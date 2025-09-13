@@ -9,7 +9,7 @@ on:
       - '**/*.jpg'
       - '**/*.jpeg'
       - '**/*.svg'
-      - '.github/**'     
+      - '.github/**'     # ← nur lassen, wenn du Workflow-Änderungen NICHT bauen willst
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -19,17 +19,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
+
       - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
+
       - run: dotnet restore BookLoggerApp.Core/BookLoggerApp.Core.csproj
       - run: dotnet restore BookLoggerApp.Tests/BookLoggerApp.Tests.csproj
+
       - run: dotnet build BookLoggerApp.Core/BookLoggerApp.Core.csproj -c Release --no-restore
+      - run: dotnet build BookLoggerApp.Tests/BookLoggerApp.Tests.csproj -c Release --no-restore
+
       - name: Run Tests (trx)
         run: dotnet test BookLoggerApp.Tests/BookLoggerApp.Tests.csproj -c Release --no-build --logger "trx;LogFileName=test_results.trx"
 
