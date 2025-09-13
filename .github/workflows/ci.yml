@@ -9,7 +9,7 @@ on:
       - '**/*.jpg'
       - '**/*.jpeg'
       - '**/*.svg'
-      - '.github/**'     # ← nur lassen, wenn du Workflow-Änderungen NICHT bauen willst
+      - '.github/**'
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -17,6 +17,11 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      checks: write          # <- wichtig für test-reporter
+      pull-requests: write   # <- damit der Check im PR sichtbar ist
     steps:
       - uses: actions/checkout@v4
 
