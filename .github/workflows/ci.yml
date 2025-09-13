@@ -27,17 +27,20 @@ jobs:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
-      - run: dotnet restore
-      - run: dotnet build -c Release --no-restore
+      - run: dotnet restore BookLoggerApp.Core/BookLoggerApp.Core.csproj
+      - run: dotnet restore BookLoggerApp.Tests/BookLoggerApp.Tests.csproj
+      - run: dotnet build BookLoggerApp.Core/BookLoggerApp.Core.csproj -c Release --no-restore
       - name: Run Tests (trx)
-        run: dotnet test -c Release --no-build --logger "trx;LogFileName=test_results.trx"
+        run: dotnet test BookLoggerApp.Tests/BookLoggerApp.Tests.csproj -c Release --no-build --logger "trx;LogFileName=test_results.trx"
+
       - name: Publish Test Results
-        uses: dorny/test-reporter@v1
         if: always()
+        uses: dorny/test-reporter@v1
         with:
           name: xUnit Tests
           path: "**/TestResults/*.trx"
           reporter: dotnet-trx
+
       - name: Upload TRX (optional)
         if: always()
         uses: actions/upload-artifact@v4
