@@ -3,8 +3,16 @@ name: CI
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.png'
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.svg'
+      - '.github/**'     
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-test:
@@ -14,13 +22,11 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-
       - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
-
       - run: dotnet restore
       - run: dotnet build -c Release --no-restore
       - name: Run Tests (trx)
@@ -32,4 +38,9 @@ jobs:
           name: xUnit Tests
           path: "**/TestResults/*.trx"
           reporter: dotnet-trx
-
+      - name: Upload TRX (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-trx
+          path: "**/TestResults/*.trx"
