@@ -1,0 +1,39 @@
+﻿@page "/books/{Id:guid}"
+@inject BookLoggerApp.Core.ViewModels.BookDetailViewModel Vm
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private int minutesToAdd = 15;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Vm.LoadAsync(Id);
+    }
+
+    private async Task AddMinutesAsync()
+    {
+        await Vm.AddSessionAsync(minutesToAdd);
+        minutesToAdd = 15;
+    }
+}
+
+<h1>Book Detail</h1>
+
+@if (Vm.Book is null)
+{
+    <p>Not found.</p>
+}
+else
+{
+    <p><strong>@Vm.Book.Title</strong> — @Vm.Book.Author</p>
+    <p>Status: @Vm.Book.Status</p>
+
+    <h3>Total Minutes: @Vm.TotalMinutes</h3>
+
+    <div style="display:flex; gap:.5rem; align-items:center;">
+        <input type="number" min="1" step="5" @bind="minutesToAdd" />
+        <button @onclick="AddMinutesAsync">Add Session</button>
+    </div>
+
+    <p><a href="/books">← Back to list</a></p>
+}

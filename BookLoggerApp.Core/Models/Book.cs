@@ -1,10 +1,13 @@
-﻿namespace BookLoggerApp.Core.Models;
+﻿using SQLite;
+
+namespace BookLoggerApp.Core.Models;
 
 /// <summary>
 /// Minimal book model for M0 seed.
 /// </summary>
 public sealed class Book
 {
+    [PrimaryKey]
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = string.Empty;
     public string Author { get; set; } = string.Empty;

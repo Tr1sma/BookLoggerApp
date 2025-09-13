@@ -1,0 +1,30 @@
+﻿@page "/books"
+@inject BookLoggerApp.Core.ViewModels.BookListViewModel Vm
+
+<h1>Books</h1>
+
+@if (Vm.IsBusy)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <div>
+        <input placeholder="Title" @bind="Vm.NewTitle" />
+        <input placeholder="Author" @bind="Vm.NewAuthor" />
+        <button @onclick="Vm.AddAsync" disabled="@(!Vm.AddAsyncCommand.CanExecute(null))">Add</button>
+    </div>
+
+    <ul>
+        @foreach (var b in Vm.Items)
+        {
+            <li>
+                <a href="@($"/books/{b.Id}")">@b.Title</a> — @b.Author (@b.Status)
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    protected override async Task OnInitializedAsync() => await Vm.LoadAsync();
+}
