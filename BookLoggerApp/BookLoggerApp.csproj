@@ -67,4 +67,8 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.5" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\BookLoggerApp.Core\BookLoggerApp.Core.csproj" />
+    </ItemGroup>
+
 </Project>
