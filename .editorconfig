@@ -1,0 +1,47 @@
+root = true
+
+# ----- Allgemein -----
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+# ----- C# Formatierung -----
+[*.cs]
+# Newline & Braces
+csharp_new_line_before_open_brace = all
+csharp_new_line_between_query_expression_clauses = true
+
+# var / explizite Typen
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# using-Sortierung & Qualifizierung
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+
+# Expression preferences
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
+
+# Pattern Matching / Switch
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_prefer_switch_expression = true:suggestion
+
+# ----- Analyzer-Schärfung (ohne zu nerven) -----
+# Keine tausend Errors, aber sinnvolle Hinweise
+dotnet_diagnostic.IDE0051.severity = warning   # unused private members
+dotnet_diagnostic.IDE0005.severity = warning   # unnötige using
+dotnet_diagnostic.IDE0063.severity = warning   # using var
+dotnet_diagnostic.CA1822.severity = suggestion # member never accesses instance data
+dotnet_diagnostic.CA2000.severity = warning    # dispose objects before losing scope

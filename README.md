@@ -1,4 +1,6 @@
-﻿# 📚 Book Logger App
+# 📚 Book Logger App
+
+![CI](https://github.com/TristanAtze/BookLoggerApp/actions/workflows/ci.yml/badge.svg)
 
 Eine Android-App zum Verwalten und Protokollieren deiner Bücher.  
 Gebaut mit **.NET MAUI Blazor Hybrid** und **SQLite** als Datenbank.
