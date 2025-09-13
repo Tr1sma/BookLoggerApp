@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using BookLoggerApp.Core.Services;
+using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace BookLoggerApp
 {
@@ -7,19 +10,22 @@ namespace BookLoggerApp
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
+
             builder
                 .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            builder.Services.AddMauiBlazorWebView();
+            // Services (DI)
+            builder.Services.AddSingleton<IBookService, InMemoryBookService>();
+            builder.Services.AddSingleton<IProgressService, InMemoryProgressService>();
 
-#if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
-    		builder.Logging.AddDebug();
-#endif
+            // ViewModels (DI)
+            builder.Services.AddTransient<BookListViewModel>();
+            builder.Services.AddTransient<BookDetailViewModel>();
 
             return builder.Build();
         }
