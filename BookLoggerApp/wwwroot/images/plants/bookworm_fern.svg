@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="fernGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#66BB6A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#388E3C;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="potGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4A574;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Pot -->
+  <path d="M 60 145 L 70 185 L 130 185 L 140 145 Z" fill="url(#potGrad2)" stroke="#6B5638" stroke-width="2"/>
+  <ellipse cx="100" cy="145" rx="42" ry="12" fill="#A67C52" stroke="#6B5638" stroke-width="2"/>
+  
+  <!-- Soil -->
+  <ellipse cx="100" cy="145" rx="38" ry="8" fill="#5D4E37"/>
+  
+  <!-- Center stem -->
+  <path d="M 100 145 L 100 70" fill="none" stroke="#2E7D32" stroke-width="3"/>
+  
+  <!-- Left fronds -->
+  <path d="M 100 130 Q 70 120 60 100 M 70 122 Q 68 118 66 114 M 75 124 Q 72 120 70 116 M 80 126 Q 77 122 74 118" 
+        fill="none" stroke="url(#fernGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 100 110 Q 65 100 55 80 M 72 102 Q 70 98 68 94 M 78 104 Q 75 100 72 96 M 84 106 Q 81 102 78 98" 
+        fill="none" stroke="url(#fernGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 100 90 Q 60 85 50 65 M 70 87 Q 68 83 66 79 M 76 88 Q 73 84 70 80 M 82 89 Q 79 85 76 81" 
+        fill="none" stroke="url(#fernGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Right fronds -->
+  <path d="M 100 130 Q 130 120 140 100 M 130 122 Q 132 118 134 114 M 125 124 Q 128 120 130 116 M 120 126 Q 123 122 126 118" 
+        fill="none" stroke="url(#fernGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 100 110 Q 135 100 145 80 M 128 102 Q 130 98 132 94 M 122 104 Q 125 100 128 96 M 116 106 Q 119 102 122 98" 
+        fill="none" stroke="url(#fernGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 100 90 Q 140 85 150 65 M 130 87 Q 132 83 134 79 M 124 88 Q 127 84 130 80 M 118 89 Q 121 85 124 81" 
+        fill="none" stroke="url(#fernGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Top fronds -->
+  <path d="M 100 70 Q 90 55 85 40 M 94 60 Q 92 56 90 52 M 96 62 Q 94 58 92 54" 
+        fill="none" stroke="url(#fernGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 100 70 Q 110 55 115 40 M 106 60 Q 108 56 110 52 M 104 62 Q 106 58 108 54" 
+        fill="none" stroke="url(#fernGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Book icon embedded -->
+  <rect x="90" y="155" width="20" height="15" fill="#8B4513" stroke="#654321" stroke-width="1" rx="1"/>
+  <line x1="100" y1="155" x2="100" y2="170" stroke="#654321" stroke-width="1"/>
+</svg>
