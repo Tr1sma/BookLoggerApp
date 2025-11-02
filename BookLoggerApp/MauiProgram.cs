@@ -1,4 +1,4 @@
-﻿using BookLoggerApp;
+using BookLoggerApp;
 using BookLoggerApp.Core.ViewModels;
 using BookLoggerApp.Infrastructure;
 using BookLoggerApp.Infrastructure.Data;
