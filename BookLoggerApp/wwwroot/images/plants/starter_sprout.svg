@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Pot -->
+  <path d="M 70 140 L 80 180 L 120 180 L 130 140 Z" fill="#8B4513" stroke="#654321" stroke-width="2"/>
+  <ellipse cx="100" cy="140" rx="30" ry="8" fill="#A0522D"/>
+  
+  <!-- Soil -->
+  <ellipse cx="100" cy="142" rx="28" ry="6" fill="#654321"/>
+  
+  <!-- Stem -->
+  <path d="M 100 140 Q 98 120 100 100" stroke="#2D5016" stroke-width="4" fill="none"/>
+  
+  <!-- Sprout leaves -->
+  <ellipse cx="95" cy="110" rx="12" ry="8" fill="#4CAF50" transform="rotate(-45 95 110)"/>
+  <ellipse cx="105" cy="110" rx="12" ry="8" fill="#4CAF50" transform="rotate(45 105 110)"/>
+  
+  <!-- Small top leaves -->
+  <ellipse cx="98" cy="95" rx="8" ry="5" fill="#66BB6A" transform="rotate(-30 98 95)"/>
+  <ellipse cx="102" cy="95" rx="8" ry="5" fill="#66BB6A" transform="rotate(30 102 95)"/>
+  
+  <!-- Sparkles -->
+  <circle cx="85" cy="100" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="115" cy="105" r="2" fill="#FFD700" opacity="0.8"/>
+</svg>

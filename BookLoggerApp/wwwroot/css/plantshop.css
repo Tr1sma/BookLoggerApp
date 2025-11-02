@@ -221,8 +221,9 @@
     border-radius: var(--border-radius-lg);
     max-width: 600px;
     width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
     box-shadow: var(--shadow-hover), var(--glow), 0 0 60px rgba(212, 165, 116, 0.4);
     animation: slideUp 0.3s ease;
 }
@@ -233,6 +234,7 @@
     align-items: center;
     padding: 1.5rem;
     border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -269,6 +271,9 @@
 /* Modal Body */
 .modal-body {
     padding: 2rem;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
 }
 
 .plant-preview {
@@ -366,6 +371,7 @@
     padding: 1.5rem;
     border-top: 1px solid var(--border-light);
     background: var(--bg-tertiary);
+    flex-shrink: 0;
 }
 
 .modal-footer .btn {
