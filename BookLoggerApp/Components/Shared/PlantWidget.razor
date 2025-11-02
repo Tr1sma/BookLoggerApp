@@ -1,0 +1,56 @@
+<div class="plant-widget">
+    <div class="plant-visual">
+        <span class="plant-emoji">🌱</span>
+        <div class="plant-info">
+            <h3>@(Plant?.Name ?? "No Plant")</h3>
+            <p class="plant-level">Level @(Plant?.CurrentLevel ?? 0)</p>
+            <div class="plant-xp">
+                <div class="xp-bar">
+                    <div class="xp-fill" style="width: @GetXpPercentage()%"></div>
+                </div>
+                <p class="xp-text">@(Plant?.Experience ?? 0) XP</p>
+            </div>
+        </div>
+    </div>
+    <div class="plant-status">
+        <p>Last watered: @FormatLastWatered()</p>
+        <button class="btn btn-primary" @onclick="HandleWater" disabled="@(Plant == null)">💧 Water</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public BookLoggerApp.Core.Models.UserPlant? Plant { get; set; }
+    [Parameter] public EventCallback OnWater { get; set; }
+
+    private string FormatLastWatered()
+    {
+        if (Plant == null || Plant.LastWatered == default)
+            return "Never";
+
+        var diff = DateTime.UtcNow - Plant.LastWatered;
+        if (diff.TotalDays >= 1)
+            return $"{(int)diff.TotalDays} days ago";
+        if (diff.TotalHours >= 1)
+            return $"{(int)diff.TotalHours} hours ago";
+        return $"{(int)diff.TotalMinutes} minutes ago";
+    }
+
+    private double GetXpPercentage()
+    {
+        if (Plant == null || Plant.Species == null)
+            return 0;
+
+        // Calculate XP needed for next level (simplified)
+        int xpForNextLevel = 100 * (int)Math.Pow(1.5, Plant.CurrentLevel - 1);
+        int maxLevel = Plant.Species?.MaxLevel ?? 10;
+        return Plant.CurrentLevel >= maxLevel 
+            ? 100 
+            : (double)Plant.Experience / xpForNextLevel * 100;
+    }
+
+    private async Task HandleWater()
+    {
+        await OnWater.InvokeAsync();
+    }
+}
+

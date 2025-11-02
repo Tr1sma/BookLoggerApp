@@ -1,0 +1,148 @@
+@page "/"
+@using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Models
+@inject DashboardViewModel ViewModel
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+
+<PageTitle>Dashboard - BookLogger</PageTitle>
+
+<div class="dashboard-container">
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading-spinner">
+            <p>Loading...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            @ViewModel.ErrorMessage
+        </div>
+    }
+    else
+    {
+        <!-- Currently Reading Section -->
+        <section class="currently-reading">
+            <h2>Currently Reading</h2>
+            @if (ViewModel.CurrentlyReading != null)
+            {
+                <div class="book-card-large">
+                    <img src="@GetCoverImageUrl(ViewModel.CurrentlyReading)" alt="Book Cover" class="book-cover" />
+                    <div class="book-info">
+                        <h3>@ViewModel.CurrentlyReading.Title</h3>
+                        <p class="author">by @ViewModel.CurrentlyReading.Author</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: @ViewModel.CurrentlyReading.ProgressPercentage%"></div>
+                        </div>
+                        <p class="progress-text">Page @ViewModel.CurrentlyReading.CurrentPage / @(ViewModel.CurrentlyReading.PageCount ?? 0) (@ViewModel.CurrentlyReading.ProgressPercentage%)</p>
+                        <button class="btn btn-primary" @onclick="NavigateToContinueReading">Continue Reading →</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <p>No book currently reading. <a href="/bookshelf">Browse your bookshelf</a></p>
+            }
+        </section>
+
+        <!-- This Week Stats -->
+        <section class="stats-grid">
+            <StatCard Icon="📚" Title="Books Read" Value="@ViewModel.BooksReadThisWeek" Subtitle="this week" />
+            <StatCard Icon="⏱️" Title="Time Read" Value="@FormatMinutes(ViewModel.MinutesReadThisWeek)" Subtitle="this week" />
+            <StatCard Icon="📄" Title="Pages Read" Value="@ViewModel.PagesReadThisWeek" Subtitle="this week" />
+            <StatCard Icon="⭐" Title="XP Earned" Value="@ViewModel.XpEarnedThisWeek" Subtitle="this week" />
+        </section>
+
+        <!-- Active Goals -->
+        <section class="goals-section">
+            <h2>Active Goals</h2>
+            @if (ViewModel.ActiveGoals.Any())
+            {
+                <div class="goals-list">
+                    @foreach (var goal in ViewModel.ActiveGoals)
+                    {
+                        <GoalCard Goal="@goal" />
+                    }
+                </div>
+            }
+            else
+            {
+                <p>No active goals. <a href="/goals">Create a goal</a></p>
+            }
+        </section>
+
+        <!-- Plant Widget -->
+        @if (ViewModel.ActivePlant != null)
+        {
+            <section class="plant-widget-section">
+                <PlantWidget Plant="@ViewModel.ActivePlant" OnWater="HandleWaterPlant" />
+            </section>
+        }
+
+        <!-- Recent Activity -->
+        <section class="recent-activity">
+            <h2>Recent Activity</h2>
+            @if (ViewModel.RecentActivity.Any())
+            {
+                <ul class="activity-list">
+                    @foreach (var session in ViewModel.RecentActivity)
+                    {
+                        <li>
+                            <span class="activity-icon">📖</span>
+                            <span class="activity-text">Read for @session.Minutes minutes</span>
+                            <span class="activity-time">@FormatRelativeTime(session.StartedAt)</span>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p>No recent activity.</p>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private string GetCoverImageUrl(Book book)
+    {
+        return string.IsNullOrEmpty(book.CoverImagePath)
+            ? "/images/placeholder-cover.png"
+            : book.CoverImagePath;
+    }
+
+    private string FormatMinutes(int minutes)
+    {
+        if (minutes < 60) return $"{minutes}m";
+        var hours = minutes / 60;
+        var remainingMinutes = minutes % 60;
+        return $"{hours}h {remainingMinutes}m";
+    }
+
+    private string FormatRelativeTime(DateTime dateTime)
+    {
+        var diff = DateTime.UtcNow - dateTime;
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} minutes ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} hours ago";
+        return $"{(int)diff.TotalDays} days ago";
+    }
+
+    private void NavigateToContinueReading()
+    {
+        if (ViewModel.CurrentlyReading != null)
+        {
+            Navigation.NavigateTo($"/books/{ViewModel.CurrentlyReading.Id}");
+        }
+    }
+
+    private async Task HandleWaterPlant()
+    {
+        await ViewModel.WaterPlantCommand.ExecuteAsync(null);
+    }
+}
+

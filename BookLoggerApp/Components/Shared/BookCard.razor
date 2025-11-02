@@ -1,0 +1,71 @@
+<div class="book-card" @onclick="HandleClick">
+    <div class="book-cover-wrapper">
+        <img src="@GetCoverUrl()" alt="@Book.Title" class="book-cover" />
+        <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
+            @GetStatusIcon()
+        </div>
+    </div>
+    <div class="book-card-body">
+        <h3 class="book-title">@Book.Title</h3>
+        <p class="book-author">@Book.Author</p>
+        @if (Book.Rating.HasValue)
+        {
+            <div class="book-rating">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <span class="star @(i <= Book.Rating.Value ? "filled" : "empty")">★</span>
+                }
+            </div>
+        }
+        @if (Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Reading || Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Completed)
+        {
+            <div class="book-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: @Book.ProgressPercentage%"></div>
+                </div>
+                <p class="progress-text">@Book.ProgressPercentage%</p>
+            </div>
+        }
+    </div>
+    <div class="book-card-actions">
+        <button class="btn-icon" @onclick:stopPropagation="true" @onclick="HandleDelete" title="Delete">
+            🗑️
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public BookLoggerApp.Core.Models.Book Book { get; set; } = null!;
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
+
+    private string GetCoverUrl()
+    {
+        return string.IsNullOrEmpty(Book.CoverImagePath)
+            ? "/images/placeholder-cover.png"
+            : Book.CoverImagePath;
+    }
+
+    private string GetStatusIcon()
+    {
+        return Book.Status switch
+        {
+            BookLoggerApp.Core.Models.ReadingStatus.Planned => "📋",
+            BookLoggerApp.Core.Models.ReadingStatus.Reading => "📖",
+            BookLoggerApp.Core.Models.ReadingStatus.Completed => "✅",
+            BookLoggerApp.Core.Models.ReadingStatus.Abandoned => "❌",
+            _ => ""
+        };
+    }
+
+    private async Task HandleClick()
+    {
+        await OnClick.InvokeAsync();
+    }
+
+    private async Task HandleDelete()
+    {
+        await OnDelete.InvokeAsync();
+    }
+}
+

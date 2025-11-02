@@ -1,0 +1,91 @@
+@page "/settings"
+@using BookLoggerApp.Core.ViewModels
+@inject SettingsViewModel ViewModel
+
+<PageTitle>Settings - BookLogger</PageTitle>
+
+<div class="settings-container">
+    <h1>⚙️ Settings</h1>
+
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading">Loading settings...</div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">@ViewModel.ErrorMessage</div>
+    }
+    else
+    {
+        <!-- Theme Selection -->
+        <section class="settings-section">
+            <h2>Theme</h2>
+            <div class="form-group">
+                <label>Theme:</label>
+                <select @bind="ViewModel.Settings.Theme">
+                    <option value="Light">Light</option>
+                    <option value="Dark">Dark</option>
+                    <option value="Auto">Auto</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Language Selection -->
+        <section class="settings-section">
+            <h2>Language</h2>
+            <div class="form-group">
+                <label>Language:</label>
+                <select @bind="ViewModel.Settings.Language">
+                    <option value="en">English</option>
+                    <option value="de">Deutsch</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Notifications -->
+        <section class="settings-section">
+            <h2>Notifications</h2>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" @bind="ViewModel.Settings.NotificationsEnabled" />
+                    Enable Notifications
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" @bind="ViewModel.Settings.ReadingRemindersEnabled" />
+                    Reading Reminders
+                </label>
+            </div>
+        </section>
+
+        <!-- Backup & Export -->
+        <section class="settings-section">
+            <h2>Backup & Export</h2>
+            <button class="btn btn-primary" @onclick="async () => await ViewModel.ExportDataCommand.ExecuteAsync(null)">Export Data</button>
+            <button class="btn btn-secondary" @onclick="async () => await ViewModel.SaveCommand.ExecuteAsync(null)">Save Settings</button>
+        </section>
+
+        <!-- About -->
+        <section class="settings-section">
+            <h2>About</h2>
+            <p>BookLogger App</p>
+            <p>Version: @ViewModel.AppVersion</p>
+        </section>
+
+        <!-- Danger Zone -->
+        <section class="settings-section danger-zone">
+            <h2>Danger Zone</h2>
+            <button class="btn btn-danger" @onclick="async () => await ViewModel.DeleteAllDataCommand.ExecuteAsync(null)">Delete All Data</button>
+            <p class="warning">⚠️ This action cannot be undone!</p>
+        </section>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+}
+

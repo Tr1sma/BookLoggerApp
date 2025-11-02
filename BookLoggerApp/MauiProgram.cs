@@ -46,6 +46,13 @@ public static class MauiProgram
         // ViewModels
         builder.Services.AddTransient<BookListViewModel>();
         builder.Services.AddTransient<BookDetailViewModel>();
+        builder.Services.AddTransient<DashboardViewModel>();
+        builder.Services.AddTransient<BookshelfViewModel>();
+        builder.Services.AddTransient<BookEditViewModel>();
+        builder.Services.AddTransient<ReadingViewModel>();
+        builder.Services.AddTransient<GoalsViewModel>();
+        builder.Services.AddTransient<StatsViewModel>();
+        builder.Services.AddTransient<SettingsViewModel>();
 
         return builder.Build();
     }
