@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Pot -->
+  <path d="M 70 150 L 80 185 L 120 185 L 130 150 Z" fill="#8B4513" stroke="#654321" stroke-width="2"/>
+  <ellipse cx="100" cy="150" rx="30" ry="8" fill="#A0522D"/>
+  
+  <!-- Soil -->
+  <ellipse cx="100" cy="152" rx="28" ry="6" fill="#654321"/>
+  
+  <!-- Main cactus body -->
+  <ellipse cx="100" cy="110" rx="25" ry="45" fill="#2E7D32"/>
+  <ellipse cx="100" cy="110" rx="22" ry="42" fill="#388E3C"/>
+  
+  <!-- Left arm -->
+  <ellipse cx="75" cy="115" rx="12" ry="20" fill="#2E7D32"/>
+  <ellipse cx="75" cy="115" rx="10" ry="18" fill="#388E3C"/>
+  <path d="M 75 105 Q 75 95 70 90" stroke="#2E7D32" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M 75 105 Q 75 95 70 90" stroke="#388E3C" stroke-width="6" fill="none" stroke-linecap="round"/>
+  
+  <!-- Right arm -->
+  <ellipse cx="125" cy="120" rx="12" ry="20" fill="#2E7D32"/>
+  <ellipse cx="125" cy="120" rx="10" ry="18" fill="#388E3C"/>
+  <path d="M 125 110 Q 125 100 130 95" stroke="#2E7D32" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M 125 110 Q 125 100 130 95" stroke="#388E3C" stroke-width="6" fill="none" stroke-linecap="round"/>
+  
+  <!-- Spines pattern -->
+  <g stroke="#FFF" stroke-width="1" opacity="0.8">
+    <line x1="90" y1="90" x2="88" y2="85"/>
+    <line x1="95" y1="85" x2="93" y2="80"/>
+    <line x1="100" y1="80" x2="98" y2="75"/>
+    <line x1="105" y1="85" x2="107" y2="80"/>
+    <line x1="110" y1="90" x2="112" y2="85"/>
+    
+    <line x1="85" y1="105" x2="82" y2="105"/>
+    <line x1="115" y1="105" x2="118" y2="105"/>
+    <line x1="85" y1="115" x2="82" y2="115"/>
+    <line x1="115" y1="115" x2="118" y2="115"/>
+    
+    <line x1="90" y1="130" x2="88" y2="135"/>
+    <line x1="110" y1="130" x2="112" y2="135"/>
+    <line x1="95" y1="135" x2="93" y2="140"/>
+    <line x1="105" y1="135" x2="107" y2="140"/>
+  </g>
+  
+  <!-- Flower on top -->
+  <circle cx="100" cy="70" r="8" fill="#FF6B9D"/>
+  <circle cx="95" cy="73" r="5" fill="#FFB6C1" opacity="0.8"/>
+  <circle cx="105" cy="73" r="5" fill="#FFB6C1" opacity="0.8"/>
+  <circle cx="100" cy="77" r="5" fill="#FFB6C1" opacity="0.8"/>
+  <circle cx="100" cy="70" r="3" fill="#FFD700"/>
+  
+  <!-- Reading glasses (decorative) -->
+  <g stroke="#654321" stroke-width="2" fill="none">
+    <circle cx="95" cy="105" r="6"/>
+    <circle cx="105" cy="105" r="6"/>
+    <line x1="101" y1="105" x2="99" y2="105"/>
+  </g>
+</svg>
