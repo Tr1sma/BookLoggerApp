@@ -62,11 +62,16 @@
 
 /* Shop Grid */
 .shop-grid {
-    display: grid;
+    display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 2rem;
     margin-bottom: 2rem;
     align-items: start;
+}
+
+.shop-grid > * {
+    display: flex;
+    flex-direction: column;
 }
 
 /* Plant Shop Card */
@@ -78,9 +83,15 @@
     cursor: pointer;
     transition: var(--transition);
     box-shadow: var(--shadow);
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
     height: 100%;
+    width: 100%;
+    min-height: 0;
+}
+
+.plant-shop-card * {
+    box-sizing: border-box;
 }
 
 .plant-shop-card:hover {
@@ -99,10 +110,11 @@
     position: relative;
     height: 200px;
     background: linear-gradient(145deg, #2D2419 0%, #3D2819 100%);
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .plant-card-image img {
@@ -132,8 +144,8 @@
 /* Plant Card Body */
 .plant-card-body {
     padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
     flex: 1;
 }
 
@@ -154,7 +166,8 @@
 
 /* Plant Card Stats */
 .plant-card-stats {
-    display: flex;
+    display: flex !important;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-bottom: 1rem;
     padding: 0.75rem 0;
@@ -176,9 +189,10 @@
 
 /* Plant Card Footer */
 .plant-card-footer {
-    display: flex;
+    display: flex !important;
     justify-content: space-between;
     align-items: center;
+    margin-top: auto;
 }
 
 .plant-cost {
@@ -219,8 +233,8 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    padding: 1rem;
-    overflow: hidden;
+    padding: 2rem 1rem;
+    overflow-y: auto;
     animation: fadeIn 0.2s ease;
 }
 
@@ -230,7 +244,7 @@
     border-radius: var(--border-radius-lg);
     max-width: 600px;
     width: 90%;
-    max-height: 85vh;
+    max-height: fit-content;
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow-hover), var(--glow), 0 0 60px rgba(212, 165, 116, 0.4);
@@ -280,7 +294,7 @@
 /* Modal Body */
 .modal-body {
     padding: 2rem;
-    overflow-y: auto;
+    overflow-y: visible;
     flex: 1;
 }
 
