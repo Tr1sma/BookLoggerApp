@@ -1,51 +1,161 @@
-﻿using BookLoggerApp.Core.Models;
-using BookLoggerApp.Core.Services;
 using FluentAssertions;
-using SQLite;
+using BookLoggerApp.Core.Models;
+using BookLoggerApp.Infrastructure.Services;
+using BookLoggerApp.Infrastructure.Repositories.Specific;
+using BookLoggerApp.Tests.TestHelpers;
 using Xunit;
-using static BookLoggerApp.Tests.TestHelpers.TestDb;
 
 namespace BookLoggerApp.Tests.Services;
 
-public class ProgressServiceTests
+public class ProgressServiceTests : IDisposable
 {
-    [Fact]
-    public async Task AddSessions_Sums_Minutes()
+    private readonly Infrastructure.Data.AppDbContext _context;
+    private readonly ReadingSessionRepository _sessionRepository;
+    private readonly BookRepository _bookRepository;
+    private readonly ProgressService _service;
+
+    public ProgressServiceTests()
     {
-        var path = NewPath();
-        try
-        {
-            // Create connection & service
-            var conn = new SQLiteAsyncConnection(path);
-            var progress = await SqliteProgressService.CreateAsync(path);
+        _context = TestDbContext.Create();
+        _sessionRepository = new ReadingSessionRepository(_context);
+        _bookRepository = new BookRepository(_context);
+        _service = new ProgressService(_sessionRepository);
+    }
 
-            var bookId = Guid.NewGuid();
-
-            await progress.AddSessionAsync(new ReadingSession { BookId = bookId, Minutes = 20 });
-            await progress.AddSessionAsync(new ReadingSession { BookId = bookId, Minutes = 15 });
-
-            var total = await progress.GetTotalMinutesAsync(bookId);
-            total.Should().Be(35);
-        }
-        finally { TryDelete(path); }
+    public void Dispose()
+    {
+        _context.Dispose();
     }
 
     [Fact]
-    public async Task GetSessionsByBook_Returns_Descending_By_Date()
+    public async Task AddSessionAsync_ShouldCalculateXp()
     {
-        var path = NewPath();
-        try
+        // Arrange
+        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var session = new ReadingSession
         {
-            var progress = await SqliteProgressService.CreateAsync(path);
-            var bookId = Guid.NewGuid();
+            BookId = book.Id,
+            Minutes = 30,
+            PagesRead = 20
+        };
 
-            await progress.AddSessionAsync(new ReadingSession { BookId = bookId, Minutes = 10, StartedAt = DateTime.UtcNow.AddHours(-2) });
-            await progress.AddSessionAsync(new ReadingSession { BookId = bookId, Minutes = 10, StartedAt = DateTime.UtcNow.AddHours(-1) });
-            await progress.AddSessionAsync(new ReadingSession { BookId = bookId, Minutes = 10, StartedAt = DateTime.UtcNow });
+        // Act
+        var result = await _service.AddSessionAsync(session);
 
-            var list = await progress.GetSessionsByBookAsync(bookId);
-            list.Select(s => s.StartedAt).Should().BeInDescendingOrder();
-        }
-        finally { TryDelete(path); }
+        // Assert
+        result.XpEarned.Should().BeGreaterThan(0);
+        // Base: 30 minutes * 1 XP = 30, 20 pages * 2 XP = 40, Total = 70 (no bonuses for first session)
+        result.XpEarned.Should().Be(70);
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_ShouldGiveBonusForLongSession()
+    {
+        // Arrange
+        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var session = new ReadingSession
+        {
+            BookId = book.Id,
+            Minutes = 60,
+            PagesRead = 30
+        };
+
+        // Act
+        var result = await _service.AddSessionAsync(session);
+
+        // Assert
+        // Base: 60 minutes * 1 XP = 60, 30 pages * 2 XP = 60, Bonus: 50 = 170
+        result.XpEarned.Should().Be(170);
+    }
+
+    [Fact]
+    public async Task GetTotalMinutesAsync_ShouldSumMinutesForBook()
+    {
+        // Arrange
+        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _service.AddSessionAsync(new ReadingSession { BookId = book.Id, Minutes = 30 });
+        await _service.AddSessionAsync(new ReadingSession { BookId = book.Id, Minutes = 45 });
+        await _service.AddSessionAsync(new ReadingSession { BookId = book.Id, Minutes = 15 });
+
+        // Act
+        var total = await _service.GetTotalMinutesAsync(book.Id);
+
+        // Assert
+        total.Should().Be(90);
+    }
+
+    [Fact]
+    public async Task GetCurrentStreakAsync_ShouldCalculateStreak()
+    {
+        // Arrange
+        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var today = DateTime.UtcNow.Date;
+
+        // Add sessions for today, yesterday, and day before yesterday
+        await _sessionRepository.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today,
+            Minutes = 30
+        });
+        await _sessionRepository.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-1),
+            Minutes = 30
+        });
+        await _sessionRepository.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-2),
+            Minutes = 30
+        });
+
+        // Act
+        var streak = await _service.GetCurrentStreakAsync();
+
+        // Assert
+        streak.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task GetCurrentStreakAsync_ShouldReturnZeroIfNoRecentSession()
+    {
+        // Arrange
+        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var threeDaysAgo = DateTime.UtcNow.AddDays(-3);
+
+        await _sessionRepository.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = threeDaysAgo,
+            Minutes = 30
+        });
+
+        // Act
+        var streak = await _service.GetCurrentStreakAsync();
+
+        // Assert
+        streak.Should().Be(0); // Streak broken
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_ShouldCalculateDurationAndXp()
+    {
+        // Arrange
+        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var session = await _service.StartSessionAsync(book.Id);
+
+        // Simulate some time passing
+        await Task.Delay(100);
+
+        // Act
+        var ended = await _service.EndSessionAsync(session.Id, 10);
+
+        // Assert
+        ended.EndedAt.Should().NotBeNull();
+        ended.Minutes.Should().BeGreaterThanOrEqualTo(0);
+        ended.PagesRead.Should().Be(10);
+        ended.XpEarned.Should().BeGreaterThan(0);
     }
 }
