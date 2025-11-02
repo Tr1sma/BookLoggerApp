@@ -4,13 +4,27 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BookLoggerApp.Infrastructure.Data.Migrations
 {
-    /// <summary>
-    /// Migration to update plant image paths from .png to .svg
-    /// </summary>
-    public partial class UpdatePlantImagePathsToSvg : Migration
+    /// <inheritdoc />
+    public partial class AddPlantBookshelfFields : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AddColumn<string>(
+                name: "BookshelfPosition",
+                table: "UserPlants",
+                type: "TEXT",
+                maxLength: 20,
+                nullable: true);
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsInBookshelf",
+                table: "UserPlants",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: false);
+
+            // Update PlantSpecies image paths to SVG
             migrationBuilder.UpdateData(
                 table: "PlantSpecies",
                 keyColumn: "Id",
@@ -33,8 +47,18 @@ namespace BookLoggerApp.Infrastructure.Data.Migrations
                 value: "/images/plants/reading_cactus.svg");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropColumn(
+                name: "BookshelfPosition",
+                table: "UserPlants");
+
+            migrationBuilder.DropColumn(
+                name: "IsInBookshelf",
+                table: "UserPlants");
+
+            // Revert PlantSpecies image paths to PNG
             migrationBuilder.UpdateData(
                 table: "PlantSpecies",
                 keyColumn: "Id",
