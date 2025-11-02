@@ -2,6 +2,7 @@
 @page "/bookshelf"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Enums
 @using BookLoggerApp.Components.Shared
 @inject BookshelfViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
@@ -61,7 +62,7 @@
     {
         <div class="loading">Loading your books...</div>
     }
-    else if (!ViewModel.Books.Any())
+    else if (!ViewModel.Books.Any() && !ViewModel.BookshelfPlants.Any())
     {
         <div class="empty-state">
             <h2>No books found</h2>
@@ -74,28 +75,57 @@
         <div class="book-grid">
             @{
                 var booksPerShelf = 8;
-                var shelves = ViewModel.Books
-                    .Select((book, index) => new { book, index })
+                
+                // Combine books and plants into shelf slots
+                var allItems = new List<object>();
+                allItems.AddRange(ViewModel.Books);
+                
+                // Add plants at their positions
+                foreach (var plant in ViewModel.BookshelfPlants.OrderBy(p => p.BookshelfPosition))
+                {
+                    allItems.Add(plant);
+                }
+
+                var shelves = allItems
+                    .Select((item, index) => new { item, index })
                     .GroupBy(x => x.index / booksPerShelf)
-                    .Select(g => g.Select(x => x.book).ToList())
+                    .Select(g => g.Select(x => x.item).ToList())
                     .ToList();
             }
 
-            @foreach (var shelf in shelves)
+            @foreach (var (shelf, shelfIndex) in shelves.Select((s, i) => (s, i)))
             {
                 <div class="shelf-row">
-                    @foreach (var book in shelf)
+                    @foreach (var item in shelf)
                     {
-                        <BookCard Book="@book"
-                                  OnClick="() => HandleBookClick(book)"
-                                  OnDelete="() => HandleDeleteBook(book.Id)" />
+                        @if (item is Book book)
+                        {
+                            <BookCard Book="@book"
+                                      OnClick="() => HandleBookClick(book)"
+                                      OnDelete="() => HandleDeleteBook(book.Id)" />
+                        }
+                        else if (item is UserPlant plant)
+                        {
+                            <PlantCard Plant="@plant"
+                                       IsInBookshelf="true"
+                                       OnClick="() => HandlePlantClick(plant)"
+                                       OnRemove="() => HandleRemovePlant(plant.Id)" />
+                        }
+                    }
+                    <!-- Add plant slot at end of each shelf -->
+                    @if (shelf.Count < booksPerShelf && ViewModel.AvailablePlants.Any())
+                    {
+                        <div class="empty-slot" @onclick="() => HandleAddPlant(shelfIndex)">
+                            <div class="empty-slot-icon">🌱</div>
+                            <div class="empty-slot-text">Add Plant</div>
+                        </div>
                     }
                 </div>
             }
         </div>
 
         <div class="bookshelf-footer">
-            <p>Showing @ViewModel.Books.Count book(s) across @shelves.Count shelf/shelves</p>
+            <p>Showing @ViewModel.Books.Count book(s) and @ViewModel.BookshelfPlants.Count plant(s) across @shelves.Count shelf/shelves</p>
         </div>
     }
 </div>
@@ -106,9 +136,52 @@
                    OnClose="HandleCloseQuickTimer"
                    OnSessionSaved="HandleSessionSaved" />
 
+<!-- Plant Selection Modal -->
+@if (showPlantSelector)
+{
+    <div class="purchase-modal-overlay" @onclick="ClosePlantSelector">
+        <div class="purchase-modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>🌱 Place Plant on Shelf</h2>
+                <button class="btn-close" @onclick="ClosePlantSelector">×</button>
+            </div>
+
+            <div class="modal-body">
+                @if (!ViewModel.AvailablePlants.Any())
+                {
+                    <p>No plants available. Purchase plants from the <a href="/shop">Plant Shop</a> first!</p>
+                }
+                else
+                {
+                    <p>Select a plant to place on shelf @(selectedShelfIndex + 1):</p>
+                    <div class="plant-selection-grid">
+                        @foreach (var plant in ViewModel.AvailablePlants)
+                        {
+                            <div class="plant-selection-card" @onclick="() => SelectPlantForPlacement(plant.Id)">
+                                <div class="plant-preview" style="@GetPlantPreviewStyle(plant)">
+                                    <div class="status-badge">@GetPlantStatusIcon(plant.Status)</div>
+                                </div>
+                                <h4>@plant.Name</h4>
+                                <p class="plant-species">@plant.Species.Name</p>
+                                <p class="plant-level-mini">Level @plant.CurrentLevel</p>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="ClosePlantSelector">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private Book? selectedBook;
     private bool showQuickTimer;
+    private bool showPlantSelector;
+    private int selectedShelfIndex;
 
     protected override async Task OnInitializedAsync()
     {
@@ -169,6 +242,67 @@
         await ViewModel.LoadCommand.ExecuteAsync(null);
         showQuickTimer = false;
         selectedBook = null;
+    }
+
+    // Plant-specific methods
+    private void HandleAddPlant(int shelfIndex)
+    {
+        selectedShelfIndex = shelfIndex;
+        showPlantSelector = true;
+    }
+
+    private void HandlePlantClick(UserPlant plant)
+    {
+        // Navigate to plant detail or show plant info
+        // For now, just show the plant widget
+        Navigation.NavigateTo($"/dashboard");
+    }
+
+    private async Task HandleRemovePlant(Guid plantId)
+    {
+        await ViewModel.RemovePlantFromBookshelfCommand.ExecuteAsync(plantId);
+    }
+
+    private async Task SelectPlantForPlacement(Guid plantId)
+    {
+        var position = $"{selectedShelfIndex}:end";
+        await ViewModel.PlacePlantInBookshelfCommand.ExecuteAsync((plantId, position));
+        showPlantSelector = false;
+    }
+
+    private void ClosePlantSelector()
+    {
+        showPlantSelector = false;
+    }
+
+    private string GetPlantPreviewStyle(UserPlant plant)
+    {
+        var hash = plant.SpeciesId.GetHashCode();
+        var colors = new[]
+        {
+            ("8B4513", "A0522D"), // Terra cotta
+            ("6B4423", "7D5530"), // Clay brown
+            ("4A7C59", "5C8E6B"), // Green pot
+            ("5D4E6D", "6F5F7F"), // Purple pot
+            ("8B7355", "A68968"), // Gold pot
+        };
+
+        var colorIndex = Math.Abs(hash) % colors.Length;
+        var (dark, light) = colors[colorIndex];
+
+        return $"background: linear-gradient(to bottom, #{light}, #{dark}); padding: 2rem; border-radius: 8px;";
+    }
+
+    private string GetPlantStatusIcon(PlantStatus status)
+    {
+        return status switch
+        {
+            PlantStatus.Healthy => "😊",
+            PlantStatus.Thirsty => "😰",
+            PlantStatus.Wilting => "😵",
+            PlantStatus.Dead => "💀",
+            _ => "🌱"
+        };
     }
 }
 

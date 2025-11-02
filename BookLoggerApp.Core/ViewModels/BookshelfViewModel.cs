@@ -10,15 +10,23 @@ public partial class BookshelfViewModel : ViewModelBase
 {
     private readonly IBookService _bookService;
     private readonly IGenreService _genreService;
+    private readonly IPlantService _plantService;
 
-    public BookshelfViewModel(IBookService bookService, IGenreService genreService)
+    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService)
     {
         _bookService = bookService;
         _genreService = genreService;
+        _plantService = plantService;
     }
 
     [ObservableProperty]
     private ObservableCollection<Book> _books = new();
+
+    [ObservableProperty]
+    private ObservableCollection<UserPlant> _bookshelfPlants = new();
+
+    [ObservableProperty]
+    private ObservableCollection<UserPlant> _availablePlants = new();
 
     [ObservableProperty]
     private List<Genre> _genres = new();
@@ -44,6 +52,15 @@ public partial class BookshelfViewModel : ViewModelBase
             Books = new ObservableCollection<Book>(allBooks);
 
             Genres = (await _genreService.GetAllAsync()).ToList();
+
+            // Load plants in bookshelf
+            var allPlants = await _plantService.GetAllAsync();
+            BookshelfPlants = new ObservableCollection<UserPlant>(
+                allPlants.Where(p => p.IsInBookshelf));
+
+            // Load available plants for placement
+            AvailablePlants = new ObservableCollection<UserPlant>(
+                allPlants.Where(p => !p.IsInBookshelf));
         }, "Failed to load books");
     }
 
@@ -105,6 +122,46 @@ public partial class BookshelfViewModel : ViewModelBase
         SearchQuery = "";
         FilterStatus = null;
         FilterGenreId = null;
+    }
+
+    [RelayCommand]
+    public async Task PlacePlantInBookshelfAsync((Guid plantId, string position) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            var plant = AvailablePlants.FirstOrDefault(p => p.Id == args.plantId);
+            if (plant == null)
+            {
+                SetError("Plant not found");
+                return;
+            }
+
+            plant.IsInBookshelf = true;
+            plant.BookshelfPosition = args.position;
+            await _plantService.UpdateAsync(plant);
+
+            // Move from available to bookshelf
+            AvailablePlants.Remove(plant);
+            BookshelfPlants.Add(plant);
+        }, "Failed to place plant");
+    }
+
+    [RelayCommand]
+    public async Task RemovePlantFromBookshelfAsync(Guid plantId)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            var plant = BookshelfPlants.FirstOrDefault(p => p.Id == plantId);
+            if (plant == null) return;
+
+            plant.IsInBookshelf = false;
+            plant.BookshelfPosition = null;
+            await _plantService.UpdateAsync(plant);
+
+            // Move from bookshelf to available
+            BookshelfPlants.Remove(plant);
+            AvailablePlants.Add(plant);
+        }, "Failed to remove plant");
     }
 }
 

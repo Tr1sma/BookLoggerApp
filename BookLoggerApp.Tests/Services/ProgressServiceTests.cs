@@ -1,5 +1,6 @@
 using FluentAssertions;
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
@@ -9,7 +10,7 @@ namespace BookLoggerApp.Tests.Services;
 
 public class ProgressServiceTests : IDisposable
 {
-    private readonly Infrastructure.Data.AppDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ReadingSessionRepository _sessionRepository;
     private readonly BookRepository _bookRepository;
     private readonly ProgressService _service;

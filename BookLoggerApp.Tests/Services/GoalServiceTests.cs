@@ -1,6 +1,7 @@
 using FluentAssertions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Enums;
+using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
@@ -10,7 +11,7 @@ namespace BookLoggerApp.Tests.Services;
 
 public class GoalServiceTests : IDisposable
 {
-    private readonly Infrastructure.Data.AppDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ReadingGoalRepository _repository;
     private readonly GoalService _service;
 
