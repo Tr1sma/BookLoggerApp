@@ -4,6 +4,8 @@ using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Infrastructure.Repositories;
+using BookLoggerApp.Infrastructure.Services.Helpers;
+using BookLoggerApp.Core.Enums;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
@@ -99,11 +101,18 @@ public class PlantService : IPlantService
 
     public async Task WaterPlantAsync(Guid plantId, CancellationToken ct = default)
     {
-        var plant = await _plantRepository.GetByIdAsync(plantId);
+        var plant = await _plantRepository.GetPlantWithSpeciesAsync(plantId);
         if (plant == null)
             throw new ArgumentException("Plant not found", nameof(plantId));
 
+        if (plant.Status == PlantStatus.Dead)
+            throw new InvalidOperationException("Cannot water a dead plant");
+
         plant.LastWatered = DateTime.UtcNow;
+
+        // Recalculate status
+        plant.Status = PlantGrowthCalculator.CalculatePlantStatus(plant.LastWatered, plant.Species.WaterIntervalDays);
+
         await _plantRepository.UpdateAsync(plant);
     }
 
@@ -115,10 +124,20 @@ public class PlantService : IPlantService
 
         plant.Experience += xp;
 
-        // Check if plant can level up
-        while (await CanLevelUpAsync(plantId, ct))
+        // Use PlantGrowthCalculator for level calculation
+        int newLevel = PlantGrowthCalculator.CalculateLevelFromXp(
+            plant.Experience,
+            plant.Species.GrowthRate,
+            plant.Species.MaxLevel
+        );
+
+        // Update level if changed
+        if (newLevel > plant.CurrentLevel)
         {
-            await LevelUpAsync(plantId, ct);
+            plant.CurrentLevel = newLevel;
+
+            // TODO: Award coins for level up (requires IStatsService or AppSettings repository)
+            // settings.Coins += 100;
         }
 
         await _plantRepository.UpdateAsync(plant);
@@ -130,13 +149,12 @@ public class PlantService : IPlantService
         if (plant == null)
             return false;
 
-        // Check if not at max level
-        if (plant.CurrentLevel >= plant.Species.MaxLevel)
-            return false;
-
-        // Calculate XP needed for next level
-        int xpForNextLevel = CalculateXpForLevel(plant.CurrentLevel + 1);
-        return plant.Experience >= xpForNextLevel;
+        return PlantGrowthCalculator.CanLevelUp(
+            plant.CurrentLevel,
+            plant.Experience,
+            plant.Species.GrowthRate,
+            plant.Species.MaxLevel
+        );
     }
 
     public async Task LevelUpAsync(Guid plantId, CancellationToken ct = default)
@@ -148,9 +166,6 @@ public class PlantService : IPlantService
         if (!await CanLevelUpAsync(plantId, ct))
             throw new InvalidOperationException("Plant cannot level up yet");
 
-        // Deduct XP and increase level
-        int xpForCurrentLevel = CalculateXpForLevel(plant.CurrentLevel + 1);
-        plant.Experience -= xpForCurrentLevel;
         plant.CurrentLevel++;
 
         await _plantRepository.UpdateAsync(plant);
@@ -181,9 +196,54 @@ public class PlantService : IPlantService
         return await _plantRepository.AddAsync(plant);
     }
 
-    private int CalculateXpForLevel(int level)
+    /// <summary>
+    /// Update all plant statuses based on last watered time.
+    /// Called periodically (e.g., when app starts or in background).
+    /// </summary>
+    public async Task UpdatePlantStatusesAsync(CancellationToken ct = default)
     {
-        // Exponential growth: Level 2 = 100 XP, Level 3 = 250 XP, etc.
-        return (int)(100 * Math.Pow(1.5, level - 2));
+        var plants = await _context.UserPlants
+            .Include(p => p.Species)
+            .ToListAsync(ct);
+
+        foreach (var plant in plants)
+        {
+            var newStatus = PlantGrowthCalculator.CalculatePlantStatus(
+                plant.LastWatered,
+                plant.Species.WaterIntervalDays
+            );
+
+            if (plant.Status != newStatus)
+            {
+                plant.Status = newStatus;
+                await _plantRepository.UpdateAsync(plant);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Get plants that need watering soon (within 6 hours).
+    /// </summary>
+    public async Task<IReadOnlyList<UserPlant>> GetPlantsNeedingWaterAsync(CancellationToken ct = default)
+    {
+        var plants = await _context.UserPlants
+            .Include(p => p.Species)
+            .Where(p => p.Status != PlantStatus.Dead)
+            .ToListAsync(ct);
+
+        return plants
+            .Where(p => PlantGrowthCalculator.NeedsWateringSoon(p.LastWatered, p.Species.WaterIntervalDays))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Get available species for purchase based on user level.
+    /// </summary>
+    public async Task<IReadOnlyList<PlantSpecies>> GetAvailableSpeciesAsync(int userLevel, CancellationToken ct = default)
+    {
+        return await _context.PlantSpecies
+            .Where(s => s.IsAvailable && s.UnlockLevel <= userLevel)
+            .OrderBy(s => s.BaseCost)
+            .ToListAsync(ct);
     }
 }

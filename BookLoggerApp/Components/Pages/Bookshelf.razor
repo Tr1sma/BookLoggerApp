@@ -2,6 +2,7 @@
 @page "/bookshelf"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Components.Shared
 @inject BookshelfViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
@@ -86,7 +87,7 @@
                     @foreach (var book in shelf)
                     {
                         <BookCard Book="@book"
-                                  OnClick="() => NavigateToBookDetail(book.Id)"
+                                  OnClick="() => HandleBookClick(book)"
                                   OnDelete="() => HandleDeleteBook(book.Id)" />
                     }
                 </div>
@@ -99,7 +100,16 @@
     }
 </div>
 
+<!-- Quick Reading Timer -->
+<QuickReadingTimer Book="@selectedBook"
+                   IsVisible="@showQuickTimer"
+                   OnClose="HandleCloseQuickTimer"
+                   OnSessionSaved="HandleSessionSaved" />
+
 @code {
+    private Book? selectedBook;
+    private bool showQuickTimer;
+
     protected override async Task OnInitializedAsync()
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
@@ -122,6 +132,21 @@
         await ViewModel.DeleteBookCommand.ExecuteAsync(bookId);
     }
 
+    private void HandleBookClick(Book book)
+    {
+        // Show quick timer or navigate to detail based on user preference
+        // For now, show quick timer for reading books, navigate for others
+        if (book.Status == ReadingStatus.Reading || book.Status == ReadingStatus.Planned)
+        {
+            selectedBook = book;
+            showQuickTimer = true;
+        }
+        else
+        {
+            NavigateToBookDetail(book.Id);
+        }
+    }
+
     private void NavigateToBookDetail(Guid bookId)
     {
         Navigation.NavigateTo($"/books/{bookId}");
@@ -130,6 +155,20 @@
     private void NavigateToAddBook()
     {
         Navigation.NavigateTo("/books/new");
+    }
+
+    private void HandleCloseQuickTimer()
+    {
+        showQuickTimer = false;
+        selectedBook = null;
+    }
+
+    private async Task HandleSessionSaved()
+    {
+        // Refresh the bookshelf to show updated progress
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+        showQuickTimer = false;
+        selectedBook = null;
     }
 }
 

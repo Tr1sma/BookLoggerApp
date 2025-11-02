@@ -1,39 +1,268 @@
 @page "/books/{Id:guid}"
-@inject BookLoggerApp.Core.ViewModels.BookDetailViewModel Vm
+@using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Services.Abstractions
+@inject BookDetailViewModel ViewModel
+@inject IProgressService ProgressService
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+
+<PageTitle>@(ViewModel.Book?.Title ?? "Book Details") - BookLogger</PageTitle>
+
+<div class="book-detail-container">
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading">Loading book details...</div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">@ViewModel.ErrorMessage</div>
+    }
+    else if (ViewModel.Book == null)
+    {
+        <div class="empty-state">
+            <h2>Book not found</h2>
+            <p>This book could not be loaded.</p>
+            <button class="btn btn-primary" @onclick="NavigateToBookshelf">← Back to Bookshelf</button>
+        </div>
+    }
+    else
+    {
+        <!-- Header -->
+        <div class="book-detail-header">
+            <h1>@ViewModel.Book.Title</h1>
+            <div class="book-detail-actions">
+                <button class="btn btn-secondary" @onclick="NavigateToEdit">✏️ Edit</button>
+                <button class="btn btn-secondary" @onclick="NavigateToBookshelf">← Back</button>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="book-detail-content">
+            <!-- Cover Section -->
+            <div class="book-cover-section">
+                <img src="@GetCoverUrl()" alt="@ViewModel.Book.Title" />
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    @if (ViewModel.Book.Status == ReadingStatus.Planned || ViewModel.Book.Status == ReadingStatus.Reading)
+                    {
+                        <button class="btn btn-primary btn-block" @onclick="StartReadingSession">
+                            📖 Start Reading
+                        </button>
+                    }
+                    @if (ViewModel.Book.Status == ReadingStatus.Reading)
+                    {
+                        <button class="btn btn-primary btn-block" @onclick="QuickAddProgress">
+                            ⚡ Quick +15 min
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="book-info-section">
+                <h2>Book Information</h2>
+
+                <div class="book-meta">
+                    <div class="book-meta-item">
+                        <span class="book-meta-label">Author</span>
+                        <span class="book-meta-value">@ViewModel.Book.Author</span>
+                    </div>
+
+                    <div class="book-meta-item">
+                        <span class="book-meta-label">Status</span>
+                        <span class="book-meta-value status-badge status-@ViewModel.Book.Status.ToString().ToLower()">
+                            @GetStatusIcon() @ViewModel.Book.Status
+                        </span>
+                    </div>
+
+                    @if (ViewModel.Book.Rating.HasValue)
+                    {
+                        <div class="book-meta-item">
+                            <span class="book-meta-label">Rating</span>
+                            <span class="book-meta-value">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <span class="star @(i <= ViewModel.Book.Rating.Value ? "filled" : "empty")">★</span>
+                                }
+                            </span>
+                        </div>
+                    }
+
+                    @if (ViewModel.Book.PageCount.HasValue)
+                    {
+                        <div class="book-meta-item">
+                            <span class="book-meta-label">Pages</span>
+                            <span class="book-meta-value">@ViewModel.Book.CurrentPage / @ViewModel.Book.PageCount (@ViewModel.Book.ProgressPercentage%)</span>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(ViewModel.Book.ISBN))
+                    {
+                        <div class="book-meta-item">
+                            <span class="book-meta-label">ISBN</span>
+                            <span class="book-meta-value">@ViewModel.Book.ISBN</span>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(ViewModel.Book.Publisher))
+                    {
+                        <div class="book-meta-item">
+                            <span class="book-meta-label">Publisher</span>
+                            <span class="book-meta-value">@ViewModel.Book.Publisher</span>
+                        </div>
+                    }
+
+                    @if (ViewModel.Book.PublicationYear.HasValue)
+                    {
+                        <div class="book-meta-item">
+                            <span class="book-meta-label">Year</span>
+                            <span class="book-meta-value">@ViewModel.Book.PublicationYear</span>
+                        </div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(ViewModel.Book.Description))
+                {
+                    <div class="book-description">
+                        <h3>Description</h3>
+                        <p>@ViewModel.Book.Description</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Reading Progress -->
+        @if (ViewModel.Book.Status == ReadingStatus.Reading || ViewModel.Book.Status == ReadingStatus.Completed)
+        {
+            <div class="reading-progress-section">
+                <h3>📊 Reading Progress</h3>
+
+                <div class="progress-stats">
+                    <div class="progress-stat-item">
+                        <label>Total Time</label>
+                        <p>@FormatMinutes(ViewModel.TotalMinutes)</p>
+                    </div>
+                    <div class="progress-stat-item">
+                        <label>Pages Read</label>
+                        <p>@ViewModel.Book.CurrentPage / @(ViewModel.Book.PageCount ?? 0)</p>
+                    </div>
+                    <div class="progress-stat-item">
+                        <label>Completion</label>
+                        <p>@ViewModel.Book.ProgressPercentage%</p>
+                    </div>
+                </div>
+
+                @if (ViewModel.Book.PageCount.HasValue)
+                {
+                    <div class="progress-bar-large">
+                        <div class="progress-fill" style="width: @ViewModel.Book.ProgressPercentage%"></div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Reading Sessions -->
+        @if (ViewModel.Sessions?.Any() == true)
+        {
+            <div class="reading-sessions-section">
+                <h3>📚 Reading Sessions (@ViewModel.Sessions.Count)</h3>
+
+                <div class="sessions-list">
+                    @foreach (var session in ViewModel.Sessions.OrderByDescending(s => s.StartedAt).Take(5))
+                    {
+                        <div class="session-item">
+                            <div class="session-date">@session.StartedAt.ToString("g")</div>
+                            <div class="session-details">
+                                <span>⏱️ @session.Minutes minutes</span>
+                                @if (session.PagesRead.HasValue && session.PagesRead > 0)
+                                {
+                                    <span>📄 @session.PagesRead pages</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (ViewModel.Sessions.Count > 5)
+                {
+                    <p class="sessions-note">Showing latest 5 of @ViewModel.Sessions.Count sessions</p>
+                }
+            </div>
+        }
+    }
+</div>
+
 @code {
     [Parameter] public Guid Id { get; set; }
 
-    private int minutesToAdd = 15;
-
     protected override async Task OnParametersSetAsync()
     {
-        await Vm.LoadAsync(Id);
+        await ViewModel.LoadAsync(Id);
     }
 
-    private async Task AddMinutesAsync()
+    private string GetCoverUrl()
     {
-        await Vm.AddSessionAsync(minutesToAdd);
-        minutesToAdd = 15;
+        return string.IsNullOrEmpty(ViewModel.Book?.CoverImagePath)
+            ? "/images/placeholder-cover.png"
+            : ViewModel.Book.CoverImagePath;
     }
-}
 
-<h1>Book Detail</h1>
+    private string GetStatusIcon()
+    {
+        if (ViewModel.Book == null) return "";
 
-@if (Vm.Book is null)
-{
-    <p>Not found.</p>
-}
-else
-{
-    <p><strong>@Vm.Book.Title</strong> — @Vm.Book.Author</p>
-    <p>Status: @Vm.Book.Status</p>
+        return ViewModel.Book.Status switch
+        {
+            ReadingStatus.Planned => "📋",
+            ReadingStatus.Reading => "📖",
+            ReadingStatus.Completed => "✅",
+            ReadingStatus.Abandoned => "❌",
+            _ => ""
+        };
+    }
 
-    <h3>Total Minutes: @Vm.TotalMinutes</h3>
+    private string FormatMinutes(int minutes)
+    {
+        if (minutes < 60) return $"{minutes}m";
+        var hours = minutes / 60;
+        var remainingMinutes = minutes % 60;
+        return $"{hours}h {remainingMinutes}m";
+    }
 
-    <div style="display:flex; gap:.5rem; align-items:center;">
-        <input type="number" min="1" step="5" @bind="minutesToAdd" />
-        <button @onclick="AddMinutesAsync">Add Session</button>
-    </div>
+    private async Task StartReadingSession()
+    {
+        if (ViewModel.Book == null) return;
 
-    <p><a href="/books">← Back to list</a></p>
+        try
+        {
+            // Create a new reading session
+            var session = await ProgressService.StartSessionAsync(ViewModel.Book.Id);
+
+            // Navigate to the reading page with the new session ID
+            Navigation.NavigateTo($"/reading/{session.Id}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to start reading session: {ex.Message}");
+            // Fallback: just add a quick session
+            await QuickAddProgress();
+        }
+    }
+
+    private async Task QuickAddProgress()
+    {
+        await ViewModel.AddSessionAsync(15);
+        await ViewModel.LoadAsync(Id); // Refresh
+    }
+
+    private void NavigateToEdit()
+    {
+        Navigation.NavigateTo($"/books/{Id}/edit");
+    }
+
+    private void NavigateToBookshelf()
+    {
+        Navigation.NavigateTo("/bookshelf");
+    }
 }

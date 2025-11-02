@@ -1,0 +1,305 @@
+/* Reading Session - Cozy Dark Mode */
+.reading-container {
+    padding: 2.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+/* Reading Header */
+.reading-header {
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.reading-header .book-info h1 {
+    font-size: 2rem;
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+}
+
+.reading-header .book-info .author {
+    color: var(--text-secondary);
+    font-size: 1.15rem;
+    margin: 0;
+}
+
+/* Reading Stats Grid */
+.reading-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-item {
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.stat-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-hover), var(--glow);
+}
+
+.stat-item label {
+    display: block;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Timer Display */
+.stat-item.timer {
+    background: linear-gradient(145deg, #2D2419 0%, #3D2819 100%);
+}
+
+.timer-display {
+    margin-bottom: 1.5rem;
+}
+
+.timer-value {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
+    display: block;
+}
+
+.timer-controls {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.timer-controls .btn {
+    flex: 1;
+    font-size: 1.05rem;
+    padding: 0.875rem;
+}
+
+/* XP Display */
+.stat-item.xp {
+    background: linear-gradient(145deg, #2D2419 0%, #2D3419 100%);
+}
+
+.xp-display {
+    text-align: center;
+    padding: 1.5rem 0;
+}
+
+.xp-value {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #88A67E 0%, #A8C69E 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+}
+
+.xp-value::after {
+    content: ' XP';
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    -webkit-text-fill-color: var(--text-muted);
+}
+
+/* Pages Display */
+.stat-item.pages {
+    background: linear-gradient(145deg, #2D2419 0%, #3D2926 100%);
+}
+
+.page-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.page-input {
+    flex: 0 0 120px;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    text-align: center;
+    transition: var(--transition);
+}
+
+.page-input:focus {
+    border-color: var(--primary-color);
+    background: var(--card-hover);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+}
+
+.page-total {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.progress-bar {
+    height: 10px;
+    background: var(--bg-primary);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-light);
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--gradient-warm);
+    transition: width 0.4s ease;
+    box-shadow: 0 0 10px rgba(212, 165, 116, 0.5);
+}
+
+.progress-text {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-align: right;
+    margin: 0;
+}
+
+/* Session Summary */
+.session-summary {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.session-summary h2 {
+    color: var(--text-primary);
+    font-size: 1.35rem;
+    margin: 0 0 1.5rem 0;
+    font-weight: 700;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+}
+
+.summary-item {
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-light);
+}
+
+.summary-item label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.summary-item p {
+    color: var(--text-primary);
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Reading Actions */
+.reading-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.reading-actions .btn-large {
+    padding: 1.25rem 3rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    min-width: 220px;
+}
+
+/* Fullscreen Hint */
+.fullscreen-hint {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-light);
+}
+
+.fullscreen-hint p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .reading-container {
+        padding: 1.5rem;
+    }
+
+    .reading-header {
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: flex-start;
+    }
+
+    .reading-header .book-info h1 {
+        font-size: 1.5rem;
+    }
+
+    .reading-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .timer-value {
+        font-size: 2.5rem;
+    }
+
+    .xp-value {
+        font-size: 2.25rem;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .reading-actions {
+        flex-direction: column;
+    }
+
+    .reading-actions .btn-large {
+        width: 100%;
+    }
+}
