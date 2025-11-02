@@ -1,58 +1,71 @@
-/* Book Card */
+/* Book Card - Cozy Dark Mode */
 .book-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow);
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: var(--transition);
     position: relative;
+    border: 1px solid var(--border-light);
 }
 
 .book-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-hover), var(--glow);
+    border-color: var(--primary-color);
 }
 
 .book-cover-wrapper {
     position: relative;
     aspect-ratio: 2/3;
     overflow: hidden;
+    background: var(--bg-tertiary);
 }
 
 .book-cover {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: var(--transition);
+}
+
+.book-card:hover .book-cover {
+    transform: scale(1.05);
 }
 
 .book-status-badge {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(255,255,255,0.9);
-    padding: 4px 8px;
-    border-radius: 12px;
+    top: 10px;
+    right: 10px;
+    background: rgba(26, 20, 16, 0.85);
+    backdrop-filter: blur(8px);
+    padding: 6px 12px;
+    border-radius: 20px;
     font-size: 1.2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .book-card-body {
-    padding: 1rem;
+    padding: 1.25rem;
 }
 
 .book-title {
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 600;
     margin: 0 0 0.5rem 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
 }
 
 .book-author {
-    font-size: 0.875rem;
-    color: #666;
-    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0 0 0.75rem 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -79,28 +92,31 @@
 }
 
 .progress-bar {
-    height: 6px;
-    background: #eee;
-    border-radius: 3px;
+    height: 8px;
+    background: var(--bg-primary);
+    border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border-light);
 }
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4CAF50, #8BC34A);
-    transition: width 0.3s;
+    background: var(--gradient-warm);
+    transition: width 0.4s ease;
+    box-shadow: 0 0 8px rgba(212, 165, 116, 0.4);
 }
 
 .progress-text {
-    font-size: 0.75rem;
-    color: #666;
+    font-size: 0.8rem;
+    color: var(--text-muted);
     text-align: right;
+    font-weight: 500;
 }
 
 .book-card-actions {
-    padding: 0.5rem 1rem;
-    border-top: 1px solid #eee;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border-light);
     display: flex;
     justify-content: flex-end;
 }
@@ -110,28 +126,38 @@
     border: none;
     font-size: 1.2rem;
     cursor: pointer;
-    padding: 0.25rem;
-    opacity: 0.6;
-    transition: opacity 0.2s;
+    padding: 0.5rem;
+    opacity: 0.5;
+    transition: var(--transition);
+    border-radius: 8px;
 }
 
 .btn-icon:hover {
     opacity: 1;
+    background: var(--bg-tertiary);
 }
 
 /* Stat Card */
 .stat-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-lg);
+    padding: 1.75rem;
+    box-shadow: var(--shadow);
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.25rem;
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-hover);
 }
 
 .stat-icon {
-    font-size: 2.5rem;
+    font-size: 2.75rem;
+    opacity: 0.9;
 }
 
 .stat-content {
@@ -139,62 +165,82 @@
 }
 
 .stat-value {
-    font-size: 2rem;
+    font-size: 2.25rem;
     font-weight: 700;
     margin: 0;
-    color: #333;
+    color: var(--text-primary);
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .stat-title {
-    font-size: 0.875rem;
-    color: #666;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
     margin: 0.25rem 0 0 0;
+    font-weight: 500;
 }
 
 .stat-subtitle {
-    font-size: 0.75rem;
-    color: #999;
+    font-size: 0.8rem;
+    color: var(--text-muted);
     margin: 0.25rem 0 0 0;
 }
 
 /* Goal Card */
 .goal-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-lg);
+    padding: 1.75rem;
+    box-shadow: var(--shadow);
     margin-bottom: 1rem;
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.goal-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-hover);
 }
 
 .goal-card h4 {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.75rem 0;
     font-size: 1.25rem;
+    color: var(--text-primary);
 }
 
 .goal-description {
-    color: #666;
-    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
     margin: 0 0 1rem 0;
+    line-height: 1.5;
 }
 
 .goal-progress-text {
-    font-size: 0.875rem;
-    color: #666;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
     margin: 0.5rem 0 0 0;
 }
 
 .goal-date {
-    font-size: 0.75rem;
-    color: #999;
+    font-size: 0.85rem;
+    color: var(--text-muted);
     margin: 0.5rem 0 0 0;
 }
 
 /* Plant Widget */
 .plant-widget {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-lg);
+    padding: 1.75rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.plant-widget:hover {
+    border-color: var(--primary-color);
 }
 
 .plant-visual {
@@ -213,8 +259,8 @@
 }
 
 .plant-level {
-    color: #666;
-    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
     margin: 0 0 0.5rem 0;
 }
 
@@ -223,53 +269,64 @@
 }
 
 .xp-bar {
-    height: 8px;
-    background: #eee;
-    border-radius: 4px;
+    height: 10px;
+    background: var(--bg-primary);
+    border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border-light);
 }
 
 .xp-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4CAF50, #8BC34A);
-    transition: width 0.3s;
+    background: var(--gradient-warm);
+    transition: width 0.4s ease;
+    box-shadow: 0 0 8px rgba(212, 165, 116, 0.4);
 }
 
 .xp-text {
-    font-size: 0.75rem;
-    color: #666;
+    font-size: 0.85rem;
+    color: var(--text-muted);
     margin: 0;
+    font-weight: 500;
 }
 
 .plant-status {
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-light);
     padding-top: 1rem;
     margin-top: 1rem;
 }
 
 .plant-status p {
-    font-size: 0.875rem;
-    color: #666;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
     margin: 0 0 0.5rem 0;
 }
 
 /* Dashboard specific */
 .book-card-large {
-    background: white;
-    border-radius: 12px;
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-lg);
     padding: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow);
     display: flex;
     gap: 2rem;
     margin-bottom: 2rem;
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.book-card-large:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-hover);
 }
 
 .book-card-large .book-cover {
     width: 150px;
     height: 225px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
 }
 
 .book-info {
@@ -278,12 +335,14 @@
 
 .book-info h3 {
     margin: 0 0 0.5rem 0;
-    font-size: 1.5rem;
+    font-size: 1.75rem;
+    color: var(--text-primary);
 }
 
 .book-info .author {
-    color: #666;
+    color: var(--text-secondary);
     margin: 0 0 1rem 0;
+    font-size: 1.05rem;
 }
 
 .stats-grid {
@@ -308,105 +367,134 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.75rem;
-    background: white;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.activity-list li:hover {
+    border-color: var(--primary-color);
+    background: var(--card-hover);
 }
 
 .activity-icon {
     font-size: 1.5rem;
+    opacity: 0.9;
 }
 
 .activity-text {
     flex: 1;
+    color: var(--text-primary);
 }
 
 .activity-time {
-    color: #666;
-    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
 }
 
 /* Buttons */
 .btn {
     padding: 0.75rem 1.5rem;
     border: none;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
     font-weight: 500;
+    letter-spacing: 0.01em;
 }
 
 .btn-primary {
-    background: #512BD4;
-    color: white;
+    background: var(--gradient-warm);
+    color: var(--bg-primary);
+    box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
 }
 
 .btn-primary:hover {
-    background: #3d1fa3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(212, 165, 116, 0.4);
 }
 
 .btn-secondary {
-    background: #e0e0e0;
-    color: #333;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
-    background: #d0d0d0;
+    background: var(--card-hover);
+    border-color: var(--primary-color);
 }
 
 .btn-danger {
-    background: #e53935;
-    color: white;
+    background: var(--status-abandoned);
+    color: var(--text-primary);
 }
 
 .btn-danger:hover {
-    background: #c62828;
+    background: #B68884;
 }
 
 .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+    transform: none !important;
 }
 
 /* Alerts */
 .alert {
-    padding: 1rem;
-    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
     margin-bottom: 1rem;
+    border-left: 4px solid;
 }
 
 .alert-danger {
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef5350;
+    background: rgba(166, 120, 116, 0.2);
+    color: var(--text-primary);
+    border-color: var(--status-abandoned);
 }
 
 .loading-spinner {
     text-align: center;
     padding: 4rem 2rem;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 /* Forms */
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.95rem;
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--primary-color);
+    background: var(--card-hover);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
 }
 
 .form-actions {

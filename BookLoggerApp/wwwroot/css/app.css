@@ -1,46 +1,89 @@
-﻿/* CSS Variables für Theme Support */
+/* CSS Variables für Cozy Dark Mode Theme */
 :root {
-    --primary-color: #512BD4;
-    --secondary-color: #4CAF50;
-    --text-color: #333;
-    --bg-color: #f5f5f5;
-    --card-bg: white;
-    --border-color: #ddd;
+    /* Warm, cozy dark mode colors */
+    --primary-color: #D4A574;
+    --primary-hover: #E8C4A0;
+    --secondary-color: #8B7355;
+    --accent-color: #C9A97F;
+    
+    /* Text colors */
+    --text-primary: #F5E6D3;
+    --text-secondary: #C9B5A0;
+    --text-muted: #8B7968;
+    
+    /* Background colors - warm, cozy tones */
+    --bg-primary: #1A1410;
+    --bg-secondary: #2D2419;
+    --bg-tertiary: #3D3126;
+    --card-bg: #2D2419;
+    --card-hover: #3D3126;
+    
+    /* Border and shadow */
+    --border-color: #4A3F32;
+    --border-light: #3D3126;
+    --shadow: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-hover: 0 8px 24px rgba(0,0,0,0.5);
+    --glow: 0 0 20px rgba(212, 165, 116, 0.15);
+    
+    /* UI elements */
     --border-radius: 12px;
-    --shadow: 0 2px 8px rgba(0,0,0,0.1);
-    --shadow-hover: 0 4px 16px rgba(0,0,0,0.15);
-}
-
-[data-theme="dark"] {
-    --text-color: #f5f5f5;
-    --bg-color: #1a1a1a;
-    --card-bg: #2a2a2a;
-    --border-color: #444;
-    --shadow: 0 2px 8px rgba(0,0,0,0.3);
-    --shadow-hover: 0 4px 16px rgba(0,0,0,0.4);
+    --border-radius-lg: 16px;
+    --transition: all 0.3s ease;
+    
+    /* Status colors with warm tones */
+    --status-planned: #7B8FA3;
+    --status-reading: #D4A574;
+    --status-completed: #88A67E;
+    --status-abandoned: #A67874;
+    
+    /* Gradient accents */
+    --gradient-warm: linear-gradient(135deg, #D4A574 0%, #C9A97F 100%);
+    --gradient-card: linear-gradient(145deg, #2D2419 0%, #251E15 100%);
 }
 
 /* Global Styles */
 html, body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: var(--text-color);
-    background: var(--bg-color);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text-primary);
+    background: var(--bg-primary);
     margin: 0;
     padding: 0;
+    line-height: 1.6;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: var(--text-color);
+    color: var(--text-primary);
     margin: 0 0 1rem 0;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+h1 {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 1.5rem;
+}
+
+h3 {
+    font-size: 1.25rem;
 }
 
 a, .btn-link {
     color: var(--primary-color);
     text-decoration: none;
+    transition: var(--transition);
 }
 
 a:hover {
-    text-decoration: underline;
+    color: var(--primary-hover);
+    text-decoration: none;
 }
 
 /* Buttons */
@@ -48,57 +91,72 @@ a:hover {
     padding: 0.75rem 1.5rem;
     border: none;
     border-radius: var(--border-radius);
-    font-size: 1rem;
+    font-size: 0.95rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
     font-weight: 500;
     display: inline-block;
+    letter-spacing: 0.01em;
 }
 
 .btn-primary {
-    background: var(--primary-color);
-    color: white;
+    background: var(--gradient-warm);
+    color: var(--bg-primary);
+    box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
 }
 
 .btn-primary:hover {
-    background: #3d1fa3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(212, 165, 116, 0.4);
 }
 
 .btn-secondary {
-    background: #e0e0e0;
-    color: #333;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
-    background: #d0d0d0;
+    background: var(--card-hover);
+    border-color: var(--primary-color);
 }
 
 .btn-danger {
-    background: #e53935;
-    color: white;
+    background: var(--status-abandoned);
+    color: var(--text-primary);
 }
 
 .btn-danger:hover {
-    background: #c62828;
+    background: #B68884;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+    transform: none !important;
 }
 
 /* Forms */
 .form-control, input[type="text"], input[type="number"], input[type="date"], select, textarea {
-    padding: 0.5rem;
+    padding: 0.75rem 1rem;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 1rem;
-    background: var(--card-bg);
-    color: var(--text-color);
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.form-control:focus, input:focus, select:focus, textarea:focus {
+    border-color: var(--primary-color);
+    background: var(--card-hover);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
 }
 
 .valid.modified:not([type=checkbox]) {
@@ -225,8 +283,9 @@ h1:focus {
 /* Navigation */
 .navbar {
     background: var(--card-bg);
-    padding: 1rem;
+    padding: 1.5rem;
     box-shadow: var(--shadow);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .nav-menu {
@@ -234,7 +293,7 @@ h1:focus {
     padding: 0;
     margin: 0;
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
 }
 
@@ -245,21 +304,25 @@ h1:focus {
 .nav-link {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    color: var(--text-color);
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    color: var(--text-secondary);
     text-decoration: none;
-    border-radius: 8px;
-    transition: background 0.2s;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    font-weight: 500;
+    font-size: 0.95rem;
 }
 
 .nav-link:hover {
-    background: var(--bg-color);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .nav-link.active {
-    background: var(--primary-color);
-    color: white;
+    background: var(--gradient-warm);
+    color: var(--bg-primary);
+    box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
 }
 
 .nav-icon {
@@ -269,20 +332,21 @@ h1:focus {
 /* Loading & Alerts */
 .loading, .loading-spinner {
     text-align: center;
-    padding: 2rem;
-    color: var(--text-color);
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
 }
 
 .alert {
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     border-radius: var(--border-radius);
     margin-bottom: 1rem;
+    border-left: 4px solid;
 }
 
 .alert-danger {
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef5350;
+    background: rgba(166, 120, 116, 0.2);
+    color: var(--text-primary);
+    border-color: var(--status-abandoned);
 }
 
 /* Responsive Design */
