@@ -106,7 +106,24 @@
 @code {
     protected override async Task OnInitializedAsync()
     {
-        await ViewModel.LoadCommand.ExecuteAsync(null);
+        try
+        {
+            await ViewModel.LoadCommand.ExecuteAsync(null);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"=== EXCEPTION IN DASHBOARD OnInitializedAsync ===");
+            System.Diagnostics.Debug.WriteLine($"Exception Type: {ex.GetType().FullName}");
+            System.Diagnostics.Debug.WriteLine($"Message: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"Inner Exception: {ex.InnerException.GetType().FullName}");
+                System.Diagnostics.Debug.WriteLine($"Inner Message: {ex.InnerException.Message}");
+            }
+            System.Diagnostics.Debug.WriteLine("=== END EXCEPTION ===");
+            // Don't throw - let the UI render with error message
+        }
     }
 
     private string GetCoverImageUrl(Book book)

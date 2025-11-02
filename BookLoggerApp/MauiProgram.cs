@@ -10,8 +10,14 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Started ===");
+
         var builder = MauiApp.CreateBuilder();
+        System.Diagnostics.Debug.WriteLine("MauiApp.CreateBuilder completed");
+
         builder.UseMauiApp<App>();
+        builder.Services.AddMauiBlazorWebView();
+        System.Diagnostics.Debug.WriteLine("UseMauiApp<App> and AddMauiBlazorWebView completed");
 
         // Database path
         var dbPath = PlatformsDbPath.GetDatabasePath();
@@ -58,6 +64,35 @@ public static class MauiProgram
         builder.Services.AddTransient<StatsViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
 
-        return builder.Build();
+        System.Diagnostics.Debug.WriteLine("All services registered, building app...");
+
+        var app = builder.Build();
+
+        // Initialize database immediately after app is built
+        System.Diagnostics.Debug.WriteLine("Initializing database...");
+        try
+        {
+            var dbContext = app.Services.GetRequiredService<AppDbContext>();
+            dbContext.Database.Migrate(); // Use synchronous version for startup
+            System.Diagnostics.Debug.WriteLine("Database migration completed successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"=== EXCEPTION IN DATABASE MIGRATION ===");
+            System.Diagnostics.Debug.WriteLine($"Exception Type: {ex.GetType().FullName}");
+            System.Diagnostics.Debug.WriteLine($"Message: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"Inner Exception: {ex.InnerException.GetType().FullName}");
+                System.Diagnostics.Debug.WriteLine($"Inner Message: {ex.InnerException.Message}");
+                System.Diagnostics.Debug.WriteLine($"Inner Stack: {ex.InnerException.StackTrace}");
+            }
+            System.Diagnostics.Debug.WriteLine("=== END EXCEPTION ===");
+            // Don't throw - let app start even if migration fails
+        }
+
+        System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Completed ===");
+        return app;
     }
 }

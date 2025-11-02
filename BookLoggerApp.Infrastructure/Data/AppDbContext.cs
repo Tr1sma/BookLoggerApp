@@ -126,7 +126,7 @@ public class AppDbContext : DbContext
                 UserLevel = 1,
                 TotalXp = 0,
                 Coins = 100, // Starting coins
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
     }

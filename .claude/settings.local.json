@@ -10,7 +10,9 @@
       "Bash(dotnet ef migrations add:*)",
       "Bash(dotnet tool install:*)",
       "Bash(dotnet test:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(dotnet ef migrations list:*)",
+      "Bash(dotnet ef database update:*)"
     ],
     "deny": [],
     "ask": []
