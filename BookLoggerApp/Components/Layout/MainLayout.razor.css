@@ -2,19 +2,24 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    background: var(--bg-primary);
+    min-height: 100vh;
 }
 
 main {
     flex: 1;
+    background: var(--bg-primary);
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background: var(--card-bg);
+    border-right: 1px solid var(--border-light);
+    box-shadow: 4px 0 12px rgba(0,0,0,0.3);
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-light);
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;
@@ -25,10 +30,13 @@ main {
         white-space: nowrap;
         margin-left: 1.5rem;
         text-decoration: none;
+        color: var(--text-secondary);
+        transition: var(--transition);
     }
 
         .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-            text-decoration: underline;
+            color: var(--primary-color);
+            text-decoration: none;
         }
 
         .top-row ::deep a:first-child {

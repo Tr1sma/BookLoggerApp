@@ -1,0 +1,179 @@
+/* Book Detail - Cozy Dark Mode */
+.book-detail-container {
+    padding: 2.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.book-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.book-detail-header h1 {
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 2.5rem;
+}
+
+.book-detail-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.book-detail-content {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 2.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.book-cover-section img {
+    width: 100%;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-hover);
+    border: 1px solid var(--border-light);
+}
+
+.book-info-section {
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.book-info-section h2 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.book-meta {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.book-meta-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.book-meta-item:last-child {
+    border-bottom: none;
+}
+
+.book-meta-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.book-meta-value {
+    color: var(--text-primary);
+}
+
+/* Reading Progress */
+.reading-progress-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.reading-progress-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+/* Reading Sessions */
+.reading-sessions-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.reading-sessions-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.session-item {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.session-item:hover {
+    border-color: var(--primary-color);
+    background: var(--card-hover);
+}
+
+.session-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.session-details {
+    display: flex;
+    gap: 2rem;
+    color: var(--text-primary);
+}
+
+/* Notes & Annotations */
+.notes-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.notes-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.note-item {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-light);
+}
+
+.note-content {
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .book-detail-container {
+        padding: 1.5rem;
+    }
+    
+    .book-detail-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .book-cover-section {
+        max-width: 250px;
+        margin: 0 auto;
+    }
+}
