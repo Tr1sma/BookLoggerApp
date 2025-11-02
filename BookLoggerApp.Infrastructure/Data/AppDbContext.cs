@@ -76,19 +76,6 @@ public class AppDbContext : DbContext
                 Id = plantIds.StarterSprout,
                 Name = "Starter Sprout",
                 Description = "A simple plant for beginners. Grows quickly!",
-                ImagePath = "images/plants/starter_sprout.svg",
-                MaxLevel = 5,
-                WaterIntervalDays = 2,
-                GrowthRate = 1.0,
-                BaseCost = 0, // Free starter plant
-                UnlockLevel = 1,
-                IsAvailable = true
-            },
-            new PlantSpecies
-            {
-                Id = plantIds.BookwormFern,
-                Name = "Bookworm Fern",
-                Description = "A lush fern that grows with every page.",
                 ImagePath = "images/plants/bookworm_fern.svg",
                 MaxLevel = 10,
                 WaterIntervalDays = 3,

@@ -1,4 +1,5 @@
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
 using FluentAssertions;
@@ -8,7 +9,7 @@ namespace BookLoggerApp.Tests.Repositories;
 
 public class ReadingSessionRepositoryTests : IDisposable
 {
-    private readonly Infrastructure.Data.AppDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ReadingSessionRepository _repository;
     private readonly BookRepository _bookRepository;
 

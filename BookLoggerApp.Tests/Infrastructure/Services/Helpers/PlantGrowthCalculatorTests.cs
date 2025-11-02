@@ -78,7 +78,7 @@ public class PlantGrowthCalculatorTests
         var level = PlantGrowthCalculator.CalculateLevelFromXp(hugeXp, 1.0, maxLevel);
 
         // Assert
-        level.Should().BeLessOrEqualTo(maxLevel);
+        level.Should().BeLessThanOrEqualTo(maxLevel);
     }
 
     [Fact]
@@ -256,7 +256,7 @@ public class PlantGrowthCalculatorTests
         var daysUntil = PlantGrowthCalculator.GetDaysUntilWaterNeeded(lastWatered, waterIntervalDays);
 
         // Assert
-        daysUntil.Should().BeCloseTo(2.0, 0.1); // ~2 days left
+        daysUntil.Should().BeApproximately(2.0, 0.1); // ~2 days left
     }
 
     [Fact]
