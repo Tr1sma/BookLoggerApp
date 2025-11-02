@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace BookLoggerApp.Infrastructure.Repositories;
 
 /// <summary>
@@ -5,12 +7,23 @@ namespace BookLoggerApp.Infrastructure.Repositories;
 /// </summary>
 public interface IRepository<T> where T : class
 {
-    Task<T?> GetByIdAsync(Guid id);
-    Task<IEnumerable<T>> GetAllAsync();
-    Task<IEnumerable<T>> FindAsync(System.Linq.Expressions.Expression<Func<T, bool>> predicate);
-    Task<T> AddAsync(T entity);
-    Task UpdateAsync(T entity);
-    Task DeleteAsync(T entity);
-    Task<int> CountAsync();
-    Task<int> CountAsync(System.Linq.Expressions.Expression<Func<T, bool>> predicate);
+    // Query
+    Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<T>> GetAllAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default);
+    Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default);
+
+    // Command
+    Task<T> AddAsync(T entity, CancellationToken ct = default);
+    Task AddRangeAsync(IEnumerable<T> entities, CancellationToken ct = default);
+    Task UpdateAsync(T entity, CancellationToken ct = default);
+    Task DeleteAsync(T entity, CancellationToken ct = default);
+    Task DeleteRangeAsync(IEnumerable<T> entities, CancellationToken ct = default);
+
+    // Count
+    Task<int> CountAsync(CancellationToken ct = default);
+    Task<int> CountAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default);
+
+    // Exists
+    Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default);
 }
