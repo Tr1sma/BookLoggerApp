@@ -1,9 +1,10 @@
 ﻿using BookLoggerApp;
-using BookLoggerApp.Core.Services;
-using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.ViewModels;
 using BookLoggerApp.Infrastructure;
-using SQLite;
+using BookLoggerApp.Infrastructure.Data;
+using BookLoggerApp.Infrastructure.Repositories;
+using BookLoggerApp.Infrastructure.Repositories.Specific;
+using Microsoft.EntityFrameworkCore;
 
 public static class MauiProgram
 {
@@ -12,25 +13,31 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
 
-        // SQLite connections
+        // Database path
         var dbPath = PlatformsDbPath.GetDatabasePath();
 
-        // Register a single SQLiteAsyncConnection for both services
-        builder.Services.AddSingleton(new SQLiteAsyncConnection(dbPath));
+        // Register EF Core DbContext
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlite($"Data Source={dbPath}"));
 
-        // Services
-        builder.Services.AddSingleton<IBookService>(sp =>
-        {
-            var svc = new SqliteBookService(dbPath);
-            // Fire-and-forget initialize (for M0 ok); alternativ: await in App start
-            svc.InitializeAsync().ConfigureAwait(false);
-            return svc;
-        });
-        builder.Services.AddSingleton<IProgressService>(sp =>
-        {
-            var conn = sp.GetRequiredService<SQLiteAsyncConnection>();
-            return SqliteProgressService.CreateAsync(dbPath).GetAwaiter().GetResult();
-        });
+        // Register Generic Repository
+        builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+        // Register Specific Repositories
+        builder.Services.AddScoped<IBookRepository, BookRepository>();
+        builder.Services.AddScoped<IReadingSessionRepository, ReadingSessionRepository>();
+        builder.Services.AddScoped<IReadingGoalRepository, ReadingGoalRepository>();
+        builder.Services.AddScoped<IUserPlantRepository, UserPlantRepository>();
+
+        // Register Services
+        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IBookService, BookLoggerApp.Infrastructure.Services.BookService>();
+        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IProgressService, BookLoggerApp.Infrastructure.Services.ProgressService>();
+        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IGenreService, BookLoggerApp.Infrastructure.Services.GenreService>();
+        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IQuoteService, BookLoggerApp.Infrastructure.Services.QuoteService>();
+        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IAnnotationService, BookLoggerApp.Infrastructure.Services.AnnotationService>();
+        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IGoalService, BookLoggerApp.Infrastructure.Services.GoalService>();
+        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IPlantService, BookLoggerApp.Infrastructure.Services.PlantService>();
+        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
 
         // ViewModels
         builder.Services.AddTransient<BookListViewModel>();
