@@ -5,26 +5,23 @@ namespace BookLoggerApp
 {
     public partial class App : Application
     {
-        private readonly AppDbContext _dbContext;
-
         public App(AppDbContext dbContext)
         {
             InitializeComponent();
-            _dbContext = dbContext;
 
-            // Apply migrations on startup
-            Task.Run(async () =>
+            // Apply migrations on startup (synchronously to avoid race conditions)
+            try
             {
-                try
-                {
-                    await _dbContext.Database.MigrateAsync();
-                }
-                catch (Exception ex)
-                {
-                    // Log error or show notification
-                    System.Diagnostics.Debug.WriteLine($"Database migration failed: {ex.Message}");
-                }
-            });
+                dbContext.Database.Migrate();
+                System.Diagnostics.Debug.WriteLine("Database migration completed successfully");
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                System.Diagnostics.Debug.WriteLine($"Database migration failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw; // Re-throw to make the error visible
+            }
         }
 
         protected override Window CreateWindow(IActivationState? activationState)

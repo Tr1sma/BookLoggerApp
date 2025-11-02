@@ -16,32 +16,36 @@ public static class MauiProgram
         // Database path
         var dbPath = PlatformsDbPath.GetDatabasePath();
 
-        // Register EF Core DbContext
-        builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite($"Data Source={dbPath}"));
+        // Register EF Core DbContext as Transient (MAUI doesn't have request scopes like ASP.NET)
+        builder.Services.AddTransient<AppDbContext>(sp =>
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            optionsBuilder.UseSqlite($"Data Source={dbPath}");
+            return new AppDbContext(optionsBuilder.Options);
+        });
 
         // Register Generic Repository
-        builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
         // Register Specific Repositories
-        builder.Services.AddScoped<IBookRepository, BookRepository>();
-        builder.Services.AddScoped<IReadingSessionRepository, ReadingSessionRepository>();
-        builder.Services.AddScoped<IReadingGoalRepository, ReadingGoalRepository>();
-        builder.Services.AddScoped<IUserPlantRepository, UserPlantRepository>();
+        builder.Services.AddTransient<IBookRepository, BookRepository>();
+        builder.Services.AddTransient<IReadingSessionRepository, ReadingSessionRepository>();
+        builder.Services.AddTransient<IReadingGoalRepository, ReadingGoalRepository>();
+        builder.Services.AddTransient<IUserPlantRepository, UserPlantRepository>();
 
-        // Register Services
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IBookService, BookLoggerApp.Infrastructure.Services.BookService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IProgressService, BookLoggerApp.Infrastructure.Services.ProgressService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IGenreService, BookLoggerApp.Infrastructure.Services.GenreService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IQuoteService, BookLoggerApp.Infrastructure.Services.QuoteService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IAnnotationService, BookLoggerApp.Infrastructure.Services.AnnotationService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IGoalService, BookLoggerApp.Infrastructure.Services.GoalService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IPlantService, BookLoggerApp.Infrastructure.Services.PlantService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>();
-        builder.Services.AddScoped<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Infrastructure.Services.NotificationService>();
+        // Register Services as Transient to match DbContext lifetime
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IBookService, BookLoggerApp.Infrastructure.Services.BookService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IProgressService, BookLoggerApp.Infrastructure.Services.ProgressService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IGenreService, BookLoggerApp.Infrastructure.Services.GenreService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IQuoteService, BookLoggerApp.Infrastructure.Services.QuoteService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IAnnotationService, BookLoggerApp.Infrastructure.Services.AnnotationService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IGoalService, BookLoggerApp.Infrastructure.Services.GoalService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IPlantService, BookLoggerApp.Infrastructure.Services.PlantService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Infrastructure.Services.NotificationService>();
 
         // ViewModels
         builder.Services.AddTransient<BookListViewModel>();
