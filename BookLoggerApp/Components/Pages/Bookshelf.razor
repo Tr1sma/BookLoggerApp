@@ -71,16 +71,30 @@
     else
     {
         <div class="book-grid">
-            @foreach (var book in ViewModel.Books)
+            @{
+                var booksPerShelf = 8;
+                var shelves = ViewModel.Books
+                    .Select((book, index) => new { book, index })
+                    .GroupBy(x => x.index / booksPerShelf)
+                    .Select(g => g.Select(x => x.book).ToList())
+                    .ToList();
+            }
+
+            @foreach (var shelf in shelves)
             {
-                <BookCard Book="@book"
-                          OnClick="() => NavigateToBookDetail(book.Id)"
-                          OnDelete="() => HandleDeleteBook(book.Id)" />
+                <div class="shelf-row">
+                    @foreach (var book in shelf)
+                    {
+                        <BookCard Book="@book"
+                                  OnClick="() => NavigateToBookDetail(book.Id)"
+                                  OnDelete="() => HandleDeleteBook(book.Id)" />
+                    }
+                </div>
             }
         </div>
 
         <div class="bookshelf-footer">
-            <p>Showing @ViewModel.Books.Count book(s)</p>
+            <p>Showing @ViewModel.Books.Count book(s) across @shelves.Count shelf/shelves</p>
         </div>
     }
 </div>

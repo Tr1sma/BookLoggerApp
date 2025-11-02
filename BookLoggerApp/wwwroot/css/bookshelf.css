@@ -21,6 +21,8 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
     margin: 0;
+    letter-spacing: -0.03em;
+    font-weight: 800;
 }
 
 .bookshelf-controls {
@@ -91,13 +93,51 @@
     box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
 }
 
-/* Book Grid (2D Grid Layout) - Cozy Bookshelf Design */
+/* Book Grid (3D Bookshelf Layout) - Realistic Shelves */
 .book-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
     margin-bottom: 3rem;
     animation: fadeIn 0.5s ease-in;
+}
+
+/* Shelf Row - Horizontal wooden shelf */
+.shelf-row {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.5rem;
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    background: linear-gradient(180deg,
+        rgba(74, 63, 50, 0.3) 0%,
+        rgba(61, 49, 38, 0.5) 85%,
+        rgba(45, 36, 25, 0.8) 100%
+    );
+    border-radius: 8px;
+    box-shadow:
+        inset 0 -3px 8px rgba(0, 0, 0, 0.4),
+        0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Wooden shelf edge (bottom border) */
+.shelf-row::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(180deg,
+        #5A4A3A 0%,
+        #4A3F32 50%,
+        #3D3126 100%
+    );
+    border-radius: 0 0 8px 8px;
+    box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 @keyframes fadeIn {
@@ -111,25 +151,22 @@
     }
 }
 
-/* Responsive Grid */
+/* Responsive Bookshelf */
 @media (max-width: 640px) {
-    .book-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 1.5rem;
+    .shelf-row {
+        gap: 0.3rem;
+        padding: 1.5rem 1rem 1rem 1rem;
     }
-}
 
-@media (min-width: 768px) and (max-width: 1024px) {
     .book-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         gap: 2rem;
     }
 }
 
 @media (min-width: 1920px) {
-    .book-grid {
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 3rem;
+    .shelf-row {
+        gap: 0.75rem;
+        padding: 2.5rem 2rem 2rem 2rem;
     }
 }
 

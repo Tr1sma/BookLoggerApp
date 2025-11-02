@@ -14,6 +14,7 @@
     color: var(--text-primary);
     margin-bottom: 1.5rem;
     font-size: 1.75rem;
+    font-weight: 700;
 }
 
 /* Currently Reading Section */
@@ -23,6 +24,67 @@
     padding: 2rem;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.currently-reading:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-hover), var(--glow);
+}
+
+.book-card-large {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.book-card-large .book-cover {
+    width: 180px;
+    height: 270px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+}
+
+.book-card-large .book-info {
+    flex: 1;
+}
+
+.book-card-large h3 {
+    font-size: 2rem;
+    margin: 0 0 0.5rem 0;
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.book-card-large .author {
+    color: var(--text-secondary);
+    font-size: 1.15rem;
+    margin: 0 0 1.5rem 0;
+}
+
+.book-card-large .progress-bar {
+    height: 12px;
+    background: var(--bg-primary);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-light);
+}
+
+.book-card-large .progress-fill {
+    height: 100%;
+    background: var(--gradient-warm);
+    box-shadow: 0 0 12px rgba(212, 165, 116, 0.5);
+}
+
+.book-card-large .progress-text {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
 }
 
 /* Stats Grid in Dashboard */
@@ -59,12 +121,71 @@
     box-shadow: var(--shadow);
 }
 
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.activity-list li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.activity-list li:hover {
+    background: var(--card-hover);
+    border-color: var(--primary-color);
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+    opacity: 0.9;
+}
+
+.activity-text {
+    flex: 1;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.activity-time {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
 @media (max-width: 768px) {
     .dashboard-container {
         padding: 1.5rem;
     }
-    
+
     .dashboard-container .stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .book-card-large {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .book-card-large .book-cover {
+        width: 160px;
+        height: 240px;
+    }
+
+    .book-card-large h3 {
+        font-size: 1.5rem;
+    }
+
+    .activity-list li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
 }

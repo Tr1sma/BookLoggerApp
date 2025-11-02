@@ -49,10 +49,45 @@ html, body {
     margin: 0;
     padding: 0;
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle texture overlay for cozy feeling */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.01) 0px,
+            transparent 1px,
+            transparent 2px,
+            rgba(255, 255, 255, 0.01) 3px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.01) 0px,
+            transparent 1px,
+            transparent 2px,
+            rgba(255, 255, 255, 0.01) 3px
+        );
+    pointer-events: none;
+    opacity: 0.3;
+    z-index: -1;
 }
 
 * {
     box-sizing: border-box;
+}
+
+/* Smooth scrolling for better UX */
+html {
+    scroll-behavior: smooth;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -60,19 +95,29 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0 0 1rem 0;
     font-weight: 600;
     letter-spacing: -0.02em;
+    line-height: 1.3;
 }
 
 h1 {
     font-size: 2rem;
     font-weight: 700;
+    letter-spacing: -0.03em;
 }
 
 h2 {
     font-size: 1.5rem;
+    font-weight: 700;
 }
 
 h3 {
     font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/* Improved paragraph spacing */
+p {
+    margin: 0 0 1rem 0;
+    line-height: 1.7;
 }
 
 a, .btn-link {
