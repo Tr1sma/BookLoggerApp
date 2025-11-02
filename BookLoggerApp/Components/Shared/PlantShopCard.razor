@@ -1,6 +1,6 @@
 @using BookLoggerApp.Core.Models
 
-<div class="plant-shop-card @(IsSelected ? "selected" : "")" @onclick="OnSelect">
+<div class="plant-shop-card @(IsSelected ? "selected" : "")" @onclick="OnSelect" style="display: flex; flex-direction: column;">
     <!-- Plant Image -->
     <div class="plant-card-image">
         <img src="@Species.ImagePath" alt="@Species.Name" />
