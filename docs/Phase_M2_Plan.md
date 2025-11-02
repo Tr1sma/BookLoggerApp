@@ -1,7 +1,7 @@
 # Phase M2: EF Core Migration & Datenmodell
 
 **Zeitrahmen:** 2 Wochen (80 Stunden)
-**Status:** Planned
+**Status:** ✅ Completed
 **Dependencies:** M1 (Basis-Implementation)
 **Blocks:** M3 (Services benötigen DbContext)
 
@@ -1814,21 +1814,23 @@ public class SmokeTests
 
 Ein M2-Feature gilt als "Done", wenn:
 
-- [x] Alle 7 Arbeitspakete abgeschlossen
-- [x] 12 Models erstellt/erweitert mit Navigation Properties
-- [x] AppDbContext mit allen DbSets und Configurations
-- [x] Initial Migration generiert und getestet
-- [x] Repository Pattern implementiert (Generic + Specific)
-- [x] Unit Tests geschrieben (≥80% Coverage für Infrastructure)
-- [x] Integration Tests (DbContext, Repositories)
-- [x] MauiProgram.cs und App.xaml.cs aktualisiert
-- [x] App startet und migriert DB automatisch
-- [x] Legacy-Daten werden migriert (wenn vorhanden)
-- [x] Seed-Daten (Genres, Plants) werden eingefügt
-- [x] CI-Pipeline grün (Tests laufen durch)
-- [x] Code reviewed (oder Self-Review mit Checkliste)
-- [x] Dokumentation aktualisiert (XML-Kommentare, README)
-- [x] Keine kritischen Bugs (P0/P1) offen
+- [x] ✅ Alle 7 Arbeitspakete abgeschlossen
+- [x] ✅ 12 Models erstellt/erweitert mit Navigation Properties
+- [x] ✅ AppDbContext mit allen DbSets und Configurations
+- [x] ✅ Initial Migration generiert und getestet
+- [x] ✅ Repository Pattern implementiert (Generic + Specific)
+- [x] ✅ Unit Tests geschrieben (≥80% Coverage für Infrastructure)
+- [x] ✅ Integration Tests (DbContext, Repositories)
+- [x] ✅ MauiProgram.cs und App.xaml.cs aktualisiert
+- [x] ✅ App startet und migriert DB automatisch
+- [x] ✅ Legacy-Daten werden migriert (wenn vorhanden)
+- [x] ✅ Seed-Daten (Genres, Plants) werden eingefügt
+- [x] ✅ CI-Pipeline grün (Tests laufen durch)
+- [x] ✅ Code reviewed (oder Self-Review mit Checkliste)
+- [x] ✅ Dokumentation aktualisiert (XML-Kommentare, README)
+- [x] ✅ Keine kritischen Bugs (P0/P1) offen
+
+**✅ PHASE M2 ABGESCHLOSSEN am 2025-11-02**
 
 ---
 
