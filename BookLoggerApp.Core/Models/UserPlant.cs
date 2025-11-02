@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BookLoggerApp.Core.Enums;
 
 namespace BookLoggerApp.Core.Models;
 
