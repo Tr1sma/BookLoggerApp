@@ -1,1 +1,70 @@
+/* Dashboard - Cozy Dark Mode */
+.dashboard-container {
+    padding: 2.5rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
 
+.dashboard-container section {
+    margin-bottom: 3rem;
+}
+
+.dashboard-container h2 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+}
+
+/* Currently Reading Section */
+.currently-reading {
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+/* Stats Grid in Dashboard */
+.dashboard-container .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Goals Section */
+.goals-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+/* Plant Widget Section */
+.plant-widget-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+/* Recent Activity */
+.recent-activity {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1.5rem;
+    }
+    
+    .dashboard-container .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
