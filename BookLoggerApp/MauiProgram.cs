@@ -49,6 +49,7 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IPlantService, BookLoggerApp.Infrastructure.Services.PlantService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider, BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Infrastructure.Services.NotificationService>();
@@ -63,6 +64,7 @@ public static class MauiProgram
         builder.Services.AddTransient<GoalsViewModel>();
         builder.Services.AddTransient<StatsViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<PlantShopViewModel>();
 
         System.Diagnostics.Debug.WriteLine("All services registered, building app...");
 

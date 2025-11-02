@@ -1,56 +1,137 @@
-<div class="plant-widget">
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Infrastructure.Services.Helpers
+
+<div class="plant-widget @GetStatusClass()">
+    <!-- Plant Visual -->
     <div class="plant-visual">
-        <span class="plant-emoji">🌱</span>
-        <div class="plant-info">
-            <h3>@(Plant?.Name ?? "No Plant")</h3>
-            <p class="plant-level">Level @(Plant?.CurrentLevel ?? 0)</p>
-            <div class="plant-xp">
-                <div class="xp-bar">
-                    <div class="xp-fill" style="width: @GetXpPercentage()%"></div>
-                </div>
-                <p class="xp-text">@(Plant?.Experience ?? 0) XP</p>
-            </div>
-        </div>
+        <img src="@GetPlantImage()" alt="@Plant.Name" class="plant-image-large" />
+        <div class="plant-status-indicator">@GetStatusEmoji()</div>
     </div>
-    <div class="plant-status">
-        <p>Last watered: @FormatLastWatered()</p>
-        <button class="btn btn-primary" @onclick="HandleWater" disabled="@(Plant == null)">💧 Water</button>
+
+    <!-- Plant Info -->
+    <div class="plant-info">
+        <h3 class="plant-name">@Plant.Name</h3>
+        <p class="plant-species">@Plant.Species.Name</p>
+
+        <!-- Level Badge -->
+        <div class="plant-level">
+            <span class="level-badge">Level @Plant.CurrentLevel / @Plant.Species.MaxLevel</span>
+        </div>
+
+        <!-- XP Progress -->
+        <div class="plant-xp">
+            <div class="xp-bar">
+                <div class="xp-fill" style="width: @GetXpPercentage()%"></div>
+            </div>
+            <p class="xp-text">
+                XP: @Plant.Experience / @GetNextLevelXp() (@GetXpPercentage()%)
+            </p>
+        </div>
+
+        <!-- Watering Status -->
+        <div class="plant-watering">
+            <p class="watering-status">@GetWateringStatus()</p>
+            @if (Plant.Status != PlantStatus.Dead)
+            {
+                <button class="btn btn-water"
+                        @onclick="() => OnWater.InvokeAsync()"
+                        disabled="@(Plant.Status == PlantStatus.Healthy || IsWatering)">
+                    @if (IsWatering)
+                    {
+                        <span>💧 Watering...</span>
+                    }
+                    else
+                    {
+                        <span>💧 Water Plant</span>
+                    }
+                </button>
+            }
+            else
+            {
+                <p class="plant-dead-message">😢 Your plant has died. Purchase a new one from the shop!</p>
+            }
+        </div>
+
+        <!-- Days Until Water Needed -->
+        @if (Plant.Status == PlantStatus.Healthy)
+        {
+            <p class="water-timer">
+                Next water in @GetDaysUntilWater() day(s)
+            </p>
+        }
     </div>
 </div>
 
 @code {
-    [Parameter] public BookLoggerApp.Core.Models.UserPlant? Plant { get; set; }
+    [Parameter] public UserPlant Plant { get; set; } = null!;
     [Parameter] public EventCallback OnWater { get; set; }
+    [Parameter] public bool IsWatering { get; set; }
 
-    private string FormatLastWatered()
+    private string GetPlantImage()
     {
-        if (Plant == null || Plant.LastWatered == default)
-            return "Never";
-
-        var diff = DateTime.UtcNow - Plant.LastWatered;
-        if (diff.TotalDays >= 1)
-            return $"{(int)diff.TotalDays} days ago";
-        if (diff.TotalHours >= 1)
-            return $"{(int)diff.TotalHours} hours ago";
-        return $"{(int)diff.TotalMinutes} minutes ago";
+        // In the future, could be level-dependent (different sprites for different levels)
+        return Plant.Species.ImagePath;
     }
 
-    private double GetXpPercentage()
+    private string GetStatusClass()
     {
-        if (Plant == null || Plant.Species == null)
-            return 0;
-
-        // Calculate XP needed for next level (simplified)
-        int xpForNextLevel = 100 * (int)Math.Pow(1.5, Plant.CurrentLevel - 1);
-        int maxLevel = Plant.Species?.MaxLevel ?? 10;
-        return Plant.CurrentLevel >= maxLevel 
-            ? 100 
-            : (double)Plant.Experience / xpForNextLevel * 100;
+        return $"status-{Plant.Status.ToString().ToLower()}";
     }
 
-    private async Task HandleWater()
+    private string GetStatusEmoji()
     {
-        await OnWater.InvokeAsync();
+        return Plant.Status switch
+        {
+            PlantStatus.Healthy => "😊",
+            PlantStatus.Thirsty => "😰",
+            PlantStatus.Wilting => "😵",
+            PlantStatus.Dead => "💀",
+            _ => ""
+        };
+    }
+
+    private string GetWateringStatus()
+    {
+        var daysSince = (DateTime.UtcNow - Plant.LastWatered).TotalDays;
+        return Plant.Status switch
+        {
+            PlantStatus.Healthy => $"Last watered {(int)daysSince} day(s) ago. Doing great! 🌿",
+            PlantStatus.Thirsty => "⚠️ Needs water soon!",
+            PlantStatus.Wilting => "⚠️⚠️ Needs water urgently!",
+            PlantStatus.Dead => "😢 Plant has died.",
+            _ => ""
+        };
+    }
+
+    private int GetNextLevelXp()
+    {
+        if (Plant.CurrentLevel >= Plant.Species.MaxLevel)
+            return Plant.Experience; // Max level reached
+
+        return PlantGrowthCalculator.GetTotalXpForLevel(Plant.CurrentLevel + 1, Plant.Species.GrowthRate);
+    }
+
+    private int GetXpPercentage()
+    {
+        if (Plant.CurrentLevel >= Plant.Species.MaxLevel)
+            return 100; // Max level reached
+
+        return PlantGrowthCalculator.GetXpPercentage(
+            Plant.CurrentLevel,
+            Plant.Experience,
+            Plant.Species.GrowthRate
+        );
+    }
+
+    private string GetDaysUntilWater()
+    {
+        var daysUntil = PlantGrowthCalculator.GetDaysUntilWaterNeeded(
+            Plant.LastWatered,
+            Plant.Species.WaterIntervalDays
+        );
+
+        return $"{daysUntil:F1}";
     }
 }
 

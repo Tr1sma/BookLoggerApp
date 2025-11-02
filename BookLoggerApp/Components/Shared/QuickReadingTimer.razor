@@ -1,0 +1,247 @@
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Services.Abstractions
+@implements IDisposable
+@inject IProgressService ProgressService
+@inject IBookService BookService
+
+@if (Book != null && IsVisible)
+{
+    <div class="quick-timer-overlay" @onclick="HandleOverlayClick">
+        <div class="quick-timer-widget" @onclick:stopPropagation="true">
+            <!-- Book Info -->
+            <div class="quick-timer-header">
+                <div class="quick-timer-book-info">
+                    <h3>@Book.Title</h3>
+                    <p>@Book.Author</p>
+                </div>
+                <button class="btn-close" @onclick="HandleClose">✕</button>
+            </div>
+
+            <!-- Timer Display -->
+            <div class="quick-timer-display">
+                <div class="timer-value">@FormatTime(ElapsedTime)</div>
+                <div class="timer-status">@(IsRunning ? "Reading..." : (ElapsedTime.TotalSeconds > 0 ? "Paused" : "Ready"))</div>
+            </div>
+
+            <!-- Pages Input -->
+            <div class="quick-timer-pages">
+                <label>Pages Read</label>
+                <div class="pages-input-group">
+                    <button class="btn-adjust" @onclick="DecrementPages" disabled="@(PagesRead <= 0)">-</button>
+                    <input type="number"
+                           class="pages-input-compact"
+                           @bind="PagesRead"
+                           min="0"
+                           placeholder="0" />
+                    <button class="btn-adjust" @onclick="IncrementPages">+</button>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="quick-timer-controls">
+                @if (!IsRunning && ElapsedTime.TotalSeconds == 0)
+                {
+                    <button class="btn btn-primary btn-large" @onclick="HandleStart">
+                        ▶ Start Reading
+                    </button>
+                }
+                else if (IsRunning)
+                {
+                    <button class="btn btn-secondary btn-large" @onclick="HandlePause">
+                        ⏸ Pause
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-primary" @onclick="HandleResume">
+                        ▶ Resume
+                    </button>
+                    <button class="btn btn-success" @onclick="HandleSave">
+                        ✓ Save Session
+                    </button>
+                }
+            </div>
+
+            <!-- Session Info -->
+            @if (ElapsedTime.TotalSeconds > 0)
+            {
+                <div class="quick-timer-info">
+                    <div class="info-item">
+                        <span class="info-label">Time:</span>
+                        <span class="info-value">@FormatTime(ElapsedTime)</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Pages:</span>
+                        <span class="info-value">@PagesRead</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">XP:</span>
+                        <span class="info-value">@CalculateXP() XP</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Book? Book { get; set; }
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnSessionSaved { get; set; }
+
+    private DateTime? StartTime { get; set; }
+    private TimeSpan ElapsedTime { get; set; } = TimeSpan.Zero;
+    private TimeSpan PausedTime { get; set; } = TimeSpan.Zero;
+    private bool IsRunning { get; set; }
+    private int PagesRead { get; set; }
+    private System.Threading.Timer? _timer;
+
+    protected override void OnParametersSet()
+    {
+        // Reset when book changes
+        if (Book != null && !IsRunning)
+        {
+            ResetTimer();
+        }
+    }
+
+    private void HandleStart()
+    {
+        StartTime = DateTime.UtcNow;
+        IsRunning = true;
+        PausedTime = TimeSpan.Zero;
+        ElapsedTime = TimeSpan.Zero;
+        StartTimer();
+    }
+
+    private void HandlePause()
+    {
+        IsRunning = false;
+        PausedTime = ElapsedTime;
+        StopTimer();
+    }
+
+    private void HandleResume()
+    {
+        StartTime = DateTime.UtcNow - PausedTime;
+        IsRunning = true;
+        StartTimer();
+    }
+
+    private async Task HandleSave()
+    {
+        if (Book == null || ElapsedTime.TotalSeconds == 0) return;
+
+        StopTimer();
+
+        try
+        {
+            // Save session
+            var session = new ReadingSession
+            {
+                BookId = Book.Id,
+                StartedAt = StartTime ?? DateTime.UtcNow,
+                EndedAt = DateTime.UtcNow,
+                Minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes),
+                PagesRead = PagesRead > 0 ? PagesRead : null,
+                XpEarned = CalculateXP()
+            };
+
+            await ProgressService.AddSessionAsync(session);
+
+            // Update book progress if pages were read
+            if (PagesRead > 0)
+            {
+                var currentPage = Book.CurrentPage + PagesRead;
+                await BookService.UpdateProgressAsync(Book.Id, currentPage);
+            }
+
+            // Notify parent and close
+            await OnSessionSaved.InvokeAsync();
+            await HandleClose();
+
+            // Reset
+            ResetTimer();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to save session: {ex.Message}");
+        }
+    }
+
+    private async Task HandleClose()
+    {
+        StopTimer();
+        IsRunning = false;
+        await OnClose.InvokeAsync();
+    }
+
+    private void HandleOverlayClick()
+    {
+        // Close when clicking outside the widget
+        _ = HandleClose();
+    }
+
+    private void IncrementPages()
+    {
+        PagesRead++;
+    }
+
+    private void DecrementPages()
+    {
+        if (PagesRead > 0)
+        {
+            PagesRead--;
+        }
+    }
+
+    private void ResetTimer()
+    {
+        ElapsedTime = TimeSpan.Zero;
+        PausedTime = TimeSpan.Zero;
+        StartTime = null;
+        IsRunning = false;
+        PagesRead = 0;
+    }
+
+    private int CalculateXP()
+    {
+        var minuteXp = (int)ElapsedTime.TotalMinutes;
+        var pageXp = PagesRead * 2;
+        return minuteXp + pageXp;
+    }
+
+    private string FormatTime(TimeSpan time)
+    {
+        if (time.TotalHours >= 1)
+        {
+            return $"{(int)time.TotalHours:D2}:{time.Minutes:D2}:{time.Seconds:D2}";
+        }
+        return $"{time.Minutes:D2}:{time.Seconds:D2}";
+    }
+
+    private void StartTimer()
+    {
+        _timer?.Dispose();
+        _timer = new System.Threading.Timer(_ =>
+        {
+            if (IsRunning && StartTime.HasValue)
+            {
+                ElapsedTime = DateTime.UtcNow - StartTime.Value;
+                InvokeAsync(StateHasChanged);
+            }
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    private void StopTimer()
+    {
+        _timer?.Dispose();
+        _timer = null;
+    }
+
+    public void Dispose()
+    {
+        StopTimer();
+    }
+}

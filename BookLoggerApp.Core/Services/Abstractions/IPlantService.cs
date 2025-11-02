@@ -30,4 +30,11 @@ public interface IPlantService
 
     // Purchase
     Task<UserPlant> PurchasePlantAsync(Guid speciesId, string name, CancellationToken ct = default);
+
+    // Status Management
+    Task UpdatePlantStatusesAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<UserPlant>> GetPlantsNeedingWaterAsync(CancellationToken ct = default);
+
+    // Shop
+    Task<IReadOnlyList<PlantSpecies>> GetAvailableSpeciesAsync(int userLevel, CancellationToken ct = default);
 }

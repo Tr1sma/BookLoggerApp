@@ -36,6 +36,7 @@
     [Parameter] public BookLoggerApp.Core.Models.Book Book { get; set; } = null!;
     [Parameter] public EventCallback OnClick { get; set; }
     [Parameter] public EventCallback OnDelete { get; set; }
+    [Parameter] public EventCallback OnQuickTimer { get; set; }
 
     private string GetSpineStyle()
     {
