@@ -564,8 +564,8 @@ Interaktionen:
 
 | Meilenstein | Dauer | Start | Ende | Ziel | Deliverables |
 |-------------|-------|-------|------|------|--------------|
-| **M2** | 2.0 Wo | KW 45 | KW 46 | EF Core Migration & Datenmodell | DbContext, Migrations, 12 Models |
-| **M3** | 2.5 Wo | KW 47 | KW 49 | Core Services & Business Logic | 10+ Services, Unit Tests |
+| **M2** ✅ | 2.0 Wo | KW 45 | KW 46 | EF Core Migration & Datenmodell | DbContext, Migrations, 12 Models |
+| **M3** ✅ | 2.5 Wo | KW 47 | KW 49 | Core Services & Business Logic | 12 Services, 56 Unit Tests |
 | **M4** | 2.0 Wo | KW 50 | KW 51 | UI Implementation | 7 Pages, Bookshelf, ViewModels |
 | **M5** | 2.0 Wo | KW 52 | KW 01 | Pflanzenmechanik & Gamification | Plant System, Shop, Notifications |
 | **M6** | 1.5 Wo | KW 02 | KW 03 | Polish, Testing & Performance | CI/CD, E2E Tests, Optimierungen |

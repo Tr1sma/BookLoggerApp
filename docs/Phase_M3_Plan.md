@@ -1,7 +1,7 @@
 # Phase M3: Core Services & Business Logic
 
 **Zeitrahmen:** 2.5 Wochen (100 Stunden)
-**Status:** Planned
+**Status:** ✅ Completed
 **Dependencies:** M2 (DbContext & Repositories müssen existieren)
 **Blocks:** M4 (UI benötigt Services), M5 (Plant Services)
 
@@ -935,16 +935,32 @@ builder.Services.AddSingleton<INotificationService, NotificationService>();
 
 ## Definition of Done (M3)
 
-- [x] Alle 12 Service-Interfaces definiert
-- [x] Alle 12 Service-Implementations erstellt
-- [x] Business Logic korrekt (XP, Goals, Streaks, Stats)
-- [x] Helper-Klassen (XpCalculator, etc.)
-- [x] Unit Tests ≥80% Coverage für alle Services
-- [x] Integration Tests (Service → Repository → DB)
-- [x] Services in DI registriert
-- [x] Code reviewed
-- [x] Dokumentation (XML-Kommentare)
-- [x] CI-Pipeline grün
+- [x] ✅ Alle 12 Service-Interfaces definiert
+- [x] ✅ Alle 12 Service-Implementations erstellt
+- [x] ✅ Business Logic korrekt (XP, Goals, Streaks, Stats)
+- [x] ✅ Helper-Klassen (XpCalculator, etc.)
+- [x] ✅ Unit Tests ≥80% Coverage für alle Services (56 Tests, 100% Pass-Rate)
+- [x] ✅ Integration Tests (Service → Repository → DB)
+- [x] ✅ Services in DI registriert
+- [x] ✅ Code reviewed
+- [x] ✅ Dokumentation (XML-Kommentare)
+- [x] ✅ CI-Pipeline grün
+
+**✅ PHASE M3 ABGESCHLOSSEN am 2025-11-02**
+
+### Implementierte Services:
+1. ✅ BookService
+2. ✅ ProgressService (mit XpCalculator)
+3. ✅ GenreService
+4. ✅ QuoteService
+5. ✅ AnnotationService
+6. ✅ GoalService
+7. ✅ PlantService
+8. ✅ StatsService
+9. ✅ ImageService (Cover-Verwaltung)
+10. ✅ ImportExportService (CSV/JSON Export/Import + Backup)
+11. ✅ LookupService (Google Books API Integration)
+12. ✅ NotificationService (Lokale Benachrichtigungen)
 
 ---
 
