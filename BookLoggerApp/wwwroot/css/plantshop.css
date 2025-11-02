@@ -63,9 +63,10 @@
 /* Shop Grid */
 .shop-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 2rem;
     margin-bottom: 2rem;
+    align-items: start;
 }
 
 /* Plant Shop Card */
@@ -77,6 +78,9 @@
     cursor: pointer;
     transition: var(--transition);
     box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .plant-shop-card:hover {
@@ -128,6 +132,9 @@
 /* Plant Card Body */
 .plant-card-body {
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .plant-card-title {
@@ -212,6 +219,8 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    padding: 1rem;
+    overflow: hidden;
     animation: fadeIn 0.2s ease;
 }
 
@@ -273,7 +282,6 @@
     padding: 2rem;
     overflow-y: auto;
     flex: 1;
-    min-height: 0;
 }
 
 .plant-preview {
