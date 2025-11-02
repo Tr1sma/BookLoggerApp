@@ -1,24 +1,34 @@
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">BookLoggerApp</a>
-    </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-item px-3">
-    <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
-        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Dashboard
-    </NavLink>
-</div>
-<div class="nav-item px-3">
-    <NavLink class="nav-link" href="/books">
-        <span class="bi bi-book-fill-nav-menu" aria-hidden="true"></span> Books
-    </NavLink>
-</div>
-<div class="nav-item px-3">
-    <NavLink class="nav-link" href="/settings">
-        <span class="bi bi-gear-fill-nav-menu" aria-hidden="true"></span> Settings
-    </NavLink>
-</div>
-
+<nav class="navbar">
+    <ul class="nav-menu">
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">Dashboard</span>
+            </NavLink>
+        </li>
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/bookshelf">
+                <span class="nav-icon">📚</span>
+                <span class="nav-text">Bookshelf</span>
+            </NavLink>
+        </li>
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/goals">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-text">Goals</span>
+            </NavLink>
+        </li>
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Stats</span>
+            </NavLink>
+        </li>
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Settings</span>
+            </NavLink>
+        </li>
+    </ul>
+</nav>

@@ -1,0 +1,120 @@
+@page "/bookshelf"
+@using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Models
+@inject BookshelfViewModel ViewModel
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+
+<PageTitle>Bookshelf - BookLogger</PageTitle>
+
+<div class="bookshelf-container">
+    <!-- Header & Controls -->
+    <div class="bookshelf-header">
+        <h1>📚 My Bookshelf</h1>
+        <div class="bookshelf-controls">
+            <input type="text" class="search-input" placeholder="🔍 Search books..."
+                   @bind="ViewModel.SearchQuery" @bind:event="oninput" @onchange="HandleSearch" />
+            <button class="btn btn-primary" @onclick="NavigateToAddBook">+ Add Book</button>
+        </div>
+    </div>
+
+    <!-- Filters & Sort -->
+    <div class="bookshelf-filters">
+        <div class="filter-group">
+            <label>Sort by:</label>
+            <select value="@ViewModel.SortBy" @onchange="@((ChangeEventArgs e) => { ViewModel.SortBy = e.Value?.ToString() ?? "Title"; HandleSearch(); })">
+                <option value="Title">Title</option>
+                <option value="Author">Author</option>
+                <option value="DateAdded">Date Added</option>
+                <option value="Status">Status</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Status:</label>
+            <select value="@(ViewModel.FilterStatus?.ToString() ?? "")" @onchange="@((ChangeEventArgs e) => { var val = e.Value?.ToString(); ViewModel.FilterStatus = string.IsNullOrEmpty(val) ? null : Enum.Parse<ReadingStatus>(val); HandleSearch(); })">
+                <option value="">All</option>
+                <option value="@ReadingStatus.Planned">Planned</option>
+                <option value="@ReadingStatus.Reading">Reading</option>
+                <option value="@ReadingStatus.Completed">Completed</option>
+                <option value="@ReadingStatus.Abandoned">Abandoned</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Genre:</label>
+            <select value="@(ViewModel.FilterGenreId?.ToString() ?? "")" @onchange="@((ChangeEventArgs e) => { var val = e.Value?.ToString(); ViewModel.FilterGenreId = string.IsNullOrEmpty(val) ? null : Guid.Parse(val); HandleSearch(); })">
+                <option value="">All Genres</option>
+                @foreach (var genre in ViewModel.Genres)
+                {
+                    <option value="@genre.Id">@genre.Icon @genre.Name</option>
+                }
+            </select>
+        </div>
+
+        <button class="btn btn-secondary" @onclick="HandleClearFilters">Clear Filters</button>
+    </div>
+
+    <!-- Book Grid -->
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading">Loading your books...</div>
+    }
+    else if (!ViewModel.Books.Any())
+    {
+        <div class="empty-state">
+            <h2>No books found</h2>
+            <p>Start building your library by adding your first book!</p>
+            <button class="btn btn-primary" @onclick="NavigateToAddBook">+ Add Your First Book</button>
+        </div>
+    }
+    else
+    {
+        <div class="book-grid">
+            @foreach (var book in ViewModel.Books)
+            {
+                <BookCard Book="@book"
+                          OnClick="() => NavigateToBookDetail(book.Id)"
+                          OnDelete="() => HandleDeleteBook(book.Id)" />
+            }
+        </div>
+
+        <div class="bookshelf-footer">
+            <p>Showing @ViewModel.Books.Count book(s)</p>
+        </div>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private void HandleSearch()
+    {
+        ViewModel.SearchCommand.ExecuteAsync(null);
+    }
+
+    private async Task HandleClearFilters()
+    {
+        ViewModel.ClearFiltersCommand.Execute(null);
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private async Task HandleDeleteBook(Guid bookId)
+    {
+        // TODO: Add confirmation dialog
+        await ViewModel.DeleteBookCommand.ExecuteAsync(bookId);
+    }
+
+    private void NavigateToBookDetail(Guid bookId)
+    {
+        Navigation.NavigateTo($"/books/{bookId}");
+    }
+
+    private void NavigateToAddBook()
+    {
+        Navigation.NavigateTo("/books/new");
+    }
+}
+

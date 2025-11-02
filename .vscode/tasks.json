@@ -2,40 +2,42 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "build-maui-windows",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/BookLoggerApp.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+                "${workspaceFolder}/BookLoggerApp/BookLoggerApp.csproj",
+                "-f",
+                "net9.0-windows10.0.19041.0",
+                "-c",
+                "Debug"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
-            "label": "publish",
+            "label": "run-maui-windows",
             "command": "dotnet",
-            "type": "process",
+            "type": "shell",
             "args": [
-                "publish",
-                "${workspaceFolder}/BookLoggerApp.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+                "build",
+                "${workspaceFolder}/BookLoggerApp/BookLoggerApp.csproj",
+                "-t:Run",
+                "-f",
+                "net9.0-windows10.0.19041.0",
+                "-c",
+                "Debug"
             ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/BookLoggerApp.sln"
-            ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": false
+            }
         }
     ]
 }

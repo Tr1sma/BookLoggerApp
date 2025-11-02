@@ -1,0 +1,85 @@
+@page "/stats"
+@using BookLoggerApp.Core.ViewModels
+@inject StatsViewModel ViewModel
+
+<PageTitle>Stats - BookLogger</PageTitle>
+
+<div class="stats-container">
+    <h1>📊 Statistics</h1>
+
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading">Loading statistics...</div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">@ViewModel.ErrorMessage</div>
+    }
+    else
+    {
+        <!-- Overview Stats -->
+        <section class="stats-overview">
+            <div class="stats-grid">
+                <StatCard Icon="📚" Title="Total Books Read" Value="@ViewModel.TotalBooksRead" />
+                <StatCard Icon="📄" Title="Total Pages" Value="@ViewModel.TotalPagesRead" />
+                <StatCard Icon="⏱️" Title="Total Minutes" Value="@FormatMinutes(ViewModel.TotalMinutesRead)" />
+                <StatCard Icon="🔥" Title="Current Streak" Value="@($"{ViewModel.CurrentStreak} days")" />
+                <StatCard Icon="⭐" Title="Longest Streak" Value="@($"{ViewModel.LongestStreak} days")" />
+                <StatCard Icon="📈" Title="Average Rating" Value="@ViewModel.AverageRating.ToString("F1")" />
+            </div>
+        </section>
+
+        <!-- Favorite Genre -->
+        @if (!string.IsNullOrEmpty(ViewModel.FavoriteGenre))
+        {
+            <section class="favorite-genre">
+                <h2>Favorite Genre</h2>
+                <p>@ViewModel.FavoriteGenre</p>
+            </section>
+        }
+
+        <!-- Genre Breakdown -->
+        @if (ViewModel.BooksByGenre.Any())
+        {
+            <section class="genre-breakdown">
+                <h2>Books by Genre</h2>
+                <ul class="genre-list">
+                    @foreach (var genre in ViewModel.BooksByGenre.OrderByDescending(g => g.Value))
+                    {
+                        <li>@genre.Key: @genre.Value books</li>
+                    }
+                </ul>
+            </section>
+        }
+
+        <!-- Date Range Filter -->
+        <section class="date-filter">
+            <h2>Date Range</h2>
+            <div class="filter-group">
+                <label>From:</label>
+                <input type="date" @bind="ViewModel.DateRangeStart" />
+            </div>
+            <div class="filter-group">
+                <label>To:</label>
+                <input type="date" @bind="ViewModel.DateRangeEnd" />
+            </div>
+            <button class="btn btn-primary" @onclick="async () => await ViewModel.RefreshCommand.ExecuteAsync(null)">Refresh</button>
+        </section>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private string FormatMinutes(int minutes)
+    {
+        if (minutes < 60) return $"{minutes}m";
+        var hours = minutes / 60;
+        var remainingMinutes = minutes % 60;
+        return $"{hours}h {remainingMinutes}m";
+    }
+}
+

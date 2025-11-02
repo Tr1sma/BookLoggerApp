@@ -1,0 +1,100 @@
+@page "/goals"
+@using BookLoggerApp.Core.ViewModels
+@inject GoalsViewModel ViewModel
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+
+<PageTitle>Goals - BookLogger</PageTitle>
+
+<div class="goals-container">
+    <div class="goals-header">
+        <h1>🎯 Reading Goals</h1>
+        <button class="btn btn-primary" @onclick="ViewModel.ShowCreateFormCommand">+ New Goal</button>
+    </div>
+
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading">Loading goals...</div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">@ViewModel.ErrorMessage</div>
+    }
+    else
+    {
+        <!-- Create Goal Form -->
+        @if (ViewModel.ShowCreateForm && ViewModel.NewGoal != null)
+        {
+            <div class="goal-form">
+                <h2>Create New Goal</h2>
+                <div class="form-group">
+                    <label>Title:</label>
+                    <input @bind="ViewModel.NewGoal.Title" placeholder="e.g., Read 5 books this month" />
+                </div>
+                <div class="form-group">
+                    <label>Type:</label>
+                    <select @bind="ViewModel.NewGoal.Type">
+                        <option value="@BookLoggerApp.Core.Enums.GoalType.Books">Books</option>
+                        <option value="@BookLoggerApp.Core.Enums.GoalType.Pages">Pages</option>
+                        <option value="@BookLoggerApp.Core.Enums.GoalType.Minutes">Minutes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Target:</label>
+                    <input type="number" @bind="ViewModel.NewGoal.Target" min="1" />
+                </div>
+                <div class="form-group">
+                    <label>End Date:</label>
+                    <input type="date" @bind="ViewModel.NewGoal.EndDate" />
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" @onclick="async () => await ViewModel.CreateGoalCommand.ExecuteAsync(null)">Create</button>
+                    <button class="btn btn-secondary" @onclick="() => ViewModel.CancelCreateCommand.Execute(null)">Cancel</button>
+                </div>
+            </div>
+        }
+
+        <!-- Active Goals -->
+        <section class="active-goals">
+            <h2>Active Goals</h2>
+            @if (ViewModel.ActiveGoals.Any())
+            {
+                <div class="goals-list">
+                    @foreach (var goal in ViewModel.ActiveGoals)
+                    {
+                        <GoalCard Goal="@goal" />
+                    }
+                </div>
+            }
+            else
+            {
+                <p>No active goals.</p>
+            }
+        </section>
+
+        <!-- Completed Goals -->
+        <section class="completed-goals">
+            <h2>Completed Goals</h2>
+            @if (ViewModel.CompletedGoals.Any())
+            {
+                <div class="goals-list">
+                    @foreach (var goal in ViewModel.CompletedGoals)
+                    {
+                        <GoalCard Goal="@goal" />
+                    }
+                </div>
+            }
+            else
+            {
+                <p>No completed goals yet.</p>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+}
+

@@ -1,0 +1,19 @@
+<div class="stat-card">
+    <div class="stat-icon">@Icon</div>
+    <div class="stat-content">
+        <h3 class="stat-value">@Value</h3>
+        <p class="stat-title">@Title</p>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <p class="stat-subtitle">@Subtitle</p>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public object Value { get; set; } = 0;
+    [Parameter] public string? Subtitle { get; set; }
+}
+

@@ -1,0 +1,203 @@
+@page "/reading/{SessionId:guid}"
+@using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Models
+@inject ReadingViewModel ViewModel
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>Reading - BookLogger</PageTitle>
+
+<div class="reading-container">
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading">Loading session...</div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">@ViewModel.ErrorMessage</div>
+    }
+    else if (ViewModel.Session == null)
+    {
+        <div class="empty-state">
+            <h2>No active reading session</h2>
+            <p>Start reading a book to begin a session.</p>
+            <button class="btn btn-primary" @onclick="NavigateToBookshelf">Browse Bookshelf</button>
+        </div>
+    }
+    else if (ViewModel.Book == null)
+    {
+        <div class="empty-state">
+            <h2>Book not found</h2>
+            <p>The book for this reading session could not be loaded.</p>
+        </div>
+    }
+    else
+    {
+        <!-- Book Info -->
+        <div class="reading-header">
+            <div class="book-info">
+                <h1>@ViewModel.Book.Title</h1>
+                <p class="author">by @ViewModel.Book.Author</p>
+            </div>
+            <button class="btn btn-secondary" @onclick="NavigateToBook">View Book Details</button>
+        </div>
+
+        <!-- Timer & Stats -->
+        <div class="reading-stats">
+            <div class="stat-item timer">
+                <label>Reading Time</label>
+                <div class="timer-display">
+                    <span class="timer-value">@FormatTime(ViewModel.ElapsedTime)</span>
+                </div>
+                <div class="timer-controls">
+                    @if (ViewModel.IsPaused)
+                    {
+                        <button class="btn btn-primary" @onclick="() => ViewModel.ResumeCommand.Execute(null)">▶ Resume</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary" @onclick="() => ViewModel.PauseCommand.Execute(null)">⏸ Pause</button>
+                    }
+                </div>
+            </div>
+
+            <div class="stat-item xp">
+                <label>XP Earned</label>
+                <div class="xp-display">
+                    <span class="xp-value">@ViewModel.XpEarned</span>
+                </div>
+            </div>
+
+            <div class="stat-item pages">
+                <label>Current Page</label>
+                <div class="page-input-group">
+                    <input type="number" 
+                           class="page-input" 
+                           value="@ViewModel.CurrentPage"
+                           @onchange="@(async (ChangeEventArgs e) => { if (int.TryParse(e.Value?.ToString(), out int page)) { ViewModel.CurrentPage = page; await HandlePageChange(); } })"
+                           min="0" 
+                           max="@(ViewModel.Book.PageCount ?? int.MaxValue)" />
+                    @if (ViewModel.Book.PageCount.HasValue)
+                    {
+                        <span class="page-total">/ @ViewModel.Book.PageCount</span>
+                    }
+                </div>
+                @if (ViewModel.Book.PageCount.HasValue)
+                {
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: @ViewModel.Book.ProgressPercentage%"></div>
+                    </div>
+                    <p class="progress-text">@ViewModel.Book.ProgressPercentage% complete</p>
+                }
+            </div>
+        </div>
+
+        <!-- Session Summary -->
+        <div class="session-summary">
+            <h2>Session Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <label>Started</label>
+                    <p>@ViewModel.SessionStartTime.ToString("g")</p>
+                </div>
+                <div class="summary-item">
+                    <label>Pages Read</label>
+                    <p>@(ViewModel.CurrentPage - (ViewModel.Session.PagesRead ?? 0))</p>
+                </div>
+                <div class="summary-item">
+                    <label>Estimated Time</label>
+                    <p>@FormatTime(ViewModel.ElapsedTime)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="reading-actions">
+            <button class="btn btn-primary btn-large" @onclick="HandleEndSession" disabled="@ViewModel.IsBusy">
+                ✓ End Session
+            </button>
+            <button class="btn btn-secondary" @onclick="NavigateToBook">Cancel</button>
+        </div>
+
+        <!-- Fullscreen Option (Optional) -->
+        <div class="fullscreen-hint">
+            <p>💡 Focus on reading - this session is being tracked automatically</p>
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter] public Guid SessionId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadCommand.ExecuteAsync(SessionId);
+        
+        // Start auto-refresh timer if session is active
+        if (ViewModel.Session != null && !ViewModel.IsPaused)
+        {
+            StartAutoRefresh();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SessionId != Guid.Empty)
+        {
+            await ViewModel.LoadCommand.ExecuteAsync(SessionId);
+        }
+    }
+
+    private void StartAutoRefresh()
+    {
+        // In a real implementation, this would use a timer to refresh the UI
+        // For MAUI, we can use Device.StartTimer or similar
+    }
+
+    private async Task HandlePageChange()
+    {
+        await ViewModel.UpdatePageCommand.ExecuteAsync((int?)ViewModel.CurrentPage);
+    }
+
+    private async Task HandleEndSession()
+    {
+        await ViewModel.EndSessionCommand.ExecuteAsync(null);
+        if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
+        {
+            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+        }
+    }
+
+    private void NavigateToBook()
+    {
+        if (ViewModel.Book != null)
+        {
+            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+        }
+        else
+        {
+            Navigation.NavigateTo("/bookshelf");
+        }
+    }
+
+    private void NavigateToBookshelf()
+    {
+        Navigation.NavigateTo("/bookshelf");
+    }
+
+    private string FormatTime(TimeSpan timeSpan)
+    {
+        if (timeSpan.TotalHours >= 1)
+        {
+            return $"{(int)timeSpan.TotalHours}h {timeSpan.Minutes}m {timeSpan.Seconds}s";
+        }
+        return $"{timeSpan.Minutes}m {timeSpan.Seconds}s";
+    }
+
+    public void Dispose()
+    {
+        // Cleanup if needed
+    }
+}
+
