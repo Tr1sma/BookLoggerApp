@@ -3,6 +3,7 @@ using System;
 using BookLoggerApp.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,12 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookLoggerApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251104191014_UseMauiImagePaths")]
+    partial class UseMauiImagePaths
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Annotation", b =>
                 {
@@ -360,11 +363,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             BaseCost = 500,
                             Description = "A simple plant for beginners. Grows quickly!",
                             GrowthRate = 1.2,
-                            ImagePath = "images/plants/starter_sprout.svg",
+                            ImagePath = "starter_sprout.svg",
                             IsAvailable = true,
                             MaxLevel = 10,
                             Name = "Starter Sprout",
-                            UnlockLevel = 1,
+                            UnlockLevel = 5,
                             WaterIntervalDays = 3
                         },
                         new
@@ -373,7 +376,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             BaseCost = 1000,
                             Description = "Low maintenance, high rewards.",
                             GrowthRate = 0.80000000000000004,
-                            ImagePath = "images/plants/reading_cactus.svg",
+                            ImagePath = "reading_cactus.svg",
                             IsAvailable = true,
                             MaxLevel = 15,
                             Name = "Reading Cactus",

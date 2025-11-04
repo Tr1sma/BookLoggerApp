@@ -88,6 +88,7 @@
     height: 100%;
     width: 100%;
     min-height: 0;
+    position: relative;
 }
 
 .plant-shop-card * {
@@ -115,6 +116,7 @@
     justify-content: center;
     overflow: hidden;
     flex-shrink: 0;
+    z-index: 0;
 }
 
 .plant-card-image img {
@@ -147,6 +149,8 @@
     display: flex !important;
     flex-direction: column !important;
     flex: 1;
+    position: relative;
+    z-index: 1;
 }
 
 .plant-card-title {
@@ -162,6 +166,8 @@
     margin: 0 0 1rem 0;
     line-height: 1.5;
     min-height: 3em;
+    position: relative;
+    z-index: 1;
 }
 
 /* Plant Card Stats */
@@ -193,6 +199,8 @@
     justify-content: space-between;
     align-items: center;
     margin-top: auto;
+    position: relative;
+    z-index: 1;
 }
 
 .plant-cost {
@@ -214,6 +222,8 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    position: relative;
+    z-index: 1;
 }
 
 .buy-label.locked {

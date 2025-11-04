@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="cactusGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#7CB342;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#558B2F;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="potGrad3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4A574;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="flowerGrad" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#FF6B9D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C2185B;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Pot -->
+  <path d="M 65 150 L 72 185 L 128 185 L 135 150 Z" fill="url(#potGrad3)" stroke="#6B5638" stroke-width="2"/>
+  <ellipse cx="100" cy="150" rx="37" ry="11" fill="#A67C52" stroke="#6B5638" stroke-width="2"/>
+  
+  <!-- Soil -->
+  <ellipse cx="100" cy="150" rx="33" ry="7" fill="#5D4E37"/>
+  
+  <!-- Main cactus body -->
+  <ellipse cx="100" cy="110" rx="25" ry="45" fill="url(#cactusGrad)" stroke="#33691E" stroke-width="2"/>
+  
+  <!-- Left arm -->
+  <ellipse cx="75" cy="110" rx="12" ry="20" fill="url(#cactusGrad)" stroke="#33691E" stroke-width="2"/>
+  <path d="M 75 100 Q 85 95 88 100" fill="url(#cactusGrad)" stroke="#33691E" stroke-width="2"/>
+  
+  <!-- Right arm -->
+  <ellipse cx="125" cy="115" rx="12" ry="18" fill="url(#cactusGrad)" stroke="#33691E" stroke-width="2"/>
+  <path d="M 125 105 Q 115 100 112 105" fill="url(#cactusGrad)" stroke="#33691E" stroke-width="2"/>
+  
+  <!-- Spines on main body -->
+  <g opacity="0.7">
+    <line x1="90" y1="80" x2="88" y2="75" stroke="#F0E68C" stroke-width="1.5"/>
+    <line x1="95" y1="75" x2="94" y2="70" stroke="#F0E68C" stroke-width="1.5"/>
+    <line x1="100" y1="72" x2="100" y2="67" stroke="#F0E68C" stroke-width="1.5"/>
+    <line x1="105" y1="75" x2="106" y2="70" stroke="#F0E68C" stroke-width="1.5"/>
+    <line x1="110" y1="80" x2="112" y2="75" stroke="#F0E68C" stroke-width="1.5"/>
+    
+    <line x1="85" y1="100" x2="82" y2="100" stroke="#F0E68C" stroke-width="1.5"/>
+    <line x1="115" y1="100" x2="118" y2="100" stroke="#F0E68C" stroke-width="1.5"/>
+    
+    <line x1="90" y1="120" x2="87" y2="122" stroke="#F0E68C" stroke-width="1.5"/>
+    <line x1="110" y1="120" x2="113" y2="122" stroke="#F0E68C" stroke-width="1.5"/>
+    
+    <line x1="95" y1="135" x2="93" y2="138" stroke="#F0E68C" stroke-width="1.5"/>
+    <line x1="105" y1="135" x2="107" y2="138" stroke="#F0E68C" stroke-width="1.5"/>
+  </g>
+  
+  <!-- Flowers on top -->
+  <circle cx="95" cy="65" r="5" fill="url(#flowerGrad)" stroke="#C2185B" stroke-width="1"/>
+  <circle cx="105" cy="63" r="5" fill="url(#flowerGrad)" stroke="#C2185B" stroke-width="1"/>
+  <circle cx="100" cy="60" r="5" fill="url(#flowerGrad)" stroke="#C2185B" stroke-width="1"/>
+  
+  <!-- Flower centers -->
+  <circle cx="95" cy="65" r="2" fill="#FFD700"/>
+  <circle cx="105" cy="63" r="2" fill="#FFD700"/>
+  <circle cx="100" cy="60" r="2" fill="#FFD700"/>
+  
+  <!-- Glasses (reading cactus!) -->
+  <circle cx="95" cy="105" r="6" fill="none" stroke="#424242" stroke-width="2"/>
+  <circle cx="105" cy="105" r="6" fill="none" stroke="#424242" stroke-width="2"/>
+  <line x1="101" y1="105" x2="99" y2="105" stroke="#424242" stroke-width="2"/>
+</svg>
