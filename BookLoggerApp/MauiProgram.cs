@@ -95,6 +95,25 @@ public static class MauiProgram
                 await dbContext.Database.MigrateAsync();
                 System.Diagnostics.Debug.WriteLine("Database migration completed successfully");
 
+                // Fix plant image paths if they don't have leading slash
+                System.Diagnostics.Debug.WriteLine("Checking and fixing plant image paths...");
+                var plants = await dbContext.PlantSpecies.ToListAsync();
+                bool needsSave = false;
+                foreach (var plant in plants)
+                {
+                    if (!string.IsNullOrEmpty(plant.ImagePath) && !plant.ImagePath.StartsWith("/"))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Fixing path for {plant.Name}: {plant.ImagePath} -> /{plant.ImagePath}");
+                        plant.ImagePath = "/" + plant.ImagePath;
+                        needsSave = true;
+                    }
+                }
+                if (needsSave)
+                {
+                    await dbContext.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine("Plant image paths fixed and saved");
+                }
+
                 // Verify seed data
                 var genreCount = await dbContext.Genres.CountAsync();
                 System.Diagnostics.Debug.WriteLine($"Genres in database: {genreCount}");
