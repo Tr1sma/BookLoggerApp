@@ -1,0 +1,316 @@
+/* Reading Timer Inline Component */
+.reading-timer-inline {
+    background: linear-gradient(135deg, rgba(212, 165, 116, 0.15), rgba(161, 120, 86, 0.1));
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-hover), 0 0 20px rgba(212, 165, 116, 0.2);
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Timer Header */
+.timer-inline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(212, 165, 116, 0.3);
+}
+
+.timer-inline-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.timer-status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.timer-status-badge.ready {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    border: 1px solid rgba(76, 175, 80, 0.5);
+}
+
+.timer-status-badge.active {
+    background: rgba(212, 165, 116, 0.3);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    animation: pulse 2s infinite;
+}
+
+.timer-status-badge.paused {
+    background: rgba(255, 152, 0, 0.2);
+    color: #FF9800;
+    border: 1px solid rgba(255, 152, 0, 0.5);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Main Timer Display */
+.timer-inline-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.timer-display-large {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1.5rem 2rem;
+    border-radius: var(--border-radius-lg);
+    border: 2px solid rgba(212, 165, 116, 0.3);
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.timer-icon {
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.timer-value-large {
+    font-size: 3.5rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    color: var(--primary-color);
+    text-shadow: 0 2px 10px rgba(212, 165, 116, 0.5);
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+/* Timer Controls */
+.timer-controls-inline {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.timer-controls-inline .btn {
+    min-width: 140px;
+    font-size: 1rem;
+    padding: 0.875rem 1.5rem;
+}
+
+/* Timer Details */
+.timer-inline-details {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    border: 1px solid rgba(212, 165, 116, 0.2);
+}
+
+.timer-detail-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.timer-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.timer-detail-item label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Pages Input Group */
+.pages-input-group-inline {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.pages-input-inline {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    transition: var(--transition);
+}
+
+.pages-input-inline:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+}
+
+.pages-input-inline:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-adjust {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-adjust:hover:not(:disabled) {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    transform: scale(1.05);
+}
+
+.btn-adjust:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* XP Display */
+.xp-display-inline {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.2));
+    border-radius: var(--border-radius);
+    border: 2px solid rgba(255, 193, 7, 0.4);
+}
+
+.xp-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #FFC107;
+    text-shadow: 0 2px 5px rgba(255, 193, 7, 0.5);
+    font-family: 'Courier New', monospace;
+}
+
+.xp-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #FFD54F;
+}
+
+/* Minutes Display */
+.minutes-display {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    border: 2px solid var(--border-color);
+    text-align: center;
+    font-family: 'Courier New', monospace;
+}
+
+/* Progress Info */
+.timer-progress-info {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid rgba(212, 165, 116, 0.3);
+}
+
+.timer-progress-info .progress-text {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .reading-timer-inline {
+        padding: 1.5rem;
+    }
+
+    .timer-inline-main {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5rem;
+    }
+
+    .timer-display-large {
+        justify-content: center;
+        padding: 1.25rem;
+    }
+
+    .timer-icon {
+        font-size: 2.5rem;
+    }
+
+    .timer-value-large {
+        font-size: 2.5rem;
+    }
+
+    .timer-controls-inline {
+        flex-direction: column;
+    }
+
+    .timer-controls-inline .btn {
+        width: 100%;
+    }
+
+    .timer-detail-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .timer-inline-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .timer-value-large {
+        font-size: 2rem;
+    }
+}
