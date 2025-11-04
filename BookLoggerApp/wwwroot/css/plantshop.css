@@ -106,6 +106,16 @@
     box-shadow: 0 4px 16px rgba(136, 166, 126, 0.4);
 }
 
+.plant-shop-card.locked {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.plant-shop-card.locked .plant-card-image,
+.plant-shop-card.locked .plant-card-body {
+    filter: blur(8px);
+}
+
 /* Plant Card Image */
 .plant-card-image {
     position: relative;
@@ -141,6 +151,44 @@
 
 .lock-icon {
     font-size: 3rem;
+}
+
+/* Full card locked overlay */
+.locked-overlay-full {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: var(--border-radius-lg);
+}
+
+.lock-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.lock-icon-large {
+    font-size: 4rem;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+}
+
+.lock-text {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
 /* Plant Card Body */

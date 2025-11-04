@@ -46,9 +46,9 @@ public partial class PlantShopViewModel : ViewModelBase
             UserCoins = await _settingsProvider.GetUserCoinsAsync();
             UserLevel = await _settingsProvider.GetUserLevelAsync();
 
-            // Load available species
-            var species = await _plantService.GetAvailableSpeciesAsync(UserLevel);
-            AvailableSpecies = new ObservableCollection<PlantSpecies>(species);
+            // Load ALL species (including locked ones for display)
+            var species = await _plantService.GetAllSpeciesAsync();
+            AvailableSpecies = new ObservableCollection<PlantSpecies>(species.Where(s => s.IsAvailable).OrderBy(s => s.UnlockLevel).ThenBy(s => s.BaseCost));
         }, "Failed to load shop");
     }
 
@@ -68,6 +68,13 @@ public partial class PlantShopViewModel : ViewModelBase
             if (species == null)
             {
                 SetError("Plant species not found");
+                return;
+            }
+
+            // Check if plant is unlocked
+            if (UserLevel < species.UnlockLevel)
+            {
+                SetError($"This plant requires level {species.UnlockLevel}. You are currently level {UserLevel}.");
                 return;
             }
 
