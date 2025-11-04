@@ -76,7 +76,7 @@ public class AppDbContext : DbContext
                 Id = plantIds.StarterSprout,
                 Name = "Starter Sprout",
                 Description = "A simple plant for beginners. Grows quickly!",
-                ImagePath = "images/plants/bookworm_fern.svg",
+                ImagePath = "images/plants/starter_sprout.svg",
                 MaxLevel = 10,
                 WaterIntervalDays = 3,
                 GrowthRate = 1.2,

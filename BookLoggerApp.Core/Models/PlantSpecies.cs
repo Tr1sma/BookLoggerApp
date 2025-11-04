@@ -7,7 +7,7 @@ namespace BookLoggerApp.Core.Models;
 /// </summary>
 public class PlantSpecies
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; }
 
     [Required]
     [MaxLength(100)]

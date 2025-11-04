@@ -3,19 +3,16 @@ using System;
 using BookLoggerApp.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BookLoggerApp.Infrastructure.Data.Migrations
+namespace BookLoggerApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251102160828_FixSeedDataCreatedAt")]
-    partial class FixSeedDataCreatedAt
+    partial class AppDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
@@ -360,26 +357,13 @@ namespace BookLoggerApp.Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000001"),
-                            BaseCost = 0,
-                            Description = "A simple plant for beginners. Grows quickly!",
-                            GrowthRate = 1.0,
-                            ImagePath = "/images/plants/starter_sprout.png",
-                            IsAvailable = true,
-                            MaxLevel = 5,
-                            Name = "Starter Sprout",
-                            UnlockLevel = 1,
-                            WaterIntervalDays = 2
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000002"),
                             BaseCost = 500,
-                            Description = "A lush fern that grows with every page.",
+                            Description = "A simple plant for beginners. Grows quickly!",
                             GrowthRate = 1.2,
-                            ImagePath = "/images/plants/bookworm_fern.png",
+                            ImagePath = "images/plants/starter_sprout.svg",
                             IsAvailable = true,
                             MaxLevel = 10,
-                            Name = "Bookworm Fern",
+                            Name = "Starter Sprout",
                             UnlockLevel = 5,
                             WaterIntervalDays = 3
                         },
@@ -389,7 +373,7 @@ namespace BookLoggerApp.Infrastructure.Data.Migrations
                             BaseCost = 1000,
                             Description = "Low maintenance, high rewards.",
                             GrowthRate = 0.80000000000000004,
-                            ImagePath = "/images/plants/reading_cactus.png",
+                            ImagePath = "images/plants/reading_cactus.svg",
                             IsAvailable = true,
                             MaxLevel = 15,
                             Name = "Reading Cactus",
@@ -578,6 +562,10 @@ namespace BookLoggerApp.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("BookshelfPosition")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("CurrentLevel")
                         .HasColumnType("INTEGER");
 
@@ -585,6 +573,9 @@ namespace BookLoggerApp.Infrastructure.Data.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsInBookshelf")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("LastWatered")

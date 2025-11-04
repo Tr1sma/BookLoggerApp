@@ -7,7 +7,7 @@ namespace BookLoggerApp.Core.Models;
 /// </summary>
 public class AppSettings
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; }
 
     // UI Settings
     [MaxLength(50)]
