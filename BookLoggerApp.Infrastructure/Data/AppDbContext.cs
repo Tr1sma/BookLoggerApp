@@ -86,6 +86,19 @@ public class AppDbContext : DbContext
             },
             new PlantSpecies
             {
+                Id = plantIds.BookwormFern,
+                Name = "Bookworm Fern",
+                Description = "A lush fern for dedicated readers.",
+                ImagePath = "images/plants/bookworm_fern.svg",
+                MaxLevel = 12,
+                WaterIntervalDays = 4,
+                GrowthRate = 1.0,
+                BaseCost = 750,
+                UnlockLevel = 5,
+                IsAvailable = true
+            },
+            new PlantSpecies
+            {
                 Id = plantIds.ReadingCactus,
                 Name = "Reading Cactus",
                 Description = "Low maintenance, high rewards.",
