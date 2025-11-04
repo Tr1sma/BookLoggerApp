@@ -70,29 +70,50 @@ public static class MauiProgram
 
         var app = builder.Build();
 
-        // Initialize database immediately after app is built
-        System.Diagnostics.Debug.WriteLine("Initializing database...");
-        try
+        // Initialize database asynchronously to avoid blocking the UI thread
+        System.Diagnostics.Debug.WriteLine("Starting database initialization task...");
+        Task.Run(async () =>
         {
-            var dbContext = app.Services.GetRequiredService<AppDbContext>();
-            dbContext.Database.Migrate(); // Use synchronous version for startup
-            System.Diagnostics.Debug.WriteLine("Database migration completed successfully");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"=== EXCEPTION IN DATABASE MIGRATION ===");
-            System.Diagnostics.Debug.WriteLine($"Exception Type: {ex.GetType().FullName}");
-            System.Diagnostics.Debug.WriteLine($"Message: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-            if (ex.InnerException != null)
+            System.Diagnostics.Debug.WriteLine("Database initialization task started");
+            try
             {
-                System.Diagnostics.Debug.WriteLine($"Inner Exception: {ex.InnerException.GetType().FullName}");
-                System.Diagnostics.Debug.WriteLine($"Inner Message: {ex.InnerException.Message}");
-                System.Diagnostics.Debug.WriteLine($"Inner Stack: {ex.InnerException.StackTrace}");
+                using var scope = app.Services.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+//#if DEBUG
+//                // In DEBUG mode, delete and recreate the database for a clean start
+//                System.Diagnostics.Debug.WriteLine("DEBUG MODE: Deleting existing database...");
+//                await dbContext.Database.EnsureDeletedAsync();
+//                System.Diagnostics.Debug.WriteLine("Database deleted");
+//#endif
+
+                System.Diagnostics.Debug.WriteLine("Checking if database exists...");
+                var canConnect = await dbContext.Database.CanConnectAsync();
+                System.Diagnostics.Debug.WriteLine($"Can connect to database: {canConnect}");
+
+                System.Diagnostics.Debug.WriteLine("Applying migrations...");
+                await dbContext.Database.MigrateAsync();
+                System.Diagnostics.Debug.WriteLine("Database migration completed successfully");
+
+                // Verify seed data
+                var genreCount = await dbContext.Genres.CountAsync();
+                System.Diagnostics.Debug.WriteLine($"Genres in database: {genreCount}");
             }
-            System.Diagnostics.Debug.WriteLine("=== END EXCEPTION ===");
-            // Don't throw - let app start even if migration fails
-        }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"=== EXCEPTION IN DATABASE MIGRATION ===");
+                System.Diagnostics.Debug.WriteLine($"Exception Type: {ex.GetType().FullName}");
+                System.Diagnostics.Debug.WriteLine($"Message: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Inner Exception: {ex.InnerException.GetType().FullName}");
+                    System.Diagnostics.Debug.WriteLine($"Inner Message: {ex.InnerException.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Inner Stack: {ex.InnerException.StackTrace}");
+                }
+                System.Diagnostics.Debug.WriteLine("=== END EXCEPTION ===");
+            }
+        });
 
         System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Completed ===");
         return app;

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace BookLoggerApp.Infrastructure.Data.Migrations
+namespace BookLoggerApp.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -251,9 +251,11 @@ namespace BookLoggerApp.Infrastructure.Data.Migrations
                     CurrentLevel = table.Column<int>(type: "INTEGER", nullable: false),
                     Experience = table.Column<int>(type: "INTEGER", nullable: false),
                     Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    LastWatered = table.Column<DateTime>(type: "TEXT", nullable: false),
                     PlantedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false)
+                    LastWatered = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    BookshelfPosition = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
+                    IsInBookshelf = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -269,7 +271,7 @@ namespace BookLoggerApp.Infrastructure.Data.Migrations
             migrationBuilder.InsertData(
                 table: "AppSettings",
                 columns: new[] { "Id", "AutoBackupEnabled", "Coins", "CreatedAt", "Language", "LastBackupDate", "NotificationsEnabled", "ReadingRemindersEnabled", "ReminderTime", "TelemetryEnabled", "Theme", "TotalXp", "UpdatedAt", "UserLevel" },
-                values: new object[] { new Guid("99999999-0000-0000-0000-000000000001"), false, 100, new DateTime(2025, 10, 30, 17, 9, 7, 340, DateTimeKind.Utc).AddTicks(8489), "en", null, false, false, null, false, "Light", 0, null, 1 });
+                values: new object[] { new Guid("99999999-0000-0000-0000-000000000001"), false, 100, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "en", null, false, false, null, false, "Light", 0, null, 1 });
 
             migrationBuilder.InsertData(
                 table: "Genres",
@@ -291,9 +293,8 @@ namespace BookLoggerApp.Infrastructure.Data.Migrations
                 columns: new[] { "Id", "BaseCost", "Description", "GrowthRate", "ImagePath", "IsAvailable", "MaxLevel", "Name", "UnlockLevel", "WaterIntervalDays" },
                 values: new object[,]
                 {
-                    { new Guid("10000000-0000-0000-0000-000000000001"), 0, "A simple plant for beginners. Grows quickly!", 1.0, "/images/plants/starter_sprout.png", true, 5, "Starter Sprout", 1, 2 },
-                    { new Guid("10000000-0000-0000-0000-000000000002"), 500, "A lush fern that grows with every page.", 1.2, "/images/plants/bookworm_fern.png", true, 10, "Bookworm Fern", 5, 3 },
-                    { new Guid("10000000-0000-0000-0000-000000000003"), 1000, "Low maintenance, high rewards.", 0.80000000000000004, "/images/plants/reading_cactus.png", true, 15, "Reading Cactus", 10, 7 }
+                    { new Guid("10000000-0000-0000-0000-000000000001"), 500, "A simple plant for beginners. Grows quickly!", 1.2, "images/plants/starter_sprout.svg", true, 10, "Starter Sprout", 5, 3 },
+                    { new Guid("10000000-0000-0000-0000-000000000003"), 1000, "Low maintenance, high rewards.", 0.80000000000000004, "images/plants/reading_cactus.svg", true, 15, "Reading Cactus", 10, 7 }
                 });
 
             migrationBuilder.CreateIndex(
