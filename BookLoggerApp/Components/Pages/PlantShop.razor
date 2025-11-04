@@ -47,6 +47,7 @@
                 <PlantShopCard
                     Species="@species"
                     UserCoins="@ViewModel.UserCoins"
+                    UserLevel="@ViewModel.UserLevel"
                     IsSelected="@(ViewModel.SelectedSpecies?.Id == species.Id)"
                     OnSelect="() => ViewModel.SelectSpeciesCommand.Execute(species)" />
             }

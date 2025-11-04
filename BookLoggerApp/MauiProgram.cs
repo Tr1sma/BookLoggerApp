@@ -80,12 +80,12 @@ public static class MauiProgram
                 using var scope = app.Services.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-//#if DEBUG
-//                // In DEBUG mode, delete and recreate the database for a clean start
-//                System.Diagnostics.Debug.WriteLine("DEBUG MODE: Deleting existing database...");
-//                await dbContext.Database.EnsureDeletedAsync();
-//                System.Diagnostics.Debug.WriteLine("Database deleted");
-//#endif
+#if DEBUG
+                // In DEBUG mode, delete and recreate the database for a clean start
+                System.Diagnostics.Debug.WriteLine("DEBUG MODE: Deleting existing database...");
+                await dbContext.Database.EnsureDeletedAsync();
+                System.Diagnostics.Debug.WriteLine("Database deleted");
+#endif
 
                 System.Diagnostics.Debug.WriteLine("Checking if database exists...");
                 var canConnect = await dbContext.Database.CanConnectAsync();
@@ -95,23 +95,70 @@ public static class MauiProgram
                 await dbContext.Database.MigrateAsync();
                 System.Diagnostics.Debug.WriteLine("Database migration completed successfully");
 
-                // Fix plant image paths if they don't have leading slash
-                System.Diagnostics.Debug.WriteLine("Checking and fixing plant image paths...");
+                // Fix plant image paths - ensure wwwroot format
+                System.Diagnostics.Debug.WriteLine("=== CHECKING PLANT IMAGE PATHS ===");
                 var plants = await dbContext.PlantSpecies.ToListAsync();
+                System.Diagnostics.Debug.WriteLine($"Found {plants.Count} plant species in database");
+
                 bool needsSave = false;
                 foreach (var plant in plants)
                 {
-                    if (!string.IsNullOrEmpty(plant.ImagePath) && !plant.ImagePath.StartsWith("/"))
+                    System.Diagnostics.Debug.WriteLine($"Plant: {plant.Name}, Current ImagePath: '{plant.ImagePath}'");
+
+                    if (!string.IsNullOrEmpty(plant.ImagePath))
                     {
-                        System.Diagnostics.Debug.WriteLine($"Fixing path for {plant.Name}: {plant.ImagePath} -> /{plant.ImagePath}");
-                        plant.ImagePath = "/" + plant.ImagePath;
-                        needsSave = true;
+                        string correctPath = plant.ImagePath;
+
+                        // Remove leading slash if present
+                        if (correctPath.StartsWith("/"))
+                        {
+                            correctPath = correctPath.TrimStart('/');
+                            System.Diagnostics.Debug.WriteLine($"  -> Removed leading slash: {correctPath}");
+                        }
+
+                        // Fix file extension: .png -> .svg
+                        if (correctPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                        {
+                            correctPath = correctPath.Substring(0, correctPath.Length - 4) + ".svg";
+                            System.Diagnostics.Debug.WriteLine($"  -> Changed extension to .svg: {correctPath}");
+                        }
+
+                        // If it's just a filename, convert to wwwroot path
+                        if (!correctPath.Contains("/"))
+                        {
+                            correctPath = $"images/plants/{correctPath}";
+                            System.Diagnostics.Debug.WriteLine($"  -> Added path prefix: {correctPath}");
+                        }
+
+                        if (correctPath != plant.ImagePath)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  -> FINAL UPDATE: '{plant.ImagePath}' -> '{correctPath}'");
+                            plant.ImagePath = correctPath;
+                            needsSave = true;
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  -> Path is correct, no change needed");
+                        }
                     }
                 }
+
                 if (needsSave)
                 {
                     await dbContext.SaveChangesAsync();
-                    System.Diagnostics.Debug.WriteLine("Plant image paths fixed and saved");
+                    System.Diagnostics.Debug.WriteLine("✓ Plant image paths fixed and saved");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("✓ All plant image paths are already correct");
+                }
+
+                // Verify final paths
+                System.Diagnostics.Debug.WriteLine("=== FINAL PLANT IMAGE PATHS ===");
+                var finalPlants = await dbContext.PlantSpecies.ToListAsync();
+                foreach (var plant in finalPlants)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  {plant.Name}: '{plant.ImagePath}'");
                 }
 
                 // Verify seed data

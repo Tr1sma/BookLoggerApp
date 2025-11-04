@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="sproutGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8BC34A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#558B2F;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="potGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4A574;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Pot -->
+  <path d="M 60 140 L 70 180 L 130 180 L 140 140 Z" fill="url(#potGrad)" stroke="#6B5638" stroke-width="2"/>
+  <ellipse cx="100" cy="140" rx="42" ry="12" fill="#A67C52" stroke="#6B5638" stroke-width="2"/>
+  
+  <!-- Soil -->
+  <ellipse cx="100" cy="140" rx="38" ry="8" fill="#5D4E37"/>
+  
+  <!-- Stem -->
+  <path d="M 100 140 Q 95 120 100 100" fill="none" stroke="#689F38" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Leaves -->
+  <ellipse cx="92" cy="115" rx="18" ry="12" fill="url(#sproutGrad)" stroke="#558B2F" stroke-width="2" transform="rotate(-30 92 115)"/>
+  <ellipse cx="108" cy="110" rx="20" ry="14" fill="url(#sproutGrad)" stroke="#558B2F" stroke-width="2" transform="rotate(25 108 110)"/>
+  
+  <!-- Top leaves -->
+  <ellipse cx="95" cy="95" rx="15" ry="10" fill="url(#sproutGrad)" stroke="#558B2F" stroke-width="2" transform="rotate(-40 95 95)"/>
+  <ellipse cx="105" cy="92" rx="16" ry="11" fill="url(#sproutGrad)" stroke="#558B2F" stroke-width="2" transform="rotate(35 105 92)"/>
+  
+  <!-- Sparkles -->
+  <circle cx="85" cy="105" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="115" cy="100" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="100" cy="85" r="2" fill="#FFD700" opacity="0.8"/>
+</svg>
