@@ -2,6 +2,7 @@
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Components.Shared
 @inject BookDetailViewModel ViewModel
 @inject IProgressService ProgressService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
@@ -36,27 +37,17 @@
             </div>
         </div>
 
+        <!-- Reading Timer - Inline on BookDetail page -->
+        @if (ViewModel.Book.Status == ReadingStatus.Reading || ViewModel.Book.Status == ReadingStatus.Planned)
+        {
+            <ReadingTimerInline Book="@ViewModel.Book" OnSessionSaved="HandleSessionSaved" />
+        }
+
         <!-- Main Content Grid -->
         <div class="book-detail-content">
             <!-- Cover Section -->
             <div class="book-cover-section">
                 <img src="@GetCoverUrl()" alt="@ViewModel.Book.Title" />
-
-                <!-- Quick Actions -->
-                <div class="quick-actions">
-                    @if (ViewModel.Book.Status == ReadingStatus.Planned || ViewModel.Book.Status == ReadingStatus.Reading)
-                    {
-                        <button class="btn btn-primary btn-block" @onclick="StartReadingSession">
-                            📖 Start Reading
-                        </button>
-                    }
-                    @if (ViewModel.Book.Status == ReadingStatus.Reading)
-                    {
-                        <button class="btn btn-primary btn-block" @onclick="QuickAddProgress">
-                            ⚡ Quick +15 min
-                        </button>
-                    }
-                </div>
             </div>
 
             <!-- Info Section -->
@@ -264,5 +255,11 @@
     private void NavigateToBookshelf()
     {
         Navigation.NavigateTo("/bookshelf");
+    }
+
+    private async Task HandleSessionSaved()
+    {
+        // Refresh the book details to show updated progress
+        await ViewModel.LoadAsync(Id);
     }
 }

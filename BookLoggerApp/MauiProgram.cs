@@ -17,6 +17,7 @@ public static class MauiProgram
 
         builder.UseMauiApp<App>();
         builder.Services.AddMauiBlazorWebView();
+
         System.Diagnostics.Debug.WriteLine("UseMauiApp<App> and AddMauiBlazorWebView completed");
 
         // Database path
