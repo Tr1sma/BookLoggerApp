@@ -40,7 +40,28 @@
 
                 <div class="form-group">
                     <label for="isbn">ISBN</label>
-                    <input id="isbn" type="text" @bind="ViewModel.Book.ISBN" maxlength="13" />
+                    <div class="isbn-input-group">
+                        <input id="isbn" type="text" @bind="ViewModel.Book.ISBN" maxlength="13" placeholder="Enter ISBN-10 or ISBN-13" />
+                        <button type="button"
+                                class="btn btn-info"
+                                @onclick="HandleIsbnLookup"
+                                disabled="@(ViewModel.IsLookingUpIsbn || string.IsNullOrWhiteSpace(ViewModel.Book?.ISBN))">
+                            @if (ViewModel.IsLookingUpIsbn)
+                            {
+                                <span>Loading...</span>
+                            }
+                            else
+                            {
+                                <span>🔍 Auto-Fill</span>
+                            }
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(ViewModel.LookupMessage))
+                    {
+                        <div class="lookup-message @(ViewModel.LookupMessage.Contains("Error") || ViewModel.LookupMessage.Contains("No book") ? "error" : "success")">
+                            @ViewModel.LookupMessage
+                        </div>
+                    }
                 </div>
 
                 <div class="form-row">
@@ -217,6 +238,11 @@
         {
             Navigation.NavigateTo("/bookshelf");
         }
+    }
+
+    private async Task HandleIsbnLookup()
+    {
+        await ViewModel.LookupByIsbnCommand.ExecuteAsync(null);
     }
 }
 

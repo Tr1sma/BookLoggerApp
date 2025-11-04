@@ -9,11 +9,19 @@ public partial class BookEditViewModel : ViewModelBase
 {
     private readonly IBookService _bookService;
     private readonly IGenreService _genreService;
+    private readonly ILookupService _lookupService;
+    private readonly IImageService _imageService;
 
-    public BookEditViewModel(IBookService bookService, IGenreService genreService)
+    public BookEditViewModel(
+        IBookService bookService,
+        IGenreService genreService,
+        ILookupService lookupService,
+        IImageService imageService)
     {
         _bookService = bookService;
         _genreService = genreService;
+        _lookupService = lookupService;
+        _imageService = imageService;
     }
 
     [ObservableProperty]
@@ -24,6 +32,12 @@ public partial class BookEditViewModel : ViewModelBase
 
     [ObservableProperty]
     private List<Guid> _selectedGenreIds = new();
+
+    [ObservableProperty]
+    private bool _isLookingUpIsbn;
+
+    [ObservableProperty]
+    private string? _lookupMessage;
 
     [RelayCommand]
     public async Task LoadAsync(Guid? bookId)
@@ -65,10 +79,25 @@ public partial class BookEditViewModel : ViewModelBase
                 return;
             }
 
-            if (Book.Id == Guid.Empty || await _bookService.GetByIdAsync(Book.Id) == null)
+            var isNewBook = Book.Id == Guid.Empty || await _bookService.GetByIdAsync(Book.Id) == null;
+            var coverImageUrl = Book.CoverImagePath;
+
+            if (isNewBook)
             {
                 // New book
                 Book = await _bookService.AddAsync(Book);
+
+                // Download and save cover image if it's a URL
+                if (!string.IsNullOrWhiteSpace(coverImageUrl) &&
+                    (coverImageUrl.StartsWith("http://") || coverImageUrl.StartsWith("https://")))
+                {
+                    var localPath = await _imageService.SaveCoverImageFromUrlAsync(coverImageUrl, Book.Id);
+                    if (localPath != null)
+                    {
+                        Book.CoverImagePath = localPath;
+                        await _bookService.UpdateAsync(Book);
+                    }
+                }
             }
             else
             {
@@ -95,6 +124,117 @@ public partial class BookEditViewModel : ViewModelBase
                 }
             }
         }, "Failed to save book");
+    }
+
+    [RelayCommand]
+    public async Task LookupByIsbnAsync()
+    {
+        if (Book == null || string.IsNullOrWhiteSpace(Book.ISBN))
+        {
+            LookupMessage = "Please enter an ISBN first";
+            return;
+        }
+
+        IsLookingUpIsbn = true;
+        LookupMessage = null;
+
+        try
+        {
+            var metadata = await _lookupService.LookupByISBNAsync(Book.ISBN);
+
+            if (metadata == null)
+            {
+                LookupMessage = "No book found with this ISBN";
+                return;
+            }
+
+            // Fill in the book data
+            if (!string.IsNullOrWhiteSpace(metadata.Title))
+                Book.Title = metadata.Title;
+
+            if (!string.IsNullOrWhiteSpace(metadata.Author))
+                Book.Author = metadata.Author;
+
+            if (!string.IsNullOrWhiteSpace(metadata.Publisher))
+                Book.Publisher = metadata.Publisher;
+
+            if (metadata.PublicationYear.HasValue)
+                Book.PublicationYear = metadata.PublicationYear;
+
+            if (!string.IsNullOrWhiteSpace(metadata.Language))
+                Book.Language = metadata.Language;
+
+            if (!string.IsNullOrWhiteSpace(metadata.Description))
+                Book.Description = metadata.Description;
+
+            if (metadata.PageCount.HasValue)
+                Book.PageCount = metadata.PageCount;
+
+            // Handle cover image
+            if (!string.IsNullOrWhiteSpace(metadata.CoverImageUrl))
+            {
+                // For new books (Id == Guid.Empty), we'll store the URL temporarily
+                // and download it when the book is saved
+                if (Book.Id == Guid.Empty)
+                {
+                    // Store the URL temporarily for display
+                    Book.CoverImagePath = metadata.CoverImageUrl;
+                }
+                else
+                {
+                    // For existing books, download and save the cover immediately
+                    var coverPath = await _imageService.SaveCoverImageFromUrlAsync(metadata.CoverImageUrl, Book.Id);
+                    if (coverPath != null)
+                    {
+                        Book.CoverImagePath = coverPath;
+                    }
+                }
+            }
+
+            // Handle genres/categories
+            if (metadata.Categories != null && metadata.Categories.Count > 0)
+            {
+                await MapCategoriesToGenresAsync(metadata.Categories);
+            }
+
+            LookupMessage = "Book data loaded successfully!";
+        }
+        catch (Exception ex)
+        {
+            LookupMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLookingUpIsbn = false;
+        }
+    }
+
+    private async Task MapCategoriesToGenresAsync(List<string> categories)
+    {
+        // Try to match categories to existing genres
+        var matchedGenreIds = new List<Guid>();
+
+        foreach (var category in categories)
+        {
+            var matchingGenre = AvailableGenres.FirstOrDefault(g =>
+                g.Name.Equals(category, StringComparison.OrdinalIgnoreCase) ||
+                category.Contains(g.Name, StringComparison.OrdinalIgnoreCase) ||
+                g.Name.Contains(category, StringComparison.OrdinalIgnoreCase));
+
+            if (matchingGenre != null && !matchedGenreIds.Contains(matchingGenre.Id))
+            {
+                matchedGenreIds.Add(matchingGenre.Id);
+            }
+        }
+
+        // Add matched genres to selected genres
+        foreach (var genreId in matchedGenreIds)
+        {
+            if (!SelectedGenreIds.Contains(genreId))
+            {
+                SelectedGenreIds.Add(genreId);
+            }
+        }
     }
 }
 
