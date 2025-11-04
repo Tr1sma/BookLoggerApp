@@ -5,7 +5,6 @@ using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using Microsoft.EntityFrameworkCore;
-using ZXing.Net.Maui.Controls;
 
 public static class MauiProgram
 {
@@ -18,9 +17,6 @@ public static class MauiProgram
 
         builder.UseMauiApp<App>();
         builder.Services.AddMauiBlazorWebView();
-
-        // Register ZXing barcode reader
-        builder.UseBarcodeReader();
 
         System.Diagnostics.Debug.WriteLine("UseMauiApp<App> and AddMauiBlazorWebView completed");
 
