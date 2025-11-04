@@ -207,17 +207,8 @@
 
     private void HandleBookClick(Book book)
     {
-        // Show quick timer or navigate to detail based on user preference
-        // For now, show quick timer for reading books, navigate for others
-        if (book.Status == ReadingStatus.Reading || book.Status == ReadingStatus.Planned)
-        {
-            selectedBook = book;
-            showQuickTimer = true;
-        }
-        else
-        {
-            NavigateToBookDetail(book.Id);
-        }
+        // Navigate directly to book detail page for all books
+        NavigateToBookDetail(book.Id);
     }
 
     private void NavigateToBookDetail(Guid bookId)

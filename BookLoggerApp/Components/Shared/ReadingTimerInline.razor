@@ -60,26 +60,34 @@
             </div>
         </div>
 
-        <!-- Session Details -->
-        <div class="timer-inline-details">
-            <div class="timer-detail-row">
-                <div class="timer-detail-item">
-                    <label>Pages Read</label>
-                    <div class="pages-input-group-inline">
-                        <button class="btn-adjust" @onclick="DecrementPages" disabled="@(PagesRead <= 0 || IsRunning)">-</button>
-                        <input type="number"
-                               class="pages-input-inline"
-                               @bind="PagesRead"
-                               @bind:event="oninput"
-                               min="0"
-                               disabled="@IsRunning"
-                               placeholder="0" />
-                        <button class="btn-adjust" @onclick="IncrementPages" disabled="@IsRunning">+</button>
+        <!-- Session Details - Only show after timer is paused -->
+        @if (!IsRunning && ElapsedTime.TotalSeconds > 0)
+        {
+            <div class="timer-inline-details">
+                <div class="timer-detail-row">
+                    <div class="timer-detail-item">
+                        <label>Current Page</label>
+                        <div class="pages-input-group-inline">
+                            <button class="btn-adjust" @onclick="DecrementCurrentPage" disabled="@(CurrentPageInput <= Book.CurrentPage)">-</button>
+                            <input type="number"
+                                   class="pages-input-inline"
+                                   @bind="CurrentPageInput"
+                                   @bind:event="oninput"
+                                   min="@Book.CurrentPage"
+                                   max="@(Book.PageCount ?? 9999)"
+                                   placeholder="@Book.CurrentPage.ToString()" />
+                            <button class="btn-adjust" @onclick="IncrementCurrentPage">+</button>
+                        </div>
+                        <small class="input-hint">Was on page @Book.CurrentPage</small>
                     </div>
-                </div>
 
-                @if (ElapsedTime.TotalSeconds > 0)
-                {
+                    <div class="timer-detail-item">
+                        <label>Pages Read</label>
+                        <div class="pages-display">
+                            @CalculatePagesRead() pages
+                        </div>
+                    </div>
+
                     <div class="timer-detail-item">
                         <label>XP to Earn</label>
                         <div class="xp-display-inline">
@@ -94,15 +102,15 @@
                             @((int)Math.Ceiling(ElapsedTime.TotalMinutes)) min
                         </div>
                     </div>
-                }
+                </div>
             </div>
-        </div>
+        }
 
-        @if (Book.PageCount.HasValue && PagesRead > 0)
+        @if (Book.PageCount.HasValue && !IsRunning && ElapsedTime.TotalSeconds > 0 && CalculatePagesRead() > 0)
         {
             <div class="timer-progress-info">
                 <p class="progress-text">
-                    Progress: @Book.CurrentPage → @(Book.CurrentPage + PagesRead) / @Book.PageCount
+                    Progress: @Book.CurrentPage → @CurrentPageInput / @Book.PageCount
                     (@CalculateNewProgressPercentage()%)
                 </p>
             </div>
@@ -118,15 +126,19 @@
     private TimeSpan ElapsedTime { get; set; } = TimeSpan.Zero;
     private TimeSpan PausedTime { get; set; } = TimeSpan.Zero;
     private bool IsRunning { get; set; }
-    private int PagesRead { get; set; }
+    private int CurrentPageInput { get; set; }
+    private int PagesRead => CalculatePagesRead();
     private System.Threading.Timer? _timer;
 
     protected override void OnParametersSet()
     {
-        // Reset when book changes
+        // Reset when book changes or initialize CurrentPageInput
         if (Book != null && !IsRunning)
         {
-            ResetTimer();
+            if (CurrentPageInput == 0 || CurrentPageInput < Book.CurrentPage)
+            {
+                CurrentPageInput = Book.CurrentPage;
+            }
         }
     }
 
@@ -161,6 +173,8 @@
 
         try
         {
+            var pagesRead = CalculatePagesRead();
+
             // Save session
             var session = new ReadingSession
             {
@@ -168,20 +182,19 @@
                 StartedAt = StartTime ?? DateTime.UtcNow,
                 EndedAt = DateTime.UtcNow,
                 Minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes),
-                PagesRead = PagesRead > 0 ? PagesRead : null,
+                PagesRead = pagesRead > 0 ? pagesRead : null,
                 XpEarned = CalculateXP()
             };
 
             await ProgressService.AddSessionAsync(session);
 
             // Update book progress if pages were read
-            if (PagesRead > 0)
+            if (pagesRead > 0)
             {
-                var currentPage = Book.CurrentPage + PagesRead;
-                await BookService.UpdateProgressAsync(Book.Id, currentPage);
+                await BookService.UpdateProgressAsync(Book.Id, CurrentPageInput);
             }
 
-            // Notify parent
+            // Notify parent to refresh
             await OnSessionSaved.InvokeAsync();
 
             // Reset
@@ -199,20 +212,30 @@
         ResetTimer();
     }
 
-    private void IncrementPages()
+    private void IncrementCurrentPage()
     {
-        if (!IsRunning)
+        if (Book != null && Book.PageCount.HasValue && CurrentPageInput < Book.PageCount.Value)
         {
-            PagesRead++;
+            CurrentPageInput++;
+        }
+        else if (Book != null && !Book.PageCount.HasValue)
+        {
+            CurrentPageInput++;
         }
     }
 
-    private void DecrementPages()
+    private void DecrementCurrentPage()
     {
-        if (PagesRead > 0 && !IsRunning)
+        if (Book != null && CurrentPageInput > Book.CurrentPage)
         {
-            PagesRead--;
+            CurrentPageInput--;
         }
+    }
+
+    private int CalculatePagesRead()
+    {
+        if (Book == null) return 0;
+        return Math.Max(0, CurrentPageInput - Book.CurrentPage);
     }
 
     private void ResetTimer()
@@ -221,21 +244,23 @@
         PausedTime = TimeSpan.Zero;
         StartTime = null;
         IsRunning = false;
-        PagesRead = 0;
+        if (Book != null)
+        {
+            CurrentPageInput = Book.CurrentPage;
+        }
     }
 
     private int CalculateXP()
     {
         var minuteXp = (int)ElapsedTime.TotalMinutes;
-        var pageXp = PagesRead * 2;
+        var pageXp = CalculatePagesRead() * 2;
         return minuteXp + pageXp;
     }
 
     private int CalculateNewProgressPercentage()
     {
         if (Book?.PageCount == null || Book.PageCount == 0) return 0;
-        var newPage = Book.CurrentPage + PagesRead;
-        return (newPage * 100) / Book.PageCount.Value;
+        return (CurrentPageInput * 100) / Book.PageCount.Value;
     }
 
     private string FormatTime(TimeSpan time)
