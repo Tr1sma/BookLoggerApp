@@ -132,13 +132,11 @@
 
     protected override void OnParametersSet()
     {
-        // Reset when book changes or initialize CurrentPageInput
-        if (Book != null && !IsRunning)
+        // Initialize CurrentPageInput when book loads or after reset
+        // Also update if book has progressed beyond current input (e.g., after saving a session)
+        if (Book != null && (CurrentPageInput == 0 || CurrentPageInput < Book.CurrentPage))
         {
-            if (CurrentPageInput == 0 || CurrentPageInput < Book.CurrentPage)
-            {
-                CurrentPageInput = Book.CurrentPage;
-            }
+            CurrentPageInput = Book.CurrentPage;
         }
     }
 
@@ -194,11 +192,11 @@
                 await BookService.UpdateProgressAsync(Book.Id, CurrentPageInput);
             }
 
-            // Notify parent to refresh
-            await OnSessionSaved.InvokeAsync();
-
-            // Reset
+            // Reset timer state first
             ResetTimer();
+
+            // Notify parent to refresh (this will trigger OnParametersSet with updated Book)
+            await OnSessionSaved.InvokeAsync();
         }
         catch (Exception ex)
         {
@@ -244,10 +242,7 @@
         PausedTime = TimeSpan.Zero;
         StartTime = null;
         IsRunning = false;
-        if (Book != null)
-        {
-            CurrentPageInput = Book.CurrentPage;
-        }
+        CurrentPageInput = 0; // Reset to 0, will be re-initialized in OnParametersSet
     }
 
     private int CalculateXP()
