@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BookLoggerApp.Infrastructure.Data.Migrations
+namespace BookLoggerApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251102212218_FixPlantImagePaths")]
-    partial class FixPlantImagePaths
+    [Migration("20251104184330_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
