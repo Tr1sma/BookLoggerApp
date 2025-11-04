@@ -63,6 +63,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="9.0.9" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
@@ -71,6 +75,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BookLoggerApp.Core\BookLoggerApp.Core.csproj" />
+      <ProjectReference Include="..\BookLoggerApp.Infrastructure\BookLoggerApp.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

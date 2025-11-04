@@ -1,0 +1,139 @@
+@page "/shop"
+@using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Components.Shared
+@inject PlantShopViewModel ViewModel
+@inject NavigationManager Navigation
+
+<PageTitle>Plant Shop - BookLogger</PageTitle>
+
+<div class="plant-shop-container">
+    <!-- Header -->
+    <div class="shop-header">
+        <h1>🌱 Plant Shop</h1>
+        <div class="user-stats">
+            <div class="stat-coin">
+                <span class="coin-icon">🪙</span>
+                <span class="coin-count">@ViewModel.UserCoins Coins</span>
+            </div>
+            <div class="stat-level">
+                <span>Level @ViewModel.UserLevel</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    <div class="shop-description">
+        <p>🌿 Welcome to the Plant Shop! Buy plants to grow as you read. Each plant has unique growth rates and care requirements.</p>
+    </div>
+
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading">Loading shop...</div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            @ViewModel.ErrorMessage
+            <button class="btn-close-alert" @onclick="() => ViewModel.ErrorMessage = null">×</button>
+        </div>
+    }
+    else
+    {
+        <!-- Shop Grid -->
+        <div class="shop-grid">
+            @foreach (var species in ViewModel.AvailableSpecies)
+            {
+                <PlantShopCard
+                    Species="@species"
+                    UserCoins="@ViewModel.UserCoins"
+                    IsSelected="@(ViewModel.SelectedSpecies?.Id == species.Id)"
+                    OnSelect="() => ViewModel.SelectSpeciesCommand.Execute(species)" />
+            }
+        </div>
+
+        @if (!ViewModel.AvailableSpecies.Any())
+        {
+            <div class="empty-state">
+                <h3>No plants available</h3>
+                <p>Level up to unlock more plants!</p>
+            </div>
+        }
+    }
+
+    <!-- Purchase Modal -->
+    @if (ViewModel.SelectedSpecies != null)
+    {
+        <div class="purchase-modal-overlay" @onclick="ViewModel.ClearSelectionCommand.Execute">
+            <div class="purchase-modal" @onclick:stopPropagation="true">
+                <div class="modal-header">
+                    <h2>Purchase @ViewModel.SelectedSpecies.Name</h2>
+                    <button class="btn-close" @onclick="ViewModel.ClearSelectionCommand.Execute">×</button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="plant-preview">
+                        <img src="@ViewModel.SelectedSpecies.ImagePath" alt="@ViewModel.SelectedSpecies.Name" />
+                    </div>
+
+                    <div class="plant-details">
+                        <p class="plant-description">@ViewModel.SelectedSpecies.Description</p>
+
+                        <div class="plant-stats-grid">
+                            <div class="stat-item">
+                                <label>Max Level</label>
+                                <span>@ViewModel.SelectedSpecies.MaxLevel</span>
+                            </div>
+                            <div class="stat-item">
+                                <label>Water Interval</label>
+                                <span>Every @ViewModel.SelectedSpecies.WaterIntervalDays days</span>
+                            </div>
+                            <div class="stat-item">
+                                <label>Growth Rate</label>
+                                <span>@ViewModel.SelectedSpecies.GrowthRate.ToString("0.0")x</span>
+                            </div>
+                            <div class="stat-item">
+                                <label>Cost</label>
+                                <span>🪙 @ViewModel.SelectedSpecies.BaseCost</span>
+                            </div>
+                        </div>
+
+                        <div class="name-input-group">
+                            <label>Name your plant:</label>
+                            <input type="text"
+                                   class="plant-name-input"
+                                   placeholder="Enter a name..."
+                                   @bind="ViewModel.NewPlantName"
+                                   maxlength="100" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="ViewModel.ClearSelectionCommand.Execute">
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary"
+                            @onclick="() => ViewModel.PurchasePlantCommand.ExecuteAsync(ViewModel.SelectedSpecies.Id)"
+                            disabled="@(string.IsNullOrWhiteSpace(ViewModel.NewPlantName) || ViewModel.UserCoins < ViewModel.SelectedSpecies.BaseCost)">
+                        @if (ViewModel.UserCoins >= ViewModel.SelectedSpecies.BaseCost)
+                        {
+                            <span>Purchase for 🪙 @ViewModel.SelectedSpecies.BaseCost</span>
+                        }
+                        else
+                        {
+                            <span>Not Enough Coins</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+}

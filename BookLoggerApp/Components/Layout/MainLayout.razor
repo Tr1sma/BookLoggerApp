@@ -1,5 +1,22 @@
 ﻿@inherits LayoutComponentBase
 
+@code {
+    protected override void OnInitialized()
+    {
+        System.Diagnostics.Debug.WriteLine("=== MainLayout OnInitialized ===");
+        base.OnInitialized();
+    }
+    
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            System.Diagnostics.Debug.WriteLine("=== MainLayout OnAfterRender (first render) ===");
+        }
+        base.OnAfterRender(firstRender);
+    }
+}
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />

@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.10" />
     <PackageReference Include="xunit" Version="2.9.0" />
     <PackageReference Include="FluentAssertions" Version="8.6.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
@@ -19,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BookLoggerApp.Core\BookLoggerApp.Core.csproj" />
+    <ProjectReference Include="..\BookLoggerApp.Infrastructure\BookLoggerApp.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

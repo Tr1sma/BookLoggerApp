@@ -1,0 +1,322 @@
+/* Book Detail - Cozy Dark Mode */
+.book-detail-container {
+    padding: 2.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.book-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.book-detail-header h1 {
+    font-size: 2.5rem;
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+}
+
+.book-detail-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.book-detail-content {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 2.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.book-cover-section img {
+    width: 100%;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-hover);
+    border: 1px solid var(--border-light);
+    margin-bottom: 1.5rem;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.btn-block {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+}
+
+.book-info-section {
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.book-info-section h2 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.book-meta {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.book-meta-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.book-meta-item:last-child {
+    border-bottom: none;
+}
+
+.book-meta-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.book-meta-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.book-meta-value .star {
+    font-size: 1rem;
+    margin-right: 0.125rem;
+}
+
+.book-meta-value .star.filled {
+    color: #FFC107;
+    text-shadow: 0 1px 2px rgba(255, 193, 7, 0.3);
+}
+
+.book-meta-value .star.empty {
+    color: rgba(221, 221, 221, 0.3);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-badge.status-planned {
+    background: rgba(123, 143, 163, 0.2);
+    color: var(--status-planned);
+}
+
+.status-badge.status-reading {
+    background: rgba(212, 165, 116, 0.2);
+    color: var(--status-reading);
+}
+
+.status-badge.status-completed {
+    background: rgba(136, 166, 126, 0.2);
+    color: var(--status-completed);
+}
+
+.status-badge.status-abandoned {
+    background: rgba(166, 120, 116, 0.2);
+    color: var(--status-abandoned);
+}
+
+.book-description {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-light);
+}
+
+.book-description h3 {
+    color: var(--text-primary);
+    font-size: 1.15rem;
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+.book-description p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+/* Reading Progress */
+.reading-progress-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.reading-progress-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.progress-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.progress-stat-item {
+    background: var(--bg-tertiary);
+    padding: 1.25rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-light);
+    text-align: center;
+}
+
+.progress-stat-item label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.progress-stat-item p {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.progress-bar-large {
+    height: 16px;
+    background: var(--bg-primary);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+}
+
+.progress-bar-large .progress-fill {
+    height: 100%;
+    background: var(--gradient-warm);
+    transition: width 0.4s ease;
+    box-shadow: 0 0 12px rgba(212, 165, 116, 0.5);
+}
+
+/* Reading Sessions */
+.reading-sessions-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.reading-sessions-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sessions-note {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.session-item {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.session-item:hover {
+    border-color: var(--primary-color);
+    background: var(--card-hover);
+}
+
+.session-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.session-details {
+    display: flex;
+    gap: 2rem;
+    color: var(--text-primary);
+}
+
+/* Notes & Annotations */
+.notes-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.notes-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.note-item {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-light);
+}
+
+.note-content {
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .book-detail-container {
+        padding: 1.5rem;
+    }
+    
+    .book-detail-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .book-cover-section {
+        max-width: 250px;
+        margin: 0 auto;
+    }
+}

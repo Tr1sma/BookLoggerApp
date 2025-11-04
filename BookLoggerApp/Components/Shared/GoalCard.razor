@@ -1,0 +1,31 @@
+<div class="goal-card">
+    <h4>@Goal.Title</h4>
+    @if (!string.IsNullOrEmpty(Goal.Description))
+    {
+        <p class="goal-description">@Goal.Description</p>
+    }
+    <div class="progress-bar">
+        <div class="progress-fill" style="width: @Goal.ProgressPercentage%"></div>
+    </div>
+    <p class="goal-progress-text">@Goal.Current / @Goal.Target @GetGoalTypeUnit(Goal.Type) (@Goal.ProgressPercentage%)</p>
+    @if (Goal.EndDate != default)
+    {
+        <p class="goal-date">Until @Goal.EndDate.ToString("yyyy-MM-dd")</p>
+    }
+</div>
+
+@code {
+    [Parameter] public BookLoggerApp.Core.Models.ReadingGoal Goal { get; set; } = null!;
+
+    private string GetGoalTypeUnit(BookLoggerApp.Core.Enums.GoalType type)
+    {
+        return type switch
+        {
+            BookLoggerApp.Core.Enums.GoalType.Books => "books",
+            BookLoggerApp.Core.Enums.GoalType.Pages => "pages",
+            BookLoggerApp.Core.Enums.GoalType.Minutes => "minutes",
+            _ => ""
+        };
+    }
+}
+

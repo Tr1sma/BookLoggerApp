@@ -1,41 +1,100 @@
-﻿using BookLoggerApp;
-using BookLoggerApp.Core.Services;
-using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp;
 using BookLoggerApp.Core.ViewModels;
 using BookLoggerApp.Infrastructure;
-using SQLite;
+using BookLoggerApp.Infrastructure.Data;
+using BookLoggerApp.Infrastructure.Repositories;
+using BookLoggerApp.Infrastructure.Repositories.Specific;
+using Microsoft.EntityFrameworkCore;
 
 public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        var builder = MauiApp.CreateBuilder();
-        builder.UseMauiApp<App>();
+        System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Started ===");
 
-        // SQLite connections
+        var builder = MauiApp.CreateBuilder();
+        System.Diagnostics.Debug.WriteLine("MauiApp.CreateBuilder completed");
+
+        builder.UseMauiApp<App>();
+        builder.Services.AddMauiBlazorWebView();
+        System.Diagnostics.Debug.WriteLine("UseMauiApp<App> and AddMauiBlazorWebView completed");
+
+        // Database path
         var dbPath = PlatformsDbPath.GetDatabasePath();
 
-        // Register a single SQLiteAsyncConnection for both services
-        builder.Services.AddSingleton(new SQLiteAsyncConnection(dbPath));
+        // Register EF Core DbContext as Transient (MAUI doesn't have request scopes like ASP.NET)
+        builder.Services.AddTransient<AppDbContext>(sp =>
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            optionsBuilder.UseSqlite($"Data Source={dbPath}");
+            return new AppDbContext(optionsBuilder.Options);
+        });
 
-        // Services
-        builder.Services.AddSingleton<IBookService>(sp =>
-        {
-            var svc = new SqliteBookService(dbPath);
-            // Fire-and-forget initialize (for M0 ok); alternativ: await in App start
-            svc.InitializeAsync().ConfigureAwait(false);
-            return svc;
-        });
-        builder.Services.AddSingleton<IProgressService>(sp =>
-        {
-            var conn = sp.GetRequiredService<SQLiteAsyncConnection>();
-            return SqliteProgressService.CreateAsync(dbPath).GetAwaiter().GetResult();
-        });
+        // Register Generic Repository
+        builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+
+        // Register Specific Repositories
+        builder.Services.AddTransient<IBookRepository, BookRepository>();
+        builder.Services.AddTransient<IReadingSessionRepository, ReadingSessionRepository>();
+        builder.Services.AddTransient<IReadingGoalRepository, ReadingGoalRepository>();
+        builder.Services.AddTransient<IUserPlantRepository, UserPlantRepository>();
+
+        // Register Services as Transient to match DbContext lifetime
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IBookService, BookLoggerApp.Infrastructure.Services.BookService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IProgressService, BookLoggerApp.Infrastructure.Services.ProgressService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IGenreService, BookLoggerApp.Infrastructure.Services.GenreService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IQuoteService, BookLoggerApp.Infrastructure.Services.QuoteService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IAnnotationService, BookLoggerApp.Infrastructure.Services.AnnotationService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IGoalService, BookLoggerApp.Infrastructure.Services.GoalService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IPlantService, BookLoggerApp.Infrastructure.Services.PlantService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider, BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Infrastructure.Services.NotificationService>();
 
         // ViewModels
         builder.Services.AddTransient<BookListViewModel>();
         builder.Services.AddTransient<BookDetailViewModel>();
+        builder.Services.AddTransient<DashboardViewModel>();
+        builder.Services.AddTransient<BookshelfViewModel>();
+        builder.Services.AddTransient<BookEditViewModel>();
+        builder.Services.AddTransient<ReadingViewModel>();
+        builder.Services.AddTransient<GoalsViewModel>();
+        builder.Services.AddTransient<StatsViewModel>();
+        builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<PlantShopViewModel>();
 
-        return builder.Build();
+        System.Diagnostics.Debug.WriteLine("All services registered, building app...");
+
+        var app = builder.Build();
+
+        // Initialize database immediately after app is built
+        System.Diagnostics.Debug.WriteLine("Initializing database...");
+        try
+        {
+            var dbContext = app.Services.GetRequiredService<AppDbContext>();
+            dbContext.Database.Migrate(); // Use synchronous version for startup
+            System.Diagnostics.Debug.WriteLine("Database migration completed successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"=== EXCEPTION IN DATABASE MIGRATION ===");
+            System.Diagnostics.Debug.WriteLine($"Exception Type: {ex.GetType().FullName}");
+            System.Diagnostics.Debug.WriteLine($"Message: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"Inner Exception: {ex.InnerException.GetType().FullName}");
+                System.Diagnostics.Debug.WriteLine($"Inner Message: {ex.InnerException.Message}");
+                System.Diagnostics.Debug.WriteLine($"Inner Stack: {ex.InnerException.StackTrace}");
+            }
+            System.Diagnostics.Debug.WriteLine("=== END EXCEPTION ===");
+            // Don't throw - let app start even if migration fails
+        }
+
+        System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Completed ===");
+        return app;
     }
 }

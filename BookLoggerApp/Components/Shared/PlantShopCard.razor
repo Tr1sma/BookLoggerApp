@@ -1,0 +1,59 @@
+@using BookLoggerApp.Core.Models
+
+<div class="plant-shop-card @(IsSelected ? "selected" : "")" @onclick="OnSelect">
+    <!-- Plant Image -->
+    <div class="plant-card-image">
+        <img src="@Species.ImagePath" alt="@Species.Name" />
+
+        @if (UserCoins < Species.BaseCost)
+        {
+            <div class="locked-overlay">
+                <span class="lock-icon">🔒</span>
+            </div>
+        }
+    </div>
+
+    <!-- Plant Info -->
+    <div class="plant-card-body">
+        <h3 class="plant-card-title">@Species.Name</h3>
+        <p class="plant-card-description">@Species.Description</p>
+
+        <!-- Stats -->
+        <div class="plant-card-stats">
+            <div class="stat-mini">
+                <span class="stat-icon">📊</span>
+                <span>Lv. @Species.MaxLevel</span>
+            </div>
+            <div class="stat-mini">
+                <span class="stat-icon">💧</span>
+                <span>@Species.WaterIntervalDays d</span>
+            </div>
+            <div class="stat-mini">
+                <span class="stat-icon">⚡</span>
+                <span>@Species.GrowthRate.ToString("0.0")x</span>
+            </div>
+        </div>
+
+        <!-- Price -->
+        <div class="plant-card-footer">
+            <span class="plant-cost @(UserCoins >= Species.BaseCost ? "affordable" : "expensive")">
+                🪙 @Species.BaseCost
+            </span>
+            @if (UserCoins >= Species.BaseCost)
+            {
+                <span class="buy-label">Click to Buy</span>
+            }
+            else
+            {
+                <span class="buy-label locked">Need @(Species.BaseCost - UserCoins) more</span>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public PlantSpecies Species { get; set; } = null!;
+    [Parameter] public int UserCoins { get; set; }
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public EventCallback OnSelect { get; set; }
+}

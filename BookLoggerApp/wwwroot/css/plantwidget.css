@@ -1,0 +1,246 @@
+/* Plant Widget */
+.plant-widget {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    color: white;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    box-shadow: var(--shadow-hover);
+    transition: var(--transition);
+}
+
+.plant-widget:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+/* Status-specific backgrounds */
+.plant-widget.status-healthy {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.plant-widget.status-thirsty {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.plant-widget.status-wilting {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.plant-widget.status-dead {
+    background: linear-gradient(135deg, #636363 0%, #a2ab58 100%);
+    filter: grayscale(80%);
+}
+
+/* Plant Visual */
+.plant-visual {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.plant-image-large {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+}
+
+.plant-status-indicator {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    font-size: 2rem;
+    background: white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Plant Info */
+.plant-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.plant-name {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.plant-species {
+    opacity: 0.9;
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+}
+
+/* Level Badge */
+.plant-level {
+    margin-bottom: 1rem;
+}
+
+.level-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 0.35rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+/* XP Progress */
+.plant-xp {
+    margin-bottom: 1.5rem;
+}
+
+.xp-bar {
+    height: 14px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 7px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    transition: width 0.5s ease;
+    border-radius: 7px;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
+
+.xp-text {
+    font-size: 0.9rem;
+    opacity: 0.95;
+    margin: 0.5rem 0 0 0;
+}
+
+/* Watering Section */
+.plant-watering {
+    margin-top: 1rem;
+}
+
+.watering-status {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.btn-water {
+    background: rgba(255,255,255,0.25);
+    border: 2px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.btn-water:hover:not(:disabled) {
+    background: rgba(255,255,255,0.35);
+    border-color: rgba(255,255,255,0.7);
+    transform: translateY(-2px);
+}
+
+.btn-water:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.plant-dead-message {
+    background: rgba(0,0,0,0.3);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin: 1rem 0 0 0;
+    font-size: 0.95rem;
+    border-left: 3px solid rgba(255,255,255,0.5);
+}
+
+/* Water Timer */
+.water-timer {
+    margin: 0.75rem 0 0 0;
+    font-size: 0.85rem;
+    opacity: 0.9;
+    font-style: italic;
+}
+
+/* Compact Version (for smaller spaces) */
+.plant-widget.compact {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.plant-widget.compact .plant-visual {
+    margin-bottom: 1rem;
+}
+
+.plant-widget.compact .plant-image-large {
+    width: 100px;
+    height: 100px;
+}
+
+.plant-widget.compact .plant-status-indicator {
+    width: 35px;
+    height: 35px;
+    font-size: 1.5rem;
+    bottom: -5px;
+    right: -5px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .plant-widget {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .plant-name {
+        font-size: 1.5rem;
+    }
+
+    .plant-image-large {
+        width: 120px;
+        height: 120px;
+    }
+
+    .btn-water {
+        width: 100%;
+    }
+}
+
+/* No Plant State */
+.plant-widget.no-plant {
+    background: linear-gradient(135deg, #636363 0%, #7d7d7d 100%);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.plant-widget.no-plant:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    background: linear-gradient(135deg, #737373 0%, #8d8d8d 100%);
+}
+
+.no-plant-message {
+    text-align: center;
+    padding: 2rem;
+}
+
+.no-plant-message h3 {
+    font-size: 1.5rem;
+    margin: 0 0 1rem 0;
+}
+
+.no-plant-message p {
+    margin: 0 0 1.5rem 0;
+    opacity: 0.9;
+}

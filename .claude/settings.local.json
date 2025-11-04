@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet new:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet add:*)",
+      "Read(//c/Users/Trist/source/repos/**)",
+      "Bash(dotnet remove:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet tool install:*)",
+      "Bash(dotnet test:*)",
+      "Bash(cat:*)",
+      "Bash(dotnet ef migrations list:*)",
+      "Bash(dotnet ef database update:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,222 @@
+@page "/books/{Id:guid}/edit"
+@page "/books/new"
+@using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Models
+@inject BookEditViewModel ViewModel
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+
+<PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? "Add Book" : "Edit Book") - BookLogger</PageTitle>
+
+<div class="book-edit-container">
+    <div class="book-edit-header">
+        <h1>@(ViewModel.Book?.Id == Guid.Empty ? "Add New Book" : "Edit Book")</h1>
+        <button class="btn btn-secondary" @onclick="NavigateBack">← Back</button>
+    </div>
+
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading">Loading...</div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">@ViewModel.ErrorMessage</div>
+    }
+    else if (ViewModel.Book != null)
+    {
+        <form class="book-edit-form" @onsubmit="HandleSave" @onsubmit:preventDefault="true">
+            <!-- Basic Information -->
+            <section class="form-section">
+                <h2>Basic Information</h2>
+                
+                <div class="form-group">
+                    <label for="title">Title *</label>
+                    <input id="title" type="text" @bind="ViewModel.Book.Title" required maxlength="500" />
+                </div>
+
+                <div class="form-group">
+                    <label for="author">Author *</label>
+                    <input id="author" type="text" @bind="ViewModel.Book.Author" required maxlength="300" />
+                </div>
+
+                <div class="form-group">
+                    <label for="isbn">ISBN</label>
+                    <input id="isbn" type="text" @bind="ViewModel.Book.ISBN" maxlength="13" />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="publisher">Publisher</label>
+                        <input id="publisher" type="text" @bind="ViewModel.Book.Publisher" maxlength="200" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="publicationYear">Publication Year</label>
+                        <input id="publicationYear" type="number" @bind="ViewModel.Book.PublicationYear" min="1000" max="@DateTime.Now.Year" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="language">Language</label>
+                    <input id="language" type="text" @bind="ViewModel.Book.Language" maxlength="50" placeholder="e.g., en, de" />
+                </div>
+            </section>
+
+            <!-- Content -->
+            <section class="form-section">
+                <h2>Content</h2>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" @bind="ViewModel.Book.Description" maxlength="2000" rows="4"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pageCount">Total Pages</label>
+                        <input id="pageCount" type="number" @bind="ViewModel.Book.PageCount" min="1" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="currentPage">Current Page</label>
+                        <input id="currentPage" type="number" @bind="ViewModel.Book.CurrentPage" min="0" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Status & Rating -->
+            <section class="form-section">
+                <h2>Status & Rating</h2>
+                
+                <div class="form-group">
+                    <label for="status">Reading Status</label>
+                    <select id="status" @bind="ViewModel.Book.Status">
+                        <option value="@ReadingStatus.Planned">Planned</option>
+                        <option value="@ReadingStatus.Reading">Reading</option>
+                        <option value="@ReadingStatus.Completed">Completed</option>
+                        <option value="@ReadingStatus.Abandoned">Abandoned</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Rating (1-5 stars)</label>
+                    <div class="rating-input">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <button type="button" 
+                                    class="star-button @(ViewModel.Book.Rating >= i ? "filled" : "empty")"
+                                    @onclick="() => SetRating(i)">
+                                ★
+                            </button>
+                        }
+                        @if (ViewModel.Book.Rating.HasValue)
+                        {
+                            <button type="button" class="star-button clear" @onclick="ClearRating">Clear</button>
+                        }
+                    </div>
+                </div>
+            </section>
+
+            <!-- Genres -->
+            <section class="form-section">
+                <h2>Genres</h2>
+                
+                <div class="genres-selection">
+                    @foreach (var genre in ViewModel.AvailableGenres)
+                    {
+                        <label class="genre-checkbox">
+                            <input type="checkbox" 
+                                   checked="@ViewModel.SelectedGenreIds.Contains(genre.Id)"
+                                   @onchange="@((ChangeEventArgs e) => ToggleGenre(genre.Id, e.Value as bool? ?? false))" />
+                            <span>@genre.Icon @genre.Name</span>
+                        </label>
+                    }
+                </div>
+            </section>
+
+            <!-- Cover Image -->
+            <section class="form-section">
+                <h2>Cover Image</h2>
+                
+                <div class="form-group">
+                    <label for="coverImagePath">Cover Image URL/Path</label>
+                    <input id="coverImagePath" type="text" @bind="ViewModel.Book.CoverImagePath" maxlength="500" placeholder="/images/covers/book.jpg" />
+                    
+                    @if (!string.IsNullOrEmpty(ViewModel.Book.CoverImagePath))
+                    {
+                        <div class="cover-preview">
+                            <img src="@ViewModel.Book.CoverImagePath" alt="Cover preview" onerror="this.style.display='none'" />
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" disabled="@ViewModel.IsBusy">
+                    @(ViewModel.Book.Id == Guid.Empty ? "Add Book" : "Save Changes")
+                </button>
+                <button type="button" class="btn btn-secondary" @onclick="NavigateBack">Cancel</button>
+            </div>
+        </form>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Guid? bookId = Id != Guid.Empty ? Id : null;
+        await ViewModel.LoadCommand.ExecuteAsync(bookId);
+    }
+
+    private async Task HandleSave()
+    {
+        await ViewModel.SaveCommand.ExecuteAsync(null);
+        if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
+        {
+            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+        }
+    }
+
+    private void SetRating(int rating)
+    {
+        if (ViewModel.Book != null)
+        {
+            ViewModel.Book.Rating = rating;
+        }
+    }
+
+    private void ClearRating()
+    {
+        if (ViewModel.Book != null)
+        {
+            ViewModel.Book.Rating = null;
+        }
+    }
+
+    private void ToggleGenre(Guid genreId, bool isSelected)
+    {
+        if (isSelected && !ViewModel.SelectedGenreIds.Contains(genreId))
+        {
+            ViewModel.SelectedGenreIds.Add(genreId);
+        }
+        else if (!isSelected && ViewModel.SelectedGenreIds.Contains(genreId))
+        {
+            ViewModel.SelectedGenreIds.Remove(genreId);
+        }
+    }
+
+    private void NavigateBack()
+    {
+        if (ViewModel.Book != null && ViewModel.Book.Id != Guid.Empty)
+        {
+            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+        }
+        else
+        {
+            Navigation.NavigateTo("/bookshelf");
+        }
+    }
+}
+
