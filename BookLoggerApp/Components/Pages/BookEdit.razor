@@ -2,6 +2,7 @@
 @page "/books/new"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Components.Shared
 @inject BookEditViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
@@ -42,6 +43,11 @@
                     <label for="isbn">ISBN</label>
                     <div class="isbn-input-group">
                         <input id="isbn" type="text" @bind="ViewModel.Book.ISBN" maxlength="13" placeholder="Enter ISBN-10 or ISBN-13" />
+                        <button type="button"
+                                class="btn btn-success"
+                                @onclick="OpenBarcodeScanner">
+                            📷 Scan
+                        </button>
                         <button type="button"
                                 class="btn btn-info"
                                 @onclick="HandleIsbnLookup"
@@ -182,8 +188,16 @@
     }
 </div>
 
+<!-- Barcode Scanner -->
+<IsbnBarcodeScanner
+    IsVisible="@_showScanner"
+    OnBarcodeScanned="HandleBarcodeScanned"
+    OnClose="CloseBarcodeScanner" />
+
 @code {
     [Parameter] public Guid Id { get; set; }
+
+    private bool _showScanner = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -243,6 +257,32 @@
     private async Task HandleIsbnLookup()
     {
         await ViewModel.LookupByIsbnCommand.ExecuteAsync(null);
+    }
+
+    private void OpenBarcodeScanner()
+    {
+        _showScanner = true;
+    }
+
+    private void CloseBarcodeScanner()
+    {
+        _showScanner = false;
+    }
+
+    private async Task HandleBarcodeScanned(string isbn)
+    {
+        if (ViewModel.Book != null)
+        {
+            // Set the ISBN
+            ViewModel.Book.ISBN = isbn;
+
+            // Close the scanner
+            _showScanner = false;
+
+            // Automatically trigger the lookup
+            await Task.Delay(100); // Small delay to ensure UI updates
+            await HandleIsbnLookup();
+        }
     }
 }
 

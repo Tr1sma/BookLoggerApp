@@ -214,22 +214,38 @@
     display: flex;
     gap: 0.75rem;
     align-items: stretch;
+    flex-wrap: wrap;
 }
 
 .isbn-input-group input {
     flex: 1;
+    min-width: 200px;
 }
 
 .isbn-input-group .btn {
     white-space: nowrap;
     padding: 0.875rem 1.25rem;
     font-size: 0.9rem;
-    min-width: 120px;
+    min-width: 100px;
 }
 
 .isbn-input-group .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .isbn-input-group {
+        flex-direction: column;
+    }
+
+    .isbn-input-group input {
+        width: 100%;
+    }
+
+    .isbn-input-group .btn {
+        width: 100%;
+    }
 }
 
 /* Lookup Message */
