@@ -42,6 +42,9 @@ public class Book
     [MaxLength(500)]
     public string? CoverImagePath { get; set; }
 
+    [MaxLength(20)]
+    public string? SpineColor { get; set; } // Color identifier for book spine (e.g., "red", "blue", "green")
+
     // Status & Rating
     public ReadingStatus Status { get; set; } = ReadingStatus.Planned;
 

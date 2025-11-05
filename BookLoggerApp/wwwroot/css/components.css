@@ -58,6 +58,16 @@
     );
 }
 
+.book-cover-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
 .book-cover {
     display: none; /* Hide cover image in spine view */
 }
@@ -701,6 +711,39 @@ section h2 {
     height: auto;
     border-radius: 8px;
     box-shadow: var(--shadow);
+}
+
+.form-hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 0.25rem 0 0.75rem 0;
+}
+
+.spine-color-picker {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.spine-color-option {
+    width: 60px;
+    height: 80px;
+    border: 3px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.spine-color-option:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.spine-color-option.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+    transform: translateY(-4px);
 }
 
 /* Reading Page */
