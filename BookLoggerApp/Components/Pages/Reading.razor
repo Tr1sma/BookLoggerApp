@@ -163,9 +163,9 @@
     private async Task HandleEndSession()
     {
         await ViewModel.EndSessionCommand.ExecuteAsync(null);
-        if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
+        if (string.IsNullOrEmpty(ViewModel.ErrorMessage))
         {
-            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+            Navigation.NavigateTo("/bookshelf");
         }
     }
 

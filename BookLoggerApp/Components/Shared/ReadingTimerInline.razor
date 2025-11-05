@@ -3,6 +3,7 @@
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 @if (Book != null)
 {
@@ -134,9 +135,18 @@
     {
         // Initialize CurrentPageInput when book loads or after reset
         // Also update if book has progressed beyond current input (e.g., after saving a session)
-        if (Book != null && (CurrentPageInput == 0 || CurrentPageInput < Book.CurrentPage))
+        if (Book != null)
         {
-            CurrentPageInput = Book.CurrentPage;
+            // Always update if we're not in an active session
+            if (!IsRunning && ElapsedTime.TotalSeconds == 0)
+            {
+                CurrentPageInput = Book.CurrentPage;
+            }
+            // Or if the book's current page has changed (e.g., after saving)
+            else if (CurrentPageInput < Book.CurrentPage)
+            {
+                CurrentPageInput = Book.CurrentPage;
+            }
         }
     }
 
@@ -197,11 +207,11 @@
             // Reset timer state first
             ResetTimer();
 
-            // Notify parent to refresh (this will trigger OnParametersSet with updated Book)
+            // Notify parent to refresh (parent will force re-render via @key change)
             await OnSessionSaved.InvokeAsync();
 
-            // Force UI update
-            StateHasChanged();
+            // Navigate to bookshelf after saving
+            Navigation.NavigateTo("/bookshelf");
         }
         catch (Exception ex)
         {
