@@ -49,7 +49,7 @@
             <div class="book-cover-section">
                 @if (!string.IsNullOrEmpty(ViewModel.Book.CoverImagePath))
                 {
-                    <img src="@ViewModel.Book.CoverImagePath" alt="@ViewModel.Book.Title" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <img src="@GetCoverImageUrl()" alt="@ViewModel.Book.Title" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                     <div class="book-cover-placeholder" style="display: none;">
                         <div class="cover-placeholder-content">
                             <div class="cover-placeholder-icon">📚</div>
@@ -324,5 +324,18 @@
             return Enumerable.Empty<ReadingSession>();
 
         return ViewModel.Sessions.OrderByDescending(s => s.StartedAt).Take(5);
+    }
+
+    private string GetCoverImageUrl()
+    {
+        if (string.IsNullOrEmpty(ViewModel.Book?.CoverImagePath))
+            return string.Empty;
+
+        // Ensure the path starts with / for wwwroot access
+        var path = ViewModel.Book.CoverImagePath.Replace("\\", "/");
+        if (!path.StartsWith("/"))
+            path = "/" + path;
+
+        return path;
     }
 }
