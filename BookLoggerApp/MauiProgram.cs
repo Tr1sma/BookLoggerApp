@@ -81,12 +81,12 @@ public static class MauiProgram
                 using var scope = app.Services.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-#if DEBUG
-                // In DEBUG mode, delete and recreate the database for a clean start
-                System.Diagnostics.Debug.WriteLine("DEBUG MODE: Deleting existing database...");
-                await dbContext.Database.EnsureDeletedAsync();
-                System.Diagnostics.Debug.WriteLine("Database deleted");
-#endif
+//#if DEBUG
+//                // In DEBUG mode, delete and recreate the database for a clean start
+//                System.Diagnostics.Debug.WriteLine("DEBUG MODE: Deleting existing database...");
+//                await dbContext.Database.EnsureDeletedAsync();
+//                System.Diagnostics.Debug.WriteLine("Database deleted");
+//#endif
 
                 System.Diagnostics.Debug.WriteLine("Checking if database exists...");
                 var canConnect = await dbContext.Database.CanConnectAsync();
