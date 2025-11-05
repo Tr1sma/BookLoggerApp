@@ -205,6 +205,11 @@
 @code {
     [Parameter] public Guid Id { get; set; }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadAsync(Id);
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         await ViewModel.LoadAsync(Id);
@@ -256,6 +261,7 @@
     {
         await ViewModel.AddSessionAsync(15);
         await ViewModel.LoadAsync(Id); // Refresh
+        StateHasChanged(); // Force UI update
     }
 
     private void NavigateToEdit()
@@ -272,5 +278,6 @@
     {
         // Refresh the book details to show updated progress
         await ViewModel.LoadAsync(Id);
+        StateHasChanged(); // Force UI update
     }
 }

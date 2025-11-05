@@ -181,6 +181,8 @@
                 EndedAt = DateTime.UtcNow,
                 Minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes),
                 PagesRead = pagesRead > 0 ? pagesRead : null,
+                StartPage = Book.CurrentPage,
+                EndPage = pagesRead > 0 ? CurrentPageInput : null,
                 XpEarned = CalculateXP()
             };
 
@@ -197,6 +199,9 @@
 
             // Notify parent to refresh (this will trigger OnParametersSet with updated Book)
             await OnSessionSaved.InvokeAsync();
+
+            // Force UI update
+            StateHasChanged();
         }
         catch (Exception ex)
         {

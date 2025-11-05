@@ -102,7 +102,7 @@
                 </div>
                 <div class="summary-item">
                     <label>Pages Read</label>
-                    <p>@(ViewModel.CurrentPage - (ViewModel.Session.PagesRead ?? 0))</p>
+                    <p>@(ViewModel.CurrentPage - ViewModel.StartPage)</p>
                 </div>
                 <div class="summary-item">
                     <label>Estimated Time</label>

@@ -35,6 +35,9 @@ public partial class ReadingViewModel : ViewModelBase
     private int _currentPage;
 
     [ObservableProperty]
+    private int _startPage;
+
+    [ObservableProperty]
     private int _xpEarned;
 
     [ObservableProperty]
@@ -58,7 +61,8 @@ public partial class ReadingViewModel : ViewModelBase
             }
 
             Book = await _bookService.GetByIdAsync(Session.BookId);
-            CurrentPage = Session.PagesRead ?? 0;
+            StartPage = Session.StartPage ?? Book?.CurrentPage ?? 0;
+            CurrentPage = Session.EndPage ?? (StartPage + (Session.PagesRead ?? 0));
             XpEarned = Session.XpEarned;
             SessionStartTime = Session.StartedAt;
             
@@ -85,8 +89,14 @@ public partial class ReadingViewModel : ViewModelBase
             SessionStartTime = Session.StartedAt;
             ElapsedTime = TimeSpan.Zero;
             IsPaused = false;
-            CurrentPage = Book?.CurrentPage ?? 0;
+            StartPage = Book?.CurrentPage ?? 0;
+            CurrentPage = StartPage;
             XpEarned = 0;
+
+            // Set StartPage in the session
+            Session.StartPage = StartPage;
+            await _progressService.UpdateSessionAsync(Session);
+
             StartTimer();
         }, "Failed to start reading session");
     }
@@ -113,13 +123,20 @@ public partial class ReadingViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             StopTimer();
-            
-            Session = await _progressService.EndSessionAsync(Session.Id, CurrentPage);
-            
-            // Update book progress if page changed
+
+            // Calculate pages read during this session
+            var pagesRead = Math.Max(0, CurrentPage - StartPage);
+
+            // End the session with the correct pages read count
+            Session = await _progressService.EndSessionAsync(Session.Id, pagesRead);
+
+            // Update book progress to the current page
             if (Book != null && Book.CurrentPage != CurrentPage)
             {
                 await _bookService.UpdateProgressAsync(Book.Id, CurrentPage);
+
+                // Reload the book to get the updated progress
+                Book = await _bookService.GetByIdAsync(Book.Id);
             }
 
             XpEarned = Session.XpEarned;
@@ -132,13 +149,14 @@ public partial class ReadingViewModel : ViewModelBase
         if (Session == null || Book == null || !page.HasValue) return;
 
         CurrentPage = page.Value;
-        
-        // Calculate XP based on pages read
-        var pagesRead = Math.Max(0, CurrentPage - (Session.PagesRead ?? 0));
+
+        // Calculate pages read during this session
+        var pagesRead = Math.Max(0, CurrentPage - StartPage);
         XpEarned = pagesRead * 2; // 2 XP per page
-        
-        // Update session
-        Session.PagesRead = CurrentPage;
+
+        // Update session with correct values
+        Session.PagesRead = pagesRead;
+        Session.EndPage = CurrentPage;
         Session.XpEarned = XpEarned;
         await _progressService.UpdateSessionAsync(Session);
     }
