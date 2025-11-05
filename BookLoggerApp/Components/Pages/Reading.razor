@@ -102,7 +102,7 @@
                 </div>
                 <div class="summary-item">
                     <label>Pages Read</label>
-                    <p>@(ViewModel.CurrentPage - (ViewModel.Session.PagesRead ?? 0))</p>
+                    <p>@(ViewModel.CurrentPage - ViewModel.StartPage)</p>
                 </div>
                 <div class="summary-item">
                     <label>Estimated Time</label>
@@ -163,9 +163,9 @@
     private async Task HandleEndSession()
     {
         await ViewModel.EndSessionCommand.ExecuteAsync(null);
-        if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
+        if (string.IsNullOrEmpty(ViewModel.ErrorMessage))
         {
-            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+            Navigation.NavigateTo("/bookshelf");
         }
     }
 

@@ -47,7 +47,25 @@
         <div class="book-detail-content">
             <!-- Cover Section -->
             <div class="book-cover-section">
-                <img src="@GetCoverUrl()" alt="@ViewModel.Book.Title" />
+                @if (!string.IsNullOrEmpty(ViewModel.Book.CoverImagePath))
+                {
+                    <img src="@ViewModel.Book.CoverImagePath" alt="@ViewModel.Book.Title" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <div class="book-cover-placeholder" style="display: none;">
+                        <div class="cover-placeholder-content">
+                            <div class="cover-placeholder-icon">📚</div>
+                            <div class="cover-placeholder-title">@ViewModel.Book.Title</div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="book-cover-placeholder">
+                        <div class="cover-placeholder-content">
+                            <div class="cover-placeholder-icon">📚</div>
+                            <div class="cover-placeholder-title">@ViewModel.Book.Title</div>
+                        </div>
+                    </div>
+                }
             </div>
 
             <!-- Info Section -->
@@ -84,7 +102,7 @@
                     {
                         <div class="book-meta-item">
                             <span class="book-meta-label">Pages</span>
-                            <span class="book-meta-value">@ViewModel.Book.CurrentPage / @ViewModel.Book.PageCount (@ViewModel.Book.ProgressPercentage%)</span>
+                            <span class="book-meta-value">@GetCurrentPageDisplay() / @ViewModel.Book.PageCount (@GetProgressDisplay()%)</span>
                         </div>
                     }
 
@@ -136,18 +154,18 @@
                     </div>
                     <div class="progress-stat-item">
                         <label>Pages Read</label>
-                        <p>@ViewModel.Book.CurrentPage / @(ViewModel.Book.PageCount ?? 0)</p>
+                        <p>@GetCurrentPageDisplay() / @(ViewModel.Book.PageCount ?? 0)</p>
                     </div>
                     <div class="progress-stat-item">
                         <label>Completion</label>
-                        <p>@ViewModel.Book.ProgressPercentage%</p>
+                        <p>@GetProgressDisplay()%</p>
                     </div>
                 </div>
 
                 @if (ViewModel.Book.PageCount.HasValue)
                 {
                     <div class="progress-bar-large">
-                        <div class="progress-fill" style="width: @ViewModel.Book.ProgressPercentage%"></div>
+                        <div class="progress-fill" style="width: @GetProgressDisplay()%"></div>
                     </div>
                 }
             </div>
@@ -157,12 +175,12 @@
         @if (ViewModel.Sessions?.Any() == true)
         {
             <div class="reading-sessions-section">
-                <h3>📚 Reading Sessions (@ViewModel.Sessions.Count)</h3>
+                <h3>📚 Reading Sessions (@GetSessionsCount())</h3>
 
                 <div class="sessions-list">
-                    @foreach (var session in ViewModel.Sessions.OrderByDescending(s => s.StartedAt).Take(5))
+                    @foreach (var session in GetRecentSessions())
                     {
-                        <div class="session-item">
+                        <div class="session-item" @key="@session.Id">
                             <div class="session-date">@session.StartedAt.ToString("g")</div>
                             <div class="session-details">
                                 <span>⏱️ @session.Minutes minutes</span>
@@ -177,7 +195,7 @@
 
                 @if (ViewModel.Sessions.Count > 5)
                 {
-                    <p class="sessions-note">Showing latest 5 of @ViewModel.Sessions.Count sessions</p>
+                    <p class="sessions-note">Showing latest 5 of @GetSessionsCount() sessions</p>
                 }
             </div>
         }
@@ -186,17 +204,26 @@
 
 @code {
     [Parameter] public Guid Id { get; set; }
+    private Guid _lastLoadedId = Guid.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookDataAsync();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
-        await ViewModel.LoadAsync(Id);
+        // Only reload if the ID has changed
+        if (_lastLoadedId != Id)
+        {
+            await LoadBookDataAsync();
+        }
     }
 
-    private string GetCoverUrl()
+    private async Task LoadBookDataAsync()
     {
-        return string.IsNullOrEmpty(ViewModel.Book?.CoverImagePath)
-            ? "/images/placeholder-cover.png"
-            : ViewModel.Book.CoverImagePath;
+        await ViewModel.LoadAsync(Id);
+        _lastLoadedId = Id;
     }
 
     private string GetStatusIcon()
@@ -244,7 +271,8 @@
     private async Task QuickAddProgress()
     {
         await ViewModel.AddSessionAsync(15);
-        await ViewModel.LoadAsync(Id); // Refresh
+        await LoadBookDataAsync(); // Refresh
+        await InvokeAsync(StateHasChanged); // Force UI update
     }
 
     private void NavigateToEdit()
@@ -259,7 +287,42 @@
 
     private async Task HandleSessionSaved()
     {
-        // Refresh the book details to show updated progress
+        // Reload all book data to get updated values
         await ViewModel.LoadAsync(Id);
+
+        // Force immediate UI refresh multiple times to ensure all bindings update
+        StateHasChanged();
+        await Task.Yield(); // Let UI thread process
+        StateHasChanged();
+    }
+
+    private int GetCurrentPageDisplay()
+    {
+        // Force re-evaluation on each call to ensure latest value
+        return ViewModel.Book?.CurrentPage ?? 0;
+    }
+
+    private int GetProgressDisplay()
+    {
+        // Force re-evaluation on each call to ensure latest value
+        if (ViewModel.Book == null || !ViewModel.Book.PageCount.HasValue || ViewModel.Book.PageCount.Value == 0)
+            return 0;
+
+        return (ViewModel.Book.CurrentPage * 100) / ViewModel.Book.PageCount.Value;
+    }
+
+    private int GetSessionsCount()
+    {
+        // Force re-evaluation on each call
+        return ViewModel.Sessions?.Count ?? 0;
+    }
+
+    private IEnumerable<ReadingSession> GetRecentSessions()
+    {
+        // Force re-evaluation on each call
+        if (ViewModel.Sessions == null)
+            return Enumerable.Empty<ReadingSession>();
+
+        return ViewModel.Sessions.OrderByDescending(s => s.StartedAt).Take(5);
     }
 }

@@ -46,6 +46,38 @@
     margin-bottom: 1.5rem;
 }
 
+.book-cover-placeholder {
+    width: 100%;
+    aspect-ratio: 2/3;
+    border-radius: var(--border-radius-lg);
+    background: var(--gradient-card);
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.cover-placeholder-content {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.cover-placeholder-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.6;
+}
+
+.cover-placeholder-title {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
 .quick-actions {
     display: flex;
     flex-direction: column;
