@@ -58,16 +58,28 @@
     private string? _statusMessage;
     private bool _isError = false;
     private bool _isInitialized = false;
+    private bool _shouldInitialize = false;
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         if (IsVisible && !_isInitialized)
         {
-            await InitializeScanner();
+            _shouldInitialize = true;
         }
         else if (!IsVisible && _isInitialized)
         {
-            await StopScanner();
+            _ = StopScanner();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldInitialize)
+        {
+            _shouldInitialize = false;
+            // Small delay to ensure DOM is fully ready
+            await Task.Delay(100);
+            await InitializeScanner();
         }
     }
 

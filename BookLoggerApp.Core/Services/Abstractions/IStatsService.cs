@@ -27,4 +27,25 @@ public interface IStatsService
     Task<double> GetAverageRatingAsync(CancellationToken ct = default);
     Task<double> GetAveragePagesPerDayAsync(int days = 30, CancellationToken ct = default);
     Task<double> GetAverageMinutesPerDayAsync(int days = 30, CancellationToken ct = default);
+
+    // Rating Statistics (Multi-Category)
+    /// <summary>
+    /// Gets the average rating for a specific category across all rated books.
+    /// </summary>
+    Task<double> GetAverageRatingByCategoryAsync(RatingCategory category, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets average ratings for all categories.
+    /// </summary>
+    Task<Dictionary<RatingCategory, double>> GetAllAverageRatingsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets the top rated books, optionally filtered by a specific rating category.
+    /// </summary>
+    Task<List<BookRatingSummary>> GetTopRatedBooksAsync(int count = 10, RatingCategory? category = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets all books with their rating summaries.
+    /// </summary>
+    Task<List<BookRatingSummary>> GetBooksWithRatingsAsync(CancellationToken ct = default);
 }

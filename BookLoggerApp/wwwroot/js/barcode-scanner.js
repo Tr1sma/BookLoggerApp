@@ -16,27 +16,16 @@ window.barcodeScanner = {
         }
 
         try {
-            // Request camera access
-            this.stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'environment', // Use back camera on mobile
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                }
-            });
-
-            this.videoElement.srcObject = this.stream;
-            await this.videoElement.play();
-
+            // Let Quagga handle the video stream
             this.isScanning = true;
             this.startScanning();
 
             return { success: true };
         } catch (error) {
-            console.error('Camera access error:', error);
+            console.error('Scanner initialization error:', error);
             return {
                 success: false,
-                error: error.message || 'Failed to access camera'
+                error: error.message || 'Failed to initialize scanner'
             };
         }
     },
@@ -45,8 +34,11 @@ window.barcodeScanner = {
     startScanning() {
         if (!Quagga) {
             console.error('Quagga.js not loaded');
+            this.dotNetHelper.invokeMethodAsync('OnScanError', 'Quagga.js not loaded');
             return;
         }
+
+        console.log('Starting Quagga scanner...');
 
         Quagga.init({
             inputStream: {
@@ -54,7 +46,9 @@ window.barcodeScanner = {
                 type: "LiveStream",
                 target: this.videoElement,
                 constraints: {
-                    facingMode: "environment"
+                    facingMode: "environment",
+                    width: { min: 640, ideal: 1280, max: 1920 },
+                    height: { min: 480, ideal: 720, max: 1080 }
                 }
             },
             decoder: {
@@ -63,37 +57,55 @@ window.barcodeScanner = {
                     "ean_8_reader",    // EAN-8
                     "upc_reader",      // UPC-A
                     "upc_e_reader"     // UPC-E
-                ]
+                ],
+                debug: {
+                    drawBoundingBox: true,
+                    showFrequency: true,
+                    drawScanline: true,
+                    showPattern: true
+                }
             },
             locate: true,
             locator: {
                 patchSize: "medium",
                 halfSample: true
             },
-            numOfWorkers: 2,
+            numOfWorkers: navigator.hardwareConcurrency || 4,
             frequency: 10
         }, (err) => {
             if (err) {
                 console.error('Quagga initialization error:', err);
-                this.dotNetHelper.invokeMethodAsync('OnScanError', err.message);
+                this.dotNetHelper.invokeMethodAsync('OnScanError', err.message || 'Failed to initialize scanner');
                 return;
             }
+            console.log('Quagga initialized successfully');
             Quagga.start();
+            console.log('Quagga started');
         });
 
         // Listen for detected barcodes
         Quagga.onDetected((result) => {
             if (result && result.codeResult && result.codeResult.code) {
                 const code = result.codeResult.code;
-                console.log('Barcode detected:', code);
+                console.log('Barcode detected:', code, 'Format:', result.codeResult.format);
 
                 // Validate ISBN format (10 or 13 digits)
                 if (this.isValidIsbn(code)) {
+                    console.log('Valid ISBN detected:', code);
                     // Stop scanning after successful detection
                     this.stopScanning();
                     // Notify Blazor component
                     this.dotNetHelper.invokeMethodAsync('OnBarcodeDetected', code);
+                } else {
+                    console.log('Invalid ISBN format:', code);
                 }
+            }
+        });
+
+        // Listen for processing events (for debugging)
+        Quagga.onProcessed((result) => {
+            if (result && result.boxes) {
+                console.log('Processing frame, boxes found:', result.boxes.length);
             }
         });
     },
@@ -110,35 +122,37 @@ window.barcodeScanner = {
 
         if (Quagga) {
             Quagga.stop();
-        }
-
-        if (this.stream) {
-            this.stream.getTracks().forEach(track => track.stop());
-            this.stream = null;
+            Quagga.offDetected();
         }
 
         if (this.videoElement) {
             this.videoElement.srcObject = null;
         }
+
+        this.stream = null;
     },
 
     // Toggle torch/flashlight (if supported)
     async toggleTorch(enable) {
         try {
-            if (this.stream) {
-                const track = this.stream.getVideoTracks()[0];
-                const capabilities = track.getCapabilities();
+            // Get the stream from Quagga
+            const stream = Quagga.CameraAccess.getActiveStreamLabel();
+            if (stream) {
+                const videoTrack = Quagga.CameraAccess.getActiveTrack();
+                if (videoTrack) {
+                    const capabilities = videoTrack.getCapabilities();
 
-                if ('torch' in capabilities) {
-                    await track.applyConstraints({
-                        advanced: [{ torch: enable }]
-                    });
-                    return { success: true };
-                } else {
-                    return { success: false, error: 'Torch not supported' };
+                    if ('torch' in capabilities) {
+                        await videoTrack.applyConstraints({
+                            advanced: [{ torch: enable }]
+                        });
+                        return { success: true };
+                    } else {
+                        return { success: false, error: 'Torch not supported' };
+                    }
                 }
             }
-            return { success: false, error: 'No active stream' };
+            return { success: false, error: 'No active camera' };
         } catch (error) {
             return { success: false, error: error.message };
         }
