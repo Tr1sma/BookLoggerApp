@@ -17,13 +17,17 @@ public class MigrationTests : IDisposable
 {
     private readonly AppDbContext _context;
     private readonly BookRepository _bookRepository;
+    private readonly MockProgressionService _progressionService;
+    private readonly MockPlantService _plantService;
     private readonly BookService _bookService;
 
     public MigrationTests()
     {
         _context = TestDbContext.Create();
         _bookRepository = new BookRepository(_context);
-        _bookService = new BookService(_bookRepository);
+        _progressionService = new MockProgressionService();
+        _plantService = new MockPlantService();
+        _bookService = new BookService(_bookRepository, _progressionService, _plantService);
     }
 
     public void Dispose()

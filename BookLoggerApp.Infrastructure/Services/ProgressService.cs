@@ -12,10 +12,17 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class ProgressService : IProgressService
 {
     private readonly IReadingSessionRepository _sessionRepository;
+    private readonly IProgressionService _progressionService;
+    private readonly IPlantService _plantService;
 
-    public ProgressService(IReadingSessionRepository sessionRepository)
+    public ProgressService(
+        IReadingSessionRepository sessionRepository,
+        IProgressionService progressionService,
+        IPlantService plantService)
     {
         _sessionRepository = sessionRepository;
+        _progressionService = progressionService;
+        _plantService = plantService;
     }
 
     public async Task<ReadingSession> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
@@ -38,7 +45,7 @@ public class ProgressService : IProgressService
         return await _sessionRepository.AddAsync(session);
     }
 
-    public async Task<ReadingSession> EndSessionAsync(Guid sessionId, int pagesRead, CancellationToken ct = default)
+    public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, CancellationToken ct = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId);
         if (session == null)
@@ -48,12 +55,39 @@ public class ProgressService : IProgressService
         session.PagesRead = pagesRead;
         session.Minutes = (int)(session.EndedAt.Value - session.StartedAt).TotalMinutes;
 
-        // Calculate XP
+        // Get active plant for boost calculation
+        var activePlant = await _plantService.GetActivePlantAsync(ct);
+
+        // Check for reading streak
         var hasStreak = await HasReadingStreakAsync(ct);
-        session.XpEarned = XpCalculator.CalculateXpForSession(session.Minutes, pagesRead, hasStreak);
+
+        // Award XP using the new progression system (with streak bonus)
+        var progressionResult = await _progressionService.AwardSessionXpAsync(
+            session.Minutes,
+            pagesRead,
+            activePlant?.Id,
+            hasStreak
+        );
+
+        // Store the XP earned in the session
+        session.XpEarned = progressionResult.XpEarned;
+
+        // Award XP to active plant if exists
+        if (activePlant != null)
+        {
+            // Award plant XP (typically a fraction of user XP, or based on minutes)
+            int plantXp = session.Minutes * 2; // 2 XP per minute for plants
+            await _plantService.AddExperienceAsync(activePlant.Id, plantXp, ct);
+        }
 
         await _sessionRepository.UpdateAsync(session);
-        return session;
+
+        // Return both session and progression result for UI celebrations
+        return new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = progressionResult
+        };
     }
 
     public async Task UpdateSessionAsync(ReadingSession session, CancellationToken ct = default)

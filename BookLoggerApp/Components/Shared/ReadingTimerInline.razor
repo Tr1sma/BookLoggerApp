@@ -1,5 +1,6 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Components.Shared
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
@@ -119,6 +120,21 @@
     </div>
 }
 
+<!-- Celebration Overlays -->
+@if (ShowSessionCelebration && SessionProgressionResult != null)
+{
+    <SessionCompleteCelebration
+        Result="@SessionProgressionResult"
+        OnClose="@HandleSessionCelebrationClose" />
+}
+
+@if (ShowLevelUpCelebration && LevelUpResult != null)
+{
+    <LevelUpCelebration
+        Result="@LevelUpResult"
+        OnClose="@HandleLevelUpCelebrationClose" />
+}
+
 @code {
     [Parameter] public Book? Book { get; set; }
     [Parameter] public EventCallback OnSessionSaved { get; set; }
@@ -130,6 +146,15 @@
     private int CurrentPageInput { get; set; }
     private int PagesRead => CalculatePagesRead();
     private System.Threading.Timer? _timer;
+
+    // Session tracking for EndSessionAsync
+    private Guid? CurrentSessionId { get; set; }
+
+    // Celebration state
+    private bool ShowSessionCelebration { get; set; }
+    private ProgressionResult? SessionProgressionResult { get; set; }
+    private bool ShowLevelUpCelebration { get; set; }
+    private LevelUpResult? LevelUpResult { get; set; }
 
     protected override void OnParametersSet()
     {
@@ -150,13 +175,26 @@
         }
     }
 
-    private void HandleStart()
+    private async Task HandleStart()
     {
-        StartTime = DateTime.UtcNow;
-        IsRunning = true;
-        PausedTime = TimeSpan.Zero;
-        ElapsedTime = TimeSpan.Zero;
-        StartTimer();
+        if (Book == null) return;
+
+        try
+        {
+            // Create new session via ProgressService
+            var session = await ProgressService.StartSessionAsync(Book.Id);
+            CurrentSessionId = session.Id;
+
+            StartTime = DateTime.UtcNow;
+            IsRunning = true;
+            PausedTime = TimeSpan.Zero;
+            ElapsedTime = TimeSpan.Zero;
+            StartTimer();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to start session: {ex.Message}");
+        }
     }
 
     private void HandlePause()
@@ -175,7 +213,7 @@
 
     private async Task HandleSave()
     {
-        if (Book == null || ElapsedTime.TotalSeconds == 0) return;
+        if (Book == null || ElapsedTime.TotalSeconds == 0 || !CurrentSessionId.HasValue) return;
 
         StopTimer();
 
@@ -183,20 +221,8 @@
         {
             var pagesRead = CalculatePagesRead();
 
-            // Save session
-            var session = new ReadingSession
-            {
-                BookId = Book.Id,
-                StartedAt = StartTime ?? DateTime.UtcNow,
-                EndedAt = DateTime.UtcNow,
-                Minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes),
-                PagesRead = pagesRead > 0 ? pagesRead : null,
-                StartPage = Book.CurrentPage,
-                EndPage = pagesRead > 0 ? CurrentPageInput : null,
-                XpEarned = CalculateXP()
-            };
-
-            await ProgressService.AddSessionAsync(session);
+            // End session using ProgressService which handles XP, streak, plant boost, level-ups
+            var result = await ProgressService.EndSessionAsync(CurrentSessionId.Value, pagesRead);
 
             // Update book progress if pages were read
             if (pagesRead > 0)
@@ -204,14 +230,23 @@
                 await BookService.UpdateProgressAsync(Book.Id, CurrentPageInput);
             }
 
-            // Reset timer state first
+            // Store progression result for celebration
+            SessionProgressionResult = result.ProgressionResult;
+
+            // Reset timer state
             ResetTimer();
 
-            // Notify parent to refresh (parent will force re-render via @key change)
+            // Notify parent to refresh
             await OnSessionSaved.InvokeAsync();
 
-            // Navigate to bookshelf after saving
-            Navigation.NavigateTo("/bookshelf");
+            // Show session celebration
+            ShowSessionCelebration = true;
+
+            // Check if there was a level-up to show afterwards
+            if (result.ProgressionResult.LevelUp != null)
+            {
+                LevelUpResult = result.ProgressionResult.LevelUp;
+            }
         }
         catch (Exception ex)
         {
@@ -258,13 +293,49 @@
         StartTime = null;
         IsRunning = false;
         CurrentPageInput = 0; // Reset to 0, will be re-initialized in OnParametersSet
+        CurrentSessionId = null;
+    }
+
+    private void HandleSessionCelebrationClose()
+    {
+        ShowSessionCelebration = false;
+
+        // If there was a level-up, show that celebration next
+        if (LevelUpResult != null)
+        {
+            ShowLevelUpCelebration = true;
+        }
+        else
+        {
+            // No level-up, navigate to bookshelf
+            Navigation.NavigateTo("/bookshelf");
+        }
+    }
+
+    private void HandleLevelUpCelebrationClose()
+    {
+        ShowLevelUpCelebration = false;
+        LevelUpResult = null;
+
+        // Navigate to bookshelf after level-up celebration
+        Navigation.NavigateTo("/bookshelf");
     }
 
     private int CalculateXP()
     {
-        var minuteXp = (int)ElapsedTime.TotalMinutes;
-        var pageXp = CalculatePagesRead() * 2;
-        return minuteXp + pageXp;
+        // Use correct XP formula: 5 XP per minute, 20 XP per page
+        int minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes);
+        int pagesRead = CalculatePagesRead();
+        int baseXp = (minutes * 5) + (pagesRead * 20);
+
+        // Add long session bonus (50 XP for 60+ minutes)
+        if (minutes >= 60)
+        {
+            baseXp += 50;
+        }
+
+        // Note: Streak bonus and plant boost are applied on save by ProgressService
+        return baseXp;
     }
 
     private int CalculateNewProgressPercentage()

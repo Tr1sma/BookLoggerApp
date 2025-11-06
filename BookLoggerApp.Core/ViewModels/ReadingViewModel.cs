@@ -43,6 +43,18 @@ public partial class ReadingViewModel : ViewModelBase
     [ObservableProperty]
     private DateTime _sessionStartTime;
 
+    [ObservableProperty]
+    private bool _showSessionCelebration;
+
+    [ObservableProperty]
+    private ProgressionResult? _sessionProgressionResult;
+
+    [ObservableProperty]
+    private bool _showLevelUpCelebration;
+
+    [ObservableProperty]
+    private LevelUpResult? _levelUpResult;
+
     public bool IsRunning => Session != null && !IsPaused;
 
     [RelayCommand]
@@ -127,8 +139,10 @@ public partial class ReadingViewModel : ViewModelBase
             // Calculate pages read during this session
             var pagesRead = Math.Max(0, CurrentPage - StartPage);
 
-            // End the session with the correct pages read count
-            Session = await _progressService.EndSessionAsync(Session.Id, pagesRead);
+            // End the session with the correct pages read count (now returns SessionEndResult)
+            var result = await _progressService.EndSessionAsync(Session.Id, pagesRead);
+            Session = result.Session;
+            SessionProgressionResult = result.ProgressionResult;
 
             // Update book progress to the current page
             if (Book != null && Book.CurrentPage != CurrentPage)
@@ -140,6 +154,15 @@ public partial class ReadingViewModel : ViewModelBase
             }
 
             XpEarned = Session.XpEarned;
+
+            // Show celebration overlay with XP breakdown
+            ShowSessionCelebration = true;
+
+            // Check if there was a level-up to show afterwards
+            if (result.ProgressionResult.LevelUp != null)
+            {
+                LevelUpResult = result.ProgressionResult.LevelUp;
+            }
         }, "Failed to end session");
     }
 
@@ -152,7 +175,21 @@ public partial class ReadingViewModel : ViewModelBase
 
         // Calculate pages read during this session
         var pagesRead = Math.Max(0, CurrentPage - StartPage);
-        XpEarned = pagesRead * 2; // 2 XP per page
+
+        // Calculate estimated XP (approximate preview - final calculation at session end)
+        // Formula: (minutes × 5) + (pages × 20) + bonuses
+        int minutes = (int)ElapsedTime.TotalMinutes;
+        int baseXp = (minutes * 5) + (pagesRead * 20);
+
+        // Add long session bonus estimate (50 XP for 60+ minutes)
+        if (minutes >= 60)
+        {
+            baseXp += 50;
+        }
+
+        // Note: Streak bonus (+20) and plant boost are not included in preview
+        // They will be applied in the final calculation at session end
+        XpEarned = baseXp;
 
         // Update session with correct values
         Session.PagesRead = pagesRead;
@@ -182,6 +219,29 @@ public partial class ReadingViewModel : ViewModelBase
         {
             ElapsedTime = DateTime.UtcNow - SessionStartTime;
         }
+    }
+
+    /// <summary>
+    /// Called when session celebration is closed. Shows level-up celebration if applicable.
+    /// </summary>
+    public void OnSessionCelebrationClose()
+    {
+        ShowSessionCelebration = false;
+
+        // If there was a level-up, show that celebration next
+        if (LevelUpResult != null)
+        {
+            ShowLevelUpCelebration = true;
+        }
+    }
+
+    /// <summary>
+    /// Called when level-up celebration is closed.
+    /// </summary>
+    public void OnLevelUpCelebrationClose()
+    {
+        ShowLevelUpCelebration = false;
+        LevelUpResult = null;
     }
 }
 

@@ -27,6 +27,7 @@ public interface IPlantService
     Task AddExperienceAsync(Guid plantId, int xp, CancellationToken ct = default);
     Task<bool> CanLevelUpAsync(Guid plantId, CancellationToken ct = default);
     Task LevelUpAsync(Guid plantId, CancellationToken ct = default);
+    Task PurchaseLevelAsync(Guid plantId, CancellationToken ct = default);
 
     // Purchase
     Task<UserPlant> PurchasePlantAsync(Guid speciesId, string name, CancellationToken ct = default);
@@ -37,4 +38,8 @@ public interface IPlantService
 
     // Shop
     Task<IReadOnlyList<PlantSpecies>> GetAvailableSpeciesAsync(int userLevel, CancellationToken ct = default);
+
+    // XP Boost System
+    Task<decimal> CalculateTotalXpBoostAsync(CancellationToken ct = default);
+    Task<int> GetPlantCostAsync(Guid speciesId, CancellationToken ct = default);
 }

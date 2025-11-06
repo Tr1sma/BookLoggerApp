@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
+using BookLoggerApp.Infrastructure.Services.Helpers;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
@@ -75,5 +76,24 @@ public class AppSettingsProvider : IAppSettingsProvider
         var settings = await GetSettingsAsync(ct);
         settings.Coins += amount;
         await UpdateSettingsAsync(settings, ct);
+    }
+
+    /// <summary>
+    /// Recalculates and updates the UserLevel based on TotalXp.
+    /// Use this to fix corrupted level data.
+    /// </summary>
+    public async Task RecalculateUserLevelAsync(CancellationToken ct = default)
+    {
+        var settings = await GetSettingsAsync(ct);
+
+        // Calculate correct level from total XP
+        int correctLevel = XpCalculator.CalculateLevelFromXp(settings.TotalXp);
+
+        // Update if different
+        if (settings.UserLevel != correctLevel)
+        {
+            settings.UserLevel = correctLevel;
+            await UpdateSettingsAsync(settings, ct);
+        }
     }
 }

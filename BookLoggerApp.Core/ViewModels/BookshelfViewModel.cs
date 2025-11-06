@@ -163,5 +163,68 @@ public partial class BookshelfViewModel : ViewModelBase
             AvailablePlants.Add(plant);
         }, "Failed to remove plant");
     }
+
+    [RelayCommand]
+    public async Task WaterPlantAsync(Guid plantId)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _plantService.WaterPlantAsync(plantId);
+
+            // Refresh plant data
+            var plant = BookshelfPlants.FirstOrDefault(p => p.Id == plantId);
+            if (plant != null)
+            {
+                var updatedPlant = await _plantService.GetByIdAsync(plantId);
+                if (updatedPlant != null)
+                {
+                    var index = BookshelfPlants.IndexOf(plant);
+                    BookshelfPlants[index] = updatedPlant;
+                }
+            }
+        }, "Failed to water plant");
+    }
+
+    [RelayCommand]
+    public async Task DeletePlantAsync(Guid plantId)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _plantService.DeleteAsync(plantId);
+
+            // Remove from bookshelf or available lists
+            var plantInBookshelf = BookshelfPlants.FirstOrDefault(p => p.Id == plantId);
+            if (plantInBookshelf != null)
+            {
+                BookshelfPlants.Remove(plantInBookshelf);
+            }
+
+            var plantAvailable = AvailablePlants.FirstOrDefault(p => p.Id == plantId);
+            if (plantAvailable != null)
+            {
+                AvailablePlants.Remove(plantAvailable);
+            }
+        }, "Failed to delete plant");
+    }
+
+    [RelayCommand]
+    public async Task MovePlantToPositionAsync((Guid plantId, string position) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            var plant = BookshelfPlants.FirstOrDefault(p => p.Id == args.plantId);
+            if (plant == null)
+            {
+                SetError("Plant not found");
+                return;
+            }
+
+            plant.BookshelfPosition = args.position;
+            await _plantService.UpdateAsync(plant);
+
+            // Reload to reflect new positions
+            await LoadAsync();
+        }, "Failed to move plant");
+    }
 }
 

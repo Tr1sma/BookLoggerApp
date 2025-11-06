@@ -80,6 +80,7 @@ public class AppDbContext : DbContext
                 MaxLevel = 10,
                 WaterIntervalDays = 3,
                 GrowthRate = 1.2,
+                XpBoostPercentage = 0.05m, // 5% base boost, +0.5% per level (max 10% at level 10)
                 BaseCost = 500,
                 UnlockLevel = 1,
                 IsAvailable = true
@@ -93,6 +94,7 @@ public class AppDbContext : DbContext
                 MaxLevel = 12,
                 WaterIntervalDays = 4,
                 GrowthRate = 1.0,
+                XpBoostPercentage = 0.08m, // 8% base boost, +0.5% per level (max 14% at level 12)
                 BaseCost = 750,
                 UnlockLevel = 5,
                 IsAvailable = true
@@ -106,6 +108,7 @@ public class AppDbContext : DbContext
                 MaxLevel = 15,
                 WaterIntervalDays = 7,
                 GrowthRate = 0.8,
+                XpBoostPercentage = 0.10m, // 10% base boost, +1% per level (max 25% at level 15)
                 BaseCost = 1000,
                 UnlockLevel = 10,
                 IsAvailable = true
@@ -126,6 +129,7 @@ public class AppDbContext : DbContext
                 UserLevel = 1,
                 TotalXp = 0,
                 Coins = 100, // Starting coins
+                PlantsPurchased = 0, // Counter for dynamic plant pricing
                 CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );

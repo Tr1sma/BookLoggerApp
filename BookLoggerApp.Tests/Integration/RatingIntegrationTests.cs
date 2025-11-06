@@ -17,6 +17,8 @@ public class RatingIntegrationTests : IDisposable
     private readonly AppDbContext _context;
     private readonly BookRepository _bookRepository;
     private readonly ReadingSessionRepository _sessionRepository;
+    private readonly MockProgressionService _progressionService;
+    private readonly MockPlantService _plantService;
     private readonly BookService _bookService;
     private readonly StatsService _statsService;
 
@@ -25,7 +27,9 @@ public class RatingIntegrationTests : IDisposable
         _context = TestDbContext.Create();
         _bookRepository = new BookRepository(_context);
         _sessionRepository = new ReadingSessionRepository(_context);
-        _bookService = new BookService(_bookRepository);
+        _progressionService = new MockProgressionService();
+        _plantService = new MockPlantService();
+        _bookService = new BookService(_bookRepository, _progressionService, _plantService);
         _statsService = new StatsService(_bookRepository, _sessionRepository, _context);
     }
 

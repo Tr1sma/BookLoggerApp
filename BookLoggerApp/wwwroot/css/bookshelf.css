@@ -121,6 +121,20 @@
         0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Shelf Slot - wrapper for each item */
+.shelf-slot {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.shelf-slot[draggable="true"] {
+    cursor: move;
+}
+
+.shelf-slot[draggable="true"]:hover {
+    transform: translateY(-4px);
+}
+
 /* Wooden shelf edge (bottom border) */
 .shelf-row::after {
     content: '';
@@ -202,5 +216,48 @@
     padding: 4rem 2rem;
     color: var(--text-secondary);
     font-size: 1.1rem;
+}
+
+/* Plant Detail Modal - Brown Theme */
+.plant-detail-modal {
+    max-width: 600px !important;
+    background: linear-gradient(135deg,
+        rgba(90, 74, 58, 0.98) 0%,
+        rgba(74, 63, 50, 0.98) 50%,
+        rgba(61, 49, 38, 0.98) 100%) !important;
+    border: 2px solid rgba(139, 115, 85, 0.6) !important;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.plant-detail-modal .modal-header {
+    background: linear-gradient(135deg,
+        rgba(110, 90, 70, 0.5) 0%,
+        rgba(90, 74, 58, 0.5) 100%) !important;
+    border-bottom: 1px solid rgba(139, 115, 85, 0.3) !important;
+}
+
+.plant-detail-modal .modal-header h2 {
+    color: var(--text-primary) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.plant-detail-modal .modal-body {
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+.plant-detail-modal .plant-widget {
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+.plant-detail-modal .modal-footer {
+    background: linear-gradient(135deg,
+        rgba(90, 74, 58, 0.5) 0%,
+        rgba(74, 63, 50, 0.5) 100%) !important;
+    border-top: 1px solid rgba(139, 115, 85, 0.3) !important;
 }
 

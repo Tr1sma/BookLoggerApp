@@ -49,7 +49,13 @@
             }
             else
             {
-                <p class="plant-dead-message">😢 Your plant has died. Purchase a new one from the shop!</p>
+                <p class="plant-dead-message">😢 Your plant has died. It can no longer provide XP boosts.</p>
+                @if (OnDelete.HasDelegate)
+                {
+                    <button class="btn btn-danger" @onclick="() => OnDelete.InvokeAsync()">
+                        🗑️ Delete Dead Plant
+                    </button>
+                }
             }
         </div>
 
@@ -66,6 +72,7 @@
 @code {
     [Parameter] public UserPlant Plant { get; set; } = null!;
     [Parameter] public EventCallback OnWater { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
     [Parameter] public bool IsWatering { get; set; }
 
     private string GetPlantImage()
