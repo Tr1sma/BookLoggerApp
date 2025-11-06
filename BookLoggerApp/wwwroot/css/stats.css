@@ -179,6 +179,7 @@
 
 .coins-icon {
     font-size: 2rem;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
     filter: drop-shadow(0 2px 6px rgba(255, 193, 7, 0.5));
     animation: coinBounce 2s ease-in-out infinite;
 }

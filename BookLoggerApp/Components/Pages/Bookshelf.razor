@@ -76,29 +76,16 @@
             @{
                 var booksPerShelf = 8;
 
-                // Create a sorted list of items with positions
-                var itemsWithPositions = new List<(object item, int position)>();
+                // Create a combined list of books and plants
+                var allItems = new List<object>();
 
-                // Add books with their implicit positions
-                for (int i = 0; i < ViewModel.Books.Count; i++)
-                {
-                    itemsWithPositions.Add((ViewModel.Books[i], i));
-                }
+                // Add all books first
+                allItems.AddRange(ViewModel.Books);
 
-                // Add plants at their specific positions
-                foreach (var plant in ViewModel.BookshelfPlants)
-                {
-                    if (int.TryParse(plant.BookshelfPosition, out int pos))
-                    {
-                        itemsWithPositions.Add((plant, pos));
-                    }
-                }
+                // Add all plants - they appear after books
+                allItems.AddRange(ViewModel.BookshelfPlants);
 
-                // Sort by position and adjust for inserted plants
-                var sortedItems = itemsWithPositions
-                    .OrderBy(x => x.position)
-                    .Select(x => x.item)
-                    .ToList();
+                var sortedItems = allItems;
 
                 var shelves = sortedItems
                     .Select((item, index) => new { item, index })
@@ -125,13 +112,14 @@
                         }
                         else if (item is UserPlant plant)
                         {
-                            <div class="shelf-slot" draggable="true"
-                                 @ondragstart="() => HandleDragStart(plant.Id)"
+                            <div class="shelf-slot"
                                  @ondrop="() => HandleDropOnSlot(globalPosition)"
                                  @ondragover:preventDefault="true" @ondragover="() => {}">
                                 <PlantCard Plant="@plant"
                                            IsInBookshelf="true"
+                                           IsDraggable="true"
                                            OnClick="() => HandlePlantClick(plant)"
+                                           OnDragStart="() => HandleDragStart(plant.Id)"
                                            OnRemove="() => HandleRemovePlant(plant.Id)" />
                             </div>
                         }

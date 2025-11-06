@@ -1,10 +1,14 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
 
-<div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")" @onclick="HandleClick">
+<div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")"
+     draggable="@(IsDraggable ? "true" : "false")"
+     @onclick="HandleClick"
+     @ondragstart="HandleDragStartInternal"
+     @ondragend="HandleDragEnd">
     <div class="plant-pot-wrapper">
         <!-- Plant Image -->
-        <img src="@Plant.Species.ImagePath" alt="@Plant.Species.Name" class="plant-card-image" />
+        <img src="@Plant.Species.ImagePath" alt="@Plant.Species.Name" class="plant-card-image" draggable="false" />
 
         <div class="plant-status-badge status-@Plant.Status.ToString().ToLower()">
             @GetStatusIcon()
@@ -27,9 +31,13 @@
     [Parameter] public UserPlant Plant { get; set; } = null!;
     [Parameter] public EventCallback OnClick { get; set; }
     [Parameter] public EventCallback OnRemove { get; set; }
+    [Parameter] public EventCallback OnDragStart { get; set; }
     [Parameter] public bool IsInBookshelf { get; set; }
     [Parameter] public bool ShowProgress { get; set; } = true;
     [Parameter] public bool ShowActions { get; set; } = true;
+    [Parameter] public bool IsDraggable { get; set; } = false;
+
+    private bool _isDragging = false;
 
     private string GetStatusIcon()
     {
@@ -45,7 +53,31 @@
 
     private async Task HandleClick()
     {
+        // Don't trigger click if we were dragging
+        if (_isDragging)
+        {
+            _isDragging = false;
+            return;
+        }
         await OnClick.InvokeAsync();
+    }
+
+    private async Task HandleDragStartInternal()
+    {
+        if (!IsDraggable) return;
+
+        _isDragging = true;
+        await OnDragStart.InvokeAsync();
+    }
+
+    private void HandleDragEnd()
+    {
+        // Reset dragging flag after a short delay to prevent click
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(100);
+            _isDragging = false;
+        });
     }
 
     private async Task HandleRemove()

@@ -261,6 +261,7 @@
 
 .coins-icon {
     font-size: 2.5rem;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
     filter: drop-shadow(0 4px 8px rgba(255, 193, 7, 0.5));
 }
 

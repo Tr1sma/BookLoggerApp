@@ -1,4 +1,5 @@
 @using BookLoggerApp.Core.ViewModels
+@implements IDisposable
 @inject UserProgressViewModel ViewModel
 @inject NavigationManager Navigation
 
@@ -20,6 +21,15 @@
     protected override async Task OnInitializedAsync()
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
+
+        // Subscribe to navigation changes to auto-refresh when user navigates
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        // Refresh progress data when navigation occurs
+        await RefreshAsync();
     }
 
     private void NavigateToLevelOverview()
@@ -33,6 +43,12 @@
     public async Task RefreshAsync()
     {
         await ViewModel.RefreshCommand.ExecuteAsync(null);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from navigation events to prevent memory leaks
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }
