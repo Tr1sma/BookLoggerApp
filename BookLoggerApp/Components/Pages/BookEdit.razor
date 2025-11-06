@@ -110,10 +110,10 @@
                 </div>
             </section>
 
-            <!-- Status & Rating -->
+            <!-- Status -->
             <section class="form-section">
-                <h2>Status & Rating</h2>
-                
+                <h2>Status</h2>
+
                 <div class="form-group">
                     <label for="status">Reading Status</label>
                     <select id="status" @bind="ViewModel.Book.Status">
@@ -122,24 +122,6 @@
                         <option value="@ReadingStatus.Completed">Completed</option>
                         <option value="@ReadingStatus.Abandoned">Abandoned</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Rating (1-5 stars)</label>
-                    <div class="rating-input">
-                        @for (int i = 1; i <= 5; i++)
-                        {
-                            <button type="button" 
-                                    class="star-button @(ViewModel.Book.Rating >= i ? "filled" : "empty")"
-                                    @onclick="() => SetRating(i)">
-                                ★
-                            </button>
-                        }
-                        @if (ViewModel.Book.Rating.HasValue)
-                        {
-                            <button type="button" class="star-button clear" @onclick="ClearRating">Clear</button>
-                        }
-                    </div>
                 </div>
             </section>
 
@@ -227,22 +209,6 @@
         if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
         {
             Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
-        }
-    }
-
-    private void SetRating(int rating)
-    {
-        if (ViewModel.Book != null)
-        {
-            ViewModel.Book.Rating = rating;
-        }
-    }
-
-    private void ClearRating()
-    {
-        if (ViewModel.Book != null)
-        {
-            ViewModel.Book.Rating = null;
         }
     }
 

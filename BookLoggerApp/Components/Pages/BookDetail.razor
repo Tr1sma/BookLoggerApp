@@ -141,6 +141,59 @@
             </div>
         </div>
 
+        <!-- Book Ratings Section -->
+        @if (ViewModel.Book.Status == ReadingStatus.Completed)
+        {
+            <div class="book-ratings-section">
+                <h3>📊 Book Ratings</h3>
+
+                <div class="ratings-grid">
+                    <RatingInput Emoji="👥"
+                                Label="Characters"
+                                Rating="@ViewModel.Book.CharactersRating"
+                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.Characters, r)" />
+
+                    <RatingInput Emoji="📖"
+                                Label="Plot"
+                                Rating="@ViewModel.Book.PlotRating"
+                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.Plot, r)" />
+
+                    <RatingInput Emoji="✍️"
+                                Label="Writing Style"
+                                Rating="@ViewModel.Book.WritingStyleRating"
+                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.WritingStyle, r)" />
+
+                    <RatingInput Emoji="🌶️"
+                                Label="Spice Level"
+                                Rating="@ViewModel.Book.SpiceLevelRating"
+                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.SpiceLevel, r)" />
+
+                    <RatingInput Emoji="⚡"
+                                Label="Pacing"
+                                Rating="@ViewModel.Book.PacingRating"
+                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.Pacing, r)" />
+
+                    <RatingInput Emoji="🌍"
+                                Label="World Building"
+                                Rating="@ViewModel.Book.WorldBuildingRating"
+                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.WorldBuilding, r)" />
+
+                    <RatingInput Emoji="⭐"
+                                Label="Overall"
+                                Rating="@ViewModel.Book.OverallRating"
+                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.Overall, r)" />
+                </div>
+
+                @if (ViewModel.Book.AverageRating.HasValue)
+                {
+                    <div class="average-rating-display">
+                        <span class="average-label">Average Rating:</span>
+                        <span class="average-value">@ViewModel.Book.AverageRating.Value.ToString("F1") / 5.0</span>
+                    </div>
+                }
+            </div>
+        }
+
         <!-- Reading Progress -->
         @if (ViewModel.Book.Status == ReadingStatus.Reading || ViewModel.Book.Status == ReadingStatus.Completed)
         {
@@ -337,5 +390,13 @@
             path = "/" + path;
 
         return path;
+    }
+
+    private async Task UpdateRating(BookLoggerApp.Core.Models.RatingCategory category, int? rating)
+    {
+        if (ViewModel.Book == null) return;
+
+        await ViewModel.UpdateRatingAsync(category, rating);
+        await InvokeAsync(StateHasChanged);
     }
 }

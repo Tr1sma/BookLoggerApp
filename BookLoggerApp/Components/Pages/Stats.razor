@@ -1,5 +1,6 @@
 @page "/stats"
 @using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Models
 @inject StatsViewModel ViewModel
 
 <PageTitle>Stats - BookLogger</PageTitle>
@@ -52,6 +53,90 @@
             </section>
         }
 
+        <!-- Rating Category Averages -->
+        @if (ViewModel.CategoryAverages.Any())
+        {
+            <section class="rating-averages-section">
+                <h2>📊 Average Ratings by Category</h2>
+                <div class="rating-averages-grid">
+                    @foreach (var category in RatingCategoryInfo.GetAllCategories())
+                    {
+                        var average = ViewModel.CategoryAverages.GetValueOrDefault(category.Category, 0);
+                        @if (average > 0)
+                        {
+                            <div class="rating-average-card">
+                                <div class="rating-category-header">
+                                    <span class="rating-emoji">@category.Emoji</span>
+                                    <span class="rating-name">@category.DisplayName</span>
+                                </div>
+                                <div class="rating-value">@average.ToString("F1")</div>
+                                <div class="rating-stars-display">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <span class="star @(i <= Math.Round(average) ? "filled" : "empty")">★</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </section>
+        }
+
+        <!-- Top Rated Books -->
+        @if (ViewModel.TopRatedBooks?.Any() == true)
+        {
+            <section class="top-rated-books-section">
+                <h2>🏆 Top Rated Books</h2>
+
+                <!-- Category Filter Buttons -->
+                <div class="category-filter-buttons">
+                    <button class="btn category-filter-btn @(selectedCategory == null ? "active" : "")"
+                            @onclick="() => FilterByCategory(null)">
+                        All
+                    </button>
+                    @foreach (var category in RatingCategoryInfo.GetAllCategories())
+                    {
+                        <button class="btn category-filter-btn @(selectedCategory == category.Category ? "active" : "")"
+                                @onclick="() => FilterByCategory(category.Category)">
+                            @category.Emoji @category.DisplayName
+                        </button>
+                    }
+                </div>
+
+                <div class="top-books-list">
+                    @{
+                        int rank = 1;
+                    }
+                    @foreach (var bookRating in ViewModel.TopRatedBooks.Take(10))
+                    {
+                        <div class="top-book-item" @key="bookRating.Book.Id">
+                            <div class="book-rank">@rank</div>
+                            <div class="book-info">
+                                <div class="book-title">@bookRating.Book.Title</div>
+                                <div class="book-author">by @bookRating.Book.Author</div>
+                            </div>
+                            <div class="book-rating-summary">
+                                <div class="average-rating">@bookRating.AverageRating.ToString("F1") ⭐</div>
+                                <div class="rating-breakdown">
+                                    @foreach (var rating in bookRating.Ratings.Where(r => r.Value.HasValue))
+                                    {
+                                        var categoryInfo = RatingCategoryInfo.GetAllCategories()
+                                            .FirstOrDefault(c => c.Category == rating.Key);
+                                        @if (categoryInfo != null)
+                                        {
+                                            <span class="mini-rating">@categoryInfo.Emoji @rating.Value</span>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        rank++;
+                    }
+                </div>
+            </section>
+        }
+
         <!-- Date Range Filter -->
         <section class="date-filter">
             <h2>Date Range</h2>
@@ -69,6 +154,8 @@
 </div>
 
 @code {
+    private RatingCategory? selectedCategory = null;
+
     protected override async Task OnInitializedAsync()
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
@@ -80,6 +167,13 @@
         var hours = minutes / 60;
         var remainingMinutes = minutes % 60;
         return $"{hours}h {remainingMinutes}m";
+    }
+
+    private async Task FilterByCategory(RatingCategory? category)
+    {
+        selectedCategory = category;
+        await ViewModel.FilterTopBooksByCategoryAsync(category);
+        StateHasChanged();
     }
 }
 

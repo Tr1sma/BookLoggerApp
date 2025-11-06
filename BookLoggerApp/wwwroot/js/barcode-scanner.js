@@ -16,18 +16,23 @@ window.barcodeScanner = {
         }
 
         try {
-            // Request camera access
+            console.log('Requesting camera access...');
+
+            // First, manually get camera access and show video
             this.stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: 'environment', // Use back camera on mobile
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
+                    width: { min: 640, ideal: 1280, max: 1920 },
+                    height: { min: 480, ideal: 720, max: 1080 }
                 }
             });
 
             this.videoElement.srcObject = this.stream;
             await this.videoElement.play();
 
+            console.log('Video stream started successfully');
+
+            // Now start Quagga for barcode detection
             this.isScanning = true;
             this.startScanning();
 
@@ -41,61 +46,83 @@ window.barcodeScanner = {
         }
     },
 
-    // Start scanning for barcodes
+    // Start scanning for barcodes using the canvas overlay technique
     startScanning() {
         if (!Quagga) {
             console.error('Quagga.js not loaded');
+            this.dotNetHelper.invokeMethodAsync('OnScanError', 'Quagga.js not loaded');
             return;
         }
 
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: this.videoElement,
-                constraints: {
-                    facingMode: "environment"
-                }
-            },
-            decoder: {
-                readers: [
-                    "ean_reader",      // EAN-13 (ISBN-13)
-                    "ean_8_reader",    // EAN-8
-                    "upc_reader",      // UPC-A
-                    "upc_e_reader"     // UPC-E
-                ]
-            },
-            locate: true,
-            locator: {
-                patchSize: "medium",
-                halfSample: true
-            },
-            numOfWorkers: 2,
-            frequency: 10
-        }, (err) => {
-            if (err) {
-                console.error('Quagga initialization error:', err);
-                this.dotNetHelper.invokeMethodAsync('OnScanError', err.message);
-                return;
-            }
-            Quagga.start();
-        });
+        console.log('Starting Quagga scanner with existing video stream...');
 
-        // Listen for detected barcodes
-        Quagga.onDetected((result) => {
-            if (result && result.codeResult && result.codeResult.code) {
-                const code = result.codeResult.code;
-                console.log('Barcode detected:', code);
+        // Create a canvas for Quagga to process
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
 
-                // Validate ISBN format (10 or 13 digits)
-                if (this.isValidIsbn(code)) {
-                    // Stop scanning after successful detection
-                    this.stopScanning();
-                    // Notify Blazor component
-                    this.dotNetHelper.invokeMethodAsync('OnBarcodeDetected', code);
+        // Set canvas size to match video
+        canvas.width = this.videoElement.videoWidth || 640;
+        canvas.height = this.videoElement.videoHeight || 480;
+
+        console.log('Canvas size:', canvas.width, 'x', canvas.height);
+
+        // Process video frames
+        const processFrame = () => {
+            if (!this.isScanning) return;
+
+            // Draw current video frame to canvas
+            context.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
+
+            // Use Quagga to decode the frame
+            Quagga.decodeSingle({
+                decoder: {
+                    readers: [
+                        "ean_reader",      // EAN-13 (ISBN-13)
+                        "ean_8_reader",    // EAN-8
+                        "upc_reader",      // UPC-A
+                        "upc_e_reader"     // UPC-E
+                    ]
+                },
+                locate: true,
+                src: canvas.toDataURL('image/jpeg')
+            }, (result) => {
+                if (result && result.codeResult && result.codeResult.code) {
+                    const code = result.codeResult.code;
+                    console.log('Barcode detected:', code, 'Format:', result.codeResult.format);
+
+                    // Validate ISBN format (10 or 13 digits)
+                    if (this.isValidIsbn(code)) {
+                        console.log('Valid ISBN detected:', code);
+                        // Stop scanning after successful detection
+                        this.stopScanning();
+                        // Notify Blazor component
+                        this.dotNetHelper.invokeMethodAsync('OnBarcodeDetected', code);
+                        return; // Stop processing
+                    } else {
+                        console.log('Invalid ISBN format:', code);
+                    }
                 }
-            }
-        });
+
+                // Continue processing next frame
+                if (this.isScanning) {
+                    requestAnimationFrame(processFrame);
+                }
+            });
+        };
+
+        // Wait for video to be ready
+        if (this.videoElement.readyState >= 2) {
+            console.log('Video ready, starting frame processing');
+            processFrame();
+        } else {
+            console.log('Waiting for video to be ready...');
+            this.videoElement.addEventListener('loadeddata', () => {
+                console.log('Video loaded, starting frame processing');
+                canvas.width = this.videoElement.videoWidth || 640;
+                canvas.height = this.videoElement.videoHeight || 480;
+                processFrame();
+            }, { once: true });
+        }
     },
 
     // Validate ISBN format
@@ -106,11 +133,8 @@ window.barcodeScanner = {
 
     // Stop scanning and release camera
     stopScanning() {
+        console.log('Stopping scanner...');
         this.isScanning = false;
-
-        if (Quagga) {
-            Quagga.stop();
-        }
 
         if (this.stream) {
             this.stream.getTracks().forEach(track => track.stop());
@@ -120,6 +144,8 @@ window.barcodeScanner = {
         if (this.videoElement) {
             this.videoElement.srcObject = null;
         }
+
+        console.log('Scanner stopped');
     },
 
     // Toggle torch/flashlight (if supported)
