@@ -54,6 +54,18 @@ main {
         }
 }
 
+/* Mobile - hide sidebar, add bottom padding for bottom nav */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+
+    main {
+        padding-bottom: 80px; /* Space for bottom navigation */
+    }
+}
+
+/* Desktop - show sidebar, hide bottom nav */
 @media (min-width: 641px) {
     .page {
         flex-direction: row;
@@ -81,5 +93,16 @@ main {
     .top-row, article {
         padding-left: 2rem !important;
         padding-right: 1.5rem !important;
+    }
+}
+
+/* Tablet breakpoint - ensure bottom nav appears */
+@media (min-width: 769px) {
+    .sidebar {
+        display: block;
+    }
+
+    main {
+        padding-bottom: 0;
     }
 }

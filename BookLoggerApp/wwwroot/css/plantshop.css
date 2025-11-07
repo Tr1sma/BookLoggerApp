@@ -2,7 +2,7 @@
 .plant-shop-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1rem;
 }
 
 /* Header */
@@ -64,9 +64,9 @@
 /* Shop Grid */
 .shop-grid {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 2rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
     align-items: start;
 }
 
@@ -120,7 +120,7 @@
 /* Plant Card Image */
 .plant-card-image {
     position: relative;
-    height: 200px;
+    height: 120px;
     background: linear-gradient(145deg, #2D2419 0%, #3D2819 100%);
     display: flex !important;
     align-items: center;
@@ -131,8 +131,8 @@
 }
 
 .plant-card-image img {
-    max-width: 150px;
-    max-height: 150px;
+    max-width: 100px;
+    max-height: 100px;
     object-fit: contain;
     filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
 }
@@ -194,7 +194,7 @@
 
 /* Plant Card Body */
 .plant-card-body {
-    padding: 1.5rem;
+    padding: 0.85rem;
     display: flex !important;
     flex-direction: column !important;
     flex: 1;
@@ -203,18 +203,18 @@
 }
 
 .plant-card-title {
-    font-size: 1.35rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.4rem 0;
 }
 
 .plant-card-description {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
-    margin: 0 0 1rem 0;
-    line-height: 1.5;
-    min-height: 3em;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.4;
+    min-height: 2.8em;
     position: relative;
     z-index: 1;
 }
@@ -253,7 +253,7 @@
 }
 
 .plant-cost {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 700;
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 }
@@ -512,8 +512,13 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    .plant-shop-container {
+        padding: 0.85rem;
+    }
+
     .shop-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.85rem;
     }
 
     .shop-header {
@@ -533,5 +538,112 @@
 
     .modal-footer {
         flex-direction: column;
+    }
+
+    .plant-card-image {
+        height: 100px;
+    }
+
+    .plant-card-image img {
+        max-width: 85px;
+        max-height: 85px;
+    }
+
+    .plant-card-body {
+        padding: 0.75rem;
+    }
+
+    .plant-card-title {
+        font-size: 0.95rem;
+    }
+
+    .plant-card-description {
+        font-size: 0.8rem;
+    }
+
+    .plant-cost {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .plant-shop-container {
+        padding: 0.75rem;
+    }
+
+    .shop-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .plant-card-image {
+        height: 90px;
+    }
+
+    .plant-card-image img {
+        max-width: 75px;
+        max-height: 75px;
+    }
+
+    .plant-card-body {
+        padding: 0.65rem;
+    }
+
+    .plant-card-title {
+        font-size: 0.9rem;
+    }
+
+    .plant-card-description {
+        font-size: 0.75rem;
+        min-height: 2.5em;
+    }
+
+    .plant-cost {
+        font-size: 0.95rem;
+    }
+
+    .buy-label {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .plant-shop-container {
+        padding: 0.6rem;
+    }
+
+    .shop-grid {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+    }
+
+    .plant-card-image {
+        height: 80px;
+    }
+
+    .plant-card-image img {
+        max-width: 65px;
+        max-height: 65px;
+    }
+
+    .plant-card-body {
+        padding: 0.6rem;
+    }
+
+    .plant-card-title {
+        font-size: 0.85rem;
+    }
+
+    .plant-card-description {
+        font-size: 0.7rem;
+        min-height: 2.3em;
+    }
+
+    .plant-cost {
+        font-size: 0.9rem;
+    }
+
+    .buy-label {
+        font-size: 0.7rem;
     }
 }

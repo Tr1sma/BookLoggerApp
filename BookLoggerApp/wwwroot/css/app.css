@@ -48,7 +48,7 @@ html, body {
     background: var(--bg-primary);
     margin: 0;
     padding: 0;
-    line-height: 1.6;
+    line-height: 1.4;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -92,25 +92,25 @@ html {
 
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary);
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.75rem 0;
     font-weight: 600;
     letter-spacing: -0.02em;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 700;
     letter-spacing: -0.03em;
 }
 
 h2 {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 700;
 }
 
 h3 {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 600;
 }
 
@@ -133,10 +133,10 @@ a:hover {
 
 /* Buttons */
 .btn {
-    padding: 0.75rem 1.5rem;
+    padding: 0.6rem 1.2rem;
     border: none;
     border-radius: var(--border-radius);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     cursor: pointer;
     transition: var(--transition);
     font-weight: 500;
@@ -188,10 +188,10 @@ a:hover {
 
 /* Forms */
 .form-control, input[type="text"], input[type="number"], input[type="date"], select, textarea {
-    padding: 0.75rem 1rem;
+    padding: 0.6rem 0.85rem;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     background: var(--bg-tertiary);
     color: var(--text-primary);
     transition: var(--transition);
@@ -227,7 +227,7 @@ h1:focus {
 
 /* Dashboard Container */
 .dashboard-container {
-    padding: 2rem;
+    padding: 1.5rem;
     max-width: 1400px;
     margin: 0 auto;
 }
@@ -235,16 +235,16 @@ h1:focus {
 /* Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 /* Goals List */
 .goals-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 /* Activity List */
@@ -256,7 +256,7 @@ h1:focus {
 
 /* Settings Container */
 .settings-container {
-    padding: 2rem;
+    padding: 1.5rem;
     max-width: 800px;
     margin: 0 auto;
 }
@@ -264,8 +264,8 @@ h1:focus {
 .settings-section {
     background: var(--card-bg);
     border-radius: var(--border-radius);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
     box-shadow: var(--shadow);
 }
 
@@ -285,7 +285,7 @@ h1:focus {
 
 /* Goals Container */
 .goals-container {
-    padding: 2rem;
+    padding: 1.5rem;
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -294,20 +294,20 @@ h1:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .goal-form {
     background: var(--card-bg);
     border-radius: var(--border-radius);
-    padding: 2rem;
-    margin-bottom: 2rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
     box-shadow: var(--shadow);
 }
 
 /* Stats Container */
 .stats-container {
-    padding: 2rem;
+    padding: 1.5rem;
     max-width: 1400px;
     margin: 0 auto;
 }
@@ -328,7 +328,7 @@ h1:focus {
 /* Navigation */
 .navbar {
     background: var(--card-bg);
-    padding: 1.5rem;
+    padding: 1rem;
     box-shadow: var(--shadow);
     border-bottom: 1px solid var(--border-light);
 }
@@ -338,7 +338,7 @@ h1:focus {
     padding: 0;
     margin: 0;
     display: flex;
-    gap: 0.5rem;
+    gap: 0.4rem;
     flex-wrap: wrap;
 }
 
@@ -349,14 +349,14 @@ h1:focus {
 .nav-link {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1.25rem;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
     color: var(--text-secondary);
     text-decoration: none;
     border-radius: var(--border-radius);
     transition: var(--transition);
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 
 .nav-link:hover {
@@ -371,20 +371,20 @@ h1:focus {
 }
 
 .nav-icon {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
 }
 
 /* Loading & Alerts */
 .loading, .loading-spinner {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 3rem 1.5rem;
     color: var(--text-secondary);
 }
 
 .alert {
-    padding: 1rem 1.5rem;
+    padding: 0.85rem 1.25rem;
     border-radius: var(--border-radius);
-    margin-bottom: 1rem;
+    margin-bottom: 0.85rem;
     border-left: 4px solid;
 }
 
@@ -395,6 +395,31 @@ h1:focus {
 }
 
 /* Responsive Design */
+
+/* Tablets */
+@media (max-width: 1024px) {
+    .dashboard-container,
+    .bookshelf-container,
+    .settings-container,
+    .goals-container,
+    .stats-container {
+        padding: 1.25rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+    }
+}
+
+/* Standard Mobile (768px and below) */
 @media (max-width: 768px) {
     .dashboard-container,
     .bookshelf-container,
@@ -404,6 +429,26 @@ h1:focus {
         padding: 1rem;
     }
 
+    .content {
+        padding-top: 0.85rem;
+    }
+
+    h1 {
+        font-size: 1.35rem;
+    }
+
+    h2 {
+        font-size: 1.15rem;
+    }
+
+    h3 {
+        font-size: 1rem;
+    }
+
+    p {
+        font-size: 0.9rem;
+    }
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
@@ -411,8 +456,157 @@ h1:focus {
     .nav-menu {
         flex-direction: column;
     }
+
+    .btn {
+        padding: 0.55rem 1.1rem;
+        font-size: 0.85rem;
+    }
+
+    .form-control, input[type="text"], input[type="number"], input[type="date"], select, textarea {
+        padding: 0.55rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .goal-form {
+        padding: 1rem;
+    }
+
+    .settings-section {
+        padding: 0.85rem;
+    }
 }
 
+/* Compact Mobile (640px and below) */
+@media (max-width: 640px) {
+    .dashboard-container,
+    .bookshelf-container,
+    .settings-container,
+    .goals-container,
+    .stats-container {
+        padding: 0.85rem;
+    }
+
+    .content {
+        padding-top: 0.75rem;
+    }
+
+    h1 {
+        font-size: 1.25rem;
+    }
+
+    h2 {
+        font-size: 1.1rem;
+    }
+
+    h3 {
+        font-size: 0.95rem;
+    }
+
+    p {
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .form-control, input[type="text"], input[type="number"], input[type="date"], select, textarea {
+        padding: 0.5rem 0.7rem;
+        font-size: 0.8rem;
+    }
+
+    .nav-link {
+        padding: 0.5rem 0.85rem;
+        font-size: 0.85rem;
+    }
+
+    .goal-form {
+        padding: 0.85rem;
+    }
+
+    .settings-section {
+        padding: 0.75rem;
+    }
+
+    .alert {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* Very Small Mobile (400px and below) */
+@media (max-width: 400px) {
+    .dashboard-container,
+    .bookshelf-container,
+    .settings-container,
+    .goals-container,
+    .stats-container {
+        padding: 0.75rem;
+    }
+
+    .content {
+        padding-top: 0.65rem;
+    }
+
+    h1 {
+        font-size: 1.15rem;
+    }
+
+    h2 {
+        font-size: 1rem;
+    }
+
+    h3 {
+        font-size: 0.9rem;
+    }
+
+    p {
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    .btn {
+        padding: 0.5rem 0.9rem;
+        font-size: 0.75rem;
+        min-height: 44px; /* Maintain touch target */
+    }
+
+    .form-control, input[type="text"], input[type="number"], input[type="date"], select, textarea {
+        padding: 0.5rem 0.65rem;
+        font-size: 0.75rem;
+        min-height: 44px; /* Maintain touch target */
+    }
+
+    .nav-link {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .goal-form {
+        padding: 0.75rem;
+    }
+
+    .settings-section {
+        padding: 0.65rem;
+    }
+
+    .settings-section h2 {
+        font-size: 1rem;
+    }
+
+    .alert {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.8rem;
+    }
+
+    .loading, .loading-spinner {
+        padding: 2rem 1rem;
+    }
+}
+
+/* Large Screens */
 @media (min-width: 1920px) {
     .dashboard-container,
     .bookshelf-container,

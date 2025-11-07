@@ -1,0 +1,52 @@
+@using System.Globalization
+
+<div class="goal-header">
+    <div class="goal-header-title">
+        <h2>@CurrentYear Reading Goal</h2>
+    </div>
+
+    <div class="goal-stats-container">
+        <div class="goal-stat-card">
+            <div class="stat-value">@TbrCount</div>
+            <div class="stat-label">in TBR</div>
+        </div>
+
+        <div class="goal-stat-card">
+            <div class="stat-value">@GoalTarget</div>
+            <div class="stat-label">in Goal</div>
+        </div>
+
+        <div class="goal-stat-card">
+            <div class="stat-value">@BooksRead</div>
+            <div class="stat-label">Read</div>
+        </div>
+    </div>
+
+    @if (BooksRemaining > 0)
+    {
+        <div class="goal-message">
+            <p>You have <strong>@BooksRemaining books</strong> left to complete your yearly reading goal</p>
+        </div>
+    }
+    else if (BooksRemaining == 0 && GoalTarget > 0)
+    {
+        <div class="goal-message goal-complete">
+            <p>🎉 Congratulations! You've completed your yearly reading goal!</p>
+        </div>
+    }
+    else if (BooksRemaining < 0)
+    {
+        <div class="goal-message goal-exceeded">
+            <p>🌟 Amazing! You've read <strong>@Math.Abs(BooksRemaining) more books</strong> than your goal!</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int TbrCount { get; set; }
+    [Parameter] public int GoalTarget { get; set; }
+    [Parameter] public int BooksRead { get; set; }
+    [Parameter] public int BooksRemaining { get; set; }
+
+    private int CurrentYear => DateTime.Now.Year;
+}
