@@ -29,20 +29,20 @@
 
         <!-- Price -->
         <div class="plant-card-footer">
-            <span class="plant-cost @(UserCoins >= Species.BaseCost ? "affordable" : "expensive")">
-                🪙 @Species.BaseCost
+            <span class="plant-cost @(UserCoins >= CurrentPrice ? "affordable" : "expensive")">
+                🪙 @CurrentPrice
             </span>
             @if (IsLockedByLevel)
             {
                 <span class="buy-label locked">Unlocks at Lv. @Species.UnlockLevel</span>
             }
-            else if (UserCoins >= Species.BaseCost)
+            else if (UserCoins >= CurrentPrice)
             {
                 <span class="buy-label">Click to Buy</span>
             }
             else
             {
-                <span class="buy-label locked">Need @(Species.BaseCost - UserCoins) more</span>
+                <span class="buy-label locked">Need @(CurrentPrice - UserCoins) more</span>
             }
         </div>
     </div>
@@ -63,6 +63,7 @@
     [Parameter] public PlantSpecies Species { get; set; } = null!;
     [Parameter] public int UserCoins { get; set; }
     [Parameter] public int UserLevel { get; set; }
+    [Parameter] public int CurrentPrice { get; set; }
     [Parameter] public bool IsSelected { get; set; }
     [Parameter] public EventCallback OnSelect { get; set; }
 

@@ -1,16 +1,25 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Models;
+using System.Collections.ObjectModel;
 
 namespace BookLoggerApp.Core.ViewModels;
 
 public partial class StatsViewModel : ViewModelBase
 {
     private readonly IStatsService _statsService;
+    private readonly IAppSettingsProvider _settingsProvider;
+    private readonly IPlantService _plantService;
 
-    public StatsViewModel(IStatsService statsService)
+    public StatsViewModel(
+        IStatsService statsService,
+        IAppSettingsProvider settingsProvider,
+        IPlantService plantService)
     {
         _statsService = statsService;
+        _settingsProvider = settingsProvider;
+        _plantService = plantService;
     }
 
     [ObservableProperty]
@@ -46,6 +55,63 @@ public partial class StatsViewModel : ViewModelBase
     [ObservableProperty]
     private DateTime _dateRangeEnd = DateTime.UtcNow;
 
+    // Multi-Category Rating Statistics
+    [ObservableProperty]
+    private double _averageCharactersRating;
+
+    [ObservableProperty]
+    private double _averagePlotRating;
+
+    [ObservableProperty]
+    private double _averageWritingStyleRating;
+
+    [ObservableProperty]
+    private double _averageSpiceLevelRating;
+
+    [ObservableProperty]
+    private double _averagePacingRating;
+
+    [ObservableProperty]
+    private double _averageWorldBuildingRating;
+
+    [ObservableProperty]
+    private double _averageOverallRating;
+
+    [ObservableProperty]
+    private Dictionary<RatingCategory, double> _categoryAverages = new();
+
+    [ObservableProperty]
+    private ObservableCollection<BookRatingSummary> _topRatedBooks = new();
+
+    // === Progression System Properties ===
+
+    [ObservableProperty]
+    private int _currentLevel = 1;
+
+    [ObservableProperty]
+    private int _totalXp = 0;
+
+    [ObservableProperty]
+    private int _currentLevelXp = 0; // XP accumulated in current level
+
+    [ObservableProperty]
+    private int _nextLevelXp = 100; // XP needed for next level
+
+    [ObservableProperty]
+    private decimal _progressPercentage = 0m; // 0-100
+
+    [ObservableProperty]
+    private int _totalCoins = 0;
+
+    [ObservableProperty]
+    private decimal _totalPlantBoost = 0m; // Total XP boost from all plants (e.g., 0.15 = 15%)
+
+    [ObservableProperty]
+    private ObservableCollection<PlantBoostInfo> _plantBoosts = new();
+
+    [ObservableProperty]
+    private ObservableCollection<LevelMilestone> _levelMilestones = new();
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -61,13 +127,163 @@ public partial class StatsViewModel : ViewModelBase
             ReadingTrend = await _statsService.GetReadingTrendAsync(DateRangeStart, DateRangeEnd);
             BooksByGenre = await _statsService.GetBooksByGenreAsync();
             FavoriteGenre = await _statsService.GetFavoriteGenreAsync();
+
+            // Load rating statistics
+            await LoadRatingStatisticsAsync();
+
+            // Load progression statistics
+            await LoadProgressionStatisticsAsync();
         }, "Failed to load statistics");
+    }
+
+    /// <summary>
+    /// Loads multi-category rating statistics.
+    /// </summary>
+    private async Task LoadRatingStatisticsAsync()
+    {
+        CategoryAverages = await _statsService.GetAllAverageRatingsAsync(DateRangeStart, DateRangeEnd);
+
+        // Set individual category averages
+        AverageCharactersRating = CategoryAverages.GetValueOrDefault(RatingCategory.Characters, 0);
+        AveragePlotRating = CategoryAverages.GetValueOrDefault(RatingCategory.Plot, 0);
+        AverageWritingStyleRating = CategoryAverages.GetValueOrDefault(RatingCategory.WritingStyle, 0);
+        AverageSpiceLevelRating = CategoryAverages.GetValueOrDefault(RatingCategory.SpiceLevel, 0);
+        AveragePacingRating = CategoryAverages.GetValueOrDefault(RatingCategory.Pacing, 0);
+        AverageWorldBuildingRating = CategoryAverages.GetValueOrDefault(RatingCategory.WorldBuilding, 0);
+        AverageOverallRating = CategoryAverages.GetValueOrDefault(RatingCategory.Overall, 0);
+
+        // Load top rated books
+        var topBooks = await _statsService.GetTopRatedBooksAsync(10);
+        TopRatedBooks = new ObservableCollection<BookRatingSummary>(topBooks);
     }
 
     [RelayCommand]
     public async Task RefreshAsync()
     {
         await LoadAsync();
+    }
+
+    /// <summary>
+    /// Filters top rated books by a specific rating category.
+    /// </summary>
+    public async Task FilterTopBooksByCategoryAsync(RatingCategory? category = null)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            var topBooks = await _statsService.GetTopRatedBooksAsync(10, category);
+            TopRatedBooks = new ObservableCollection<BookRatingSummary>(topBooks);
+        }, "Failed to filter top books");
+    }
+
+    /// <summary>
+    /// Loads progression system statistics (level, XP, coins, plant boosts).
+    /// </summary>
+    private async Task LoadProgressionStatisticsAsync()
+    {
+        var settings = await _settingsProvider.GetSettingsAsync();
+
+        CurrentLevel = settings.UserLevel;
+        TotalXp = settings.TotalXp;
+        TotalCoins = settings.Coins;
+
+        // Calculate XP for current level progress
+        CalculateProgress();
+
+        // Load plant boost details
+        TotalPlantBoost = await _plantService.CalculateTotalXpBoostAsync();
+
+        var plants = await _plantService.GetAllAsync();
+        var plantBoostList = new List<PlantBoostInfo>();
+
+        foreach (var plant in plants)
+        {
+            var baseBoost = plant.Species.XpBoostPercentage;
+            var levelBonus = plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel);
+            var totalBoost = baseBoost + levelBonus;
+
+            plantBoostList.Add(new PlantBoostInfo
+            {
+                PlantId = plant.Id,
+                PlantName = plant.Species.Name,
+                PlantLevel = plant.CurrentLevel,
+                BoostPercentage = totalBoost
+            });
+        }
+
+        PlantBoosts = new ObservableCollection<PlantBoostInfo>(plantBoostList);
+
+        // Generate level milestones (show -2, current, +5 levels)
+        GenerateLevelMilestones();
+    }
+
+    private void CalculateProgress()
+    {
+        // Use exponential growth formula: Level N requires 100 * (1.5^(N-1)) XP
+        // This matches the XpCalculator in Infrastructure
+
+        // Calculate XP accumulated for current level
+        int xpForPreviousLevels = 0;
+        for (int i = 1; i < CurrentLevel; i++)
+        {
+            xpForPreviousLevels += GetXpForLevel(i);
+        }
+
+        CurrentLevelXp = TotalXp - xpForPreviousLevels;
+        NextLevelXp = GetXpForLevel(CurrentLevel);
+
+        // Calculate percentage (0-100)
+        if (NextLevelXp > 0)
+        {
+            ProgressPercentage = (decimal)CurrentLevelXp / NextLevelXp * 100m;
+        }
+        else
+        {
+            ProgressPercentage = 0m;
+        }
+    }
+
+    /// <summary>
+    /// Calculate XP required for a specific level (matches XpCalculator logic).
+    /// Exponential growth: Level 1 = 100 XP, Level 2 = 150 XP, Level 3 = 225 XP, etc.
+    /// </summary>
+    private static int GetXpForLevel(int level)
+    {
+        return (int)(100 * Math.Pow(1.5, level - 1));
+    }
+
+    private void GenerateLevelMilestones()
+    {
+        var milestones = new List<LevelMilestone>();
+
+        // Show past levels (if any)
+        int startLevel = Math.Max(1, CurrentLevel - 2);
+
+        // Show up to +5 future levels
+        int endLevel = CurrentLevel + 5;
+
+        // Calculate cumulative XP
+        int cumulativeXp = 0;
+        for (int level = 1; level < startLevel; level++)
+        {
+            cumulativeXp += GetXpForLevel(level);
+        }
+
+        for (int level = startLevel; level <= endLevel; level++)
+        {
+            int xpForThisLevel = GetXpForLevel(level);
+            cumulativeXp += xpForThisLevel;
+
+            milestones.Add(new LevelMilestone
+            {
+                Level = level,
+                XpRequired = cumulativeXp,
+                CoinsReward = level * 50,
+                IsCompleted = level < CurrentLevel,
+                IsCurrent = level == CurrentLevel
+            });
+        }
+
+        LevelMilestones = new ObservableCollection<LevelMilestone>(milestones);
     }
 }
 

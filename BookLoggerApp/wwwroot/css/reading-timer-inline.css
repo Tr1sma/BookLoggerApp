@@ -212,6 +212,28 @@
     cursor: not-allowed;
 }
 
+/* Input Hint */
+.input-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+/* Pages Display (Read-only) */
+.pages-display {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    border: 2px solid var(--border-color);
+    text-align: center;
+    font-family: 'Courier New', monospace;
+}
+
 /* XP Display */
 .xp-display-inline {
     display: flex;

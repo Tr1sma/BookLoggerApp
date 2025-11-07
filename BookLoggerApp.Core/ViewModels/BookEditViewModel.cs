@@ -59,6 +59,7 @@ public partial class BookEditViewModel : ViewModelBase
                 // New book
                 Book = new Book
                 {
+                    Id = Guid.Empty, // Explicitly set to Empty so navigation knows this is unsaved
                     Status = ReadingStatus.Planned,
                     DateAdded = DateTime.UtcNow
                 };

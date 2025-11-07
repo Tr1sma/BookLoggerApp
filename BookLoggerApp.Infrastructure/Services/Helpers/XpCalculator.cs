@@ -5,8 +5,9 @@ namespace BookLoggerApp.Infrastructure.Services.Helpers;
 /// </summary>
 public static class XpCalculator
 {
-    private const int XP_PER_MINUTE = 1;
-    private const int XP_PER_PAGE = 2;
+    private const int XP_PER_MINUTE = 5;
+    private const int XP_PER_PAGE = 20;
+    private const int XP_BOOK_COMPLETION = 100; // Bonus for completing a book
     private const int BONUS_XP_LONG_SESSION = 50; // 60+ minutes
     private const int BONUS_XP_STREAK = 20; // Daily streak
 
@@ -55,6 +56,26 @@ public static class XpCalculator
             xpRequired = GetXpForLevel(level);
         }
 
-        return level - 1; // Return completed level
+        return level; // Return current level (not level - 1!)
+    }
+
+    /// <summary>
+    /// Applies plant XP boost to base XP amount.
+    /// </summary>
+    /// <param name="baseXp">The base XP earned before boost</param>
+    /// <param name="boostPercentage">The boost percentage (e.g., 0.25 for 25% boost)</param>
+    /// <returns>The boosted XP amount</returns>
+    public static int ApplyPlantBoost(int baseXp, decimal boostPercentage)
+    {
+        return (int)(baseXp * (1 + boostPercentage));
+    }
+
+    /// <summary>
+    /// Calculates XP earned for completing a book.
+    /// </summary>
+    /// <returns>The XP bonus for book completion</returns>
+    public static int CalculateXpForBookCompletion()
+    {
+        return XP_BOOK_COMPLETION;
     }
 }

@@ -29,6 +29,10 @@ public class PlantSpecies
     [Range(0.1, 10.0)]
     public double GrowthRate { get; set; } = 1.0; // XP multiplier for leveling
 
+    // XP Boost System
+    [Range(0.0, 1.0)]
+    public decimal XpBoostPercentage { get; set; } = 0.05m; // Base XP boost (e.g., 0.05 = 5%)
+
     // Shop
     [Range(0, 1000000)]
     public int BaseCost { get; set; } = 100; // Cost in coins (or XP)

@@ -1,8 +1,10 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Components.Shared
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 @if (Book != null)
 {
@@ -60,26 +62,34 @@
             </div>
         </div>
 
-        <!-- Session Details -->
-        <div class="timer-inline-details">
-            <div class="timer-detail-row">
-                <div class="timer-detail-item">
-                    <label>Pages Read</label>
-                    <div class="pages-input-group-inline">
-                        <button class="btn-adjust" @onclick="DecrementPages" disabled="@(PagesRead <= 0 || IsRunning)">-</button>
-                        <input type="number"
-                               class="pages-input-inline"
-                               @bind="PagesRead"
-                               @bind:event="oninput"
-                               min="0"
-                               disabled="@IsRunning"
-                               placeholder="0" />
-                        <button class="btn-adjust" @onclick="IncrementPages" disabled="@IsRunning">+</button>
+        <!-- Session Details - Only show after timer is paused -->
+        @if (!IsRunning && ElapsedTime.TotalSeconds > 0)
+        {
+            <div class="timer-inline-details">
+                <div class="timer-detail-row">
+                    <div class="timer-detail-item">
+                        <label>Current Page</label>
+                        <div class="pages-input-group-inline">
+                            <button class="btn-adjust" @onclick="DecrementCurrentPage" disabled="@(CurrentPageInput <= Book.CurrentPage)">-</button>
+                            <input type="number"
+                                   class="pages-input-inline"
+                                   @bind="CurrentPageInput"
+                                   @bind:event="oninput"
+                                   min="@Book.CurrentPage"
+                                   max="@(Book.PageCount ?? 9999)"
+                                   placeholder="@Book.CurrentPage.ToString()" />
+                            <button class="btn-adjust" @onclick="IncrementCurrentPage">+</button>
+                        </div>
+                        <small class="input-hint">Was on page @Book.CurrentPage</small>
                     </div>
-                </div>
 
-                @if (ElapsedTime.TotalSeconds > 0)
-                {
+                    <div class="timer-detail-item">
+                        <label>Pages Read</label>
+                        <div class="pages-display">
+                            @CalculatePagesRead() pages
+                        </div>
+                    </div>
+
                     <div class="timer-detail-item">
                         <label>XP to Earn</label>
                         <div class="xp-display-inline">
@@ -94,20 +104,35 @@
                             @((int)Math.Ceiling(ElapsedTime.TotalMinutes)) min
                         </div>
                     </div>
-                }
+                </div>
             </div>
-        </div>
+        }
 
-        @if (Book.PageCount.HasValue && PagesRead > 0)
+        @if (Book.PageCount.HasValue && !IsRunning && ElapsedTime.TotalSeconds > 0 && CalculatePagesRead() > 0)
         {
             <div class="timer-progress-info">
                 <p class="progress-text">
-                    Progress: @Book.CurrentPage → @(Book.CurrentPage + PagesRead) / @Book.PageCount
+                    Progress: @Book.CurrentPage → @CurrentPageInput / @Book.PageCount
                     (@CalculateNewProgressPercentage()%)
                 </p>
             </div>
         }
     </div>
+}
+
+<!-- Celebration Overlays -->
+@if (ShowSessionCelebration && SessionProgressionResult != null)
+{
+    <SessionCompleteCelebration
+        Result="@SessionProgressionResult"
+        OnClose="@HandleSessionCelebrationClose" />
+}
+
+@if (ShowLevelUpCelebration && LevelUpResult != null)
+{
+    <LevelUpCelebration
+        Result="@LevelUpResult"
+        OnClose="@HandleLevelUpCelebrationClose" />
 }
 
 @code {
@@ -118,25 +143,58 @@
     private TimeSpan ElapsedTime { get; set; } = TimeSpan.Zero;
     private TimeSpan PausedTime { get; set; } = TimeSpan.Zero;
     private bool IsRunning { get; set; }
-    private int PagesRead { get; set; }
+    private int CurrentPageInput { get; set; }
+    private int PagesRead => CalculatePagesRead();
     private System.Threading.Timer? _timer;
+
+    // Session tracking for EndSessionAsync
+    private Guid? CurrentSessionId { get; set; }
+
+    // Celebration state
+    private bool ShowSessionCelebration { get; set; }
+    private ProgressionResult? SessionProgressionResult { get; set; }
+    private bool ShowLevelUpCelebration { get; set; }
+    private LevelUpResult? LevelUpResult { get; set; }
 
     protected override void OnParametersSet()
     {
-        // Reset when book changes
-        if (Book != null && !IsRunning)
+        // Initialize CurrentPageInput when book loads or after reset
+        // Also update if book has progressed beyond current input (e.g., after saving a session)
+        if (Book != null)
         {
-            ResetTimer();
+            // Always update if we're not in an active session
+            if (!IsRunning && ElapsedTime.TotalSeconds == 0)
+            {
+                CurrentPageInput = Book.CurrentPage;
+            }
+            // Or if the book's current page has changed (e.g., after saving)
+            else if (CurrentPageInput < Book.CurrentPage)
+            {
+                CurrentPageInput = Book.CurrentPage;
+            }
         }
     }
 
-    private void HandleStart()
+    private async Task HandleStart()
     {
-        StartTime = DateTime.UtcNow;
-        IsRunning = true;
-        PausedTime = TimeSpan.Zero;
-        ElapsedTime = TimeSpan.Zero;
-        StartTimer();
+        if (Book == null) return;
+
+        try
+        {
+            // Create new session via ProgressService
+            var session = await ProgressService.StartSessionAsync(Book.Id);
+            CurrentSessionId = session.Id;
+
+            StartTime = DateTime.UtcNow;
+            IsRunning = true;
+            PausedTime = TimeSpan.Zero;
+            ElapsedTime = TimeSpan.Zero;
+            StartTimer();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to start session: {ex.Message}");
+        }
     }
 
     private void HandlePause()
@@ -155,37 +213,40 @@
 
     private async Task HandleSave()
     {
-        if (Book == null || ElapsedTime.TotalSeconds == 0) return;
+        if (Book == null || ElapsedTime.TotalSeconds == 0 || !CurrentSessionId.HasValue) return;
 
         StopTimer();
 
         try
         {
-            // Save session
-            var session = new ReadingSession
-            {
-                BookId = Book.Id,
-                StartedAt = StartTime ?? DateTime.UtcNow,
-                EndedAt = DateTime.UtcNow,
-                Minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes),
-                PagesRead = PagesRead > 0 ? PagesRead : null,
-                XpEarned = CalculateXP()
-            };
+            var pagesRead = CalculatePagesRead();
 
-            await ProgressService.AddSessionAsync(session);
+            // End session using ProgressService which handles XP, streak, plant boost, level-ups
+            var result = await ProgressService.EndSessionAsync(CurrentSessionId.Value, pagesRead);
 
             // Update book progress if pages were read
-            if (PagesRead > 0)
+            if (pagesRead > 0)
             {
-                var currentPage = Book.CurrentPage + PagesRead;
-                await BookService.UpdateProgressAsync(Book.Id, currentPage);
+                await BookService.UpdateProgressAsync(Book.Id, CurrentPageInput);
             }
 
-            // Notify parent
+            // Store progression result for celebration
+            SessionProgressionResult = result.ProgressionResult;
+
+            // Reset timer state
+            ResetTimer();
+
+            // Notify parent to refresh
             await OnSessionSaved.InvokeAsync();
 
-            // Reset
-            ResetTimer();
+            // Show session celebration
+            ShowSessionCelebration = true;
+
+            // Check if there was a level-up to show afterwards
+            if (result.ProgressionResult.LevelUp != null)
+            {
+                LevelUpResult = result.ProgressionResult.LevelUp;
+            }
         }
         catch (Exception ex)
         {
@@ -199,20 +260,30 @@
         ResetTimer();
     }
 
-    private void IncrementPages()
+    private void IncrementCurrentPage()
     {
-        if (!IsRunning)
+        if (Book != null && Book.PageCount.HasValue && CurrentPageInput < Book.PageCount.Value)
         {
-            PagesRead++;
+            CurrentPageInput++;
+        }
+        else if (Book != null && !Book.PageCount.HasValue)
+        {
+            CurrentPageInput++;
         }
     }
 
-    private void DecrementPages()
+    private void DecrementCurrentPage()
     {
-        if (PagesRead > 0 && !IsRunning)
+        if (Book != null && CurrentPageInput > Book.CurrentPage)
         {
-            PagesRead--;
+            CurrentPageInput--;
         }
+    }
+
+    private int CalculatePagesRead()
+    {
+        if (Book == null) return 0;
+        return Math.Max(0, CurrentPageInput - Book.CurrentPage);
     }
 
     private void ResetTimer()
@@ -221,21 +292,56 @@
         PausedTime = TimeSpan.Zero;
         StartTime = null;
         IsRunning = false;
-        PagesRead = 0;
+        CurrentPageInput = 0; // Reset to 0, will be re-initialized in OnParametersSet
+        CurrentSessionId = null;
+    }
+
+    private void HandleSessionCelebrationClose()
+    {
+        ShowSessionCelebration = false;
+
+        // If there was a level-up, show that celebration next
+        if (LevelUpResult != null)
+        {
+            ShowLevelUpCelebration = true;
+        }
+        else
+        {
+            // No level-up, navigate to bookshelf
+            Navigation.NavigateTo("/bookshelf");
+        }
+    }
+
+    private void HandleLevelUpCelebrationClose()
+    {
+        ShowLevelUpCelebration = false;
+        LevelUpResult = null;
+
+        // Navigate to bookshelf after level-up celebration
+        Navigation.NavigateTo("/bookshelf");
     }
 
     private int CalculateXP()
     {
-        var minuteXp = (int)ElapsedTime.TotalMinutes;
-        var pageXp = PagesRead * 2;
-        return minuteXp + pageXp;
+        // Use correct XP formula: 5 XP per minute, 20 XP per page
+        int minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes);
+        int pagesRead = CalculatePagesRead();
+        int baseXp = (minutes * 5) + (pagesRead * 20);
+
+        // Add long session bonus (50 XP for 60+ minutes)
+        if (minutes >= 60)
+        {
+            baseXp += 50;
+        }
+
+        // Note: Streak bonus and plant boost are applied on save by ProgressService
+        return baseXp;
     }
 
     private int CalculateNewProgressPercentage()
     {
         if (Book?.PageCount == null || Book.PageCount == 0) return 0;
-        var newPage = Book.CurrentPage + PagesRead;
-        return (newPage * 100) / Book.PageCount.Value;
+        return (CurrentPageInput * 100) / Book.PageCount.Value;
     }
 
     private string FormatTime(TimeSpan time)

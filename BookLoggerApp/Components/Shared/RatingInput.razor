@@ -1,0 +1,86 @@
+@* RatingInput - Reusable component for single rating category input *@
+
+<div class="rating-input">
+    <div class="rating-header">
+        <span class="rating-emoji">@Emoji</span>
+        <span class="rating-label">@Label</span>
+    </div>
+    <div class="rating-stars">
+        @for (int i = 1; i <= 5; i++)
+        {
+            int starValue = i;
+            <span class="star @GetStarClass(starValue)"
+                  @onclick="() => OnStarClick(starValue)"
+                  @onmouseover="() => OnStarHover(starValue)"
+                  @onmouseout="OnStarHoverEnd"
+                  style="@(ReadOnly ? "cursor: default;" : "cursor: pointer;")">
+                ★
+            </span>
+        }
+        @if (Rating.HasValue && !ReadOnly)
+        {
+            <button class="clear-rating" @onclick="ClearRating">✕</button>
+        }
+    </div>
+    @if (Rating.HasValue)
+    {
+        <div class="rating-value-display">@Rating.Value / 5</div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Emoji { get; set; } = string.Empty;
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public int? Rating { get; set; }
+    [Parameter] public EventCallback<int?> RatingChanged { get; set; }
+    [Parameter] public bool ReadOnly { get; set; } = false;
+
+    private int? hoverRating = null;
+
+    private string GetStarClass(int starValue)
+    {
+        int displayRating = hoverRating ?? Rating ?? 0;
+
+        if (starValue <= displayRating)
+            return hoverRating.HasValue ? "filled hover" : "filled";
+
+        return "empty";
+    }
+
+    private async Task OnStarClick(int starValue)
+    {
+        if (ReadOnly) return;
+
+        // If clicking the same star, clear the rating
+        if (Rating == starValue)
+        {
+            await ClearRating();
+        }
+        else
+        {
+            Rating = starValue;
+            await RatingChanged.InvokeAsync(Rating);
+        }
+    }
+
+    private void OnStarHover(int starValue)
+    {
+        if (!ReadOnly)
+        {
+            hoverRating = starValue;
+        }
+    }
+
+    private void OnStarHoverEnd()
+    {
+        hoverRating = null;
+    }
+
+    private async Task ClearRating()
+    {
+        if (ReadOnly) return;
+
+        Rating = null;
+        await RatingChanged.InvokeAsync(null);
+    }
+}

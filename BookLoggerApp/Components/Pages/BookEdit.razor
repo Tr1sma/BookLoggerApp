@@ -110,10 +110,10 @@
                 </div>
             </section>
 
-            <!-- Status & Rating -->
+            <!-- Status -->
             <section class="form-section">
-                <h2>Status & Rating</h2>
-                
+                <h2>Status</h2>
+
                 <div class="form-group">
                     <label for="status">Reading Status</label>
                     <select id="status" @bind="ViewModel.Book.Status">
@@ -122,24 +122,6 @@
                         <option value="@ReadingStatus.Completed">Completed</option>
                         <option value="@ReadingStatus.Abandoned">Abandoned</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Rating (1-5 stars)</label>
-                    <div class="rating-input">
-                        @for (int i = 1; i <= 5; i++)
-                        {
-                            <button type="button" 
-                                    class="star-button @(ViewModel.Book.Rating >= i ? "filled" : "empty")"
-                                    @onclick="() => SetRating(i)">
-                                ★
-                            </button>
-                        }
-                        @if (ViewModel.Book.Rating.HasValue)
-                        {
-                            <button type="button" class="star-button clear" @onclick="ClearRating">Clear</button>
-                        }
-                    </div>
                 </div>
             </section>
 
@@ -163,17 +145,33 @@
             <!-- Cover Image -->
             <section class="form-section">
                 <h2>Cover Image</h2>
-                
+
                 <div class="form-group">
                     <label for="coverImagePath">Cover Image URL/Path</label>
                     <input id="coverImagePath" type="text" @bind="ViewModel.Book.CoverImagePath" maxlength="500" placeholder="/images/covers/book.jpg" />
-                    
+
                     @if (!string.IsNullOrEmpty(ViewModel.Book.CoverImagePath))
                     {
                         <div class="cover-preview">
                             <img src="@ViewModel.Book.CoverImagePath" alt="Cover preview" onerror="this.style.display='none'" />
                         </div>
                     }
+                </div>
+
+                <div class="form-group">
+                    <label>Book Spine Color</label>
+                    <p class="form-hint">Choose a color for the book spine (used when no cover image is available)</p>
+                    <div class="spine-color-picker">
+                        @foreach (var color in GetSpineColors())
+                        {
+                            <button type="button"
+                                    class="spine-color-option @(ViewModel.Book.SpineColor == color.Key ? "selected" : "")"
+                                    style="background: linear-gradient(to right, #@color.Value.dark, #@color.Value.light, #@color.Value.dark);"
+                                    @onclick="() => SetSpineColor(color.Key)"
+                                    title="@color.Key">
+                            </button>
+                        }
+                    </div>
                 </div>
             </section>
 
@@ -211,22 +209,6 @@
         if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
         {
             Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
-        }
-    }
-
-    private void SetRating(int rating)
-    {
-        if (ViewModel.Book != null)
-        {
-            ViewModel.Book.Rating = rating;
-        }
-    }
-
-    private void ClearRating()
-    {
-        if (ViewModel.Book != null)
-        {
-            ViewModel.Book.Rating = null;
         }
     }
 
@@ -282,6 +264,31 @@
             // Automatically trigger the lookup
             await Task.Delay(100); // Small delay to ensure UI updates
             await HandleIsbnLookup();
+        }
+    }
+
+    private Dictionary<string, (string dark, string light)> GetSpineColors()
+    {
+        return new Dictionary<string, (string dark, string light)>
+        {
+            { "red", ("8B4513", "A0522D") },
+            { "blue", ("2C4A6B", "3A5F7D") },
+            { "green", ("3D5A3D", "4A6B4A") },
+            { "purple", ("5D4E6D", "6F5F7F") },
+            { "brown", ("4A3426", "5C452F") },
+            { "gold", ("8B7355", "A68968") },
+            { "burgundy", ("6B3240", "7D4450") },
+            { "teal", ("2C5F5F", "3A7373") },
+            { "navy", ("1C2E4A", "2A3F5F") },
+            { "olive", ("4A4A2C", "5C5C3A") }
+        };
+    }
+
+    private void SetSpineColor(string color)
+    {
+        if (ViewModel.Book != null)
+        {
+            ViewModel.Book.SpineColor = color;
         }
     }
 }

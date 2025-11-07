@@ -93,17 +93,25 @@ public static class PlantGrowthCalculator
 
     /// <summary>
     /// Calculate plant status based on last watered date and water interval.
+    /// Pflanzen sterben nach 2 verpassten Gießzeiten.
     /// </summary>
     public static PlantStatus CalculatePlantStatus(DateTime lastWatered, int waterIntervalDays)
     {
         var daysSinceWatered = (DateTime.UtcNow - lastWatered).TotalDays;
 
+        // Healthy: Innerhalb des normalen Gießintervalls
         if (daysSinceWatered < waterIntervalDays)
             return PlantStatus.Healthy;
-        else if (daysSinceWatered < waterIntervalDays + 1)
+
+        // Thirsty: 1. verpasste Gießzeit (waterIntervalDays bis waterIntervalDays * 1.5)
+        else if (daysSinceWatered < waterIntervalDays * 1.5)
             return PlantStatus.Thirsty;
-        else if (daysSinceWatered < waterIntervalDays + 3)
+
+        // Wilting: Kurz vor dem Tod (waterIntervalDays * 1.5 bis waterIntervalDays * 2)
+        else if (daysSinceWatered < waterIntervalDays * 2)
             return PlantStatus.Wilting;
+
+        // Dead: 2. verpasste Gießzeit (ab waterIntervalDays * 2)
         else
             return PlantStatus.Dead;
     }

@@ -1,0 +1,38 @@
+@inject NavigationManager Navigation
+
+<nav class="bottom-nav">
+    <NavLink class="nav-item" href="/" Match="NavLinkMatch.All">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label">Bookshelf</span>
+    </NavLink>
+
+    <NavLink class="nav-item" href="/dashboard">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Dashboard</span>
+    </NavLink>
+
+    <NavLink class="nav-item" href="/stats">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Stats</span>
+    </NavLink>
+
+    <NavLink class="nav-item" href="/goals">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-label">Goals</span>
+    </NavLink>
+
+    <NavLink class="nav-item" href="/shop">
+        <span class="nav-icon">🌱</span>
+        <span class="nav-label">Shop</span>
+    </NavLink>
+
+    <NavLink class="nav-item" href="/settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+    </NavLink>
+</nav>
+
+@code {
+    // Bottom navigation component for mobile-first design
+    // Uses NavLink for automatic active state handling
+}

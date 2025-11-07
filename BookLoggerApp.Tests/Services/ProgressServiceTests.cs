@@ -13,6 +13,9 @@ public class ProgressServiceTests : IDisposable
     private readonly AppDbContext _context;
     private readonly ReadingSessionRepository _sessionRepository;
     private readonly BookRepository _bookRepository;
+    private readonly MockProgressionService _progressionService;
+    private readonly MockPlantService _plantService;
+    private readonly MockBookService _bookService;
     private readonly ProgressService _service;
 
     public ProgressServiceTests()
@@ -20,7 +23,10 @@ public class ProgressServiceTests : IDisposable
         _context = TestDbContext.Create();
         _sessionRepository = new ReadingSessionRepository(_context);
         _bookRepository = new BookRepository(_context);
-        _service = new ProgressService(_sessionRepository);
+        _progressionService = new MockProgressionService();
+        _plantService = new MockPlantService();
+        _bookService = new MockBookService();
+        _service = new ProgressService(_sessionRepository, _progressionService, _plantService, _bookService);
     }
 
     public void Dispose()
@@ -45,8 +51,8 @@ public class ProgressServiceTests : IDisposable
 
         // Assert
         result.XpEarned.Should().BeGreaterThan(0);
-        // Base: 30 minutes * 1 XP = 30, 20 pages * 2 XP = 40, Total = 70 (no bonuses for first session)
-        result.XpEarned.Should().Be(70);
+        // Base: 30 minutes * 5 XP = 150, 20 pages * 20 XP = 400, Total = 550 (no bonuses for first session)
+        result.XpEarned.Should().Be(550);
     }
 
     [Fact]
@@ -65,8 +71,8 @@ public class ProgressServiceTests : IDisposable
         var result = await _service.AddSessionAsync(session);
 
         // Assert
-        // Base: 60 minutes * 1 XP = 60, 30 pages * 2 XP = 60, Bonus: 50 = 170
-        result.XpEarned.Should().Be(170);
+        // Base: 60 minutes * 5 XP = 300, 30 pages * 20 XP = 600, Bonus: 50 = 950
+        result.XpEarned.Should().Be(950);
     }
 
     [Fact]
@@ -151,12 +157,12 @@ public class ProgressServiceTests : IDisposable
         await Task.Delay(100);
 
         // Act
-        var ended = await _service.EndSessionAsync(session.Id, 10);
+        var result = await _service.EndSessionAsync(session.Id, 10);
 
         // Assert
-        ended.EndedAt.Should().NotBeNull();
-        ended.Minutes.Should().BeGreaterThanOrEqualTo(0);
-        ended.PagesRead.Should().Be(10);
-        ended.XpEarned.Should().BeGreaterThan(0);
+        result.Session.EndedAt.Should().NotBeNull();
+        result.Session.Minutes.Should().BeGreaterThanOrEqualTo(0);
+        result.Session.PagesRead.Should().Be(10);
+        result.Session.XpEarned.Should().BeGreaterThanOrEqualTo(0);
     }
 }

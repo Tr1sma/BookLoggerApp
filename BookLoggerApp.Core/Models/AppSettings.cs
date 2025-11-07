@@ -32,6 +32,7 @@ public class AppSettings
     public int UserLevel { get; set; } = 1;
     public int TotalXp { get; set; } = 0;
     public int Coins { get; set; } = 0; // Currency for shop
+    public int PlantsPurchased { get; set; } = 0; // Counter for dynamic plant pricing
 
     // Misc
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

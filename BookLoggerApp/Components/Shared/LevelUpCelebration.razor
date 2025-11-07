@@ -1,0 +1,67 @@
+@using BookLoggerApp.Core.Models
+
+@if (Result != null)
+{
+    <div class="celebration-overlay" @onclick="HandleClose">
+        <div class="celebration-card" @onclick:stopPropagation="true">
+            <!-- Confetti particles (more for level-up!) -->
+            @for (int i = 0; i < 15; i++)
+            {
+                <div class="confetti"></div>
+            }
+
+            <!-- Header -->
+            <div class="levelup-header">
+                <h1>🏆 LEVEL UP!</h1>
+            </div>
+
+            <!-- Level Transition -->
+            <div class="level-transition">
+                <div class="level-badge">
+                    <div class="level-badge-number">@Result.OldLevel</div>
+                    <div class="level-badge-label">LEVEL</div>
+                </div>
+
+                <div class="level-arrow">→</div>
+
+                <div class="level-badge">
+                    <div class="level-badge-number">@Result.NewLevel</div>
+                    <div class="level-badge-label">LEVEL</div>
+                </div>
+            </div>
+
+            <!-- Coins Reward -->
+            <div class="coins-reward">
+                <p style="color: #e0e0e0; margin-bottom: 0.5rem; font-size: 1.1rem;">
+                    You earned
+                </p>
+                <div class="coins-amount">
+                    <span class="coins-icon">💰</span>
+                    <span>@Result.CoinsAwarded Coins!</span>
+                </div>
+            </div>
+
+            <!-- New Total -->
+            <div style="text-align: center; margin: 1rem 0;">
+                <p style="color: #999; font-size: 0.9rem;">
+                    Total Coins: @Result.NewTotalCoins
+                </p>
+            </div>
+
+            <!-- Continue Button -->
+            <button class="celebration-button" @onclick="HandleClose">
+                Awesome!
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public LevelUpResult? Result { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

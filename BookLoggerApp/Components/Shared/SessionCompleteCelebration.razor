@@ -1,0 +1,68 @@
+@using BookLoggerApp.Core.Models
+
+@if (Result != null)
+{
+    <div class="celebration-overlay" @onclick="HandleClose">
+        <div class="celebration-card" @onclick:stopPropagation="true">
+            <!-- Confetti particles -->
+            @for (int i = 0; i < 9; i++)
+            {
+                <div class="confetti"></div>
+            }
+
+            <!-- Header -->
+            <div class="session-complete-header">
+                <h1>🎉 Session Complete!</h1>
+            </div>
+
+            <!-- XP Breakdown -->
+            <div class="xp-breakdown">
+                <div class="xp-row">
+                    <span class="xp-label">Base XP Earned</span>
+                    <span class="xp-value">+@Result.BaseXp XP</span>
+                </div>
+
+                @if (Result.PlantBoostPercentage > 0)
+                {
+                    <div class="xp-row">
+                        <span class="xp-label">🌱 Plant Boost (@(Result.PlantBoostPercentage * 100)%)</span>
+                        <span class="xp-value">+@Result.BoostedXp XP</span>
+                    </div>
+                }
+
+                <div class="xp-row">
+                    <span class="xp-label">Total XP Gained</span>
+                    <span class="xp-value total">@Result.XpEarned XP</span>
+                </div>
+            </div>
+
+            <!-- Progress bar (optional) -->
+            @if (ShowProgressBar)
+            {
+                <div class="xp-progress-container">
+                    <div class="xp-progress-bar">
+                        <div class="xp-progress-fill" style="width: @ProgressPercentage%"></div>
+                    </div>
+                    <p class="xp-progress-text">@Result.NewTotalXp XP Total</p>
+                </div>
+            }
+
+            <!-- Continue Button -->
+            <button class="celebration-button" @onclick="HandleClose">
+                Continue
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public ProgressionResult? Result { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public bool ShowProgressBar { get; set; } = true;
+    [Parameter] public decimal ProgressPercentage { get; set; } = 0;
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

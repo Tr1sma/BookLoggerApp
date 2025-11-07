@@ -4,38 +4,68 @@
     width: clamp(80px, 12vw, 140px);
     height: clamp(280px, 35vh, 380px);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
     border-radius: 4px 4px 2px 2px;
     overflow: visible;
 
-    /* 3D Book Spine Effect */
+    /* Enhanced 3D Book Spine Effect with depth */
     background: linear-gradient(
         to right,
-        rgba(0, 0, 0, 0.3) 0%,
-        rgba(0, 0, 0, 0.05) 5%,
-        transparent 8%,
-        transparent 92%,
-        rgba(0, 0, 0, 0.05) 95%,
-        rgba(0, 0, 0, 0.3) 100%
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.1) 3%,
+        rgba(0, 0, 0, 0.05) 6%,
+        transparent 10%,
+        transparent 90%,
+        rgba(0, 0, 0, 0.05) 94%,
+        rgba(0, 0, 0, 0.1) 97%,
+        rgba(0, 0, 0, 0.4) 100%
     );
 
+    /* Multi-layer shadow for enhanced depth */
     box-shadow:
-        -2px 0 4px rgba(0, 0, 0, 0.3),
-        2px 0 4px rgba(0, 0, 0, 0.3),
-        0 4px 8px rgba(0, 0, 0, 0.4),
-        inset -2px 0 3px rgba(0, 0, 0, 0.2),
-        inset 2px 0 3px rgba(0, 0, 0, 0.2);
+        -3px 0 5px rgba(0, 0, 0, 0.4),
+        3px 0 5px rgba(0, 0, 0, 0.4),
+        0 4px 10px rgba(0, 0, 0, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.3),
+        inset -3px 0 4px rgba(0, 0, 0, 0.25),
+        inset 3px 0 4px rgba(0, 0, 0, 0.25),
+        inset 0 -2px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Subtle texture overlay */
+.book-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 1px,
+            rgba(0, 0, 0, 0.02) 1px,
+            rgba(0, 0, 0, 0.02) 2px
+        );
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.3;
 }
 
 .book-card:hover {
-    transform: translateY(-12px) scale(1.02);
+    transform: translateY(-14px) scale(1.03);
+    /* Enhanced hover shadow with glow effect */
     box-shadow:
-        -3px 0 6px rgba(0, 0, 0, 0.4),
-        3px 0 6px rgba(0, 0, 0, 0.4),
-        0 12px 24px rgba(0, 0, 0, 0.5),
-        0 0 20px rgba(212, 165, 116, 0.2);
+        -4px 0 8px rgba(0, 0, 0, 0.5),
+        4px 0 8px rgba(0, 0, 0, 0.5),
+        0 16px 32px rgba(0, 0, 0, 0.6),
+        0 8px 16px rgba(0, 0, 0, 0.4),
+        0 0 24px rgba(212, 165, 116, 0.3),
+        inset -3px 0 4px rgba(0, 0, 0, 0.25),
+        inset 3px 0 4px rgba(0, 0, 0, 0.25);
     z-index: 10;
 }
 
@@ -56,6 +86,16 @@
         var(--card-bg),
         var(--bg-tertiary)
     );
+}
+
+.book-cover-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
 }
 
 .book-cover {
@@ -216,15 +256,297 @@
 .book-spine-navy { background: linear-gradient(to right, #1C2E4A, #2A3F5F, #1C2E4A); }
 .book-spine-olive { background: linear-gradient(to right, #4A4A2C, #5C5C3A, #4A4A2C); }
 
+/* ===== COMPACT BOOK CARD LAYOUT ===== */
+/* Horizontal layout with thumbnail + info for better information density */
+
+.book-card.compact {
+    /* Override vertical spine layout with horizontal card */
+    width: auto;
+    height: auto;
+    min-height: 80px;
+    max-height: 95px;
+    flex-direction: row;
+    padding: 0.4rem;
+    gap: 0.4rem;
+
+    /* Keep the beautiful shadow effects! */
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        0 1px 3px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+    background: var(--gradient-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+}
+
+/* Keep texture overlay for cozy feel */
+.book-card.compact::before {
+    opacity: 0.2;
+}
+
+.book-card.compact:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        0 2px 6px rgba(0, 0, 0, 0.3),
+        0 0 16px rgba(212, 165, 116, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border-color: var(--primary-color);
+}
+
+/* Compact thumbnail (50px) */
+.book-cover-thumbnail {
+    position: relative;
+    width: 50px;
+    min-width: 50px;
+    height: 100%;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    /* Keep spine colors and effects */
+    background: linear-gradient(
+        to right,
+        var(--bg-tertiary),
+        var(--card-bg),
+        var(--bg-tertiary)
+    );
+
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.3),
+        inset -2px 0 3px rgba(0, 0, 0, 0.2),
+        inset 2px 0 3px rgba(0, 0, 0, 0.2);
+}
+
+.book-cover-thumbnail .book-cover-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Content area - all info side-by-side with thumbnail */
+.book-card.compact .book-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    position: relative;
+}
+
+/* Header with badge and actions */
+.book-card.compact .book-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+/* Compact status badge */
+.book-card.compact .book-status-badge {
+    position: static;
+    transform: none;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+/* Compact delete button */
+.btn-icon-compact {
+    background: rgba(26, 20, 16, 0.6);
+    border: 1px solid var(--border-light);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    transition: var(--transition);
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    flex-shrink: 0;
+}
+
+.book-card.compact:hover .btn-icon-compact {
+    opacity: 1;
+}
+
+.btn-icon-compact:hover {
+    background: rgba(212, 165, 116, 0.3);
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+/* Compact title - smaller, 2 lines max */
+.book-card.compact .book-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.25;
+    max-height: 2.5em;
+    -webkit-line-clamp: 2;
+    text-shadow: none;
+}
+
+/* Compact author - smaller */
+.book-card.compact .book-author {
+    font-size: 0.7rem;
+    margin: 0;
+    line-height: 1.2;
+    max-height: 1.2em;
+    -webkit-line-clamp: 1;
+    text-shadow: none;
+}
+
+/* Show rating in compact view */
+.book-card.compact .book-rating {
+    display: flex;
+    gap: 1px;
+}
+
+.book-card.compact .star {
+    font-size: 0.6rem;
+}
+
+/* Compact progress bar */
+.book-card.compact .book-progress {
+    position: static;
+    margin-top: auto;
+}
+
+.book-card.compact .progress-bar {
+    height: 2px;
+    border-radius: 2px;
+}
+
+/* Hide old actions positioning */
+.book-card.compact .book-card-actions {
+    display: none;
+}
+
+/* Responsive - Compact Book Cards */
+@media (max-width: 768px) {
+    .book-card.compact {
+        min-height: 75px;
+        max-height: 90px;
+        padding: 0.35rem;
+        gap: 0.35rem;
+    }
+
+    .book-cover-thumbnail {
+        width: 45px;
+        min-width: 45px;
+    }
+
+    .book-card.compact .book-card-content {
+        gap: 0.2rem;
+    }
+
+    .book-card.compact .book-title {
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+
+    .book-card.compact .book-author {
+        font-size: 0.65rem;
+    }
+
+    .book-card.compact .star {
+        font-size: 0.55rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .book-card.compact {
+        min-height: 70px;
+        max-height: 85px;
+        padding: 0.3rem;
+        gap: 0.3rem;
+    }
+
+    .book-cover-thumbnail {
+        width: 42px;
+        min-width: 42px;
+    }
+
+    .book-card.compact .book-card-content {
+        gap: 0.15rem;
+    }
+
+    .book-card.compact .book-title {
+        font-size: 0.7rem;
+    }
+
+    .book-card.compact .book-author {
+        font-size: 0.6rem;
+    }
+
+    .book-card.compact .book-status-badge {
+        padding: 1px 4px;
+        font-size: 0.7rem;
+    }
+
+    .book-card.compact .star {
+        font-size: 0.5rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .book-card.compact {
+        min-height: 65px;
+        max-height: 80px;
+        padding: 0.25rem;
+        gap: 0.25rem;
+    }
+
+    .book-cover-thumbnail {
+        width: 40px;
+        min-width: 40px;
+    }
+
+    .book-card.compact .book-card-content {
+        gap: 0.15rem;
+    }
+
+    .book-card.compact .book-title {
+        font-size: 0.65rem;
+        line-height: 1.2;
+    }
+
+    .book-card.compact .book-author {
+        font-size: 0.55rem;
+    }
+
+    .book-card.compact .book-status-badge {
+        padding: 1px 3px;
+        font-size: 0.65rem;
+    }
+
+    .btn-icon-compact {
+        font-size: 0.65rem;
+        padding: 1px 4px;
+    }
+
+    .book-card.compact .star {
+        font-size: 0.5rem;
+    }
+
+    .book-card.compact .progress-bar {
+        height: 2px;
+    }
+}
+
+/* ===== END COMPACT LAYOUT ===== */
+
 /* Stat Card */
 .stat-card {
     background: var(--gradient-card);
     border-radius: var(--border-radius-lg);
-    padding: 1.75rem;
+    padding: 0.75rem;
     box-shadow: var(--shadow);
     display: flex;
     align-items: center;
-    gap: 1.25rem;
+    gap: 0.75rem;
     border: 1px solid var(--border-light);
     transition: var(--transition);
 }
@@ -235,7 +557,7 @@
 }
 
 .stat-icon {
-    font-size: 2.75rem;
+    font-size: 1.5rem;
     opacity: 0.9;
 }
 
@@ -244,7 +566,7 @@
 }
 
 .stat-value {
-    font-size: 2.25rem;
+    font-size: 1.25rem;
     font-weight: 700;
     margin: 0;
     color: var(--text-primary);
@@ -255,7 +577,7 @@
 }
 
 .stat-title {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     margin: 0.25rem 0 0 0;
     font-weight: 500;
@@ -271,9 +593,9 @@
 .goal-card {
     background: var(--gradient-card);
     border-radius: var(--border-radius-lg);
-    padding: 1.75rem;
+    padding: 0.85rem;
     box-shadow: var(--shadow);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     border: 1px solid var(--border-light);
     transition: var(--transition);
 }
@@ -284,8 +606,8 @@
 }
 
 .goal-card h4 {
-    margin: 0 0 0.75rem 0;
-    font-size: 1.25rem;
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
     color: var(--text-primary);
 }
 
@@ -703,6 +1025,39 @@ section h2 {
     box-shadow: var(--shadow);
 }
 
+.form-hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 0.25rem 0 0.75rem 0;
+}
+
+.spine-color-picker {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.spine-color-option {
+    width: 60px;
+    height: 80px;
+    border: 3px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.spine-color-option:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.spine-color-option.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+    transform: translateY(-4px);
+}
+
 /* Reading Page */
 .reading-container {
     padding: 2rem;
@@ -838,6 +1193,15 @@ section h2 {
     overflow: visible;
 }
 
+.plant-card[draggable="true"] {
+    cursor: move;
+}
+
+.plant-card[draggable="true"]:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+}
+
 .plant-card:hover {
     transform: translateY(-12px) scale(1.02);
     box-shadow:
@@ -851,19 +1215,83 @@ section h2 {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
-    padding: 1.5rem 0.75rem;
+    padding: 0;
     overflow: hidden;
     border-radius: 4px;
+    background: transparent !important;
     box-shadow:
         -2px 0 4px rgba(0, 0, 0, 0.3),
         2px 0 4px rgba(0, 0, 0, 0.3),
         0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* Plants in bookshelf - small purple decorative flowers */
+.plant-card.in-bookshelf {
+    border-radius: 0;
+    background: transparent !important;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    /* Make plants smaller and decorative */
+    transform: scale(0.7);
+    opacity: 0.85;
+    transition: all 0.3s ease;
+}
+
+.plant-card.in-bookshelf .plant-pot-wrapper {
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.plant-card.in-bookshelf:hover {
+    box-shadow: none !important;
+    transform: scale(0.75) translateY(-4px);
+    opacity: 1;
+}
+
+.plant-card.in-bookshelf .plant-card-name {
+    display: none;
+}
+
+.plant-card.in-bookshelf .plant-status-badge {
+    display: none;
+}
+
+.plant-card.in-bookshelf .plant-card-image {
+    background: transparent !important;
+    user-drag: none;
+    -webkit-user-drag: none;
+    /* Green natural plant tint */
+    filter: drop-shadow(0 2px 6px rgba(72, 187, 120, 0.4))
+            saturate(1.3)
+            brightness(0.95);
+}
+
 .plant-card:hover .plant-pot-wrapper {
     filter: brightness(1.1);
+}
+
+.plant-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: 1;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+}
+
+.plant-selection-image {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
 }
 
 .plant-status-badge {
@@ -938,6 +1366,35 @@ section h2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+}
+
+.plant-card-name {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.plant-name-small {
+    font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    line-height: 1.2;
+    text-align: center;
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    border-radius: 4px;
+    max-width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .plant-card .plant-progress {

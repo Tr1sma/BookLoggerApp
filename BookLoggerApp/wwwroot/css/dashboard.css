@@ -1,19 +1,19 @@
 /* Dashboard - Cozy Dark Mode */
 .dashboard-container {
-    padding: 2.5rem;
+    padding: 1rem;
     max-width: 1600px;
     margin: 0 auto;
     min-height: 100vh;
 }
 
 .dashboard-container section {
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .dashboard-container h2 {
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
     font-weight: 700;
 }
 
@@ -21,7 +21,7 @@
 .currently-reading {
     background: var(--gradient-card);
     border-radius: var(--border-radius-lg);
-    padding: 2rem;
+    padding: 1.5rem;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow);
     transition: var(--transition);
@@ -34,13 +34,13 @@
 
 .book-card-large {
     display: flex;
-    gap: 2rem;
+    gap: 1.5rem;
     align-items: center;
 }
 
 .book-card-large .book-cover {
-    width: 180px;
-    height: 270px;
+    width: 140px;
+    height: 210px;
     object-fit: cover;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
@@ -52,8 +52,8 @@
 }
 
 .book-card-large h3 {
-    font-size: 2rem;
-    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    margin: 0 0 0.4rem 0;
     background: var(--gradient-warm);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -62,16 +62,16 @@
 
 .book-card-large .author {
     color: var(--text-secondary);
-    font-size: 1.15rem;
-    margin: 0 0 1.5rem 0;
+    font-size: 1rem;
+    margin: 0 0 1rem 0;
 }
 
 .book-card-large .progress-bar {
-    height: 12px;
+    height: 8px;
     background: var(--bg-primary);
     border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
     border: 1px solid var(--border-light);
 }
 
@@ -83,22 +83,22 @@
 
 .book-card-large .progress-text {
     color: var(--text-muted);
-    font-size: 0.95rem;
-    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
 }
 
 /* Stats Grid in Dashboard */
 .dashboard-container .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
 }
 
 /* Goals Section */
 .goals-section {
     background: var(--card-bg);
     border-radius: var(--border-radius-lg);
-    padding: 2rem;
+    padding: 1.5rem;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow);
 }
@@ -107,7 +107,7 @@
 .plant-widget-section {
     background: var(--card-bg);
     border-radius: var(--border-radius-lg);
-    padding: 2rem;
+    padding: 1.5rem;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow);
 }
@@ -116,7 +116,7 @@
 .recent-activity {
     background: var(--card-bg);
     border-radius: var(--border-radius-lg);
-    padding: 2rem;
+    padding: 1.5rem;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow);
 }
@@ -130,9 +130,9 @@
 .activity-list li {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    margin-bottom: 0.75rem;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
     background: var(--bg-tertiary);
     border-radius: var(--border-radius);
     border: 1px solid var(--border-light);
@@ -145,7 +145,7 @@
 }
 
 .activity-icon {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     opacity: 0.9;
 }
 
@@ -160,32 +160,68 @@
     font-size: 0.9rem;
 }
 
+/* Tablet and below */
 @media (max-width: 768px) {
     .dashboard-container {
-        padding: 1.5rem;
+        padding: 0.85rem;
     }
 
     .dashboard-container .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 0.6rem;
     }
 
     .book-card-large {
         flex-direction: column;
         text-align: center;
+        gap: 1rem;
     }
 
     .book-card-large .book-cover {
-        width: 160px;
-        height: 240px;
+        width: 120px;
+        height: 180px;
     }
 
     .book-card-large h3 {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
 
     .activity-list li {
         flex-direction: column;
         align-items: flex-start;
+        gap: 0.4rem;
+        padding: 0.6rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    .dashboard-container {
+        padding: 0.75rem;
+    }
+
+    .dashboard-container .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         gap: 0.5rem;
+    }
+
+    .dashboard-container section {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Very small mobile */
+@media (max-width: 400px) {
+    .dashboard-container {
+        padding: 0.6rem;
+    }
+
+    .dashboard-container .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.4rem;
+    }
+
+    .dashboard-container section {
+        margin-bottom: 1.25rem;
     }
 }

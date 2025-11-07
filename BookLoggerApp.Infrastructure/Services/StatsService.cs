@@ -159,12 +159,12 @@ public class StatsService : IStatsService
     public async Task<double> GetAverageRatingAsync(CancellationToken ct = default)
     {
         var books = await _bookRepository.GetAllAsync();
-        var ratedBooks = books.Where(b => b.Rating.HasValue).ToList();
+        var ratedBooks = books.Where(b => b.OverallRating.HasValue).ToList();
 
         if (!ratedBooks.Any())
             return 0;
 
-        return ratedBooks.Average(b => b.Rating!.Value);
+        return ratedBooks.Average(b => b.OverallRating!.Value);
     }
 
     public async Task<double> GetAveragePagesPerDayAsync(int days = 30, CancellationToken ct = default)
@@ -185,5 +185,104 @@ public class StatsService : IStatsService
         var totalMinutes = sessions.Sum(s => s.Minutes);
 
         return (double)totalMinutes / days;
+    }
+
+    public async Task<double> GetAverageRatingByCategoryAsync(RatingCategory category, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
+    {
+        var books = await GetFilteredBooksAsync(startDate, endDate, ct);
+
+        var ratings = category switch
+        {
+            RatingCategory.Characters => books.Where(b => b.CharactersRating.HasValue).Select(b => b.CharactersRating!.Value),
+            RatingCategory.Plot => books.Where(b => b.PlotRating.HasValue).Select(b => b.PlotRating!.Value),
+            RatingCategory.WritingStyle => books.Where(b => b.WritingStyleRating.HasValue).Select(b => b.WritingStyleRating!.Value),
+            RatingCategory.SpiceLevel => books.Where(b => b.SpiceLevelRating.HasValue).Select(b => b.SpiceLevelRating!.Value),
+            RatingCategory.Pacing => books.Where(b => b.PacingRating.HasValue).Select(b => b.PacingRating!.Value),
+            RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).Select(b => b.WorldBuildingRating!.Value),
+            RatingCategory.Overall => books.Where(b => b.OverallRating.HasValue).Select(b => b.OverallRating!.Value),
+            _ => Enumerable.Empty<int>()
+        };
+
+        var ratingList = ratings.ToList();
+        return ratingList.Any() ? ratingList.Average() : 0;
+    }
+
+    public async Task<Dictionary<RatingCategory, double>> GetAllAverageRatingsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
+    {
+        var result = new Dictionary<RatingCategory, double>();
+
+        foreach (RatingCategory category in Enum.GetValues(typeof(RatingCategory)))
+        {
+            var average = await GetAverageRatingByCategoryAsync(category, startDate, endDate, ct);
+            result[category] = average;
+        }
+
+        return result;
+    }
+
+    public async Task<List<BookRatingSummary>> GetTopRatedBooksAsync(int count = 10, RatingCategory? category = null, CancellationToken ct = default)
+    {
+        var books = await _bookRepository.GetBooksByStatusAsync(ReadingStatus.Completed);
+
+        IEnumerable<Book> sortedBooks;
+
+        if (category.HasValue)
+        {
+            // Sort by specific category
+            sortedBooks = category.Value switch
+            {
+                RatingCategory.Characters => books.Where(b => b.CharactersRating.HasValue).OrderByDescending(b => b.CharactersRating),
+                RatingCategory.Plot => books.Where(b => b.PlotRating.HasValue).OrderByDescending(b => b.PlotRating),
+                RatingCategory.WritingStyle => books.Where(b => b.WritingStyleRating.HasValue).OrderByDescending(b => b.WritingStyleRating),
+                RatingCategory.SpiceLevel => books.Where(b => b.SpiceLevelRating.HasValue).OrderByDescending(b => b.SpiceLevelRating),
+                RatingCategory.Pacing => books.Where(b => b.PacingRating.HasValue).OrderByDescending(b => b.PacingRating),
+                RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).OrderByDescending(b => b.WorldBuildingRating),
+                RatingCategory.Overall => books.Where(b => b.OverallRating.HasValue).OrderByDescending(b => b.OverallRating),
+                _ => Enumerable.Empty<Book>()
+            };
+        }
+        else
+        {
+            // Sort by average rating (or overall if no category ratings)
+            sortedBooks = books
+                .Where(b => b.AverageRating.HasValue || b.OverallRating.HasValue)
+                .OrderByDescending(b => b.AverageRating ?? b.OverallRating ?? 0);
+        }
+
+        return sortedBooks
+            .Take(count)
+            .Select(BookRatingSummary.FromBook)
+            .ToList();
+    }
+
+    public async Task<List<BookRatingSummary>> GetBooksWithRatingsAsync(CancellationToken ct = default)
+    {
+        var books = await _bookRepository.GetAllAsync();
+
+        return books
+            .Where(b => b.Status == ReadingStatus.Completed)
+            .Select(BookRatingSummary.FromBook)
+            .OrderByDescending(s => s.AverageRating)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Helper method to filter books by date range.
+    /// </summary>
+    private async Task<List<Book>> GetFilteredBooksAsync(DateTime? startDate, DateTime? endDate, CancellationToken ct = default)
+    {
+        var books = (await _bookRepository.GetBooksByStatusAsync(ReadingStatus.Completed)).ToList();
+
+        if (startDate.HasValue)
+        {
+            books = books.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value >= startDate.Value).ToList();
+        }
+
+        if (endDate.HasValue)
+        {
+            books = books.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value <= endDate.Value).ToList();
+        }
+
+        return books;
     }
 }

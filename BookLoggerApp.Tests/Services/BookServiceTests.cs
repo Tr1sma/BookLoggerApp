@@ -12,13 +12,17 @@ public class BookServiceTests : IDisposable
 {
     private readonly AppDbContext _context;
     private readonly BookRepository _repository;
+    private readonly MockProgressionService _progressionService;
+    private readonly MockPlantService _plantService;
     private readonly BookService _service;
 
     public BookServiceTests()
     {
         _context = TestDbContext.Create();
         _repository = new BookRepository(_context);
-        _service = new BookService(_repository);
+        _progressionService = new MockProgressionService();
+        _plantService = new MockPlantService();
+        _service = new BookService(_repository, _progressionService, _plantService);
     }
 
     public void Dispose()

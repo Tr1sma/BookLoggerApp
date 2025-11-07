@@ -48,6 +48,7 @@
                     Species="@species"
                     UserCoins="@ViewModel.UserCoins"
                     UserLevel="@ViewModel.UserLevel"
+                    CurrentPrice="@ViewModel.GetDynamicPrice(species.Id)"
                     IsSelected="@(ViewModel.SelectedSpecies?.Id == species.Id)"
                     OnSelect="() => ViewModel.SelectSpeciesCommand.Execute(species)" />
             }
@@ -95,7 +96,7 @@
                             </div>
                             <div class="stat-item">
                                 <label>Cost</label>
-                                <span>🪙 @ViewModel.SelectedSpecies.BaseCost</span>
+                                <span>🪙 @ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id)</span>
                             </div>
                         </div>
 
@@ -105,6 +106,7 @@
                                    class="plant-name-input"
                                    placeholder="Enter a name..."
                                    @bind="ViewModel.NewPlantName"
+                                   @bind:event="oninput"
                                    maxlength="100" />
                         </div>
                     </div>
@@ -115,11 +117,11 @@
                         Cancel
                     </button>
                     <button class="btn btn-primary"
-                            @onclick="() => ViewModel.PurchasePlantCommand.ExecuteAsync(ViewModel.SelectedSpecies.Id)"
-                            disabled="@(string.IsNullOrWhiteSpace(ViewModel.NewPlantName) || ViewModel.UserCoins < ViewModel.SelectedSpecies.BaseCost)">
-                        @if (ViewModel.UserCoins >= ViewModel.SelectedSpecies.BaseCost)
+                            @onclick="HandlePurchaseAsync"
+                            disabled="@(string.IsNullOrWhiteSpace(ViewModel.NewPlantName) || ViewModel.UserCoins < ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))">
+                        @if (ViewModel.UserCoins >= ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))
                         {
-                            <span>Purchase for 🪙 @ViewModel.SelectedSpecies.BaseCost</span>
+                            <span>Purchase for 🪙 @ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id)</span>
                         }
                         else
                         {
@@ -136,5 +138,32 @@
     protected override async Task OnInitializedAsync()
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Refresh when navigating back to the page
+        if (ViewModel.AvailableSpecies.Any())
+        {
+            await ViewModel.LoadCommand.ExecuteAsync(null);
+        }
+    }
+
+    private async Task HandlePurchaseAsync()
+    {
+        if (ViewModel.SelectedSpecies != null)
+        {
+            await ViewModel.PurchasePlantCommand.ExecuteAsync(ViewModel.SelectedSpecies.Id);
+
+            // Navigate to Bookshelf after successful purchase
+            if (string.IsNullOrEmpty(ViewModel.ErrorMessage))
+            {
+                Navigation.NavigateTo("/bookshelf");
+            }
+            else
+            {
+                StateHasChanged(); // Force UI update if there was an error
+            }
+        }
     }
 }

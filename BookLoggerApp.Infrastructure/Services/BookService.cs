@@ -10,10 +10,17 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class BookService : IBookService
 {
     private readonly IBookRepository _bookRepository;
+    private readonly IProgressionService _progressionService;
+    private readonly IPlantService _plantService;
 
-    public BookService(IBookRepository bookRepository)
+    public BookService(
+        IBookRepository bookRepository,
+        IProgressionService progressionService,
+        IPlantService plantService)
     {
         _bookRepository = bookRepository;
+        _progressionService = progressionService;
+        _plantService = plantService;
     }
 
     public async Task<IReadOnlyList<Book>> GetAllAsync(CancellationToken ct = default)
@@ -131,6 +138,10 @@ public class BookService : IBookService
         book.CurrentPage = book.PageCount ?? book.CurrentPage;
 
         await _bookRepository.UpdateAsync(book);
+
+        // Award book completion XP (100 XP bonus + plant boost)
+        var activePlant = await _plantService.GetActivePlantAsync(ct);
+        await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
     }
 
     public async Task UpdateProgressAsync(Guid bookId, int currentPage, CancellationToken ct = default)

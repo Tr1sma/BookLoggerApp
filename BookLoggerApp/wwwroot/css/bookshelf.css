@@ -1,5 +1,5 @@
 .bookshelf-container {
-    padding: 2.5rem;
+    padding: 1.5rem;
     max-width: 1600px;
     margin: 0 auto;
     min-height: 100vh;
@@ -9,13 +9,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
     border-bottom: 2px solid var(--border-light);
 }
 
 .bookshelf-header h1 {
-    font-size: 2.5rem;
+    font-size: 1.75rem;
     background: var(--gradient-warm);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -27,16 +27,16 @@
 
 .bookshelf-controls {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: center;
 }
 
 .search-input {
-    padding: 0.75rem 1.25rem;
+    padding: 0.6rem 1rem;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    font-size: 0.95rem;
-    min-width: 320px;
+    font-size: 0.9rem;
+    min-width: 240px;
     background: var(--bg-tertiary);
     color: var(--text-primary);
     transition: var(--transition);
@@ -56,9 +56,9 @@
 .bookshelf-filters {
     display: flex;
     gap: 1rem;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     flex-wrap: wrap;
-    padding: 1.5rem;
+    padding: 1rem;
     background: var(--card-bg);
     border-radius: var(--border-radius-lg);
     border: 1px solid var(--border-light);
@@ -97,8 +97,8 @@
 .book-grid {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
-    margin-bottom: 3rem;
+    gap: 2rem;
+    margin-bottom: 2rem;
     animation: fadeIn 0.5s ease-in;
 }
 
@@ -108,36 +108,92 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    gap: 0.5rem;
-    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    gap: 0.3rem;
+    padding: 1.5rem 1rem 1rem 1rem;
+    /* Enhanced rich wood gradient with more depth */
     background: linear-gradient(180deg,
-        rgba(74, 63, 50, 0.3) 0%,
-        rgba(61, 49, 38, 0.5) 85%,
-        rgba(45, 36, 25, 0.8) 100%
+        rgba(74, 63, 50, 0.4) 0%,
+        rgba(69, 57, 45, 0.6) 30%,
+        rgba(61, 49, 38, 0.7) 70%,
+        rgba(51, 41, 31, 0.85) 90%,
+        rgba(45, 36, 25, 0.95) 100%
     );
     border-radius: 8px;
+    /* Multi-layer shadow for enhanced depth */
     box-shadow:
-        inset 0 -3px 8px rgba(0, 0, 0, 0.4),
-        0 4px 12px rgba(0, 0, 0, 0.3);
+        inset 0 -4px 10px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(90, 74, 58, 0.3),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+        0 6px 16px rgba(0, 0, 0, 0.4),
+        0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* Wooden shelf edge (bottom border) */
+/* Wood texture overlay */
+.shelf-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.03) 2px,
+            rgba(0, 0, 0, 0.03) 4px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 80px,
+            rgba(0, 0, 0, 0.02) 80px,
+            rgba(0, 0, 0, 0.02) 160px
+        );
+    pointer-events: none;
+    opacity: 0.4;
+    z-index: 0;
+}
+
+/* Shelf Slot - wrapper for each item */
+.shelf-slot {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.shelf-slot[draggable="true"] {
+    cursor: move;
+}
+
+.shelf-slot[draggable="true"]:hover {
+    transform: translateY(-4px);
+}
+
+/* Wooden shelf edge (bottom border) - Enhanced prominent edge */
 .shelf-row::after {
     content: '';
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 8px;
+    height: 12px;
+    /* Richer, more prominent wood gradient */
     background: linear-gradient(180deg,
-        #5A4A3A 0%,
-        #4A3F32 50%,
-        #3D3126 100%
+        #6B5544 0%,
+        #5A4A3A 25%,
+        #4A3F32 60%,
+        #3D3126 90%,
+        #2D2419 100%
     );
     border-radius: 0 0 8px 8px;
+    /* Enhanced shadow for more realistic depth */
     box-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 3px 8px rgba(0, 0, 0, 0.6),
+        0 1px 3px rgba(0, 0, 0, 0.4),
+        inset 0 2px 1px rgba(255, 255, 255, 0.08),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.4);
+    z-index: 1;
 }
 
 @keyframes fadeIn {
@@ -154,19 +210,19 @@
 /* Responsive Bookshelf */
 @media (max-width: 640px) {
     .shelf-row {
-        gap: 0.3rem;
-        padding: 1.5rem 1rem 1rem 1rem;
+        gap: 0.2rem;
+        padding: 1rem 0.75rem 0.75rem 0.75rem;
     }
 
     .book-grid {
-        gap: 2rem;
+        gap: 1.5rem;
     }
 }
 
 @media (min-width: 1920px) {
     .shelf-row {
-        gap: 0.75rem;
-        padding: 2.5rem 2rem 2rem 2rem;
+        gap: 0.4rem;
+        padding: 1.75rem 1.25rem 1.25rem 1.25rem;
     }
 }
 
@@ -202,5 +258,48 @@
     padding: 4rem 2rem;
     color: var(--text-secondary);
     font-size: 1.1rem;
+}
+
+/* Plant Detail Modal - Brown Theme */
+.plant-detail-modal {
+    max-width: 600px !important;
+    background: linear-gradient(135deg,
+        rgba(90, 74, 58, 0.98) 0%,
+        rgba(74, 63, 50, 0.98) 50%,
+        rgba(61, 49, 38, 0.98) 100%) !important;
+    border: 2px solid rgba(139, 115, 85, 0.6) !important;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.plant-detail-modal .modal-header {
+    background: linear-gradient(135deg,
+        rgba(110, 90, 70, 0.5) 0%,
+        rgba(90, 74, 58, 0.5) 100%) !important;
+    border-bottom: 1px solid rgba(139, 115, 85, 0.3) !important;
+}
+
+.plant-detail-modal .modal-header h2 {
+    color: var(--text-primary) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.plant-detail-modal .modal-body {
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+.plant-detail-modal .plant-widget {
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+.plant-detail-modal .modal-footer {
+    background: linear-gradient(135deg,
+        rgba(90, 74, 58, 0.5) 0%,
+        rgba(74, 63, 50, 0.5) 100%) !important;
+    border-top: 1px solid rgba(139, 115, 85, 0.3) !important;
 }
 

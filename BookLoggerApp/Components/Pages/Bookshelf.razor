@@ -10,6 +10,12 @@
 <PageTitle>Bookshelf - BookLogger</PageTitle>
 
 <div class="bookshelf-container">
+    <!-- Reading Goal Header -->
+    <GoalHeader TbrCount="@ViewModel.TbrCount"
+                GoalTarget="@ViewModel.GoalTarget"
+                BooksRead="@ViewModel.BooksReadThisYear"
+                BooksRemaining="@ViewModel.BooksRemainingToGoal" />
+
     <!-- Header & Controls -->
     <div class="bookshelf-header">
         <h1>📚 My Bookshelf</h1>
@@ -75,18 +81,19 @@
         <div class="book-grid">
             @{
                 var booksPerShelf = 8;
-                
-                // Combine books and plants into shelf slots
-                var allItems = new List<object>();
-                allItems.AddRange(ViewModel.Books);
-                
-                // Add plants at their positions
-                foreach (var plant in ViewModel.BookshelfPlants.OrderBy(p => p.BookshelfPosition))
-                {
-                    allItems.Add(plant);
-                }
 
-                var shelves = allItems
+                // Create a combined list of books and plants
+                var allItems = new List<object>();
+
+                // Add all books first
+                allItems.AddRange(ViewModel.Books);
+
+                // Add all plants - they appear after books
+                allItems.AddRange(ViewModel.BookshelfPlants);
+
+                var sortedItems = allItems;
+
+                var shelves = sortedItems
                     .Select((item, index) => new { item, index })
                     .GroupBy(x => x.index / booksPerShelf)
                     .Select(g => g.Select(x => x.item).ToList())
@@ -96,26 +103,43 @@
             @foreach (var (shelf, shelfIndex) in shelves.Select((s, i) => (s, i)))
             {
                 <div class="shelf-row">
-                    @foreach (var item in shelf)
+                    @foreach (var (item, slotIndex) in shelf.Select((item, idx) => (item, idx)))
                     {
+                        var globalPosition = shelfIndex * booksPerShelf + slotIndex;
+
                         @if (item is Book book)
                         {
-                            <BookCard Book="@book"
-                                      OnClick="() => HandleBookClick(book)"
-                                      OnDelete="() => HandleDeleteBook(book.Id)" />
+                            <div class="shelf-slot" @ondrop="() => HandleDropOnSlot(globalPosition)"
+                                 @ondragover:preventDefault="true" @ondragover="() => {}">
+                                <BookCard Book="@book"
+                                          IsInBookshelf="true"
+                                          IsDraggable="true"
+                                          OnClick="() => HandleBookClick(book)"
+                                          OnDragStart="() => HandleDragStartBook(book.Id)"
+                                          OnDelete="() => HandleDeleteBook(book.Id)" />
+                            </div>
                         }
                         else if (item is UserPlant plant)
                         {
-                            <PlantCard Plant="@plant"
-                                       IsInBookshelf="true"
-                                       OnClick="() => HandlePlantClick(plant)"
-                                       OnRemove="() => HandleRemovePlant(plant.Id)" />
+                            <div class="shelf-slot"
+                                 @ondrop="() => HandleDropOnSlot(globalPosition)"
+                                 @ondragover:preventDefault="true" @ondragover="() => {}">
+                                <PlantCard Plant="@plant"
+                                           IsInBookshelf="true"
+                                           IsDraggable="true"
+                                           OnClick="() => HandlePlantClick(plant)"
+                                           OnDragStart="() => HandleDragStart(plant.Id)"
+                                           OnRemove="() => HandleRemovePlant(plant.Id)" />
+                            </div>
                         }
                     }
                     <!-- Add plant slot at end of each shelf -->
                     @if (shelf.Count < booksPerShelf && ViewModel.AvailablePlants.Any())
                     {
-                        <div class="empty-slot" @onclick="() => HandleAddPlant(shelfIndex)">
+                        var globalPosition = shelfIndex * booksPerShelf + shelf.Count;
+                        <div class="empty-slot" @onclick="() => HandleAddPlant(globalPosition)"
+                             @ondrop="() => HandleDropOnSlot(globalPosition)"
+                             @ondragover:preventDefault="true" @ondragover="() => {}">
                             <div class="empty-slot-icon">🌱</div>
                             <div class="empty-slot-text">Add Plant</div>
                         </div>
@@ -153,12 +177,13 @@
                 }
                 else
                 {
-                    <p>Select a plant to place on shelf @(selectedShelfIndex + 1):</p>
+                    <p>Select a plant to place at position @selectedPosition:</p>
                     <div class="plant-selection-grid">
                         @foreach (var plant in ViewModel.AvailablePlants)
                         {
                             <div class="plant-selection-card" @onclick="() => SelectPlantForPlacement(plant.Id)">
                                 <div class="plant-preview" style="@GetPlantPreviewStyle(plant)">
+                                    <img src="@plant.Species.ImagePath" alt="@plant.Species.Name" class="plant-selection-image" />
                                     <div class="status-badge">@GetPlantStatusIcon(plant.Status)</div>
                                 </div>
                                 <h4>@plant.Name</h4>
@@ -177,11 +202,40 @@
     </div>
 }
 
+<!-- Plant Detail Modal -->
+@if (showPlantDetail && selectedPlant != null)
+{
+    <div class="purchase-modal-overlay" @onclick="ClosePlantDetail">
+        <div class="purchase-modal plant-detail-modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>🌱 @selectedPlant.Name</h2>
+                <button class="btn-close" @onclick="ClosePlantDetail">×</button>
+            </div>
+
+            <div class="modal-body">
+                <PlantWidget Plant="@selectedPlant"
+                             OnWater="HandleWaterPlantFromModal"
+                             OnDelete="HandleDeletePlantFromModal"
+                             IsWatering="@isWateringPlant" />
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="ClosePlantDetail">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private Book? selectedBook;
     private bool showQuickTimer;
     private bool showPlantSelector;
-    private int selectedShelfIndex;
+    private bool showPlantDetail;
+    private int selectedPosition;
+    private Guid? draggedPlantId;
+    private Guid? draggedBookId;
+    private UserPlant? selectedPlant;
+    private bool isWateringPlant;
 
     protected override async Task OnInitializedAsync()
     {
@@ -207,17 +261,8 @@
 
     private void HandleBookClick(Book book)
     {
-        // Show quick timer or navigate to detail based on user preference
-        // For now, show quick timer for reading books, navigate for others
-        if (book.Status == ReadingStatus.Reading || book.Status == ReadingStatus.Planned)
-        {
-            selectedBook = book;
-            showQuickTimer = true;
-        }
-        else
-        {
-            NavigateToBookDetail(book.Id);
-        }
+        // Navigate directly to book detail page for all books
+        NavigateToBookDetail(book.Id);
     }
 
     private void NavigateToBookDetail(Guid bookId)
@@ -245,17 +290,89 @@
     }
 
     // Plant-specific methods
-    private void HandleAddPlant(int shelfIndex)
+    private void HandleAddPlant(int position)
     {
-        selectedShelfIndex = shelfIndex;
+        selectedPosition = position;
         showPlantSelector = true;
+    }
+
+    private void HandleDragStart(Guid plantId)
+    {
+        System.Diagnostics.Debug.WriteLine($"Bookshelf: Starting drag for plant {plantId}");
+        draggedPlantId = plantId;
+        draggedBookId = null; // Clear book drag when dragging plant
+    }
+
+    private void HandleDragStartBook(Guid bookId)
+    {
+        System.Diagnostics.Debug.WriteLine($"Bookshelf: Starting drag for book {bookId}");
+        draggedBookId = bookId;
+        draggedPlantId = null; // Clear plant drag when dragging book
+    }
+
+    private async Task HandleDropOnSlot(int position)
+    {
+        System.Diagnostics.Debug.WriteLine($"Bookshelf: Drop on slot {position}, PlantId: {draggedPlantId}, BookId: {draggedBookId}");
+
+        if (draggedPlantId.HasValue)
+        {
+            System.Diagnostics.Debug.WriteLine($"Bookshelf: Moving plant {draggedPlantId.Value} to position {position}");
+            await ViewModel.MovePlantToPositionCommand.ExecuteAsync((draggedPlantId.Value, position.ToString()));
+            draggedPlantId = null;
+        }
+        else if (draggedBookId.HasValue)
+        {
+            System.Diagnostics.Debug.WriteLine($"Bookshelf: Moving book {draggedBookId.Value} to position {position}");
+            await ViewModel.MoveBookToPositionCommand.ExecuteAsync((draggedBookId.Value, position.ToString()));
+            draggedBookId = null;
+        }
     }
 
     private void HandlePlantClick(UserPlant plant)
     {
-        // Navigate to plant detail or show plant info
-        // For now, just show the plant widget
-        Navigation.NavigateTo($"/dashboard");
+        // Show plant detail modal
+        selectedPlant = plant;
+        showPlantDetail = true;
+    }
+
+    private void ClosePlantDetail()
+    {
+        showPlantDetail = false;
+        selectedPlant = null;
+    }
+
+    private async Task HandleWaterPlantFromModal()
+    {
+        if (selectedPlant == null) return;
+
+        isWateringPlant = true;
+        try
+        {
+            await ViewModel.WaterPlantCommand.ExecuteAsync(selectedPlant.Id);
+            // Refresh plant data
+            await ViewModel.LoadCommand.ExecuteAsync(null);
+        }
+        finally
+        {
+            isWateringPlant = false;
+        }
+    }
+
+    private async Task HandleDeletePlantFromModal()
+    {
+        if (selectedPlant == null) return;
+
+        try
+        {
+            await ViewModel.DeletePlantCommand.ExecuteAsync(selectedPlant.Id);
+            // Close modal and refresh
+            ClosePlantDetail();
+            await ViewModel.LoadCommand.ExecuteAsync(null);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to delete plant: {ex.Message}");
+        }
     }
 
     private async Task HandleRemovePlant(Guid plantId)
@@ -265,8 +382,7 @@
 
     private async Task SelectPlantForPlacement(Guid plantId)
     {
-        var position = $"{selectedShelfIndex}:end";
-        await ViewModel.PlacePlantInBookshelfCommand.ExecuteAsync((plantId, position));
+        await ViewModel.PlacePlantInBookshelfCommand.ExecuteAsync((plantId, selectedPosition.ToString()));
         showPlantSelector = false;
     }
 

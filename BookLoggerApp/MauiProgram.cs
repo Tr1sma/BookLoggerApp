@@ -51,6 +51,7 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider, BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IProgressionService, BookLoggerApp.Infrastructure.Services.ProgressionService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Infrastructure.Services.NotificationService>();
@@ -66,6 +67,7 @@ public static class MauiProgram
         builder.Services.AddTransient<StatsViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
         builder.Services.AddTransient<PlantShopViewModel>();
+        builder.Services.AddTransient<UserProgressViewModel>();
 
         System.Diagnostics.Debug.WriteLine("All services registered, building app...");
 
@@ -81,12 +83,12 @@ public static class MauiProgram
                 using var scope = app.Services.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-#if DEBUG
-                // In DEBUG mode, delete and recreate the database for a clean start
-                System.Diagnostics.Debug.WriteLine("DEBUG MODE: Deleting existing database...");
-                await dbContext.Database.EnsureDeletedAsync();
-                System.Diagnostics.Debug.WriteLine("Database deleted");
-#endif
+//#if DEBUG
+//                // In DEBUG mode, delete and recreate the database for a clean start
+//                System.Diagnostics.Debug.WriteLine("DEBUG MODE: Deleting existing database...");
+//                await dbContext.Database.EnsureDeletedAsync();
+//                System.Diagnostics.Debug.WriteLine("Database deleted");
+//#endif
 
                 System.Diagnostics.Debug.WriteLine("Checking if database exists...");
                 var canConnect = await dbContext.Database.CanConnectAsync();
@@ -95,6 +97,15 @@ public static class MauiProgram
                 System.Diagnostics.Debug.WriteLine("Applying migrations...");
                 await dbContext.Database.MigrateAsync();
                 System.Diagnostics.Debug.WriteLine("Database migration completed successfully");
+
+                // Recalculate UserLevel based on TotalXp (fixes corrupted level data)
+                System.Diagnostics.Debug.WriteLine("Recalculating UserLevel from TotalXp...");
+                var settingsProvider = scope.ServiceProvider.GetRequiredService<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider>();
+                if (settingsProvider is BookLoggerApp.Infrastructure.Services.AppSettingsProvider provider)
+                {
+                    await provider.RecalculateUserLevelAsync();
+                    System.Diagnostics.Debug.WriteLine("UserLevel recalculation completed");
+                }
 
                 // Fix plant image paths - ensure wwwroot format
                 System.Diagnostics.Debug.WriteLine("=== CHECKING PLANT IMAGE PATHS ===");
