@@ -83,6 +83,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<bool>("NotificationsEnabled")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("PlantsPurchased")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("ReadingRemindersEnabled")
                         .HasColumnType("INTEGER");
 
@@ -119,6 +122,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Language = "en",
                             NotificationsEnabled = false,
+                            PlantsPurchased = 0,
                             ReadingRemindersEnabled = false,
                             TelemetryEnabled = false,
                             Theme = "Light",
@@ -137,6 +141,13 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("BookshelfPosition")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("CharactersRating")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("CoverImagePath")
                         .HasMaxLength(500)
@@ -166,7 +177,16 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("OverallRating")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PacingRating")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("PageCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PlotRating")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("PublicationYear")
@@ -179,6 +199,13 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<int?>("Rating")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("SpiceLevelRating")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SpineColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
@@ -186,6 +213,12 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("WorldBuildingRating")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("WritingStyleRating")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -345,6 +378,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<int>("WaterIntervalDays")
                         .HasColumnType("INTEGER");
 
+                    b.Property<decimal>("XpBoostPercentage")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name");
@@ -365,7 +401,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             MaxLevel = 10,
                             Name = "Starter Sprout",
                             UnlockLevel = 1,
-                            WaterIntervalDays = 3
+                            WaterIntervalDays = 3,
+                            XpBoostPercentage = 0.05m
                         },
                         new
                         {
@@ -378,7 +415,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             MaxLevel = 12,
                             Name = "Bookworm Fern",
                             UnlockLevel = 5,
-                            WaterIntervalDays = 4
+                            WaterIntervalDays = 4,
+                            XpBoostPercentage = 0.08m
                         },
                         new
                         {
@@ -391,7 +429,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             MaxLevel = 15,
                             Name = "Reading Cactus",
                             UnlockLevel = 10,
-                            WaterIntervalDays = 7
+                            WaterIntervalDays = 7,
+                            XpBoostPercentage = 0.10m
                         });
                 });
 

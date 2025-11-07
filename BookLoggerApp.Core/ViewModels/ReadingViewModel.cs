@@ -35,10 +35,25 @@ public partial class ReadingViewModel : ViewModelBase
     private int _currentPage;
 
     [ObservableProperty]
+    private int _startPage;
+
+    [ObservableProperty]
     private int _xpEarned;
 
     [ObservableProperty]
     private DateTime _sessionStartTime;
+
+    [ObservableProperty]
+    private bool _showSessionCelebration;
+
+    [ObservableProperty]
+    private ProgressionResult? _sessionProgressionResult;
+
+    [ObservableProperty]
+    private bool _showLevelUpCelebration;
+
+    [ObservableProperty]
+    private LevelUpResult? _levelUpResult;
 
     public bool IsRunning => Session != null && !IsPaused;
 
@@ -58,7 +73,8 @@ public partial class ReadingViewModel : ViewModelBase
             }
 
             Book = await _bookService.GetByIdAsync(Session.BookId);
-            CurrentPage = Session.PagesRead ?? 0;
+            StartPage = Session.StartPage ?? Book?.CurrentPage ?? 0;
+            CurrentPage = Session.EndPage ?? (StartPage + (Session.PagesRead ?? 0));
             XpEarned = Session.XpEarned;
             SessionStartTime = Session.StartedAt;
             
@@ -85,8 +101,14 @@ public partial class ReadingViewModel : ViewModelBase
             SessionStartTime = Session.StartedAt;
             ElapsedTime = TimeSpan.Zero;
             IsPaused = false;
-            CurrentPage = Book?.CurrentPage ?? 0;
+            StartPage = Book?.CurrentPage ?? 0;
+            CurrentPage = StartPage;
             XpEarned = 0;
+
+            // Set StartPage in the session
+            Session.StartPage = StartPage;
+            await _progressService.UpdateSessionAsync(Session);
+
             StartTimer();
         }, "Failed to start reading session");
     }
@@ -113,16 +135,34 @@ public partial class ReadingViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             StopTimer();
-            
-            Session = await _progressService.EndSessionAsync(Session.Id, CurrentPage);
-            
-            // Update book progress if page changed
+
+            // Calculate pages read during this session
+            var pagesRead = Math.Max(0, CurrentPage - StartPage);
+
+            // End the session with the correct pages read count (now returns SessionEndResult)
+            var result = await _progressService.EndSessionAsync(Session.Id, pagesRead);
+            Session = result.Session;
+            SessionProgressionResult = result.ProgressionResult;
+
+            // Update book progress to the current page
             if (Book != null && Book.CurrentPage != CurrentPage)
             {
                 await _bookService.UpdateProgressAsync(Book.Id, CurrentPage);
+
+                // Reload the book to get the updated progress
+                Book = await _bookService.GetByIdAsync(Book.Id);
             }
 
             XpEarned = Session.XpEarned;
+
+            // Show celebration overlay with XP breakdown
+            ShowSessionCelebration = true;
+
+            // Check if there was a level-up to show afterwards
+            if (result.ProgressionResult.LevelUp != null)
+            {
+                LevelUpResult = result.ProgressionResult.LevelUp;
+            }
         }, "Failed to end session");
     }
 
@@ -132,13 +172,28 @@ public partial class ReadingViewModel : ViewModelBase
         if (Session == null || Book == null || !page.HasValue) return;
 
         CurrentPage = page.Value;
-        
-        // Calculate XP based on pages read
-        var pagesRead = Math.Max(0, CurrentPage - (Session.PagesRead ?? 0));
-        XpEarned = pagesRead * 2; // 2 XP per page
-        
-        // Update session
-        Session.PagesRead = CurrentPage;
+
+        // Calculate pages read during this session
+        var pagesRead = Math.Max(0, CurrentPage - StartPage);
+
+        // Calculate estimated XP (approximate preview - final calculation at session end)
+        // Formula: (minutes × 5) + (pages × 20) + bonuses
+        int minutes = (int)ElapsedTime.TotalMinutes;
+        int baseXp = (minutes * 5) + (pagesRead * 20);
+
+        // Add long session bonus estimate (50 XP for 60+ minutes)
+        if (minutes >= 60)
+        {
+            baseXp += 50;
+        }
+
+        // Note: Streak bonus (+20) and plant boost are not included in preview
+        // They will be applied in the final calculation at session end
+        XpEarned = baseXp;
+
+        // Update session with correct values
+        Session.PagesRead = pagesRead;
+        Session.EndPage = CurrentPage;
         Session.XpEarned = XpEarned;
         await _progressService.UpdateSessionAsync(Session);
     }
@@ -164,6 +219,29 @@ public partial class ReadingViewModel : ViewModelBase
         {
             ElapsedTime = DateTime.UtcNow - SessionStartTime;
         }
+    }
+
+    /// <summary>
+    /// Called when session celebration is closed. Shows level-up celebration if applicable.
+    /// </summary>
+    public void OnSessionCelebrationClose()
+    {
+        ShowSessionCelebration = false;
+
+        // If there was a level-up, show that celebration next
+        if (LevelUpResult != null)
+        {
+            ShowLevelUpCelebration = true;
+        }
+    }
+
+    /// <summary>
+    /// Called when level-up celebration is closed.
+    /// </summary>
+    public void OnLevelUpCelebrationClose()
+    {
+        ShowLevelUpCelebration = false;
+        LevelUpResult = null;
     }
 }
 

@@ -42,10 +42,30 @@ public class Book
     [MaxLength(500)]
     public string? CoverImagePath { get; set; }
 
+    [MaxLength(20)]
+    public string? SpineColor { get; set; } // Color identifier for book spine (e.g., "red", "blue", "green")
+
+    [MaxLength(20)]
+    public string? BookshelfPosition { get; set; } // Position on bookshelf for drag & drop sorting
+
     // Status & Rating
     public ReadingStatus Status { get; set; } = ReadingStatus.Planned;
 
-    public int? Rating { get; set; } // 1-5 stars, nullable
+    [Obsolete("Use OverallRating instead")]
+    public int? Rating
+    {
+        get => OverallRating;
+        set => OverallRating = value;
+    }
+
+    // Multi-Category Ratings (1-5 stars, nullable)
+    public int? CharactersRating { get; set; }
+    public int? PlotRating { get; set; }
+    public int? WritingStyleRating { get; set; }
+    public int? SpiceLevelRating { get; set; }
+    public int? PacingRating { get; set; }
+    public int? WorldBuildingRating { get; set; }
+    public int? OverallRating { get; set; }
 
     // Timestamps
     public DateTime DateAdded { get; set; } = DateTime.UtcNow;
@@ -60,6 +80,33 @@ public class Book
 
     // Computed Properties
     public int ProgressPercentage => PageCount > 0 ? (CurrentPage * 100 / PageCount.Value) : 0;
+
+    /// <summary>
+    /// Calculates the average of all set category ratings.
+    /// Returns OverallRating if no category ratings are set.
+    /// </summary>
+    public double? AverageRating
+    {
+        get
+        {
+            var ratings = new List<int?>
+            {
+                CharactersRating,
+                PlotRating,
+                WritingStyleRating,
+                SpiceLevelRating,
+                PacingRating,
+                WorldBuildingRating
+            };
+
+            var validRatings = ratings.Where(r => r.HasValue).Select(r => r!.Value).ToList();
+
+            if (!validRatings.Any())
+                return OverallRating;
+
+            return validRatings.Average();
+        }
+    }
 }
 
 /// <summary>

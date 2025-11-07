@@ -1,12 +1,14 @@
 @page "/stats"
+@page "/level-overview"
 @using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Models
 @inject StatsViewModel ViewModel
 
-<PageTitle>Stats - BookLogger</PageTitle>
+<PageTitle>Level Overview - BookLogger</PageTitle>
 
-<div class="stats-container">
-    <h1>📊 Statistics</h1>
+<link rel="stylesheet" href="css/stats.css" />
 
+<div class="level-overview-container">
     @if (ViewModel.IsBusy)
     {
         <div class="loading">Loading statistics...</div>
@@ -17,58 +19,237 @@
     }
     else
     {
-        <!-- Overview Stats -->
-        <section class="stats-overview">
-            <div class="stats-grid">
-                <StatCard Icon="📚" Title="Total Books Read" Value="@ViewModel.TotalBooksRead" />
-                <StatCard Icon="📄" Title="Total Pages" Value="@ViewModel.TotalPagesRead" />
-                <StatCard Icon="⏱️" Title="Total Minutes" Value="@FormatMinutes(ViewModel.TotalMinutesRead)" />
-                <StatCard Icon="🔥" Title="Current Streak" Value="@($"{ViewModel.CurrentStreak} days")" />
-                <StatCard Icon="⭐" Title="Longest Streak" Value="@($"{ViewModel.LongestStreak} days")" />
-                <StatCard Icon="📈" Title="Average Rating" Value="@ViewModel.AverageRating.ToString("F1")" />
+        <!-- Hero Section: Level Badge, XP Progress, Coins -->
+        <section class="hero-section">
+            <div class="level-hero-card">
+                <!-- Large Level Badge -->
+                <div class="level-badge-hero">
+                    <div class="badge-inner">
+                        <div class="level-number">@ViewModel.CurrentLevel</div>
+                        <div class="level-label">LEVEL</div>
+                    </div>
+                </div>
+
+                <!-- XP Progress -->
+                <div class="xp-progress-section">
+                    <h2 class="hero-title">🏆 Your Progress</h2>
+                    <div class="xp-text">@ViewModel.CurrentLevelXp / @ViewModel.NextLevelXp XP</div>
+                    <div class="xp-progress-bar-container">
+                        <div class="xp-progress-bar">
+                            <div class="xp-progress-fill" style="width: @ViewModel.ProgressPercentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                        </div>
+                    </div>
+                    <div class="xp-percentage-text">@ViewModel.ProgressPercentage.ToString("F1")% to Level @(ViewModel.CurrentLevel + 1)</div>
+                </div>
+
+                <!-- Coins -->
+                <div class="coins-display">
+                    <span class="coins-icon">💰</span>
+                    <span class="coins-amount">@ViewModel.TotalCoins</span>
+                    <span class="coins-label">Coins</span>
+                </div>
             </div>
         </section>
+
+        <!-- Stats Grid: Combined Reading + Progression Stats -->
+        <section class="stats-grid-section">
+            <h2>📊 Your Stats</h2>
+            <div class="stats-grid">
+                <!-- Progression Stats -->
+                <StatCard Icon="⭐" Title="Total XP" Value="@ViewModel.TotalXp.ToString()" />
+                <StatCard Icon="💰" Title="Total Coins" Value="@ViewModel.TotalCoins.ToString()" />
+                <StatCard Icon="🌱" Title="XP Boost" Value="@($"+{(ViewModel.TotalPlantBoost * 100):F0}%")" />
+
+                <!-- Reading Stats -->
+                <StatCard Icon="📚" Title="Books Read" Value="@ViewModel.TotalBooksRead" />
+                <StatCard Icon="📄" Title="Pages Read" Value="@ViewModel.TotalPagesRead" />
+                <StatCard Icon="⏱️" Title="Reading Time" Value="@FormatMinutes(ViewModel.TotalMinutesRead)" />
+                <StatCard Icon="🔥" Title="Current Streak" Value="@($"{ViewModel.CurrentStreak} days")" />
+                <StatCard Icon="📈" Title="Avg Rating" Value="@ViewModel.AverageRating.ToString("F1")" />
+            </div>
+        </section>
+
+        <!-- Plant Boost Section -->
+        @if (ViewModel.PlantBoosts.Any())
+        {
+            <section class="plant-boost-section">
+                <div class="section-header">
+                    <h2>🌱 Plant XP Boosts</h2>
+                    <div class="total-boost">
+                        Total Boost: <span class="boost-value">+@((ViewModel.TotalPlantBoost * 100).ToString("F0"))%</span>
+                    </div>
+                </div>
+                <div class="plant-boost-grid">
+                    @foreach (var plant in ViewModel.PlantBoosts.OrderByDescending(p => p.BoostPercentage))
+                    {
+                        <div class="plant-boost-card" @key="plant.PlantId">
+                            <div class="plant-boost-header">
+                                <span class="plant-name">@plant.PlantName</span>
+                                <span class="plant-level">Lv. @plant.PlantLevel</span>
+                            </div>
+                            <div class="plant-boost-value">@plant.BoostDisplay</div>
+                            <div class="plant-boost-bar">
+                                <div class="plant-boost-fill" style="width: @((plant.BoostPercentage / ViewModel.TotalPlantBoost) * 100)%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        <!-- Level Milestones -->
+        @if (ViewModel.LevelMilestones.Any())
+        {
+            <section class="level-milestones-section">
+                <h2>🎯 Level Milestones</h2>
+                <div class="milestones-list">
+                    @foreach (var milestone in ViewModel.LevelMilestones)
+                    {
+                        <div class="milestone-item @(milestone.IsCompleted ? "completed" : "") @(milestone.IsCurrent ? "current" : "")" @key="milestone.Level">
+                            <div class="milestone-icon">
+                                @if (milestone.IsCompleted)
+                                {
+                                    <span class="icon-completed">✓</span>
+                                }
+                                else if (milestone.IsCurrent)
+                                {
+                                    <span class="icon-current">🏆</span>
+                                }
+                                else
+                                {
+                                    <span class="icon-future">🔒</span>
+                                }
+                            </div>
+                            <div class="milestone-content">
+                                <div class="milestone-level">Level @milestone.Level</div>
+                                <div class="milestone-requirements">
+                                    <span class="xp-req">@milestone.XpRequired XP</span>
+                                    <span class="coins-reward">+@milestone.CoinsReward 💰</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
 
         <!-- Favorite Genre -->
         @if (!string.IsNullOrEmpty(ViewModel.FavoriteGenre))
         {
-            <section class="favorite-genre">
-                <h2>Favorite Genre</h2>
-                <p>@ViewModel.FavoriteGenre</p>
+            <section class="favorite-genre-section">
+                <h2>🎭 Favorite Genre</h2>
+                <div class="favorite-genre-card">
+                    <p class="genre-name">@ViewModel.FavoriteGenre</p>
+                </div>
             </section>
         }
 
         <!-- Genre Breakdown -->
         @if (ViewModel.BooksByGenre.Any())
         {
-            <section class="genre-breakdown">
-                <h2>Books by Genre</h2>
-                <ul class="genre-list">
+            <section class="genre-breakdown-section">
+                <h2>📖 Books by Genre</h2>
+                <div class="genre-grid">
                     @foreach (var genre in ViewModel.BooksByGenre.OrderByDescending(g => g.Value))
                     {
-                        <li>@genre.Key: @genre.Value books</li>
+                        <div class="genre-card" @key="genre.Key">
+                            <div class="genre-name">@genre.Key</div>
+                            <div class="genre-count">@genre.Value <span class="label">books</span></div>
+                        </div>
                     }
-                </ul>
+                </div>
             </section>
         }
 
-        <!-- Date Range Filter -->
-        <section class="date-filter">
-            <h2>Date Range</h2>
-            <div class="filter-group">
-                <label>From:</label>
-                <input type="date" @bind="ViewModel.DateRangeStart" />
-            </div>
-            <div class="filter-group">
-                <label>To:</label>
-                <input type="date" @bind="ViewModel.DateRangeEnd" />
-            </div>
-            <button class="btn btn-primary" @onclick="async () => await ViewModel.RefreshCommand.ExecuteAsync(null)">Refresh</button>
-        </section>
+        <!-- Rating Category Averages -->
+        @if (ViewModel.CategoryAverages.Any(x => x.Value > 0))
+        {
+            <section class="rating-averages-section">
+                <h2>📊 Average Ratings by Category</h2>
+                <div class="rating-averages-grid">
+                    @foreach (var category in RatingCategoryInfo.GetAllCategories())
+                    {
+                        var average = ViewModel.CategoryAverages.GetValueOrDefault(category.Category, 0);
+                        @if (average > 0)
+                        {
+                            <div class="rating-average-card">
+                                <div class="rating-category-header">
+                                    <span class="rating-emoji">@category.Emoji</span>
+                                    <span class="rating-name">@category.DisplayName</span>
+                                </div>
+                                <div class="rating-value">@average.ToString("F1")</div>
+                                <div class="rating-stars-display">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <span class="star @(i <= Math.Round(average) ? "filled" : "empty")">★</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </section>
+        }
+
+        <!-- Top Rated Books -->
+        @if (ViewModel.TopRatedBooks?.Any() == true)
+        {
+            <section class="top-rated-books-section">
+                <h2>🏆 Top Rated Books</h2>
+
+                <!-- Category Filter Buttons -->
+                <div class="category-filter-buttons">
+                    <button class="btn category-filter-btn @(selectedCategory == null ? "active" : "")"
+                            @onclick="() => FilterByCategory(null)">
+                        All
+                    </button>
+                    @foreach (var category in RatingCategoryInfo.GetAllCategories())
+                    {
+                        <button class="btn category-filter-btn @(selectedCategory == category.Category ? "active" : "")"
+                                @onclick="() => FilterByCategory(category.Category)">
+                            @category.Emoji @category.DisplayName
+                        </button>
+                    }
+                </div>
+
+                <div class="top-books-list">
+                    @{
+                        int rank = 1;
+                    }
+                    @foreach (var bookRating in ViewModel.TopRatedBooks.Take(10))
+                    {
+                        <div class="top-book-item" @key="bookRating.Book.Id">
+                            <div class="book-rank">@rank</div>
+                            <div class="book-info">
+                                <div class="book-title">@bookRating.Book.Title</div>
+                                <div class="book-author">by @bookRating.Book.Author</div>
+                            </div>
+                            <div class="book-rating-summary">
+                                <div class="average-rating">@bookRating.AverageRating.ToString("F1") ⭐</div>
+                                <div class="rating-breakdown">
+                                    @foreach (var rating in bookRating.Ratings.Where(r => r.Value.HasValue))
+                                    {
+                                        var categoryInfo = RatingCategoryInfo.GetAllCategories()
+                                            .FirstOrDefault(c => c.Category == rating.Key);
+                                        @if (categoryInfo != null)
+                                        {
+                                            <span class="mini-rating">@categoryInfo.Emoji @rating.Value</span>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        rank++;
+                    }
+                </div>
+            </section>
+        }
     }
 </div>
 
 @code {
+    private RatingCategory? selectedCategory = null;
+
     protected override async Task OnInitializedAsync()
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
@@ -81,5 +262,11 @@
         var remainingMinutes = minutes % 60;
         return $"{hours}h {remainingMinutes}m";
     }
-}
 
+    private async Task FilterByCategory(RatingCategory? category)
+    {
+        selectedCategory = category;
+        await ViewModel.FilterTopBooksByCategoryAsync(category);
+        StateHasChanged();
+    }
+}

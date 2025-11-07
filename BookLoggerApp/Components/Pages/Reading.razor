@@ -1,6 +1,7 @@
 @page "/reading/{SessionId:guid}"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Components.Shared
 @inject ReadingViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @implements IDisposable
@@ -102,7 +103,7 @@
                 </div>
                 <div class="summary-item">
                     <label>Pages Read</label>
-                    <p>@(ViewModel.CurrentPage - (ViewModel.Session.PagesRead ?? 0))</p>
+                    <p>@(ViewModel.CurrentPage - ViewModel.StartPage)</p>
                 </div>
                 <div class="summary-item">
                     <label>Estimated Time</label>
@@ -126,6 +127,20 @@
     }
 </div>
 
+<!-- Celebration Overlays -->
+@if (ViewModel.ShowSessionCelebration && ViewModel.SessionProgressionResult != null)
+{
+    <SessionCompleteCelebration
+        Result="@ViewModel.SessionProgressionResult"
+        OnClose="@HandleSessionCelebrationClose" />
+}
+
+@if (ViewModel.ShowLevelUpCelebration && ViewModel.LevelUpResult != null)
+{
+    <LevelUpCelebration
+        Result="@ViewModel.LevelUpResult"
+        OnClose="@HandleLevelUpCelebrationClose" />
+}
 
 @code {
     [Parameter] public Guid SessionId { get; set; }
@@ -163,10 +178,27 @@
     private async Task HandleEndSession()
     {
         await ViewModel.EndSessionCommand.ExecuteAsync(null);
-        if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
+        // Don't navigate immediately - let the celebration overlays show
+        // Navigation will happen after user closes all celebrations
+    }
+
+    private void HandleSessionCelebrationClose()
+    {
+        ViewModel.OnSessionCelebrationClose();
+
+        // If no level-up, navigate to bookshelf after session celebration
+        if (ViewModel.LevelUpResult == null)
         {
-            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+            Navigation.NavigateTo("/bookshelf");
         }
+    }
+
+    private void HandleLevelUpCelebrationClose()
+    {
+        ViewModel.OnLevelUpCelebrationClose();
+
+        // Navigate to bookshelf after level-up celebration
+        Navigation.NavigateTo("/bookshelf");
     }
 
     private void NavigateToBook()

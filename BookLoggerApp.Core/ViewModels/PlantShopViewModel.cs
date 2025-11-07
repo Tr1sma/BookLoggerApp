@@ -37,6 +37,9 @@ public partial class PlantShopViewModel : ViewModelBase
     [ObservableProperty]
     private PlantSpecies? _selectedSpecies;
 
+    // Dictionary to store dynamic prices for each species
+    private Dictionary<Guid, int> _dynamicPrices = new();
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -49,7 +52,23 @@ public partial class PlantShopViewModel : ViewModelBase
             // Load ALL species (including locked ones for display)
             var species = await _plantService.GetAllSpeciesAsync();
             AvailableSpecies = new ObservableCollection<PlantSpecies>(species.Where(s => s.IsAvailable).OrderBy(s => s.UnlockLevel).ThenBy(s => s.BaseCost));
+
+            // Load dynamic prices for each species
+            _dynamicPrices.Clear();
+            foreach (var sp in AvailableSpecies)
+            {
+                var price = await _plantService.GetPlantCostAsync(sp.Id);
+                _dynamicPrices[sp.Id] = price;
+            }
         }, "Failed to load shop");
+    }
+
+    /// <summary>
+    /// Get the dynamic price for a plant species.
+    /// </summary>
+    public int GetDynamicPrice(Guid speciesId)
+    {
+        return _dynamicPrices.TryGetValue(speciesId, out var price) ? price : 0;
     }
 
     [RelayCommand]
@@ -78,19 +97,19 @@ public partial class PlantShopViewModel : ViewModelBase
                 return;
             }
 
-            if (UserCoins < species.BaseCost)
+            // Get dynamic price
+            int dynamicPrice = GetDynamicPrice(speciesId);
+
+            if (UserCoins < dynamicPrice)
             {
-                SetError($"Not enough coins. You need {species.BaseCost} coins but only have {UserCoins}.");
+                SetError($"Not enough coins. You need {dynamicPrice} coins but only have {UserCoins}.");
                 return;
             }
 
-            // Deduct coins
-            await _settingsProvider.SpendCoinsAsync(species.BaseCost);
-
-            // Purchase plant
+            // Purchase plant (PlantService handles coin deduction and counter increment)
             await _plantService.PurchasePlantAsync(speciesId, NewPlantName);
 
-            // Reload shop
+            // Reload shop (prices will be recalculated after PlantsPurchased increment)
             NewPlantName = "";
             SelectedSpecies = null;
             await LoadAsync();

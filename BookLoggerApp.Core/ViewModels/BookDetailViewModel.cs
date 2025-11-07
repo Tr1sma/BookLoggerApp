@@ -134,4 +134,67 @@ public partial class BookDetailViewModel : ViewModelBase
             await LoadAsync(Book.Id); // Reload
         }, "Failed to add session");
     }
+
+    /// <summary>
+    /// Updates a specific rating category for the current book.
+    /// </summary>
+    public async Task UpdateRatingAsync(RatingCategory category, int? rating)
+    {
+        if (Book == null) return;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            // Update the appropriate rating property
+            switch (category)
+            {
+                case RatingCategory.Characters:
+                    Book.CharactersRating = rating;
+                    break;
+                case RatingCategory.Plot:
+                    Book.PlotRating = rating;
+                    break;
+                case RatingCategory.WritingStyle:
+                    Book.WritingStyleRating = rating;
+                    break;
+                case RatingCategory.SpiceLevel:
+                    Book.SpiceLevelRating = rating;
+                    break;
+                case RatingCategory.Pacing:
+                    Book.PacingRating = rating;
+                    break;
+                case RatingCategory.WorldBuilding:
+                    Book.WorldBuildingRating = rating;
+                    break;
+                case RatingCategory.Overall:
+                    Book.OverallRating = rating;
+                    break;
+            }
+
+            // Save the book
+            await _bookService.UpdateAsync(Book);
+
+            // Reload to refresh computed properties
+            await LoadAsync(Book.Id);
+        }, $"Failed to update {category} rating");
+    }
+
+    /// <summary>
+    /// Gets the rating for a specific category.
+    /// </summary>
+    public int? GetRating(RatingCategory category)
+    {
+        if (Book == null) return null;
+
+        return category switch
+        {
+            RatingCategory.Characters => Book.CharactersRating,
+            RatingCategory.Plot => Book.PlotRating,
+            RatingCategory.WritingStyle => Book.WritingStyleRating,
+            RatingCategory.SpiceLevel => Book.SpiceLevelRating,
+            RatingCategory.Pacing => Book.PacingRating,
+            RatingCategory.WorldBuilding => Book.WorldBuildingRating,
+            RatingCategory.Overall => Book.OverallRating,
+            _ => null
+        };
+    }
 }

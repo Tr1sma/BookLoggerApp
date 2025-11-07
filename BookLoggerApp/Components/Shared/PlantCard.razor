@@ -1,27 +1,22 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
 
-<div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")" @onclick="HandleClick">
-    <div class="plant-pot-wrapper" style="@GetPlantStyle()">
+<div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")"
+     draggable="@(IsDraggable ? "true" : "false")"
+     @onclick="HandleClick"
+     @ondragstart="HandleDragStartInternal"
+     @ondragend="HandleDragEnd">
+    <div class="plant-pot-wrapper">
+        <!-- Plant Image -->
+        <img src="@Plant.Species.ImagePath" alt="@Plant.Species.Name" class="plant-card-image" @ondragstart:preventDefault="true" />
+
         <div class="plant-status-badge status-@Plant.Status.ToString().ToLower()">
             @GetStatusIcon()
         </div>
-        <div class="plant-level-badge">
-            Lv. @Plant.CurrentLevel
-        </div>
     </div>
-    <div class="plant-card-body">
-        <h3 class="plant-name">@Plant.Name</h3>
-        <p class="plant-species-name">@Plant.Species.Name</p>
+    <div class="plant-card-name">
+        <span class="plant-name-small">@Plant.Name</span>
     </div>
-    @if (ShowProgress)
-    {
-        <div class="plant-progress">
-            <div class="progress-bar">
-                <div class="progress-fill plant-xp" style="width: @GetXpPercentage()%"></div>
-            </div>
-        </div>
-    }
     @if (ShowActions)
     {
         <div class="plant-card-actions">
@@ -36,28 +31,13 @@
     [Parameter] public UserPlant Plant { get; set; } = null!;
     [Parameter] public EventCallback OnClick { get; set; }
     [Parameter] public EventCallback OnRemove { get; set; }
+    [Parameter] public EventCallback OnDragStart { get; set; }
     [Parameter] public bool IsInBookshelf { get; set; }
     [Parameter] public bool ShowProgress { get; set; } = true;
     [Parameter] public bool ShowActions { get; set; } = true;
+    [Parameter] public bool IsDraggable { get; set; } = false;
 
-    private string GetPlantStyle()
-    {
-        // Create pot-like gradient based on species
-        var hash = Plant.SpeciesId.GetHashCode();
-        var colors = new[]
-        {
-            ("8B4513", "A0522D"), // Terra cotta
-            ("6B4423", "7D5530"), // Clay brown
-            ("4A7C59", "5C8E6B"), // Green pot
-            ("5D4E6D", "6F5F7F"), // Purple pot
-            ("8B7355", "A68968"), // Gold pot
-        };
-
-        var colorIndex = Math.Abs(hash) % colors.Length;
-        var (dark, light) = colors[colorIndex];
-
-        return $"background: linear-gradient(to bottom, #{light}, #{dark});";
-    }
+    private bool _isDragging = false;
 
     private string GetStatusIcon()
     {
@@ -71,34 +51,39 @@
         };
     }
 
-    private int GetXpPercentage()
-    {
-        if (Plant.CurrentLevel >= Plant.Species.MaxLevel)
-            return 100;
-
-        var totalForCurrent = GetTotalXpForLevel(Plant.CurrentLevel);
-        var totalForNext = GetTotalXpForLevel(Plant.CurrentLevel + 1);
-        var xpIntoLevel = Plant.Experience - totalForCurrent;
-        var xpNeededForLevel = totalForNext - totalForCurrent;
-
-        if (xpNeededForLevel == 0) return 100;
-        return Math.Clamp((xpIntoLevel * 100) / xpNeededForLevel, 0, 100);
-    }
-
-    private int GetTotalXpForLevel(int level)
-    {
-        if (level <= 1) return 0;
-        int totalXp = 0;
-        for (int i = 2; i <= level; i++)
-        {
-            totalXp += (int)(100 * Math.Pow(1.5, i - 1) / Plant.Species.GrowthRate);
-        }
-        return totalXp;
-    }
-
     private async Task HandleClick()
     {
+        // Don't trigger click if we were dragging
+        if (_isDragging)
+        {
+            _isDragging = false;
+            return;
+        }
         await OnClick.InvokeAsync();
+    }
+
+    private async Task HandleDragStartInternal(Microsoft.AspNetCore.Components.Web.DragEventArgs e)
+    {
+        if (!IsDraggable) return;
+
+        System.Diagnostics.Debug.WriteLine($"PlantCard: Drag started for plant {Plant.Name} (ID: {Plant.Id})");
+        _isDragging = true;
+
+        // Set effectAllowed to enable drop
+        // Note: DataTransfer is not directly accessible in Blazor, but setting effectAllowed helps
+
+        await OnDragStart.InvokeAsync();
+    }
+
+    private void HandleDragEnd(Microsoft.AspNetCore.Components.Web.DragEventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine($"PlantCard: Drag ended for plant {Plant.Name}");
+        // Reset dragging flag after a short delay to prevent click
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(100);
+            _isDragging = false;
+        });
     }
 
     private async Task HandleRemove()

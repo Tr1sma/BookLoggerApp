@@ -1,0 +1,66 @@
+@using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Services.Abstractions
+@implements IDisposable
+@inject UserProgressViewModel ViewModel
+@inject NavigationManager Navigation
+@inject IAppSettingsProvider SettingsProvider
+
+<div class="user-progress-widget" @onclick="NavigateToLevelOverview">
+    <div class="progress-header">
+        <span class="level-icon">🏆</span>
+        <span class="level-text">Level @ViewModel.CurrentLevel</span>
+    </div>
+
+    <div class="progress-bar-container">
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: @ViewModel.ProgressPercentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+        </div>
+        <span class="progress-text">@ViewModel.CurrentLevelXp / @ViewModel.NextLevelXp XP</span>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+
+        // Subscribe to navigation changes to auto-refresh when user navigates
+        Navigation.LocationChanged += OnLocationChanged;
+
+        // Subscribe to progression changes to auto-refresh when XP/level/coins change
+        SettingsProvider.ProgressionChanged += OnProgressionChanged;
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        // Refresh progress data when navigation occurs
+        await RefreshAsync();
+    }
+
+    private async void OnProgressionChanged(object? sender, EventArgs e)
+    {
+        // Refresh progress data when XP/level/coins change
+        await RefreshAsync();
+    }
+
+    private void NavigateToLevelOverview()
+    {
+        Navigation.NavigateTo("/level-overview");
+    }
+
+    /// <summary>
+    /// Public method to refresh the widget (call after XP is earned).
+    /// </summary>
+    public async Task RefreshAsync()
+    {
+        await ViewModel.RefreshCommand.ExecuteAsync(null);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        Navigation.LocationChanged -= OnLocationChanged;
+        SettingsProvider.ProgressionChanged -= OnProgressionChanged;
+    }
+}

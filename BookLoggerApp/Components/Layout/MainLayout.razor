@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@using BookLoggerApp.Components.Layout
 
 @code {
     protected override void OnInitialized()
@@ -6,7 +7,7 @@
         System.Diagnostics.Debug.WriteLine("=== MainLayout OnInitialized ===");
         base.OnInitialized();
     }
-    
+
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
@@ -23,12 +24,11 @@
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
         <article class="content px-4">
             @Body
         </article>
     </main>
+
+    <!-- Bottom Navigation for Mobile -->
+    <BottomNavBar />
 </div>
