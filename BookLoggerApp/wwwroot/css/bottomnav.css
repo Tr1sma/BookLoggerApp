@@ -1,0 +1,115 @@
+/* Bottom Navigation Bar Styles - Mobile First Design */
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: linear-gradient(to bottom, rgba(29, 20, 16, 0.95), rgba(45, 36, 25, 0.98));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-color, #4A3F32);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3),
+                0 -1px 3px rgba(0, 0, 0, 0.2);
+    padding: 0.5rem 0;
+    height: 70px;
+}
+
+.bottom-nav .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-secondary, #C9B5A0);
+    padding: 0.5rem 1rem;
+    min-width: 60px;
+    min-height: 48px; /* Touch target minimum */
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.bottom-nav .nav-item .nav-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+    transition: transform 0.3s ease;
+}
+
+.bottom-nav .nav-item .nav-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Hover state */
+.bottom-nav .nav-item:hover {
+    background: rgba(212, 165, 116, 0.1);
+    color: var(--primary, #D4A574);
+}
+
+.bottom-nav .nav-item:hover .nav-icon {
+    transform: translateY(-2px);
+}
+
+/* Active state - using ::deep to style Blazor NavLink active class */
+.bottom-nav .nav-item.active,
+.bottom-nav .nav-item:active {
+    background: linear-gradient(to bottom, rgba(212, 165, 116, 0.2), rgba(212, 165, 116, 0.1));
+    color: var(--primary, #D4A574);
+}
+
+.bottom-nav .nav-item.active .nav-icon {
+    transform: scale(1.1);
+}
+
+/* Active indicator dot */
+.bottom-nav .nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0.25rem;
+    width: 4px;
+    height: 4px;
+    background: var(--primary, #D4A574);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--primary, #D4A574);
+}
+
+/* Touch feedback */
+.bottom-nav .nav-item:active {
+    transform: scale(0.95);
+}
+
+/* Desktop - hide bottom nav */
+@media (min-width: 769px) {
+    .bottom-nav {
+        display: none;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    .bottom-nav {
+        height: 65px;
+        padding: 0.25rem 0;
+    }
+
+    .bottom-nav .nav-item {
+        padding: 0.5rem 0.5rem;
+        min-width: 50px;
+    }
+
+    .bottom-nav .nav-item .nav-icon {
+        font-size: 1.3rem;
+        margin-bottom: 0.15rem;
+    }
+
+    .bottom-nav .nav-item .nav-label {
+        font-size: 0.65rem;
+    }
+}

@@ -10,6 +10,12 @@
 <PageTitle>Bookshelf - BookLogger</PageTitle>
 
 <div class="bookshelf-container">
+    <!-- Reading Goal Header -->
+    <GoalHeader TbrCount="@ViewModel.TbrCount"
+                GoalTarget="@ViewModel.GoalTarget"
+                BooksRead="@ViewModel.BooksReadThisYear"
+                BooksRemaining="@ViewModel.BooksRemainingToGoal" />
+
     <!-- Header & Controls -->
     <div class="bookshelf-header">
         <h1>📚 My Bookshelf</h1>

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Enums;
 
 namespace BookLoggerApp.Core.ViewModels;
 
@@ -11,12 +12,14 @@ public partial class BookshelfViewModel : ViewModelBase
     private readonly IBookService _bookService;
     private readonly IGenreService _genreService;
     private readonly IPlantService _plantService;
+    private readonly IGoalService _goalService;
 
-    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService)
+    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService)
     {
         _bookService = bookService;
         _genreService = genreService;
         _plantService = plantService;
+        _goalService = goalService;
     }
 
     [ObservableProperty]
@@ -43,6 +46,19 @@ public partial class BookshelfViewModel : ViewModelBase
     [ObservableProperty]
     private string _sortBy = "Title"; // Title, Author, DateAdded, Status
 
+    // Goal tracking properties
+    [ObservableProperty]
+    private int _tbrCount = 0;
+
+    [ObservableProperty]
+    private int _goalTarget = 0;
+
+    [ObservableProperty]
+    private int _booksReadThisYear = 0;
+
+    [ObservableProperty]
+    private int _booksRemainingToGoal = 0;
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -61,7 +77,48 @@ public partial class BookshelfViewModel : ViewModelBase
             // Load available plants for placement
             AvailablePlants = new ObservableCollection<UserPlant>(
                 allPlants.Where(p => !p.IsInBookshelf));
+
+            // Calculate goal statistics
+            await CalculateGoalStatsAsync();
         }, "Failed to load books");
+    }
+
+    private async Task CalculateGoalStatsAsync()
+    {
+        // Count TBR (To Be Read) books - those with "Planned" status
+        TbrCount = Books.Count(b => b.Status == ReadingStatus.Planned);
+
+        // Get active yearly book goal
+        var activeGoals = await _goalService.GetActiveGoalsAsync();
+        var yearlyBookGoal = activeGoals
+            .Where(g => g.Type == GoalType.Books)
+            .Where(g => g.StartDate.Year == DateTime.Now.Year || g.EndDate.Year == DateTime.Now.Year)
+            .OrderByDescending(g => g.Target)
+            .FirstOrDefault();
+
+        if (yearlyBookGoal != null)
+        {
+            GoalTarget = yearlyBookGoal.Target;
+
+            // Count books read this year (completed status and completed this year)
+            BooksReadThisYear = Books.Count(b =>
+                b.Status == ReadingStatus.Completed &&
+                b.DateCompleted.HasValue &&
+                b.DateCompleted.Value.Year == DateTime.Now.Year);
+
+            // Calculate books remaining
+            BooksRemainingToGoal = GoalTarget - BooksReadThisYear;
+        }
+        else
+        {
+            // No active goal found
+            GoalTarget = 0;
+            BooksReadThisYear = Books.Count(b =>
+                b.Status == ReadingStatus.Completed &&
+                b.DateCompleted.HasValue &&
+                b.DateCompleted.Value.Year == DateTime.Now.Year);
+            BooksRemainingToGoal = 0;
+        }
     }
 
     [RelayCommand]

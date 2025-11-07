@@ -110,15 +110,50 @@
     align-items: flex-end;
     gap: 0.5rem;
     padding: 2rem 1.5rem 1.5rem 1.5rem;
+    /* Enhanced rich wood gradient with more depth */
     background: linear-gradient(180deg,
-        rgba(74, 63, 50, 0.3) 0%,
-        rgba(61, 49, 38, 0.5) 85%,
-        rgba(45, 36, 25, 0.8) 100%
+        rgba(74, 63, 50, 0.4) 0%,
+        rgba(69, 57, 45, 0.6) 30%,
+        rgba(61, 49, 38, 0.7) 70%,
+        rgba(51, 41, 31, 0.85) 90%,
+        rgba(45, 36, 25, 0.95) 100%
     );
     border-radius: 8px;
+    /* Multi-layer shadow for enhanced depth */
     box-shadow:
-        inset 0 -3px 8px rgba(0, 0, 0, 0.4),
-        0 4px 12px rgba(0, 0, 0, 0.3);
+        inset 0 -4px 10px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(90, 74, 58, 0.3),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+        0 6px 16px rgba(0, 0, 0, 0.4),
+        0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Wood texture overlay */
+.shelf-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.03) 2px,
+            rgba(0, 0, 0, 0.03) 4px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 80px,
+            rgba(0, 0, 0, 0.02) 80px,
+            rgba(0, 0, 0, 0.02) 160px
+        );
+    pointer-events: none;
+    opacity: 0.4;
+    z-index: 0;
 }
 
 /* Shelf Slot - wrapper for each item */
@@ -135,23 +170,30 @@
     transform: translateY(-4px);
 }
 
-/* Wooden shelf edge (bottom border) */
+/* Wooden shelf edge (bottom border) - Enhanced prominent edge */
 .shelf-row::after {
     content: '';
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 8px;
+    height: 20px;
+    /* Richer, more prominent wood gradient */
     background: linear-gradient(180deg,
-        #5A4A3A 0%,
-        #4A3F32 50%,
-        #3D3126 100%
+        #6B5544 0%,
+        #5A4A3A 25%,
+        #4A3F32 60%,
+        #3D3126 90%,
+        #2D2419 100%
     );
     border-radius: 0 0 8px 8px;
+    /* Enhanced shadow for more realistic depth */
     box-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 3px 8px rgba(0, 0, 0, 0.6),
+        0 1px 3px rgba(0, 0, 0, 0.4),
+        inset 0 2px 1px rgba(255, 255, 255, 0.08),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.4);
+    z-index: 1;
 }
 
 @keyframes fadeIn {
