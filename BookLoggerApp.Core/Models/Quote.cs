@@ -27,4 +27,8 @@ public class Quote
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public bool IsFavorite { get; set; } = false;
+
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 }

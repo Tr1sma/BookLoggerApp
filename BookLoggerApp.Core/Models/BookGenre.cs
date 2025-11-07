@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace BookLoggerApp.Core.Models;
 
 /// <summary>
@@ -12,4 +14,8 @@ public class BookGenre
     public Genre Genre { get; set; } = null!;
 
     public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 }

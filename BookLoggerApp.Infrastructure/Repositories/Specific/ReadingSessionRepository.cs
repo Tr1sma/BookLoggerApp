@@ -52,4 +52,9 @@ public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSess
             .Include(rs => rs.Book)
             .ToListAsync();
     }
+
+    public async Task<int> GetTotalMinutesAsync(CancellationToken ct = default)
+    {
+        return await _dbSet.SumAsync(rs => rs.Minutes, ct);
+    }
 }

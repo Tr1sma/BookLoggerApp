@@ -73,12 +73,12 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="publisher">Publisher</label>
-                        <input id="publisher" type="text" @bind="ViewModel.Book.Publisher" maxlength="200" />
+                        <input id="publisher" type="text" @bind="ViewModel.Book!.Publisher" maxlength="200" />
                     </div>
 
                     <div class="form-group">
                         <label for="publicationYear">Publication Year</label>
-                        <input id="publicationYear" type="number" @bind="ViewModel.Book.PublicationYear" min="1000" max="@DateTime.Now.Year" />
+                        <input id="publicationYear" type="number" @bind="ViewModel.Book!.PublicationYear" min="1000" max="@DateTime.Now.Year" />
                     </div>
                 </div>
 

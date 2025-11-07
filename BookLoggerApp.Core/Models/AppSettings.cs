@@ -37,4 +37,8 @@ public class AppSettings
     // Misc
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 }

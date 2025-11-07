@@ -2,6 +2,7 @@ using FluentAssertions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Services;
+using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
 using Xunit;
@@ -17,6 +18,7 @@ public class RatingIntegrationTests : IDisposable
     private readonly AppDbContext _context;
     private readonly BookRepository _bookRepository;
     private readonly ReadingSessionRepository _sessionRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly MockProgressionService _progressionService;
     private readonly MockPlantService _plantService;
     private readonly BookService _bookService;
@@ -27,9 +29,14 @@ public class RatingIntegrationTests : IDisposable
         _context = TestDbContext.Create();
         _bookRepository = new BookRepository(_context);
         _sessionRepository = new ReadingSessionRepository(_context);
+        var goalRepository = new ReadingGoalRepository(_context);
+        var plantRepository = new UserPlantRepository(_context);
+
+        _unitOfWork = new UnitOfWork(_context, _bookRepository, _sessionRepository, goalRepository, plantRepository);
+
         _progressionService = new MockProgressionService();
         _plantService = new MockPlantService();
-        _bookService = new BookService(_bookRepository, _progressionService, _plantService);
+        _bookService = new BookService(_unitOfWork, _progressionService, _plantService, null!);
         _statsService = new StatsService(_bookRepository, _sessionRepository, _context);
     }
 

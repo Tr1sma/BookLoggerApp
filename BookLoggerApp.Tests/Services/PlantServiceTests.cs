@@ -6,6 +6,8 @@ using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
@@ -13,16 +15,30 @@ namespace BookLoggerApp.Tests.Services;
 public class PlantServiceTests : IDisposable
 {
     private readonly PlantService _plantService;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly UserPlantRepository _userPlantRepository;
     private readonly Repository<PlantSpecies> _speciesRepository;
     private readonly DbContextTestHelper _dbHelper;
+    private readonly IMemoryCache _cache;
 
     public PlantServiceTests()
     {
         _dbHelper = DbContextTestHelper.CreateTestContext();
+        var bookRepository = new BookRepository(_dbHelper.Context);
+        var sessionRepository = new ReadingSessionRepository(_dbHelper.Context);
+        var goalRepository = new ReadingGoalRepository(_dbHelper.Context);
         _userPlantRepository = new UserPlantRepository(_dbHelper.Context);
         _speciesRepository = new Repository<PlantSpecies>(_dbHelper.Context);
-        _plantService = new PlantService(_userPlantRepository, _speciesRepository, _dbHelper.Context);
+
+        // Create memory cache for testing
+        var services = new ServiceCollection();
+        services.AddMemoryCache();
+        var serviceProvider = services.BuildServiceProvider();
+        _cache = serviceProvider.GetRequiredService<IMemoryCache>();
+
+        _unitOfWork = new UnitOfWork(_dbHelper.Context, bookRepository, sessionRepository, goalRepository, _userPlantRepository);
+        var settingsProvider = new AppSettingsProvider(_dbHelper.Context);
+        _plantService = new PlantService(_unitOfWork, _speciesRepository, settingsProvider, _dbHelper.Context, _cache, null!);
     }
 
     public void Dispose()
@@ -372,7 +388,9 @@ public class PlantServiceTests : IDisposable
             IsAvailable = isAvailable
         };
 
-        return await _speciesRepository.AddAsync(species);
+        var result = await _speciesRepository.AddAsync(species);
+        await _dbHelper.Context.SaveChangesAsync();
+        return result;
     }
 
     private async Task<UserPlant> SeedUserPlant(
@@ -392,7 +410,9 @@ public class PlantServiceTests : IDisposable
             Status = PlantStatus.Healthy
         };
 
-        return await _userPlantRepository.AddAsync(plant);
+        var result = await _userPlantRepository.AddAsync(plant);
+        await _dbHelper.Context.SaveChangesAsync();
+        return result;
     }
 
     #endregion

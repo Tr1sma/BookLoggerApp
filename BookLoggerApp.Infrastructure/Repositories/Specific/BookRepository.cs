@@ -33,11 +33,10 @@ public class BookRepository : Repository<Book>, IBookRepository
 
     public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm)
     {
-        var lowerSearchTerm = searchTerm.ToLower();
         return await _dbSet
-            .Where(b => b.Title.ToLower().Contains(lowerSearchTerm) ||
-                       b.Author.ToLower().Contains(lowerSearchTerm) ||
-                       (b.ISBN != null && b.ISBN.Contains(searchTerm)))
+            .Where(b => EF.Functions.Like(b.Title, $"%{searchTerm}%") ||
+                       EF.Functions.Like(b.Author, $"%{searchTerm}%") ||
+                       (b.ISBN != null && EF.Functions.Like(b.ISBN, $"%{searchTerm}%")))
             .Include(b => b.BookGenres)
                 .ThenInclude(bg => bg.Genre)
             .ToListAsync();
@@ -65,7 +64,7 @@ public class BookRepository : Repository<Book>, IBookRepository
     public async Task<IEnumerable<Book>> GetBooksByAuthorAsync(string author)
     {
         return await _dbSet
-            .Where(b => b.Author.ToLower() == author.ToLower())
+            .Where(b => EF.Functions.Like(b.Author, author))
             .OrderByDescending(b => b.DateAdded)
             .ToListAsync();
     }

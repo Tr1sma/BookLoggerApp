@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Repositories;
@@ -75,7 +76,7 @@ public class QuoteService : IQuoteService
     {
         var quote = await _quoteRepository.GetByIdAsync(quoteId);
         if (quote == null)
-            throw new ArgumentException("Quote not found", nameof(quoteId));
+            throw new EntityNotFoundException(typeof(Quote), quoteId);
 
         quote.IsFavorite = !quote.IsFavorite;
         await _quoteRepository.UpdateAsync(quote);

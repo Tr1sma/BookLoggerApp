@@ -66,5 +66,9 @@ public class UserPlant
     /// Whether the plant is displayed in the bookshelf.
     /// </summary>
     public bool IsInBookshelf { get; set; } = false;
+
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 }
 

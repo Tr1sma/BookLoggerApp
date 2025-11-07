@@ -22,6 +22,10 @@ public class Genre
     [MaxLength(7)]
     public string? ColorHex { get; set; } // For UI theming
 
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
+
     // Navigation Properties
     public ICollection<BookGenre> BookGenres { get; set; } = new List<BookGenre>();
 }
