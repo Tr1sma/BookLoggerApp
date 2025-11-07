@@ -1,10 +1,15 @@
-<div class="book-card" @onclick="HandleClick">
+<div class="book-card @(IsInBookshelf ? "in-bookshelf-book" : "")"
+     draggable="@(IsDraggable ? "true" : "false")"
+     @onclick="HandleClick"
+     @ondragstart="HandleDragStartInternal"
+     @ondragend="HandleDragEnd">
     <div class="book-cover-wrapper" style="@GetSpineStyle()">
         @if (!string.IsNullOrEmpty(Book.CoverImagePath))
         {
             <img src="@GetCoverImageUrl()"
                  alt="@Book.Title"
                  class="book-cover-image"
+                 @ondragstart:preventDefault="true"
                  onerror="this.style.display='none'; console.error('Failed to load image: @GetCoverImageUrl()');" />
         }
         <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
@@ -44,6 +49,11 @@
     [Parameter] public EventCallback OnClick { get; set; }
     [Parameter] public EventCallback OnDelete { get; set; }
     [Parameter] public EventCallback OnQuickTimer { get; set; }
+    [Parameter] public EventCallback OnDragStart { get; set; }
+    [Parameter] public bool IsInBookshelf { get; set; }
+    [Parameter] public bool IsDraggable { get; set; } = false;
+
+    private bool _isDragging = false;
 
     private string GetCoverImageUrl()
     {
@@ -108,7 +118,33 @@
 
     private async Task HandleClick()
     {
+        // Don't trigger click if we were dragging
+        if (_isDragging)
+        {
+            _isDragging = false;
+            return;
+        }
         await OnClick.InvokeAsync();
+    }
+
+    private async Task HandleDragStartInternal(Microsoft.AspNetCore.Components.Web.DragEventArgs e)
+    {
+        if (!IsDraggable) return;
+
+        System.Diagnostics.Debug.WriteLine($"BookCard: Drag started for book {Book.Title}");
+        _isDragging = true;
+        await OnDragStart.InvokeAsync();
+    }
+
+    private void HandleDragEnd(Microsoft.AspNetCore.Components.Web.DragEventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine($"BookCard: Drag ended for book {Book.Title}");
+        // Reset dragging flag after a short delay to prevent click
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(100);
+            _isDragging = false;
+        });
     }
 
     private async Task HandleDelete()

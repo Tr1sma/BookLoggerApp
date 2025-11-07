@@ -8,7 +8,7 @@
      @ondragend="HandleDragEnd">
     <div class="plant-pot-wrapper">
         <!-- Plant Image -->
-        <img src="@Plant.Species.ImagePath" alt="@Plant.Species.Name" class="plant-card-image" draggable="false" />
+        <img src="@Plant.Species.ImagePath" alt="@Plant.Species.Name" class="plant-card-image" @ondragstart:preventDefault="true" />
 
         <div class="plant-status-badge status-@Plant.Status.ToString().ToLower()">
             @GetStatusIcon()
@@ -62,16 +62,22 @@
         await OnClick.InvokeAsync();
     }
 
-    private async Task HandleDragStartInternal()
+    private async Task HandleDragStartInternal(Microsoft.AspNetCore.Components.Web.DragEventArgs e)
     {
         if (!IsDraggable) return;
 
+        System.Diagnostics.Debug.WriteLine($"PlantCard: Drag started for plant {Plant.Name} (ID: {Plant.Id})");
         _isDragging = true;
+
+        // Set effectAllowed to enable drop
+        // Note: DataTransfer is not directly accessible in Blazor, but setting effectAllowed helps
+
         await OnDragStart.InvokeAsync();
     }
 
-    private void HandleDragEnd()
+    private void HandleDragEnd(Microsoft.AspNetCore.Components.Web.DragEventArgs e)
     {
+        System.Diagnostics.Debug.WriteLine($"PlantCard: Drag ended for plant {Plant.Name}");
         // Reset dragging flag after a short delay to prevent click
         _ = Task.Run(async () =>
         {

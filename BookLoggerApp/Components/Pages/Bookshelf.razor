@@ -106,7 +106,10 @@
                             <div class="shelf-slot" @ondrop="() => HandleDropOnSlot(globalPosition)"
                                  @ondragover:preventDefault="true" @ondragover="() => {}">
                                 <BookCard Book="@book"
+                                          IsInBookshelf="true"
+                                          IsDraggable="true"
                                           OnClick="() => HandleBookClick(book)"
+                                          OnDragStart="() => HandleDragStartBook(book.Id)"
                                           OnDelete="() => HandleDeleteBook(book.Id)" />
                             </div>
                         }
@@ -224,6 +227,7 @@
     private bool showPlantDetail;
     private int selectedPosition;
     private Guid? draggedPlantId;
+    private Guid? draggedBookId;
     private UserPlant? selectedPlant;
     private bool isWateringPlant;
 
@@ -288,15 +292,33 @@
 
     private void HandleDragStart(Guid plantId)
     {
+        System.Diagnostics.Debug.WriteLine($"Bookshelf: Starting drag for plant {plantId}");
         draggedPlantId = plantId;
+        draggedBookId = null; // Clear book drag when dragging plant
+    }
+
+    private void HandleDragStartBook(Guid bookId)
+    {
+        System.Diagnostics.Debug.WriteLine($"Bookshelf: Starting drag for book {bookId}");
+        draggedBookId = bookId;
+        draggedPlantId = null; // Clear plant drag when dragging book
     }
 
     private async Task HandleDropOnSlot(int position)
     {
+        System.Diagnostics.Debug.WriteLine($"Bookshelf: Drop on slot {position}, PlantId: {draggedPlantId}, BookId: {draggedBookId}");
+
         if (draggedPlantId.HasValue)
         {
+            System.Diagnostics.Debug.WriteLine($"Bookshelf: Moving plant {draggedPlantId.Value} to position {position}");
             await ViewModel.MovePlantToPositionCommand.ExecuteAsync((draggedPlantId.Value, position.ToString()));
             draggedPlantId = null;
+        }
+        else if (draggedBookId.HasValue)
+        {
+            System.Diagnostics.Debug.WriteLine($"Bookshelf: Moving book {draggedBookId.Value} to position {position}");
+            await ViewModel.MoveBookToPositionCommand.ExecuteAsync((draggedBookId.Value, position.ToString()));
+            draggedBookId = null;
         }
     }
 

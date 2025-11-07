@@ -226,5 +226,25 @@ public partial class BookshelfViewModel : ViewModelBase
             await LoadAsync();
         }, "Failed to move plant");
     }
+
+    [RelayCommand]
+    public async Task MoveBookToPositionAsync((Guid bookId, string position) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            var book = Books.FirstOrDefault(b => b.Id == args.bookId);
+            if (book == null)
+            {
+                SetError("Book not found");
+                return;
+            }
+
+            book.BookshelfPosition = args.position;
+            await _bookService.UpdateAsync(book);
+
+            // Reload to reflect new positions
+            await LoadAsync();
+        }, "Failed to move book");
+    }
 }
 

@@ -915,6 +915,41 @@ section h2 {
         0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* Plants in bookshelf - pure decoration style (no background, no border) */
+.plant-card.in-bookshelf {
+    border-radius: 0;
+    background: transparent !important;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.plant-card.in-bookshelf .plant-pot-wrapper {
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+.plant-card.in-bookshelf:hover {
+    box-shadow: none !important;
+    transform: translateY(-4px) scale(1.02);
+}
+
+.plant-card.in-bookshelf .plant-card-name {
+    display: none;
+}
+
+.plant-card.in-bookshelf .plant-status-badge {
+    display: none;
+}
+
+.plant-card.in-bookshelf .plant-card-image {
+    background: transparent !important;
+    user-drag: none;
+    -webkit-user-drag: none;
+}
+
 .plant-card:hover .plant-pot-wrapper {
     filter: brightness(1.1);
 }

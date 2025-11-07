@@ -14,15 +14,18 @@ public class ProgressService : IProgressService
     private readonly IReadingSessionRepository _sessionRepository;
     private readonly IProgressionService _progressionService;
     private readonly IPlantService _plantService;
+    private readonly IBookService _bookService;
 
     public ProgressService(
         IReadingSessionRepository sessionRepository,
         IProgressionService progressionService,
-        IPlantService plantService)
+        IPlantService plantService,
+        IBookService bookService)
     {
         _sessionRepository = sessionRepository;
         _progressionService = progressionService;
         _plantService = plantService;
+        _bookService = bookService;
     }
 
     public async Task<ReadingSession> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
@@ -36,6 +39,13 @@ public class ProgressService : IProgressService
 
     public async Task<ReadingSession> StartSessionAsync(Guid bookId, CancellationToken ct = default)
     {
+        // Start reading the book if it's in Planned status
+        var book = await _bookService.GetByIdAsync(bookId, ct);
+        if (book?.Status == ReadingStatus.Planned)
+        {
+            await _bookService.StartReadingAsync(bookId, ct);
+        }
+
         var session = new ReadingSession
         {
             BookId = bookId,

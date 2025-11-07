@@ -7,6 +7,11 @@ namespace BookLoggerApp.Core.Services.Abstractions;
 /// </summary>
 public interface IAppSettingsProvider
 {
+    /// <summary>
+    /// Event raised when user progression data (XP, level, coins) changes.
+    /// </summary>
+    event EventHandler? ProgressionChanged;
+
     Task<AppSettings> GetSettingsAsync(CancellationToken ct = default);
     Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default);
     Task<int> GetUserCoinsAsync(CancellationToken ct = default);

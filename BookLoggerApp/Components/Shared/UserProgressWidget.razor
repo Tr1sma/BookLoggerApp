@@ -1,7 +1,9 @@
 @using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Services.Abstractions
 @implements IDisposable
 @inject UserProgressViewModel ViewModel
 @inject NavigationManager Navigation
+@inject IAppSettingsProvider SettingsProvider
 
 <div class="user-progress-widget" @onclick="NavigateToLevelOverview">
     <div class="progress-header">
@@ -24,11 +26,20 @@
 
         // Subscribe to navigation changes to auto-refresh when user navigates
         Navigation.LocationChanged += OnLocationChanged;
+
+        // Subscribe to progression changes to auto-refresh when XP/level/coins change
+        SettingsProvider.ProgressionChanged += OnProgressionChanged;
     }
 
     private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
         // Refresh progress data when navigation occurs
+        await RefreshAsync();
+    }
+
+    private async void OnProgressionChanged(object? sender, EventArgs e)
+    {
+        // Refresh progress data when XP/level/coins change
         await RefreshAsync();
     }
 
@@ -48,7 +59,8 @@
 
     public void Dispose()
     {
-        // Unsubscribe from navigation events to prevent memory leaks
+        // Unsubscribe from events to prevent memory leaks
         Navigation.LocationChanged -= OnLocationChanged;
+        SettingsProvider.ProgressionChanged -= OnProgressionChanged;
     }
 }
