@@ -5,7 +5,7 @@
 
 /* ===== Container ===== */
 .level-overview-container {
-    padding: 2rem;
+    padding: 1.5rem;
     max-width: 1200px;
     margin: 0 auto;
     animation: fadeIn 0.3s ease;
@@ -18,7 +18,7 @@
 
 /* ===== Hero Section ===== */
 .hero-section {
-    margin-bottom: 3rem;
+    margin-bottom: 1.25rem;
     animation: slideDown 0.6s ease;
 }
 
@@ -36,13 +36,13 @@
 .level-hero-card {
     background: var(--gradient-card);
     border-radius: 20px;
-    padding: 3rem 2rem;
+    padding: 1rem 0.75rem;
     box-shadow: var(--shadow);
     border: 1px solid rgba(212, 165, 116, 0.2);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2rem;
+    gap: 0.85rem;
 }
 
 /* ===== Level Badge ===== */
@@ -50,11 +50,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 160px;
-    height: 160px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-    border: 6px solid #ffc107;
+    border: 3px solid #ffc107;
     box-shadow:
         0 12px 32px rgba(255, 193, 7, 0.4),
         inset 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -75,7 +75,7 @@
 }
 
 .level-number {
-    font-size: 4rem;
+    font-size: 1.75rem;
     font-weight: 900;
     color: #ffc107;
     line-height: 1;
@@ -100,30 +100,30 @@
 }
 
 .hero-title {
-    font-size: 2rem;
+    font-size: 1.1rem;
     font-weight: 800;
     background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.75rem 0;
 }
 
 .xp-text {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     color: var(--text-secondary);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     font-weight: 600;
 }
 
 .xp-progress-bar-container {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .xp-progress-bar {
-    height: 24px;
+    height: 18px;
     background: rgba(0, 0, 0, 0.4);
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     border: 2px solid rgba(255, 193, 7, 0.3);
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
@@ -178,7 +178,7 @@
 }
 
 .coins-icon {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
     filter: drop-shadow(0 2px 6px rgba(255, 193, 7, 0.5));
     animation: coinBounce 2s ease-in-out infinite;
@@ -190,7 +190,7 @@
 }
 
 .coins-amount {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 900;
     color: #ffc107;
     text-shadow: 0 2px 6px rgba(255, 193, 7, 0.4);
@@ -205,7 +205,7 @@
 
 /* ===== Stats Grid Section ===== */
 .stats-grid-section {
-    margin-bottom: 3rem;
+    margin-bottom: 1.25rem;
     animation: slideUp 0.6s ease 0.2s both;
 }
 
@@ -221,24 +221,24 @@
 }
 
 .stats-grid-section h2 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
 }
 
 /* ===== Plant Boost Section ===== */
 .plant-boost-section {
     background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%);
-    border-radius: 16px;
-    padding: 2rem;
-    margin-bottom: 3rem;
+    border-radius: 12px;
+    padding: 0.9rem;
+    margin-bottom: 1rem;
     border: 1px solid rgba(76, 175, 80, 0.2);
     animation: slideUp 0.6s ease 0.3s both;
 }
@@ -247,39 +247,39 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .section-header h2 {
-    font-size: 1.75rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
 }
 
 .total-boost {
-    font-size: 1.125rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
     font-weight: 600;
 }
 
 .boost-value {
     color: #4CAF50;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 800;
     text-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
 }
 
 .plant-boost-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.6rem;
 }
 
 .plant-boost-card {
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.1) 100%);
-    border-radius: 12px;
-    padding: 1.25rem;
+    border-radius: 10px;
+    padding: 0.65rem;
     border: 1px solid rgba(76, 175, 80, 0.2);
     transition: all 0.3s ease;
 }
@@ -294,34 +294,34 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .plant-name {
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 700;
     color: var(--text-primary);
 }
 
 .plant-level {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     color: #4CAF50;
     background: rgba(76, 175, 80, 0.2);
-    padding: 0.25rem 0.5rem;
-    border-radius: 8px;
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
     font-weight: 600;
 }
 
 .plant-boost-value {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     font-weight: 800;
     color: #8BC34A;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
     text-shadow: 0 2px 4px rgba(139, 195, 74, 0.3);
 }
 
 .plant-boost-bar {
-    height: 8px;
+    height: 6px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 4px;
     overflow: hidden;
@@ -336,30 +336,30 @@
 
 /* ===== Level Milestones Section ===== */
 .level-milestones-section {
-    margin-bottom: 3rem;
+    margin-bottom: 1.25rem;
     animation: slideUp 0.6s ease 0.4s both;
 }
 
 .level-milestones-section h2 {
-    font-size: 1.75rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .milestones-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.6rem;
 }
 
 .milestone-item {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 0.75rem;
     background: var(--card-bg);
-    border-radius: 12px;
-    padding: 1.25rem 1.5rem;
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem;
     border: 2px solid transparent;
     transition: all 0.3s ease;
 }
@@ -394,10 +394,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 56px;
-    height: 56px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    font-size: 2rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
 }
 
@@ -437,16 +437,16 @@
 }
 
 .milestone-level {
-    font-size: 1.25rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
 }
 
 .milestone-requirements {
     display: flex;
-    gap: 1.5rem;
-    font-size: 0.95rem;
+    gap: 0.9rem;
+    font-size: 0.8rem;
 }
 
 .xp-req {
@@ -461,28 +461,28 @@
 
 /* ===== Favorite Genre Section ===== */
 .favorite-genre-section {
-    margin-bottom: 3rem;
+    margin-bottom: 1.25rem;
     animation: slideUp 0.6s ease 0.5s both;
 }
 
 .favorite-genre-section h2 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .favorite-genre-card {
     background: var(--gradient-card);
     border-radius: 12px;
-    padding: 2rem;
+    padding: 1.5rem;
     text-align: center;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow);
 }
 
 .genre-name {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 800;
     background: var(--gradient-warm);
     -webkit-background-clip: text;
@@ -493,27 +493,27 @@
 
 /* ===== Genre Breakdown Section ===== */
 .genre-breakdown-section {
-    margin-bottom: 3rem;
+    margin-bottom: 1.25rem;
     animation: slideUp 0.6s ease 0.6s both;
 }
 
 .genre-breakdown-section h2 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .genre-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
 }
 
 .genre-card {
     background: var(--gradient-card);
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.25rem;
     text-align: center;
     border: 1px solid var(--border-light);
     transition: all 0.3s ease;
@@ -533,7 +533,7 @@
 }
 
 .genre-count {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 800;
     background: var(--gradient-warm);
     -webkit-background-clip: text;
@@ -549,27 +549,27 @@
 
 /* ===== Rating Averages Section ===== */
 .rating-averages-section {
-    margin-bottom: 3rem;
+    margin-bottom: 1.25rem;
     animation: slideUp 0.6s ease 0.7s both;
 }
 
 .rating-averages-section h2 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .rating-averages-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
 }
 
 .rating-average-card {
     background: var(--gradient-card);
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.25rem;
     border: 1px solid var(--border-light);
     text-align: center;
     transition: all 0.3s ease;
@@ -590,7 +590,7 @@
 }
 
 .rating-emoji {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
 }
 
 .rating-name {
@@ -600,7 +600,7 @@
 }
 
 .rating-value {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 800;
     background: var(--gradient-warm);
     -webkit-background-clip: text;
@@ -629,15 +629,15 @@
 
 /* ===== Top Rated Books Section ===== */
 .top-rated-books-section {
-    margin-bottom: 3rem;
+    margin-bottom: 1.25rem;
     animation: slideUp 0.6s ease 0.8s both;
 }
 
 .top-rated-books-section h2 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .category-filter-buttons {
@@ -672,16 +672,16 @@
 .top-books-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .top-book-item {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.25rem;
     background: var(--gradient-card);
     border-radius: 12px;
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
     border: 1px solid var(--border-light);
     transition: all 0.3s ease;
 }
@@ -696,12 +696,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     background: var(--gradient-warm);
     color: var(--bg-primary);
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 900;
     flex-shrink: 0;
     box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
@@ -738,7 +738,7 @@
 }
 
 .average-rating {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: #ffc107;
     white-space: nowrap;
@@ -771,26 +771,26 @@
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
     .level-overview-container {
-        padding: 1.5rem 1rem;
+        padding: 1rem 0.75rem;
     }
 
     .level-hero-card {
-        padding: 2rem 1.5rem;
-        gap: 1.5rem;
+        padding: 0.85rem 0.65rem;
+        gap: 0.75rem;
     }
 
     .level-badge-hero {
-        width: 120px;
-        height: 120px;
-        border-width: 4px;
+        width: 65px;
+        height: 65px;
+        border-width: 2px;
     }
 
     .level-number {
-        font-size: 3rem;
+        font-size: 1.5rem;
     }
 
     .hero-title {
-        font-size: 1.5rem;
+        font-size: 1rem;
     }
 
     .xp-text {
@@ -798,16 +798,16 @@
     }
 
     .coins-icon {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
 
     .coins-amount {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
 
     .stats-grid {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 0.6rem;
     }
 
     .plant-boost-grid {
@@ -817,32 +817,32 @@
     .section-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
 
     .milestone-item {
-        padding: 1rem;
-        gap: 1rem;
+        padding: 0.5rem;
+        gap: 0.5rem;
     }
 
     .milestone-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 1.5rem;
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
     }
 
     .genre-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     }
 
     .rating-averages-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     }
 
     .top-book-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .book-rating-summary {
@@ -855,30 +855,69 @@
     }
 }
 
-@media (max-width: 480px) {
+/* Mobile */
+@media (max-width: 640px) {
     .level-overview-container {
-        padding: 1rem 0.75rem;
+        padding: 0.75rem 0.5rem;
     }
 
     .level-hero-card {
-        padding: 1.5rem 1rem;
+        padding: 0.75rem 0.6rem;
+        gap: 0.65rem;
     }
 
     .level-badge-hero {
-        width: 100px;
-        height: 100px;
+        width: 60px;
+        height: 60px;
+        border-width: 2px;
     }
 
     .level-number {
-        font-size: 2.5rem;
+        font-size: 1.4rem;
     }
 
     .hero-title {
-        font-size: 1.25rem;
+        font-size: 0.95rem;
     }
 
     .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .stats-grid-section {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Very small mobile */
+@media (max-width: 400px) {
+    .level-overview-container {
+        padding: 0.6rem 0.4rem;
+    }
+
+    .level-hero-card {
+        padding: 0.65rem 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .level-badge-hero {
+        width: 55px;
+        height: 55px;
+        border-width: 2px;
+    }
+
+    .level-number {
+        font-size: 1.3rem;
+    }
+
+    .hero-title {
+        font-size: 0.9rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        gap: 0.4rem;
     }
 
     .milestone-requirements {
