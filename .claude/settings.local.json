@@ -14,7 +14,10 @@
       "Bash(dotnet ef migrations list:*)",
       "Bash(dotnet ef database update:*)",
       "Bash(ls:*)",
-      "Bash(dotnet clean:*)"
+      "Bash(dotnet clean:*)",
+      "Bash(for file in BookRepository.cs ReadingSessionRepository.cs ReadingGoalRepository.cs UserPlantRepository.cs)",
+      "Bash(do sed -i '/^[[:space:]]*\\.AsNoTracking()$/d' \"$file\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

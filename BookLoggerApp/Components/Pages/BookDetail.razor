@@ -85,14 +85,14 @@
                         </span>
                     </div>
 
-                    @if (ViewModel.Book.Rating.HasValue)
+                    @if (ViewModel.Book.OverallRating.HasValue)
                     {
                         <div class="book-meta-item">
                             <span class="book-meta-label">Rating</span>
                             <span class="book-meta-value">
                                 @for (int i = 1; i <= 5; i++)
                                 {
-                                    <span class="star @(i <= ViewModel.Book.Rating.Value ? "filled" : "empty")">★</span>
+                                    <span class="star @(i <= ViewModel.Book.OverallRating.Value ? "filled" : "empty")">★</span>
                                 }
                             </span>
                         </div>

@@ -2,6 +2,7 @@ using FluentAssertions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Services;
+using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ public class MigrationTests : IDisposable
 {
     private readonly AppDbContext _context;
     private readonly BookRepository _bookRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly MockProgressionService _progressionService;
     private readonly MockPlantService _plantService;
     private readonly BookService _bookService;
@@ -25,9 +27,15 @@ public class MigrationTests : IDisposable
     {
         _context = TestDbContext.Create();
         _bookRepository = new BookRepository(_context);
+        var sessionRepository = new ReadingSessionRepository(_context);
+        var goalRepository = new ReadingGoalRepository(_context);
+        var plantRepository = new UserPlantRepository(_context);
+
+        _unitOfWork = new UnitOfWork(_context, _bookRepository, sessionRepository, goalRepository, plantRepository);
+
         _progressionService = new MockProgressionService();
         _plantService = new MockPlantService();
-        _bookService = new BookService(_bookRepository, _progressionService, _plantService);
+        _bookService = new BookService(_unitOfWork, _progressionService, _plantService, null!);
     }
 
     public void Dispose()

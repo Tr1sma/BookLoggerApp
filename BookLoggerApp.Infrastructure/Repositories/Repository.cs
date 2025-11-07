@@ -41,32 +41,27 @@ public class Repository<T> : IRepository<T> where T : class
     public virtual async Task<T> AddAsync(T entity, CancellationToken ct = default)
     {
         await _dbSet.AddAsync(entity, ct);
-        await _context.SaveChangesAsync(ct);
         return entity;
     }
 
     public virtual async Task AddRangeAsync(IEnumerable<T> entities, CancellationToken ct = default)
     {
         await _dbSet.AddRangeAsync(entities, ct);
-        await _context.SaveChangesAsync(ct);
     }
 
     public virtual async Task UpdateAsync(T entity, CancellationToken ct = default)
     {
         _dbSet.Update(entity);
-        await _context.SaveChangesAsync(ct);
     }
 
     public virtual async Task DeleteAsync(T entity, CancellationToken ct = default)
     {
         _dbSet.Remove(entity);
-        await _context.SaveChangesAsync(ct);
     }
 
     public virtual async Task DeleteRangeAsync(IEnumerable<T> entities, CancellationToken ct = default)
     {
         _dbSet.RemoveRange(entities);
-        await _context.SaveChangesAsync(ct);
     }
 
     public virtual async Task<int> CountAsync(CancellationToken ct = default)

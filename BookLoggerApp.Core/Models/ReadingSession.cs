@@ -32,4 +32,8 @@ public class ReadingSession
     // Notes
     [MaxLength(1000)]
     public string? Notes { get; set; }
+
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 }

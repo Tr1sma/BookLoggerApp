@@ -42,6 +42,10 @@ public class PlantSpecies
     [Range(1, 100)]
     public int UnlockLevel { get; set; } = 1; // User must be level X to unlock
 
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
+
     // Navigation Properties
     public ICollection<UserPlant> UserPlants { get; set; } = new List<UserPlant>();
 }
