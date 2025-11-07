@@ -1,9 +1,9 @@
-<div class="book-card @(IsInBookshelf ? "in-bookshelf-book" : "")"
+<div class="book-card @(IsInBookshelf ? "in-bookshelf-book" : "compact") @(IsInBookshelf ? "" : "")"
      draggable="@(IsDraggable ? "true" : "false")"
      @onclick="HandleClick"
      @ondragstart="HandleDragStartInternal"
      @ondragend="HandleDragEnd">
-    <div class="book-cover-wrapper" style="@GetSpineStyle()">
+    <div class="@(IsInBookshelf ? "book-cover-wrapper" : "book-cover-thumbnail")" style="@GetSpineStyle()">
         @if (!string.IsNullOrEmpty(Book.CoverImagePath))
         {
             <img src="@GetCoverImageUrl()"
@@ -12,36 +12,60 @@
                  @ondragstart:preventDefault="true"
                  onerror="this.style.display='none'; console.error('Failed to load image: @GetCoverImageUrl()');" />
         }
+    </div>
+
+    @if (IsInBookshelf)
+    {
+        <!-- Spine view: title and author on the spine -->
         <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
             @GetStatusIcon()
         </div>
-    </div>
-    <div class="book-card-body">
-        <h3 class="book-title">@Book.Title</h3>
-        <p class="book-author">@Book.Author</p>
-        @if (Book.Rating.HasValue)
+        <div class="book-card-body">
+            <h3 class="book-title">@Book.Title</h3>
+            <p class="book-author">@Book.Author</p>
+        </div>
+        @if (Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Reading || Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Completed)
         {
-            <div class="book-rating">
-                @for (int i = 1; i <= 5; i++)
-                {
-                    <span class="star @(i <= Book.Rating.Value ? "filled" : "empty")">★</span>
-                }
+            <div class="book-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: @Book.ProgressPercentage%"></div>
+                </div>
             </div>
         }
-    </div>
-    @if (Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Reading || Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Completed)
+    }
+    else
     {
-        <div class="book-progress">
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: @Book.ProgressPercentage%"></div>
+        <!-- Compact card view: horizontal layout -->
+        <div class="book-card-content">
+            <div class="book-card-header">
+                <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
+                    @GetStatusIcon()
+                </div>
+                <button class="btn-icon-compact" @onclick:stopPropagation="true" @onclick="HandleDelete" title="Delete">
+                    🗑️
+                </button>
             </div>
+            <h3 class="book-title">@Book.Title</h3>
+            <p class="book-author">@Book.Author</p>
+            @if (Book.Rating.HasValue)
+            {
+                <div class="book-rating">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <span class="star @(i <= Book.Rating.Value ? "filled" : "empty")">★</span>
+                    }
+                </div>
+            }
+            @if (Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Reading || Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Completed)
+            {
+                <div class="book-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: @Book.ProgressPercentage%"></div>
+                    </div>
+                </div>
+            }
         </div>
     }
-    <div class="book-card-actions">
-        <button class="btn-icon" @onclick:stopPropagation="true" @onclick="HandleDelete" title="Delete">
-            🗑️
-        </button>
-    </div>
 </div>
 
 @code {

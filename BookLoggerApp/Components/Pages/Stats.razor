@@ -162,7 +162,7 @@
         }
 
         <!-- Rating Category Averages -->
-        @if (ViewModel.CategoryAverages.Any())
+        @if (ViewModel.CategoryAverages.Any(x => x.Value > 0))
         {
             <section class="rating-averages-section">
                 <h2>📊 Average Ratings by Category</h2>
