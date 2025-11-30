@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
-using BookLoggerApp.Infrastructure.Repositories.Specific;
+using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Services.Helpers;
 
 namespace BookLoggerApp.Infrastructure.Services;
@@ -11,18 +12,18 @@ namespace BookLoggerApp.Infrastructure.Services;
 /// </summary>
 public class ProgressService : IProgressService
 {
-    private readonly IReadingSessionRepository _sessionRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IProgressionService _progressionService;
     private readonly IPlantService _plantService;
     private readonly IBookService _bookService;
 
     public ProgressService(
-        IReadingSessionRepository sessionRepository,
+        IUnitOfWork unitOfWork,
         IProgressionService progressionService,
         IPlantService plantService,
         IBookService bookService)
     {
-        _sessionRepository = sessionRepository;
+        _unitOfWork = unitOfWork;
         _progressionService = progressionService;
         _plantService = plantService;
         _bookService = bookService;
@@ -34,7 +35,9 @@ public class ProgressService : IProgressService
         var hasStreak = await HasReadingStreakAsync(ct);
         session.XpEarned = XpCalculator.CalculateXpForSession(session.Minutes, session.PagesRead, hasStreak);
 
-        return await _sessionRepository.AddAsync(session);
+        var result = await _unitOfWork.ReadingSessions.AddAsync(session);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return result;
     }
 
     public async Task<ReadingSession> StartSessionAsync(Guid bookId, CancellationToken ct = default)
@@ -52,14 +55,26 @@ public class ProgressService : IProgressService
             StartedAt = DateTime.UtcNow
         };
 
-        return await _sessionRepository.AddAsync(session);
+        var result = await _unitOfWork.ReadingSessions.AddAsync(session);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return result;
     }
 
     public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, CancellationToken ct = default)
     {
-        var session = await _sessionRepository.GetByIdAsync(sessionId);
+        // Validate input
+        if (pagesRead < 0)
+            throw new ArgumentOutOfRangeException(nameof(pagesRead), "Pages read cannot be negative");
+
+        var session = await _unitOfWork.ReadingSessions.GetByIdAsync(sessionId);
         if (session == null)
-            throw new ArgumentException("Session not found", nameof(sessionId));
+            throw new EntityNotFoundException(typeof(ReadingSession), sessionId);
+
+        // Validate pages read against book page count
+        var book = await _bookService.GetByIdAsync(session.BookId, ct);
+        if (book?.PageCount.HasValue == true && pagesRead > book.PageCount.Value)
+            throw new ArgumentOutOfRangeException(nameof(pagesRead),
+                $"Pages read ({pagesRead}) exceeds book page count ({book.PageCount.Value})");
 
         session.EndedAt = DateTime.UtcNow;
         session.PagesRead = pagesRead;
@@ -90,7 +105,8 @@ public class ProgressService : IProgressService
             await _plantService.AddExperienceAsync(activePlant.Id, plantXp, ct);
         }
 
-        await _sessionRepository.UpdateAsync(session);
+        await _unitOfWork.ReadingSessions.UpdateAsync(session);
+        await _unitOfWork.SaveChangesAsync(ct);
 
         // Return both session and progression result for UI celebrations
         return new SessionEndResult
@@ -102,55 +118,56 @@ public class ProgressService : IProgressService
 
     public async Task UpdateSessionAsync(ReadingSession session, CancellationToken ct = default)
     {
-        await _sessionRepository.UpdateAsync(session);
+        await _unitOfWork.ReadingSessions.UpdateAsync(session);
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task DeleteSessionAsync(Guid sessionId, CancellationToken ct = default)
     {
-        var session = await _sessionRepository.GetByIdAsync(sessionId);
+        var session = await _unitOfWork.ReadingSessions.GetByIdAsync(sessionId);
         if (session != null)
         {
-            await _sessionRepository.DeleteAsync(session);
+            await _unitOfWork.ReadingSessions.DeleteAsync(session);
+            await _unitOfWork.SaveChangesAsync(ct);
         }
     }
 
     public async Task<IReadOnlyList<ReadingSession>> GetSessionsByBookAsync(Guid bookId, CancellationToken ct = default)
     {
-        var sessions = await _sessionRepository.GetSessionsByBookAsync(bookId);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsByBookAsync(bookId);
         return sessions.ToList();
     }
 
     public async Task<IReadOnlyList<ReadingSession>> GetRecentSessionsAsync(int count = 10, CancellationToken ct = default)
     {
-        var sessions = await _sessionRepository.GetRecentSessionsAsync(count);
+        var sessions = await _unitOfWork.ReadingSessions.GetRecentSessionsAsync(count);
         return sessions.ToList();
     }
 
     public async Task<IReadOnlyList<ReadingSession>> GetSessionsInRangeAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _sessionRepository.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
         return sessions.ToList();
     }
 
     public async Task<int> GetTotalMinutesAsync(Guid bookId, CancellationToken ct = default)
     {
-        return await _sessionRepository.GetTotalMinutesReadAsync(bookId);
+        return await _unitOfWork.ReadingSessions.GetTotalMinutesReadAsync(bookId);
     }
 
     public async Task<int> GetTotalPagesAsync(Guid bookId, CancellationToken ct = default)
     {
-        return await _sessionRepository.GetTotalPagesReadAsync(bookId);
+        return await _unitOfWork.ReadingSessions.GetTotalPagesReadAsync(bookId);
     }
 
     public async Task<int> GetTotalMinutesAllBooksAsync(CancellationToken ct = default)
     {
-        var allSessions = await _sessionRepository.GetAllAsync();
-        return allSessions.Sum(s => s.Minutes);
+        return await _unitOfWork.ReadingSessions.GetTotalMinutesAsync(ct);
     }
 
     public async Task<Dictionary<DateTime, int>> GetMinutesByDateAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _sessionRepository.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
 
         return sessions
             .GroupBy(s => s.StartedAt.Date)
@@ -163,7 +180,7 @@ public class ProgressService : IProgressService
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
     {
         var today = DateTime.UtcNow.Date;
-        var allSessions = await _sessionRepository.GetAllAsync();
+        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
 
         var sessionsByDate = allSessions
             .GroupBy(s => s.StartedAt.Date)

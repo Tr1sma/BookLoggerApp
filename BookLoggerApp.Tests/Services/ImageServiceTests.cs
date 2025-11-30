@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Services;
 using FluentAssertions;
 using Xunit;
@@ -11,7 +12,8 @@ public class ImageServiceTests : IDisposable
 
     public ImageServiceTests()
     {
-        _service = new ImageService();
+        IFileSystem fileSystem = new FileSystemAdapter();
+        _service = new ImageService(fileSystem);
 
         // Create a test image file
         _testImagePath = Path.Combine(Path.GetTempPath(), "test_image.jpg");

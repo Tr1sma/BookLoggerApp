@@ -78,8 +78,14 @@ public class Book
     public ICollection<Quote> Quotes { get; set; } = new List<Quote>();
     public ICollection<Annotation> Annotations { get; set; } = new List<Annotation>();
 
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
+
     // Computed Properties
-    public int ProgressPercentage => PageCount > 0 ? (CurrentPage * 100 / PageCount.Value) : 0;
+    public int ProgressPercentage => PageCount.HasValue && PageCount.Value > 0
+        ? (CurrentPage * 100 / PageCount.Value)
+        : 0;
 
     /// <summary>
     /// Calculates the average of all set category ratings.

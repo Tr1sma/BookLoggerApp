@@ -35,6 +35,7 @@ public class ReadingSessionRepositoryTests : IDisposable
         await _repository.AddAsync(new ReadingSession { BookId = book1.Id, Minutes = 30 });
         await _repository.AddAsync(new ReadingSession { BookId = book1.Id, Minutes = 45 });
         await _repository.AddAsync(new ReadingSession { BookId = book2.Id, Minutes = 60 });
+        await _context.SaveChangesAsync();
 
         // Act
         var sessions = await _repository.GetSessionsByBookAsync(book1.Id);
@@ -52,6 +53,7 @@ public class ReadingSessionRepositoryTests : IDisposable
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, Minutes = 30 });
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, Minutes = 45 });
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, Minutes = 15 });
+        await _context.SaveChangesAsync();
 
         // Act
         var totalMinutes = await _repository.GetTotalMinutesReadAsync(book.Id);
@@ -68,6 +70,7 @@ public class ReadingSessionRepositoryTests : IDisposable
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, PagesRead = 20 });
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, PagesRead = 30 });
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, PagesRead = null }); // Should be ignored
+        await _context.SaveChangesAsync();
 
         // Act
         var totalPages = await _repository.GetTotalPagesReadAsync(book.Id);
@@ -101,6 +104,7 @@ public class ReadingSessionRepositoryTests : IDisposable
             StartedAt = today.AddDays(2),
             Minutes = 60
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var sessions = await _repository.GetSessionsInRangeAsync(today.AddDays(-3), today);
@@ -136,6 +140,7 @@ public class ReadingSessionRepositoryTests : IDisposable
             StartedAt = DateTime.UtcNow.AddDays(-1),
             Minutes = 60
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var recentSessions = await _repository.GetRecentSessionsAsync(2);

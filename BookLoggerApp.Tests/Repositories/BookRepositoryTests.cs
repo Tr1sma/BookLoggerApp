@@ -51,6 +51,7 @@ public class BookRepositoryTests : IDisposable
         await _repository.AddAsync(new Book { Title = "Reading Book", Status = ReadingStatus.Reading });
         await _repository.AddAsync(new Book { Title = "Planned Book", Status = ReadingStatus.Planned });
         await _repository.AddAsync(new Book { Title = "Completed Book", Status = ReadingStatus.Completed });
+        await _context.SaveChangesAsync();
 
         // Act
         var readingBooks = await _repository.GetBooksByStatusAsync(ReadingStatus.Reading);
@@ -67,6 +68,7 @@ public class BookRepositoryTests : IDisposable
         await _repository.AddAsync(new Book { Title = "The Hobbit", Author = "J.R.R. Tolkien" });
         await _repository.AddAsync(new Book { Title = "1984", Author = "George Orwell" });
         await _repository.AddAsync(new Book { Title = "The Lord of the Rings", Author = "J.R.R. Tolkien" });
+        await _context.SaveChangesAsync();
 
         // Act
         var tolkienBooks = await _repository.SearchBooksAsync("tolkien");
@@ -83,6 +85,7 @@ public class BookRepositoryTests : IDisposable
         var isbn = "9780547928227";
         await _repository.AddAsync(new Book { Title = "The Hobbit", ISBN = isbn });
         await _repository.AddAsync(new Book { Title = "1984", ISBN = "9780451524935" });
+        await _context.SaveChangesAsync();
 
         // Act
         var book = await _repository.GetBookByISBNAsync(isbn);
@@ -97,6 +100,7 @@ public class BookRepositoryTests : IDisposable
     {
         // Arrange
         var book = await _repository.AddAsync(new Book { Title = "Original Title", Author = "Author" });
+        await _context.SaveChangesAsync();
         book.Title = "Updated Title";
 
         // Act
@@ -112,9 +116,11 @@ public class BookRepositoryTests : IDisposable
     {
         // Arrange
         var book = await _repository.AddAsync(new Book { Title = "To Delete", Author = "Author" });
+        await _context.SaveChangesAsync();
 
         // Act
         await _repository.DeleteAsync(book);
+        await _context.SaveChangesAsync(); // Must save changes after delete
 
         // Assert
         var deletedBook = await _repository.GetByIdAsync(book.Id);
@@ -130,6 +136,7 @@ public class BookRepositoryTests : IDisposable
         await _repository.AddAsync(new Book { Title = "Book 2" });
         await Task.Delay(10);
         await _repository.AddAsync(new Book { Title = "Book 3" });
+        await _context.SaveChangesAsync();
 
         // Act
         var recentBooks = await _repository.GetRecentBooksAsync(2);

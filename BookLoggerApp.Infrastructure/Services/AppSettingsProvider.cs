@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
@@ -7,11 +8,14 @@ using BookLoggerApp.Infrastructure.Services.Helpers;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Provider implementation for app settings.
+/// Provider implementation for app settings with caching support.
 /// </summary>
 public class AppSettingsProvider : IAppSettingsProvider
 {
     private readonly AppDbContext _context;
+    private AppSettings? _cachedSettings;
+    private DateTime _lastLoad = DateTime.MinValue;
+    private readonly TimeSpan _cacheLifetime = TimeSpan.FromMinutes(5);
 
     public event EventHandler? ProgressionChanged;
 
@@ -30,6 +34,11 @@ public class AppSettingsProvider : IAppSettingsProvider
 
     public async Task<AppSettings> GetSettingsAsync(CancellationToken ct = default)
     {
+        // Return cached settings if still valid
+        if (_cachedSettings != null && DateTime.UtcNow - _lastLoad < _cacheLifetime)
+            return _cachedSettings;
+
+        // Load from database
         var settings = await _context.AppSettings.FirstOrDefaultAsync(ct);
 
         if (settings == null)
@@ -48,6 +57,10 @@ public class AppSettingsProvider : IAppSettingsProvider
             await _context.SaveChangesAsync(ct);
         }
 
+        // Update cache
+        _cachedSettings = settings;
+        _lastLoad = DateTime.UtcNow;
+
         return settings;
     }
 
@@ -63,6 +76,10 @@ public class AppSettingsProvider : IAppSettingsProvider
         settings.UpdatedAt = DateTime.UtcNow;
         _context.AppSettings.Update(settings);
         await _context.SaveChangesAsync(ct);
+
+        // Invalidate cache on update
+        _cachedSettings = settings;
+        _lastLoad = DateTime.UtcNow;
 
         // Notify subscribers if progression data changed
         if (progressionChanged)
@@ -88,7 +105,7 @@ public class AppSettingsProvider : IAppSettingsProvider
         var settings = await GetSettingsAsync(ct);
 
         if (settings.Coins < amount)
-            throw new InvalidOperationException($"Not enough coins. Have {settings.Coins}, need {amount}");
+            throw new InsufficientFundsException(amount, settings.Coins);
 
         settings.Coins -= amount;
         await UpdateSettingsAsync(settings, ct);
@@ -99,6 +116,19 @@ public class AppSettingsProvider : IAppSettingsProvider
         var settings = await GetSettingsAsync(ct);
         settings.Coins += amount;
         await UpdateSettingsAsync(settings, ct);
+    }
+
+    public async Task IncrementPlantsPurchasedAsync(CancellationToken ct = default)
+    {
+        var settings = await GetSettingsAsync(ct);
+        settings.PlantsPurchased++;
+        await UpdateSettingsAsync(settings, ct);
+    }
+
+    public async Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default)
+    {
+        var settings = await GetSettingsAsync(ct);
+        return settings.PlantsPurchased;
     }
 
     /// <summary>

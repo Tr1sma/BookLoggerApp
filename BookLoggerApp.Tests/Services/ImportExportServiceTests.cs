@@ -1,4 +1,5 @@
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Tests.TestHelpers;
 using FluentAssertions;
@@ -8,6 +9,8 @@ namespace BookLoggerApp.Tests.Services;
 
 public class ImportExportServiceTests
 {
+    private static IFileSystem CreateFileSystem() => new FileSystemAdapter();
+
     [Fact]
     public async Task ExportToJsonAsync_ShouldExportBooksAsJson()
     {
@@ -21,7 +24,7 @@ public class ImportExportServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new ImportExportService(context);
+        var service = new ImportExportService(context, CreateFileSystem());
 
         // Act
         var json = await service.ExportToJsonAsync();
@@ -46,7 +49,7 @@ public class ImportExportServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new ImportExportService(context);
+        var service = new ImportExportService(context, CreateFileSystem());
 
         // Act
         var csv = await service.ExportToCsvAsync();
@@ -73,11 +76,11 @@ public class ImportExportServiceTests
         });
         await exportContext.SaveChangesAsync();
 
-        var exportService = new ImportExportService(exportContext);
+        var exportService = new ImportExportService(exportContext, CreateFileSystem());
         var json = await exportService.ExportToJsonAsync();
 
         using var importContext = TestDbContext.Create();
-        var importService = new ImportExportService(importContext);
+        var importService = new ImportExportService(importContext, CreateFileSystem());
 
         // Act
         var importedCount = await importService.ImportFromJsonAsync(json);
@@ -98,7 +101,7 @@ public class ImportExportServiceTests
 d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publisher,2023,en,Test Description,300,0,,Planned,5,2023-01-01T00:00:00,,,Fiction;Fantasy";
 
         using var context = TestDbContext.Create();
-        var service = new ImportExportService(context);
+        var service = new ImportExportService(context, CreateFileSystem());
 
         // Act
         var importedCount = await service.ImportFromCsvAsync(csv);
@@ -126,7 +129,7 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         context.Books.Add(existingBook);
         await context.SaveChangesAsync();
 
-        var service = new ImportExportService(context);
+        var service = new ImportExportService(context, CreateFileSystem());
         var json = await service.ExportToJsonAsync();
 
         // Act - import the same books again
@@ -145,7 +148,7 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         context.Books.Add(new Book { Title = "Test", Author = "Test" });
         await context.SaveChangesAsync();
 
-        var service = new ImportExportService(context);
+        var service = new ImportExportService(context, CreateFileSystem());
 
         // Act & Assert
         // Note: Backup functionality requires a real SQLite database file,

@@ -33,4 +33,8 @@ public class ShopItem
     // For Plants: Reference to PlantSpecies
     public Guid? PlantSpeciesId { get; set; }
     public PlantSpecies? PlantSpecies { get; set; }
+
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 }

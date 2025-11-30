@@ -2,6 +2,7 @@ using FluentAssertions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Services;
+using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
 using Xunit;
@@ -11,7 +12,7 @@ namespace BookLoggerApp.Tests.Services;
 public class BookServiceTests : IDisposable
 {
     private readonly AppDbContext _context;
-    private readonly BookRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly MockProgressionService _progressionService;
     private readonly MockPlantService _plantService;
     private readonly BookService _service;
@@ -19,10 +20,19 @@ public class BookServiceTests : IDisposable
     public BookServiceTests()
     {
         _context = TestDbContext.Create();
-        _repository = new BookRepository(_context);
+
+        // Create all repositories
+        var bookRepository = new BookRepository(_context);
+        var sessionRepository = new ReadingSessionRepository(_context);
+        var goalRepository = new ReadingGoalRepository(_context);
+        var plantRepository = new UserPlantRepository(_context);
+
+        // Create UnitOfWork
+        _unitOfWork = new UnitOfWork(_context, bookRepository, sessionRepository, goalRepository, plantRepository);
+
         _progressionService = new MockProgressionService();
         _plantService = new MockPlantService();
-        _service = new BookService(_repository, _progressionService, _plantService);
+        _service = new BookService(_unitOfWork, _progressionService, _plantService, null!);
     }
 
     public void Dispose()

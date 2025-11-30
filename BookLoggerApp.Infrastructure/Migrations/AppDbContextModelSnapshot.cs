@@ -15,7 +15,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Annotation", b =>
                 {
@@ -40,6 +40,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
 
                     b.Property<int?>("PageNumber")
                         .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.Property<string>("Title")
                         .HasMaxLength(200)
@@ -91,6 +96,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
 
                     b.Property<TimeSpan?>("ReminderTime")
                         .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.Property<bool>("TelemetryEnabled")
                         .HasColumnType("INTEGER");
@@ -199,6 +209,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<int?>("Rating")
                         .HasColumnType("INTEGER");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
                     b.Property<int?>("SpiceLevelRating")
                         .HasColumnType("INTEGER");
 
@@ -244,6 +259,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<DateTime>("AddedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
                     b.HasKey("BookId", "GenreId");
 
                     b.HasIndex("GenreId");
@@ -273,6 +293,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.HasKey("Id");
 
@@ -372,6 +397,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
                     b.Property<int>("UnlockLevel")
                         .HasColumnType("INTEGER");
 
@@ -456,6 +486,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<int?>("PageNumber")
                         .HasColumnType("INTEGER");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasMaxLength(2000)
@@ -491,6 +526,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
 
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("TEXT");
@@ -542,6 +582,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<int?>("PagesRead")
                         .HasColumnType("INTEGER");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
                     b.Property<int?>("StartPage")
                         .HasColumnType("INTEGER");
 
@@ -592,6 +637,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<Guid?>("PlantSpeciesId")
                         .HasColumnType("TEXT");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
                     b.Property<int>("UnlockLevel")
                         .HasColumnType("INTEGER");
 
@@ -640,6 +690,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
 
                     b.Property<DateTime>("PlantedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.Property<Guid>("SpeciesId")
                         .HasColumnType("TEXT");

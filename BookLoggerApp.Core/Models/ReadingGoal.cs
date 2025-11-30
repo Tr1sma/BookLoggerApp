@@ -30,6 +30,10 @@ public class ReadingGoal
     public bool IsCompleted { get; set; } = false;
     public DateTime? CompletedAt { get; set; }
 
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
+
     // Computed Properties
     public int ProgressPercentage => Target > 0 ? (Current * 100 / Target) : 0;
     public bool IsActive => !IsCompleted && DateTime.UtcNow <= EndDate;
