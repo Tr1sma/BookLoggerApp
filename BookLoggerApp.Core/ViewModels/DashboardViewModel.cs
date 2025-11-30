@@ -54,7 +54,7 @@ public partial class DashboardViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             // Currently Reading Book
             var readingBooks = await _bookService.GetByStatusAsync(ReadingStatus.Reading);

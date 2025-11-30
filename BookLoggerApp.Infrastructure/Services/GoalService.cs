@@ -1,7 +1,8 @@
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Services.Abstractions;
-using BookLoggerApp.Infrastructure.Repositories.Specific;
+using BookLoggerApp.Infrastructure.Repositories;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
@@ -10,66 +11,70 @@ namespace BookLoggerApp.Infrastructure.Services;
 /// </summary>
 public class GoalService : IGoalService
 {
-    private readonly IReadingGoalRepository _goalRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public GoalService(IReadingGoalRepository goalRepository)
+    public GoalService(IUnitOfWork unitOfWork)
     {
-        _goalRepository = goalRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IReadOnlyList<ReadingGoal>> GetAllAsync(CancellationToken ct = default)
     {
-        var goals = await _goalRepository.GetAllAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetAllAsync();
         return goals.ToList();
     }
 
     public async Task<ReadingGoal?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _goalRepository.GetByIdAsync(id);
+        return await _unitOfWork.ReadingGoals.GetByIdAsync(id);
     }
 
     public async Task<ReadingGoal> AddAsync(ReadingGoal goal, CancellationToken ct = default)
     {
-        return await _goalRepository.AddAsync(goal);
+        var result = await _unitOfWork.ReadingGoals.AddAsync(goal);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return result;
     }
 
     public async Task UpdateAsync(ReadingGoal goal, CancellationToken ct = default)
     {
-        await _goalRepository.UpdateAsync(goal);
+        await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var goal = await _goalRepository.GetByIdAsync(id);
+        var goal = await _unitOfWork.ReadingGoals.GetByIdAsync(id);
         if (goal != null)
         {
-            await _goalRepository.DeleteAsync(goal);
+            await _unitOfWork.ReadingGoals.DeleteAsync(goal);
+            await _unitOfWork.SaveChangesAsync(ct);
         }
     }
 
     public async Task<IReadOnlyList<ReadingGoal>> GetActiveGoalsAsync(CancellationToken ct = default)
     {
-        var goals = await _goalRepository.GetActiveGoalsAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
         return goals.ToList();
     }
 
     public async Task<IReadOnlyList<ReadingGoal>> GetCompletedGoalsAsync(CancellationToken ct = default)
     {
-        var goals = await _goalRepository.GetCompletedGoalsAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetCompletedGoalsAsync();
         return goals.ToList();
     }
 
     public async Task<IReadOnlyList<ReadingGoal>> GetGoalsByTypeAsync(GoalType type, CancellationToken ct = default)
     {
-        var goals = await _goalRepository.FindAsync(g => g.Type == type);
+        var goals = await _unitOfWork.ReadingGoals.FindAsync(g => g.Type == type);
         return goals.ToList();
     }
 
     public async Task UpdateGoalProgressAsync(Guid goalId, int progress, CancellationToken ct = default)
     {
-        var goal = await _goalRepository.GetByIdAsync(goalId);
+        var goal = await _unitOfWork.ReadingGoals.GetByIdAsync(goalId);
         if (goal == null)
-            throw new ArgumentException("Goal not found", nameof(goalId));
+            throw new EntityNotFoundException(typeof(ReadingGoal), goalId);
 
         goal.Current = progress;
 
@@ -79,20 +84,24 @@ public class GoalService : IGoalService
             goal.IsCompleted = true;
         }
 
-        await _goalRepository.UpdateAsync(goal);
+        await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task CheckAndCompleteGoalsAsync(CancellationToken ct = default)
     {
-        var activeGoals = await _goalRepository.GetActiveGoalsAsync();
+        var activeGoals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
 
         foreach (var goal in activeGoals)
         {
             if (goal.Current >= goal.Target)
             {
                 goal.IsCompleted = true;
-                await _goalRepository.UpdateAsync(goal);
+                await _unitOfWork.ReadingGoals.UpdateAsync(goal);
             }
         }
+
+        // Single SaveChanges for all updates
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 }

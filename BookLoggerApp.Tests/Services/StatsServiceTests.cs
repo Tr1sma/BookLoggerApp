@@ -54,6 +54,7 @@ public class StatsServiceTests : IDisposable
             CharactersRating = 5
         };
         await _bookRepository.AddAsync(book);
+        await _context.SaveChangesAsync();
 
         // Act
         var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
@@ -89,6 +90,7 @@ public class StatsServiceTests : IDisposable
             Status = ReadingStatus.Completed,
             CharactersRating = 4
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
@@ -124,6 +126,7 @@ public class StatsServiceTests : IDisposable
             Status = ReadingStatus.Completed,
             PlotRating = 3
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Plot);
@@ -159,6 +162,7 @@ public class StatsServiceTests : IDisposable
             Status = ReadingStatus.Planned,
             WritingStyleRating = 1
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.WritingStyle);
@@ -184,6 +188,7 @@ public class StatsServiceTests : IDisposable
             WorldBuildingRating = 5,
             OverallRating = 4
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var averages = await _service.GetAllAverageRatingsAsync();
@@ -229,6 +234,7 @@ public class StatsServiceTests : IDisposable
             CharactersRating = 3,
             PlotRating = 4
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var topBooks = await _service.GetTopRatedBooksAsync(10);
@@ -255,6 +261,7 @@ public class StatsServiceTests : IDisposable
                 OverallRating = i % 5 + 1
             });
         }
+        await _context.SaveChangesAsync();
 
         // Act
         var topBooks = await _service.GetTopRatedBooksAsync(5);
@@ -284,6 +291,7 @@ public class StatsServiceTests : IDisposable
             PlotRating = 2,
             CharactersRating = 5
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var topByPlot = await _service.GetTopRatedBooksAsync(10, RatingCategory.Plot);
@@ -321,6 +329,7 @@ public class StatsServiceTests : IDisposable
             Status = ReadingStatus.Reading,
             OverallRating = 3
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var books = await _service.GetBooksWithRatingsAsync();
@@ -344,6 +353,7 @@ public class StatsServiceTests : IDisposable
             WritingStyleRating = null,
             SpiceLevelRating = 3
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var books = await _service.GetBooksWithRatingsAsync();
@@ -383,6 +393,7 @@ public class StatsServiceTests : IDisposable
             OverallRating = 4
         };
         await _bookRepository.AddAsync(book);
+        await _context.SaveChangesAsync();
 
         // Act
         var average = await _service.GetAverageRatingByCategoryAsync(category);
@@ -420,6 +431,7 @@ public class StatsServiceTests : IDisposable
             DateCompleted = recentDate,
             CharactersRating = 5
         });
+        await _context.SaveChangesAsync();
 
         // Act
         var allAverage = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Characters);

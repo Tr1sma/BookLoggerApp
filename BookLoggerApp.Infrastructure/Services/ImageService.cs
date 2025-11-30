@@ -11,17 +11,19 @@ public class ImageService : IImageService
     private readonly string _imagesDirectory;
     private readonly HttpClient _httpClient;
     private readonly ILogger<ImageService>? _logger;
+    private readonly IFileSystem _fileSystem;
 
-    public ImageService(ILogger<ImageService>? logger = null)
+    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null)
     {
+        _fileSystem = fileSystem;
         _logger = logger;
 
         // Get the app's local data directory
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        _imagesDirectory = Path.Combine(appDataPath, "covers");
+        _imagesDirectory = _fileSystem.CombinePath(appDataPath, "covers");
 
         // Ensure directory exists
-        Directory.CreateDirectory(_imagesDirectory);
+        _fileSystem.CreateDirectory(_imagesDirectory);
 
         // Initialize HttpClient for downloading images
         _httpClient = new HttpClient
@@ -39,16 +41,16 @@ public class ImageService : IImageService
         {
             // Generate filename: {bookId}.jpg
             var fileName = $"{bookId}.jpg";
-            var fullPath = Path.Combine(_imagesDirectory, fileName);
+            var fullPath = _fileSystem.CombinePath(_imagesDirectory, fileName);
 
             // Save the stream to file
-            using var fileStream = new FileStream(fullPath, FileMode.Create, FileAccess.Write);
+            using var fileStream = _fileSystem.OpenWrite(fullPath);
             await imageStream.CopyToAsync(fileStream, ct);
 
             _logger?.LogInformation("Cover image saved for book {BookId} at {Path}", bookId, fullPath);
 
             // Return relative path
-            return Path.Combine("covers", fileName);
+            return _fileSystem.CombinePath("covers", fileName);
         }
         catch (Exception ex)
         {
@@ -62,17 +64,17 @@ public class ImageService : IImageService
         try
         {
             var fileName = $"{bookId}.jpg";
-            var fullPath = Path.Combine(_imagesDirectory, fileName);
+            var fullPath = _fileSystem.CombinePath(_imagesDirectory, fileName);
 
             // Check if file exists
-            if (File.Exists(fullPath))
+            if (_fileSystem.FileExists(fullPath))
             {
                 return Task.FromResult<string?>(fullPath);
             }
 
             // Try alternative extensions
-            var pngPath = Path.Combine(_imagesDirectory, $"{bookId}.png");
-            if (File.Exists(pngPath))
+            var pngPath = _fileSystem.CombinePath(_imagesDirectory, $"{bookId}.png");
+            if (_fileSystem.FileExists(pngPath))
             {
                 return Task.FromResult<string?>(pngPath);
             }
@@ -91,19 +93,19 @@ public class ImageService : IImageService
         try
         {
             var fileName = $"{bookId}.jpg";
-            var fullPath = Path.Combine(_imagesDirectory, fileName);
+            var fullPath = _fileSystem.CombinePath(_imagesDirectory, fileName);
 
-            if (File.Exists(fullPath))
+            if (_fileSystem.FileExists(fullPath))
             {
-                File.Delete(fullPath);
+                _fileSystem.DeleteFile(fullPath);
                 _logger?.LogInformation("Cover image deleted for book {BookId}", bookId);
             }
 
             // Also try to delete PNG version
-            var pngPath = Path.Combine(_imagesDirectory, $"{bookId}.png");
-            if (File.Exists(pngPath))
+            var pngPath = _fileSystem.CombinePath(_imagesDirectory, $"{bookId}.png");
+            if (_fileSystem.FileExists(pngPath))
             {
-                File.Delete(pngPath);
+                _fileSystem.DeleteFile(pngPath);
             }
 
             return Task.CompletedTask;

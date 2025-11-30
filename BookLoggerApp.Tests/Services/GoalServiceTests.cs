@@ -3,6 +3,7 @@ using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Services;
+using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
 using Xunit;
@@ -12,14 +13,19 @@ namespace BookLoggerApp.Tests.Services;
 public class GoalServiceTests : IDisposable
 {
     private readonly AppDbContext _context;
-    private readonly ReadingGoalRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly GoalService _service;
 
     public GoalServiceTests()
     {
         _context = TestDbContext.Create();
-        _repository = new ReadingGoalRepository(_context);
-        _service = new GoalService(_repository);
+        var bookRepository = new BookRepository(_context);
+        var sessionRepository = new ReadingSessionRepository(_context);
+        var goalRepository = new ReadingGoalRepository(_context);
+        var plantRepository = new UserPlantRepository(_context);
+
+        _unitOfWork = new UnitOfWork(_context, bookRepository, sessionRepository, goalRepository, plantRepository);
+        _service = new GoalService(_unitOfWork);
     }
 
     public void Dispose()

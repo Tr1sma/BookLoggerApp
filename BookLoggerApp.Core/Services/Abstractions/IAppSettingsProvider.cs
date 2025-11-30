@@ -18,4 +18,6 @@ public interface IAppSettingsProvider
     Task<int> GetUserLevelAsync(CancellationToken ct = default);
     Task SpendCoinsAsync(int amount, CancellationToken ct = default);
     Task AddCoinsAsync(int amount, CancellationToken ct = default);
+    Task IncrementPlantsPurchasedAsync(CancellationToken ct = default);
+    Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default);
 }

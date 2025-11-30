@@ -6,6 +6,8 @@ using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
@@ -13,16 +15,30 @@ namespace BookLoggerApp.Tests.Services;
 public class PlantServiceTests : IDisposable
 {
     private readonly PlantService _plantService;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly UserPlantRepository _userPlantRepository;
     private readonly Repository<PlantSpecies> _speciesRepository;
     private readonly DbContextTestHelper _dbHelper;
+    private readonly IMemoryCache _cache;
 
     public PlantServiceTests()
     {
         _dbHelper = DbContextTestHelper.CreateTestContext();
+        var bookRepository = new BookRepository(_dbHelper.Context);
+        var sessionRepository = new ReadingSessionRepository(_dbHelper.Context);
+        var goalRepository = new ReadingGoalRepository(_dbHelper.Context);
         _userPlantRepository = new UserPlantRepository(_dbHelper.Context);
         _speciesRepository = new Repository<PlantSpecies>(_dbHelper.Context);
-        _plantService = new PlantService(_userPlantRepository, _speciesRepository, _dbHelper.Context);
+
+        // Create memory cache for testing
+        var services = new ServiceCollection();
+        services.AddMemoryCache();
+        var serviceProvider = services.BuildServiceProvider();
+        _cache = serviceProvider.GetRequiredService<IMemoryCache>();
+
+        _unitOfWork = new UnitOfWork(_dbHelper.Context, bookRepository, sessionRepository, goalRepository, _userPlantRepository);
+        var settingsProvider = new AppSettingsProvider(_dbHelper.Context);
+        _plantService = new PlantService(_unitOfWork, _speciesRepository, settingsProvider, _dbHelper.Context, _cache, null!);
     }
 
     public void Dispose()
@@ -192,13 +208,13 @@ public class PlantServiceTests : IDisposable
         var species = await SeedPlantSpecies();
         var plant = await SeedUserPlant(species.Id, "Leveling Plant");
 
-        // Act - Add enough XP to reach level 2 (100 XP needed)
-        await _plantService.AddExperienceAsync(plant.Id, 100);
+        // Act - Add enough XP to reach level 2 (150 XP needed based on formula 100 * 1.5^1)
+        await _plantService.AddExperienceAsync(plant.Id, 150);
 
         // Assert
         var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
         updatedPlant!.CurrentLevel.Should().Be(2);
-        updatedPlant.Experience.Should().Be(100);
+        updatedPlant.Experience.Should().Be(150);
     }
 
     [Fact]
@@ -208,13 +224,13 @@ public class PlantServiceTests : IDisposable
         var species = await SeedPlantSpecies();
         var plant = await SeedUserPlant(species.Id, "Fast Growing Plant");
 
-        // Act - Add enough XP to reach level 3 (250 XP needed: 100 for L2 + 150 for L3)
-        await _plantService.AddExperienceAsync(plant.Id, 250);
+        // Act - Add enough XP to reach level 3 (375 XP needed: 150 for L2 + 225 for L3)
+        await _plantService.AddExperienceAsync(plant.Id, 375);
 
         // Assert
         var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
         updatedPlant!.CurrentLevel.Should().Be(3);
-        updatedPlant.Experience.Should().Be(250);
+        updatedPlant.Experience.Should().Be(375);
     }
 
     [Fact]
@@ -223,7 +239,7 @@ public class PlantServiceTests : IDisposable
         // Arrange
         var species = await SeedPlantSpecies();
         var plant = await SeedUserPlant(species.Id, "Ready Plant");
-        plant.Experience = 100; // Enough for level 2
+        plant.Experience = 150; // Enough for level 2 (150 XP needed)
         await _userPlantRepository.UpdateAsync(plant);
 
         // Act
@@ -336,18 +352,22 @@ public class PlantServiceTests : IDisposable
     [Fact]
     public async Task GetAvailableSpeciesAsync_ShouldReturnOnlyAvailableSpeciesForUserLevel()
     {
-        // Arrange
-        var species1 = await SeedPlantSpecies("Species 1", unlockLevel: 1, isAvailable: true);
-        var species2 = await SeedPlantSpecies("Species 2", unlockLevel: 5, isAvailable: true);
-        var species3 = await SeedPlantSpecies("Species 3", unlockLevel: 10, isAvailable: false);
+        // Arrange - note: database may contain seeded species (Starter Sprout, Bookworm Fern)
+        var species1 = await SeedPlantSpecies("Test Species 1", unlockLevel: 1, isAvailable: true);
+        var species2 = await SeedPlantSpecies("Test Species 2", unlockLevel: 5, isAvailable: true);
+        var species3 = await SeedPlantSpecies("Test Species 3", unlockLevel: 10, isAvailable: false);
+        var species4 = await SeedPlantSpecies("Test Species 4", unlockLevel: 15, isAvailable: true);
 
         // Act
         var result = await _plantService.GetAvailableSpeciesAsync(userLevel: 5);
 
-        // Assert
-        result.Should().HaveCount(2);
-        result.Select(s => s.Name).Should().Contain(new[] { "Species 1", "Species 2" });
-        result.Select(s => s.Name).Should().NotContain("Species 3");
+        // Assert - should include test species 1 & 2 (available and unlockLevel <= 5)
+        // but not species 3 (unavailable) and species 4 (unlockLevel > 5)
+        result.Select(s => s.Name).Should().Contain(new[] { "Test Species 1", "Test Species 2" });
+        result.Select(s => s.Name).Should().NotContain("Test Species 3");
+        result.Select(s => s.Name).Should().NotContain("Test Species 4");
+        // All returned species should be available and have unlockLevel <= 5
+        result.Should().OnlyContain(s => s.IsAvailable && s.UnlockLevel <= 5);
     }
 
     #endregion
@@ -372,7 +392,9 @@ public class PlantServiceTests : IDisposable
             IsAvailable = isAvailable
         };
 
-        return await _speciesRepository.AddAsync(species);
+        var result = await _speciesRepository.AddAsync(species);
+        await _dbHelper.Context.SaveChangesAsync();
+        return result;
     }
 
     private async Task<UserPlant> SeedUserPlant(
@@ -392,7 +414,9 @@ public class PlantServiceTests : IDisposable
             Status = PlantStatus.Healthy
         };
 
-        return await _userPlantRepository.AddAsync(plant);
+        var result = await _userPlantRepository.AddAsync(plant);
+        await _dbHelper.Context.SaveChangesAsync();
+        return result;
     }
 
     #endregion

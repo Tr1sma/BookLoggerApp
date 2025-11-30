@@ -1,10 +1,12 @@
 using BookLoggerApp;
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.ViewModels;
 using BookLoggerApp.Infrastructure;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 public static class MauiProgram
 {
@@ -13,50 +15,92 @@ public static class MauiProgram
         System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Started ===");
 
         var builder = MauiApp.CreateBuilder();
-        System.Diagnostics.Debug.WriteLine("MauiApp.CreateBuilder completed");
-
         builder.UseMauiApp<App>();
         builder.Services.AddMauiBlazorWebView();
 
-        System.Diagnostics.Debug.WriteLine("UseMauiApp<App> and AddMauiBlazorWebView completed");
+        ConfigureLogging(builder);
+        RegisterDatabase(builder);
+        RegisterRepositories(builder);
+        RegisterBusinessServices(builder);
+        RegisterViewModels(builder);
+        RegisterValidators(builder);
 
-        // Database path
+        System.Diagnostics.Debug.WriteLine("All services registered, building app...");
+
+        var app = builder.Build();
+
+        // Setup global exception handler
+        SetupGlobalExceptionHandler(app);
+
+        InitializeDatabase(app);
+
+        System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Completed ===");
+        return app;
+    }
+
+    private static void ConfigureLogging(MauiAppBuilder builder)
+    {
+#if DEBUG
+        builder.Logging.AddDebug();
+#endif
+        // Add Memory Cache for performance optimization
+        builder.Services.AddMemoryCache();
+    }
+
+    private static void RegisterDatabase(MauiAppBuilder builder)
+    {
         var dbPath = PlatformsDbPath.GetDatabasePath();
 
-        // Register EF Core DbContext as Transient (MAUI doesn't have request scopes like ASP.NET)
-        builder.Services.AddTransient<AppDbContext>(sp =>
+        // Register EF Core DbContext as Singleton
+        // In MAUI, there are no request scopes like ASP.NET Core. We use Singleton for shared infrastructure.
+        // SQLite + EF Core is safe for concurrent operations through connection pooling and locking.
+        builder.Services.AddSingleton<AppDbContext>(sp =>
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlite($"Data Source={dbPath}");
             return new AppDbContext(optionsBuilder.Options);
         });
+    }
 
-        // Register Generic Repository
-        builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+    private static void RegisterRepositories(MauiAppBuilder builder)
+    {
+        // Register Generic Repository as Singleton (shares DbContext)
+        builder.Services.AddSingleton(typeof(IRepository<>), typeof(Repository<>));
 
-        // Register Specific Repositories
-        builder.Services.AddTransient<IBookRepository, BookRepository>();
-        builder.Services.AddTransient<IReadingSessionRepository, ReadingSessionRepository>();
-        builder.Services.AddTransient<IReadingGoalRepository, ReadingGoalRepository>();
-        builder.Services.AddTransient<IUserPlantRepository, UserPlantRepository>();
+        // Register Specific Repositories as Singleton (shares DbContext)
+        builder.Services.AddSingleton<IBookRepository, BookRepository>();
+        builder.Services.AddSingleton<IReadingSessionRepository, ReadingSessionRepository>();
+        builder.Services.AddSingleton<IReadingGoalRepository, ReadingGoalRepository>();
+        builder.Services.AddSingleton<IUserPlantRepository, UserPlantRepository>();
 
-        // Register Services as Transient to match DbContext lifetime
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IBookService, BookLoggerApp.Infrastructure.Services.BookService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IProgressService, BookLoggerApp.Infrastructure.Services.ProgressService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IGenreService, BookLoggerApp.Infrastructure.Services.GenreService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IQuoteService, BookLoggerApp.Infrastructure.Services.QuoteService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IAnnotationService, BookLoggerApp.Infrastructure.Services.AnnotationService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IGoalService, BookLoggerApp.Infrastructure.Services.GoalService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IPlantService, BookLoggerApp.Infrastructure.Services.PlantService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider, BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IProgressionService, BookLoggerApp.Infrastructure.Services.ProgressionService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Infrastructure.Services.NotificationService>();
+        // Register Unit of Work as Singleton (coordinates repositories and transactions)
+        builder.Services.AddSingleton<IUnitOfWork, UnitOfWork>();
+    }
 
-        // ViewModels
+    private static void RegisterBusinessServices(MauiAppBuilder builder)
+    {
+        // Register File System Abstraction as Singleton (infrastructure layer)
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFileSystem, BookLoggerApp.Infrastructure.Services.FileSystemAdapter>();
+
+        // Register Services as Singleton (shares UnitOfWork and DbContext for transaction consistency)
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IBookService, BookLoggerApp.Infrastructure.Services.BookService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IProgressService, BookLoggerApp.Infrastructure.Services.ProgressService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IGenreService, BookLoggerApp.Infrastructure.Services.GenreService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IQuoteService, BookLoggerApp.Infrastructure.Services.QuoteService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAnnotationService, BookLoggerApp.Infrastructure.Services.AnnotationService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IGoalService, BookLoggerApp.Infrastructure.Services.GoalService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IPlantService, BookLoggerApp.Infrastructure.Services.PlantService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider, BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IProgressionService, BookLoggerApp.Infrastructure.Services.ProgressionService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Infrastructure.Services.NotificationService>();
+    }
+
+    private static void RegisterViewModels(MauiAppBuilder builder)
+    {
         builder.Services.AddTransient<BookListViewModel>();
         builder.Services.AddTransient<BookDetailViewModel>();
         builder.Services.AddTransient<DashboardViewModel>();
@@ -68,118 +112,92 @@ public static class MauiProgram
         builder.Services.AddTransient<SettingsViewModel>();
         builder.Services.AddTransient<PlantShopViewModel>();
         builder.Services.AddTransient<UserProgressViewModel>();
+    }
 
-        System.Diagnostics.Debug.WriteLine("All services registered, building app...");
+    private static void RegisterValidators(MauiAppBuilder builder)
+    {
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IValidationService, BookLoggerApp.Infrastructure.Services.ValidationService>();
+        builder.Services.AddTransient<FluentValidation.IValidator<BookLoggerApp.Core.Models.Book>, BookLoggerApp.Core.Validators.BookValidator>();
+        builder.Services.AddTransient<FluentValidation.IValidator<BookLoggerApp.Core.Models.ReadingSession>, BookLoggerApp.Core.Validators.ReadingSessionValidator>();
+        builder.Services.AddTransient<FluentValidation.IValidator<BookLoggerApp.Core.Models.ReadingGoal>, BookLoggerApp.Core.Validators.ReadingGoalValidator>();
+        builder.Services.AddTransient<FluentValidation.IValidator<BookLoggerApp.Core.Models.UserPlant>, BookLoggerApp.Core.Validators.UserPlantValidator>();
+    }
 
-        var app = builder.Build();
-
-        // Initialize database asynchronously to avoid blocking the UI thread
-        System.Diagnostics.Debug.WriteLine("Starting database initialization task...");
-        Task.Run(async () =>
+    private static void SetupGlobalExceptionHandler(MauiApp app)
+    {
+        // Global exception handler for unhandled exceptions
+        AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
         {
-            System.Diagnostics.Debug.WriteLine("Database initialization task started");
+            var exception = (Exception)args.ExceptionObject;
+            var logger = app.Services.GetService<ILogger<MauiApp>>();
+
+            logger?.LogCritical(exception, "Unhandled exception occurred");
+
+            // Log user-friendly message for custom exceptions
+            if (exception is BookLoggerException bookLoggerEx)
+            {
+                logger?.LogError("Application error: {Message}", bookLoggerEx.Message);
+
+                // Specific handling for different exception types
+                switch (bookLoggerEx)
+                {
+                    case EntityNotFoundException notFoundEx:
+                        logger?.LogWarning("Entity not found: {EntityType} with ID {EntityId}",
+                            notFoundEx.EntityType.Name, notFoundEx.EntityId);
+                        break;
+
+                    case ConcurrencyException concurrencyEx:
+                        logger?.LogWarning("Concurrency conflict: {Message}", concurrencyEx.Message);
+                        break;
+
+                    case InsufficientFundsException fundsEx:
+                        logger?.LogWarning("Insufficient funds: Required {Required}, Available {Available}",
+                            fundsEx.Required, fundsEx.Available);
+                        break;
+
+                    case ValidationException validationEx:
+                        logger?.LogWarning("Validation failed: {Errors}", string.Join(", ", validationEx.Errors));
+                        break;
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"=== UNHANDLED EXCEPTION ===");
+            System.Diagnostics.Debug.WriteLine($"Type: {exception.GetType().FullName}");
+            System.Diagnostics.Debug.WriteLine($"Message: {exception.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stack: {exception.StackTrace}");
+            System.Diagnostics.Debug.WriteLine("=========================");
+        };
+
+        // MAUI-specific unhandled exception handler
+        TaskScheduler.UnobservedTaskException += (sender, args) =>
+        {
+            var logger = app.Services.GetService<ILogger<MauiApp>>();
+            logger?.LogError(args.Exception, "Unobserved task exception");
+
+            System.Diagnostics.Debug.WriteLine($"=== UNOBSERVED TASK EXCEPTION ===");
+            System.Diagnostics.Debug.WriteLine($"Exception: {args.Exception}");
+            System.Diagnostics.Debug.WriteLine("=================================");
+
+            // Mark as observed to prevent app crash
+            args.SetObserved();
+        };
+    }
+
+    private static void InitializeDatabase(MauiApp app)
+    {
+        // Initialize database using DbInitializer
+        // This runs asynchronously but provides EnsureInitializedAsync() for ViewModels to await
+        System.Diagnostics.Debug.WriteLine("Starting database initialization...");
+        _ = Task.Run(async () =>
+        {
             try
             {
-                using var scope = app.Services.CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-//#if DEBUG
-//                // In DEBUG mode, delete and recreate the database for a clean start
-//                System.Diagnostics.Debug.WriteLine("DEBUG MODE: Deleting existing database...");
-//                await dbContext.Database.EnsureDeletedAsync();
-//                System.Diagnostics.Debug.WriteLine("Database deleted");
-//#endif
-
-                System.Diagnostics.Debug.WriteLine("Checking if database exists...");
-                var canConnect = await dbContext.Database.CanConnectAsync();
-                System.Diagnostics.Debug.WriteLine($"Can connect to database: {canConnect}");
-
-                System.Diagnostics.Debug.WriteLine("Applying migrations...");
-                await dbContext.Database.MigrateAsync();
-                System.Diagnostics.Debug.WriteLine("Database migration completed successfully");
-
-                // Recalculate UserLevel based on TotalXp (fixes corrupted level data)
-                System.Diagnostics.Debug.WriteLine("Recalculating UserLevel from TotalXp...");
-                var settingsProvider = scope.ServiceProvider.GetRequiredService<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider>();
-                if (settingsProvider is BookLoggerApp.Infrastructure.Services.AppSettingsProvider provider)
-                {
-                    await provider.RecalculateUserLevelAsync();
-                    System.Diagnostics.Debug.WriteLine("UserLevel recalculation completed");
-                }
-
-                // Fix plant image paths - ensure wwwroot format
-                System.Diagnostics.Debug.WriteLine("=== CHECKING PLANT IMAGE PATHS ===");
-                var plants = await dbContext.PlantSpecies.ToListAsync();
-                System.Diagnostics.Debug.WriteLine($"Found {plants.Count} plant species in database");
-
-                bool needsSave = false;
-                foreach (var plant in plants)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Plant: {plant.Name}, Current ImagePath: '{plant.ImagePath}'");
-
-                    if (!string.IsNullOrEmpty(plant.ImagePath))
-                    {
-                        string correctPath = plant.ImagePath;
-
-                        // Remove leading slash if present
-                        if (correctPath.StartsWith("/"))
-                        {
-                            correctPath = correctPath.TrimStart('/');
-                            System.Diagnostics.Debug.WriteLine($"  -> Removed leading slash: {correctPath}");
-                        }
-
-                        // Fix file extension: .png -> .svg
-                        if (correctPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
-                        {
-                            correctPath = correctPath.Substring(0, correctPath.Length - 4) + ".svg";
-                            System.Diagnostics.Debug.WriteLine($"  -> Changed extension to .svg: {correctPath}");
-                        }
-
-                        // If it's just a filename, convert to wwwroot path
-                        if (!correctPath.Contains("/"))
-                        {
-                            correctPath = $"images/plants/{correctPath}";
-                            System.Diagnostics.Debug.WriteLine($"  -> Added path prefix: {correctPath}");
-                        }
-
-                        if (correctPath != plant.ImagePath)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"  -> FINAL UPDATE: '{plant.ImagePath}' -> '{correctPath}'");
-                            plant.ImagePath = correctPath;
-                            needsSave = true;
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine($"  -> Path is correct, no change needed");
-                        }
-                    }
-                }
-
-                if (needsSave)
-                {
-                    await dbContext.SaveChangesAsync();
-                    System.Diagnostics.Debug.WriteLine("✓ Plant image paths fixed and saved");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("✓ All plant image paths are already correct");
-                }
-
-                // Verify final paths
-                System.Diagnostics.Debug.WriteLine("=== FINAL PLANT IMAGE PATHS ===");
-                var finalPlants = await dbContext.PlantSpecies.ToListAsync();
-                foreach (var plant in finalPlants)
-                {
-                    System.Diagnostics.Debug.WriteLine($"  {plant.Name}: '{plant.ImagePath}'");
-                }
-
-                // Verify seed data
-                var genreCount = await dbContext.Genres.CountAsync();
-                System.Diagnostics.Debug.WriteLine($"Genres in database: {genreCount}");
+                var logger = app.Services.GetService<ILogger<AppDbContext>>();
+                await DbInitializer.InitializeAsync(app.Services, logger);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"=== EXCEPTION IN DATABASE MIGRATION ===");
+                System.Diagnostics.Debug.WriteLine($"=== EXCEPTION IN DATABASE INITIALIZATION ===");
                 System.Diagnostics.Debug.WriteLine($"Exception Type: {ex.GetType().FullName}");
                 System.Diagnostics.Debug.WriteLine($"Message: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
@@ -190,10 +208,8 @@ public static class MauiProgram
                     System.Diagnostics.Debug.WriteLine($"Inner Stack: {ex.InnerException.StackTrace}");
                 }
                 System.Diagnostics.Debug.WriteLine("=== END EXCEPTION ===");
+                throw; // Re-throw to ensure TCS gets the exception
             }
         });
-
-        System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Completed ===");
-        return app;
     }
 }

@@ -30,4 +30,8 @@ public class Annotation
     // Optional: Color tag
     [MaxLength(7)]
     public string? ColorHex { get; set; }
+
+    // Concurrency Control
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 }

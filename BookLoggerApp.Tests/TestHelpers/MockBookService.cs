@@ -5,23 +5,30 @@ namespace BookLoggerApp.Tests.TestHelpers;
 
 /// <summary>
 /// Mock implementation of IBookService for testing purposes.
-/// Returns default/empty values for all operations.
+/// Maintains an in-memory collection of books for testing.
 /// </summary>
 public class MockBookService : IBookService
 {
+    private readonly Dictionary<Guid, Book> _books = new();
+
     // Basic CRUD
     public Task<IReadOnlyList<Book>> GetAllAsync(CancellationToken ct = default)
     {
-        return Task.FromResult<IReadOnlyList<Book>>(Array.Empty<Book>());
+        return Task.FromResult<IReadOnlyList<Book>>(_books.Values.ToList());
     }
 
     public Task<Book?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return Task.FromResult<Book?>(null);
+        _books.TryGetValue(id, out var book);
+        return Task.FromResult(book);
     }
 
     public Task<Book> AddAsync(Book book, CancellationToken ct = default)
     {
+        if (book.Id == Guid.Empty)
+            book.Id = Guid.NewGuid();
+
+        _books[book.Id] = book;
         return Task.FromResult(book);
     }
 

@@ -17,17 +17,19 @@ public class ImportExportService : IImportExportService
 {
     private readonly AppDbContext _context;
     private readonly ILogger<ImportExportService>? _logger;
+    private readonly IFileSystem _fileSystem;
     private readonly string _backupDirectory;
 
-    public ImportExportService(AppDbContext context, ILogger<ImportExportService>? logger = null)
+    public ImportExportService(AppDbContext context, IFileSystem fileSystem, ILogger<ImportExportService>? logger = null)
     {
         _context = context;
+        _fileSystem = fileSystem;
         _logger = logger;
 
         // Set up backup directory
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        _backupDirectory = Path.Combine(appDataPath, "backups");
-        Directory.CreateDirectory(_backupDirectory);
+        _backupDirectory = _fileSystem.CombinePath(appDataPath, "backups");
+        _fileSystem.CreateDirectory(_backupDirectory);
     }
 
     public async Task<string> ExportToJsonAsync(CancellationToken ct = default)
@@ -276,7 +278,7 @@ public class ImportExportService : IImportExportService
             // Get the database file path
             var dbPath = _context.Database.GetConnectionString()?.Replace("Data Source=", "");
 
-            if (string.IsNullOrWhiteSpace(dbPath) || !File.Exists(dbPath))
+            if (string.IsNullOrWhiteSpace(dbPath) || !_fileSystem.FileExists(dbPath))
             {
                 throw new InvalidOperationException("Database file not found");
             }
@@ -284,10 +286,10 @@ public class ImportExportService : IImportExportService
             // Create backup filename with timestamp
             var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             var backupFileName = $"booklogger_backup_{timestamp}.db";
-            var backupPath = Path.Combine(_backupDirectory, backupFileName);
+            var backupPath = _fileSystem.CombinePath(_backupDirectory, backupFileName);
 
             // Copy database file
-            File.Copy(dbPath, backupPath, overwrite: true);
+            _fileSystem.CopyFile(dbPath, backupPath, overwrite: true);
 
             _logger?.LogInformation("Backup created at: {Path}", backupPath);
 
@@ -314,7 +316,7 @@ public class ImportExportService : IImportExportService
         {
             _logger?.LogInformation("Restoring from backup: {Path}", backupPath);
 
-            if (!File.Exists(backupPath))
+            if (!_fileSystem.FileExists(backupPath))
             {
                 throw new FileNotFoundException("Backup file not found", backupPath);
             }
@@ -331,7 +333,7 @@ public class ImportExportService : IImportExportService
             await _context.Database.CloseConnectionAsync();
 
             // Copy backup file over current database
-            File.Copy(backupPath, dbPath, overwrite: true);
+            _fileSystem.CopyFile(backupPath, dbPath, overwrite: true);
 
             _logger?.LogInformation("Backup restored successfully");
 
