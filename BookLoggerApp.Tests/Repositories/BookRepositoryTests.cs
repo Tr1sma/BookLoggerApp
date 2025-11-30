@@ -120,6 +120,7 @@ public class BookRepositoryTests : IDisposable
 
         // Act
         await _repository.DeleteAsync(book);
+        await _context.SaveChangesAsync(); // Must save changes after delete
 
         // Assert
         var deletedBook = await _repository.GetByIdAsync(book.Id);

@@ -4,40 +4,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BookLoggerApp is a .NET 9 MAUI Blazor Hybrid Android app for managing and tracking books. It uses Entity Framework Core with SQLite for local data storage and follows a layered architecture with Repository and Unit of Work patterns.
+BookLoggerApp is a .NET 10 MAUI Blazor Hybrid Android app for managing and tracking books. It uses Entity Framework Core with SQLite for local data storage and follows a layered architecture with Repository and Unit of Work patterns.
 
 ## Build and Test Commands
 
-### Building the solution
 ```bash
-# Build the entire solution
+# Build entire solution
 dotnet build BookLoggerApp.sln
 
-# Build individual projects (in dependency order)
-dotnet build BookLoggerApp.Core/BookLoggerApp.Core.csproj -c Release
-dotnet build BookLoggerApp.Infrastructure/BookLoggerApp.Infrastructure.csproj -c Release
-dotnet build BookLoggerApp.Tests/BookLoggerApp.Tests.csproj -c Release
-dotnet build BookLoggerApp/BookLoggerApp.csproj -c Release
-```
-
-### Running tests
-```bash
 # Run all tests
 dotnet test BookLoggerApp.Tests/BookLoggerApp.Tests.csproj
 
-# Run tests with detailed output
-dotnet test BookLoggerApp.Tests/BookLoggerApp.Tests.csproj -c Release --logger "trx;LogFileName=test_results.trx"
-
-# Run specific test
+# Run specific test by name
 dotnet test BookLoggerApp.Tests/BookLoggerApp.Tests.csproj --filter "FullyQualifiedName~YourTestName"
+
+# Run tests with trx output (CI-style)
+dotnet test BookLoggerApp.Tests/BookLoggerApp.Tests.csproj -c Release --logger "trx;LogFileName=test_results.trx"
 ```
 
-### Restore packages
+### EF Core Migrations
+
 ```bash
-dotnet restore BookLoggerApp.Core/BookLoggerApp.Core.csproj
-dotnet restore BookLoggerApp.Infrastructure/BookLoggerApp.Infrastructure.csproj
-dotnet restore BookLoggerApp.Tests/BookLoggerApp.Tests.csproj
-dotnet restore BookLoggerApp/BookLoggerApp.csproj
+# Add a new migration (run from solution root)
+dotnet ef migrations add MigrationName --project BookLoggerApp.Infrastructure --startup-project BookLoggerApp
+
+# Update database
+dotnet ef database update --project BookLoggerApp.Infrastructure --startup-project BookLoggerApp
+
+# List migrations
+dotnet ef migrations list --project BookLoggerApp.Infrastructure --startup-project BookLoggerApp
 ```
 
 ## Architecture
@@ -46,14 +41,14 @@ dotnet restore BookLoggerApp/BookLoggerApp.csproj
 
 The solution follows a layered architecture with four main projects:
 
-1. **BookLoggerApp.Core** - Domain layer (net9.0)
+1. **BookLoggerApp.Core** - Domain layer (net10.0)
    - Domain models and entities
    - Service interfaces in `Services/Abstractions/`
    - ViewModels using CommunityToolkit.Mvvm
    - Custom exceptions in `Exceptions/`
    - FluentValidation validators in `Validators/`
 
-2. **BookLoggerApp.Infrastructure** - Infrastructure layer (net9.0)
+2. **BookLoggerApp.Infrastructure** - Infrastructure layer (net10.0)
    - Entity Framework Core `AppDbContext` and entity configurations
    - Repository implementations (generic and specific)
    - Unit of Work pattern implementation
@@ -61,14 +56,15 @@ The solution follows a layered architecture with four main projects:
    - Database initialization via `DbInitializer`
 
 3. **BookLoggerApp** - Presentation layer (multi-targeted)
-   - Targets: Android, iOS, macOS Catalyst, Windows
+   - Targets: net10.0-android, net10.0-ios, net10.0-maccatalyst, net10.0-windows
    - Blazor components and pages in `Components/`
    - Entry point: `MauiProgram.cs` for DI configuration
    - Platform-specific implementations in `Platforms/`
 
-4. **BookLoggerApp.Tests** - Test project (net9.0)
+4. **BookLoggerApp.Tests** - Test project (net10.0)
    - Uses xUnit as test framework
    - Uses FluentAssertions for assertions
+   - Uses EF Core InMemory provider for database tests
 
 ### Core Architecture Patterns
 
@@ -158,17 +154,17 @@ The solution follows a layered architecture with four main projects:
 
 ## CI/CD
 
-GitHub Actions workflow (`.github/workflows/ci.yml`) runs on pushes to `main`:
+GitHub Actions workflow (`.github/workflows/ci.yml`) runs on pushes to `main` and PRs:
 - Builds Core and Tests projects only (not Infrastructure or MAUI app)
 - Runs xUnit tests with trx output
 - Publishes test results using dorny/test-reporter
-- Only builds/tests Core and Tests projects to avoid MAUI platform-specific build complexity in CI
+- **Note:** CI currently uses .NET 9.0.x SDK - update to .NET 10 when merging migration branch
 
 ## Important Notes
 
-- The MAUI app project and Infrastructure project are NOT built in CI
+- The MAUI app project and Infrastructure project are NOT built in CI (avoids MAUI platform-specific complexity)
 - All services are Singletons sharing the same DbContext for transaction consistency
 - Database initialization is fire-and-forget but provides `DbInitializer.EnsureInitializedAsync()` for ViewModels to await
 - Main branch for PRs: `main`
 - Development branch: `dev`
-- Project uses latest C# language version and .NET 9
+- Project uses latest C# language version (`<LangVersion>latest</LangVersion>`) and .NET 10

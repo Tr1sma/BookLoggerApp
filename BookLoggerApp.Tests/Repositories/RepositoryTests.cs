@@ -91,6 +91,7 @@ public class RepositoryTests
         // Act
         var booksToDelete = await repository.FindAsync(b => b.Author == "Author 1" || b.Author == "Author 2");
         await repository.DeleteRangeAsync(booksToDelete);
+        await context.SaveChangesAsync(); // Must save changes after delete
 
         // Assert
         var remainingBooks = await repository.GetAllAsync();
