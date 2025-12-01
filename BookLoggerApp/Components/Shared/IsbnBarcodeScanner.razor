@@ -1,5 +1,6 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
+@inject BookLoggerApp.Services.IPermissionService PermissionService
 
 @if (IsVisible)
 {
@@ -87,6 +88,16 @@
     {
         try
         {
+            // Request camera permission before initializing scanner
+            var hasPermission = await PermissionService.RequestCameraPermissionAsync();
+            if (!hasPermission)
+            {
+                _statusMessage = "Camera permission denied. Please grant camera access in your device settings.";
+                _isError = true;
+                StateHasChanged();
+                return;
+            }
+
             _objRef = DotNetObjectReference.Create(this);
 
             var result = await JSRuntime.InvokeAsync<ScannerResult>(

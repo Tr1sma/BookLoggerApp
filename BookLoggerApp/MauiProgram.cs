@@ -18,6 +18,9 @@ public static class MauiProgram
         builder.UseMauiApp<App>();
         builder.Services.AddMauiBlazorWebView();
 
+        // Configure platform-specific handlers
+        ConfigurePlatformHandlers(builder);
+
         ConfigureLogging(builder);
         RegisterDatabase(builder);
         RegisterRepositories(builder);
@@ -38,6 +41,23 @@ public static class MauiProgram
         return app;
     }
 
+    private static void ConfigurePlatformHandlers(MauiAppBuilder builder)
+    {
+#if ANDROID
+        // Configure BlazorWebView to use custom WebChromeClient for camera permissions
+        Microsoft.AspNetCore.Components.WebView.Maui.BlazorWebViewHandler.BlazorWebViewMapper.AppendToMapping(
+            "CustomWebChromeClient",
+            (handler, view) =>
+            {
+                if (handler.PlatformView is Android.Webkit.WebView webView)
+                {
+                    webView.SetWebChromeClient(new BookLoggerApp.Platforms.Android.CustomWebChromeClient());
+                    System.Diagnostics.Debug.WriteLine("CustomWebChromeClient attached to BlazorWebView");
+                }
+            });
+#endif
+    }
+
     private static void ConfigureLogging(MauiAppBuilder builder)
     {
 #if DEBUG
@@ -51,30 +71,34 @@ public static class MauiProgram
     {
         var dbPath = PlatformsDbPath.GetDatabasePath();
 
-        // Register EF Core DbContext as Singleton
-        // In MAUI, there are no request scopes like ASP.NET Core. We use Singleton for shared infrastructure.
-        // SQLite + EF Core is safe for concurrent operations through connection pooling and locking.
-        builder.Services.AddSingleton<AppDbContext>(sp =>
+        // Register DbContextFactory for creating DbContext instances on demand
+        // This is the recommended approach for Blazor to avoid concurrency issues
+        builder.Services.AddDbContextFactory<AppDbContext>(options =>
         {
-            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseSqlite($"Data Source={dbPath}");
-            return new AppDbContext(optionsBuilder.Options);
+            options.UseSqlite($"Data Source={dbPath}");
         });
+
+        // Also register DbContext as Transient for compatibility with existing code
+        // Each injection gets a fresh instance from the factory
+        builder.Services.AddDbContext<AppDbContext>(options =>
+        {
+            options.UseSqlite($"Data Source={dbPath}");
+        }, ServiceLifetime.Transient);
     }
 
     private static void RegisterRepositories(MauiAppBuilder builder)
     {
-        // Register Generic Repository as Singleton (shares DbContext)
-        builder.Services.AddSingleton(typeof(IRepository<>), typeof(Repository<>));
+        // Register Generic Repository as Transient (gets fresh DbContext each time)
+        builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
-        // Register Specific Repositories as Singleton (shares DbContext)
-        builder.Services.AddSingleton<IBookRepository, BookRepository>();
-        builder.Services.AddSingleton<IReadingSessionRepository, ReadingSessionRepository>();
-        builder.Services.AddSingleton<IReadingGoalRepository, ReadingGoalRepository>();
-        builder.Services.AddSingleton<IUserPlantRepository, UserPlantRepository>();
+        // Register Specific Repositories as Transient (gets fresh DbContext each time)
+        builder.Services.AddTransient<IBookRepository, BookRepository>();
+        builder.Services.AddTransient<IReadingSessionRepository, ReadingSessionRepository>();
+        builder.Services.AddTransient<IReadingGoalRepository, ReadingGoalRepository>();
+        builder.Services.AddTransient<IUserPlantRepository, UserPlantRepository>();
 
-        // Register Unit of Work as Singleton (coordinates repositories and transactions)
-        builder.Services.AddSingleton<IUnitOfWork, UnitOfWork>();
+        // Register Unit of Work as Transient (coordinates repositories with fresh DbContext)
+        builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
     }
 
     private static void RegisterBusinessServices(MauiAppBuilder builder)
@@ -97,6 +121,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Infrastructure.Services.NotificationService>();
+
+        // Register MAUI-specific services
+        builder.Services.AddSingleton<BookLoggerApp.Services.IPermissionService, BookLoggerApp.Services.PermissionService>();
     }
 
     private static void RegisterViewModels(MauiAppBuilder builder)

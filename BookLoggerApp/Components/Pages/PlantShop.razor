@@ -101,10 +101,10 @@
                         </div>
 
                         <div class="name-input-group">
-                            <label>Name your plant:</label>
+                            <label>Name your plant (optional):</label>
                             <input type="text"
                                    class="plant-name-input"
-                                   placeholder="Enter a name..."
+                                   placeholder="@($"Default: {ViewModel.SelectedSpecies.Name}")"
                                    @bind="ViewModel.NewPlantName"
                                    @bind:event="oninput"
                                    maxlength="100" />
@@ -118,7 +118,7 @@
                     </button>
                     <button class="btn btn-primary"
                             @onclick="HandlePurchaseAsync"
-                            disabled="@(string.IsNullOrWhiteSpace(ViewModel.NewPlantName) || ViewModel.UserCoins < ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))">
+                            disabled="@(ViewModel.UserCoins < ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))">
                         @if (ViewModel.UserCoins >= ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))
                         {
                             <span>Purchase for 🪙 @ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id)</span>
