@@ -41,7 +41,7 @@ public partial class GoalsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void ShowCreateFormCommand()
+    public void OpenCreateForm()
     {
         ShowCreateForm = true;
         NewGoal = new ReadingGoal

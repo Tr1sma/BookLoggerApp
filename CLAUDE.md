@@ -92,7 +92,10 @@ The solution follows a layered architecture with four main projects:
 
 **Dependency Injection:**
 - All services registered in `MauiProgram.cs:CreateMauiApp()`
-- Services are registered as **singletons** (shares DbContext and UnitOfWork for transaction consistency)
+- `DbContextFactory<AppDbContext>` registered for on-demand context creation (recommended for Blazor)
+- `AppDbContext` also registered as **transient** for compatibility
+- Repositories registered as **transient** (gets fresh DbContext each time)
+- Services registered as **singletons** (shares UnitOfWork for transaction consistency)
 - ViewModels are registered as **transient**
 - Validators are registered as **transient**
 - Registration methods: `RegisterDatabase()`, `RegisterRepositories()`, `RegisterBusinessServices()`, `RegisterViewModels()`, `RegisterValidators()`
@@ -152,6 +155,23 @@ The solution follows a layered architecture with four main projects:
 - Layout: `MainLayout.razor`, `NavMenu.razor`
 - Routing defined in `Routes.razor`
 
+### CSS Structure
+
+CSS files are in `BookLoggerApp/wwwroot/css/`:
+- `app.css` - Global styles, CSS variables, loading spinner, status bar safe area
+- `components.css` - Book cards (spine view), stat cards, goal cards, plant widgets, buttons, forms
+- `dashboard.css` - Dashboard page layout and sections
+- `stats.css` - Stats/Level overview page with progression system
+- `ratings.css` - Multi-category rating system components
+- `bookdetail.css` - Book detail page layout
+- `reading.css` - Reading session page
+- `reading-timer-inline.css` - Inline timer component
+
+**Mobile-First Design:**
+- Breakpoints: 768px (tablet), 640px (mobile), 480px (small mobile), 400px (very small)
+- All pages should have responsive breakpoints for these screen sizes
+- Use CSS variables from `app.css` for consistent theming (cozy dark brown theme)
+
 ## CI/CD
 
 GitHub Actions workflow (`.github/workflows/ci.yml`) runs on pushes to `main` and PRs:
@@ -163,8 +183,9 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) runs on pushes to `main` an
 ## Important Notes
 
 - The MAUI app project and Infrastructure project are NOT built in CI (avoids MAUI platform-specific complexity)
-- All services are Singletons sharing the same DbContext for transaction consistency
+- Services are Singletons, but DbContext is transient via DbContextFactory to avoid concurrency issues in Blazor
 - Database initialization is fire-and-forget but provides `DbInitializer.EnsureInitializedAsync()` for ViewModels to await
 - Main branch for PRs: `main`
 - Development branch: `dev`
 - Project uses latest C# language version (`<LangVersion>latest</LangVersion>`) and .NET 10
+- App name displayed on device: "Book Logger" (configured in `BookLoggerApp.csproj` as `ApplicationTitle`)

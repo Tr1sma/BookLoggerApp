@@ -1,19 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet --list-sdks:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git tag:*)",
-      "Bash(git checkout:*)",
-      "Bash(dotnet restore:*)",
       "Bash(dotnet build:*)",
-      "Bash(dotnet test:*)",
-      "Bash(Select-Object -Last 300)",
-      "Bash(Select-Object -Last 30)",
-      "Bash(dotnet clean:*)",
-      "Bash(powershell -Command:*)",
-      "Bash(ls -la \"C:\\Users\\AriKn\\source\\repos\\Tr1sma\\BookLoggerApp\\BookLoggerApp\\wwwroot\"\" 2>/dev/null || echo \"wwwroot not found, checking structure \")"
+      "Bash(dotnet test:*)"
     ],
     "deny": [],
     "ask": []
