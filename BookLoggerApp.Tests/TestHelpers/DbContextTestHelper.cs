@@ -9,16 +9,19 @@ namespace BookLoggerApp.Tests.TestHelpers;
 public class DbContextTestHelper : IDisposable
 {
     public AppDbContext Context { get; }
+    public string DatabaseName { get; }
 
-    private DbContextTestHelper(AppDbContext context)
+    private DbContextTestHelper(AppDbContext context, string databaseName)
     {
         Context = context;
+        DatabaseName = databaseName;
     }
 
     public static DbContextTestHelper CreateTestContext()
     {
-        var context = TestDbContext.Create();
-        return new DbContextTestHelper(context);
+        var databaseName = Guid.NewGuid().ToString();
+        var context = TestDbContext.Create(databaseName);
+        return new DbContextTestHelper(context, databaseName);
     }
 
     public void Dispose()

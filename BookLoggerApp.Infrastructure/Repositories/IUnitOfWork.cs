@@ -1,3 +1,5 @@
+using BookLoggerApp.Core.Models;
+using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 
 namespace BookLoggerApp.Infrastructure.Repositories;
@@ -8,6 +10,8 @@ namespace BookLoggerApp.Infrastructure.Repositories;
 /// </summary>
 public interface IUnitOfWork : IDisposable
 {
+    // ===== Specific Repositories =====
+
     /// <summary>
     /// Repository for Book entities.
     /// </summary>
@@ -27,6 +31,46 @@ public interface IUnitOfWork : IDisposable
     /// Repository for UserPlant entities.
     /// </summary>
     IUserPlantRepository UserPlants { get; }
+
+    // ===== Generic Repositories =====
+
+    /// <summary>
+    /// Repository for Genre entities.
+    /// </summary>
+    IRepository<Genre> Genres { get; }
+
+    /// <summary>
+    /// Repository for BookGenre junction entities.
+    /// </summary>
+    IRepository<BookGenre> BookGenres { get; }
+
+    /// <summary>
+    /// Repository for Quote entities.
+    /// </summary>
+    IRepository<Quote> Quotes { get; }
+
+    /// <summary>
+    /// Repository for Annotation entities.
+    /// </summary>
+    IRepository<Annotation> Annotations { get; }
+
+    /// <summary>
+    /// Repository for PlantSpecies entities.
+    /// </summary>
+    IRepository<PlantSpecies> PlantSpecies { get; }
+
+    /// <summary>
+    /// Repository for AppSettings entities.
+    /// </summary>
+    IRepository<AppSettings> AppSettingsRepo { get; }
+
+    // ===== Direct Context Access =====
+
+    /// <summary>
+    /// Direct access to DbContext for complex queries (e.g., Include, Raw SQL).
+    /// Use sparingly - prefer repository methods when possible.
+    /// </summary>
+    AppDbContext Context { get; }
 
     /// <summary>
     /// Saves all changes made in this unit of work to the database.

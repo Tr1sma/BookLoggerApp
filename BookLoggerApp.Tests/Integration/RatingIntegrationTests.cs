@@ -3,7 +3,6 @@ using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Infrastructure.Repositories;
-using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
 using Xunit;
 
@@ -30,7 +29,7 @@ public class RatingIntegrationTests : IDisposable
         _progressionService = new MockProgressionService();
         _plantService = new MockPlantService();
         _bookService = new BookService(_unitOfWork, _progressionService, _plantService, null!);
-        _statsService = new StatsService(_unitOfWork.Books, _unitOfWork.ReadingSessions, _context);
+        _statsService = new StatsService(_unitOfWork);
     }
 
     public void Dispose()

@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
-using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Repositories;
 
 namespace BookLoggerApp.Infrastructure.Services;
@@ -12,21 +11,13 @@ namespace BookLoggerApp.Infrastructure.Services;
 /// </summary>
 public class GenreService : IGenreService
 {
-    private readonly IRepository<Genre> _genreRepository;
-    private readonly IRepository<BookGenre> _bookGenreRepository;
-    private readonly AppDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMemoryCache _cache;
     private const string CacheKey = "AllGenres";
 
-    public GenreService(
-        IRepository<Genre> genreRepository,
-        IRepository<BookGenre> bookGenreRepository,
-        AppDbContext context,
-        IMemoryCache cache)
+    public GenreService(IUnitOfWork unitOfWork, IMemoryCache cache)
     {
-        _genreRepository = genreRepository;
-        _bookGenreRepository = bookGenreRepository;
-        _context = context;
+        _unitOfWork = unitOfWork;
         _cache = cache;
     }
 
@@ -37,7 +28,7 @@ public class GenreService : IGenreService
             return cached!;
 
         // Load from database if not cached
-        var genres = await _genreRepository.GetAllAsync(ct);
+        var genres = await _unitOfWork.Genres.GetAllAsync(ct);
         var list = genres.ToList();
 
         // Cache for 24 hours (genres rarely change)
@@ -47,12 +38,12 @@ public class GenreService : IGenreService
 
     public async Task<Genre?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _genreRepository.GetByIdAsync(id);
+        return await _unitOfWork.Genres.GetByIdAsync(id);
     }
 
     public async Task<Genre> AddAsync(Genre genre, CancellationToken ct = default)
     {
-        var result = await _genreRepository.AddAsync(genre, ct);
+        var result = await _unitOfWork.Genres.AddAsync(genre, ct);
         // Invalidate cache when genres are modified
         _cache.Remove(CacheKey);
         return result;
@@ -60,17 +51,17 @@ public class GenreService : IGenreService
 
     public async Task UpdateAsync(Genre genre, CancellationToken ct = default)
     {
-        await _genreRepository.UpdateAsync(genre, ct);
+        await _unitOfWork.Genres.UpdateAsync(genre, ct);
         // Invalidate cache when genres are modified
         _cache.Remove(CacheKey);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var genre = await _genreRepository.GetByIdAsync(id, ct);
+        var genre = await _unitOfWork.Genres.GetByIdAsync(id, ct);
         if (genre != null)
         {
-            await _genreRepository.DeleteAsync(genre, ct);
+            await _unitOfWork.Genres.DeleteAsync(genre, ct);
             // Invalidate cache when genres are modified
             _cache.Remove(CacheKey);
         }
@@ -78,7 +69,7 @@ public class GenreService : IGenreService
 
     public async Task AddGenreToBookAsync(Guid bookId, Guid genreId, CancellationToken ct = default)
     {
-        var existing = await _bookGenreRepository.FindAsync(bg => bg.BookId == bookId && bg.GenreId == genreId);
+        var existing = await _unitOfWork.BookGenres.FindAsync(bg => bg.BookId == bookId && bg.GenreId == genreId);
         if (existing.Any())
             return; // Already exists
 
@@ -89,21 +80,21 @@ public class GenreService : IGenreService
             AddedAt = DateTime.UtcNow
         };
 
-        await _bookGenreRepository.AddAsync(bookGenre);
+        await _unitOfWork.BookGenres.AddAsync(bookGenre);
     }
 
     public async Task RemoveGenreFromBookAsync(Guid bookId, Guid genreId, CancellationToken ct = default)
     {
-        var bookGenre = (await _bookGenreRepository.FindAsync(bg => bg.BookId == bookId && bg.GenreId == genreId)).FirstOrDefault();
+        var bookGenre = (await _unitOfWork.BookGenres.FindAsync(bg => bg.BookId == bookId && bg.GenreId == genreId)).FirstOrDefault();
         if (bookGenre != null)
         {
-            await _bookGenreRepository.DeleteAsync(bookGenre);
+            await _unitOfWork.BookGenres.DeleteAsync(bookGenre);
         }
     }
 
     public async Task<IReadOnlyList<Genre>> GetGenresForBookAsync(Guid bookId, CancellationToken ct = default)
     {
-        return await _context.BookGenres
+        return await _unitOfWork.Context.BookGenres
             .Where(bg => bg.BookId == bookId)
             .Include(bg => bg.Genre)
             .Select(bg => bg.Genre)

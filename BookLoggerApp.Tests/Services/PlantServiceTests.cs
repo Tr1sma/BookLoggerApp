@@ -3,9 +3,7 @@ using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Infrastructure.Repositories;
-using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -16,14 +14,12 @@ public class PlantServiceTests : IDisposable
 {
     private readonly PlantService _plantService;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly Repository<PlantSpecies> _speciesRepository;
     private readonly DbContextTestHelper _dbHelper;
     private readonly IMemoryCache _cache;
 
     public PlantServiceTests()
     {
         _dbHelper = DbContextTestHelper.CreateTestContext();
-        _speciesRepository = new Repository<PlantSpecies>(_dbHelper.Context);
 
         // Create memory cache for testing
         var services = new ServiceCollection();
@@ -32,8 +28,9 @@ public class PlantServiceTests : IDisposable
         _cache = serviceProvider.GetRequiredService<IMemoryCache>();
 
         _unitOfWork = new UnitOfWork(_dbHelper.Context);
-        var settingsProvider = new AppSettingsProvider(_dbHelper.Context);
-        _plantService = new PlantService(_unitOfWork, _speciesRepository, settingsProvider, _dbHelper.Context, _cache, null!);
+        var contextFactory = new TestDbContextFactory(_dbHelper.DatabaseName);
+        var settingsProvider = new AppSettingsProvider(contextFactory);
+        _plantService = new PlantService(_unitOfWork, settingsProvider, _cache, null!);
     }
 
     public void Dispose()
@@ -387,7 +384,7 @@ public class PlantServiceTests : IDisposable
             IsAvailable = isAvailable
         };
 
-        var result = await _speciesRepository.AddAsync(species);
+        var result = await _unitOfWork.PlantSpecies.AddAsync(species);
         await _dbHelper.Context.SaveChangesAsync();
         return result;
     }

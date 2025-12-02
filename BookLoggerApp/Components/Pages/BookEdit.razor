@@ -177,6 +177,12 @@
 
             <!-- Form Actions -->
             <div class="form-actions">
+                @if (ViewModel.Book.Id != Guid.Empty)
+                {
+                    <button type="button" class="btn btn-danger" @onclick="ShowDeleteModal">
+                        Löschen
+                    </button>
+                }
                 <button type="submit" class="btn btn-primary" disabled="@ViewModel.IsBusy">
                     @(ViewModel.Book.Id == Guid.Empty ? "Add Book" : "Save Changes")
                 </button>
@@ -191,6 +197,20 @@
     IsVisible="@_showScanner"
     OnBarcodeScanned="HandleBarcodeScanned"
     OnClose="CloseBarcodeScanner" />
+
+<!-- Book Completion Celebration -->
+<BookCompletionCelebration
+    IsVisible="@ViewModel.ShowBookCompletionCelebration"
+    Book="@ViewModel.Book"
+    OnClose="HandleCelebrationClose" />
+
+<!-- Delete Confirmation Modal -->
+<DeleteConfirmationModal
+    IsVisible="@ViewModel.ShowDeleteConfirmation"
+    BookTitle="@ViewModel.Book?.Title"
+    IsDeleting="@ViewModel.IsDeleting"
+    OnConfirm="HandleDeleteConfirm"
+    OnCancel="HideDeleteModal" />
 
 @code {
     [Parameter] public Guid Id { get; set; }
@@ -208,7 +228,46 @@
         await ViewModel.SaveCommand.ExecuteAsync(null);
         if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
         {
+            // If book was completed, show celebration first before navigating
+            if (ViewModel.ShowBookCompletionCelebration)
+            {
+                // Celebration will be shown, navigation happens in HandleCelebrationClose
+                StateHasChanged();
+            }
+            else
+            {
+                Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+            }
+        }
+    }
+
+    private void HandleCelebrationClose()
+    {
+        ViewModel.ShowBookCompletionCelebration = false;
+        if (ViewModel.Book != null)
+        {
             Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+        }
+    }
+
+    private void ShowDeleteModal()
+    {
+        ViewModel.ShowDeleteConfirmation = true;
+    }
+
+    private void HideDeleteModal()
+    {
+        ViewModel.ShowDeleteConfirmation = false;
+    }
+
+    private async Task HandleDeleteConfirm()
+    {
+        await ViewModel.DeleteBookCommand.ExecuteAsync(null);
+
+        // If deletion was successful, navigate to bookshelf
+        if (ViewModel.BookDeleted)
+        {
+            Navigation.NavigateTo("/bookshelf");
         }
     }
 

@@ -1,8 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
-using BookLoggerApp.Infrastructure.Data;
-using BookLoggerApp.Infrastructure.Repositories.Specific;
+using BookLoggerApp.Infrastructure.Repositories;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
@@ -11,41 +10,34 @@ namespace BookLoggerApp.Infrastructure.Services;
 /// </summary>
 public class StatsService : IStatsService
 {
-    private readonly IBookRepository _bookRepository;
-    private readonly IReadingSessionRepository _sessionRepository;
-    private readonly AppDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public StatsService(
-        IBookRepository bookRepository,
-        IReadingSessionRepository sessionRepository,
-        AppDbContext context)
+    public StatsService(IUnitOfWork unitOfWork)
     {
-        _bookRepository = bookRepository;
-        _sessionRepository = sessionRepository;
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<int> GetTotalBooksReadAsync(CancellationToken ct = default)
     {
-        return await _bookRepository.CountAsync(b => b.Status == ReadingStatus.Completed);
+        return await _unitOfWork.Books.CountAsync(b => b.Status == ReadingStatus.Completed);
     }
 
     public async Task<int> GetTotalPagesReadAsync(CancellationToken ct = default)
     {
-        var completedBooks = await _bookRepository.GetBooksByStatusAsync(ReadingStatus.Completed);
+        var completedBooks = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
         return completedBooks.Where(b => b.PageCount.HasValue).Sum(b => b.PageCount!.Value);
     }
 
     public async Task<int> GetTotalMinutesReadAsync(CancellationToken ct = default)
     {
-        var allSessions = await _sessionRepository.GetAllAsync();
+        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
         return allSessions.Sum(s => s.Minutes);
     }
 
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
     {
         var today = DateTime.UtcNow.Date;
-        var allSessions = await _sessionRepository.GetAllAsync();
+        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
 
         var sessionsByDate = allSessions
             .GroupBy(s => s.StartedAt.Date)
@@ -80,7 +72,7 @@ public class StatsService : IStatsService
 
     public async Task<int> GetLongestStreakAsync(CancellationToken ct = default)
     {
-        var allSessions = await _sessionRepository.GetAllAsync();
+        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
         var sessionDates = allSessions
             .Select(s => s.StartedAt.Date)
             .Distinct()
@@ -111,7 +103,7 @@ public class StatsService : IStatsService
 
     public async Task<Dictionary<DateTime, int>> GetReadingTrendAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _sessionRepository.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
 
         return sessions
             .GroupBy(s => s.StartedAt.Date)
@@ -123,19 +115,19 @@ public class StatsService : IStatsService
 
     public async Task<int> GetPagesReadInRangeAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _sessionRepository.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
         return sessions.Where(s => s.PagesRead.HasValue).Sum(s => s.PagesRead!.Value);
     }
 
     public async Task<int> GetBooksCompletedInYearAsync(int year, CancellationToken ct = default)
     {
-        var books = await _bookRepository.GetBooksByStatusAsync(ReadingStatus.Completed);
+        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
         return books.Count(b => b.DateCompleted.HasValue && b.DateCompleted.Value.Year == year);
     }
 
     public async Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default)
     {
-        var books = await _context.Books
+        var books = await _unitOfWork.Context.Books
             .Include(b => b.BookGenres)
             .ThenInclude(bg => bg.Genre)
             .ToListAsync();
@@ -158,7 +150,7 @@ public class StatsService : IStatsService
 
     public async Task<double> GetAverageRatingAsync(CancellationToken ct = default)
     {
-        var books = await _bookRepository.GetAllAsync();
+        var books = await _unitOfWork.Books.GetAllAsync();
         var ratedBooks = books.Where(b => b.OverallRating.HasValue).ToList();
 
         if (!ratedBooks.Any())
@@ -181,7 +173,7 @@ public class StatsService : IStatsService
         var start = DateTime.UtcNow.AddDays(-days);
         var end = DateTime.UtcNow;
 
-        var sessions = await _sessionRepository.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
         var totalMinutes = sessions.Sum(s => s.Minutes);
 
         return (double)totalMinutes / days;
@@ -222,7 +214,7 @@ public class StatsService : IStatsService
 
     public async Task<List<BookRatingSummary>> GetTopRatedBooksAsync(int count = 10, RatingCategory? category = null, CancellationToken ct = default)
     {
-        var books = await _bookRepository.GetBooksByStatusAsync(ReadingStatus.Completed);
+        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
 
         IEnumerable<Book> sortedBooks;
 
@@ -257,7 +249,7 @@ public class StatsService : IStatsService
 
     public async Task<List<BookRatingSummary>> GetBooksWithRatingsAsync(CancellationToken ct = default)
     {
-        var books = await _bookRepository.GetAllAsync();
+        var books = await _unitOfWork.Books.GetAllAsync();
 
         return books
             .Where(b => b.Status == ReadingStatus.Completed)
@@ -271,7 +263,7 @@ public class StatsService : IStatsService
     /// </summary>
     private async Task<List<Book>> GetFilteredBooksAsync(DateTime? startDate, DateTime? endDate, CancellationToken ct = default)
     {
-        var books = (await _bookRepository.GetBooksByStatusAsync(ReadingStatus.Completed)).ToList();
+        var books = (await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed)).ToList();
 
         if (startDate.HasValue)
         {

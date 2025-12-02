@@ -88,17 +88,13 @@ public static class MauiProgram
 
     private static void RegisterRepositories(MauiAppBuilder builder)
     {
-        // Register Generic Repository as Transient (gets fresh DbContext each time)
-        builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
-
-        // Register Specific Repositories as Transient (gets fresh DbContext each time)
-        builder.Services.AddTransient<IBookRepository, BookRepository>();
-        builder.Services.AddTransient<IReadingSessionRepository, ReadingSessionRepository>();
-        builder.Services.AddTransient<IReadingGoalRepository, ReadingGoalRepository>();
-        builder.Services.AddTransient<IUserPlantRepository, UserPlantRepository>();
-
-        // Register Unit of Work as Transient (coordinates repositories with fresh DbContext)
+        // Register Unit of Work as Transient
+        // UnitOfWork creates all repositories internally with the same DbContext instance
+        // This ensures all repositories in a single operation share the same context
         builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
+
+        // NOTE: Individual repositories are no longer registered here
+        // All services should use IUnitOfWork instead of direct repository injection
     }
 
     private static void RegisterBusinessServices(MauiAppBuilder builder)
