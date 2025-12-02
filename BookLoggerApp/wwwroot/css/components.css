@@ -127,42 +127,70 @@
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 0.75rem 0.25rem 0.5rem 0.25rem;
+    padding: 0.5rem 0.15rem;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
-    text-align: center;
+    gap: 0.1rem;
     pointer-events: none;
 }
 
+/* Book Spine Text - Default (horizontal, for non-bookshelf contexts) */
 .book-title {
-    font-size: clamp(0.35rem, 1vw, 0.7rem);
+    font-size: 0.9rem;
     font-weight: 700;
-    margin: 0 0 0.15rem 0;
+    margin: 0;
     color: var(--text-primary);
-    letter-spacing: -0.01em;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-    line-height: 1.15;
-    max-height: 4.5em;
+    line-height: 1.2;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    word-break: break-word;
+    text-overflow: ellipsis;
 }
 
 .book-author {
-    font-size: clamp(0.3rem, 0.9vw, 0.6rem);
+    font-size: 0.8rem;
     color: var(--text-secondary);
     margin: 0;
     font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    max-height: 2.5em;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+}
+
+/* Book Spine Text - Vertical ONLY for Bookshelf (.book-card) */
+/* Rotated so bottom of letters faces RIGHT (like real Western book spines) */
+.book-card .book-title {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: clamp(0.22rem, 0.55vw, 0.35rem);
+    font-weight: 700;
+    margin: 0;
+    padding: 0.15rem 0;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    line-height: 1.05;
+    max-width: 100%;
+    max-height: 90%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.book-card .book-author {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: clamp(0.18rem, 0.45vw, 0.28rem);
+    color: var(--text-secondary);
+    margin: 0;
+    padding: 0.1rem 0;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    max-height: 10%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .book-rating {
@@ -574,6 +602,9 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .stat-title {
@@ -581,6 +612,9 @@
     color: var(--text-secondary);
     margin: 0.25rem 0 0 0;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .stat-subtitle {
@@ -1751,5 +1785,87 @@ section h2 {
     color: var(--text-muted);
     text-align: center;
     padding: 0 0.5rem;
+}
+
+/* ===== STATS CHIPS ===== */
+/* Kompakte Pill-Badges für Stats-Anzeige */
+
+.stats-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 20px;
+    border: 1px solid var(--border-light);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.stat-chip:hover {
+    border-color: var(--primary-color);
+    background: var(--card-hover);
+}
+
+.stat-chip-icon {
+    font-size: 0.9rem;
+}
+
+.stat-chip-value {
+    font-weight: 700;
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-chip-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Stats Chips - Mobile Responsive */
+@media (max-width: 640px) {
+    .stats-chips {
+        gap: 0.4rem;
+        padding: 0.5rem;
+    }
+
+    .stat-chip {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        gap: 0.25rem;
+    }
+
+    .stat-chip-icon {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .stats-chips {
+        gap: 0.35rem;
+        padding: 0.4rem;
+    }
+
+    .stat-chip {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+    }
 }
 

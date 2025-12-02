@@ -13,7 +13,6 @@ public class ProgressServiceTests : IDisposable
 {
     private readonly AppDbContext _context;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly BookRepository _bookRepository;
     private readonly MockProgressionService _progressionService;
     private readonly MockPlantService _plantService;
     private readonly MockBookService _bookService;
@@ -22,12 +21,7 @@ public class ProgressServiceTests : IDisposable
     public ProgressServiceTests()
     {
         _context = TestDbContext.Create();
-        _bookRepository = new BookRepository(_context);
-        var sessionRepository = new ReadingSessionRepository(_context);
-        var goalRepository = new ReadingGoalRepository(_context);
-        var plantRepository = new UserPlantRepository(_context);
-
-        _unitOfWork = new UnitOfWork(_context, _bookRepository, sessionRepository, goalRepository, plantRepository);
+        _unitOfWork = new UnitOfWork(_context);
         _progressionService = new MockProgressionService();
         _plantService = new MockPlantService();
         _bookService = new MockBookService();
@@ -43,7 +37,7 @@ public class ProgressServiceTests : IDisposable
     public async Task AddSessionAsync_ShouldCalculateXp()
     {
         // Arrange
-        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
         await _context.SaveChangesAsync();
         var session = new ReadingSession
         {
@@ -65,7 +59,7 @@ public class ProgressServiceTests : IDisposable
     public async Task AddSessionAsync_ShouldGiveBonusForLongSession()
     {
         // Arrange
-        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
         await _context.SaveChangesAsync();
         var session = new ReadingSession
         {
@@ -86,7 +80,7 @@ public class ProgressServiceTests : IDisposable
     public async Task GetTotalMinutesAsync_ShouldSumMinutesForBook()
     {
         // Arrange
-        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
         await _context.SaveChangesAsync();
         await _service.AddSessionAsync(new ReadingSession { BookId = book.Id, Minutes = 30 });
         await _service.AddSessionAsync(new ReadingSession { BookId = book.Id, Minutes = 45 });
@@ -103,7 +97,7 @@ public class ProgressServiceTests : IDisposable
     public async Task GetCurrentStreakAsync_ShouldCalculateStreak()
     {
         // Arrange
-        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
         await _context.SaveChangesAsync();
         var today = DateTime.UtcNow.Date;
 
@@ -139,7 +133,7 @@ public class ProgressServiceTests : IDisposable
     public async Task GetCurrentStreakAsync_ShouldReturnZeroIfNoRecentSession()
     {
         // Arrange
-        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
         await _context.SaveChangesAsync();
         var threeDaysAgo = DateTime.UtcNow.AddDays(-3);
 
@@ -162,7 +156,7 @@ public class ProgressServiceTests : IDisposable
     public async Task EndSessionAsync_ShouldCalculateDurationAndXp()
     {
         // Arrange
-        var book = await _bookRepository.AddAsync(new Book { Title = "Test", Author = "Author" });
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
         await _context.SaveChangesAsync();
         var session = await _service.StartSessionAsync(book.Id);
 

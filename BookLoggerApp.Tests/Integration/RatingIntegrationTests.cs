@@ -16,8 +16,6 @@ namespace BookLoggerApp.Tests.Integration;
 public class RatingIntegrationTests : IDisposable
 {
     private readonly AppDbContext _context;
-    private readonly BookRepository _bookRepository;
-    private readonly ReadingSessionRepository _sessionRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly MockProgressionService _progressionService;
     private readonly MockPlantService _plantService;
@@ -27,17 +25,12 @@ public class RatingIntegrationTests : IDisposable
     public RatingIntegrationTests()
     {
         _context = TestDbContext.Create();
-        _bookRepository = new BookRepository(_context);
-        _sessionRepository = new ReadingSessionRepository(_context);
-        var goalRepository = new ReadingGoalRepository(_context);
-        var plantRepository = new UserPlantRepository(_context);
-
-        _unitOfWork = new UnitOfWork(_context, _bookRepository, _sessionRepository, goalRepository, plantRepository);
+        _unitOfWork = new UnitOfWork(_context);
 
         _progressionService = new MockProgressionService();
         _plantService = new MockPlantService();
         _bookService = new BookService(_unitOfWork, _progressionService, _plantService, null!);
-        _statsService = new StatsService(_bookRepository, _sessionRepository, _context);
+        _statsService = new StatsService(_unitOfWork.Books, _unitOfWork.ReadingSessions, _context);
     }
 
     public void Dispose()

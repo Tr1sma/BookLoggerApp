@@ -16,7 +16,6 @@ public class PlantServiceTests : IDisposable
 {
     private readonly PlantService _plantService;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly UserPlantRepository _userPlantRepository;
     private readonly Repository<PlantSpecies> _speciesRepository;
     private readonly DbContextTestHelper _dbHelper;
     private readonly IMemoryCache _cache;
@@ -24,10 +23,6 @@ public class PlantServiceTests : IDisposable
     public PlantServiceTests()
     {
         _dbHelper = DbContextTestHelper.CreateTestContext();
-        var bookRepository = new BookRepository(_dbHelper.Context);
-        var sessionRepository = new ReadingSessionRepository(_dbHelper.Context);
-        var goalRepository = new ReadingGoalRepository(_dbHelper.Context);
-        _userPlantRepository = new UserPlantRepository(_dbHelper.Context);
         _speciesRepository = new Repository<PlantSpecies>(_dbHelper.Context);
 
         // Create memory cache for testing
@@ -36,7 +31,7 @@ public class PlantServiceTests : IDisposable
         var serviceProvider = services.BuildServiceProvider();
         _cache = serviceProvider.GetRequiredService<IMemoryCache>();
 
-        _unitOfWork = new UnitOfWork(_dbHelper.Context, bookRepository, sessionRepository, goalRepository, _userPlantRepository);
+        _unitOfWork = new UnitOfWork(_dbHelper.Context);
         var settingsProvider = new AppSettingsProvider(_dbHelper.Context);
         _plantService = new PlantService(_unitOfWork, _speciesRepository, settingsProvider, _dbHelper.Context, _cache, null!);
     }
@@ -153,7 +148,7 @@ public class PlantServiceTests : IDisposable
         // Set plant to thirsty by backdating last watered
         plant.LastWatered = DateTime.UtcNow.AddDays(-4);
         plant.Status = PlantStatus.Thirsty;
-        await _userPlantRepository.UpdateAsync(plant);
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
 
         // Act
         await _plantService.WaterPlantAsync(plant.Id);
@@ -172,7 +167,7 @@ public class PlantServiceTests : IDisposable
         var species = await SeedPlantSpecies();
         var plant = await SeedUserPlant(species.Id, "Dead Plant");
         plant.Status = PlantStatus.Dead;
-        await _userPlantRepository.UpdateAsync(plant);
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
 
         // Act
         Func<Task> act = async () => await _plantService.WaterPlantAsync(plant.Id);
@@ -240,7 +235,7 @@ public class PlantServiceTests : IDisposable
         var species = await SeedPlantSpecies();
         var plant = await SeedUserPlant(species.Id, "Ready Plant");
         plant.Experience = 150; // Enough for level 2 (150 XP needed)
-        await _userPlantRepository.UpdateAsync(plant);
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
 
         // Act
         var canLevel = await _plantService.CanLevelUpAsync(plant.Id);
@@ -256,7 +251,7 @@ public class PlantServiceTests : IDisposable
         var species = await SeedPlantSpecies();
         var plant = await SeedUserPlant(species.Id, "Not Ready Plant");
         plant.Experience = 50; // Not enough for level 2
-        await _userPlantRepository.UpdateAsync(plant);
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
 
         // Act
         var canLevel = await _plantService.CanLevelUpAsync(plant.Id);
@@ -313,7 +308,7 @@ public class PlantServiceTests : IDisposable
         
         var thirstyPlant = await SeedUserPlant(species.Id, "Thirsty Plant");
         thirstyPlant.LastWatered = DateTime.UtcNow.AddDays(-3.5);
-        await _userPlantRepository.UpdateAsync(thirstyPlant);
+        await _unitOfWork.UserPlants.UpdateAsync(thirstyPlant);
 
         // Act
         await _plantService.UpdatePlantStatusesAsync();
@@ -335,7 +330,7 @@ public class PlantServiceTests : IDisposable
         
         var needsWaterPlant = await SeedUserPlant(species.Id, "Needs Water");
         needsWaterPlant.LastWatered = DateTime.UtcNow.AddHours(-67); // Within 6 hours of needing water
-        await _userPlantRepository.UpdateAsync(needsWaterPlant);
+        await _unitOfWork.UserPlants.UpdateAsync(needsWaterPlant);
 
         // Act
         var plantsNeedingWater = await _plantService.GetPlantsNeedingWaterAsync();
@@ -414,7 +409,7 @@ public class PlantServiceTests : IDisposable
             Status = PlantStatus.Healthy
         };
 
-        var result = await _userPlantRepository.AddAsync(plant);
+        var result = await _unitOfWork.UserPlants.AddAsync(plant);
         await _dbHelper.Context.SaveChangesAsync();
         return result;
     }

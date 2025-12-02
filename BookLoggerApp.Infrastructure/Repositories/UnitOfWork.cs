@@ -14,24 +14,22 @@ public class UnitOfWork : IUnitOfWork
     private IDbContextTransaction? _transaction;
     private bool _disposed;
 
-    public UnitOfWork(
-        AppDbContext context,
-        IBookRepository books,
-        IReadingSessionRepository readingSessions,
-        IReadingGoalRepository readingGoals,
-        IUserPlantRepository userPlants)
+    // Lazy-initialized repositories to ensure they all share the SAME DbContext
+    private IBookRepository? _books;
+    private IReadingSessionRepository? _readingSessions;
+    private IReadingGoalRepository? _readingGoals;
+    private IUserPlantRepository? _userPlants;
+
+    public UnitOfWork(AppDbContext context)
     {
         _context = context;
-        Books = books;
-        ReadingSessions = readingSessions;
-        ReadingGoals = readingGoals;
-        UserPlants = userPlants;
     }
 
-    public IBookRepository Books { get; }
-    public IReadingSessionRepository ReadingSessions { get; }
-    public IReadingGoalRepository ReadingGoals { get; }
-    public IUserPlantRepository UserPlants { get; }
+    // Create repositories lazily with the SAME DbContext instance
+    public IBookRepository Books => _books ??= new BookRepository(_context);
+    public IReadingSessionRepository ReadingSessions => _readingSessions ??= new ReadingSessionRepository(_context);
+    public IReadingGoalRepository ReadingGoals => _readingGoals ??= new ReadingGoalRepository(_context);
+    public IUserPlantRepository UserPlants => _userPlants ??= new UserPlantRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {

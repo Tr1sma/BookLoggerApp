@@ -411,13 +411,113 @@
     }
 }
 
-@media (max-width: 480px) {
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+    .ratings-grid,
+    .ratings-grid-edit {
+        gap: 0.5rem;
+    }
+
     .rating-input {
-        padding: 0.75rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .rating-header {
+        width: 100%;
+    }
+
+    .rating-stars {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        min-width: unset;
+    }
+
+    .rating-stars .star {
+        font-size: 1.5rem;
+    }
+
+    .rating-label {
+        font-size: 0.8rem;
     }
 
     .rating-emoji {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
+    }
+
+    .book-ratings-section {
+        padding: 0.75rem;
+        margin: 1rem 0;
+    }
+
+    .book-ratings-section h3 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .average-rating-display {
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .average-rating-display .average-value {
+        font-size: 1.1rem;
+    }
+
+    .rating-averages-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+
+    .rating-average-card {
+        padding: 0.75rem;
+    }
+
+    .rating-value {
+        font-size: 1.75rem;
+    }
+
+    .rating-category-header .rating-emoji {
+        font-size: 1.4rem;
+    }
+
+    .rating-category-header .rating-name {
+        font-size: 0.85rem;
+    }
+
+    .top-book-item {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .book-rank {
+        font-size: 1.75rem;
+        min-width: 50px;
+    }
+
+    .book-info .book-title {
+        font-size: 1rem;
+    }
+
+    .average-rating {
+        font-size: 1.2rem;
+    }
+
+    .category-filter-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .rating-input {
+        padding: 0.4rem;
+    }
+
+    .rating-emoji {
+        font-size: 1rem;
     }
 
     .rating-stars .star {
@@ -425,19 +525,20 @@
     }
 
     .rating-value {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
 
     .book-rank {
-        font-size: 2rem;
+        font-size: 1.5rem;
+        min-width: 40px;
     }
 
-    .book-title {
-        font-size: 1rem;
+    .book-info .book-title {
+        font-size: 0.9rem;
     }
 
     .average-rating {
-        font-size: 1.3rem;
+        font-size: 1.1rem;
     }
 }
 
