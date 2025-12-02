@@ -1,0 +1,59 @@
+@using BookLoggerApp.Core.Models
+
+@if (IsVisible && Book != null)
+{
+    <div class="celebration-overlay" @onclick="HandleClose">
+        <div class="celebration-card" @onclick:stopPropagation="true">
+            <!-- Confetti particles -->
+            @for (int i = 0; i < 12; i++)
+            {
+                <div class="confetti"></div>
+            }
+
+            <!-- Header -->
+            <div class="book-complete-header">
+                <h1>📚 Book Completed!</h1>
+            </div>
+
+            <!-- Book Info -->
+            <div class="completed-book-info">
+                <h2>@Book.Title</h2>
+                <p class="book-author">by @Book.Author</p>
+            </div>
+
+            <!-- XP Reward -->
+            <div class="xp-reward">
+                <p style="color: #e0e0e0; margin-bottom: 0.5rem; font-size: 1.1rem;">
+                    You earned
+                </p>
+                <div class="xp-amount">
+                    <span class="xp-icon">✨</span>
+                    <span>100 XP!</span>
+                </div>
+            </div>
+
+            <!-- Motivational Message -->
+            <div style="text-align: center; margin: 1rem 0;">
+                <p style="color: #999; font-size: 0.9rem;">
+                    Keep reading to level up!
+                </p>
+            </div>
+
+            <!-- Continue Button -->
+            <button class="celebration-button" @onclick="HandleClose">
+                Awesome!
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public Book? Book { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+}
