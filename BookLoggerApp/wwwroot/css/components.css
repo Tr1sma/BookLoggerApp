@@ -1,8 +1,8 @@
 /* Book Card - Realistic Book Spine Design */
 .book-card {
     position: relative;
-    width: clamp(80px, 12vw, 140px);
-    height: clamp(280px, 35vh, 380px);
+    width: clamp(45px, 10vw, 140px);
+    height: clamp(140px, 22vh, 380px);
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
@@ -76,7 +76,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 1.5rem 0.75rem;
+    padding: 0.5rem 0.25rem;
     overflow: hidden;
 
     /* Dynamic book spine colors - will be overridden by inline styles */
@@ -111,8 +111,7 @@
     top: 8px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(26, 20, 16, 0.9);
-    backdrop-filter: blur(8px);
+    background: rgba(26, 20, 16, 0.95);
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 0.9rem;
@@ -127,42 +126,70 @@
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 2rem 0.5rem 1rem 0.5rem;
+    padding: 0.5rem 0.15rem;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
-    text-align: center;
+    gap: 0.1rem;
     pointer-events: none;
 }
 
+/* Book Spine Text - Default (horizontal, for non-bookshelf contexts) */
 .book-title {
-    font-size: clamp(0.75rem, 1.8vw, 0.95rem);
+    font-size: 0.9rem;
     font-weight: 700;
-    margin: 0 0 0.5rem 0;
+    margin: 0;
     color: var(--text-primary);
-    letter-spacing: 0.02em;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-    line-height: 1.3;
-    max-height: 4.5em;
+    line-height: 1.2;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    word-break: break-word;
+    text-overflow: ellipsis;
 }
 
 .book-author {
-    font-size: clamp(0.65rem, 1.4vw, 0.8rem);
+    font-size: 0.8rem;
     color: var(--text-secondary);
     margin: 0;
     font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    max-height: 2.6em;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+}
+
+/* Book Spine Text - Vertical ONLY for Bookshelf (.book-card) */
+/* Rotated so bottom of letters faces RIGHT (like real Western book spines) */
+.book-card .book-title {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: clamp(0.22rem, 0.55vw, 0.35rem);
+    font-weight: 700;
+    margin: 0;
+    padding: 0.15rem 0;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    line-height: 1.05;
+    max-width: 100%;
+    max-height: 90%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.book-card .book-author {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: clamp(0.18rem, 0.45vw, 0.28rem);
+    color: var(--text-secondary);
+    margin: 0;
+    padding: 0.1rem 0;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    max-height: 10%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .book-rating {
@@ -228,14 +255,13 @@
 }
 
 .btn-icon {
-    background: rgba(26, 20, 16, 0.8);
+    background: rgba(26, 20, 16, 0.95);
     border: 1px solid var(--border-light);
     font-size: 0.9rem;
     cursor: pointer;
     padding: 0.3rem;
     transition: var(--transition);
     border-radius: 6px;
-    backdrop-filter: blur(4px);
 }
 
 .btn-icon:hover {
@@ -355,14 +381,13 @@
 
 /* Compact delete button */
 .btn-icon-compact {
-    background: rgba(26, 20, 16, 0.6);
+    background: rgba(26, 20, 16, 0.9);
     border: 1px solid var(--border-light);
     font-size: 0.75rem;
     cursor: pointer;
     padding: 2px 6px;
     transition: var(--transition);
     border-radius: 6px;
-    backdrop-filter: blur(4px);
     opacity: 0;
     flex-shrink: 0;
 }
@@ -574,6 +599,9 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .stat-title {
@@ -581,6 +609,9 @@
     color: var(--text-secondary);
     margin: 0.25rem 0 0 0;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .stat-subtitle {
@@ -1058,133 +1089,422 @@ section h2 {
     transform: translateY(-4px);
 }
 
-/* Reading Page */
+/* Reading Page - Mobile First Design */
 .reading-container {
-    padding: 2rem;
+    padding: 0.5rem;
     max-width: 800px;
     margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .reading-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid var(--border-color);
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.book-info h1 {
-    margin: 0 0 0.25rem 0;
-    font-size: 1.75rem;
+.reading-header .book-info {
+    flex: 1;
 }
 
+.reading-header .book-info h1 {
+    margin: 0 0 0.15rem 0;
+    font-size: 1rem;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.reading-header .book-info .author {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.reading-header .btn-secondary {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    align-self: flex-start;
+}
+
+/* Stats Grid - Compact Mobile Layout */
 .reading-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
-    margin-bottom: 2rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Timer stat spans full width */
+.reading-stats .stat-item.timer {
+    grid-column: 1 / -1;
 }
 
 .stat-item {
     background: var(--card-bg);
     border-radius: var(--border-radius);
-    padding: 1.5rem;
+    padding: 0.5rem;
     box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
 }
 
 .stat-item label {
     display: block;
-    font-size: 0.875rem;
-    color: #666;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
+/* Timer - Prominent but Compact */
 .timer-display {
-    font-size: 2.5rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--primary-color);
-    margin-bottom: 1rem;
+    margin-bottom: 0.35rem;
+    font-variant-numeric: tabular-nums;
 }
 
+.timer-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.timer-controls .btn {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    min-height: 40px;
+}
+
+/* XP Display */
 .xp-display {
-    font-size: 2rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #4CAF50;
 }
 
+.xp-display::after {
+    content: ' XP';
+    font-size: 0.7rem;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+/* Page Input - Touch Friendly */
 .page-input-group {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
 }
 
 .page-input {
-    width: 100px;
-    padding: 0.5rem;
-    font-size: 1.25rem;
+    width: 55px;
+    padding: 0.35rem 0.25rem;
+    font-size: 1rem;
     text-align: center;
     border: 2px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 6px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    min-height: 36px;
+}
+
+.page-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
 }
 
 .page-total {
-    font-size: 1rem;
-    color: #666;
+    font-size: 0.75rem;
+    color: var(--text-muted);
 }
 
+.stat-item.pages .progress-bar {
+    height: 3px;
+    margin-top: 0.25rem;
+}
+
+.stat-item.pages .progress-text {
+    font-size: 0.65rem;
+    margin-top: 0.15rem;
+    color: var(--text-muted);
+}
+
+/* Session Summary - Compact */
 .session-summary {
     background: var(--card-bg);
     border-radius: var(--border-radius);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
     box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+}
+
+.session-summary h2 {
+    font-size: 0.8rem;
+    margin: 0 0 0.4rem 0;
+    color: var(--text-secondary);
+    font-weight: 600;
 }
 
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem;
+}
+
+.summary-item {
+    text-align: center;
+    padding: 0.25rem;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
 }
 
 .summary-item label {
     display: block;
-    font-size: 0.875rem;
-    color: #666;
-    margin-bottom: 0.25rem;
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    margin-bottom: 0.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .summary-item p {
     margin: 0;
-    font-size: 1.125rem;
+    font-size: 0.75rem;
     font-weight: 600;
+    color: var(--text-primary);
 }
 
+/* Action Buttons - Touch Friendly */
 .reading-actions {
     display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-bottom: 2rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
+
+.reading-actions .btn {
+    width: 100%;
+    min-height: 44px;
 }
 
 .btn-large {
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
 }
 
+.reading-actions .btn-secondary {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+/* Fullscreen Hint */
 .fullscreen-hint {
     text-align: center;
-    color: #666;
-    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.fullscreen-hint p {
+    margin: 0;
+}
+
+/* Progress text in stat items */
+.progress-text {
+    font-size: 0.65rem;
+    margin-top: 0.15rem;
+    color: var(--text-muted);
+}
+
+/* Larger screens - expand layout */
+@media (min-width: 480px) {
+    .reading-container {
+        padding: 0.75rem;
+    }
+
+    .reading-header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .reading-header .book-info h1 {
+        font-size: 1.1rem;
+    }
+
+    .reading-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .reading-stats .stat-item.timer {
+        grid-column: auto;
+    }
+
+    .timer-display {
+        font-size: 1.5rem;
+    }
+
+    .reading-actions {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .reading-actions .btn {
+        width: auto;
+        flex: 1;
+        max-width: 200px;
+    }
+}
+
+@media (min-width: 768px) {
+    .reading-container {
+        padding: 1.5rem;
+    }
+
+    .reading-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom-width: 2px;
+    }
+
+    .reading-header .book-info h1 {
+        font-size: 1.5rem;
+        white-space: normal;
+    }
+
+    .reading-header .book-info .author {
+        font-size: 1rem;
+    }
+
+    .reading-header .btn-secondary {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .reading-stats {
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-item {
+        padding: 1rem;
+    }
+
+    .stat-item label {
+        font-size: 0.75rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .timer-display {
+        font-size: 2.25rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .timer-controls .btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.9rem;
+    }
+
+    .xp-display {
+        font-size: 1.5rem;
+    }
+
+    .page-input {
+        width: 80px;
+        padding: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .page-total {
+        font-size: 0.9rem;
+    }
+
+    .session-summary {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .session-summary h2 {
+        font-size: 1rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .summary-grid {
+        gap: 0.75rem;
+    }
+
+    .summary-item {
+        padding: 0.5rem;
+    }
+
+    .summary-item label {
+        font-size: 0.7rem;
+    }
+
+    .summary-item p {
+        font-size: 0.95rem;
+    }
+
+    .btn-large {
+        padding: 0.9rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .fullscreen-hint {
+        font-size: 0.8rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .reading-container {
+        padding: 2rem;
+    }
+
+    .reading-header .book-info h1 {
+        font-size: 1.75rem;
+    }
+
+    .reading-stats {
+        gap: 1.5rem;
+    }
+
+    .stat-item {
+        padding: 1.25rem;
+    }
+
+    .timer-display {
+        font-size: 2.5rem;
+    }
+
+    .xp-display {
+        font-size: 1.75rem;
+    }
+
+    .session-summary {
+        padding: 1.25rem;
+    }
 }
 
 /* Plant Card - Bookshelf Style (like a potted plant on the shelf) */
 .plant-card {
     position: relative;
-    width: clamp(80px, 12vw, 140px);
-    height: clamp(280px, 35vh, 380px);
+    width: clamp(45px, 10vw, 140px);
+    height: clamp(140px, 22vh, 380px);
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -1235,8 +1555,9 @@ section h2 {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    /* Make plants smaller and decorative */
-    transform: scale(0.7);
+    /* Make plants slightly smaller than books (85%) */
+    transform: scale(0.85);
+    transform-origin: bottom center;
     opacity: 0.85;
     transition: all 0.3s ease;
 }
@@ -1252,7 +1573,8 @@ section h2 {
 
 .plant-card.in-bookshelf:hover {
     box-shadow: none !important;
-    transform: scale(0.75) translateY(-4px);
+    transform: scale(0.9) translateY(-4px);
+    transform-origin: bottom center;
     opacity: 1;
 }
 
@@ -1299,8 +1621,7 @@ section h2 {
     top: 8px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(26, 20, 16, 0.9);
-    backdrop-filter: blur(8px);
+    background: rgba(26, 20, 16, 0.95);
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 0.9rem;
@@ -1313,8 +1634,7 @@ section h2 {
     position: absolute;
     bottom: 8px;
     right: 8px;
-    background: rgba(136, 166, 126, 0.9);
-    backdrop-filter: blur(4px);
+    background: rgba(136, 166, 126, 0.95);
     padding: 4px 8px;
     border-radius: 8px;
     font-size: 0.75rem;
@@ -1388,8 +1708,7 @@ section h2 {
     line-height: 1.2;
     text-align: center;
     padding: 2px 6px;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.6);
     border-radius: 4px;
     max-width: 90%;
     white-space: nowrap;
@@ -1430,8 +1749,8 @@ section h2 {
 /* Empty Slot for adding plants */
 .empty-slot {
     position: relative;
-    width: clamp(80px, 12vw, 140px);
-    height: clamp(280px, 35vh, 380px);
+    width: clamp(45px, 10vw, 140px);
+    height: clamp(140px, 22vh, 380px);
     border: 2px dashed var(--border-color);
     border-radius: 4px;
     display: flex;
@@ -1462,3 +1781,268 @@ section h2 {
     padding: 0 0.5rem;
 }
 
+/* ===== STATS CHIPS ===== */
+/* Kompakte Pill-Badges für Stats-Anzeige */
+
+.stats-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 20px;
+    border: 1px solid var(--border-light);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.stat-chip:hover {
+    border-color: var(--primary-color);
+    background: var(--card-hover);
+}
+
+.stat-chip-icon {
+    font-size: 0.9rem;
+}
+
+.stat-chip-value {
+    font-weight: 700;
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-chip-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Stats Chips - Mobile Responsive */
+@media (max-width: 640px) {
+    .stats-chips {
+        gap: 0.4rem;
+        padding: 0.5rem;
+    }
+
+    .stat-chip {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        gap: 0.25rem;
+    }
+
+    .stat-chip-icon {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .stats-chips {
+        gap: 0.35rem;
+        padding: 0.4rem;
+    }
+
+    .stat-chip {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+    }
+}
+
+/* ========================================
+   Delete Confirmation Modal
+   ======================================== */
+
+.delete-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.delete-modal {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: 1.5rem;
+    max-width: 400px;
+    width: 100%;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.delete-modal-header {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.delete-modal-header h2 {
+    color: #dc3545;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.delete-modal-header h2::before {
+    content: '🗑️';
+    font-size: 1.25rem;
+}
+
+.delete-modal-content {
+    margin-bottom: 1.5rem;
+}
+
+.delete-modal-content .book-title {
+    text-align: center;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    padding: 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+}
+
+.warning-box {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+}
+
+.warning-box .warning-title {
+    color: #dc3545;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.warning-box .warning-title::before {
+    content: '⚠️';
+}
+
+.warning-box .warning-text {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.warning-box ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.warning-box li {
+    margin-bottom: 0.25rem;
+}
+
+.warning-box li:last-child {
+    margin-bottom: 0;
+}
+
+.delete-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.delete-modal-actions .btn {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .delete-modal {
+        padding: 1rem;
+        margin: 0.5rem;
+    }
+
+    .delete-modal-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .delete-modal-content .book-title {
+        font-size: 1rem;
+        padding: 0.6rem;
+    }
+
+    .warning-box {
+        padding: 0.75rem;
+    }
+
+    .warning-box .warning-title {
+        font-size: 0.85rem;
+    }
+
+    .warning-box .warning-text {
+        font-size: 0.8rem;
+    }
+
+    .warning-box ul {
+        font-size: 0.8rem;
+    }
+
+    .delete-modal-actions .btn {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+}

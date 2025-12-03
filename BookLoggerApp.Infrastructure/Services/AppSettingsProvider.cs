@@ -8,20 +8,20 @@ using BookLoggerApp.Infrastructure.Services.Helpers;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Provider implementation for app settings with caching support.
+/// Provider implementation for app settings using DbContextFactory for thread-safe operations.
 /// </summary>
 public class AppSettingsProvider : IAppSettingsProvider
 {
-    private readonly AppDbContext _context;
+    private readonly IDbContextFactory<AppDbContext> _contextFactory;
     private AppSettings? _cachedSettings;
     private DateTime _lastLoad = DateTime.MinValue;
     private readonly TimeSpan _cacheLifetime = TimeSpan.FromMinutes(5);
 
     public event EventHandler? ProgressionChanged;
 
-    public AppSettingsProvider(AppDbContext context)
+    public AppSettingsProvider(IDbContextFactory<AppDbContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
     }
 
     /// <summary>
@@ -38,8 +38,11 @@ public class AppSettingsProvider : IAppSettingsProvider
         if (_cachedSettings != null && DateTime.UtcNow - _lastLoad < _cacheLifetime)
             return _cachedSettings;
 
+        // Create a new context for this operation
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
         // Load from database
-        var settings = await _context.AppSettings.FirstOrDefaultAsync(ct);
+        var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
 
         if (settings == null)
         {
@@ -53,8 +56,8 @@ public class AppSettingsProvider : IAppSettingsProvider
                 Coins = 100 // Start with 100 coins
             };
 
-            _context.AppSettings.Add(settings);
-            await _context.SaveChangesAsync(ct);
+            context.AppSettings.Add(settings);
+            await context.SaveChangesAsync(ct);
         }
 
         // Update cache
@@ -66,16 +69,18 @@ public class AppSettingsProvider : IAppSettingsProvider
 
     public async Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
         // Track original values to detect progression changes
-        var originalEntry = await _context.AppSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == settings.Id, ct);
+        var originalEntry = await context.AppSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == settings.Id, ct);
         bool progressionChanged = originalEntry != null &&
                                   (originalEntry.TotalXp != settings.TotalXp ||
                                    originalEntry.UserLevel != settings.UserLevel ||
                                    originalEntry.Coins != settings.Coins);
 
         settings.UpdatedAt = DateTime.UtcNow;
-        _context.AppSettings.Update(settings);
-        await _context.SaveChangesAsync(ct);
+        context.AppSettings.Update(settings);
+        await context.SaveChangesAsync(ct);
 
         // Invalidate cache on update
         _cachedSettings = settings;
@@ -102,27 +107,60 @@ public class AppSettingsProvider : IAppSettingsProvider
 
     public async Task SpendCoinsAsync(int amount, CancellationToken ct = default)
     {
-        var settings = await GetSettingsAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
+        var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+        if (settings == null)
+            throw new InvalidOperationException("AppSettings not found");
 
         if (settings.Coins < amount)
             throw new InsufficientFundsException(amount, settings.Coins);
 
         settings.Coins -= amount;
-        await UpdateSettingsAsync(settings, ct);
+        settings.UpdatedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync(ct);
+
+        // Invalidate cache
+        _cachedSettings = settings;
+        _lastLoad = DateTime.UtcNow;
+
+        OnProgressionChanged();
     }
 
     public async Task AddCoinsAsync(int amount, CancellationToken ct = default)
     {
-        var settings = await GetSettingsAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
+        var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+        if (settings == null)
+            throw new InvalidOperationException("AppSettings not found");
+
         settings.Coins += amount;
-        await UpdateSettingsAsync(settings, ct);
+        settings.UpdatedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync(ct);
+
+        // Invalidate cache
+        _cachedSettings = settings;
+        _lastLoad = DateTime.UtcNow;
+
+        OnProgressionChanged();
     }
 
     public async Task IncrementPlantsPurchasedAsync(CancellationToken ct = default)
     {
-        var settings = await GetSettingsAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
+        var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+        if (settings == null)
+            throw new InvalidOperationException("AppSettings not found");
+
         settings.PlantsPurchased++;
-        await UpdateSettingsAsync(settings, ct);
+        settings.UpdatedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync(ct);
+
+        // Invalidate cache
+        _cachedSettings = settings;
+        _lastLoad = DateTime.UtcNow;
     }
 
     public async Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default)
@@ -137,7 +175,11 @@ public class AppSettingsProvider : IAppSettingsProvider
     /// </summary>
     public async Task RecalculateUserLevelAsync(CancellationToken ct = default)
     {
-        var settings = await GetSettingsAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
+        var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+        if (settings == null)
+            throw new InvalidOperationException("AppSettings not found");
 
         // Calculate correct level from total XP
         int correctLevel = XpCalculator.CalculateLevelFromXp(settings.TotalXp);
@@ -146,7 +188,14 @@ public class AppSettingsProvider : IAppSettingsProvider
         if (settings.UserLevel != correctLevel)
         {
             settings.UserLevel = correctLevel;
-            await UpdateSettingsAsync(settings, ct);
+            settings.UpdatedAt = DateTime.UtcNow;
+            await context.SaveChangesAsync(ct);
+
+            // Invalidate cache
+            _cachedSettings = settings;
+            _lastLoad = DateTime.UtcNow;
+
+            OnProgressionChanged();
         }
     }
 }

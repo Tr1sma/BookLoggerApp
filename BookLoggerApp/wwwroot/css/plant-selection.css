@@ -38,8 +38,7 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    background: rgba(26, 20, 16, 0.9);
-    backdrop-filter: blur(4px);
+    background: rgba(26, 20, 16, 0.95);
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 1rem;

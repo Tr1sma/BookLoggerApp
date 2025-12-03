@@ -10,8 +10,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.95);
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -130,14 +129,92 @@
     font-size: 1.75rem;
     color: #4CAF50;
     animation: numberPulse 1s ease infinite;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes numberPulse {
     0%, 100% {
-        transform: scale(1);
+        transform: scale(1) translateZ(0);
     }
     50% {
-        transform: scale(1.1);
+        transform: scale(1.1) translateZ(0);
+    }
+}
+
+/* ===== Book Completion Celebration ===== */
+.book-complete-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    animation: slideDown 0.6s ease 0.2s both;
+}
+
+.book-complete-header h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #4CAF50;
+    margin: 0;
+    text-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+}
+
+.completed-book-info {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    animation: slideUp 0.6s ease 0.3s both;
+}
+
+.completed-book-info h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.5rem 0;
+}
+
+.completed-book-info .book-author {
+    font-size: 1rem;
+    color: #aaa;
+    margin: 0;
+    font-style: italic;
+}
+
+.xp-reward {
+    text-align: center;
+    background: rgba(76, 175, 80, 0.15);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    animation: slideUp 0.6s ease 0.5s both;
+}
+
+.xp-amount {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    animation: xpPop 0.5s ease 0.7s both;
+}
+
+.xp-icon {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 4px 8px rgba(76, 175, 80, 0.5));
+}
+
+@keyframes xpPop {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
     }
 }
 
@@ -213,14 +290,18 @@
     font-size: 2rem;
     color: #ffc107;
     animation: arrowBounce 1s ease infinite;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes arrowBounce {
     0%, 100% {
-        transform: translateX(0);
+        transform: translateX(0) translateZ(0);
     }
     50% {
-        transform: translateX(10px);
+        transform: translateX(10px) translateZ(0);
     }
 }
 
@@ -273,6 +354,9 @@
     background: #ffc107;
     animation: confettiFall 3s linear infinite;
     pointer-events: none;
+    /* GPU Acceleration */
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
 
 .confetti:nth-child(1) {
@@ -331,11 +415,11 @@
 
 @keyframes confettiFall {
     0% {
-        transform: translateY(-100vh) rotate(0deg);
+        transform: translateY(-100vh) rotate(0deg) translateZ(0);
         opacity: 1;
     }
     100% {
-        transform: translateY(100vh) rotate(720deg);
+        transform: translateY(100vh) rotate(720deg) translateZ(0);
         opacity: 0;
     }
 }
@@ -387,70 +471,228 @@
     }
 }
 
-/* ===== Responsive Design ===== */
-@media (max-width: 768px) {
+/* ===== Responsive Design - Mobile First ===== */
+
+/* Small phones (< 360px) - Very compact */
+@media (max-width: 360px) {
     .celebration-card {
-        padding: 2rem;
+        padding: 1rem;
+        max-width: 95%;
+        border-radius: 12px;
+    }
+
+    .session-complete-header,
+    .levelup-header {
+        margin-bottom: 1rem;
+    }
+
+    .session-complete-header h1,
+    .levelup-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .xp-breakdown {
+        padding: 0.65rem;
+        margin: 0.75rem 0;
+        border-radius: 8px;
+    }
+
+    .xp-row {
+        padding: 0.4rem 0;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    .xp-label {
+        font-size: 0.75rem;
+    }
+
+    .xp-value {
+        font-size: 0.9rem;
+    }
+
+    .xp-value.total {
+        font-size: 1.1rem;
+    }
+
+    .level-transition {
+        gap: 0.75rem;
+        margin: 1rem 0;
+    }
+
+    .level-badge {
+        width: 55px;
+        height: 55px;
+        border-width: 3px;
+    }
+
+    .level-badge-number {
+        font-size: 1.25rem;
+    }
+
+    .level-badge-label {
+        font-size: 0.55rem;
+    }
+
+    .level-arrow {
+        font-size: 1.25rem;
+    }
+
+    .coins-reward {
+        padding: 0.75rem;
+        margin: 0.75rem 0;
+    }
+
+    .coins-amount {
+        font-size: 1.25rem;
+        gap: 0.35rem;
+    }
+
+    .coins-icon {
+        font-size: 1.5rem;
+    }
+
+    .celebration-button {
+        font-size: 0.9rem;
+        padding: 0.65rem 1rem;
+        border-radius: 8px;
+    }
+
+    .confetti {
+        width: 6px;
+        height: 6px;
+    }
+}
+
+/* Regular phones (360px - 480px) */
+@media (min-width: 361px) and (max-width: 480px) {
+    .celebration-card {
+        padding: 1.25rem;
+        max-width: 92%;
+        border-radius: 14px;
+    }
+
+    .session-complete-header,
+    .levelup-header {
+        margin-bottom: 1.25rem;
+    }
+
+    .session-complete-header h1,
+    .levelup-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .xp-breakdown {
+        padding: 0.85rem;
+        margin: 1rem 0;
+    }
+
+    .xp-row {
+        padding: 0.5rem 0;
+    }
+
+    .xp-label {
+        font-size: 0.85rem;
+    }
+
+    .xp-value {
+        font-size: 1rem;
+    }
+
+    .xp-value.total {
+        font-size: 1.25rem;
+    }
+
+    .level-transition {
+        gap: 1rem;
+        margin: 1.25rem 0;
+    }
+
+    .level-badge {
+        width: 65px;
+        height: 65px;
+    }
+
+    .level-badge-number {
+        font-size: 1.5rem;
+    }
+
+    .level-badge-label {
+        font-size: 0.6rem;
+    }
+
+    .level-arrow {
+        font-size: 1.5rem;
+    }
+
+    .coins-reward {
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .coins-amount {
+        font-size: 1.5rem;
+    }
+
+    .coins-icon {
+        font-size: 1.75rem;
+    }
+
+    .celebration-button {
+        font-size: 1rem;
+        padding: 0.75rem 1.25rem;
+    }
+
+    .confetti {
+        width: 8px;
+        height: 8px;
+    }
+}
+
+/* Large phones / small tablets (480px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+    .celebration-card {
+        padding: 1.75rem;
         max-width: 90%;
     }
 
     .session-complete-header h1,
     .levelup-header h1 {
-        font-size: 2rem;
-    }
-
-    .level-badge {
-        width: 80px;
-        height: 80px;
-    }
-
-    .level-badge-number {
-        font-size: 2rem;
-    }
-
-    .coins-amount {
-        font-size: 2rem;
-    }
-
-    .xp-value.total {
-        font-size: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .celebration-card {
-        padding: 1.5rem;
-    }
-
-    .session-complete-header h1,
-    .levelup-header h1 {
-        font-size: 1.75rem;
+        font-size: 1.85rem;
     }
 
     .xp-breakdown {
-        padding: 1rem;
+        padding: 1.15rem;
     }
 
     .xp-value {
         font-size: 1.1rem;
     }
 
+    .xp-value.total {
+        font-size: 1.4rem;
+    }
+
     .level-badge {
-        width: 70px;
-        height: 70px;
+        width: 75px;
+        height: 75px;
     }
 
     .level-badge-number {
-        font-size: 1.75rem;
+        font-size: 1.85rem;
     }
 
     .coins-amount {
-        font-size: 1.75rem;
+        font-size: 1.85rem;
+    }
+
+    .coins-icon {
+        font-size: 2rem;
     }
 
     .celebration-button {
         font-size: 1.1rem;
-        padding: 0.875rem 1.5rem;
+        padding: 0.85rem 1.5rem;
     }
 }
 

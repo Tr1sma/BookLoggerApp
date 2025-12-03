@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
-using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Services.Helpers;
 using BookLoggerApp.Core.Enums;
@@ -17,25 +16,19 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class PlantService : IPlantService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IRepository<PlantSpecies> _speciesRepository;
     private readonly IAppSettingsProvider _settingsProvider;
-    private readonly AppDbContext _context; // Still needed for ExecuteUpdateAsync bulk operations
     private readonly IMemoryCache _cache;
     private readonly ILogger<PlantService> _logger;
     private const string SpeciesCacheKey = "AllPlantSpecies";
 
     public PlantService(
         IUnitOfWork unitOfWork,
-        IRepository<PlantSpecies> speciesRepository,
         IAppSettingsProvider settingsProvider,
-        AppDbContext context,
         IMemoryCache cache,
         ILogger<PlantService> logger)
     {
         _unitOfWork = unitOfWork;
-        _speciesRepository = speciesRepository;
         _settingsProvider = settingsProvider;
-        _context = context;
         _cache = cache;
         _logger = logger;
     }
@@ -120,7 +113,7 @@ public class PlantService : IPlantService
             return cached!;
 
         // Load from database if not cached
-        var species = await _speciesRepository.GetAllAsync(ct);
+        var species = await _unitOfWork.PlantSpecies.GetAllAsync(ct);
         var list = species.ToList();
 
         // Cache for 24 hours (plant species rarely change)
@@ -130,7 +123,7 @@ public class PlantService : IPlantService
 
     public async Task<PlantSpecies?> GetSpeciesByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _speciesRepository.GetByIdAsync(id);
+        return await _unitOfWork.PlantSpecies.GetByIdAsync(id);
     }
 
     public async Task WaterPlantAsync(Guid plantId, CancellationToken ct = default)
@@ -258,7 +251,7 @@ public class PlantService : IPlantService
 
     public async Task<UserPlant> PurchasePlantAsync(Guid speciesId, string name, CancellationToken ct = default)
     {
-        var species = await _speciesRepository.GetByIdAsync(speciesId);
+        var species = await _unitOfWork.PlantSpecies.GetByIdAsync(speciesId);
         if (species == null)
             throw new EntityNotFoundException(typeof(PlantSpecies), speciesId);
 
@@ -335,7 +328,7 @@ public class PlantService : IPlantService
     /// </summary>
     public async Task<IReadOnlyList<PlantSpecies>> GetAvailableSpeciesAsync(int userLevel, CancellationToken ct = default)
     {
-        var species = await _speciesRepository.FindAsync(s => s.IsAvailable && s.UnlockLevel <= userLevel, ct);
+        var species = await _unitOfWork.PlantSpecies.FindAsync(s => s.IsAvailable && s.UnlockLevel <= userLevel, ct);
         return species.OrderBy(s => s.BaseCost).ToList();
     }
 
@@ -379,7 +372,7 @@ public class PlantService : IPlantService
     /// </summary>
     public async Task<int> GetPlantCostAsync(Guid speciesId, CancellationToken ct = default)
     {
-        var species = await _speciesRepository.GetByIdAsync(speciesId);
+        var species = await _unitOfWork.PlantSpecies.GetByIdAsync(speciesId);
         if (species == null)
             throw new EntityNotFoundException(typeof(PlantSpecies), speciesId);
 

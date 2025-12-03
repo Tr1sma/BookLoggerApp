@@ -12,17 +12,21 @@ namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
 /// Service for importing and exporting data in various formats.
+/// Uses DbContextFactory for thread-safe operations.
 /// </summary>
 public class ImportExportService : IImportExportService
 {
-    private readonly AppDbContext _context;
+    private readonly IDbContextFactory<AppDbContext> _contextFactory;
     private readonly ILogger<ImportExportService>? _logger;
     private readonly IFileSystem _fileSystem;
     private readonly string _backupDirectory;
 
-    public ImportExportService(AppDbContext context, IFileSystem fileSystem, ILogger<ImportExportService>? logger = null)
+    public ImportExportService(
+        IDbContextFactory<AppDbContext> contextFactory,
+        IFileSystem fileSystem,
+        ILogger<ImportExportService>? logger = null)
     {
-        _context = context;
+        _contextFactory = contextFactory;
         _fileSystem = fileSystem;
         _logger = logger;
 
@@ -38,8 +42,10 @@ public class ImportExportService : IImportExportService
         {
             _logger?.LogInformation("Starting JSON export");
 
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
             // Fetch all data
-            var books = await _context.Books
+            var books = await context.Books
                 .Include(b => b.BookGenres)
                     .ThenInclude(bg => bg.Genre)
                 .Include(b => b.ReadingSessions)
@@ -47,11 +53,11 @@ public class ImportExportService : IImportExportService
                 .Include(b => b.Annotations)
                 .ToListAsync(ct);
 
-            var goals = await _context.ReadingGoals.ToListAsync(ct);
-            var plants = await _context.UserPlants
+            var goals = await context.ReadingGoals.ToListAsync(ct);
+            var plants = await context.UserPlants
                 .Include(p => p.Species)
                 .ToListAsync(ct);
-            var settings = await _context.AppSettings.FirstOrDefaultAsync(ct);
+            var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
 
             // Create export object
             var exportData = new
@@ -89,7 +95,9 @@ public class ImportExportService : IImportExportService
         {
             _logger?.LogInformation("Starting CSV export");
 
-            var books = await _context.Books
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
+            var books = await context.Books
                 .Include(b => b.BookGenres)
                     .ThenInclude(bg => bg.Genre)
                 .ToListAsync(ct);
@@ -166,19 +174,21 @@ public class ImportExportService : IImportExportService
                 return 0;
             }
 
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
             // Add books (with merge strategy to avoid duplicates)
             int importedCount = 0;
             foreach (var book in books)
             {
                 // Check if book already exists (by ISBN or Title+Author)
-                var existingBook = await _context.Books
+                var existingBook = await context.Books
                     .FirstOrDefaultAsync(b =>
                         (b.ISBN != null && b.ISBN == book.ISBN) ||
                         (b.Title == book.Title && b.Author == book.Author), ct);
 
                 if (existingBook == null)
                 {
-                    _context.Books.Add(book);
+                    context.Books.Add(book);
                     importedCount++;
                 }
                 else
@@ -188,7 +198,7 @@ public class ImportExportService : IImportExportService
                 }
             }
 
-            await _context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
 
             _logger?.LogInformation("JSON import completed. Imported: {Count}", importedCount);
 
@@ -216,11 +226,13 @@ public class ImportExportService : IImportExportService
 
             var records = csvReader.GetRecords<BookCsvRecord>().ToList();
 
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
             int importedCount = 0;
             foreach (var record in records)
             {
                 // Check if book already exists
-                var existingBook = await _context.Books
+                var existingBook = await context.Books
                     .FirstOrDefaultAsync(b =>
                         (b.ISBN != null && b.ISBN == record.ISBN) ||
                         (b.Title == record.Title && b.Author == record.Author), ct);
@@ -246,7 +258,7 @@ public class ImportExportService : IImportExportService
                         DateCompleted = record.DateCompleted
                     };
 
-                    _context.Books.Add(book);
+                    context.Books.Add(book);
                     importedCount++;
                 }
                 else
@@ -256,7 +268,7 @@ public class ImportExportService : IImportExportService
                 }
             }
 
-            await _context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
 
             _logger?.LogInformation("CSV import completed. Imported: {Count}", importedCount);
 
@@ -275,8 +287,10 @@ public class ImportExportService : IImportExportService
         {
             _logger?.LogInformation("Creating backup");
 
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
             // Get the database file path
-            var dbPath = _context.Database.GetConnectionString()?.Replace("Data Source=", "");
+            var dbPath = context.Database.GetConnectionString()?.Replace("Data Source=", "");
 
             if (string.IsNullOrWhiteSpace(dbPath) || !_fileSystem.FileExists(dbPath))
             {
@@ -294,11 +308,11 @@ public class ImportExportService : IImportExportService
             _logger?.LogInformation("Backup created at: {Path}", backupPath);
 
             // Update AppSettings with last backup date
-            var settings = await _context.AppSettings.FirstOrDefaultAsync(ct);
+            var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
             if (settings != null)
             {
                 settings.LastBackupDate = DateTime.UtcNow;
-                await _context.SaveChangesAsync(ct);
+                await context.SaveChangesAsync(ct);
             }
 
             return backupPath;
@@ -321,8 +335,10 @@ public class ImportExportService : IImportExportService
                 throw new FileNotFoundException("Backup file not found", backupPath);
             }
 
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
             // Get the current database file path
-            var dbPath = _context.Database.GetConnectionString()?.Replace("Data Source=", "");
+            var dbPath = context.Database.GetConnectionString()?.Replace("Data Source=", "");
 
             if (string.IsNullOrWhiteSpace(dbPath))
             {
@@ -330,7 +346,7 @@ public class ImportExportService : IImportExportService
             }
 
             // Close all connections
-            await _context.Database.CloseConnectionAsync();
+            await context.Database.CloseConnectionAsync();
 
             // Copy backup file over current database
             _fileSystem.CopyFile(backupPath, dbPath, overwrite: true);
@@ -338,7 +354,7 @@ public class ImportExportService : IImportExportService
             _logger?.LogInformation("Backup restored successfully");
 
             // Reopen connection
-            await _context.Database.OpenConnectionAsync(ct);
+            await context.Database.OpenConnectionAsync(ct);
         }
         catch (Exception ex)
         {

@@ -51,6 +51,7 @@ public abstract partial class ViewModelBase : ObservableObject
     /// <summary>
     /// Executes an action safely after ensuring the database is initialized.
     /// This should be called from ViewModel Load methods to prevent race conditions.
+    /// Note: DbContext concurrency is now handled via Transient lifetime registration.
     /// </summary>
     protected async Task ExecuteSafelyWithDbAsync(Func<Task> action, string? errorPrefix = null)
     {
@@ -60,8 +61,6 @@ public abstract partial class ViewModelBase : ObservableObject
             ClearError();
 
             // Wait for database initialization to complete
-            // This uses the TaskCompletionSource pattern from DatabaseInitializationHelper
-            // to ensure DB is ready before executing the action
             await BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.EnsureInitializedAsync();
 
             await action();

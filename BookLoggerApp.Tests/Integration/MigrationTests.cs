@@ -17,7 +17,6 @@ namespace BookLoggerApp.Tests.Integration;
 public class MigrationTests : IDisposable
 {
     private readonly AppDbContext _context;
-    private readonly BookRepository _bookRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly MockProgressionService _progressionService;
     private readonly MockPlantService _plantService;
@@ -26,12 +25,7 @@ public class MigrationTests : IDisposable
     public MigrationTests()
     {
         _context = TestDbContext.Create();
-        _bookRepository = new BookRepository(_context);
-        var sessionRepository = new ReadingSessionRepository(_context);
-        var goalRepository = new ReadingGoalRepository(_context);
-        var plantRepository = new UserPlantRepository(_context);
-
-        _unitOfWork = new UnitOfWork(_context, _bookRepository, sessionRepository, goalRepository, plantRepository);
+        _unitOfWork = new UnitOfWork(_context);
 
         _progressionService = new MockProgressionService();
         _plantService = new MockPlantService();
@@ -189,7 +183,7 @@ public class MigrationTests : IDisposable
         await _bookService.AddAsync(hybridBook);
 
         // Retrieve all completed books
-        var allBooks = await _bookRepository.GetBooksByStatusAsync(ReadingStatus.Completed);
+        var allBooks = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
 
         // Assert - All books should be in database
         allBooks.Should().HaveCount(3);
@@ -235,7 +229,7 @@ public class MigrationTests : IDisposable
 
         // Act - Save and retrieve
         await _bookService.AddAsync(book);
-        var retrieved = await _bookRepository.GetByIdAsync(book.Id);
+        var retrieved = await _unitOfWork.Books.GetByIdAsync(book.Id);
 
         // Assert - All columns should be persisted
         retrieved.Should().NotBeNull();

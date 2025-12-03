@@ -19,12 +19,7 @@ public class GoalServiceTests : IDisposable
     public GoalServiceTests()
     {
         _context = TestDbContext.Create();
-        var bookRepository = new BookRepository(_context);
-        var sessionRepository = new ReadingSessionRepository(_context);
-        var goalRepository = new ReadingGoalRepository(_context);
-        var plantRepository = new UserPlantRepository(_context);
-
-        _unitOfWork = new UnitOfWork(_context, bookRepository, sessionRepository, goalRepository, plantRepository);
+        _unitOfWork = new UnitOfWork(_context);
         _service = new GoalService(_unitOfWork);
     }
 

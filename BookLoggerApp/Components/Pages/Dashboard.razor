@@ -45,12 +45,27 @@
             }
         </section>
 
-        <!-- This Week Stats -->
-        <section class="stats-grid">
-            <StatCard Icon="📚" Title="Books Read" Value="@ViewModel.BooksReadThisWeek" Subtitle="this week" />
-            <StatCard Icon="⏱️" Title="Time Read" Value="@FormatMinutes(ViewModel.MinutesReadThisWeek)" Subtitle="this week" />
-            <StatCard Icon="📄" Title="Pages Read" Value="@ViewModel.PagesReadThisWeek" Subtitle="this week" />
-            <StatCard Icon="⭐" Title="XP Earned" Value="@ViewModel.XpEarnedThisWeek" Subtitle="this week" />
+        <!-- This Week Stats - Compact Chips -->
+        <section class="stats-chips">
+            <span class="stat-chip">
+                <span class="stat-chip-icon">📚</span>
+                <span class="stat-chip-value">@ViewModel.BooksReadThisWeek</span>
+                <span class="stat-chip-label">books</span>
+            </span>
+            <span class="stat-chip">
+                <span class="stat-chip-icon">⏱️</span>
+                <span class="stat-chip-value">@FormatMinutes(ViewModel.MinutesReadThisWeek)</span>
+            </span>
+            <span class="stat-chip">
+                <span class="stat-chip-icon">📄</span>
+                <span class="stat-chip-value">@ViewModel.PagesReadThisWeek</span>
+                <span class="stat-chip-label">pages</span>
+            </span>
+            <span class="stat-chip">
+                <span class="stat-chip-icon">⭐</span>
+                <span class="stat-chip-value">@ViewModel.XpEarnedThisWeek</span>
+                <span class="stat-chip-label">XP</span>
+            </span>
         </section>
 
         <!-- Active Goals -->
