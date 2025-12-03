@@ -29,6 +29,14 @@ public interface IPlantService
     Task LevelUpAsync(Guid plantId, CancellationToken ct = default);
     Task PurchaseLevelAsync(Guid plantId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Records a reading day for the plant if:
+    /// - Session was at least 15 minutes long
+    /// - No reading day has been recorded for this plant today
+    /// Automatically updates the plant's level based on reading days.
+    /// </summary>
+    Task RecordReadingDayAsync(Guid plantId, DateTime sessionDate, int sessionMinutes, CancellationToken ct = default);
+
     // Purchase
     Task<UserPlant> PurchasePlantAsync(Guid speciesId, string name, CancellationToken ct = default);
 

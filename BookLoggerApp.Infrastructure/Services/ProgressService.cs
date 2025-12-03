@@ -100,12 +100,16 @@ public class ProgressService : IProgressService
         // Store the XP earned in the session
         session.XpEarned = progressionResult.XpEarned;
 
-        // Award XP to active plant if exists
+        // Record reading day for active plant (for plant leveling)
+        // Plants level up based on reading days (15+ min sessions), not XP
         if (activePlant != null)
         {
-            // Award plant XP (typically a fraction of user XP, or based on minutes)
-            int plantXp = session.Minutes * 2; // 2 XP per minute for plants
-            await _plantService.AddExperienceAsync(activePlant.Id, plantXp, ct);
+            await _plantService.RecordReadingDayAsync(
+                activePlant.Id,
+                session.StartedAt,
+                session.Minutes,
+                ct
+            );
         }
 
         await _unitOfWork.ReadingSessions.UpdateAsync(session);

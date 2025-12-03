@@ -148,4 +148,67 @@ public static class PlantGrowthCalculator
         int totalXpForNextLevel = GetTotalXpForLevel(currentLevel + 1, growthRate);
         return currentXp >= totalXpForNextLevel;
     }
+
+    #region Reading Days Based Leveling
+
+    /// <summary>
+    /// Calculate level based on reading days.
+    /// Formula: floor(readingDays * growthRate / 3) + 1
+    /// At GrowthRate 1.0: 3 reading days = 1 level.
+    /// At GrowthRate 1.2: ~2.5 reading days = 1 level (20% faster).
+    /// At GrowthRate 0.8: ~3.75 reading days = 1 level (20% slower).
+    /// </summary>
+    public static int CalculateLevelFromReadingDays(int readingDays, double growthRate, int maxLevel)
+    {
+        if (readingDays <= 0)
+            return 1;
+
+        int level = (int)Math.Floor(readingDays * growthRate / 3.0) + 1;
+        return Math.Min(level, maxLevel);
+    }
+
+    /// <summary>
+    /// Calculate required reading days for a specific level.
+    /// Formula: ceil((level - 1) * 3 / growthRate)
+    /// </summary>
+    public static int GetReadingDaysForLevel(int level, double growthRate)
+    {
+        if (level <= 1)
+            return 0;
+
+        return (int)Math.Ceiling((level - 1) * 3.0 / growthRate);
+    }
+
+    /// <summary>
+    /// Calculate remaining reading days until next level.
+    /// </summary>
+    public static int GetReadingDaysToNextLevel(int currentLevel, int readingDays, double growthRate, int maxLevel)
+    {
+        if (currentLevel >= maxLevel)
+            return 0;
+
+        int daysForNextLevel = GetReadingDaysForLevel(currentLevel + 1, growthRate);
+        return Math.Max(0, daysForNextLevel - readingDays);
+    }
+
+    /// <summary>
+    /// Calculate progress percentage towards next level based on reading days.
+    /// </summary>
+    public static int GetReadingDaysPercentage(int currentLevel, int readingDays, double growthRate, int maxLevel)
+    {
+        if (currentLevel >= maxLevel)
+            return 100;
+
+        int daysForCurrent = GetReadingDaysForLevel(currentLevel, growthRate);
+        int daysForNext = GetReadingDaysForLevel(currentLevel + 1, growthRate);
+        int daysIntoLevel = readingDays - daysForCurrent;
+        int daysNeeded = daysForNext - daysForCurrent;
+
+        if (daysNeeded == 0)
+            return 100;
+
+        return Math.Clamp((daysIntoLevel * 100) / daysNeeded, 0, 100);
+    }
+
+    #endregion
 }
