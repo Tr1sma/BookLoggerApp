@@ -29,9 +29,22 @@ public class UserPlant
     public int CurrentLevel { get; set; } = 1;
 
     /// <summary>
-    /// Total experience points accumulated.
+    /// Total experience points accumulated (legacy, kept for potential future use).
     /// </summary>
     public int Experience { get; set; } = 0;
+
+    /// <summary>
+    /// Number of reading days credited to this plant.
+    /// A reading day = day with at least 15 min of reading time (while plant was active).
+    /// Used for plant leveling: 3 reading days = 1 level (at GrowthRate 1.0).
+    /// </summary>
+    public int ReadingDaysCount { get; set; } = 0;
+
+    /// <summary>
+    /// Last day a reading day was credited to this plant.
+    /// Prevents double-counting on the same day.
+    /// </summary>
+    public DateTime? LastReadingDayRecorded { get; set; }
 
     /// <summary>
     /// Current health status (Healthy, Thirsty, Wilting, Dead).

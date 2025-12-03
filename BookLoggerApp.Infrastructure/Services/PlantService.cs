@@ -188,6 +188,64 @@ public class PlantService : IPlantService
         }
     }
 
+    /// <summary>
+    /// Records a reading day for the plant if:
+    /// - Session was at least 15 minutes long
+    /// - No reading day has been recorded for this plant today
+    /// Automatically updates the plant's level based on reading days.
+    /// Formula: 3 reading days = 1 level (at GrowthRate 1.0)
+    /// </summary>
+    public async Task RecordReadingDayAsync(Guid plantId, DateTime sessionDate, int sessionMinutes, CancellationToken ct = default)
+    {
+        // Minimum 15 minutes required for a reading day
+        if (sessionMinutes < 15)
+            return;
+
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
+        if (plant == null)
+            return;
+
+        // Dead plants don't earn reading days
+        if (plant.Status == PlantStatus.Dead)
+            return;
+
+        var sessionDay = sessionDate.Date;
+
+        // Check if a reading day was already recorded today for this plant
+        if (plant.LastReadingDayRecorded?.Date == sessionDay)
+            return;
+
+        // Record the reading day
+        plant.ReadingDaysCount++;
+        plant.LastReadingDayRecorded = sessionDay;
+
+        // Calculate new level based on reading days
+        int newLevel = PlantGrowthCalculator.CalculateLevelFromReadingDays(
+            plant.ReadingDaysCount,
+            plant.Species.GrowthRate,
+            plant.Species.MaxLevel
+        );
+
+        // Update level if changed
+        if (newLevel > plant.CurrentLevel)
+        {
+            plant.CurrentLevel = newLevel;
+            _logger.LogInformation("Plant {PlantId} leveled up to {Level} after {ReadingDays} reading days",
+                plantId, newLevel, plant.ReadingDaysCount);
+        }
+
+        try
+        {
+            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "Concurrency conflict recording reading day for plant {PlantId}", plantId);
+            throw new ConcurrencyException($"Plant with ID {plantId} was modified by another user. Please reload and try again.", ex);
+        }
+    }
+
     public async Task<bool> CanLevelUpAsync(Guid plantId, CancellationToken ct = default)
     {
         var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);

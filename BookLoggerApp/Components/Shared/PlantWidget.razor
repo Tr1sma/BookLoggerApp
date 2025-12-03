@@ -19,13 +19,20 @@
             <span class="level-badge">Level @Plant.CurrentLevel / @Plant.Species.MaxLevel</span>
         </div>
 
-        <!-- XP Progress -->
-        <div class="plant-xp">
-            <div class="xp-bar">
-                <div class="xp-fill" style="width: @GetXpPercentage()%"></div>
+        <!-- Reading Days Progress -->
+        <div class="plant-progress">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: @GetProgressPercentage()%"></div>
             </div>
-            <p class="xp-text">
-                XP: @Plant.Experience / @GetNextLevelXp() (@GetXpPercentage()%)
+            <p class="progress-text">
+                @if (Plant.CurrentLevel >= Plant.Species.MaxLevel)
+                {
+                    <span>📖 @Plant.ReadingDaysCount Lesetage (Max Level erreicht!)</span>
+                }
+                else
+                {
+                    <span>📖 @Plant.ReadingDaysCount Lesetage (@GetDaysToNextLevel() bis Level @(Plant.CurrentLevel + 1))</span>
+                }
             </p>
         </div>
 
@@ -111,23 +118,26 @@
         };
     }
 
-    private int GetNextLevelXp()
-    {
-        if (Plant.CurrentLevel >= Plant.Species.MaxLevel)
-            return Plant.Experience; // Max level reached
-
-        return PlantGrowthCalculator.GetTotalXpForLevel(Plant.CurrentLevel + 1, Plant.Species.GrowthRate);
-    }
-
-    private int GetXpPercentage()
+    private int GetProgressPercentage()
     {
         if (Plant.CurrentLevel >= Plant.Species.MaxLevel)
             return 100; // Max level reached
 
-        return PlantGrowthCalculator.GetXpPercentage(
+        return PlantGrowthCalculator.GetReadingDaysPercentage(
             Plant.CurrentLevel,
-            Plant.Experience,
-            Plant.Species.GrowthRate
+            Plant.ReadingDaysCount,
+            Plant.Species.GrowthRate,
+            Plant.Species.MaxLevel
+        );
+    }
+
+    private int GetDaysToNextLevel()
+    {
+        return PlantGrowthCalculator.GetReadingDaysToNextLevel(
+            Plant.CurrentLevel,
+            Plant.ReadingDaysCount,
+            Plant.Species.GrowthRate,
+            Plant.Species.MaxLevel
         );
     }
 

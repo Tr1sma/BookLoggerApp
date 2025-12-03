@@ -509,6 +509,53 @@
     transform: scale(1.2);
 }
 
+/* Leveling Info Box */
+.info-box {
+    background: linear-gradient(135deg, rgba(136, 166, 126, 0.1) 0%, rgba(183, 142, 97, 0.1) 100%);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--status-completed);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-box h4 {
+    margin: 0 0 0.75rem 0;
+    color: var(--status-completed);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.info-box ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style-type: none;
+}
+
+.info-box li {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    position: relative;
+}
+
+.info-box li::before {
+    content: "";
+    position: absolute;
+    left: -1.25rem;
+    top: 0.5em;
+    width: 6px;
+    height: 6px;
+    background: var(--status-completed);
+    border-radius: 50%;
+}
+
+.info-box strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .plant-shop-container {
