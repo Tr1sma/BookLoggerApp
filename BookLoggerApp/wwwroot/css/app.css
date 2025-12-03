@@ -41,6 +41,49 @@
     --gradient-card: linear-gradient(145deg, #2D2419 0%, #251E15 100%);
 }
 
+/* ============================================
+   GPU Acceleration & Animation Optimization
+   ============================================ */
+
+/*
+ * GPU-beschleunigte Animation-Klassen
+ * Verwende diese für Elemente mit CSS-Animationen
+ */
+.gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+.gpu-accelerated-opacity {
+    will-change: opacity;
+    backface-visibility: hidden;
+}
+
+/* Animation Pause/Play Control */
+.animation-paused,
+.animation-paused * {
+    animation-play-state: paused !important;
+}
+
+.animation-running {
+    animation-play-state: running !important;
+}
+
+/*
+ * Reduzierte Bewegung für Barrierefreiheit
+ * Respektiert Nutzer-Systemeinstellungen
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
 /* App Loading Screen */
 .app-loading {
     display: flex;

@@ -111,8 +111,7 @@
     top: 8px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(26, 20, 16, 0.9);
-    backdrop-filter: blur(8px);
+    background: rgba(26, 20, 16, 0.95);
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 0.9rem;
@@ -256,14 +255,13 @@
 }
 
 .btn-icon {
-    background: rgba(26, 20, 16, 0.8);
+    background: rgba(26, 20, 16, 0.95);
     border: 1px solid var(--border-light);
     font-size: 0.9rem;
     cursor: pointer;
     padding: 0.3rem;
     transition: var(--transition);
     border-radius: 6px;
-    backdrop-filter: blur(4px);
 }
 
 .btn-icon:hover {
@@ -383,14 +381,13 @@
 
 /* Compact delete button */
 .btn-icon-compact {
-    background: rgba(26, 20, 16, 0.6);
+    background: rgba(26, 20, 16, 0.9);
     border: 1px solid var(--border-light);
     font-size: 0.75rem;
     cursor: pointer;
     padding: 2px 6px;
     transition: var(--transition);
     border-radius: 6px;
-    backdrop-filter: blur(4px);
     opacity: 0;
     flex-shrink: 0;
 }
@@ -1624,8 +1621,7 @@ section h2 {
     top: 8px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(26, 20, 16, 0.9);
-    backdrop-filter: blur(8px);
+    background: rgba(26, 20, 16, 0.95);
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 0.9rem;
@@ -1638,8 +1634,7 @@ section h2 {
     position: absolute;
     bottom: 8px;
     right: 8px;
-    background: rgba(136, 166, 126, 0.9);
-    backdrop-filter: blur(4px);
+    background: rgba(136, 166, 126, 0.95);
     padding: 4px 8px;
     border-radius: 8px;
     font-size: 0.75rem;
@@ -1713,8 +1708,7 @@ section h2 {
     line-height: 1.2;
     text-align: center;
     padding: 2px 6px;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.6);
     border-radius: 4px;
     max-width: 90%;
     white-space: nowrap;
