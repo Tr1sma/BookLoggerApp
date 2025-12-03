@@ -3,6 +3,8 @@
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
 @inject StatsViewModel ViewModel
+@inject NavigationManager NavigationManager
+@implements IDisposable
 
 <PageTitle>Level Overview - BookLogger</PageTitle>
 
@@ -125,42 +127,6 @@
             </section>
         }
 
-        <!-- Level Milestones -->
-        @if (ViewModel.LevelMilestones.Any())
-        {
-            <section class="level-milestones-section">
-                <h2>🎯 Level Milestones</h2>
-                <div class="milestones-list">
-                    @foreach (var milestone in ViewModel.LevelMilestones)
-                    {
-                        <div class="milestone-item @(milestone.IsCompleted ? "completed" : "") @(milestone.IsCurrent ? "current" : "")" @key="milestone.Level">
-                            <div class="milestone-icon">
-                                @if (milestone.IsCompleted)
-                                {
-                                    <span class="icon-completed">✓</span>
-                                }
-                                else if (milestone.IsCurrent)
-                                {
-                                    <span class="icon-current">🏆</span>
-                                }
-                                else
-                                {
-                                    <span class="icon-future">🔒</span>
-                                }
-                            </div>
-                            <div class="milestone-content">
-                                <div class="milestone-level">Level @milestone.Level</div>
-                                <div class="milestone-requirements">
-                                    <span class="xp-req">@milestone.XpRequired XP</span>
-                                    <span class="coins-reward">+@milestone.CoinsReward 💰</span>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </section>
-        }
-
         <!-- Favorite Genre -->
         @if (!string.IsNullOrEmpty(ViewModel.FavoriteGenre))
         {
@@ -253,7 +219,17 @@
                                 <div class="book-author">by @bookRating.Book.Author</div>
                             </div>
                             <div class="book-rating-summary">
-                                <div class="average-rating">@bookRating.AverageRating.ToString("F1") ⭐</div>
+                                @if (selectedCategory.HasValue)
+                                {
+                                    var categoryRating = bookRating.Ratings.GetValueOrDefault(selectedCategory.Value);
+                                    var categoryInfo = RatingCategoryInfo.GetAllCategories()
+                                        .FirstOrDefault(c => c.Category == selectedCategory.Value);
+                                    <div class="average-rating">@(categoryRating?.ToString() ?? "-") @(categoryInfo?.Emoji ?? "⭐")</div>
+                                }
+                                else
+                                {
+                                    <div class="average-rating">@bookRating.AverageRating.ToString("F1") ⭐</div>
+                                }
                                 <div class="rating-breakdown">
                                     @foreach (var rating in bookRating.Ratings.Where(r => r.Value.HasValue))
                                     {
@@ -261,7 +237,7 @@
                                             .FirstOrDefault(c => c.Category == rating.Key);
                                         @if (categoryInfo != null)
                                         {
-                                            <span class="mini-rating">@categoryInfo.Emoji @rating.Value</span>
+                                            <span class="mini-rating @(selectedCategory == rating.Key ? "selected" : "")">@categoryInfo.Emoji @rating.Value</span>
                                         }
                                     }
                                 </div>
@@ -272,15 +248,88 @@
                 </div>
             </section>
         }
+
+        <!-- Level Milestones (moved to bottom) -->
+        @if (ViewModel.LevelMilestones.Any())
+        {
+            <section class="level-milestones-section">
+                <h2>🎯 Level Milestones</h2>
+                <div class="milestones-list">
+                    @foreach (var milestone in ViewModel.LevelMilestones)
+                    {
+                        <div class="milestone-item @(milestone.IsCompleted ? "completed" : "") @(milestone.IsCurrent ? "current" : "")" @key="milestone.Level">
+                            <div class="milestone-icon">
+                                @if (milestone.IsCompleted)
+                                {
+                                    <span class="icon-completed">✓</span>
+                                }
+                                else if (milestone.IsCurrent)
+                                {
+                                    <span class="icon-current">🏆</span>
+                                }
+                                else
+                                {
+                                    <span class="icon-future">🔒</span>
+                                }
+                            </div>
+                            <div class="milestone-content">
+                                <div class="milestone-level">Level @milestone.Level</div>
+                                <div class="milestone-requirements">
+                                    <span class="xp-req">@milestone.XpRequired XP</span>
+                                    <span class="coins-reward">+@milestone.CoinsReward 💰</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
     }
 </div>
 
 @code {
     private RatingCategory? selectedCategory = null;
+    private string? _currentUrl;
 
     protected override async Task OnInitializedAsync()
     {
+        NavigationManager.LocationChanged += OnLocationChanged;
+        await LoadDataAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Check if we navigated to this page
+        var newUrl = NavigationManager.Uri;
+        if (_currentUrl != newUrl)
+        {
+            _currentUrl = newUrl;
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        selectedCategory = null;
         await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        // Reload when navigating to this page
+        if (e.Location.Contains("/stats") || e.Location.Contains("/level-overview"))
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadDataAsync();
+                StateHasChanged();
+            });
+        }
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 
     private string FormatMinutes(int minutes)

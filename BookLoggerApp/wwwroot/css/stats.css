@@ -826,6 +826,12 @@
     white-space: nowrap;
 }
 
+.mini-rating.selected {
+    background: rgba(255, 193, 7, 0.3);
+    border-color: #ffc107;
+    font-weight: 700;
+}
+
 /* ===== Loading & Empty States ===== */
 .loading {
     text-align: center;
