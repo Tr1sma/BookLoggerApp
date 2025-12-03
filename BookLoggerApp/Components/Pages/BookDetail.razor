@@ -45,28 +45,13 @@
 
         <!-- Main Content Grid -->
         <div class="book-detail-content">
-            <!-- Cover Section -->
-            <div class="book-cover-section">
-                @if (!string.IsNullOrEmpty(ViewModel.Book.CoverImagePath))
-                {
-                    <img src="@GetCoverImageUrl()" alt="@ViewModel.Book.Title" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                    <div class="book-cover-placeholder" style="display: none;">
-                        <div class="cover-placeholder-content">
-                            <div class="cover-placeholder-icon">📚</div>
-                            <div class="cover-placeholder-title">@ViewModel.Book.Title</div>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="book-cover-placeholder">
-                        <div class="cover-placeholder-content">
-                            <div class="cover-placeholder-icon">📚</div>
-                            <div class="cover-placeholder-title">@ViewModel.Book.Title</div>
-                        </div>
-                    </div>
-                }
-            </div>
+            <!-- Cover Section (only shown if cover image exists and loads successfully) -->
+            @if (!string.IsNullOrEmpty(ViewModel.Book.CoverImagePath))
+            {
+                <div class="book-cover-section">
+                    <img src="@GetCoverImageUrl()" alt="@ViewModel.Book.Title" onerror="this.onerror=null; this.parentElement.style.display='none';" />
+                </div>
+            }
 
             <!-- Info Section -->
             <div class="book-info-section">
