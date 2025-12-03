@@ -1,6 +1,7 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject BookLoggerApp.Services.IPermissionService PermissionService
+@using Microsoft.Maui.Devices
 
 @if (IsVisible)
 {
@@ -158,18 +159,26 @@
         {
             _torchOn = !_torchOn;
 
-            var result = await JSRuntime.InvokeAsync<ScannerResult>(
-                "barcodeScanner.toggleTorch",
-                _torchOn
-            );
-
-            if (!result.Success)
+            // Use native MAUI Flashlight API instead of JavaScript
+            if (_torchOn)
             {
-                _statusMessage = "Torch not supported on this device";
-                _isError = true;
-                _torchOn = false;
-                StateHasChanged();
+                await Flashlight.Default.TurnOnAsync();
             }
+            else
+            {
+                await Flashlight.Default.TurnOffAsync();
+            }
+
+            _statusMessage = _torchOn ? "Torch on" : "Torch off";
+            _isError = false;
+            StateHasChanged();
+        }
+        catch (FeatureNotSupportedException)
+        {
+            _statusMessage = "Torch not supported on this device";
+            _isError = true;
+            _torchOn = false;
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -186,6 +195,13 @@
         {
             try
             {
+                // Turn off torch when closing scanner
+                if (_torchOn)
+                {
+                    await Flashlight.Default.TurnOffAsync();
+                    _torchOn = false;
+                }
+
                 await JSRuntime.InvokeVoidAsync("barcodeScanner.stopScanning");
                 _isInitialized = false;
             }
