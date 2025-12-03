@@ -18,6 +18,15 @@ public class GoalService : IGoalService
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
+    public event EventHandler? GoalsChanged;
+
+    /// <inheritdoc />
+    public void NotifyGoalsChanged()
+    {
+        GoalsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public async Task<IReadOnlyList<ReadingGoal>> GetAllAsync(CancellationToken ct = default)
     {
         var goals = await _unitOfWork.ReadingGoals.GetAllAsync();
@@ -105,24 +114,36 @@ public class GoalService : IGoalService
 
     private int CalculateBooksProgress(IEnumerable<Book> books, ReadingGoal goal)
     {
+        // Use date-only comparison to include all books completed on the start/end days
+        var startDate = goal.StartDate.Date;
+        var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
+
         return books.Count(b =>
             b.Status == ReadingStatus.Completed &&
             b.DateCompleted.HasValue &&
-            b.DateCompleted.Value >= goal.StartDate &&
-            b.DateCompleted.Value <= goal.EndDate);
+            b.DateCompleted.Value >= startDate &&
+            b.DateCompleted.Value <= endDate);
     }
 
     private int CalculatePagesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal)
     {
+        // Use date-only comparison to include all sessions on the start/end days
+        var startDate = goal.StartDate.Date;
+        var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
+
         return sessions
-            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= goal.StartDate && s.EndedAt.Value <= goal.EndDate)
+            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
             .Sum(s => s.PagesRead ?? 0);
     }
 
     private int CalculateMinutesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal)
     {
+        // Use date-only comparison to include all sessions on the start/end days
+        var startDate = goal.StartDate.Date;
+        var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
+
         return sessions
-            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= goal.StartDate && s.EndedAt.Value <= goal.EndDate)
+            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
             .Sum(s => s.Minutes);
     }
 

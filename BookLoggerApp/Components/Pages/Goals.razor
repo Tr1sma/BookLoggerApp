@@ -1,8 +1,10 @@
 @page "/goals"
 @using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Services.Abstractions
 @using System.ComponentModel
 @inject GoalsViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject IGoalService GoalService
 @implements IDisposable
 
 <PageTitle>Goals - BookLogger</PageTitle>
@@ -98,6 +100,8 @@
     {
         // Subscribe to ViewModel property changes for re-rendering
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+        // Subscribe to goal changes to refresh data when sessions end
+        GoalService.GoalsChanged += OnGoalsChanged;
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
 
@@ -105,6 +109,16 @@
     {
         // Re-render when any ViewModel property changes
         InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnGoalsChanged(object? sender, EventArgs e)
+    {
+        // Reload goals data when goals change
+        await InvokeAsync(async () =>
+        {
+            await ViewModel.LoadCommand.ExecuteAsync(null);
+            StateHasChanged();
+        });
     }
 
     private void ShowCreateForm()
@@ -129,6 +143,7 @@
     {
         // Unsubscribe to prevent memory leaks
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        GoalService.GoalsChanged -= OnGoalsChanged;
     }
 }
 

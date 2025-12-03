@@ -16,17 +16,20 @@ public class ProgressService : IProgressService
     private readonly IProgressionService _progressionService;
     private readonly IPlantService _plantService;
     private readonly IBookService _bookService;
+    private readonly IGoalService _goalService;
 
     public ProgressService(
         IUnitOfWork unitOfWork,
         IProgressionService progressionService,
         IPlantService plantService,
-        IBookService bookService)
+        IBookService bookService,
+        IGoalService goalService)
     {
         _unitOfWork = unitOfWork;
         _progressionService = progressionService;
         _plantService = plantService;
         _bookService = bookService;
+        _goalService = goalService;
     }
 
     public async Task<ReadingSession> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
@@ -107,6 +110,9 @@ public class ProgressService : IProgressService
 
         await _unitOfWork.ReadingSessions.UpdateAsync(session);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        // Notify that goals may have changed (pages/minutes progress)
+        _goalService.NotifyGoalsChanged();
 
         // Return both session and progression result for UI celebrations
         return new SessionEndResult

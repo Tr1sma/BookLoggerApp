@@ -20,6 +20,7 @@ public class MigrationTests : IDisposable
     private readonly IUnitOfWork _unitOfWork;
     private readonly MockProgressionService _progressionService;
     private readonly MockPlantService _plantService;
+    private readonly MockGoalService _goalService;
     private readonly BookService _bookService;
 
     public MigrationTests()
@@ -29,7 +30,8 @@ public class MigrationTests : IDisposable
 
         _progressionService = new MockProgressionService();
         _plantService = new MockPlantService();
-        _bookService = new BookService(_unitOfWork, _progressionService, _plantService, null!);
+        _goalService = new MockGoalService();
+        _bookService = new BookService(_unitOfWork, _progressionService, _plantService, _goalService, null!);
     }
 
     public void Dispose()

@@ -1,8 +1,11 @@
 @page "/dashboard"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Services.Abstractions
 @inject DashboardViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject IGoalService GoalService
+@implements IDisposable
 
 <PageTitle>Dashboard - BookLogger</PageTitle>
 
@@ -121,6 +124,9 @@
 @code {
     protected override async Task OnInitializedAsync()
     {
+        // Subscribe to goal changes to refresh data when sessions end
+        GoalService.GoalsChanged += OnGoalsChanged;
+
         try
         {
             await ViewModel.LoadCommand.ExecuteAsync(null);
@@ -139,6 +145,21 @@
             System.Diagnostics.Debug.WriteLine("=== END EXCEPTION ===");
             // Don't throw - let the UI render with error message
         }
+    }
+
+    private async void OnGoalsChanged(object? sender, EventArgs e)
+    {
+        // Reload dashboard data when goals change
+        await InvokeAsync(async () =>
+        {
+            await ViewModel.LoadCommand.ExecuteAsync(null);
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        GoalService.GoalsChanged -= OnGoalsChanged;
     }
 
     private string GetCoverImageUrl(Book book)
