@@ -145,26 +145,29 @@ public class ProgressionService : IProgressionService
             coinsAwarded += level * 50;
         }
 
-        // Award coins
-        await _settingsProvider.AddCoinsAsync(coinsAwarded);
+        int newCoins;
 
-        // Get new coin balance
-        int newCoins = await _settingsProvider.GetUserCoinsAsync();
-
-        // Update user level in settings
+        // Update user level and coins in settings
         if (settingsToUpdate != null)
         {
-            // Update the provided settings instance (caller will save)
+            // Update the provided settings instance directly (caller will save)
+            // This prevents the race condition where AddCoinsAsync would save to DB
+            // but then UpdateSettingsAsync overwrites with old Coins value
             settingsToUpdate.UserLevel = newLevel;
+            settingsToUpdate.Coins += coinsAwarded;
             settingsToUpdate.UpdatedAt = DateTime.UtcNow;
+            newCoins = settingsToUpdate.Coins;
         }
         else
         {
             // Fetch, update, and save settings ourselves (backwards compatibility)
+            // In this case we can use AddCoinsAsync since we control the full save
+            await _settingsProvider.AddCoinsAsync(coinsAwarded);
             var settings = await _settingsProvider.GetSettingsAsync();
             settings.UserLevel = newLevel;
             settings.UpdatedAt = DateTime.UtcNow;
             await _settingsProvider.UpdateSettingsAsync(settings);
+            newCoins = settings.Coins;
         }
 
         return new LevelUpResult
