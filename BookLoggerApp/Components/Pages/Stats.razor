@@ -51,21 +51,49 @@
             </div>
         </section>
 
-        <!-- Stats Grid: Combined Reading + Progression Stats -->
-        <section class="stats-grid-section">
+        <!-- Stats - Compact Chips -->
+        <section class="stats-chips-section">
             <h2>📊 Your Stats</h2>
-            <div class="stats-grid">
-                <!-- Progression Stats -->
-                <StatCard Icon="⭐" Title="Total XP" Value="@ViewModel.TotalXp.ToString()" />
-                <StatCard Icon="💰" Title="Total Coins" Value="@ViewModel.TotalCoins.ToString()" />
-                <StatCard Icon="🌱" Title="XP Boost" Value="@($"+{(ViewModel.TotalPlantBoost * 100):F0}%")" />
-
-                <!-- Reading Stats -->
-                <StatCard Icon="📚" Title="Books Read" Value="@ViewModel.TotalBooksRead" />
-                <StatCard Icon="📄" Title="Pages Read" Value="@ViewModel.TotalPagesRead" />
-                <StatCard Icon="⏱️" Title="Reading Time" Value="@FormatMinutes(ViewModel.TotalMinutesRead)" />
-                <StatCard Icon="🔥" Title="Current Streak" Value="@($"{ViewModel.CurrentStreak} days")" />
-                <StatCard Icon="📈" Title="Avg Rating" Value="@ViewModel.AverageRating.ToString("F1")" />
+            <div class="stats-chips">
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">⭐</span>
+                    <span class="stat-chip-value">@ViewModel.TotalXp</span>
+                    <span class="stat-chip-label">XP</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">💰</span>
+                    <span class="stat-chip-value">@ViewModel.TotalCoins</span>
+                    <span class="stat-chip-label">coins</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">🌱</span>
+                    <span class="stat-chip-value">+@((ViewModel.TotalPlantBoost * 100).ToString("F0"))%</span>
+                    <span class="stat-chip-label">boost</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">📚</span>
+                    <span class="stat-chip-value">@ViewModel.TotalBooksRead</span>
+                    <span class="stat-chip-label">books</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">📄</span>
+                    <span class="stat-chip-value">@ViewModel.TotalPagesRead</span>
+                    <span class="stat-chip-label">pages</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">⏱️</span>
+                    <span class="stat-chip-value">@FormatMinutes(ViewModel.TotalMinutesRead)</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">🔥</span>
+                    <span class="stat-chip-value">@ViewModel.CurrentStreak</span>
+                    <span class="stat-chip-label">day streak</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">📈</span>
+                    <span class="stat-chip-value">@ViewModel.AverageRating.ToString("F1")</span>
+                    <span class="stat-chip-label">avg</span>
+                </span>
             </div>
         </section>
 

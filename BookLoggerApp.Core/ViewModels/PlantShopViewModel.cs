@@ -74,12 +74,6 @@ public partial class PlantShopViewModel : ViewModelBase
     [RelayCommand]
     public async Task PurchasePlantAsync(Guid speciesId)
     {
-        if (string.IsNullOrWhiteSpace(NewPlantName))
-        {
-            SetError("Please enter a name for your plant");
-            return;
-        }
-
         await ExecuteSafelyAsync(async () =>
         {
             // Check if user has enough coins
@@ -106,8 +100,13 @@ public partial class PlantShopViewModel : ViewModelBase
                 return;
             }
 
+            // Use species name as default if no custom name provided
+            var plantName = string.IsNullOrWhiteSpace(NewPlantName)
+                ? species.Name
+                : NewPlantName;
+
             // Purchase plant (PlantService handles coin deduction and counter increment)
-            await _plantService.PurchasePlantAsync(speciesId, NewPlantName);
+            await _plantService.PurchasePlantAsync(speciesId, plantName);
 
             // Reload shop (prices will be recalculated after PlantsPurchased increment)
             NewPlantName = "";

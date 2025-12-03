@@ -1,14 +1,16 @@
 @page "/goals"
 @using BookLoggerApp.Core.ViewModels
+@using System.ComponentModel
 @inject GoalsViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@implements IDisposable
 
 <PageTitle>Goals - BookLogger</PageTitle>
 
 <div class="goals-container">
     <div class="goals-header">
         <h1>🎯 Reading Goals</h1>
-        <button class="btn btn-primary" @onclick="ViewModel.ShowCreateFormCommand">+ New Goal</button>
+        <button class="btn btn-primary" @onclick="ShowCreateForm">+ New Goal</button>
     </div>
 
     @if (ViewModel.IsBusy)
@@ -28,7 +30,7 @@
                 <h2>Create New Goal</h2>
                 <div class="form-group">
                     <label>Title:</label>
-                    <input @bind="ViewModel.NewGoal.Title" placeholder="e.g., Read 5 books this month" />
+                    <input @bind="ViewModel.NewGoal.Title" @bind:event="oninput" placeholder="e.g., Read 5 books this month" />
                 </div>
                 <div class="form-group">
                     <label>Type:</label>
@@ -47,8 +49,8 @@
                     <input type="date" @bind="ViewModel.NewGoal.EndDate" />
                 </div>
                 <div class="form-actions">
-                    <button class="btn btn-primary" @onclick="async () => await ViewModel.CreateGoalCommand.ExecuteAsync(null)">Create</button>
-                    <button class="btn btn-secondary" @onclick="() => ViewModel.CancelCreateCommand.Execute(null)">Cancel</button>
+                    <button class="btn btn-primary" @onclick="CreateGoal">Create</button>
+                    <button class="btn btn-secondary" @onclick="CancelCreate">Cancel</button>
                 </div>
             </div>
         }
@@ -94,7 +96,39 @@
 @code {
     protected override async Task OnInitializedAsync()
     {
+        // Subscribe to ViewModel property changes for re-rendering
+        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // Re-render when any ViewModel property changes
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ShowCreateForm()
+    {
+        ViewModel.OpenCreateFormCommand.Execute(null);
+        StateHasChanged();
+    }
+
+    private async Task CreateGoal()
+    {
+        await ViewModel.CreateGoalCommand.ExecuteAsync(null);
+        StateHasChanged();
+    }
+
+    private void CancelCreate()
+    {
+        ViewModel.CancelCreateCommand.Execute(null);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe to prevent memory leaks
+        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
     }
 }
 

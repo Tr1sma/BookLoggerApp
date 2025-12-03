@@ -26,41 +26,51 @@
         </div>
     </div>
 
-    <!-- Filters & Sort -->
-    <div class="bookshelf-filters">
-        <div class="filter-group">
-            <label>Sort by:</label>
-            <select value="@ViewModel.SortBy" @onchange="@((ChangeEventArgs e) => { ViewModel.SortBy = e.Value?.ToString() ?? "Title"; HandleSearch(); })">
-                <option value="Title">Title</option>
-                <option value="Author">Author</option>
-                <option value="DateAdded">Date Added</option>
-                <option value="Status">Status</option>
-            </select>
-        </div>
+    <!-- Filters & Sort (Collapsible) -->
+    <div class="bookshelf-filters-wrapper">
+        <button class="filter-toggle-btn" @onclick="ToggleFilters">
+            <span>@(filtersExpanded ? "▼" : "▶") Filters & Sort</span>
+            @if (HasActiveFilters())
+            {
+                <span class="active-filter-badge">Active</span>
+            }
+        </button>
 
-        <div class="filter-group">
-            <label>Status:</label>
-            <select value="@(ViewModel.FilterStatus?.ToString() ?? "")" @onchange="@((ChangeEventArgs e) => { var val = e.Value?.ToString(); ViewModel.FilterStatus = string.IsNullOrEmpty(val) ? null : Enum.Parse<ReadingStatus>(val); HandleSearch(); })">
-                <option value="">All</option>
-                <option value="@ReadingStatus.Planned">Planned</option>
-                <option value="@ReadingStatus.Reading">Reading</option>
-                <option value="@ReadingStatus.Completed">Completed</option>
-                <option value="@ReadingStatus.Abandoned">Abandoned</option>
-            </select>
-        </div>
+        <div class="bookshelf-filters @(filtersExpanded ? "expanded" : "collapsed")">
+            <div class="filter-group">
+                <label>Sort by:</label>
+                <select value="@ViewModel.SortBy" @onchange="@((ChangeEventArgs e) => { ViewModel.SortBy = e.Value?.ToString() ?? "Title"; HandleSearch(); })">
+                    <option value="Title">Title</option>
+                    <option value="Author">Author</option>
+                    <option value="DateAdded">Date Added</option>
+                    <option value="Status">Status</option>
+                </select>
+            </div>
 
-        <div class="filter-group">
-            <label>Genre:</label>
-            <select value="@(ViewModel.FilterGenreId?.ToString() ?? "")" @onchange="@((ChangeEventArgs e) => { var val = e.Value?.ToString(); ViewModel.FilterGenreId = string.IsNullOrEmpty(val) ? null : Guid.Parse(val); HandleSearch(); })">
-                <option value="">All Genres</option>
-                @foreach (var genre in ViewModel.Genres)
-                {
-                    <option value="@genre.Id">@genre.Icon @genre.Name</option>
-                }
-            </select>
-        </div>
+            <div class="filter-group">
+                <label>Status:</label>
+                <select value="@(ViewModel.FilterStatus?.ToString() ?? "")" @onchange="@((ChangeEventArgs e) => { var val = e.Value?.ToString(); ViewModel.FilterStatus = string.IsNullOrEmpty(val) ? null : Enum.Parse<ReadingStatus>(val); HandleSearch(); })">
+                    <option value="">All</option>
+                    <option value="@ReadingStatus.Planned">Planned</option>
+                    <option value="@ReadingStatus.Reading">Reading</option>
+                    <option value="@ReadingStatus.Completed">Completed</option>
+                    <option value="@ReadingStatus.Abandoned">Abandoned</option>
+                </select>
+            </div>
 
-        <button class="btn btn-secondary" @onclick="HandleClearFilters">Clear Filters</button>
+            <div class="filter-group">
+                <label>Genre:</label>
+                <select value="@(ViewModel.FilterGenreId?.ToString() ?? "")" @onchange="@((ChangeEventArgs e) => { var val = e.Value?.ToString(); ViewModel.FilterGenreId = string.IsNullOrEmpty(val) ? null : Guid.Parse(val); HandleSearch(); })">
+                    <option value="">All Genres</option>
+                    @foreach (var genre in ViewModel.Genres)
+                    {
+                        <option value="@genre.Id">@genre.Icon @genre.Name</option>
+                    }
+                </select>
+            </div>
+
+            <button class="btn btn-secondary" @onclick="HandleClearFilters">Clear Filters</button>
+        </div>
     </div>
 
     <!-- Book Grid -->
@@ -226,6 +236,11 @@
     </div>
 }
 
+<!-- Floating Action Button for Add Book -->
+<button class="fab-add-book" @onclick="NavigateToAddBook" title="Add Book">
+    <span>+</span>
+</button>
+
 @code {
     private Book? selectedBook;
     private bool showQuickTimer;
@@ -236,6 +251,19 @@
     private Guid? draggedBookId;
     private UserPlant? selectedPlant;
     private bool isWateringPlant;
+    private bool filtersExpanded = false;
+
+    private void ToggleFilters()
+    {
+        filtersExpanded = !filtersExpanded;
+    }
+
+    private bool HasActiveFilters()
+    {
+        return ViewModel.FilterStatus.HasValue ||
+               ViewModel.FilterGenreId.HasValue ||
+               !string.IsNullOrWhiteSpace(ViewModel.SearchQuery);
+    }
 
     protected override async Task OnInitializedAsync()
     {

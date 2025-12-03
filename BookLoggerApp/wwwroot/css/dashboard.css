@@ -200,6 +200,11 @@
         padding: 0.75rem;
     }
 
+    .dashboard-container h2 {
+        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+    }
+
     .dashboard-container .stats-grid {
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         gap: 0.5rem;
@@ -207,6 +212,47 @@
 
     .dashboard-container section {
         margin-bottom: 1.5rem;
+    }
+
+    .currently-reading,
+    .goals-section,
+    .plant-widget-section,
+    .recent-activity {
+        padding: 0.75rem;
+    }
+
+    .book-card-large .book-cover {
+        width: 100px;
+        height: 150px;
+    }
+
+    .book-card-large h3 {
+        font-size: 1rem;
+    }
+
+    .book-card-large .author {
+        font-size: 0.85rem;
+    }
+
+    .book-card-large .progress-text {
+        font-size: 0.8rem;
+    }
+
+    .activity-list li {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .activity-icon {
+        font-size: 1rem;
+    }
+
+    .activity-text {
+        font-size: 0.85rem;
+    }
+
+    .activity-time {
+        font-size: 0.75rem;
     }
 }
 

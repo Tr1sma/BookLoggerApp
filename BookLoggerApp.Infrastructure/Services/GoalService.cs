@@ -55,13 +55,75 @@ public class GoalService : IGoalService
     public async Task<IReadOnlyList<ReadingGoal>> GetActiveGoalsAsync(CancellationToken ct = default)
     {
         var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
-        return goals.ToList();
+        var goalsList = goals.ToList();
+
+        // Calculate current progress for each goal dynamically
+        await CalculateGoalProgressAsync(goalsList, ct);
+
+        return goalsList;
     }
 
     public async Task<IReadOnlyList<ReadingGoal>> GetCompletedGoalsAsync(CancellationToken ct = default)
     {
         var goals = await _unitOfWork.ReadingGoals.GetCompletedGoalsAsync();
-        return goals.ToList();
+        var goalsList = goals.ToList();
+
+        // Also calculate progress for completed goals to show final values
+        await CalculateGoalProgressAsync(goalsList, ct);
+
+        return goalsList;
+    }
+
+    private async Task CalculateGoalProgressAsync(List<ReadingGoal> goals, CancellationToken ct)
+    {
+        if (!goals.Any()) return;
+
+        // Get all books and sessions for calculation
+        var books = await _unitOfWork.Books.GetAllAsync();
+        var sessions = await _unitOfWork.ReadingSessions.GetAllAsync();
+
+        foreach (var goal in goals)
+        {
+            goal.Current = goal.Type switch
+            {
+                GoalType.Books => CalculateBooksProgress(books, goal),
+                GoalType.Pages => CalculatePagesProgress(sessions, goal),
+                GoalType.Minutes => CalculateMinutesProgress(sessions, goal),
+                _ => goal.Current
+            };
+
+            // Auto-mark as completed if target is reached
+            if (goal.Current >= goal.Target && !goal.IsCompleted)
+            {
+                goal.IsCompleted = true;
+                await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+            }
+        }
+
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    private int CalculateBooksProgress(IEnumerable<Book> books, ReadingGoal goal)
+    {
+        return books.Count(b =>
+            b.Status == ReadingStatus.Completed &&
+            b.DateCompleted.HasValue &&
+            b.DateCompleted.Value >= goal.StartDate &&
+            b.DateCompleted.Value <= goal.EndDate);
+    }
+
+    private int CalculatePagesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal)
+    {
+        return sessions
+            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= goal.StartDate && s.EndedAt.Value <= goal.EndDate)
+            .Sum(s => s.PagesRead ?? 0);
+    }
+
+    private int CalculateMinutesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal)
+    {
+        return sessions
+            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= goal.StartDate && s.EndedAt.Value <= goal.EndDate)
+            .Sum(s => s.Minutes);
     }
 
     public async Task<IReadOnlyList<ReadingGoal>> GetGoalsByTypeAsync(GoalType type, CancellationToken ct = default)

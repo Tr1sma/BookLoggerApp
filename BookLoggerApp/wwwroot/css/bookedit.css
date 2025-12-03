@@ -1,6 +1,6 @@
-/* Book Edit Form - Cozy Dark Mode */
+/* Book Edit Form - Cozy Dark Mode - Mobile First */
 .book-edit-container {
-    padding: 2.5rem;
+    padding: 1.5rem;
     max-width: 900px;
     margin: 0 auto;
     min-height: 100vh;
@@ -10,13 +10,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
     border-bottom: 2px solid var(--border-light);
 }
 
 .book-edit-header h1 {
-    font-size: 2.25rem;
+    font-size: 1.75rem;
     background: var(--gradient-warm);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -30,13 +30,13 @@
 .book-edit-form {
     display: flex;
     flex-direction: column;
-    gap: 2.5rem;
+    gap: 1.25rem;
 }
 
 .form-section {
     background: var(--gradient-card);
     border-radius: var(--border-radius-lg);
-    padding: 2rem;
+    padding: 1.25rem;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow);
     transition: var(--transition);
@@ -313,32 +313,273 @@
 /* Responsive */
 @media (max-width: 768px) {
     .book-edit-container {
-        padding: 1.5rem;
+        padding: 1.25rem;
     }
 
     .book-edit-header {
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
         align-items: flex-start;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
     }
 
     .book-edit-header h1 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
     }
 
     .form-section {
-        padding: 1.5rem;
+        padding: 1rem;
+    }
+
+    .form-section h2 {
+        font-size: 1.15rem;
+        margin-bottom: 1rem;
     }
 
     .genres-selection {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+
+    .genre-checkbox {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.85rem;
     }
 
     .form-actions {
         flex-direction: column-reverse;
+        padding-top: 1.25rem;
+        gap: 0.75rem;
     }
 
     .form-actions .btn {
         width: 100%;
+        min-width: unset;
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* 640px - Compact Mobile */
+@media (max-width: 640px) {
+    .book-edit-container {
+        padding: 1rem;
+    }
+
+    .book-edit-header h1 {
+        font-size: 1.35rem;
+    }
+
+    .form-section {
+        padding: 0.875rem;
+    }
+
+    .form-section h2 {
+        font-size: 1.05rem;
+        margin-bottom: 0.875rem;
+        gap: 0.5rem;
+    }
+
+    .form-section h2::before {
+        font-size: 1.15rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        font-size: 0.85rem;
+        margin-bottom: 0.375rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.7rem 0.875rem;
+        font-size: 0.9rem;
+    }
+
+    .form-group textarea {
+        min-height: 80px;
+    }
+}
+
+/* 480px - Very Compact */
+@media (max-width: 480px) {
+    .book-edit-container {
+        padding: 0.75rem;
+    }
+
+    .book-edit-header {
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .book-edit-header h1 {
+        font-size: 1.25rem;
+        letter-spacing: -0.03em;
+    }
+
+    .book-edit-form {
+        gap: 0.875rem;
+    }
+
+    .form-section {
+        padding: 0.75rem;
+        border-radius: var(--border-radius);
+    }
+
+    .form-section h2 {
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .form-section h2::before {
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 0.75rem;
+    }
+
+    .form-group label {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .genres-selection {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.375rem;
+    }
+
+    .genre-checkbox {
+        padding: 0.5rem 0.6rem;
+        font-size: 0.8rem;
+        gap: 0.5rem;
+    }
+
+    .genre-checkbox input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+    }
+
+    .form-actions {
+        padding-top: 1rem;
+        gap: 0.5rem;
+    }
+
+    .form-actions .btn {
+        padding: 0.65rem 0.875rem;
+        font-size: 0.9rem;
+    }
+
+    .star-button {
+        font-size: 1.6rem;
+        padding: 0.15rem;
+    }
+
+    .star-button.clear {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.75rem;
+    }
+
+    .spine-color-picker {
+        gap: 0.5rem;
+    }
+
+    .spine-color-option {
+        width: 45px;
+        height: 60px;
+    }
+
+    .cover-preview img {
+        max-width: 150px;
+        max-height: 225px;
+    }
+}
+
+/* 400px - Ultra Compact */
+@media (max-width: 400px) {
+    .book-edit-container {
+        padding: 0.5rem;
+    }
+
+    .book-edit-header {
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.375rem;
+    }
+
+    .book-edit-header h1 {
+        font-size: 1.1rem;
+    }
+
+    .book-edit-form {
+        gap: 0.75rem;
+    }
+
+    .form-section {
+        padding: 0.625rem;
+    }
+
+    .form-section h2 {
+        font-size: 0.9rem;
+        margin-bottom: 0.625rem;
+    }
+
+    .form-group {
+        margin-bottom: 0.625rem;
+    }
+
+    .form-group label {
+        font-size: 0.75rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.5rem 0.625rem;
+        font-size: 0.8rem;
+    }
+
+    .genres-selection {
+        grid-template-columns: 1fr;
+        gap: 0.3rem;
+    }
+
+    .genre-checkbox {
+        padding: 0.45rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .star-button {
+        font-size: 1.4rem;
+    }
+
+    .spine-color-picker {
+        gap: 0.375rem;
+    }
+
+    .spine-color-option {
+        width: 38px;
+        height: 50px;
+        border-width: 2px;
+    }
+
+    .cover-preview img {
+        max-width: 120px;
+        max-height: 180px;
+    }
+
+    .isbn-input-group .btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
     }
 }

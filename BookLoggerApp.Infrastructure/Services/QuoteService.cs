@@ -10,22 +10,22 @@ namespace BookLoggerApp.Infrastructure.Services;
 /// </summary>
 public class QuoteService : IQuoteService
 {
-    private readonly IRepository<Quote> _quoteRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public QuoteService(IRepository<Quote> quoteRepository)
+    public QuoteService(IUnitOfWork unitOfWork)
     {
-        _quoteRepository = quoteRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IReadOnlyList<Quote>> GetAllAsync(CancellationToken ct = default)
     {
-        var quotes = await _quoteRepository.GetAllAsync();
+        var quotes = await _unitOfWork.Quotes.GetAllAsync();
         return quotes.ToList();
     }
 
     public async Task<Quote?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _quoteRepository.GetByIdAsync(id);
+        return await _unitOfWork.Quotes.GetByIdAsync(id);
     }
 
     public async Task<Quote> AddAsync(Quote quote, CancellationToken ct = default)
@@ -33,32 +33,32 @@ public class QuoteService : IQuoteService
         if (quote.CreatedAt == default)
             quote.CreatedAt = DateTime.UtcNow;
 
-        return await _quoteRepository.AddAsync(quote);
+        return await _unitOfWork.Quotes.AddAsync(quote);
     }
 
     public async Task UpdateAsync(Quote quote, CancellationToken ct = default)
     {
-        await _quoteRepository.UpdateAsync(quote);
+        await _unitOfWork.Quotes.UpdateAsync(quote);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var quote = await _quoteRepository.GetByIdAsync(id);
+        var quote = await _unitOfWork.Quotes.GetByIdAsync(id);
         if (quote != null)
         {
-            await _quoteRepository.DeleteAsync(quote);
+            await _unitOfWork.Quotes.DeleteAsync(quote);
         }
     }
 
     public async Task<IReadOnlyList<Quote>> GetQuotesByBookAsync(Guid bookId, CancellationToken ct = default)
     {
-        var quotes = await _quoteRepository.FindAsync(q => q.BookId == bookId);
+        var quotes = await _unitOfWork.Quotes.FindAsync(q => q.BookId == bookId);
         return quotes.ToList();
     }
 
     public async Task<IReadOnlyList<Quote>> GetFavoriteQuotesAsync(CancellationToken ct = default)
     {
-        var quotes = await _quoteRepository.FindAsync(q => q.IsFavorite);
+        var quotes = await _unitOfWork.Quotes.FindAsync(q => q.IsFavorite);
         return quotes.ToList();
     }
 
@@ -68,17 +68,17 @@ public class QuoteService : IQuoteService
             return await GetAllAsync(ct);
 
         var lowerQuery = query.ToLower();
-        var quotes = await _quoteRepository.FindAsync(q => q.Text.ToLower().Contains(lowerQuery));
+        var quotes = await _unitOfWork.Quotes.FindAsync(q => q.Text.ToLower().Contains(lowerQuery));
         return quotes.ToList();
     }
 
     public async Task ToggleFavoriteAsync(Guid quoteId, CancellationToken ct = default)
     {
-        var quote = await _quoteRepository.GetByIdAsync(quoteId);
+        var quote = await _unitOfWork.Quotes.GetByIdAsync(quoteId);
         if (quote == null)
             throw new EntityNotFoundException(typeof(Quote), quoteId);
 
         quote.IsFavorite = !quote.IsFavorite;
-        await _quoteRepository.UpdateAsync(quote);
+        await _unitOfWork.Quotes.UpdateAsync(quote);
     }
 }

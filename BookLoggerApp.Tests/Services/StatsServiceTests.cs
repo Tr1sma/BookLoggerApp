@@ -2,7 +2,7 @@ using FluentAssertions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Services;
-using BookLoggerApp.Infrastructure.Repositories.Specific;
+using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Tests.TestHelpers;
 using Xunit;
 
@@ -11,16 +11,14 @@ namespace BookLoggerApp.Tests.Services;
 public class StatsServiceTests : IDisposable
 {
     private readonly AppDbContext _context;
-    private readonly BookRepository _bookRepository;
-    private readonly ReadingSessionRepository _sessionRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly StatsService _service;
 
     public StatsServiceTests()
     {
         _context = TestDbContext.Create();
-        _bookRepository = new BookRepository(_context);
-        _sessionRepository = new ReadingSessionRepository(_context);
-        _service = new StatsService(_bookRepository, _sessionRepository, _context);
+        _unitOfWork = new UnitOfWork(_context);
+        _service = new StatsService(_unitOfWork);
     }
 
     public void Dispose()
@@ -53,7 +51,7 @@ public class StatsServiceTests : IDisposable
             Status = ReadingStatus.Completed,
             CharactersRating = 5
         };
-        await _bookRepository.AddAsync(book);
+        await _unitOfWork.Books.AddAsync(book);
         await _context.SaveChangesAsync();
 
         // Act
@@ -67,7 +65,7 @@ public class StatsServiceTests : IDisposable
     public async Task GetAverageRatingByCategoryAsync_WithMultipleBooks_ShouldCalculateCorrectly()
     {
         // Arrange
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Book 1",
             Author = "Author 1",
@@ -75,7 +73,7 @@ public class StatsServiceTests : IDisposable
             CharactersRating = 5
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Book 2",
             Author = "Author 2",
@@ -83,7 +81,7 @@ public class StatsServiceTests : IDisposable
             CharactersRating = 3
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Book 3",
             Author = "Author 3",
@@ -103,7 +101,7 @@ public class StatsServiceTests : IDisposable
     public async Task GetAverageRatingByCategoryAsync_ShouldIgnoreNullRatings()
     {
         // Arrange
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Book 1",
             Author = "Author 1",
@@ -111,7 +109,7 @@ public class StatsServiceTests : IDisposable
             PlotRating = 5
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Book 2",
             Author = "Author 2",
@@ -119,7 +117,7 @@ public class StatsServiceTests : IDisposable
             PlotRating = null
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Book 3",
             Author = "Author 3",
@@ -139,7 +137,7 @@ public class StatsServiceTests : IDisposable
     public async Task GetAverageRatingByCategoryAsync_ShouldOnlyIncludeCompletedBooks()
     {
         // Arrange
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Completed Book",
             Author = "Author",
@@ -147,7 +145,7 @@ public class StatsServiceTests : IDisposable
             WritingStyleRating = 5
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Reading Book",
             Author = "Author",
@@ -155,7 +153,7 @@ public class StatsServiceTests : IDisposable
             WritingStyleRating = 3
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Planned Book",
             Author = "Author",
@@ -175,7 +173,7 @@ public class StatsServiceTests : IDisposable
     public async Task GetAllAverageRatingsAsync_ShouldReturnAllCategories()
     {
         // Arrange
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Test Book",
             Author = "Test Author",
@@ -208,7 +206,7 @@ public class StatsServiceTests : IDisposable
     public async Task GetTopRatedBooksAsync_ShouldReturnBooksOrderedByRating()
     {
         // Arrange
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Low Rated",
             Author = "Author",
@@ -217,7 +215,7 @@ public class StatsServiceTests : IDisposable
             PlotRating = 2
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "High Rated",
             Author = "Author",
@@ -226,7 +224,7 @@ public class StatsServiceTests : IDisposable
             PlotRating = 5
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Medium Rated",
             Author = "Author",
@@ -253,7 +251,7 @@ public class StatsServiceTests : IDisposable
         // Arrange
         for (int i = 1; i <= 15; i++)
         {
-            await _bookRepository.AddAsync(new Book
+            await _unitOfWork.Books.AddAsync(new Book
             {
                 Title = $"Book {i}",
                 Author = "Author",
@@ -274,7 +272,7 @@ public class StatsServiceTests : IDisposable
     public async Task GetTopRatedBooksAsync_FilteredByCategory_ShouldOnlyConsiderThatCategory()
     {
         // Arrange
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Best Plot",
             Author = "Author",
@@ -283,7 +281,7 @@ public class StatsServiceTests : IDisposable
             CharactersRating = 2
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Best Characters",
             Author = "Author",
@@ -306,7 +304,7 @@ public class StatsServiceTests : IDisposable
     public async Task GetBooksWithRatingsAsync_ShouldReturnAllCompletedBooks()
     {
         // Arrange
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Completed Book 1",
             Author = "Author",
@@ -314,7 +312,7 @@ public class StatsServiceTests : IDisposable
             OverallRating = 5
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Completed Book 2",
             Author = "Author",
@@ -322,7 +320,7 @@ public class StatsServiceTests : IDisposable
             OverallRating = 4
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Reading Book",
             Author = "Author",
@@ -343,7 +341,7 @@ public class StatsServiceTests : IDisposable
     public async Task GetBooksWithRatingsAsync_ShouldIncludeRatingsDictionary()
     {
         // Arrange
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Test Book",
             Author = "Author",
@@ -392,7 +390,7 @@ public class StatsServiceTests : IDisposable
             WorldBuildingRating = 5,
             OverallRating = 4
         };
-        await _bookRepository.AddAsync(book);
+        await _unitOfWork.Books.AddAsync(book);
         await _context.SaveChangesAsync();
 
         // Act
@@ -414,7 +412,7 @@ public class StatsServiceTests : IDisposable
         var oldDate = DateTime.UtcNow.AddDays(-30);
         var recentDate = DateTime.UtcNow.AddDays(-5);
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Old Book",
             Author = "Author",
@@ -423,7 +421,7 @@ public class StatsServiceTests : IDisposable
             CharactersRating = 2
         });
 
-        await _bookRepository.AddAsync(new Book
+        await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Recent Book",
             Author = "Author",

@@ -59,14 +59,19 @@
         0 12px 32px rgba(255, 193, 7, 0.4),
         inset 0 4px 12px rgba(0, 0, 0, 0.3);
     animation: levelBadgeFloat 3s ease-in-out infinite;
+    overflow: hidden;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes levelBadgeFloat {
     0%, 100% {
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
     50% {
-        transform: translateY(-10px);
+        transform: translateY(-10px) translateZ(0);
     }
 }
 
@@ -82,6 +87,7 @@
     text-shadow:
         0 2px 8px rgba(255, 193, 7, 0.6),
         0 0 30px rgba(255, 193, 7, 0.4);
+    white-space: nowrap;
 }
 
 .level-label {
@@ -138,6 +144,9 @@
         0 0 24px rgba(255, 193, 7, 0.4);
     border-radius: 10px;
     position: relative;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .xp-progress-fill::after {
@@ -152,11 +161,15 @@
         rgba(255, 255, 255, 0.3) 50%,
         rgba(255, 255, 255, 0) 100%);
     animation: progressShine 2s ease-in-out infinite;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes progressShine {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    0% { transform: translateX(-100%) translateZ(0); }
+    100% { transform: translateX(100%) translateZ(0); }
 }
 
 .xp-percentage-text {
@@ -182,11 +195,15 @@
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
     filter: drop-shadow(0 2px 6px rgba(255, 193, 7, 0.5));
     animation: coinBounce 2s ease-in-out infinite;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes coinBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+    0%, 100% { transform: translateY(0) translateZ(0); }
+    50% { transform: translateY(-4px) translateZ(0); }
 }
 
 .coins-amount {
@@ -194,6 +211,10 @@
     font-weight: 900;
     color: #ffc107;
     text-shadow: 0 2px 6px rgba(255, 193, 7, 0.4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
 }
 
 .coins-label {
@@ -207,6 +228,26 @@
 .stats-grid-section {
     margin-bottom: 1.25rem;
     animation: slideUp 0.6s ease 0.2s both;
+}
+
+/* ===== Stats Chips Section ===== */
+.stats-chips-section {
+    margin-bottom: 1.25rem;
+    animation: slideUp 0.6s ease 0.2s both;
+}
+
+.stats-chips-section h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+@media (max-width: 640px) {
+    .stats-chips-section h2 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
 }
 
 @keyframes slideUp {
@@ -379,6 +420,10 @@
     background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
     box-shadow: 0 4px 20px rgba(255, 193, 7, 0.3);
     animation: currentMilestonePulse 2s ease-in-out infinite;
+    /* GPU Acceleration */
+    will-change: box-shadow;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes currentMilestonePulse {
@@ -420,11 +465,15 @@
 .icon-current {
     color: #ffc107;
     animation: iconRotate 3s ease-in-out infinite;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes iconRotate {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(-10deg); }
+    0%, 100% { transform: rotate(0deg) translateZ(0); }
+    50% { transform: rotate(-10deg) translateZ(0); }
 }
 
 .icon-future {
@@ -445,7 +494,8 @@
 
 .milestone-requirements {
     display: flex;
-    gap: 0.9rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
     font-size: 0.8rem;
 }
 
@@ -551,6 +601,10 @@
 .rating-averages-section {
     margin-bottom: 1.25rem;
     animation: slideUp 0.6s ease 0.7s both;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-light);
 }
 
 .rating-averages-section h2 {
@@ -567,10 +621,10 @@
 }
 
 .rating-average-card {
-    background: var(--gradient-card);
+    background: linear-gradient(145deg, #2D2419 0%, #251E15 100%);
     border-radius: 12px;
     padding: 1.25rem;
-    border: 1px solid var(--border-light);
+    border: 1px solid rgba(139, 115, 85, 0.3);
     text-align: center;
     transition: all 0.3s ease;
 }
@@ -631,6 +685,10 @@
 .top-rated-books-section {
     margin-bottom: 1.25rem;
     animation: slideUp 0.6s ease 0.8s both;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-light);
 }
 
 .top-rated-books-section h2 {
@@ -679,10 +737,10 @@
     display: flex;
     align-items: center;
     gap: 1.25rem;
-    background: var(--gradient-card);
+    background: linear-gradient(145deg, #2D2419 0%, #251E15 100%);
     border-radius: 12px;
     padding: 1rem 1.25rem;
-    border: 1px solid var(--border-light);
+    border: 1px solid rgba(139, 115, 85, 0.3);
     transition: all 0.3s ease;
 }
 
@@ -713,20 +771,30 @@
 }
 
 .top-book-item .book-title {
+    /* Reset vertical spine styles - keep horizontal */
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    transform: none;
     font-size: 1.125rem;
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 0.25rem;
     text-shadow: none;
     max-height: none;
+    white-space: normal;
     -webkit-line-clamp: unset;
 }
 
 .top-book-item .book-author {
+    /* Reset vertical spine styles - keep horizontal */
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    transform: none;
     font-size: 0.95rem;
     color: var(--text-secondary);
     text-shadow: none;
     max-height: none;
+    white-space: normal;
     -webkit-line-clamp: unset;
 }
 
@@ -887,6 +955,157 @@
 
     .stats-grid-section {
         margin-bottom: 1rem;
+    }
+
+    /* Section Headers */
+    .favorite-genre-section h2,
+    .genre-breakdown-section h2,
+    .rating-averages-section h2,
+    .top-rated-books-section h2 {
+        font-size: 1.1rem;
+        margin-bottom: 0.6rem;
+    }
+
+    /* Favorite Genre Card */
+    .favorite-genre-card {
+        padding: 0.75rem;
+    }
+
+    .favorite-genre-card .genre-name {
+        font-size: 1.1rem;
+    }
+
+    /* Genre Grid */
+    .genre-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .genre-card {
+        padding: 0.6rem;
+    }
+
+    .genre-card .genre-name {
+        font-size: 0.8rem;
+    }
+
+    .genre-count {
+        font-size: 1.1rem;
+    }
+
+    /* Rating Averages */
+    .rating-averages-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .rating-average-card {
+        padding: 0.6rem;
+    }
+
+    .rating-category-header .rating-emoji {
+        font-size: 1rem;
+    }
+
+    .rating-name {
+        font-size: 0.8rem;
+    }
+
+    .rating-value {
+        font-size: 1.4rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .rating-stars-display .star {
+        font-size: 1rem;
+    }
+
+    /* Top Books */
+    .top-book-item {
+        padding: 0.6rem;
+        gap: 0.5rem;
+    }
+
+    .book-rank {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    .top-book-item .book-title {
+        font-size: 0.9rem;
+    }
+
+    .top-book-item .book-author {
+        font-size: 0.75rem;
+    }
+
+    .average-rating {
+        font-size: 1rem;
+    }
+
+    .mini-rating {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.35rem;
+    }
+
+    /* Category Filter */
+    .category-filter-buttons {
+        gap: 0.35rem;
+    }
+
+    .category-filter-btn {
+        padding: 0.35rem 0.65rem;
+        font-size: 0.75rem;
+    }
+
+    /* Plant Boost */
+    .plant-boost-section {
+        padding: 0.6rem;
+    }
+
+    .section-header h2 {
+        font-size: 1rem;
+    }
+
+    .plant-boost-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.4rem;
+    }
+
+    .plant-boost-card {
+        padding: 0.5rem;
+    }
+
+    .plant-name {
+        font-size: 0.75rem;
+    }
+
+    .plant-boost-value {
+        font-size: 0.9rem;
+    }
+
+    /* Milestones */
+    .level-milestones-section h2 {
+        font-size: 1rem;
+    }
+
+    .milestones-list {
+        gap: 0.4rem;
+    }
+
+    .milestone-item {
+        padding: 0.4rem 0.5rem;
+        gap: 0.4rem;
+    }
+
+    .milestone-level {
+        font-size: 0.8rem;
+    }
+
+    .milestone-requirements {
+        gap: 0.5rem;
+        font-size: 0.7rem;
     }
 }
 

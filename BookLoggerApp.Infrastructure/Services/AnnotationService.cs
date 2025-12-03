@@ -9,22 +9,22 @@ namespace BookLoggerApp.Infrastructure.Services;
 /// </summary>
 public class AnnotationService : IAnnotationService
 {
-    private readonly IRepository<Annotation> _annotationRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public AnnotationService(IRepository<Annotation> annotationRepository)
+    public AnnotationService(IUnitOfWork unitOfWork)
     {
-        _annotationRepository = annotationRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IReadOnlyList<Annotation>> GetAllAsync(CancellationToken ct = default)
     {
-        var annotations = await _annotationRepository.GetAllAsync();
+        var annotations = await _unitOfWork.Annotations.GetAllAsync();
         return annotations.ToList();
     }
 
     public async Task<Annotation?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _annotationRepository.GetByIdAsync(id);
+        return await _unitOfWork.Annotations.GetByIdAsync(id);
     }
 
     public async Task<Annotation> AddAsync(Annotation annotation, CancellationToken ct = default)
@@ -32,27 +32,27 @@ public class AnnotationService : IAnnotationService
         if (annotation.CreatedAt == default)
             annotation.CreatedAt = DateTime.UtcNow;
 
-        return await _annotationRepository.AddAsync(annotation);
+        return await _unitOfWork.Annotations.AddAsync(annotation);
     }
 
     public async Task UpdateAsync(Annotation annotation, CancellationToken ct = default)
     {
         annotation.UpdatedAt = DateTime.UtcNow;
-        await _annotationRepository.UpdateAsync(annotation);
+        await _unitOfWork.Annotations.UpdateAsync(annotation);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var annotation = await _annotationRepository.GetByIdAsync(id);
+        var annotation = await _unitOfWork.Annotations.GetByIdAsync(id);
         if (annotation != null)
         {
-            await _annotationRepository.DeleteAsync(annotation);
+            await _unitOfWork.Annotations.DeleteAsync(annotation);
         }
     }
 
     public async Task<IReadOnlyList<Annotation>> GetAnnotationsByBookAsync(Guid bookId, CancellationToken ct = default)
     {
-        var annotations = await _annotationRepository.FindAsync(a => a.BookId == bookId);
+        var annotations = await _unitOfWork.Annotations.FindAsync(a => a.BookId == bookId);
         return annotations.ToList();
     }
 
@@ -62,7 +62,7 @@ public class AnnotationService : IAnnotationService
             return await GetAllAsync(ct);
 
         var lowerQuery = query.ToLower();
-        var annotations = await _annotationRepository.FindAsync(a =>
+        var annotations = await _unitOfWork.Annotations.FindAsync(a =>
             a.Note.ToLower().Contains(lowerQuery) ||
             (a.Title != null && a.Title.ToLower().Contains(lowerQuery)));
         return annotations.ToList();

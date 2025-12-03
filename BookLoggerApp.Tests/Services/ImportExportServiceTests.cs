@@ -15,7 +15,8 @@ public class ImportExportServiceTests
     public async Task ExportToJsonAsync_ShouldExportBooksAsJson()
     {
         // Arrange
-        using var context = TestDbContext.Create();
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
         context.Books.Add(new Book
         {
             Title = "Test Book",
@@ -24,7 +25,8 @@ public class ImportExportServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new ImportExportService(context, CreateFileSystem());
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem());
 
         // Act
         var json = await service.ExportToJsonAsync();
@@ -40,7 +42,8 @@ public class ImportExportServiceTests
     public async Task ExportToCsvAsync_ShouldExportBooksAsCsv()
     {
         // Arrange
-        using var context = TestDbContext.Create();
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
         context.Books.Add(new Book
         {
             Title = "Test Book",
@@ -49,7 +52,8 @@ public class ImportExportServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new ImportExportService(context, CreateFileSystem());
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem());
 
         // Act
         var csv = await service.ExportToCsvAsync();
@@ -66,7 +70,8 @@ public class ImportExportServiceTests
     public async Task ImportFromJsonAsync_ShouldImportBooks()
     {
         // Arrange
-        using var exportContext = TestDbContext.Create();
+        var exportDbName = Guid.NewGuid().ToString();
+        using var exportContext = TestDbContext.Create(exportDbName);
         exportContext.Books.Add(new Book
         {
             Id = Guid.NewGuid(),
@@ -76,18 +81,23 @@ public class ImportExportServiceTests
         });
         await exportContext.SaveChangesAsync();
 
-        var exportService = new ImportExportService(exportContext, CreateFileSystem());
+        var exportContextFactory = new TestDbContextFactory(exportDbName);
+        var exportService = new ImportExportService(exportContextFactory, CreateFileSystem());
         var json = await exportService.ExportToJsonAsync();
 
-        using var importContext = TestDbContext.Create();
-        var importService = new ImportExportService(importContext, CreateFileSystem());
+        var importDbName = Guid.NewGuid().ToString();
+        using var importContext = TestDbContext.Create(importDbName);
+        var importContextFactory = new TestDbContextFactory(importDbName);
+        var importService = new ImportExportService(importContextFactory, CreateFileSystem());
 
         // Act
         var importedCount = await importService.ImportFromJsonAsync(json);
 
         // Assert
         importedCount.Should().Be(1);
-        var books = importContext.Books.ToList();
+        // Need to query from a new context to see the imported data
+        using var verifyContext = TestDbContext.Create(importDbName);
+        var books = verifyContext.Books.ToList();
         books.Should().HaveCount(1);
         books[0].Title.Should().Be("Test Book");
         books[0].Author.Should().Be("Test Author");
@@ -100,15 +110,19 @@ public class ImportExportServiceTests
         var csv = @"Id,Title,Author,ISBN,Publisher,PublicationYear,Language,Description,PageCount,CurrentPage,CoverImagePath,Status,Rating,DateAdded,DateStarted,DateCompleted,Genres
 d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publisher,2023,en,Test Description,300,0,,Planned,5,2023-01-01T00:00:00,,,Fiction;Fantasy";
 
-        using var context = TestDbContext.Create();
-        var service = new ImportExportService(context, CreateFileSystem());
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem());
 
         // Act
         var importedCount = await service.ImportFromCsvAsync(csv);
 
         // Assert
         importedCount.Should().Be(1);
-        var books = context.Books.ToList();
+        // Need to query from a new context to see the imported data
+        using var verifyContext = TestDbContext.Create(dbName);
+        var books = verifyContext.Books.ToList();
         books.Should().HaveCount(1);
         books[0].Title.Should().Be("Test Book");
         books[0].Author.Should().Be("Test Author");
@@ -119,7 +133,8 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
     public async Task ImportFromJsonAsync_WithDuplicates_ShouldSkipDuplicates()
     {
         // Arrange
-        using var context = TestDbContext.Create();
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
         var existingBook = new Book
         {
             Title = "Test Book",
@@ -129,7 +144,8 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         context.Books.Add(existingBook);
         await context.SaveChangesAsync();
 
-        var service = new ImportExportService(context, CreateFileSystem());
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem());
         var json = await service.ExportToJsonAsync();
 
         // Act - import the same books again
@@ -137,18 +153,22 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
 
         // Assert
         importedCount.Should().Be(0); // No new books imported
-        context.Books.Should().HaveCount(1); // Still only 1 book
+        // Need to query from a new context to verify count
+        using var verifyContext = TestDbContext.Create(dbName);
+        verifyContext.Books.Should().HaveCount(1); // Still only 1 book
     }
 
     [Fact]
     public async Task CreateBackupAsync_ShouldCreateBackupFile()
     {
         // Arrange
-        using var context = TestDbContext.Create();
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
         context.Books.Add(new Book { Title = "Test", Author = "Test" });
         await context.SaveChangesAsync();
 
-        var service = new ImportExportService(context, CreateFileSystem());
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem());
 
         // Act & Assert
         // Note: Backup functionality requires a real SQLite database file,

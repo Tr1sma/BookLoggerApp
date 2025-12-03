@@ -337,18 +337,213 @@
     line-height: 1.6;
 }
 
-/* Responsive */
+/* Responsive - Tablet */
 @media (max-width: 768px) {
     .book-detail-container {
         padding: 1.5rem;
     }
-    
+
     .book-detail-content {
         grid-template-columns: 1fr;
     }
-    
+
     .book-cover-section {
         max-width: 250px;
         margin: 0 auto;
+    }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+    .book-detail-container {
+        padding: 0.75rem;
+    }
+
+    .book-detail-header {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+    }
+
+    .book-detail-header h1 {
+        font-size: 1.25rem;
+        line-height: 1.3;
+    }
+
+    .book-detail-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .book-detail-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .book-detail-content {
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .book-cover-section {
+        max-width: 150px;
+        margin: 0 auto;
+    }
+
+    .book-cover-section img {
+        margin-bottom: 1rem;
+    }
+
+    .book-cover-placeholder {
+        margin-bottom: 1rem;
+    }
+
+    .cover-placeholder-icon {
+        font-size: 2rem;
+    }
+
+    .cover-placeholder-title {
+        font-size: 0.8rem;
+    }
+
+    .quick-actions {
+        gap: 0.5rem;
+    }
+
+    .quick-actions .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .book-info-section {
+        padding: 0.75rem;
+    }
+
+    .book-info-section h2 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .book-meta {
+        gap: 0;
+        margin-bottom: 1rem;
+    }
+
+    .book-meta-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        padding: 0.5rem 0;
+    }
+
+    .book-meta-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .book-meta-value {
+        font-size: 0.85rem;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+    }
+
+    .book-description {
+        margin-top: 1rem;
+        padding-top: 1rem;
+    }
+
+    .book-description h3 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .book-description p {
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+
+    /* Reading Progress Mobile */
+    .reading-progress-section {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .reading-progress-section h3 {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .progress-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .progress-stat-item {
+        padding: 0.65rem;
+    }
+
+    .progress-stat-item label {
+        font-size: 0.65rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .progress-stat-item p {
+        font-size: 1rem;
+    }
+
+    .progress-bar-large {
+        height: 12px;
+    }
+
+    /* Reading Sessions Mobile */
+    .reading-sessions-section {
+        padding: 0.75rem;
+    }
+
+    .reading-sessions-section h3 {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .session-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .session-date {
+        font-size: 0.8rem;
+    }
+
+    .session-details {
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        font-size: 0.85rem;
+    }
+
+    /* Notes Section Mobile */
+    .notes-section {
+        padding: 0.75rem;
+    }
+
+    .notes-section h3 {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .note-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .note-content {
+        font-size: 0.85rem;
     }
 }

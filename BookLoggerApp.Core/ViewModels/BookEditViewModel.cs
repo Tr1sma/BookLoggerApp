@@ -39,6 +39,21 @@ public partial class BookEditViewModel : ViewModelBase
     [ObservableProperty]
     private string? _lookupMessage;
 
+    [ObservableProperty]
+    private bool _showBookCompletionCelebration;
+
+    [ObservableProperty]
+    private bool _showDeleteConfirmation;
+
+    [ObservableProperty]
+    private bool _isDeleting;
+
+    [ObservableProperty]
+    private bool _bookDeleted;
+
+    // Track original status to detect when book becomes completed
+    private ReadingStatus? _originalStatus;
+
     [RelayCommand]
     public async Task LoadAsync(Guid? bookId)
     {
@@ -52,6 +67,7 @@ public partial class BookEditViewModel : ViewModelBase
                 if (Book != null)
                 {
                     SelectedGenreIds = Book.BookGenres.Select(bg => bg.GenreId).ToList();
+                    _originalStatus = Book.Status;
                 }
             }
             else
@@ -63,6 +79,7 @@ public partial class BookEditViewModel : ViewModelBase
                     Status = ReadingStatus.Planned,
                     DateAdded = DateTime.UtcNow
                 };
+                _originalStatus = null;
             }
         }, "Failed to load book");
     }
@@ -71,6 +88,9 @@ public partial class BookEditViewModel : ViewModelBase
     public async Task SaveAsync()
     {
         if (Book == null) return;
+
+        // Reset celebration flag
+        ShowBookCompletionCelebration = false;
 
         await ExecuteSafelyAsync(async () =>
         {
@@ -82,6 +102,11 @@ public partial class BookEditViewModel : ViewModelBase
 
             var isNewBook = Book.Id == Guid.Empty || await _bookService.GetByIdAsync(Book.Id) == null;
             var coverImageUrl = Book.CoverImagePath;
+
+            // Check if book is being marked as completed for the first time
+            var isBeingCompleted = Book.Status == ReadingStatus.Completed &&
+                                   _originalStatus.HasValue &&
+                                   _originalStatus.Value != ReadingStatus.Completed;
 
             if (isNewBook)
             {
@@ -99,11 +124,28 @@ public partial class BookEditViewModel : ViewModelBase
                         await _bookService.UpdateAsync(Book);
                     }
                 }
+
+                // If new book is being added as completed, award XP
+                if (Book.Status == ReadingStatus.Completed)
+                {
+                    await _bookService.CompleteBookAsync(Book.Id);
+                    ShowBookCompletionCelebration = true;
+                }
             }
             else
             {
-                // Update existing
-                await _bookService.UpdateAsync(Book);
+                // Update existing book
+                if (isBeingCompleted)
+                {
+                    // Book is being marked as completed - use CompleteBookAsync for XP
+                    await _bookService.CompleteBookAsync(Book.Id);
+                    ShowBookCompletionCelebration = true;
+                }
+                else
+                {
+                    // Normal update
+                    await _bookService.UpdateAsync(Book);
+                }
             }
 
             // Update genres
@@ -236,6 +278,23 @@ public partial class BookEditViewModel : ViewModelBase
                 SelectedGenreIds.Add(genreId);
             }
         }
+    }
+
+    [RelayCommand]
+    public async Task DeleteBookAsync()
+    {
+        if (Book == null || Book.Id == Guid.Empty) return;
+
+        IsDeleting = true;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _bookService.DeleteAsync(Book.Id);
+            BookDeleted = true;
+            ShowDeleteConfirmation = false;
+        }, "Buch konnte nicht gelöscht werden");
+
+        IsDeleting = false;
     }
 }
 

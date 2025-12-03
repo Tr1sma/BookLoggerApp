@@ -1,8 +1,11 @@
 .bookshelf-container {
     padding: 1.5rem;
     max-width: 1600px;
+    max-width: 100vw;
     margin: 0 auto;
     min-height: 100vh;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .bookshelf-header {
@@ -53,15 +56,66 @@
     color: var(--text-muted);
 }
 
+/* Collapsible Filters Wrapper */
+.bookshelf-filters-wrapper {
+    margin-bottom: 1.5rem;
+}
+
+.filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-lg);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-toggle-btn:hover {
+    background: var(--card-hover);
+    border-color: var(--primary-color);
+}
+
+.active-filter-badge {
+    background: var(--primary-color);
+    color: var(--bg-primary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: auto;
+}
+
 .bookshelf-filters {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1.5rem;
     flex-wrap: wrap;
     padding: 1rem;
     background: var(--card-bg);
-    border-radius: var(--border-radius-lg);
     border: 1px solid var(--border-light);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+}
+
+.bookshelf-filters.expanded {
+    max-height: 500px;
+    padding: 1rem;
+    opacity: 1;
+}
+
+.bookshelf-filters.collapsed {
+    max-height: 0;
+    padding: 0 1rem;
+    opacity: 0;
+    border: none;
 }
 
 .filter-group {
@@ -209,13 +263,96 @@
 
 /* Responsive Bookshelf */
 @media (max-width: 640px) {
+    .bookshelf-container {
+        padding: 0.5rem;
+    }
+
+    .bookshelf-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .bookshelf-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .bookshelf-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .bookshelf-controls .btn-primary {
+        display: none; /* Hide header button, use FAB instead */
+    }
+
+    .search-input {
+        width: 100%;
+        min-width: unset;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
     .shelf-row {
-        gap: 0.2rem;
-        padding: 1rem 0.75rem 0.75rem 0.75rem;
+        gap: 0.15rem;
+        padding: 0.5rem 0.25rem 0.35rem 0.25rem;
+        overflow-x: hidden;
     }
 
     .book-grid {
-        gap: 1.5rem;
+        gap: 1rem;
+    }
+
+    .bookshelf-filters-wrapper {
+        margin-bottom: 0.75rem;
+    }
+
+    .filter-toggle-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .bookshelf-filters {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .filter-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        width: 100%;
+    }
+
+    .filter-group label {
+        font-size: 0.8rem;
+    }
+
+    .filter-group select {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .bookshelf-footer {
+        padding: 0.75rem;
+        font-size: 0.8rem;
+        margin-top: 1rem;
+    }
+
+    .empty-state {
+        padding: 3rem 1rem;
+    }
+
+    .empty-state h2 {
+        font-size: 1.25rem;
+    }
+
+    .empty-state p {
+        font-size: 0.9rem;
     }
 }
 
@@ -301,5 +438,55 @@
         rgba(90, 74, 58, 0.5) 0%,
         rgba(74, 63, 50, 0.5) 100%) !important;
     border-top: 1px solid rgba(139, 115, 85, 0.3) !important;
+}
+
+/* Floating Action Button for Add Book */
+.fab-add-book {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gradient-warm);
+    border: none;
+    color: var(--bg-primary);
+    font-size: 2rem;
+    font-weight: 300;
+    cursor: pointer;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fab-add-book:hover {
+    transform: scale(1.1);
+    box-shadow:
+        0 6px 16px rgba(0, 0, 0, 0.5),
+        0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.fab-add-book:active {
+    transform: scale(0.95);
+}
+
+.fab-add-book span {
+    line-height: 1;
+    margin-top: -2px;
+}
+
+@media (max-width: 640px) {
+    .fab-add-book {
+        bottom: 70px;
+        right: 16px;
+        width: 52px;
+        height: 52px;
+        font-size: 1.75rem;
+    }
 }
 
