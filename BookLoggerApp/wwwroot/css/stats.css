@@ -58,7 +58,6 @@
     box-shadow:
         0 12px 32px rgba(255, 193, 7, 0.4),
         inset 0 4px 12px rgba(0, 0, 0, 0.3);
-    animation: levelBadgeFloat 3s ease-in-out infinite;
     overflow: hidden;
     /* GPU Acceleration */
     will-change: transform;
@@ -91,11 +90,11 @@
 }
 
 .level-label {
-    font-size: 0.85rem;
+    font-size: 0.65rem;
     color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-top: 0.25rem;
+    letter-spacing: 1px;
+    margin-top: 0.15rem;
 }
 
 /* ===== XP Progress Section ===== */
@@ -194,7 +193,6 @@
     font-size: 1.5rem;
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
     filter: drop-shadow(0 2px 6px rgba(255, 193, 7, 0.5));
-    animation: coinBounce 2s ease-in-out infinite;
     /* GPU Acceleration */
     will-change: transform;
     transform: translateZ(0);
