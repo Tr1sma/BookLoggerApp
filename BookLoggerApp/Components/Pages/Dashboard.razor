@@ -5,6 +5,7 @@
 @inject DashboardViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
+@inject IImageService ImageService
 @implements IDisposable
 
 <PageTitle>Dashboard - BookLogger</PageTitle>
@@ -30,7 +31,10 @@
             @if (ViewModel.CurrentlyReading != null)
             {
                 <div class="book-card-large">
-                    <img src="@GetCoverImageUrl(ViewModel.CurrentlyReading)" alt="Book Cover" class="book-cover" />
+                    @if (!string.IsNullOrEmpty(_coverImageDataUrl))
+                    {
+                        <img src="@_coverImageDataUrl" alt="Book Cover" class="book-cover" />
+                    }
                     <div class="book-info">
                         <h3>@ViewModel.CurrentlyReading.Title</h3>
                         <p class="author">by @ViewModel.CurrentlyReading.Author</p>
@@ -122,6 +126,8 @@
 </div>
 
 @code {
+    private string? _coverImageDataUrl;
+
     protected override async Task OnInitializedAsync()
     {
         // Subscribe to goal changes to refresh data when sessions end
@@ -130,6 +136,7 @@
         try
         {
             await ViewModel.LoadCommand.ExecuteAsync(null);
+            await LoadCoverImageAsync();
         }
         catch (Exception ex)
         {
@@ -153,6 +160,7 @@
         await InvokeAsync(async () =>
         {
             await ViewModel.LoadCommand.ExecuteAsync(null);
+            await LoadCoverImageAsync();
             StateHasChanged();
         });
     }
@@ -162,11 +170,47 @@
         GoalService.GoalsChanged -= OnGoalsChanged;
     }
 
-    private string GetCoverImageUrl(Book book)
+    private async Task LoadCoverImageAsync()
     {
-        return string.IsNullOrEmpty(book.CoverImagePath)
-            ? "/images/placeholder-cover.png"
-            : book.CoverImagePath;
+        _coverImageDataUrl = null;
+
+        if (ViewModel.CurrentlyReading == null || string.IsNullOrEmpty(ViewModel.CurrentlyReading.CoverImagePath))
+            return;
+
+        try
+        {
+            var coverPath = ViewModel.CurrentlyReading.CoverImagePath;
+
+            // If it's already a URL (http/https), use it directly
+            if (coverPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                coverPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                _coverImageDataUrl = coverPath;
+                return;
+            }
+
+            // Get the full path from ImageService
+            var fullPath = await ImageService.GetCoverImagePathAsync(ViewModel.CurrentlyReading.Id);
+
+            if (string.IsNullOrEmpty(fullPath) || !System.IO.File.Exists(fullPath))
+                return;
+
+            // Read the file and convert to Base64
+            var imageBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+            var base64 = Convert.ToBase64String(imageBytes);
+
+            // Determine MIME type
+            var mimeType = fullPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                ? "image/png"
+                : "image/jpeg";
+
+            _coverImageDataUrl = $"data:{mimeType};base64,{base64}";
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load cover image: {ex.Message}");
+            _coverImageDataUrl = null;
+        }
     }
 
     private string FormatMinutes(int minutes)
