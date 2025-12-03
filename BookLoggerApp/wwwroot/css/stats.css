@@ -60,14 +60,18 @@
         inset 0 4px 12px rgba(0, 0, 0, 0.3);
     animation: levelBadgeFloat 3s ease-in-out infinite;
     overflow: hidden;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes levelBadgeFloat {
     0%, 100% {
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
     50% {
-        transform: translateY(-10px);
+        transform: translateY(-10px) translateZ(0);
     }
 }
 
@@ -140,6 +144,9 @@
         0 0 24px rgba(255, 193, 7, 0.4);
     border-radius: 10px;
     position: relative;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .xp-progress-fill::after {
@@ -154,11 +161,15 @@
         rgba(255, 255, 255, 0.3) 50%,
         rgba(255, 255, 255, 0) 100%);
     animation: progressShine 2s ease-in-out infinite;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes progressShine {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    0% { transform: translateX(-100%) translateZ(0); }
+    100% { transform: translateX(100%) translateZ(0); }
 }
 
 .xp-percentage-text {
@@ -184,11 +195,15 @@
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
     filter: drop-shadow(0 2px 6px rgba(255, 193, 7, 0.5));
     animation: coinBounce 2s ease-in-out infinite;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes coinBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+    0%, 100% { transform: translateY(0) translateZ(0); }
+    50% { transform: translateY(-4px) translateZ(0); }
 }
 
 .coins-amount {
@@ -405,6 +420,10 @@
     background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
     box-shadow: 0 4px 20px rgba(255, 193, 7, 0.3);
     animation: currentMilestonePulse 2s ease-in-out infinite;
+    /* GPU Acceleration */
+    will-change: box-shadow;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes currentMilestonePulse {
@@ -446,11 +465,15 @@
 .icon-current {
     color: #ffc107;
     animation: iconRotate 3s ease-in-out infinite;
+    /* GPU Acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes iconRotate {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(-10deg); }
+    0%, 100% { transform: rotate(0deg) translateZ(0); }
+    50% { transform: rotate(-10deg) translateZ(0); }
 }
 
 .icon-future {
