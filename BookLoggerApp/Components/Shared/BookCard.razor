@@ -137,6 +137,12 @@
 
     private string GetSpineStyle()
     {
+        // If UsesCoverAsSpine is true and we have a cover image, use it as background
+        if (Book.UsesCoverAsSpine && !string.IsNullOrEmpty(_coverImageDataUrl))
+        {
+            return $"background-image: url('{_coverImageDataUrl}'); background-size: cover; background-position: center;";
+        }
+
         // Use custom spine color if set, otherwise generate based on book ID
         var colors = new Dictionary<string, (string dark, string light)>
         {

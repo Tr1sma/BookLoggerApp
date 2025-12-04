@@ -161,20 +161,47 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Book Spine Color</label>
-                    <p class="form-hint">Choose a color for the book spine (used when no cover image is available)</p>
-                    <div class="spine-color-picker">
-                        @foreach (var color in GetSpineColors())
-                        {
-                            <button type="button"
-                                    class="spine-color-option @(ViewModel.Book.SpineColor == color.Key ? "selected" : "")"
-                                    style="background: linear-gradient(to right, #@color.Value.dark, #@color.Value.light, #@color.Value.dark);"
-                                    @onclick="() => SetSpineColor(color.Key)"
-                                    title="@color.Key">
-                            </button>
-                        }
+                    <label>Book Spine Display</label>
+                    <p class="form-hint">Choose how the book spine should be displayed in the bookshelf</p>
+
+                    <div class="spine-mode-selector">
+                        <button type="button"
+                                class="spine-mode-option @(!ViewModel.Book.UsesCoverAsSpine ? "selected" : "")"
+                                @onclick="() => SetSpineMode(false)">
+                            <span class="spine-mode-icon">🎨</span>
+                            <span class="spine-mode-label">Color</span>
+                        </button>
+                        <button type="button"
+                                class="spine-mode-option @(ViewModel.Book.UsesCoverAsSpine ? "selected" : "") @(string.IsNullOrEmpty(_coverPreviewUrl) ? "disabled" : "")"
+                                @onclick="() => SetSpineMode(true)"
+                                disabled="@string.IsNullOrEmpty(_coverPreviewUrl)">
+                            <span class="spine-mode-icon">🖼️</span>
+                            <span class="spine-mode-label">Cover</span>
+                        </button>
                     </div>
+                    @if (string.IsNullOrEmpty(_coverPreviewUrl))
+                    {
+                        <p class="form-hint-warning">Cover mode requires a cover image</p>
+                    }
                 </div>
+
+                @if (!ViewModel.Book.UsesCoverAsSpine)
+                {
+                    <div class="form-group">
+                        <label>Spine Color</label>
+                        <div class="spine-color-picker">
+                            @foreach (var color in GetSpineColors())
+                            {
+                                <button type="button"
+                                        class="spine-color-option @(ViewModel.Book.SpineColor == color.Key ? "selected" : "")"
+                                        style="background: linear-gradient(to right, #@color.Value.dark, #@color.Value.light, #@color.Value.dark);"
+                                        @onclick="() => SetSpineColor(color.Key)"
+                                        title="@color.Key">
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
             </section>
 
             <!-- Form Actions -->
@@ -408,6 +435,18 @@
         if (ViewModel.Book != null)
         {
             ViewModel.Book.SpineColor = color;
+        }
+    }
+
+    private void SetSpineMode(bool useCoverAsSpine)
+    {
+        if (ViewModel.Book != null)
+        {
+            // Only allow cover mode if there's a cover image
+            if (useCoverAsSpine && string.IsNullOrEmpty(_coverPreviewUrl))
+                return;
+
+            ViewModel.Book.UsesCoverAsSpine = useCoverAsSpine;
         }
     }
 }

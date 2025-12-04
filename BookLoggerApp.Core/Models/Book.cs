@@ -45,6 +45,8 @@ public class Book
     [MaxLength(20)]
     public string? SpineColor { get; set; } // Color identifier for book spine (e.g., "red", "blue", "green")
 
+    public bool UsesCoverAsSpine { get; set; } = false; // If true, use cover image as spine background instead of color
+
     [MaxLength(20)]
     public string? BookshelfPosition { get; set; } // Position on bookshelf for drag & drop sorting
 
