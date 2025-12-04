@@ -5,7 +5,7 @@ Copyright (c) 2025 Ben Sowieja
 ---
 
 ## Nutzungsrechte
-- Der Quellcode darf **eingesehen** und **privat verwendet** werden.
+- Der Quellcode darf **eingesehen** werden.
 - **Keine Änderungen** am Quellcode sind erlaubt.
 - **Keine Weitergabe, kein Verkauf, kein Forking** des Codes ohne ausdrückliche, schriftliche Erlaubnis des Autors.
 
