@@ -88,6 +88,9 @@ public class RepositoryTests
         await repository.AddRangeAsync(books);
         await context.SaveChangesAsync();
 
+        // Clear the change tracker to avoid tracking conflicts
+        context.ChangeTracker.Clear();
+
         // Act
         var booksToDelete = await repository.FindAsync(b => b.Author == "Author 1" || b.Author == "Author 2");
         await repository.DeleteRangeAsync(booksToDelete);
