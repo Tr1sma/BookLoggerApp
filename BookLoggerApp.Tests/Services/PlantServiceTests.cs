@@ -112,6 +112,9 @@ public class PlantServiceTests : IDisposable
         var plant1 = await SeedUserPlant(species.Id, "Plant 1", isActive: true);
         var plant2 = await SeedUserPlant(species.Id, "Plant 2", isActive: false);
 
+        // Clear the change tracker to avoid tracking conflicts
+        _dbHelper.Context.ChangeTracker.Clear();
+
         // Act
         await _plantService.SetActivePlantAsync(plant2.Id);
 
