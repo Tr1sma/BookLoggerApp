@@ -15,17 +15,20 @@ public class BookService : IBookService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IProgressionService _progressionService;
     private readonly IPlantService _plantService;
+    private readonly IGoalService _goalService;
     private readonly ILogger<BookService> _logger;
 
     public BookService(
         IUnitOfWork unitOfWork,
         IProgressionService progressionService,
         IPlantService plantService,
+        IGoalService goalService,
         ILogger<BookService> logger)
     {
         _unitOfWork = unitOfWork;
         _progressionService = progressionService;
         _plantService = plantService;
+        _goalService = goalService;
         _logger = logger;
     }
 
@@ -174,6 +177,9 @@ public class BookService : IBookService
             // Award book completion XP (100 XP bonus + plant boost)
             var activePlant = await _plantService.GetActivePlantAsync(ct);
             await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
+
+            // Notify that goals may have changed (book completed)
+            _goalService.NotifyGoalsChanged();
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -189,18 +195,26 @@ public class BookService : IBookService
             throw new EntityNotFoundException(typeof(Book), bookId);
 
         book.CurrentPage = currentPage;
+        var wasCompleted = false;
 
         // Auto-complete if reached last page
         if (book.PageCount.HasValue && currentPage >= book.PageCount.Value)
         {
             book.Status = ReadingStatus.Completed;
             book.DateCompleted = DateTime.UtcNow;
+            wasCompleted = true;
         }
 
         try
         {
             await _unitOfWork.Books.UpdateAsync(book);
             await _unitOfWork.SaveChangesAsync(ct);
+
+            // Notify goals changed if book was completed
+            if (wasCompleted)
+            {
+                _goalService.NotifyGoalsChanged();
+            }
         }
         catch (DbUpdateConcurrencyException ex)
         {

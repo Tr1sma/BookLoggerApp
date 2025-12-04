@@ -19,15 +19,18 @@ public class ImportExportService : IImportExportService
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
     private readonly ILogger<ImportExportService>? _logger;
     private readonly IFileSystem _fileSystem;
+    private readonly IAppSettingsProvider _appSettingsProvider;
     private readonly string _backupDirectory;
 
     public ImportExportService(
         IDbContextFactory<AppDbContext> contextFactory,
         IFileSystem fileSystem,
+        IAppSettingsProvider appSettingsProvider,
         ILogger<ImportExportService>? logger = null)
     {
         _contextFactory = contextFactory;
         _fileSystem = fileSystem;
+        _appSettingsProvider = appSettingsProvider;
         _logger = logger;
 
         // Set up backup directory
@@ -359,6 +362,53 @@ public class ImportExportService : IImportExportService
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Failed to restore from backup");
+            throw;
+        }
+    }
+
+    public async Task DeleteAllDataAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            _logger?.LogWarning("Deleting all user data");
+
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
+            // Delete in correct order to respect foreign key constraints
+            // 1. Delete child entities first
+            context.Annotations.RemoveRange(context.Annotations);
+            context.Quotes.RemoveRange(context.Quotes);
+            context.ReadingSessions.RemoveRange(context.ReadingSessions);
+            context.BookGenres.RemoveRange(context.BookGenres);
+
+            // 2. Delete main entities
+            context.Books.RemoveRange(context.Books);
+            context.ReadingGoals.RemoveRange(context.ReadingGoals);
+            context.UserPlants.RemoveRange(context.UserPlants);
+            context.ShopItems.RemoveRange(context.ShopItems);
+
+            // 3. Reset AppSettings to defaults (but keep the record)
+            var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+            if (settings != null)
+            {
+                settings.UserLevel = 1;
+                settings.TotalXp = 0;
+                settings.Coins = 100; // Starting coins
+                settings.PlantsPurchased = 0;
+                settings.LastBackupDate = null;
+                settings.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await context.SaveChangesAsync(ct);
+
+            // Invalidate the AppSettingsProvider cache to force reload of reset values
+            _appSettingsProvider.InvalidateCache();
+
+            _logger?.LogWarning("All user data deleted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to delete all data");
             throw;
         }
     }

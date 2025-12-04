@@ -8,6 +8,12 @@ namespace BookLoggerApp.Core.Services.Abstractions;
 /// </summary>
 public interface IGoalService
 {
+    /// <summary>
+    /// Event fired when goal progress may have changed (e.g., after a reading session).
+    /// UI components should subscribe to refresh their goal displays.
+    /// </summary>
+    event EventHandler? GoalsChanged;
+
     // Goal CRUD
     Task<IReadOnlyList<ReadingGoal>> GetAllAsync(CancellationToken ct = default);
     Task<ReadingGoal?> GetByIdAsync(Guid id, CancellationToken ct = default);
@@ -23,4 +29,10 @@ public interface IGoalService
     // Goal Progress Tracking
     Task UpdateGoalProgressAsync(Guid goalId, int progress, CancellationToken ct = default);
     Task CheckAndCompleteGoalsAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Notifies subscribers that goal progress may have changed.
+    /// Call this after completing a reading session or finishing a book.
+    /// </summary>
+    void NotifyGoalsChanged();
 }

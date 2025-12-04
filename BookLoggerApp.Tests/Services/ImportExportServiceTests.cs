@@ -10,6 +10,41 @@ namespace BookLoggerApp.Tests.Services;
 public class ImportExportServiceTests
 {
     private static IFileSystem CreateFileSystem() => new FileSystemAdapter();
+    private static IAppSettingsProvider CreateMockSettingsProvider() => new MockAppSettingsProvider();
+
+    private class MockAppSettingsProvider : IAppSettingsProvider
+    {
+        public event EventHandler? ProgressionChanged;
+
+        public Task<AppSettings> GetSettingsAsync(CancellationToken ct = default)
+            => Task.FromResult(new AppSettings());
+
+        public Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task<int> GetUserCoinsAsync(CancellationToken ct = default)
+            => Task.FromResult(100);
+
+        public Task<int> GetUserLevelAsync(CancellationToken ct = default)
+            => Task.FromResult(1);
+
+        public Task SpendCoinsAsync(int amount, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task AddCoinsAsync(int amount, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task IncrementPlantsPurchasedAsync(CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default)
+            => Task.FromResult(0);
+
+        public void InvalidateCache()
+        {
+            ProgressionChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
 
     [Fact]
     public async Task ExportToJsonAsync_ShouldExportBooksAsJson()
@@ -26,7 +61,7 @@ public class ImportExportServiceTests
         await context.SaveChangesAsync();
 
         var contextFactory = new TestDbContextFactory(dbName);
-        var service = new ImportExportService(contextFactory, CreateFileSystem());
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
         // Act
         var json = await service.ExportToJsonAsync();
@@ -53,7 +88,7 @@ public class ImportExportServiceTests
         await context.SaveChangesAsync();
 
         var contextFactory = new TestDbContextFactory(dbName);
-        var service = new ImportExportService(contextFactory, CreateFileSystem());
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
         // Act
         var csv = await service.ExportToCsvAsync();
@@ -82,13 +117,13 @@ public class ImportExportServiceTests
         await exportContext.SaveChangesAsync();
 
         var exportContextFactory = new TestDbContextFactory(exportDbName);
-        var exportService = new ImportExportService(exportContextFactory, CreateFileSystem());
+        var exportService = new ImportExportService(exportContextFactory, CreateFileSystem(), CreateMockSettingsProvider());
         var json = await exportService.ExportToJsonAsync();
 
         var importDbName = Guid.NewGuid().ToString();
         using var importContext = TestDbContext.Create(importDbName);
         var importContextFactory = new TestDbContextFactory(importDbName);
-        var importService = new ImportExportService(importContextFactory, CreateFileSystem());
+        var importService = new ImportExportService(importContextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
         // Act
         var importedCount = await importService.ImportFromJsonAsync(json);
@@ -113,7 +148,7 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         var dbName = Guid.NewGuid().ToString();
         using var context = TestDbContext.Create(dbName);
         var contextFactory = new TestDbContextFactory(dbName);
-        var service = new ImportExportService(contextFactory, CreateFileSystem());
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
         // Act
         var importedCount = await service.ImportFromCsvAsync(csv);
@@ -145,7 +180,7 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         await context.SaveChangesAsync();
 
         var contextFactory = new TestDbContextFactory(dbName);
-        var service = new ImportExportService(contextFactory, CreateFileSystem());
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
         var json = await service.ExportToJsonAsync();
 
         // Act - import the same books again
@@ -168,7 +203,7 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         await context.SaveChangesAsync();
 
         var contextFactory = new TestDbContextFactory(dbName);
-        var service = new ImportExportService(contextFactory, CreateFileSystem());
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
         // Act & Assert
         // Note: Backup functionality requires a real SQLite database file,

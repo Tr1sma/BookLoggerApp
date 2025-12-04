@@ -17,6 +17,7 @@ public class BookRepository : Repository<Book>, IBookRepository
     public async Task<IEnumerable<Book>> GetBooksByStatusAsync(ReadingStatus status)
     {
         return await _dbSet
+            .AsNoTracking()
             .Where(b => b.Status == status)
             .OrderByDescending(b => b.DateAdded)
             .ToListAsync();

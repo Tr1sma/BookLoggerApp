@@ -6,6 +6,8 @@ using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Tests.TestHelpers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
@@ -30,7 +32,8 @@ public class PlantServiceTests : IDisposable
         _unitOfWork = new UnitOfWork(_dbHelper.Context);
         var contextFactory = new TestDbContextFactory(_dbHelper.DatabaseName);
         var settingsProvider = new AppSettingsProvider(contextFactory);
-        _plantService = new PlantService(_unitOfWork, settingsProvider, _cache, null!);
+        var logger = NullLogger<PlantService>.Instance;
+        _plantService = new PlantService(_unitOfWork, settingsProvider, _cache, logger);
     }
 
     public void Dispose()
@@ -108,6 +111,9 @@ public class PlantServiceTests : IDisposable
         var species = await SeedPlantSpecies();
         var plant1 = await SeedUserPlant(species.Id, "Plant 1", isActive: true);
         var plant2 = await SeedUserPlant(species.Id, "Plant 2", isActive: false);
+
+        // Clear the change tracker to avoid tracking conflicts
+        _dbHelper.Context.ChangeTracker.Clear();
 
         // Act
         await _plantService.SetActivePlantAsync(plant2.Id);
@@ -364,21 +370,413 @@ public class PlantServiceTests : IDisposable
 
     #endregion
 
+    #region Reading Days Tests (RecordReadingDayAsync)
+
+    [Fact]
+    public async Task RecordReadingDayAsync_WithLessThan15Minutes_ShouldNotRecord()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Short Session Plant");
+
+        // Act - 14 minutes is not enough
+        await _plantService.RecordReadingDayAsync(plant.Id, DateTime.UtcNow, 14);
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(0);
+        updatedPlant.LastReadingDayRecorded.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_WithExactly15Minutes_ShouldRecord()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Exact Session Plant");
+        var sessionDate = DateTime.UtcNow;
+
+        // Act - exactly 15 minutes is enough
+        await _plantService.RecordReadingDayAsync(plant.Id, sessionDate, 15);
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(1);
+        updatedPlant.LastReadingDayRecorded.Should().NotBeNull();
+        updatedPlant.LastReadingDayRecorded!.Value.Date.Should().Be(sessionDate.Date);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_WithMoreThan15Minutes_ShouldRecord()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Long Session Plant");
+        var sessionDate = DateTime.UtcNow;
+
+        // Act - 60 minutes definitely counts
+        await _plantService.RecordReadingDayAsync(plant.Id, sessionDate, 60);
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(1);
+        updatedPlant.LastReadingDayRecorded.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_FirstReadingDay_ShouldRecordWhenLastRecordedIsNull()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "First Day Plant");
+
+        // Verify initial state
+        var initialPlant = await _plantService.GetByIdAsync(plant.Id);
+        initialPlant!.LastReadingDayRecorded.Should().BeNull();
+        initialPlant.ReadingDaysCount.Should().Be(0);
+
+        // Act
+        await _plantService.RecordReadingDayAsync(plant.Id, DateTime.UtcNow, 20);
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(1);
+        updatedPlant.LastReadingDayRecorded.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_SameDaySecondSession_ShouldNotRecordAgain()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Same Day Plant");
+        var today = DateTime.UtcNow.Date;
+        var morningSession = today.AddHours(8);
+        var eveningSession = today.AddHours(20);
+
+        // Act - First session
+        await _plantService.RecordReadingDayAsync(plant.Id, morningSession, 30);
+
+        // Second session same day
+        await _plantService.RecordReadingDayAsync(plant.Id, eveningSession, 45);
+
+        // Assert - Should still be 1 reading day
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_DifferentDays_ShouldRecordEachDay()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Multi Day Plant");
+        var day1 = DateTime.UtcNow.Date;
+        var day2 = day1.AddDays(1);
+        var day3 = day1.AddDays(2);
+
+        // Act - Three sessions on different days
+        await _plantService.RecordReadingDayAsync(plant.Id, day1, 20);
+        await _plantService.RecordReadingDayAsync(plant.Id, day2, 20);
+        await _plantService.RecordReadingDayAsync(plant.Id, day3, 20);
+
+        // Assert - Should have 3 reading days
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(3);
+        updatedPlant.LastReadingDayRecorded!.Value.Date.Should().Be(day3);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_DeadPlant_ShouldNotRecord()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Dead Plant");
+        plant.Status = PlantStatus.Dead;
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
+
+        // Act
+        await _plantService.RecordReadingDayAsync(plant.Id, DateTime.UtcNow, 30);
+
+        // Assert - Dead plants don't earn reading days
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(0);
+        updatedPlant.LastReadingDayRecorded.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData(PlantStatus.Healthy)]
+    [InlineData(PlantStatus.Thirsty)]
+    [InlineData(PlantStatus.Wilting)]
+    public async Task RecordReadingDayAsync_AlivePlants_ShouldRecord(PlantStatus status)
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, $"{status} Plant");
+        plant.Status = status;
+        if (status == PlantStatus.Thirsty)
+            plant.LastWatered = DateTime.UtcNow.AddDays(-4);
+        else if (status == PlantStatus.Wilting)
+            plant.LastWatered = DateTime.UtcNow.AddDays(-5);
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
+
+        // Act
+        await _plantService.RecordReadingDayAsync(plant.Id, DateTime.UtcNow, 20);
+
+        // Assert - All alive plants can earn reading days
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_After3Days_ShouldLevelUpToLevel2()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies(growthRate: 1.0);
+        var plant = await SeedUserPlant(species.Id, "Leveling Plant");
+        var day1 = DateTime.UtcNow.Date;
+
+        // Act - 3 reading days at GrowthRate 1.0 should reach level 2
+        await _plantService.RecordReadingDayAsync(plant.Id, day1, 20);
+        await _plantService.RecordReadingDayAsync(plant.Id, day1.AddDays(1), 20);
+        await _plantService.RecordReadingDayAsync(plant.Id, day1.AddDays(2), 20);
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(3);
+        updatedPlant.CurrentLevel.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_After6Days_ShouldLevelUpToLevel3()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies(growthRate: 1.0);
+        var plant = await SeedUserPlant(species.Id, "Fast Leveling Plant");
+        var startDay = DateTime.UtcNow.Date;
+
+        // Act - 6 reading days at GrowthRate 1.0 should reach level 3
+        for (int i = 0; i < 6; i++)
+        {
+            await _plantService.RecordReadingDayAsync(plant.Id, startDay.AddDays(i), 20);
+        }
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(6);
+        updatedPlant.CurrentLevel.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_WithFasterGrowthRate_ShouldLevelFaster()
+    {
+        // Arrange - GrowthRate 1.2 means faster leveling
+        var species = await SeedPlantSpecies(growthRate: 1.2);
+        var plant = await SeedUserPlant(species.Id, "Fast Growth Plant");
+        var startDay = DateTime.UtcNow.Date;
+
+        // Act - At GR 1.2, 5 days should give: floor(5 * 1.2 / 3) + 1 = floor(2) + 1 = 3
+        for (int i = 0; i < 5; i++)
+        {
+            await _plantService.RecordReadingDayAsync(plant.Id, startDay.AddDays(i), 20);
+        }
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(5);
+        updatedPlant.CurrentLevel.Should().Be(3); // Level 3 at 5 days with GR 1.2
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_WithSlowerGrowthRate_ShouldLevelSlower()
+    {
+        // Arrange - GrowthRate 0.8 means slower leveling
+        var species = await SeedPlantSpecies(growthRate: 0.8);
+        var plant = await SeedUserPlant(species.Id, "Slow Growth Plant");
+        var startDay = DateTime.UtcNow.Date;
+
+        // Act - At GR 0.8, 3 days should give: floor(3 * 0.8 / 3) + 1 = floor(0.8) + 1 = 1
+        for (int i = 0; i < 3; i++)
+        {
+            await _plantService.RecordReadingDayAsync(plant.Id, startDay.AddDays(i), 20);
+        }
+
+        // Assert - Still level 1 after 3 days with slow growth rate
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(3);
+        updatedPlant.CurrentLevel.Should().Be(1); // Still level 1 at 3 days with GR 0.8
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_SlowGrowthAfter4Days_ShouldReachLevel2()
+    {
+        // Arrange - GrowthRate 0.8 needs 4 days for level 2
+        var species = await SeedPlantSpecies(growthRate: 0.8);
+        var plant = await SeedUserPlant(species.Id, "Slow But Steady Plant");
+        var startDay = DateTime.UtcNow.Date;
+
+        // Act - At GR 0.8, 4 days should give: floor(4 * 0.8 / 3) + 1 = floor(1.06) + 1 = 2
+        for (int i = 0; i < 4; i++)
+        {
+            await _plantService.RecordReadingDayAsync(plant.Id, startDay.AddDays(i), 20);
+        }
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(4);
+        updatedPlant.CurrentLevel.Should().Be(2); // Level 2 at 4 days with GR 0.8
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_ShouldNotExceedMaxLevel()
+    {
+        // Arrange - Species with max level 3
+        var species = await SeedPlantSpecies(maxLevel: 3, growthRate: 1.0);
+        var plant = await SeedUserPlant(species.Id, "Max Level Plant");
+        var startDay = DateTime.UtcNow.Date;
+
+        // Act - 100 reading days should hit max level 3
+        for (int i = 0; i < 100; i++)
+        {
+            await _plantService.RecordReadingDayAsync(plant.Id, startDay.AddDays(i), 20);
+        }
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(100);
+        updatedPlant.CurrentLevel.Should().Be(3); // Capped at max level
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_PlantNotFound_ShouldReturnSilently()
+    {
+        // Arrange - Non-existent plant ID
+        var nonExistentId = Guid.NewGuid();
+
+        // Act & Assert - Should not throw
+        await _plantService.Invoking(p => p.RecordReadingDayAsync(nonExistentId, DateTime.UtcNow, 30))
+            .Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_ShouldOnlyIncreaseLevelNeverDecrease()
+    {
+        // Arrange - Plant that was manually set to higher level
+        var species = await SeedPlantSpecies(growthRate: 1.0);
+        var plant = await SeedUserPlant(species.Id, "High Level Plant");
+        plant.CurrentLevel = 5; // Manually set higher than reading days would give
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
+
+        // Act - Add 1 reading day (would calculate to level 1)
+        await _plantService.RecordReadingDayAsync(plant.Id, DateTime.UtcNow, 20);
+
+        // Assert - Level should stay at 5, not decrease
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(1);
+        updatedPlant.CurrentLevel.Should().Be(5); // Level should NOT decrease
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_ZeroMinuteSession_ShouldNotRecord()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Zero Session Plant");
+
+        // Act
+        await _plantService.RecordReadingDayAsync(plant.Id, DateTime.UtcNow, 0);
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_NegativeMinutes_ShouldNotRecord()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Negative Session Plant");
+
+        // Act
+        await _plantService.RecordReadingDayAsync(plant.Id, DateTime.UtcNow, -10);
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_MixedSessionLengthsSameDay_ShouldOnlyCountOnce()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Mixed Session Plant");
+        var today = DateTime.UtcNow.Date;
+
+        // Act - Multiple sessions of varying lengths on same day
+        await _plantService.RecordReadingDayAsync(plant.Id, today.AddHours(8), 10);  // Too short
+        await _plantService.RecordReadingDayAsync(plant.Id, today.AddHours(10), 20); // Long enough - recorded
+        await _plantService.RecordReadingDayAsync(plant.Id, today.AddHours(14), 30); // Already recorded today
+        await _plantService.RecordReadingDayAsync(plant.Id, today.AddHours(18), 5);  // Too short anyway
+
+        // Assert - Should only count once
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.ReadingDaysCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_LevelProgressionIntegrationTest()
+    {
+        // Arrange - Full integration test simulating real usage
+        var species = await SeedPlantSpecies(growthRate: 1.0, maxLevel: 10);
+        var plant = await SeedUserPlant(species.Id, "Integration Test Plant");
+        var startDay = DateTime.UtcNow.Date;
+
+        // Act & Assert - Verify level progression over time
+        // Day 1: Still level 1
+        await _plantService.RecordReadingDayAsync(plant.Id, startDay, 20);
+        var afterDay1 = await _plantService.GetByIdAsync(plant.Id);
+        afterDay1!.CurrentLevel.Should().Be(1);
+
+        // Day 2: Still level 1
+        await _plantService.RecordReadingDayAsync(plant.Id, startDay.AddDays(1), 20);
+        var afterDay2 = await _plantService.GetByIdAsync(plant.Id);
+        afterDay2!.CurrentLevel.Should().Be(1);
+
+        // Day 3: Level up to 2!
+        await _plantService.RecordReadingDayAsync(plant.Id, startDay.AddDays(2), 20);
+        var afterDay3 = await _plantService.GetByIdAsync(plant.Id);
+        afterDay3!.CurrentLevel.Should().Be(2);
+
+        // Day 6: Level up to 3!
+        await _plantService.RecordReadingDayAsync(plant.Id, startDay.AddDays(3), 20);
+        await _plantService.RecordReadingDayAsync(plant.Id, startDay.AddDays(4), 20);
+        await _plantService.RecordReadingDayAsync(plant.Id, startDay.AddDays(5), 20);
+        var afterDay6 = await _plantService.GetByIdAsync(plant.Id);
+        afterDay6!.CurrentLevel.Should().Be(3);
+        afterDay6.ReadingDaysCount.Should().Be(6);
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private async Task<PlantSpecies> SeedPlantSpecies(
         string name = "Test Species",
         int unlockLevel = 1,
-        bool isAvailable = true)
+        bool isAvailable = true,
+        double growthRate = 1.0,
+        int maxLevel = 10)
     {
         var species = new PlantSpecies
         {
             Name = name,
             Description = "A test plant species",
             ImagePath = "/images/plants/test.svg",
-            MaxLevel = 10,
+            MaxLevel = maxLevel,
             WaterIntervalDays = 3,
-            GrowthRate = 1.0,
+            GrowthRate = growthRate,
             BaseCost = 100,
             UnlockLevel = unlockLevel,
             IsAvailable = isAvailable

@@ -18,7 +18,7 @@ public partial class SettingsViewModel : ViewModelBase
     private AppSettings _settings = new();
 
     [ObservableProperty]
-    private string _appVersion = "1.0.0";
+    private string _appVersion = "0.3.19";
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -63,11 +63,9 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     public async Task DeleteAllDataAsync()
     {
-        // This would require confirmation dialog in the UI
         await ExecuteSafelyAsync(async () =>
         {
-            // TODO: Implement delete all data when service is available
-            SetError("Delete all data not yet implemented");
+            await _importExportService.DeleteAllDataAsync();
         }, "Failed to delete data");
     }
 }

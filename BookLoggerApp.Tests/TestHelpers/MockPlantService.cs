@@ -83,6 +83,11 @@ public class MockPlantService : IPlantService
         return Task.CompletedTask;
     }
 
+    public Task RecordReadingDayAsync(Guid plantId, DateTime sessionDate, int sessionMinutes, CancellationToken ct = default)
+    {
+        return Task.CompletedTask;
+    }
+
     // Purchase
     public Task<UserPlant> PurchasePlantAsync(Guid speciesId, string name, CancellationToken ct = default)
     {
