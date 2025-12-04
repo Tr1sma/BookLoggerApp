@@ -17,7 +17,7 @@ Gebaut mit **.NET MAUI Blazor Hybrid** und **SQLite** als Datenbank.
 ---
 
 ## 🔧 Tech Stack
-- [.NET 9 MAUI Blazor Hybrid](https://learn.microsoft.com/dotnet/maui)
+- [.NET 10 MAUI Blazor Hybrid](https://learn.microsoft.com/dotnet/maui)
 - SQLite für lokale Datenspeicherung
 - MVVM + Dependency Injection
 - GitHub Actions für CI/CD
