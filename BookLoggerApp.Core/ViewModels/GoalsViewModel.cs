@@ -44,10 +44,16 @@ public partial class GoalsViewModel : ViewModelBase
     public void OpenCreateForm()
     {
         ShowCreateForm = true;
+        // For Books goals, default to yearly tracking (Jan 1 - Dec 31)
+        // For other goals, use current date as start
+        var startOfYear = new DateTime(DateTime.UtcNow.Year, 1, 1);
+        var endOfYear = new DateTime(DateTime.UtcNow.Year, 12, 31);
+
         NewGoal = new ReadingGoal
         {
-            StartDate = DateTime.UtcNow,
-            EndDate = DateTime.UtcNow.AddMonths(1),
+            // Start from beginning of year to include all books completed this year
+            StartDate = startOfYear,
+            EndDate = endOfYear,
             Type = GoalType.Books,
             Target = 1,
             Current = 0

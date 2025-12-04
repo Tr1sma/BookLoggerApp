@@ -27,6 +27,9 @@
         <p>🌿 Welcome to the Plant Shop! Buy plants to grow as you read. Each plant has unique growth rates and care requirements.</p>
     </div>
 
+    <!-- Leveling Info Box -->
+
+
     @if (ViewModel.IsBusy)
     {
         <div class="loading">Loading shop...</div>
@@ -132,6 +135,16 @@
             </div>
         </div>
     }
+    <div class="info-box">
+        <h4>📚 Wie leveln Pflanzen?</h4>
+        <ul>
+            <li>📖 Ein <strong>Lesetag</strong> = Tag mit mind. 15 Min Lesezeit</li>
+            <li>🌱 <strong>3 Lesetage</strong> = 1 Level (bei Growth Rate 1.0)</li>
+            <li>⚡ <strong>Growth Rate 1.2</strong> = 20% schneller (~2.5 Tage/Level)</li>
+            <li>🐢 <strong>Growth Rate 0.8</strong> = 20% langsamer (~3.75 Tage/Level)</li>
+            <li>✨ Höheres Level = Höherer XP-Boost beim Lesen</li>
+        </ul>
+    </div>
 </div>
 
 @code {

@@ -169,6 +169,13 @@ public class AppSettingsProvider : IAppSettingsProvider
         return settings.PlantsPurchased;
     }
 
+    public void InvalidateCache()
+    {
+        _cachedSettings = null;
+        _lastLoad = DateTime.MinValue;
+        OnProgressionChanged();
+    }
+
     /// <summary>
     /// Recalculates and updates the UserLevel based on TotalXp.
     /// Use this to fix corrupted level data.

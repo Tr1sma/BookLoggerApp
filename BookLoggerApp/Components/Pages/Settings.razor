@@ -5,7 +5,7 @@
 <PageTitle>Settings - BookLogger</PageTitle>
 
 <div class="settings-container">
-    <h1>⚙️ Settings</h1>
+    <h1 class="settings-title">Settings</h1>
 
     @if (ViewModel.IsBusy)
     {
@@ -17,75 +17,371 @@
     }
     else
     {
-        <!-- Theme Selection -->
-        <section class="settings-section">
-            <h2>Theme</h2>
-            <div class="form-group">
-                <label>Theme:</label>
-                <select @bind="ViewModel.Settings.Theme">
-                    <option value="Light">Light</option>
-                    <option value="Dark">Dark</option>
-                    <option value="Auto">Auto</option>
-                </select>
-            </div>
-        </section>
-
-        <!-- Language Selection -->
-        <section class="settings-section">
-            <h2>Language</h2>
-            <div class="form-group">
-                <label>Language:</label>
-                <select @bind="ViewModel.Settings.Language">
-                    <option value="en">English</option>
-                    <option value="de">Deutsch</option>
-                </select>
-            </div>
-        </section>
-
-        <!-- Notifications -->
-        <section class="settings-section">
-            <h2>Notifications</h2>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" @bind="ViewModel.Settings.NotificationsEnabled" />
-                    Enable Notifications
-                </label>
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" @bind="ViewModel.Settings.ReadingRemindersEnabled" />
-                    Reading Reminders
-                </label>
-            </div>
-        </section>
-
-        <!-- Backup & Export -->
-        <section class="settings-section">
-            <h2>Backup & Export</h2>
-            <button class="btn btn-primary" @onclick="async () => await ViewModel.ExportDataCommand.ExecuteAsync(null)">Export Data</button>
-            <button class="btn btn-secondary" @onclick="async () => await ViewModel.SaveCommand.ExecuteAsync(null)">Save Settings</button>
-        </section>
-
         <!-- About -->
         <section class="settings-section">
             <h2>About</h2>
-            <p>BookLogger App</p>
-            <p>Version: @ViewModel.AppVersion</p>
+            <div class="about-info">
+                <p class="app-name">Book Logger</p>
+                <p class="app-version">Version @ViewModel.AppVersion</p>
+            </div>
         </section>
 
         <!-- Danger Zone -->
         <section class="settings-section danger-zone">
             <h2>Danger Zone</h2>
-            <button class="btn btn-danger" @onclick="async () => await ViewModel.DeleteAllDataCommand.ExecuteAsync(null)">Delete All Data</button>
-            <p class="warning">⚠️ This action cannot be undone!</p>
+            <p class="danger-description">
+                Delete all your books, reading sessions, goals, plants, and reset your progress.
+                This action cannot be undone.
+            </p>
+            <button class="btn btn-danger" @onclick="ShowDeleteConfirmation">
+                Delete All Data
+            </button>
         </section>
     }
 </div>
 
+<!-- Delete Confirmation Modal -->
+@if (_showDeleteConfirmation)
+{
+    <div class="modal-overlay" @onclick="HideDeleteConfirmation">
+        <div class="modal-content delete-modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>Delete All Data?</h3>
+            </div>
+            <div class="modal-body">
+                <p class="warning-text">
+                    This will permanently delete:
+                </p>
+                <ul class="delete-list">
+                    <li>All your books</li>
+                    <li>All reading sessions</li>
+                    <li>All reading goals</li>
+                    <li>All plants</li>
+                    <li>Your level and XP progress</li>
+                    <li>Your coins</li>
+                </ul>
+                <p class="confirm-text">
+                    Type <strong>DELETE</strong> to confirm:
+                </p>
+                <input type="text"
+                       class="confirm-input"
+                       @bind="_deleteConfirmText"
+                       @bind:event="oninput"
+                       placeholder="Type DELETE" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="HideDeleteConfirmation">Cancel</button>
+                <button class="btn btn-danger"
+                        @onclick="ConfirmDeleteAllData"
+                        disabled="@(!IsDeleteConfirmed)">
+                    Delete Everything
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Success Modal -->
+@if (_showSuccessModal)
+{
+    <div class="modal-overlay" @onclick="CloseSuccessAndNavigate">
+        <div class="modal-content success-modal" @onclick:stopPropagation="true">
+            <div class="modal-body">
+                <div class="success-icon">&#10003;</div>
+                <h3>Data Deleted</h3>
+                <p>All your data has been deleted. Starting fresh!</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" @onclick="CloseSuccessAndNavigate">OK</button>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .settings-container {
+        padding: 1rem;
+        max-width: 600px;
+        margin: 0 auto;
+        padding-bottom: 100px;
+    }
+
+    .settings-title {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+
+    .settings-section {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .settings-section h2 {
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        margin: 0 0 1rem 0;
+        font-weight: 600;
+    }
+
+    .about-info {
+        text-align: center;
+    }
+
+    .app-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .app-version {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin: 0.25rem 0 0 0;
+    }
+
+    .danger-zone {
+        border-color: rgba(220, 53, 69, 0.3);
+        background: rgba(220, 53, 69, 0.05);
+    }
+
+    .danger-zone h2 {
+        color: #dc3545;
+    }
+
+    .danger-description {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+        background: #c82333;
+    }
+
+    .btn-danger:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .btn-secondary {
+        background: var(--card-bg);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+        background: var(--hover-bg);
+    }
+
+    .btn-primary {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        filter: brightness(1.1);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        background: var(--card-bg);
+        border-radius: 16px;
+        width: 100%;
+        max-width: 400px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    .delete-modal .modal-header {
+        background: rgba(220, 53, 69, 0.1);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(220, 53, 69, 0.2);
+    }
+
+    .delete-modal .modal-header h3 {
+        color: #dc3545;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .modal-body {
+        padding: 1.25rem;
+    }
+
+    .warning-text {
+        color: var(--text-primary);
+        margin: 0 0 0.75rem 0;
+        font-weight: 500;
+    }
+
+    .delete-list {
+        margin: 0 0 1rem 0;
+        padding-left: 1.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .confirm-text {
+        color: var(--text-primary);
+        margin: 0 0 0.5rem 0;
+        font-size: 0.9rem;
+    }
+
+    .confirm-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 1rem;
+        text-align: center;
+        letter-spacing: 2px;
+    }
+
+    .confirm-input:focus {
+        outline: none;
+        border-color: #dc3545;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.25rem;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Success Modal */
+    .success-modal .modal-body {
+        text-align: center;
+        padding: 2rem 1.25rem;
+    }
+
+    .success-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--accent-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .success-modal h3 {
+        color: var(--text-primary);
+        margin: 0 0 0.5rem 0;
+    }
+
+    .success-modal p {
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .success-modal .modal-footer {
+        justify-content: center;
+    }
+
+    .loading {
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 2rem;
+    }
+
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+</style>
+
 @code {
+    private bool _showDeleteConfirmation = false;
+    private bool _showSuccessModal = false;
+    private string _deleteConfirmText = string.Empty;
+
+    private bool IsDeleteConfirmed => _deleteConfirmText.Equals("DELETE", StringComparison.Ordinal);
+
     protected override async Task OnInitializedAsync()
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
-}
 
+    private void ShowDeleteConfirmation()
+    {
+        _deleteConfirmText = string.Empty;
+        _showDeleteConfirmation = true;
+    }
+
+    private void HideDeleteConfirmation()
+    {
+        _showDeleteConfirmation = false;
+        _deleteConfirmText = string.Empty;
+    }
+
+    private async Task ConfirmDeleteAllData()
+    {
+        if (!IsDeleteConfirmed) return;
+
+        _showDeleteConfirmation = false;
+        await ViewModel.DeleteAllDataCommand.ExecuteAsync(null);
+
+        if (string.IsNullOrEmpty(ViewModel.ErrorMessage))
+        {
+            _showSuccessModal = true;
+        }
+    }
+
+    private void CloseSuccessAndNavigate()
+    {
+        _showSuccessModal = false;
+        // Force page refresh to reflect reset state
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+}

@@ -168,11 +168,21 @@ public partial class StatsViewModel : ViewModelBase
     /// </summary>
     public async Task FilterTopBooksByCategoryAsync(RatingCategory? category = null)
     {
-        await ExecuteSafelyAsync(async () =>
+        System.Diagnostics.Debug.WriteLine($"FilterTopBooksByCategoryAsync called with category: {category}");
+
+        try
         {
             var topBooks = await _statsService.GetTopRatedBooksAsync(10, category);
+            System.Diagnostics.Debug.WriteLine($"Got {topBooks.Count} books from service");
+
             TopRatedBooks = new ObservableCollection<BookRatingSummary>(topBooks);
-        }, "Failed to filter top books");
+            System.Diagnostics.Debug.WriteLine($"TopRatedBooks updated, count: {TopRatedBooks.Count}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"ERROR in FilterTopBooksByCategoryAsync: {ex}");
+            throw;
+        }
     }
 
     /// <summary>

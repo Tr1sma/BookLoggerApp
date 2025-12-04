@@ -3,9 +3,12 @@
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Components.Shared
 @inject BookshelfViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject IGoalService GoalService
+@implements IDisposable
 
 <PageTitle>Bookshelf - BookLogger</PageTitle>
 
@@ -267,7 +270,24 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Subscribe to goal changes to refresh data when sessions end
+        GoalService.GoalsChanged += OnGoalsChanged;
         await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private async void OnGoalsChanged(object? sender, EventArgs e)
+    {
+        // Reload bookshelf data when goals change
+        await InvokeAsync(async () =>
+        {
+            await ViewModel.LoadCommand.ExecuteAsync(null);
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        GoalService.GoalsChanged -= OnGoalsChanged;
     }
 
     private void HandleSearch()

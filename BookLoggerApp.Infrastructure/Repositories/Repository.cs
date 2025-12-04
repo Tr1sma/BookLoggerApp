@@ -25,17 +25,17 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken ct = default)
     {
-        return await _dbSet.ToListAsync(ct);
+        return await _dbSet.AsNoTracking().ToListAsync(ct);
     }
 
     public virtual async Task<IReadOnlyList<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default)
     {
-        return await _dbSet.Where(predicate).ToListAsync(ct);
+        return await _dbSet.AsNoTracking().Where(predicate).ToListAsync(ct);
     }
 
     public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default)
     {
-        return await _dbSet.FirstOrDefaultAsync(predicate, ct);
+        return await _dbSet.AsNoTracking().FirstOrDefaultAsync(predicate, ct);
     }
 
     public virtual async Task<T> AddAsync(T entity, CancellationToken ct = default)

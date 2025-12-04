@@ -16,6 +16,7 @@ public class ProgressServiceTests : IDisposable
     private readonly MockProgressionService _progressionService;
     private readonly MockPlantService _plantService;
     private readonly MockBookService _bookService;
+    private readonly MockGoalService _goalService;
     private readonly ProgressService _service;
 
     public ProgressServiceTests()
@@ -25,7 +26,8 @@ public class ProgressServiceTests : IDisposable
         _progressionService = new MockProgressionService();
         _plantService = new MockPlantService();
         _bookService = new MockBookService();
-        _service = new ProgressService(_unitOfWork, _progressionService, _plantService, _bookService);
+        _goalService = new MockGoalService();
+        _service = new ProgressService(_unitOfWork, _progressionService, _plantService, _bookService, _goalService);
     }
 
     public void Dispose()

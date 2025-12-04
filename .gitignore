@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Keystore and signing credentials (NEVER commit these!)
+*.keystore
+*.jks
+key.txt

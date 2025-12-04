@@ -1,16 +1,17 @@
+@inject BookLoggerApp.Core.Services.Abstractions.IImageService ImageService
+
 <div class="book-card @(IsInBookshelf ? "in-bookshelf-book" : "compact") @(IsInBookshelf ? "" : "")"
      draggable="@(IsDraggable ? "true" : "false")"
      @onclick="HandleClick"
      @ondragstart="HandleDragStartInternal"
      @ondragend="HandleDragEnd">
     <div class="@(IsInBookshelf ? "book-cover-wrapper" : "book-cover-thumbnail")" style="@GetSpineStyle()">
-        @if (!string.IsNullOrEmpty(Book.CoverImagePath))
+        @if (!string.IsNullOrEmpty(_coverImageDataUrl))
         {
-            <img src="@GetCoverImageUrl()"
+            <img src="@_coverImageDataUrl"
                  alt="@Book.Title"
                  class="book-cover-image"
-                 @ondragstart:preventDefault="true"
-                 onerror="this.style.display='none'; console.error('Failed to load image: @GetCoverImageUrl()');" />
+                 @ondragstart:preventDefault="true" />
         }
     </div>
 
@@ -78,22 +79,70 @@
     [Parameter] public bool IsDraggable { get; set; } = false;
 
     private bool _isDragging = false;
+    private string? _coverImageDataUrl;
+    private Guid _lastBookId;
 
-    private string GetCoverImageUrl()
+    protected override async Task OnParametersSetAsync()
     {
-        if (string.IsNullOrEmpty(Book.CoverImagePath))
-            return string.Empty;
+        // Only reload if book changed
+        if (Book != null && Book.Id != _lastBookId)
+        {
+            _lastBookId = Book.Id;
+            await LoadCoverImageAsync();
+        }
+    }
 
-        // Ensure the path starts with / for wwwroot access
-        var path = Book.CoverImagePath.Replace("\\", "/");
-        if (!path.StartsWith("/"))
-            path = "/" + path;
+    private async Task LoadCoverImageAsync()
+    {
+        _coverImageDataUrl = null;
 
-        return path;
+        if (Book == null || string.IsNullOrEmpty(Book.CoverImagePath))
+            return;
+
+        try
+        {
+            var coverPath = Book.CoverImagePath;
+
+            // If it's already a URL (http/https), use it directly
+            if (coverPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                coverPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                _coverImageDataUrl = coverPath;
+                return;
+            }
+
+            // Get the full path from ImageService
+            var fullPath = await ImageService.GetCoverImagePathAsync(Book.Id);
+
+            if (string.IsNullOrEmpty(fullPath) || !System.IO.File.Exists(fullPath))
+                return;
+
+            // Read the file and convert to Base64
+            var imageBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+            var base64 = Convert.ToBase64String(imageBytes);
+
+            // Determine MIME type
+            var mimeType = fullPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                ? "image/png"
+                : "image/jpeg";
+
+            _coverImageDataUrl = $"data:{mimeType};base64,{base64}";
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load cover image for book {Book.Id}: {ex.Message}");
+            _coverImageDataUrl = null;
+        }
     }
 
     private string GetSpineStyle()
     {
+        // If UsesCoverAsSpine is true and we have a cover image, use it as background
+        if (Book.UsesCoverAsSpine && !string.IsNullOrEmpty(_coverImageDataUrl))
+        {
+            return $"background-image: url('{_coverImageDataUrl}'); background-size: cover; background-position: center;";
+        }
+
         // Use custom spine color if set, otherwise generate based on book ID
         var colors = new Dictionary<string, (string dark, string light)>
         {

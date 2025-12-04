@@ -50,4 +50,11 @@ public interface IImportExportService
     /// <param name="backupPath">Full path to the backup file.</param>
     /// <param name="ct">Cancellation token.</param>
     Task RestoreFromBackupAsync(string backupPath, CancellationToken ct = default);
+
+    /// <summary>
+    /// Deletes all user data (books, sessions, goals, plants) and resets settings.
+    /// Seeded data (genres, plant species) is preserved.
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    Task DeleteAllDataAsync(CancellationToken ct = default);
 }

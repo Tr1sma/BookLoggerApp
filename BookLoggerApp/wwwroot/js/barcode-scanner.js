@@ -4,6 +4,7 @@ window.barcodeScanner = {
     isScanning: false,
     videoElement: null,
     stream: null,
+    videoTrack: null,
 
     // Initialize the scanner
     async initialize(dotNetHelper, videoElementId) {
@@ -18,14 +19,32 @@ window.barcodeScanner = {
         try {
             console.log('Requesting camera access...');
 
-            // First, manually get camera access and show video
-            this.stream = await navigator.mediaDevices.getUserMedia({
+            // Get list of video devices to find the back camera
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+            console.log('Available cameras:', videoDevices.length);
+
+            // Try to find the back camera by label or use facingMode
+            let constraints = {
                 video: {
-                    facingMode: 'environment', // Use back camera on mobile
+                    facingMode: { ideal: 'environment' },
                     width: { min: 640, ideal: 1280, max: 1920 },
                     height: { min: 480, ideal: 720, max: 1080 }
                 }
-            });
+            };
+
+            // Request camera access
+            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+            this.videoTrack = this.stream.getVideoTracks()[0];
+
+            console.log('Camera track:', this.videoTrack.label);
+            console.log('Track settings:', JSON.stringify(this.videoTrack.getSettings()));
+
+            // Check capabilities after getting stream
+            if (this.videoTrack.getCapabilities) {
+                const caps = this.videoTrack.getCapabilities();
+                console.log('Track capabilities:', JSON.stringify(caps));
+            }
 
             this.videoElement.srcObject = this.stream;
             await this.videoElement.play();
@@ -141,6 +160,8 @@ window.barcodeScanner = {
             this.stream = null;
         }
 
+        this.videoTrack = null;
+
         if (this.videoElement) {
             this.videoElement.srcObject = null;
         }
@@ -151,22 +172,57 @@ window.barcodeScanner = {
     // Toggle torch/flashlight (if supported)
     async toggleTorch(enable) {
         try {
-            if (this.stream) {
-                const track = this.stream.getVideoTracks()[0];
-                const capabilities = track.getCapabilities();
+            if (!this.videoTrack) {
+                console.error('No video track available');
+                return { success: false, error: 'No active camera' };
+            }
 
-                if ('torch' in capabilities) {
-                    await track.applyConstraints({
-                        advanced: [{ torch: enable }]
-                    });
-                    return { success: true };
-                } else {
-                    return { success: false, error: 'Torch not supported' };
+            console.log('Attempting to toggle torch:', enable);
+            console.log('Track readyState:', this.videoTrack.readyState);
+
+            // Check if torch is in capabilities
+            if (this.videoTrack.getCapabilities) {
+                const caps = this.videoTrack.getCapabilities();
+                console.log('Torch in capabilities:', 'torch' in caps);
+            }
+
+            // Try using ImageCapture API (works better on some Android devices)
+            if (typeof ImageCapture !== 'undefined') {
+                try {
+                    const imageCapture = new ImageCapture(this.videoTrack);
+                    const photoCapabilities = await imageCapture.getPhotoCapabilities();
+                    console.log('Photo capabilities:', JSON.stringify(photoCapabilities));
+
+                    if (photoCapabilities.fillLightMode && photoCapabilities.fillLightMode.includes('flash')) {
+                        await this.videoTrack.applyConstraints({
+                            advanced: [{ torch: enable }]
+                        });
+                        console.log('Torch toggled via ImageCapture path:', enable);
+                        return { success: true };
+                    }
+                } catch (imgErr) {
+                    console.log('ImageCapture approach failed:', imgErr.message);
                 }
             }
-            return { success: false, error: 'No active stream' };
+
+            // Direct approach - try to apply torch constraint
+            await this.videoTrack.applyConstraints({
+                advanced: [{ torch: enable }]
+            });
+
+            console.log('Torch toggled:', enable);
+            return { success: true };
         } catch (error) {
-            return { success: false, error: error.message };
+            console.error('Torch error:', error.name, error.message);
+
+            // Provide more specific error message
+            if (error.name === 'NotSupportedError') {
+                return { success: false, error: 'Torch not supported by this camera' };
+            } else if (error.name === 'OverconstrainedError') {
+                return { success: false, error: 'Torch constraint not available' };
+            }
+
+            return { success: false, error: 'Torch not available: ' + error.message };
         }
     }
 };

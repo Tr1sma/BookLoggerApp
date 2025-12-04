@@ -20,4 +20,9 @@ public interface IAppSettingsProvider
     Task AddCoinsAsync(int amount, CancellationToken ct = default);
     Task IncrementPlantsPurchasedAsync(CancellationToken ct = default);
     Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Invalidates the cached settings, forcing a fresh load from the database on next access.
+    /// </summary>
+    void InvalidateCache();
 }

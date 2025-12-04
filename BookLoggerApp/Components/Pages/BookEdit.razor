@@ -3,8 +3,10 @@
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Components.Shared
+@using BookLoggerApp.Core.Services.Abstractions
 @inject BookEditViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject IImageService ImageService
 
 <PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? "Add Book" : "Edit Book") - BookLogger</PageTitle>
 
@@ -150,29 +152,56 @@
                     <label for="coverImagePath">Cover Image URL/Path</label>
                     <input id="coverImagePath" type="text" @bind="ViewModel.Book.CoverImagePath" maxlength="500" placeholder="/images/covers/book.jpg" />
 
-                    @if (!string.IsNullOrEmpty(ViewModel.Book.CoverImagePath))
+                    @if (!string.IsNullOrEmpty(_coverPreviewUrl))
                     {
                         <div class="cover-preview">
-                            <img src="@ViewModel.Book.CoverImagePath" alt="Cover preview" onerror="this.style.display='none'" />
+                            <img src="@_coverPreviewUrl" alt="Cover preview" onerror="this.style.display='none'" />
                         </div>
                     }
                 </div>
 
                 <div class="form-group">
-                    <label>Book Spine Color</label>
-                    <p class="form-hint">Choose a color for the book spine (used when no cover image is available)</p>
-                    <div class="spine-color-picker">
-                        @foreach (var color in GetSpineColors())
-                        {
-                            <button type="button"
-                                    class="spine-color-option @(ViewModel.Book.SpineColor == color.Key ? "selected" : "")"
-                                    style="background: linear-gradient(to right, #@color.Value.dark, #@color.Value.light, #@color.Value.dark);"
-                                    @onclick="() => SetSpineColor(color.Key)"
-                                    title="@color.Key">
-                            </button>
-                        }
+                    <label>Book Spine Display</label>
+                    <p class="form-hint">Choose how the book spine should be displayed in the bookshelf</p>
+
+                    <div class="spine-mode-selector">
+                        <button type="button"
+                                class="spine-mode-option @(!ViewModel.Book.UsesCoverAsSpine ? "selected" : "")"
+                                @onclick="() => SetSpineMode(false)">
+                            <span class="spine-mode-icon">🎨</span>
+                            <span class="spine-mode-label">Color</span>
+                        </button>
+                        <button type="button"
+                                class="spine-mode-option @(ViewModel.Book.UsesCoverAsSpine ? "selected" : "") @(string.IsNullOrEmpty(_coverPreviewUrl) ? "disabled" : "")"
+                                @onclick="() => SetSpineMode(true)"
+                                disabled="@string.IsNullOrEmpty(_coverPreviewUrl)">
+                            <span class="spine-mode-icon">🖼️</span>
+                            <span class="spine-mode-label">Cover</span>
+                        </button>
                     </div>
+                    @if (string.IsNullOrEmpty(_coverPreviewUrl))
+                    {
+                        <p class="form-hint-warning">Cover mode requires a cover image</p>
+                    }
                 </div>
+
+                @if (!ViewModel.Book.UsesCoverAsSpine)
+                {
+                    <div class="form-group">
+                        <label>Spine Color</label>
+                        <div class="spine-color-picker">
+                            @foreach (var color in GetSpineColors())
+                            {
+                                <button type="button"
+                                        class="spine-color-option @(ViewModel.Book.SpineColor == color.Key ? "selected" : "")"
+                                        style="background: linear-gradient(to right, #@color.Value.dark, #@color.Value.light, #@color.Value.dark);"
+                                        @onclick="() => SetSpineColor(color.Key)"
+                                        title="@color.Key">
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
             </section>
 
             <!-- Form Actions -->
@@ -216,11 +245,66 @@
     [Parameter] public Guid Id { get; set; }
 
     private bool _showScanner = false;
+    private string? _coverPreviewUrl;
 
     protected override async Task OnInitializedAsync()
     {
         Guid? bookId = Id != Guid.Empty ? Id : null;
         await ViewModel.LoadCommand.ExecuteAsync(bookId);
+        await LoadCoverPreviewAsync();
+    }
+
+    private async Task LoadCoverPreviewAsync()
+    {
+        _coverPreviewUrl = null;
+
+        if (ViewModel.Book == null || string.IsNullOrEmpty(ViewModel.Book.CoverImagePath))
+            return;
+
+        try
+        {
+            var coverPath = ViewModel.Book.CoverImagePath;
+
+            // If it's already a URL (http/https), use it directly
+            if (coverPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                coverPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                _coverPreviewUrl = coverPath;
+                return;
+            }
+
+            // If it's a data URL already, use it directly
+            if (coverPath.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            {
+                _coverPreviewUrl = coverPath;
+                return;
+            }
+
+            // For local files, get the full path from ImageService
+            if (ViewModel.Book.Id != Guid.Empty)
+            {
+                var fullPath = await ImageService.GetCoverImagePathAsync(ViewModel.Book.Id);
+
+                if (string.IsNullOrEmpty(fullPath) || !System.IO.File.Exists(fullPath))
+                    return;
+
+                // Read the file and convert to Base64
+                var imageBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+                var base64 = Convert.ToBase64String(imageBytes);
+
+                // Determine MIME type
+                var mimeType = fullPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                    ? "image/png"
+                    : "image/jpeg";
+
+                _coverPreviewUrl = $"data:{mimeType};base64,{base64}";
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load cover preview: {ex.Message}");
+            _coverPreviewUrl = null;
+        }
     }
 
     private async Task HandleSave()
@@ -298,6 +382,9 @@
     private async Task HandleIsbnLookup()
     {
         await ViewModel.LookupByIsbnCommand.ExecuteAsync(null);
+        // Reload cover preview after lookup (might have set a new cover URL)
+        await LoadCoverPreviewAsync();
+        StateHasChanged();
     }
 
     private void OpenBarcodeScanner()
@@ -348,6 +435,18 @@
         if (ViewModel.Book != null)
         {
             ViewModel.Book.SpineColor = color;
+        }
+    }
+
+    private void SetSpineMode(bool useCoverAsSpine)
+    {
+        if (ViewModel.Book != null)
+        {
+            // Only allow cover mode if there's a cover image
+            if (useCoverAsSpine && string.IsNullOrEmpty(_coverPreviewUrl))
+                return;
+
+            ViewModel.Book.UsesCoverAsSpine = useCoverAsSpine;
         }
     }
 }
