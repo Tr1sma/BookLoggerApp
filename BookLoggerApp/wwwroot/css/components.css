@@ -1089,6 +1089,61 @@ section h2 {
     transform: translateY(-4px);
 }
 
+/* Spine Mode Selector */
+.spine-mode-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.spine-mode-option {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.spine-mode-option:hover:not(.disabled):not(:disabled) {
+    border-color: var(--primary-color);
+    background: var(--card-hover);
+}
+
+.spine-mode-option.selected {
+    border-color: var(--primary-color);
+    background: rgba(212, 165, 116, 0.15);
+    color: var(--primary-color);
+}
+
+.spine-mode-option.disabled,
+.spine-mode-option:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.spine-mode-icon {
+    font-size: 1.5rem;
+}
+
+.spine-mode-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.form-hint-warning {
+    color: var(--text-warning, #f5a623);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
 /* Reading Page - Mobile First Design */
 .reading-container {
     padding: 0.5rem;
