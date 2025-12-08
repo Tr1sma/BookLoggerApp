@@ -87,64 +87,39 @@ public class GoalService : IGoalService
     {
         if (!goals.Any()) return;
 
-        // Get all books and sessions for calculation
-        var books = await _unitOfWork.Books.GetAllAsync();
-        var sessions = await _unitOfWork.ReadingSessions.GetAllAsync();
-
         foreach (var goal in goals)
         {
-            goal.Current = goal.Type switch
-            {
-                GoalType.Books => CalculateBooksProgress(books, goal),
-                GoalType.Pages => CalculatePagesProgress(sessions, goal),
-                GoalType.Minutes => CalculateMinutesProgress(sessions, goal),
-                _ => goal.Current
-            };
+            var startDate = goal.StartDate.Date;
+            var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
 
-            // Auto-mark as completed if target is reached
-            if (goal.Current >= goal.Target && !goal.IsCompleted)
+            int current = goal.Current;
+
+            switch (goal.Type)
             {
-                goal.IsCompleted = true;
+                case GoalType.Books:
+                    current = await _unitOfWork.Books.GetCompletedBooksCountInRangeAsync(startDate, endDate);
+                    break;
+                case GoalType.Pages:
+                    current = await _unitOfWork.ReadingSessions.GetTotalPagesReadInRangeAsync(startDate, endDate);
+                    break;
+                case GoalType.Minutes:
+                    current = await _unitOfWork.ReadingSessions.GetTotalMinutesReadInRangeAsync(startDate, endDate);
+                    break;
+            }
+
+            if (goal.Current != current)
+            {
+                goal.Current = current;
+                // Auto-mark as completed if target is reached
+                if (goal.Current >= goal.Target && !goal.IsCompleted)
+                {
+                    goal.IsCompleted = true;
+                }
                 await _unitOfWork.ReadingGoals.UpdateAsync(goal);
             }
         }
 
         await _unitOfWork.SaveChangesAsync(ct);
-    }
-
-    private int CalculateBooksProgress(IEnumerable<Book> books, ReadingGoal goal)
-    {
-        // Use date-only comparison to include all books completed on the start/end days
-        var startDate = goal.StartDate.Date;
-        var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
-
-        return books.Count(b =>
-            b.Status == ReadingStatus.Completed &&
-            b.DateCompleted.HasValue &&
-            b.DateCompleted.Value >= startDate &&
-            b.DateCompleted.Value <= endDate);
-    }
-
-    private int CalculatePagesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal)
-    {
-        // Use date-only comparison to include all sessions on the start/end days
-        var startDate = goal.StartDate.Date;
-        var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
-
-        return sessions
-            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
-            .Sum(s => s.PagesRead ?? 0);
-    }
-
-    private int CalculateMinutesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal)
-    {
-        // Use date-only comparison to include all sessions on the start/end days
-        var startDate = goal.StartDate.Date;
-        var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
-
-        return sessions
-            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
-            .Sum(s => s.Minutes);
     }
 
     public async Task<IReadOnlyList<ReadingGoal>> GetGoalsByTypeAsync(GoalType type, CancellationToken ct = default)

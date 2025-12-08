@@ -15,4 +15,9 @@ public interface IBookRepository : IRepository<Book>
     Task<IEnumerable<Book>> GetRecentBooksAsync(int count = 10);
     Task<IEnumerable<Book>> GetBooksByAuthorAsync(string author);
     Task<Book?> GetBookByISBNAsync(string isbn);
+    Task<int> GetCompletedBooksCountInRangeAsync(DateTime startDate, DateTime endDate);
+    Task<Dictionary<string, int>> GetGenreDistributionAsync();
+    Task<Dictionary<RatingCategory, double>> GetAverageRatingsProfileAsync(DateTime? startDate = null, DateTime? endDate = null);
+    Task<double> GetAverageOverallRatingAsync();
+    Task<IEnumerable<Book>> GetBooksWithGenresAsync();
 }

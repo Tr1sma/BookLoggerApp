@@ -115,8 +115,7 @@ public class StatsService : IStatsService
 
     public async Task<int> GetPagesReadInRangeAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
-        return sessions.Where(s => s.PagesRead.HasValue).Sum(s => s.PagesRead!.Value);
+        return await _unitOfWork.ReadingSessions.GetTotalPagesReadInRangeAsync(start, end);
     }
 
     public async Task<int> GetBooksCompletedInYearAsync(int year, CancellationToken ct = default)
@@ -127,15 +126,7 @@ public class StatsService : IStatsService
 
     public async Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Context.Books
-            .Include(b => b.BookGenres)
-            .ThenInclude(bg => bg.Genre)
-            .ToListAsync();
-
-        return books
-            .SelectMany(b => b.BookGenres.Select(bg => bg.Genre.Name))
-            .GroupBy(name => name)
-            .ToDictionary(g => g.Key, g => g.Count());
+        return await _unitOfWork.Books.GetGenreDistributionAsync();
     }
 
     public async Task<string?> GetFavoriteGenreAsync(CancellationToken ct = default)
@@ -150,13 +141,7 @@ public class StatsService : IStatsService
 
     public async Task<double> GetAverageRatingAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync();
-        var ratedBooks = books.Where(b => b.OverallRating.HasValue).ToList();
-
-        if (!ratedBooks.Any())
-            return 0;
-
-        return ratedBooks.Average(b => b.OverallRating!.Value);
+        return await _unitOfWork.Books.GetAverageOverallRatingAsync();
     }
 
     public async Task<double> GetAveragePagesPerDayAsync(int days = 30, CancellationToken ct = default)
@@ -173,43 +158,20 @@ public class StatsService : IStatsService
         var start = DateTime.UtcNow.AddDays(-days);
         var end = DateTime.UtcNow;
 
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
-        var totalMinutes = sessions.Sum(s => s.Minutes);
-
+        // Use optimized query
+        var totalMinutes = await _unitOfWork.ReadingSessions.GetTotalMinutesReadInRangeAsync(start, end);
         return (double)totalMinutes / days;
     }
 
     public async Task<double> GetAverageRatingByCategoryAsync(RatingCategory category, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
     {
-        var books = await GetFilteredBooksAsync(startDate, endDate, ct);
-
-        var ratings = category switch
-        {
-            RatingCategory.Characters => books.Where(b => b.CharactersRating.HasValue).Select(b => b.CharactersRating!.Value),
-            RatingCategory.Plot => books.Where(b => b.PlotRating.HasValue).Select(b => b.PlotRating!.Value),
-            RatingCategory.WritingStyle => books.Where(b => b.WritingStyleRating.HasValue).Select(b => b.WritingStyleRating!.Value),
-            RatingCategory.SpiceLevel => books.Where(b => b.SpiceLevelRating.HasValue).Select(b => b.SpiceLevelRating!.Value),
-            RatingCategory.Pacing => books.Where(b => b.PacingRating.HasValue).Select(b => b.PacingRating!.Value),
-            RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).Select(b => b.WorldBuildingRating!.Value),
-            RatingCategory.Overall => books.Where(b => b.OverallRating.HasValue).Select(b => b.OverallRating!.Value),
-            _ => Enumerable.Empty<int>()
-        };
-
-        var ratingList = ratings.ToList();
-        return ratingList.Any() ? ratingList.Average() : 0;
+        var profile = await _unitOfWork.Books.GetAverageRatingsProfileAsync(startDate, endDate);
+        return profile.TryGetValue(category, out var val) ? val : 0;
     }
 
     public async Task<Dictionary<RatingCategory, double>> GetAllAverageRatingsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
     {
-        var result = new Dictionary<RatingCategory, double>();
-
-        foreach (RatingCategory category in Enum.GetValues(typeof(RatingCategory)))
-        {
-            var average = await GetAverageRatingByCategoryAsync(category, startDate, endDate, ct);
-            result[category] = average;
-        }
-
-        return result;
+        return await _unitOfWork.Books.GetAverageRatingsProfileAsync(startDate, endDate);
     }
 
     public async Task<List<BookRatingSummary>> GetTopRatedBooksAsync(int count = 10, RatingCategory? category = null, CancellationToken ct = default)
@@ -258,23 +220,4 @@ public class StatsService : IStatsService
             .ToList();
     }
 
-    /// <summary>
-    /// Helper method to filter books by date range.
-    /// </summary>
-    private async Task<List<Book>> GetFilteredBooksAsync(DateTime? startDate, DateTime? endDate, CancellationToken ct = default)
-    {
-        var books = (await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed)).ToList();
-
-        if (startDate.HasValue)
-        {
-            books = books.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value >= startDate.Value).ToList();
-        }
-
-        if (endDate.HasValue)
-        {
-            books = books.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value <= endDate.Value).ToList();
-        }
-
-        return books;
-    }
 }

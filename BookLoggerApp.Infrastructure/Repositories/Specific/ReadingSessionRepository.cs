@@ -57,4 +57,18 @@ public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSess
     {
         return await _dbSet.SumAsync(rs => rs.Minutes, ct);
     }
+
+    public async Task<int> GetTotalPagesReadInRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        return await _dbSet
+            .Where(rs => rs.StartedAt >= startDate && rs.StartedAt <= endDate && rs.PagesRead.HasValue)
+            .SumAsync(rs => rs.PagesRead!.Value);
+    }
+
+    public async Task<int> GetTotalMinutesReadInRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        return await _dbSet
+            .Where(rs => rs.StartedAt >= startDate && rs.StartedAt <= endDate)
+            .SumAsync(rs => rs.Minutes);
+    }
 }

@@ -194,15 +194,20 @@ public class BookService : IBookService
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
+        var wasAlreadyCompleted = book.Status == ReadingStatus.Completed;
         book.CurrentPage = currentPage;
-        var wasCompleted = false;
+        var justCompleted = false;
 
         // Auto-complete if reached last page
         if (book.PageCount.HasValue && currentPage >= book.PageCount.Value)
         {
-            book.Status = ReadingStatus.Completed;
-            book.DateCompleted = DateTime.UtcNow;
-            wasCompleted = true;
+            // Only mark as completed if it wasn't already
+            if (!wasAlreadyCompleted)
+            {
+                book.Status = ReadingStatus.Completed;
+                book.DateCompleted = DateTime.UtcNow;
+                justCompleted = true;
+            }
         }
 
         try
@@ -211,8 +216,12 @@ public class BookService : IBookService
             await _unitOfWork.SaveChangesAsync(ct);
 
             // Notify goals changed if book was completed
-            if (wasCompleted)
+            if (justCompleted)
             {
+                // Award book completion XP (100 XP bonus + plant boost)
+                var activePlant = await _plantService.GetActivePlantAsync(ct);
+                await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
+
                 _goalService.NotifyGoalsChanged();
             }
         }
