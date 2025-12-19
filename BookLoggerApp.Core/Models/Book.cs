@@ -53,12 +53,7 @@ public class Book
     // Status & Rating
     public ReadingStatus Status { get; set; } = ReadingStatus.Planned;
 
-    [Obsolete("Use OverallRating instead")]
-    public int? Rating
-    {
-        get => OverallRating;
-        set => OverallRating = value;
-    }
+
 
     // Multi-Category Ratings (1-5 stars, nullable)
     public int? CharactersRating { get; set; }
@@ -67,7 +62,10 @@ public class Book
     public int? SpiceLevelRating { get; set; }
     public int? PacingRating { get; set; }
     public int? WorldBuildingRating { get; set; }
-    public int? OverallRating { get; set; }
+
+
+    [MaxLength(5000)]
+    public string? Notes { get; set; }
 
     // Timestamps
     public DateTime DateAdded { get; set; } = DateTime.UtcNow;
@@ -79,6 +77,7 @@ public class Book
     public ICollection<ReadingSession> ReadingSessions { get; set; } = new List<ReadingSession>();
     public ICollection<Quote> Quotes { get; set; } = new List<Quote>();
     public ICollection<Annotation> Annotations { get; set; } = new List<Annotation>();
+    public ICollection<BookShelf> BookShelves { get; set; } = new List<BookShelf>();
 
     // Concurrency Control
     [Timestamp]
@@ -110,7 +109,7 @@ public class Book
             var validRatings = ratings.Where(r => r.HasValue).Select(r => r!.Value).ToList();
 
             if (!validRatings.Any())
-                return OverallRating;
+                return null;
 
             return validRatings.Average();
         }

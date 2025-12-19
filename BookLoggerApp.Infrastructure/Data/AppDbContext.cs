@@ -24,10 +24,20 @@ public class AppDbContext : DbContext
     public DbSet<UserPlant> UserPlants => Set<UserPlant>();
     public DbSet<ShopItem> ShopItems => Set<ShopItem>();
     public DbSet<AppSettings> AppSettings => Set<AppSettings>();
+    public DbSet<BookRatingSummary> BookRatingSummaries => Set<BookRatingSummary>(); // View
+    public DbSet<Shelf> Shelves => Set<Shelf>();
+    public DbSet<BookShelf> BookShelves => Set<BookShelf>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Configure Many-to-Many for Book <-> Shelf
+        modelBuilder.Entity<BookShelf>()
+            .HasKey(bs => new { bs.BookId, bs.ShelfId });
+
+        // Configure BookRatingSummary as Keyless (View)
+        modelBuilder.Entity<BookRatingSummary>().HasNoKey();
 
         // Apply all configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

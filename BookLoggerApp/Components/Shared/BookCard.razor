@@ -48,12 +48,15 @@
             </div>
             <h3 class="book-title">@Book.Title</h3>
             <p class="book-author">@Book.Author</p>
-            @if (Book.OverallRating.HasValue)
+            @if (Book.AverageRating.HasValue)
             {
                 <div class="book-rating">
+                    @{
+                        var rating = (int)Math.Round(Book.AverageRating.Value);
+                    }
                     @for (int i = 1; i <= 5; i++)
                     {
-                        <span class="star @(i <= Book.OverallRating.Value ? "filled" : "empty")">★</span>
+                        <span class="star @(i <= rating ? "filled" : "empty")">★</span>
                     }
                 </div>
             }

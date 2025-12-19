@@ -47,7 +47,7 @@ public class GoalService : IGoalService
 
     public async Task UpdateAsync(ReadingGoal goal, CancellationToken ct = default)
     {
-        await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+        await _unitOfWork.ReadingGoals.UpdateAsync(goal, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 

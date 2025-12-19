@@ -126,7 +126,7 @@ public class ImportExportService : IImportExportService
                 b.CurrentPage,
                 b.CoverImagePath,
                 Status = b.Status.ToString(),
-                Rating = b.OverallRating,
+                Rating = b.AverageRating,
                 b.DateAdded,
                 b.DateStarted,
                 b.DateCompleted,
@@ -255,7 +255,7 @@ public class ImportExportService : IImportExportService
                         CurrentPage = record.CurrentPage,
                         CoverImagePath = record.CoverImagePath,
                         Status = Enum.TryParse<ReadingStatus>(record.Status, out var status) ? status : ReadingStatus.Planned,
-                        OverallRating = record.Rating,
+
                         DateAdded = record.DateAdded ?? DateTime.UtcNow,
                         DateStarted = record.DateStarted,
                         DateCompleted = record.DateCompleted
@@ -428,7 +428,7 @@ public class ImportExportService : IImportExportService
         public int CurrentPage { get; set; }
         public string? CoverImagePath { get; set; }
         public string Status { get; set; } = "Planned";
-        public int? Rating { get; set; }
+        public double? Rating { get; set; }
         public DateTime? DateAdded { get; set; }
         public DateTime? DateStarted { get; set; }
         public DateTime? DateCompleted { get; set; }

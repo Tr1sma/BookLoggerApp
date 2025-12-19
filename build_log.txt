@@ -1,0 +1,15 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\Models\RatingCategoryInfo.cs(62,14): error CS1002: ; expected [C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\BookLoggerApp.Core.csproj]
+C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\Models\RatingCategoryInfo.cs(63,10): error CS1597: Semicolon after method or accessor block is not valid [C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\BookLoggerApp.Core.csproj]
+C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\Models\RatingCategoryInfo.cs(64,5): error CS1519: Invalid token '}' in a member declaration [C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\BookLoggerApp.Core.csproj]
+
+Build FAILED.
+
+C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\Models\RatingCategoryInfo.cs(62,14): error CS1002: ; expected [C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\BookLoggerApp.Core.csproj]
+C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\Models\RatingCategoryInfo.cs(63,10): error CS1597: Semicolon after method or accessor block is not valid [C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\BookLoggerApp.Core.csproj]
+C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\Models\RatingCategoryInfo.cs(64,5): error CS1519: Invalid token '}' in a member declaration [C:\Users\Trist\source\repos\BookLoggerApp\BookLoggerApp.Core\BookLoggerApp.Core.csproj]
+    0 Warning(s)
+    3 Error(s)
+
+Time Elapsed 00:00:01.28

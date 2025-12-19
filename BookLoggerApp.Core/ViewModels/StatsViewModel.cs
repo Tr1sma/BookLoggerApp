@@ -74,8 +74,7 @@ public partial class StatsViewModel : ViewModelBase
     [ObservableProperty]
     private double _averageWorldBuildingRating;
 
-    [ObservableProperty]
-    private double _averageOverallRating;
+
 
     [ObservableProperty]
     private Dictionary<RatingCategory, double> _categoryAverages = new();
@@ -150,7 +149,6 @@ public partial class StatsViewModel : ViewModelBase
         AverageSpiceLevelRating = CategoryAverages.GetValueOrDefault(RatingCategory.SpiceLevel, 0);
         AveragePacingRating = CategoryAverages.GetValueOrDefault(RatingCategory.Pacing, 0);
         AverageWorldBuildingRating = CategoryAverages.GetValueOrDefault(RatingCategory.WorldBuilding, 0);
-        AverageOverallRating = CategoryAverages.GetValueOrDefault(RatingCategory.Overall, 0);
 
         // Load top rated books
         var topBooks = await _statsService.GetTopRatedBooksAsync(10);
