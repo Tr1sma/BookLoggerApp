@@ -23,7 +23,12 @@ public partial class BookshelfViewModel : ViewModelBase
     }
 
     [ObservableProperty]
-    private ObservableCollection<Book> _books = new();
+    private ObservableCollection<ShelfViewModel> _shelves = new();
+
+    // Keep this for flat search results if needed, or remove? 
+    // For now, let's keep it but primarily use Shelves.
+    [ObservableProperty]
+    private ObservableCollection<Book> _books = new(); 
 
     [ObservableProperty]
     private ObservableCollection<UserPlant> _bookshelfPlants = new();
@@ -59,11 +64,45 @@ public partial class BookshelfViewModel : ViewModelBase
     [ObservableProperty]
     private int _booksRemainingToGoal = 0;
 
+    private readonly IShelfService _shelfService;
+
+    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IShelfService shelfService)
+    {
+        _bookService = bookService;
+        _genreService = genreService;
+        _plantService = plantService;
+        _goalService = goalService;
+        _shelfService = shelfService;
+    }
+
     [RelayCommand]
     public async Task LoadAsync()
     {
         await ExecuteSafelyAsync(async () =>
         {
+            // Load Shelves
+            var shelves = await _shelfService.GetAllShelvesAsync();
+            
+            // If no shelves exist, create default ones
+            if (!shelves.Any())
+            {
+                var defaultShelf = new Shelf { Name = "Main Shelf", SortOrder = 0 };
+                await _shelfService.CreateShelfAsync(defaultShelf);
+                
+                // Assign all existing books to this shelf for migration purposes (optional, or just leave them unassigned?)
+                // For now, let's just reload.
+                shelves = await _shelfService.GetAllShelvesAsync();
+            }
+
+            var shelfViewModels = new List<ShelfViewModel>();
+            foreach (var shelf in shelves)
+            {
+                var books = await _shelfService.GetBooksForShelfAsync(shelf.Id);
+                shelfViewModels.Add(new ShelfViewModel { Shelf = shelf, Books = new ObservableCollection<Book>(books) });
+            }
+            Shelves = new ObservableCollection<ShelfViewModel>(shelfViewModels);
+
+            // Also load flat list for calculations (like TBR count)
             var allBooks = await _bookService.GetAllAsync();
             Books = new ObservableCollection<Book>(allBooks);
 
@@ -83,8 +122,69 @@ public partial class BookshelfViewModel : ViewModelBase
         }, "Failed to load books");
     }
 
+    // New Commands for Shelf Management
+    [RelayCommand]
+    public async Task CreateShelfAsync((string name, ShelfAutoSortRule rule) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            var newShelf = new Shelf
+            {
+                Name = args.name,
+                AutoSortRule = args.rule
+            };
+            await _shelfService.CreateShelfAsync(newShelf);
+            await LoadAsync();
+        }, "Failed to create shelf");
+    }
+
+    [RelayCommand]
+    public async Task DeleteShelfAsync(Guid shelfId)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _shelfService.DeleteShelfAsync(shelfId);
+            await LoadAsync();
+        }, "Failed to delete shelf");
+    }
+
+    [RelayCommand]
+    public async Task MoveBookToShelfAsync((Guid bookId, Guid targetShelfId) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+             // Implement moving logic: 
+             // If book is already in a shelf, remove it? Or just add?
+             // Requirement says "Book can be in multiple shelves".
+             // But drag and drop usually implies "move" if within the same context, or "copy" if distinct.
+             // User request: "Ein buch darf gleichzeitig in mehreren regalen sein." (A book may be in multiple shelves at the same time).
+             
+             // So, standard drag and drop might be "Add to shelf". 
+             // But if dragging FROM a shelf TO another, user might expect move.
+             // Let's assume Add for now, or check if we know the source shelf.
+             
+             await _shelfService.AddBookToShelfAsync(args.targetShelfId, args.bookId);
+             
+             // Refresh
+             await LoadAsync();
+        }, "Failed to move book to shelf");
+    }
+    
+    [RelayCommand]
+    public async Task RemoveBookFromShelfAsync((Guid bookId, Guid shelfId) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _shelfService.RemoveBookFromShelfAsync(args.shelfId, args.bookId);
+            await LoadAsync();
+        }, "Failed to remove book from shelf");
+    }
+
+    // ... (Keep existing goal stats and search logic, update Search to filter shelves maybe?)
+
     private async Task CalculateGoalStatsAsync()
     {
+        // ... (Keep existing logic using _books which contains all books)
         // Count TBR (To Be Read) books - those with "Planned" status
         TbrCount = Books.Count(b => b.Status == ReadingStatus.Planned);
 
@@ -124,13 +224,19 @@ public partial class BookshelfViewModel : ViewModelBase
     [RelayCommand]
     public async Task SearchAsync()
     {
+        // Search logic might need to filter books within shelves or show a "Search Results" virtual shelf?
+        // For now, let's keep search acting on the global book list, 
+        // effectively showing "Search Results" and hiding standard shelves if search is active.
+        
         await ExecuteSafelyAsync(async () =>
         {
-            IEnumerable<Book> filtered;
+             IEnumerable<Book> filtered;
 
             if (string.IsNullOrWhiteSpace(SearchQuery))
             {
-                filtered = await _bookService.GetAllAsync();
+                // Reset to shelf view
+                await LoadAsync();
+                return;
             }
             else
             {
@@ -160,6 +266,9 @@ public partial class BookshelfViewModel : ViewModelBase
             };
 
             Books = new ObservableCollection<Book>(filtered);
+            // Clear shelves to indicate search mode
+            Shelves.Clear();
+            
         }, "Failed to search books");
     }
 
@@ -179,8 +288,10 @@ public partial class BookshelfViewModel : ViewModelBase
         SearchQuery = "";
         FilterStatus = null;
         FilterGenreId = null;
+        LoadAsync(); // Reload to show shelves again
     }
 
+    // ... (Keep existing plant commands)
     [RelayCommand]
     public async Task PlacePlantInBookshelfAsync((Guid plantId, string position) args)
     {
@@ -287,6 +398,10 @@ public partial class BookshelfViewModel : ViewModelBase
     [RelayCommand]
     public async Task MoveBookToPositionAsync((Guid bookId, string position) args)
     {
+        // This is legacy single-shelf positioning. 
+        // We might want to adapt this to shelf-specific positioning later.
+        // For now, keep it compatible or ignore if not using this field anymore.
+        
         await ExecuteSafelyAsync(async () =>
         {
             var book = Books.FirstOrDefault(b => b.Id == args.bookId);
@@ -303,5 +418,19 @@ public partial class BookshelfViewModel : ViewModelBase
             await LoadAsync();
         }, "Failed to move book");
     }
+
+
 }
+
+public partial class ShelfViewModel : ObservableObject
+{
+    [ObservableProperty]
+    private Shelf _shelf = null!;
+
+    [ObservableProperty]
+    private ObservableCollection<Book> _books = new();
+}
+
+
+
 

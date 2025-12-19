@@ -15,6 +15,7 @@ public class BookRatingSummary
     /// <summary>
     /// Dictionary of all ratings by category.
     /// </summary>
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public Dictionary<RatingCategory, int?> Ratings { get; set; } = new();
 
     /// <summary>
@@ -25,7 +26,7 @@ public class BookRatingSummary
         var summary = new BookRatingSummary
         {
             Book = book,
-            AverageRating = book.AverageRating ?? book.OverallRating ?? 0,
+            AverageRating = book.AverageRating ?? 0,
             Ratings = new Dictionary<RatingCategory, int?>
             {
                 { RatingCategory.Characters, book.CharactersRating },
@@ -34,7 +35,7 @@ public class BookRatingSummary
                 { RatingCategory.SpiceLevel, book.SpiceLevelRating },
                 { RatingCategory.Pacing, book.PacingRating },
                 { RatingCategory.WorldBuilding, book.WorldBuildingRating },
-                { RatingCategory.Overall, book.OverallRating }
+
             }
         };
 
