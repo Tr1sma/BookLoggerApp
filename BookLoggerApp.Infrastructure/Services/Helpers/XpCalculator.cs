@@ -13,29 +13,18 @@ public static class XpCalculator
 
     public static int CalculateXpForSession(int minutes, int? pagesRead, bool hasStreak = false)
     {
-        int xp = 0;
+        var (minutesXp, pagesXp, longSessionXp, streakXp) = CalculateSessionXpBreakdown(minutes, pagesRead, hasStreak);
+        return minutesXp + pagesXp + longSessionXp + streakXp;
+    }
 
-        // Base XP
-        xp += minutes * XP_PER_MINUTE;
+    public static (int MinutesXp, int PagesXp, int LongSessionXp, int StreakXp) CalculateSessionXpBreakdown(int minutes, int? pagesRead, bool hasStreak = false)
+    {
+        int minutesXp = minutes * XP_PER_MINUTE;
+        int pagesXp = (pagesRead ?? 0) * XP_PER_PAGE;
+        int longSessionXp = (minutes >= 60) ? BONUS_XP_LONG_SESSION : 0;
+        int streakXp = hasStreak ? BONUS_XP_STREAK : 0;
 
-        if (pagesRead.HasValue)
-        {
-            xp += pagesRead.Value * XP_PER_PAGE;
-        }
-
-        // Bonus for long sessions (60+ minutes)
-        if (minutes >= 60)
-        {
-            xp += BONUS_XP_LONG_SESSION;
-        }
-
-        // Streak bonus
-        if (hasStreak)
-        {
-            xp += BONUS_XP_STREAK;
-        }
-
-        return xp;
+        return (minutesXp, pagesXp, longSessionXp, streakXp);
     }
 
     public static int GetXpForLevel(int level)

@@ -1,8 +1,8 @@
 /* Book Card - Realistic Book Spine Design */
 .book-card {
     position: relative;
-    width: clamp(45px, 10vw, 140px);
-    height: clamp(140px, 22vh, 380px);
+    width: clamp(35px, 7vw, 100px);
+    height: clamp(110px, 16vh, 280px);
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
@@ -11,17 +11,15 @@
     overflow: visible;
 
     /* Enhanced 3D Book Spine Effect with depth */
-    background: linear-gradient(
-        to right,
-        rgba(0, 0, 0, 0.4) 0%,
-        rgba(0, 0, 0, 0.1) 3%,
-        rgba(0, 0, 0, 0.05) 6%,
-        transparent 10%,
-        transparent 90%,
-        rgba(0, 0, 0, 0.05) 94%,
-        rgba(0, 0, 0, 0.1) 97%,
-        rgba(0, 0, 0, 0.4) 100%
-    );
+    background: linear-gradient(to right,
+            rgba(0, 0, 0, 0.4) 0%,
+            rgba(0, 0, 0, 0.1) 3%,
+            rgba(0, 0, 0, 0.05) 6%,
+            transparent 10%,
+            transparent 90%,
+            rgba(0, 0, 0, 0.05) 94%,
+            rgba(0, 0, 0, 0.1) 97%,
+            rgba(0, 0, 0, 0.4) 100%);
 
     /* Multi-layer shadow for enhanced depth */
     box-shadow:
@@ -43,13 +41,11 @@
     right: 0;
     bottom: 0;
     background-image:
-        repeating-linear-gradient(
-            90deg,
+        repeating-linear-gradient(90deg,
             transparent,
             transparent 1px,
             rgba(0, 0, 0, 0.02) 1px,
-            rgba(0, 0, 0, 0.02) 2px
-        );
+            rgba(0, 0, 0, 0.02) 2px);
     pointer-events: none;
     z-index: 1;
     opacity: 0.3;
@@ -80,12 +76,10 @@
     overflow: hidden;
 
     /* Dynamic book spine colors - will be overridden by inline styles */
-    background: linear-gradient(
-        to right,
-        var(--bg-tertiary),
-        var(--card-bg),
-        var(--bg-tertiary)
-    );
+    background: linear-gradient(to right,
+            var(--bg-tertiary),
+            var(--card-bg),
+            var(--bg-tertiary));
 }
 
 .book-cover-image {
@@ -99,7 +93,8 @@
 }
 
 .book-cover {
-    display: none; /* Hide cover image in spine view */
+    display: none;
+    /* Hide cover image in spine view */
 }
 
 .book-card:hover .book-cover-wrapper {
@@ -116,7 +111,7 @@
     border-radius: 12px;
     font-size: 0.9rem;
     border: 1px solid var(--border-light);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     z-index: 2;
 }
 
@@ -161,7 +156,7 @@
     writing-mode: vertical-rl;
     text-orientation: mixed;
     transform: rotate(180deg);
-    font-size: clamp(0.22rem, 0.55vw, 0.35rem);
+    font-size: clamp(0.2rem, 0.45vw, 0.3rem);
     font-weight: 700;
     margin: 0;
     padding: 0.15rem 0;
@@ -180,7 +175,7 @@
     writing-mode: vertical-rl;
     text-orientation: mixed;
     transform: rotate(180deg);
-    font-size: clamp(0.18rem, 0.45vw, 0.28rem);
+    font-size: clamp(0.15rem, 0.35vw, 0.22rem);
     color: var(--text-secondary);
     margin: 0;
     padding: 0.1rem 0;
@@ -193,7 +188,8 @@
 }
 
 .book-rating {
-    display: none; /* Hide rating in compact spine view */
+    display: none;
+    /* Hide rating in compact spine view */
 }
 
 .star {
@@ -234,7 +230,8 @@
 }
 
 .progress-text {
-    display: none; /* Hide percentage text in spine view */
+    display: none;
+    /* Hide percentage text in spine view */
 }
 
 .book-card-actions {
@@ -271,16 +268,45 @@
 }
 
 /* Book Spine Color Variations (applied via inline styles or classes) */
-.book-spine-red { background: linear-gradient(to right, #8B4513, #A0522D, #8B4513); }
-.book-spine-blue { background: linear-gradient(to right, #2C4A6B, #3A5F7D, #2C4A6B); }
-.book-spine-green { background: linear-gradient(to right, #3D5A3D, #4A6B4A, #3D5A3D); }
-.book-spine-purple { background: linear-gradient(to right, #5D4E6D, #6F5F7F, #5D4E6D); }
-.book-spine-brown { background: linear-gradient(to right, #4A3426, #5C452F, #4A3426); }
-.book-spine-gold { background: linear-gradient(to right, #8B7355, #A68968, #8B7355); }
-.book-spine-burgundy { background: linear-gradient(to right, #6B3240, #7D4450, #6B3240); }
-.book-spine-teal { background: linear-gradient(to right, #2C5F5F, #3A7373, #2C5F5F); }
-.book-spine-navy { background: linear-gradient(to right, #1C2E4A, #2A3F5F, #1C2E4A); }
-.book-spine-olive { background: linear-gradient(to right, #4A4A2C, #5C5C3A, #4A4A2C); }
+.book-spine-red {
+    background: linear-gradient(to right, #8B4513, #A0522D, #8B4513);
+}
+
+.book-spine-blue {
+    background: linear-gradient(to right, #2C4A6B, #3A5F7D, #2C4A6B);
+}
+
+.book-spine-green {
+    background: linear-gradient(to right, #3D5A3D, #4A6B4A, #3D5A3D);
+}
+
+.book-spine-purple {
+    background: linear-gradient(to right, #5D4E6D, #6F5F7F, #5D4E6D);
+}
+
+.book-spine-brown {
+    background: linear-gradient(to right, #4A3426, #5C452F, #4A3426);
+}
+
+.book-spine-gold {
+    background: linear-gradient(to right, #8B7355, #A68968, #8B7355);
+}
+
+.book-spine-burgundy {
+    background: linear-gradient(to right, #6B3240, #7D4450, #6B3240);
+}
+
+.book-spine-teal {
+    background: linear-gradient(to right, #2C5F5F, #3A7373, #2C5F5F);
+}
+
+.book-spine-navy {
+    background: linear-gradient(to right, #1C2E4A, #2A3F5F, #1C2E4A);
+}
+
+.book-spine-olive {
+    background: linear-gradient(to right, #4A4A2C, #5C5C3A, #4A4A2C);
+}
 
 /* ===== COMPACT BOOK CARD LAYOUT ===== */
 /* Horizontal layout with thumbnail + info for better information density */
@@ -332,12 +358,10 @@
     flex-shrink: 0;
 
     /* Keep spine colors and effects */
-    background: linear-gradient(
-        to right,
-        var(--bg-tertiary),
-        var(--card-bg),
-        var(--bg-tertiary)
-    );
+    background: linear-gradient(to right,
+            var(--bg-tertiary),
+            var(--card-bg),
+            var(--bg-tertiary));
 
     box-shadow:
         0 2px 6px rgba(0, 0, 0, 0.3),
@@ -1558,8 +1582,8 @@ section h2 {
 /* Plant Card - Bookshelf Style (like a potted plant on the shelf) */
 .plant-card {
     position: relative;
-    width: clamp(45px, 10vw, 140px);
-    height: clamp(140px, 22vh, 380px);
+    width: clamp(35px, 7vw, 100px);
+    height: clamp(110px, 16vh, 280px);
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -1646,9 +1670,7 @@ section h2 {
     user-drag: none;
     -webkit-user-drag: none;
     /* Green natural plant tint */
-    filter: drop-shadow(0 2px 6px rgba(72, 187, 120, 0.4))
-            saturate(1.3)
-            brightness(0.95);
+    filter: drop-shadow(0 2px 6px rgba(72, 187, 120, 0.4)) saturate(1.3) brightness(0.95);
 }
 
 .plant-card:hover .plant-pot-wrapper {
@@ -1661,14 +1683,14 @@ section h2 {
     object-fit: cover;
     object-position: center;
     z-index: 1;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
 
 .plant-selection-image {
     width: 80px;
     height: 80px;
     object-fit: contain;
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
 }
 
 .plant-status-badge {
@@ -1681,7 +1703,7 @@ section h2 {
     border-radius: 12px;
     font-size: 0.9rem;
     border: 1px solid var(--border-light);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     z-index: 2;
 }
 
@@ -1950,6 +1972,7 @@ section h2 {
         opacity: 0;
         transform: scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: scale(1);

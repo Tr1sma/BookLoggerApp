@@ -27,6 +27,12 @@ public partial class GoalsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _showCreateForm = false;
 
+    [ObservableProperty]
+    private bool _isEditing = false;
+
+    [ObservableProperty]
+    private string? _statusMessage;
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -43,7 +49,9 @@ public partial class GoalsViewModel : ViewModelBase
     [RelayCommand]
     public void OpenCreateForm()
     {
+        StatusMessage = null;
         ShowCreateForm = true;
+        IsEditing = false;
         // For Books goals, default to yearly tracking (Jan 1 - Dec 31)
         // For other goals, use current date as start
         var startOfYear = new DateTime(DateTime.UtcNow.Year, 1, 1);
@@ -61,14 +69,39 @@ public partial class GoalsViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public void OpenEditForm(ReadingGoal goal)
+    {
+        StatusMessage = null;
+        // Create a copy to edit to avoid modifying the list directly before saving
+        NewGoal = new ReadingGoal
+        {
+            Id = goal.Id,
+            Title = goal.Title,
+            Description = goal.Description,
+            Type = goal.Type,
+            Target = goal.Target,
+            Current = goal.Current,
+            StartDate = goal.StartDate,
+            EndDate = goal.EndDate,
+            IsCompleted = goal.IsCompleted,
+            CompletedAt = goal.CompletedAt,
+            RowVersion = goal.RowVersion
+        };
+        IsEditing = true;
+        ShowCreateForm = true;
+    }
+
+    [RelayCommand]
     public void CancelCreate()
     {
         ShowCreateForm = false;
         NewGoal = null;
+        IsEditing = false;
+        StatusMessage = null;
     }
 
     [RelayCommand]
-    public async Task CreateGoalAsync()
+    public async Task SaveGoalAsync()
     {
         if (NewGoal == null) return;
 
@@ -80,11 +113,27 @@ public partial class GoalsViewModel : ViewModelBase
 
         await ExecuteSafelyAsync(async () =>
         {
-            await _goalService.AddAsync(NewGoal);
+            bool wasEditing = IsEditing;
+            if (IsEditing)
+            {
+                await _goalService.UpdateAsync(NewGoal);
+                StatusMessage = "Update erfolgreich";
+            }
+            else
+            {
+                await _goalService.AddAsync(NewGoal);
+                StatusMessage = "Ziel erstellt";
+            }
+            
             ShowCreateForm = false;
             NewGoal = null;
+            IsEditing = false;
             await LoadAsync();
-        }, "Failed to create goal");
+
+            // Clear message after 3 seconds
+            _ = Task.Delay(3000).ContinueWith(_ => StatusMessage = null);
+
+        }, IsEditing ? "Failed to update goal" : "Failed to create goal");
     }
 
     [RelayCommand]
@@ -93,7 +142,17 @@ public partial class GoalsViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             await _goalService.DeleteAsync(goalId);
+            if (ShowCreateForm && NewGoal?.Id == goalId)
+            {
+                ShowCreateForm = false;
+                NewGoal = null;
+            }
+            StatusMessage = "Erfolgreich gelöscht";
             await LoadAsync();
+            
+            // Clear message after 3 seconds
+            _ = Task.Delay(3000).ContinueWith(_ => StatusMessage = null);
+
         }, "Failed to delete goal");
     }
 

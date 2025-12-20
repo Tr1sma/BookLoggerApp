@@ -366,3 +366,5 @@ FodyWeavers.xsd
 *.keystore
 *.jks
 key.txt
+.gemini/
+gha-creds-*.json

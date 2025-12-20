@@ -23,7 +23,8 @@ public class ProgressionService : IProgressionService
     public async Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, bool hasStreak = false)
     {
         // 1. Calculate base XP from session (including streak bonus)
-        int baseXp = XpCalculator.CalculateXpForSession(minutes, pagesRead, hasStreak);
+        var (minutesXp, pagesXp, longSessionXp, streakXp) = XpCalculator.CalculateSessionXpBreakdown(minutes, pagesRead, hasStreak);
+        int baseXp = minutesXp + pagesXp + longSessionXp + streakXp;
 
         // 2. Get plant boost
         decimal plantBoost = await GetTotalPlantBoostAsync();
@@ -51,6 +52,10 @@ public class ProgressionService : IProgressionService
         {
             XpEarned = boostedXp,
             BaseXp = baseXp,
+            MinutesXp = minutesXp,
+            PagesXp = pagesXp,
+            LongSessionBonusXp = longSessionXp,
+            StreakBonusXp = streakXp,
             PlantBoostPercentage = plantBoost,
             BoostedXp = bonusXp,
             NewTotalXp = settings.TotalXp,
@@ -89,6 +94,7 @@ public class ProgressionService : IProgressionService
         {
             XpEarned = boostedXp,
             BaseXp = baseXp,
+            BookCompletionXp = baseXp,
             PlantBoostPercentage = plantBoost,
             BoostedXp = bonusXp,
             NewTotalXp = settings.TotalXp,
