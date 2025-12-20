@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Repositories;
+using BookLoggerApp.Infrastructure.Services.Helpers;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
@@ -30,75 +32,19 @@ public class StatsService : IStatsService
 
     public async Task<int> GetTotalMinutesReadAsync(CancellationToken ct = default)
     {
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
-        return allSessions.Sum(s => s.Minutes);
+        return await _unitOfWork.ReadingSessions.GetTotalMinutesAsync(ct);
     }
 
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
     {
-        var today = DateTime.UtcNow.Date;
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
-
-        var sessionsByDate = allSessions
-            .GroupBy(s => s.StartedAt.Date)
-            .OrderByDescending(g => g.Key)
-            .ToList();
-
-        if (!sessionsByDate.Any())
-            return 0;
-
-        var mostRecentDate = sessionsByDate.First().Key;
-        if ((today - mostRecentDate).Days > 1)
-            return 0;
-
-        int streak = 0;
-        var currentDate = today;
-
-        foreach (var group in sessionsByDate)
-        {
-            if ((currentDate - group.Key).Days <= 1)
-            {
-                streak++;
-                currentDate = group.Key;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return streak;
+        var dates = await _unitOfWork.ReadingSessions.GetSessionDatesAsync(ct);
+        return StreakCalculator.CalculateCurrentStreak(dates);
     }
 
     public async Task<int> GetLongestStreakAsync(CancellationToken ct = default)
     {
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
-        var sessionDates = allSessions
-            .Select(s => s.StartedAt.Date)
-            .Distinct()
-            .OrderBy(d => d)
-            .ToList();
-
-        if (!sessionDates.Any())
-            return 0;
-
-        int longestStreak = 1;
-        int currentStreak = 1;
-
-        for (int i = 1; i < sessionDates.Count; i++)
-        {
-            if ((sessionDates[i] - sessionDates[i - 1]).Days == 1)
-            {
-                currentStreak++;
-                longestStreak = Math.Max(longestStreak, currentStreak);
-            }
-            else if ((sessionDates[i] - sessionDates[i - 1]).Days > 1)
-            {
-                currentStreak = 1;
-            }
-        }
-
-        return longestStreak;
+        var dates = await _unitOfWork.ReadingSessions.GetSessionDatesAsync(ct);
+        return StreakCalculator.CalculateLongestStreak(dates);
     }
 
     public async Task<Dictionary<DateTime, int>> GetReadingTrendAsync(DateTime start, DateTime end, CancellationToken ct = default)
@@ -127,15 +73,7 @@ public class StatsService : IStatsService
 
     public async Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Context.Books
-            .Include(b => b.BookGenres)
-            .ThenInclude(bg => bg.Genre)
-            .ToListAsync();
-
-        return books
-            .SelectMany(b => b.BookGenres.Select(bg => bg.Genre.Name))
-            .GroupBy(name => name)
-            .ToDictionary(g => g.Key, g => g.Count());
+        return await _unitOfWork.Books.GetGenreStatsAsync();
     }
 
     public async Task<string?> GetFavoriteGenreAsync(CancellationToken ct = default)
@@ -183,16 +121,10 @@ public class StatsService : IStatsService
     {
         var books = await GetFilteredBooksAsync(startDate, endDate, ct);
 
-        var ratings = category switch
-        {
-            RatingCategory.Characters => books.Where(b => b.CharactersRating.HasValue).Select(b => b.CharactersRating!.Value),
-            RatingCategory.Plot => books.Where(b => b.PlotRating.HasValue).Select(b => b.PlotRating!.Value),
-            RatingCategory.WritingStyle => books.Where(b => b.WritingStyleRating.HasValue).Select(b => b.WritingStyleRating!.Value),
-            RatingCategory.SpiceLevel => books.Where(b => b.SpiceLevelRating.HasValue).Select(b => b.SpiceLevelRating!.Value),
-            RatingCategory.Pacing => books.Where(b => b.PacingRating.HasValue).Select(b => b.PacingRating!.Value),
-            RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).Select(b => b.WorldBuildingRating!.Value),
-            _ => Enumerable.Empty<int>()
-        };
+        var ratings = books
+            .Select(b => RatingHelper.GetRating(b, category))
+            .Where(r => r.HasValue)
+            .Select(r => r!.Value);
 
         var ratingList = ratings.ToList();
         return ratingList.Any() ? ratingList.Average() : 0;
@@ -220,16 +152,9 @@ public class StatsService : IStatsService
         if (category.HasValue)
         {
             // Sort by specific category
-            sortedBooks = category.Value switch
-            {
-                RatingCategory.Characters => books.Where(b => b.CharactersRating.HasValue).OrderByDescending(b => b.CharactersRating),
-                RatingCategory.Plot => books.Where(b => b.PlotRating.HasValue).OrderByDescending(b => b.PlotRating),
-                RatingCategory.WritingStyle => books.Where(b => b.WritingStyleRating.HasValue).OrderByDescending(b => b.WritingStyleRating),
-                RatingCategory.SpiceLevel => books.Where(b => b.SpiceLevelRating.HasValue).OrderByDescending(b => b.SpiceLevelRating),
-                RatingCategory.Pacing => books.Where(b => b.PacingRating.HasValue).OrderByDescending(b => b.PacingRating),
-                RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).OrderByDescending(b => b.WorldBuildingRating),
-                _ => Enumerable.Empty<Book>()
-            };
+            sortedBooks = books
+                .Where(b => RatingHelper.GetRating(b, category.Value).HasValue)
+                .OrderByDescending(b => RatingHelper.GetRating(b, category.Value));
         }
         else
         {

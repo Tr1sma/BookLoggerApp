@@ -13,4 +13,5 @@ public interface IReadingSessionRepository : IRepository<ReadingSession>
     Task<int> GetTotalPagesReadAsync(Guid bookId);
     Task<IEnumerable<ReadingSession>> GetRecentSessionsAsync(int count = 10);
     Task<int> GetTotalMinutesAsync(CancellationToken ct = default);
+    Task<List<DateTime>> GetSessionDatesAsync(CancellationToken ct = default);
 }

@@ -1,3 +1,5 @@
+using BookLoggerApp.Core.Helpers;
+
 namespace BookLoggerApp.Core.Models;
 
 /// <summary>
@@ -27,17 +29,13 @@ public class BookRatingSummary
         {
             Book = book,
             AverageRating = book.AverageRating ?? 0,
-            Ratings = new Dictionary<RatingCategory, int?>
-            {
-                { RatingCategory.Characters, book.CharactersRating },
-                { RatingCategory.Plot, book.PlotRating },
-                { RatingCategory.WritingStyle, book.WritingStyleRating },
-                { RatingCategory.SpiceLevel, book.SpiceLevelRating },
-                { RatingCategory.Pacing, book.PacingRating },
-                { RatingCategory.WorldBuilding, book.WorldBuildingRating },
-
-            }
+            Ratings = new Dictionary<RatingCategory, int?>()
         };
+
+        foreach (RatingCategory category in Enum.GetValues(typeof(RatingCategory)))
+        {
+            summary.Ratings[category] = RatingHelper.GetRating(book, category);
+        }
 
         return summary;
     }

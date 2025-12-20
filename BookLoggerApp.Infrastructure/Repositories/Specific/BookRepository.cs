@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Infrastructure.Data;
+using BookLoggerApp.Infrastructure.Extensions;
 
 namespace BookLoggerApp.Infrastructure.Repositories.Specific;
 
@@ -35,9 +36,7 @@ public class BookRepository : Repository<Book>, IBookRepository
     public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm)
     {
         return await _dbSet
-            .Where(b => EF.Functions.Like(b.Title, $"%{searchTerm}%") ||
-                       EF.Functions.Like(b.Author, $"%{searchTerm}%") ||
-                       (b.ISBN != null && EF.Functions.Like(b.ISBN, $"%{searchTerm}%")))
+            .Search(searchTerm)
             .Include(b => b.BookGenres)
                 .ThenInclude(bg => bg.Genre)
             .ToListAsync();
@@ -76,5 +75,19 @@ public class BookRepository : Repository<Book>, IBookRepository
     {
         return await _dbSet
             .FirstOrDefaultAsync(b => b.ISBN == isbn);
+    }
+
+    public async Task<Dictionary<string, int>> GetGenreStatsAsync()
+    {
+        var books = await _dbSet
+            .AsNoTracking()
+            .Include(b => b.BookGenres)
+                .ThenInclude(bg => bg.Genre)
+            .ToListAsync();
+
+        return books
+            .SelectMany(b => b.BookGenres.Select(bg => bg.Genre.Name))
+            .GroupBy(name => name)
+            .ToDictionary(g => g.Key, g => g.Count());
     }
 }

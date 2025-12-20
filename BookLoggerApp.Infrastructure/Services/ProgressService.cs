@@ -189,39 +189,8 @@ public class ProgressService : IProgressService
 
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
     {
-        var today = DateTime.UtcNow.Date;
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
-
-        var sessionsByDate = allSessions
-            .GroupBy(s => s.StartedAt.Date)
-            .OrderByDescending(g => g.Key)
-            .ToList();
-
-        if (!sessionsByDate.Any())
-            return 0;
-
-        // Check if user read today or yesterday
-        var mostRecentDate = sessionsByDate.First().Key;
-        if ((today - mostRecentDate).Days > 1)
-            return 0; // Streak broken
-
-        int streak = 0;
-        var currentDate = today;
-
-        foreach (var group in sessionsByDate)
-        {
-            if ((currentDate - group.Key).Days <= 1)
-            {
-                streak++;
-                currentDate = group.Key;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return streak;
+        var dates = await _unitOfWork.ReadingSessions.GetSessionDatesAsync(ct);
+        return StreakCalculator.CalculateCurrentStreak(dates);
     }
 
     private async Task<bool> HasReadingStreakAsync(CancellationToken ct = default)

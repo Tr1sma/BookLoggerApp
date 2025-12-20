@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp.Core.Models;
 
@@ -92,28 +93,7 @@ public class Book
     /// Calculates the average of all set category ratings.
     /// Returns OverallRating if no category ratings are set.
     /// </summary>
-    public double? AverageRating
-    {
-        get
-        {
-            var ratings = new List<int?>
-            {
-                CharactersRating,
-                PlotRating,
-                WritingStyleRating,
-                SpiceLevelRating,
-                PacingRating,
-                WorldBuildingRating
-            };
-
-            var validRatings = ratings.Where(r => r.HasValue).Select(r => r!.Value).ToList();
-
-            if (!validRatings.Any())
-                return null;
-
-            return validRatings.Average();
-        }
-    }
+    public double? AverageRating => RatingHelper.CalculateAverage(this);
 }
 
 /// <summary>
