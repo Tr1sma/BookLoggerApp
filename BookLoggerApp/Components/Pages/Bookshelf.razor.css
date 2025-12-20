@@ -60,12 +60,13 @@
     align-items: flex-end;
     /* Align books to bottom */
     gap: 10px;
-    padding: 10px 15px 4px 15px;
-    /* Tiny bottom padding to prevent exact clipping */
-    min-height: 110px;
+    padding: 5px 15px 8px 15px;
+    /* Reduced top, increased bottom for breathing room */
+    min-height: auto;
+    /* Let content dictate height */
 
     /* Matches standard bookshelf look likely requested */
-    background-color: #231E1B;
+    background-color: #2D251A;
     /* Dark chocolate/black background */
     border-radius: 12px 12px 0 0;
     /* Rounded top */
@@ -104,8 +105,8 @@
 }
 
 .modal-content {
-    background-color: #1E1E1E;
-    /* Very dark grey/black */
+    background-color: #2D251A;
+    /* Dark brown/wood to match shelf */
     border: 1px solid #333;
     border-radius: 16px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
