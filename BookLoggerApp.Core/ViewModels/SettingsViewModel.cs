@@ -8,10 +8,14 @@ namespace BookLoggerApp.Core.ViewModels;
 public partial class SettingsViewModel : ViewModelBase
 {
     private readonly IImportExportService _importExportService;
+    private readonly IAppSettingsProvider _appSettingsProvider;
 
-    public SettingsViewModel(IImportExportService importExportService)
+    public SettingsViewModel(
+        IImportExportService importExportService,
+        IAppSettingsProvider appSettingsProvider)
     {
         _importExportService = importExportService;
+        _appSettingsProvider = appSettingsProvider;
     }
 
     [ObservableProperty]
@@ -25,9 +29,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         await ExecuteSafelyAsync(async () =>
         {
-            // TODO: Load settings from service when AppSettingsService is implemented
-            // For now, use defaults
-            Settings = new AppSettings();
+            Settings = await _appSettingsProvider.GetSettingsAsync();
         }, "Failed to load settings");
     }
 
@@ -37,7 +39,7 @@ public partial class SettingsViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             Settings.UpdatedAt = DateTime.UtcNow;
-            // TODO: Save settings when AppSettingsService is implemented
+            await _appSettingsProvider.UpdateSettingsAsync(Settings);
         }, "Failed to save settings");
     }
 
