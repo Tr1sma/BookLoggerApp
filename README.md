@@ -68,6 +68,10 @@ Statt einer einfachen 5-Sterne-Wertung bietet die App ein **Multi-Kategorie-Rati
 ---
 
 ## 🔧 Tech Stack
+- [.NET 10 MAUI Blazor Hybrid](https://learn.microsoft.com/dotnet/maui)
+- SQLite für lokale Datenspeicherung
+- MVVM + Dependency Injection
+- GitHub Actions für CI/CD
 
 ### Frontend
 
@@ -154,5 +158,5 @@ Details siehe [`LICENSE.md`](LICENSE.md).
 ---
 
 ## 👨‍💻 Autor
+Entwickelt von **Ben Sowieja**  
 
-Entwickelt von **Ben Sowieja**
