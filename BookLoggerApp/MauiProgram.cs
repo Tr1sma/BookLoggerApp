@@ -101,6 +101,7 @@ public static class MauiProgram
     {
         // Register File System Abstraction as Singleton (infrastructure layer)
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFileSystem, BookLoggerApp.Infrastructure.Services.FileSystemAdapter>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFileSaverService, BookLoggerApp.Services.FileSaverService>();
 
         // Register Services as Transient (Recommended for Blazor/MAUI with EF Core to avoid DbContext tracking issues)
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IBookService, BookLoggerApp.Infrastructure.Services.BookService>();

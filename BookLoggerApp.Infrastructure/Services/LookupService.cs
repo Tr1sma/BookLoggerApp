@@ -13,10 +13,10 @@ public class LookupService : ILookupService
     private readonly HttpClient _httpClient;
     private readonly ILogger<LookupService>? _logger;
 
-    public LookupService(ILogger<LookupService>? logger = null)
+    public LookupService(HttpClient? httpClient = null, ILogger<LookupService>? logger = null)
     {
         _logger = logger;
-        _httpClient = new HttpClient
+        _httpClient = httpClient ?? new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(10)
         };
