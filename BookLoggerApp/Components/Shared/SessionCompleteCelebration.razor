@@ -17,20 +17,51 @@
 
             <!-- XP Breakdown -->
             <div class="xp-breakdown">
+                <!-- Reading Session (Minutes + Pages + Long Session) -->
                 <div class="xp-row">
-                    <span class="xp-label">Base XP Earned</span>
-                    <span class="xp-value">+@Result.BaseXp XP</span>
+                    <span class="xp-label">Reading Session</span>
+                    <span class="xp-value">+@(Result.MinutesXp + Result.PagesXp + Result.LongSessionBonusXp) XP</span>
                 </div>
 
+                <!-- Book Completion Bonus -->
+                @if (Result.BookCompletionXp > 0)
+                {
+                    <div class="xp-row">
+                        <span class="xp-label">Book Completed</span>
+                        <span class="xp-value">+@Result.BookCompletionXp XP</span>
+                    </div>
+                }
+
+                <!-- Streak Bonus -->
+                @if (Result.StreakBonusXp > 0)
+                {
+                    <div class="xp-row">
+                        <span class="xp-label">Streak Bonus</span>
+                        <span class="xp-value">+@Result.StreakBonusXp XP</span>
+                    </div>
+                }
+
+                <div class="xp-divider"></div>
+
+                <!-- Subtotal -->
+                <div class="xp-row subtotal">
+                    <span class="xp-label">Subtotal</span>
+                    <span class="xp-value">@Result.BaseXp XP</span>
+                </div>
+
+                <!-- Plant Boost -->
                 @if (Result.PlantBoostPercentage > 0)
                 {
                     <div class="xp-row">
-                        <span class="xp-label">🌱 Plant Boost (@(Result.PlantBoostPercentage * 100)%)</span>
+                        <span class="xp-label">🌱 Plant Boost (@(Math.Round(Result.PlantBoostPercentage * 100))%)</span>
                         <span class="xp-value">+@Result.BoostedXp XP</span>
                     </div>
                 }
 
-                <div class="xp-row">
+                <div class="xp-divider"></div>
+
+                <!-- Total -->
+                <div class="xp-row total-row">
                     <span class="xp-label">Total XP Gained</span>
                     <span class="xp-value total">@Result.XpEarned XP</span>
                 </div>

@@ -25,8 +25,6 @@
         <div class="bookshelf-controls">
             <input type="text" class="search-input" placeholder="🔍 Search books..."
                    @bind="ViewModel.SearchQuery" @bind:event="oninput" @onchange="HandleSearch" />
-            <button class="btn btn-secondary" @onclick="OpenAddShelfModal">+ New Shelf</button>
-            <button class="btn btn-primary" @onclick="NavigateToAddBook">+ Add Book</button>
         </div>
     </div>
 
@@ -154,6 +152,15 @@
             }
         </div>
     }
+    <!-- Floating Action Buttons -->
+    <div class="fab-container">
+        <button class="fab-button secondary" @onclick="OpenAddShelfModal" title="New Shelf">
+            📚
+        </button>
+        <button class="fab-button" @onclick="NavigateToAddBook" title="Add Book">
+            +
+        </button>
+    </div>
 </div>
 
 <!-- Add Shelf Modal -->
