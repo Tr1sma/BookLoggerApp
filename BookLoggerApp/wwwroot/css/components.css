@@ -1582,8 +1582,8 @@ section h2 {
 /* Plant Card - Bookshelf Style (like a potted plant on the shelf) */
 .plant-card {
     position: relative;
-    width: clamp(45px, 10vw, 140px);
-    height: clamp(140px, 22vh, 380px);
+    width: clamp(35px, 7vw, 100px);
+    height: clamp(110px, 16vh, 280px);
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
