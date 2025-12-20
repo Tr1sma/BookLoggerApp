@@ -112,6 +112,18 @@
     border-top: 2px solid rgba(255, 193, 7, 0.3);
 }
 
+.xp-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0.5rem 0;
+}
+
+.xp-row.subtotal .xp-label,
+.xp-row.subtotal .xp-value {
+    color: #fff;
+    font-weight: 700;
+}
+
 .xp-label {
     font-size: 1rem;
     color: #e0e0e0;

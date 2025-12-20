@@ -14,12 +14,15 @@ public partial class BookshelfViewModel : ViewModelBase
     private readonly IPlantService _plantService;
     private readonly IGoalService _goalService;
 
-    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService)
+    private readonly IShelfService _shelfService;
+
+    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IShelfService shelfService)
     {
         _bookService = bookService;
         _genreService = genreService;
         _plantService = plantService;
         _goalService = goalService;
+        _shelfService = shelfService;
     }
 
     [ObservableProperty]
@@ -64,17 +67,6 @@ public partial class BookshelfViewModel : ViewModelBase
     [ObservableProperty]
     private int _booksRemainingToGoal = 0;
 
-    private readonly IShelfService _shelfService;
-
-    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IShelfService shelfService)
-    {
-        _bookService = bookService;
-        _genreService = genreService;
-        _plantService = plantService;
-        _goalService = goalService;
-        _shelfService = shelfService;
-    }
-
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -84,14 +76,44 @@ public partial class BookshelfViewModel : ViewModelBase
             var shelves = await _shelfService.GetAllShelvesAsync();
             
             // If no shelves exist, create default ones
+            // If no shelves exist, create default ones
             if (!shelves.Any())
             {
                 var defaultShelf = new Shelf { Name = "Main Shelf", SortOrder = 0 };
                 await _shelfService.CreateShelfAsync(defaultShelf);
-                
-                // Assign all existing books to this shelf for migration purposes (optional, or just leave them unassigned?)
-                // For now, let's just reload.
                 shelves = await _shelfService.GetAllShelvesAsync();
+            }
+
+            // AUTO-MIGRATION: Ensure all books are on at least one shelf
+            // This specifically fixes the issue where pre-existing books disappear from the UI
+            // because they haven't been assigned to the new shelf system yet.
+            var allBooks = await _bookService.GetAllAsync();
+            var mainShelf = shelves.FirstOrDefault();
+            
+            if (mainShelf != null && allBooks.Any())
+            {
+                // Get set of all book IDs currently in any shelf
+                var assignedBookIds = new HashSet<Guid>();
+                foreach (var shelf in shelves)
+                {
+                    var shelfBooks = await _shelfService.GetBooksForShelfAsync(shelf.Id);
+                    foreach (var book in shelfBooks)
+                    {
+                        assignedBookIds.Add(book.Id);
+                    }
+                }
+
+                // Identify orphans (books not in any shelf)
+                var orphanBooks = allBooks.Where(b => !assignedBookIds.Contains(b.Id)).ToList();
+                
+                // Assign orphans to the main shelf
+                if (orphanBooks.Any())
+                {
+                    foreach (var orphan in orphanBooks)
+                    {
+                        await _shelfService.AddBookToShelfAsync(mainShelf.Id, orphan.Id);
+                    }
+                }
             }
 
             var shelfViewModels = new List<ShelfViewModel>();
@@ -103,7 +125,7 @@ public partial class BookshelfViewModel : ViewModelBase
             Shelves = new ObservableCollection<ShelfViewModel>(shelfViewModels);
 
             // Also load flat list for calculations (like TBR count)
-            var allBooks = await _bookService.GetAllAsync();
+            // Variable allBooks already loaded above
             Books = new ObservableCollection<Book>(allBooks);
 
             Genres = (await _genreService.GetAllAsync()).ToList();
@@ -283,12 +305,12 @@ public partial class BookshelfViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void ClearFilters()
+    public async Task ClearFilters()
     {
         SearchQuery = "";
         FilterStatus = null;
         FilterGenreId = null;
-        LoadAsync(); // Reload to show shelves again
+        await LoadAsync(); // Reload to show shelves again
     }
 
     // ... (Keep existing plant commands)
