@@ -165,9 +165,7 @@ public partial class BookDetailViewModel : ViewModelBase
                 case RatingCategory.WorldBuilding:
                     Book.WorldBuildingRating = rating;
                     break;
-                case RatingCategory.Overall:
-                    Book.OverallRating = rating;
-                    break;
+
             }
 
             // Save the book
@@ -176,6 +174,20 @@ public partial class BookDetailViewModel : ViewModelBase
             // Reload to refresh computed properties
             await LoadAsync(Book.Id);
         }, $"Failed to update {category} rating");
+    }
+
+    /// <summary>
+    /// Updates the notes for the current book.
+    /// </summary>
+    public async Task UpdateNotesAsync(string notes)
+    {
+        if (Book == null) return;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            Book.Notes = notes;
+            await _bookService.UpdateAsync(Book);
+        }, "Failed to update notes");
     }
 
     /// <summary>
@@ -193,7 +205,7 @@ public partial class BookDetailViewModel : ViewModelBase
             RatingCategory.SpiceLevel => Book.SpiceLevelRating,
             RatingCategory.Pacing => Book.PacingRating,
             RatingCategory.WorldBuilding => Book.WorldBuildingRating,
-            RatingCategory.Overall => Book.OverallRating,
+
             _ => null
         };
     }

@@ -16,6 +16,31 @@ public class ProgressionResult
     public int BaseXp { get; set; }
 
     /// <summary>
+    /// XP earned from reading time.
+    /// </summary>
+    public int MinutesXp { get; set; }
+
+    /// <summary>
+    /// XP earned from pages read.
+    /// </summary>
+    public int PagesXp { get; set; }
+
+    /// <summary>
+    /// XP earned from long session bonus.
+    /// </summary>
+    public int LongSessionBonusXp { get; set; }
+
+    /// <summary>
+    /// XP earned from streak bonus.
+    /// </summary>
+    public int StreakBonusXp { get; set; }
+
+    /// <summary>
+    /// XP earned from book completion.
+    /// </summary>
+    public int BookCompletionXp { get; set; }
+
+    /// <summary>
     /// The plant boost percentage applied (e.g., 0.25 for 25%).
     /// </summary>
     public decimal PlantBoostPercentage { get; set; }

@@ -22,6 +22,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -45,6 +46,7 @@
         transform: scale(0.5) translateY(-100px);
         opacity: 0;
     }
+
     100% {
         transform: scale(1) translateY(0);
         opacity: 1;
@@ -71,6 +73,7 @@
         transform: translateY(-30px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -91,6 +94,7 @@
         transform: translateY(30px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -110,6 +114,18 @@
     margin-top: 0.5rem;
     padding-top: 1rem;
     border-top: 2px solid rgba(255, 193, 7, 0.3);
+}
+
+.xp-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0.5rem 0;
+}
+
+.xp-row.subtotal .xp-label,
+.xp-row.subtotal .xp-value {
+    color: #fff;
+    font-weight: 700;
 }
 
 .xp-label {
@@ -136,9 +152,12 @@
 }
 
 @keyframes numberPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1) translateZ(0);
     }
+
     50% {
         transform: scale(1.1) translateZ(0);
     }
@@ -209,9 +228,11 @@
         transform: scale(0.5);
         opacity: 0;
     }
+
     60% {
         transform: scale(1.2);
     }
+
     100% {
         transform: scale(1);
         opacity: 1;
@@ -241,9 +262,11 @@
         transform: scale(0.5);
         opacity: 0;
     }
+
     50% {
         transform: scale(1.2);
     }
+
     100% {
         transform: scale(1);
         opacity: 1;
@@ -297,9 +320,12 @@
 }
 
 @keyframes arrowBounce {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateX(0) translateZ(0);
     }
+
     50% {
         transform: translateX(10px) translateZ(0);
     }
@@ -331,9 +357,11 @@
         transform: rotateY(0deg) scale(0.5);
         opacity: 0;
     }
+
     50% {
         transform: rotateY(180deg) scale(1.2);
     }
+
     100% {
         transform: rotateY(360deg) scale(1);
         opacity: 1;
@@ -418,6 +446,7 @@
         transform: translateY(-100vh) rotate(0deg) translateZ(0);
         opacity: 1;
     }
+
     100% {
         transform: translateY(100vh) rotate(720deg) translateZ(0);
         opacity: 0;
@@ -465,6 +494,7 @@
         transform: translate(0, 0);
         opacity: 1;
     }
+
     100% {
         transform: translate(var(--x), var(--y));
         opacity: 0;
@@ -699,7 +729,7 @@
 /* ===== Dark Mode Support ===== */
 @media (prefers-color-scheme: dark) {
     .celebration-card {
-        background: linear-gradient(135deg, #2d2d2d 0%, #3d3d3d 100%);
+        background: linear-gradient(135deg, #3d3329 0%, #4a3f32 100%);
     }
 
     .level-badge {

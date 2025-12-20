@@ -187,8 +187,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("OverallRating")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Notes")
+                        .HasMaxLength(5000)
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("PacingRating")
                         .HasColumnType("INTEGER");
@@ -206,9 +207,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("Rating")
-                        .HasColumnType("INTEGER");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -221,9 +219,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("UsesCoverAsSpine")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
@@ -231,6 +226,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("UsesCoverAsSpine")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("WorldBuildingRating")
                         .HasColumnType("INTEGER");
@@ -272,6 +270,37 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.HasIndex("GenreId");
 
                     b.ToTable("BookGenres");
+                });
+
+            modelBuilder.Entity("BookLoggerApp.Core.Models.BookRatingSummary", b =>
+                {
+                    b.Property<double>("AverageRating")
+                        .HasColumnType("REAL");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("TEXT");
+
+                    b.HasIndex("BookId");
+
+                    b.ToTable("BookRatingSummaries");
+                });
+
+            modelBuilder.Entity("BookLoggerApp.Core.Models.BookShelf", b =>
+                {
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ShelfId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("BookId", "ShelfId");
+
+                    b.HasIndex("ShelfId");
+
+                    b.ToTable("BookShelves");
                 });
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Genre", b =>
@@ -365,6 +394,34 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             ColorHex = "#95a5a6",
                             Icon = "📜",
                             Name = "History"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000009"),
+                            ColorHex = "#880e4f",
+                            Icon = "🖤",
+                            Name = "Dark Romance"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000010"),
+                            ColorHex = "#34495e",
+                            Icon = "🔦",
+                            Name = "Krimi"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000011"),
+                            ColorHex = "#f1c40f",
+                            Icon = "🎭",
+                            Name = "Comedy"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000012"),
+                            ColorHex = "#c0392b",
+                            Icon = "😱",
+                            Name = "Thriller"
                         });
                 });
 
@@ -608,6 +665,33 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.ToTable("ReadingSessions");
                 });
 
+            modelBuilder.Entity("BookLoggerApp.Core.Models.Shelf", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AutoSortRule")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Shelves");
+                });
+
             modelBuilder.Entity("BookLoggerApp.Core.Models.ShopItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -750,6 +834,36 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Navigation("Genre");
                 });
 
+            modelBuilder.Entity("BookLoggerApp.Core.Models.BookRatingSummary", b =>
+                {
+                    b.HasOne("BookLoggerApp.Core.Models.Book", "Book")
+                        .WithMany()
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+                });
+
+            modelBuilder.Entity("BookLoggerApp.Core.Models.BookShelf", b =>
+                {
+                    b.HasOne("BookLoggerApp.Core.Models.Book", "Book")
+                        .WithMany("BookShelves")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookLoggerApp.Core.Models.Shelf", "Shelf")
+                        .WithMany("BookShelves")
+                        .HasForeignKey("ShelfId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("Shelf");
+                });
+
             modelBuilder.Entity("BookLoggerApp.Core.Models.Quote", b =>
                 {
                     b.HasOne("BookLoggerApp.Core.Models.Book", "Book")
@@ -799,6 +913,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
 
                     b.Navigation("BookGenres");
 
+                    b.Navigation("BookShelves");
+
                     b.Navigation("Quotes");
 
                     b.Navigation("ReadingSessions");
@@ -812,6 +928,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
             modelBuilder.Entity("BookLoggerApp.Core.Models.PlantSpecies", b =>
                 {
                     b.Navigation("UserPlants");
+                });
+
+            modelBuilder.Entity("BookLoggerApp.Core.Models.Shelf", b =>
+                {
+                    b.Navigation("BookShelves");
                 });
 #pragma warning restore 612, 618
         }

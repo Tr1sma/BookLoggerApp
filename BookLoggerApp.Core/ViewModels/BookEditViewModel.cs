@@ -11,17 +11,20 @@ public partial class BookEditViewModel : ViewModelBase
     private readonly IGenreService _genreService;
     private readonly ILookupService _lookupService;
     private readonly IImageService _imageService;
+    private readonly IShelfService _shelfService;
 
     public BookEditViewModel(
         IBookService bookService,
         IGenreService genreService,
         ILookupService lookupService,
-        IImageService imageService)
+        IImageService imageService,
+        IShelfService shelfService)
     {
         _bookService = bookService;
         _genreService = genreService;
         _lookupService = lookupService;
         _imageService = imageService;
+        _shelfService = shelfService;
     }
 
     [ObservableProperty]
@@ -32,6 +35,12 @@ public partial class BookEditViewModel : ViewModelBase
 
     [ObservableProperty]
     private List<Guid> _selectedGenreIds = new();
+
+    [ObservableProperty]
+    private List<Shelf> _availableShelves = new();
+
+    [ObservableProperty]
+    private List<Guid> _selectedShelfIds = new();
 
     [ObservableProperty]
     private bool _isLookingUpIsbn;
@@ -60,6 +69,10 @@ public partial class BookEditViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             AvailableGenres = (await _genreService.GetAllAsync()).ToList();
+            
+            // Load and filter shelves (manual only for editing)
+            var allShelves = await _shelfService.GetAllShelvesAsync();
+            AvailableShelves = allShelves.Where(s => s.AutoSortRule == ShelfAutoSortRule.None).ToList();
 
             if (bookId.HasValue)
             {
@@ -67,6 +80,7 @@ public partial class BookEditViewModel : ViewModelBase
                 if (Book != null)
                 {
                     SelectedGenreIds = Book.BookGenres.Select(bg => bg.GenreId).ToList();
+                    SelectedShelfIds = Book.BookShelves.Select(bs => bs.ShelfId).ToList();
                     _originalStatus = Book.Status;
                 }
             }
@@ -164,6 +178,33 @@ public partial class BookEditViewModel : ViewModelBase
                 foreach (var genreId in SelectedGenreIds.Where(id => !currentGenreIds.Contains(id)))
                 {
                     await _genreService.AddGenreToBookAsync(Book.Id, genreId);
+                }
+                
+                // Update Shelves (Similar logic)
+                // Note: GetWithDetailsAsync was called in Load, but Book might be fresh if AddAsync was just called
+                // We should re-fetch with details to be safe or rely on what we have if loaded
+                var bookWithShelves = await _bookService.GetWithDetailsAsync(Book.Id);
+                if (bookWithShelves != null)
+                {
+                    var currentShelfIds = bookWithShelves.BookShelves.Select(bs => bs.ShelfId).ToHashSet();
+                    
+                    // Remove from deselected manual shelves
+                    foreach(var shelfId in currentShelfIds.Where(id => !SelectedShelfIds.Contains(id)))
+                    {
+                         // Verify it is a manual shelf? (UI only shows manual, but safety check or just assume)
+                         // For now assume filtering happened in UI/ViewModel
+                         var shelf = AvailableShelves.FirstOrDefault(s => s.Id == shelfId);
+                         if (shelf != null) // Only remove if it's one of the manual shelves we allow editing
+                         {
+                             await _shelfService.RemoveBookFromShelfAsync(shelfId, Book.Id);
+                         }
+                    }
+                    
+                    // Add to newly selected shelves
+                    foreach(var shelfId in SelectedShelfIds.Where(id => !currentShelfIds.Contains(id)))
+                    {
+                        await _shelfService.AddBookToShelfAsync(shelfId, Book.Id);
+                    }
                 }
             }
         }, "Failed to save book");

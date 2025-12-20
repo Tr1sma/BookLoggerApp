@@ -11,12 +11,14 @@ public partial class ReadingViewModel : ViewModelBase
 {
     private readonly IProgressService _progressService;
     private readonly IBookService _bookService;
+    private readonly IProgressionService _progressionService;
     private Timer? _timer;
 
-    public ReadingViewModel(IProgressService progressService, IBookService bookService)
+    public ReadingViewModel(IProgressService progressService, IBookService bookService, IProgressionService progressionService)
     {
         _progressService = progressService;
         _bookService = bookService;
+        _progressionService = progressionService;
     }
 
     [ObservableProperty]
@@ -144,6 +146,9 @@ public partial class ReadingViewModel : ViewModelBase
             Session = result.Session;
             SessionProgressionResult = result.ProgressionResult;
 
+            // Check if book was already completed before update
+            var wasCompleted = Book?.Status == ReadingStatus.Completed;
+
             // Update book progress to the current page
             if (Book != null && Book.CurrentPage != CurrentPage)
             {
@@ -153,17 +158,73 @@ public partial class ReadingViewModel : ViewModelBase
                 Book = await _bookService.GetByIdAsync(Book.Id);
             }
 
-            XpEarned = Session.XpEarned;
+            // Check if book just completed
+            if (!wasCompleted && Book?.Status == ReadingStatus.Completed)
+            {
+                // Award Book Completion XP
+                var completionResult = await _progressionService.AwardBookCompletionXpAsync(null);
+                
+                // Merge results
+                SessionProgressionResult = MergeProgressionResults(SessionProgressionResult, completionResult);
+                
+                // Update session XP to reflect total
+                Session.XpEarned = SessionProgressionResult.XpEarned;
+                // Note: We don't save the merged XP to session in DB because session XP should reflect just the session.
+                // But for display we show total.
+            }
+
+            XpEarned = SessionProgressionResult?.XpEarned ?? 0;
 
             // Show celebration overlay with XP breakdown
             ShowSessionCelebration = true;
 
             // Check if there was a level-up to show afterwards
-            if (result.ProgressionResult.LevelUp != null)
+            if (SessionProgressionResult?.LevelUp != null)
             {
-                LevelUpResult = result.ProgressionResult.LevelUp;
+                LevelUpResult = SessionProgressionResult.LevelUp;
             }
         }, "Failed to end session");
+    }
+
+    private ProgressionResult MergeProgressionResults(ProgressionResult? r1, ProgressionResult r2)
+    {
+        if (r1 == null) return r2;
+
+        var merged = new ProgressionResult
+        {
+            XpEarned = r1.XpEarned + r2.XpEarned,
+            BaseXp = r1.BaseXp + r2.BaseXp,
+            MinutesXp = r1.MinutesXp + r2.MinutesXp,
+            PagesXp = r1.PagesXp + r2.PagesXp,
+            LongSessionBonusXp = r1.LongSessionBonusXp + r2.LongSessionBonusXp,
+            StreakBonusXp = r1.StreakBonusXp + r2.StreakBonusXp,
+            BookCompletionXp = r1.BookCompletionXp + r2.BookCompletionXp,
+            PlantBoostPercentage = r1.PlantBoostPercentage, // Assuming same boost
+            BoostedXp = r1.BoostedXp + r2.BoostedXp,
+            NewTotalXp = r2.NewTotalXp, // Result 2 is later
+            LevelUp = null
+        };
+
+        if (r1.LevelUp != null && r2.LevelUp != null)
+        {
+            merged.LevelUp = new LevelUpResult
+            {
+                OldLevel = r1.LevelUp.OldLevel,
+                NewLevel = r2.LevelUp.NewLevel,
+                CoinsAwarded = r1.LevelUp.CoinsAwarded + r2.LevelUp.CoinsAwarded,
+                NewTotalCoins = r2.LevelUp.NewTotalCoins
+            };
+        }
+        else if (r1.LevelUp != null)
+        {
+            merged.LevelUp = r1.LevelUp;
+        }
+        else
+        {
+            merged.LevelUp = r2.LevelUp;
+        }
+
+        return merged;
     }
 
     [RelayCommand]

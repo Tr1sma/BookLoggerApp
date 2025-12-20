@@ -34,9 +34,7 @@ public class BookValidator : AbstractValidator<Book>
                 .WithMessage("Current page cannot exceed total page count")
             .When(b => b.PageCount.HasValue);
 
-        RuleFor(b => b.OverallRating)
-            .InclusiveBetween(0, 5).WithMessage("Rating must be between 0 and 5")
-            .When(b => b.OverallRating.HasValue);
+
 
         RuleFor(b => b.DateStarted)
             .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Start date cannot be in the future")

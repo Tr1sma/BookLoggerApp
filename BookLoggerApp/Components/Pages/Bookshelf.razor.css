@@ -1,0 +1,236 @@
+/* Bookshelf.razor.css */
+
+/* Modern Wood Shelf Styling */
+.shelf-section {
+    background-color: transparent;
+    margin-bottom: 2rem;
+    position: relative;
+    padding-top: 0;
+    /* Removed top padding to close gap */
+    transition: margin-bottom 0.3s ease;
+}
+
+.shelf-section.collapsed {
+    margin-bottom: 0.5rem;
+    /* Tighter spacing when collapsed */
+}
+
+.shelf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1rem 0.5rem 1rem;
+    /* Reduced top padding */
+    margin-bottom: 0;
+    /* Transparent header as requested */
+    background: transparent;
+    border: none;
+}
+
+.shelf-header h3 {
+    margin: 0;
+    color: var(--text-primary, #fff);
+    font-size: 0.9rem;
+    /* Smaller font size as requested */
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+}
+
+.shelf-header .btn-icon {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, #999);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.2s, color 0.2s;
+    opacity: 0.6;
+}
+
+.shelf-header .btn-icon:hover {
+    color: #fff;
+    opacity: 1;
+}
+
+/* Shelf Body / Books Container */
+.shelf-books {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    /* Align books to bottom */
+    gap: 10px;
+    padding: 5px 15px 8px 15px;
+    /* Reduced top, increased bottom for breathing room */
+    min-height: auto;
+    /* Let content dictate height */
+
+    /* Matches standard bookshelf look likely requested */
+    background-color: #2D251A;
+    /* Dark chocolate/black background */
+    border-radius: 12px 12px 0 0;
+    /* Rounded top */
+    overflow: hidden;
+    /* Ensure content stays within rounded corners */
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+    /* Inner shadow for depth */
+    position: relative;
+}
+
+/* The visual shelf bar at the bottom */
+.shelf-wood-base {
+    height: 12px;
+    background: var(--gradient-warm);
+    /* Matches FAB button color */
+    /* Smooth wood gradient */
+    border-radius: 0 0 8px 8px;
+    /* Rounded bottom corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    position: relative;
+    z-index: 10;
+    margin-top: -2px;
+    /* Connect seamlessly */
+}
+
+/* Dragging visual cues */
+.shelf-section.drag-over .shelf-books {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 20px rgba(79, 172, 254, 0.3);
+}
+
+/* Add Shelf Modal Styling - Matching Screenshot */
+.modal-overlay {
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: #2D251A;
+    /* Dark brown/wood to match shelf */
+    border: 1px solid #333;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    color: #E0E0E0;
+    padding: 24px;
+    width: 90%;
+    max-width: 400px;
+}
+
+.modal-content h3 {
+    color: #fff;
+    margin-top: 0;
+    margin-bottom: 24px;
+    font-size: 1.1rem;
+    border: none;
+    padding: 0;
+    font-weight: 600;
+}
+
+.modal-content label {
+    color: #ccc;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.modal-content .form-control {
+    background-color: #2D2D2D;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.modal-content .form-control:focus {
+    border-color: #C8AA82;
+    /* Accent color focus */
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(200, 170, 130, 0.2);
+}
+
+.modal-content small {
+    color: #aaa;
+}
+
+/* Modal Actions */
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* Custom button styling for modal to match screenshot */
+.modal-actions .btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 12px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.modal-actions .btn-secondary {
+    background-color: #3E342F;
+    /* Dark brown/grey from screenshot */
+    color: #E0E0E0;
+    /* Light text */
+}
+
+.modal-actions .btn-secondary:hover {
+    background-color: #4E4039;
+}
+
+.modal-actions .btn-primary {
+    background-color: #C8AA82;
+    /* Beige/Gold from screenshot */
+    color: #221;
+    /* Dark text for contrast */
+}
+
+.modal-actions .btn-primary:hover {
+    background-color: #D8BA92;
+}
+
+/* Toggle chevron rotation */
+.toggle-icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.toggle-icon.collapsed {
+    transform: rotate(-90deg);
+}
+
+/* Empty Slot / Add Plant Button - Matching Book Card Dimensions */
+.empty-slot {
+    width: clamp(35px, 7vw, 100px);
+    height: clamp(110px, 16vh, 280px);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.empty-slot:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.empty-slot-icon {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.empty-slot-text {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-align: center;
+    line-height: 1.2;
+}

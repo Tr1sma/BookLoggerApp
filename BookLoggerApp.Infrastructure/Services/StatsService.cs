@@ -151,12 +151,12 @@ public class StatsService : IStatsService
     public async Task<double> GetAverageRatingAsync(CancellationToken ct = default)
     {
         var books = await _unitOfWork.Books.GetAllAsync();
-        var ratedBooks = books.Where(b => b.OverallRating.HasValue).ToList();
+        var ratedBooks = books.Where(b => b.AverageRating.HasValue).ToList();
 
         if (!ratedBooks.Any())
             return 0;
 
-        return ratedBooks.Average(b => b.OverallRating!.Value);
+        return ratedBooks.Average(b => b.AverageRating!.Value);
     }
 
     public async Task<double> GetAveragePagesPerDayAsync(int days = 30, CancellationToken ct = default)
@@ -191,7 +191,6 @@ public class StatsService : IStatsService
             RatingCategory.SpiceLevel => books.Where(b => b.SpiceLevelRating.HasValue).Select(b => b.SpiceLevelRating!.Value),
             RatingCategory.Pacing => books.Where(b => b.PacingRating.HasValue).Select(b => b.PacingRating!.Value),
             RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).Select(b => b.WorldBuildingRating!.Value),
-            RatingCategory.Overall => books.Where(b => b.OverallRating.HasValue).Select(b => b.OverallRating!.Value),
             _ => Enumerable.Empty<int>()
         };
 
@@ -229,16 +228,15 @@ public class StatsService : IStatsService
                 RatingCategory.SpiceLevel => books.Where(b => b.SpiceLevelRating.HasValue).OrderByDescending(b => b.SpiceLevelRating),
                 RatingCategory.Pacing => books.Where(b => b.PacingRating.HasValue).OrderByDescending(b => b.PacingRating),
                 RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).OrderByDescending(b => b.WorldBuildingRating),
-                RatingCategory.Overall => books.Where(b => b.OverallRating.HasValue).OrderByDescending(b => b.OverallRating),
                 _ => Enumerable.Empty<Book>()
             };
         }
         else
         {
-            // Sort by average rating (or overall if no category ratings)
+            // Sort by average rating
             sortedBooks = books
-                .Where(b => b.AverageRating.HasValue || b.OverallRating.HasValue)
-                .OrderByDescending(b => b.AverageRating ?? b.OverallRating ?? 0);
+                .Where(b => b.AverageRating.HasValue)
+                .OrderByDescending(b => b.AverageRating ?? 0);
         }
 
         return sortedBooks
