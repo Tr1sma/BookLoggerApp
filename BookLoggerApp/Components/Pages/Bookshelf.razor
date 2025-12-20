@@ -87,67 +87,69 @@
         <div class="shelves-container">
             @foreach (var shelfVM in ViewModel.Shelves)
             {
-                <div class="shelf-component" @ondrop="() => HandleDropOnShelf(shelfVM.Shelf.Id)" 
-                     @ondragover:preventDefault="true" @ondragover="() => {}">
+                <div class="shelf-section @(draggedBookId.HasValue ? "drag-target" : "") @(shelfVM.IsExpanded ? "" : "collapsed")" 
+                     @ondragenter="@(() => { /* Visual feedback handling in CSS */ })"
+                     @ondragover:preventDefault
+                     @ondrop="@(() => HandleDropOnShelf(shelfVM.Shelf.Id))">
                     
-                    <div class="shelf-header-row">
-                        <h3>@shelfVM.Shelf.Icon @shelfVM.Shelf.Name</h3>
-                        @if (shelfVM.Shelf.AutoSortRule != ShelfAutoSortRule.None)
-                        {
-                            <span class="badge badge-info">Auto: @shelfVM.Shelf.AutoSortRule</span>
-                        }
+                    <div class="shelf-header">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button class="btn-icon toggle-icon @(shelfVM.IsExpanded ? "" : "collapsed")" 
+                                    @onclick="() => shelfVM.IsExpanded = !shelfVM.IsExpanded">
+                                ▼
+                            </button>
+                            <h3>@shelfVM.Shelf.Name</h3>
+                            <!-- Icon removed as requested -->
+                        </div>
                         
                         <div class="shelf-actions">
                              @if (shelfVM.Shelf.SortOrder > 0) 
                              {
-                                 <!-- Delete only non-default if needed, strict delete for now -->
                                  <button class="btn-icon" @onclick="() => HandleDeleteShelf(shelfVM.Shelf.Id)" title="Delete Shelf">🗑️</button>
                              }
                         </div>
                     </div>
 
-                    <div class="shelf-books-row">
-                        <!-- Books -->
-                        @foreach (var book in shelfVM.Books)
-                        {
-                             <div class="shelf-slot">
-                                <BookCard Book="@book"
-                                          IsInBookshelf="true"
-                                          IsDraggable="true"
-                                          OnClick="() => HandleBookClick(book)"
-                                          OnDragStart="() => HandleDragStartBook(book.Id)"
-                                          OnDelete="() => HandleRemoveBookFromShelf(book.Id, shelfVM.Shelf.Id)" /> <!-- Changed delete to remove from shelf -->
-                            </div>
-                        }
-                        
-                        <!-- Plants (Only on first shelf or specific plant shelf? For now, keep plants separate or allow adding to any shelf via similar logic? 
-                             The request is about Books. Let's put plants in a designated Plant Shelf or just the first one if we want to keep them.
-                             Or just display them at the bottom in a 'Greenhouse' section? 
-                             For back-compat, let's put them in the first shelf or a dedicated one.
-                             Let's append plants to the first shelf for now if any exist. -->
-                        @if (shelfVM == ViewModel.Shelves.FirstOrDefault())
-                        {
-                            @foreach (var plant in ViewModel.BookshelfPlants)
+                    @if (shelfVM.IsExpanded)
+                    {
+                        <div class="shelf-books">
+                            <!-- Books -->
+                            @foreach (var book in shelfVM.Books)
                             {
-                                <div class="shelf-slot">
-                                    <PlantCard Plant="@plant"
-                                               IsInBookshelf="true"
-                                               IsDraggable="false" 
-                                               OnClick="() => HandlePlantClick(plant)" 
-                                               OnRemove="() => HandleRemovePlant(plant.Id)" />
+                                 <div class="shelf-slot">
+                                    <BookCard Book="@book"
+                                              IsInBookshelf="true"
+                                              IsDraggable="true"
+                                              OnClick="() => HandleBookClick(book)"
+                                              OnDragStart="() => HandleDragStartBook(book.Id)"
+                                              OnDelete="() => HandleRemoveBookFromShelf(book.Id, shelfVM.Shelf.Id)" />
                                 </div>
                             }
-                            <!-- Add Plant Button -->
-                             @if (ViewModel.AvailablePlants.Any())
-                             {
-                                 <div class="empty-slot" @onclick="() => HandleAddPlant(0)"> <!-- Position 0 implies append/generic -->
-                                    <div class="empty-slot-icon">🌱</div>
-                                    <div class="empty-slot-text">Add Plant</div>
-                                </div>
-                             }
-                        }
-                    </div>
-                    <div class="shelf-wood-base"></div>
+                            
+                            <!-- Plants (First shelf only for compatibility) -->
+                            @if (shelfVM == ViewModel.Shelves.FirstOrDefault())
+                            {
+                                @foreach (var plant in ViewModel.BookshelfPlants)
+                                {
+                                    <div class="shelf-slot">
+                                        <PlantCard Plant="@plant"
+                                                   IsInBookshelf="true"
+                                                   IsDraggable="false" 
+                                                   OnClick="() => HandlePlantClick(plant)" 
+                                                   OnRemove="() => HandleRemovePlant(plant.Id)" />
+                                    </div>
+                                }
+                                 @if (ViewModel.AvailablePlants.Any())
+                                 {
+                                     <div class="empty-slot" @onclick="() => HandleAddPlant(0)">
+                                        <div class="empty-slot-icon">🌱</div>
+                                        <div class="empty-slot-text">Add Plant</div>
+                                    </div>
+                                 }
+                            }
+                        </div>
+                        <div class="shelf-wood-base"></div>
+                    }
                 </div>
             }
         </div>
@@ -209,6 +211,35 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" @onclick="ClosePlantDetail">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Plant Selector Modal -->
+@if (showPlantSelector)
+{
+    <div class="modal-overlay" @onclick="ClosePlantSelector">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <h3>Select a Plant</h3>
+            <div class="plant-selector-grid" style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 0;">
+                @if (ViewModel.AvailablePlants.Any())
+                {
+                    @foreach (var plant in ViewModel.AvailablePlants)
+                    {
+                        <div class="plant-select-item" @onclick="() => SelectPlantForBookshelf(plant)" style="cursor: pointer; transform: scale(0.9);">
+                            <PlantCard Plant="@plant" IsInBookshelf="false" IsDraggable="false" />
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p style="color: #ccc; width: 100%; text-align: center;">No plants available. Visit the shop?</p>
+                    <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/shop"))" style="width: 100%;">Go to Shop</button>
+                }
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="ClosePlantSelector">Cancel</button>
             </div>
         </div>
     </div>
@@ -323,10 +354,20 @@
     private async Task HandleWaterPlantFromModal() { if (selectedPlant != null) await ViewModel.WaterPlantCommand.ExecuteAsync(selectedPlant.Id); }
     private async Task HandleDeletePlantFromModal() { if (selectedPlant != null) { await ViewModel.DeletePlantCommand.ExecuteAsync(selectedPlant.Id); ClosePlantDetail(); } }
     private async Task HandleRemovePlant(Guid plantId) => await ViewModel.RemovePlantFromBookshelfCommand.ExecuteAsync(plantId);
+    private bool showPlantSelector;
+    
     private void HandleAddPlant(int pos) 
     { 
-         // Logic to add plant logic (omitted for brevity as focus is shelves)
-         Navigation.NavigateTo("/shop"); // Or open selector
+         showPlantSelector = true;
+    }
+
+    private void ClosePlantSelector() => showPlantSelector = false;
+
+    private async Task SelectPlantForBookshelf(UserPlant plant)
+    {
+        // 0 implies append, or we could track specific position if needed
+        await ViewModel.PlacePlantInBookshelfAsync((plant.Id, "0"));
+        ClosePlantSelector();
     }
 
     private string GetPlantStatusIcon(PlantStatus status) => status switch { PlantStatus.Healthy => "😊", PlantStatus.Thirsty => "😰", _ => "🌱" };

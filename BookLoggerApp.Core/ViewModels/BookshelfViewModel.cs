@@ -451,6 +451,9 @@ public partial class ShelfViewModel : ObservableObject
 
     [ObservableProperty]
     private ObservableCollection<Book> _books = new();
+
+    [ObservableProperty]
+    private bool _isExpanded = true;
 }
 
 
