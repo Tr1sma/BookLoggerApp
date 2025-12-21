@@ -51,6 +51,8 @@ public class BookRepository : Repository<Book>, IBookRepository
             .Include(b => b.ReadingSessions)
             .Include(b => b.Quotes)
             .Include(b => b.Annotations)
+            .Include(b => b.BookShelves)
+                .ThenInclude(bs => bs.Shelf)
             .FirstOrDefaultAsync(b => b.Id == id);
     }
 

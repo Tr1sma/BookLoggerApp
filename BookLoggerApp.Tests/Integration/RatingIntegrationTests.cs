@@ -53,8 +53,7 @@ public class RatingIntegrationTests : IDisposable
             WritingStyleRating = 5,
             SpiceLevelRating = 3,
             PacingRating = 4,
-            WorldBuildingRating = 5,
-            OverallRating = 4
+            WorldBuildingRating = 5
         };
 
         // Act - Save the book
@@ -75,7 +74,7 @@ public class RatingIntegrationTests : IDisposable
         retrievedBook.SpiceLevelRating.Should().Be(3);
         retrievedBook.PacingRating.Should().Be(4);
         retrievedBook.WorldBuildingRating.Should().Be(5);
-        retrievedBook.OverallRating.Should().Be(4);
+        retrievedBook.WorldBuildingRating.Should().Be(5);
 
         // Assert - AverageRating calculated correctly
         retrievedBook.AverageRating.Should().NotBeNull();
@@ -279,36 +278,7 @@ public class RatingIntegrationTests : IDisposable
         topByWriting[0].Book.Title.Should().Be("Best Writing");
     }
 
-    [Fact]
-    public async Task BackwardsCompatibility_ObsoleteRatingProperty_ShouldWork()
-    {
-        // Arrange - Create a book using obsolete Rating property
-        var book = new Book
-        {
-            Title = "Test Book",
-            Author = "Test Author",
-            Status = ReadingStatus.Completed
-        };
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        book.Rating = 4;
-#pragma warning restore CS0618
-
-        // Act - Save and retrieve
-        book = await _bookService.AddAsync(book);
-        var retrieved = await _bookService.GetByIdAsync(book.Id);
-
-        // Assert - Rating is stored in OverallRating
-        retrieved.Should().NotBeNull();
-        retrieved!.OverallRating.Should().Be(4);
-#pragma warning disable CS0618
-        retrieved.Rating.Should().Be(4);
-#pragma warning restore CS0618
-
-        // Statistics should work
-        var overallAverage = await _statsService.GetAverageRatingByCategoryAsync(RatingCategory.Overall);
-        overallAverage.Should().Be(4.0);
-    }
 
     [Fact]
     public async Task DateRangeFilter_ShouldFilterCorrectly()
@@ -380,7 +350,7 @@ public class RatingIntegrationTests : IDisposable
             SpiceLevelRating = 3,
             PacingRating = 4,
             WorldBuildingRating = 5,
-            OverallRating = 4
+
         };
         await _bookService.AddAsync(book);
 
@@ -392,13 +362,12 @@ public class RatingIntegrationTests : IDisposable
         var summary = booksWithRatings[0];
 
         summary.AverageRating.Should().BeApproximately(4.33, 0.01);
-        summary.Ratings.Should().HaveCount(7);
+        summary.Ratings.Should().HaveCount(6);
         summary.Ratings[RatingCategory.Characters].Should().Be(5);
         summary.Ratings[RatingCategory.Plot].Should().Be(4);
         summary.Ratings[RatingCategory.WritingStyle].Should().Be(5);
         summary.Ratings[RatingCategory.SpiceLevel].Should().Be(3);
         summary.Ratings[RatingCategory.Pacing].Should().Be(4);
         summary.Ratings[RatingCategory.WorldBuilding].Should().Be(5);
-        summary.Ratings[RatingCategory.Overall].Should().Be(4);
     }
 }

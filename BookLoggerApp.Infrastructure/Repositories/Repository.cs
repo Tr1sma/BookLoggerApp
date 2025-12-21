@@ -51,7 +51,36 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual async Task UpdateAsync(T entity, CancellationToken ct = default)
     {
-        _dbSet.Update(entity);
+        // Check if entity is already tracked
+        var entry = _context.Entry(entity);
+        
+        if (entry.State == EntityState.Detached)
+        {
+            // Get the primary key value of the detached entity we want to update
+            var keyProperty = _context.Model.FindEntityType(typeof(T))?.FindPrimaryKey()?.Properties.FirstOrDefault();
+            
+            if (keyProperty != null)
+            {
+                var currentId = keyProperty.GetGetter().GetClrValue(entity);
+
+                // Find if any tracked entity of type T has this ID
+                var trackedEntity = _dbSet.Local.FirstOrDefault(e => 
+                    keyProperty.GetGetter().GetClrValue(e).Equals(currentId));
+
+                if (trackedEntity != null)
+                {
+                    // Detach the existing tracked instance to avoid conflict
+                    _context.Entry(trackedEntity).State = EntityState.Detached;
+                }
+            }
+            
+            _dbSet.Update(entity);
+        }
+        else
+        {
+            // Already tracked, just ensure it's marked as modified
+            _dbSet.Update(entity);
+        }
     }
 
     public virtual async Task DeleteAsync(T entity, CancellationToken ct = default)

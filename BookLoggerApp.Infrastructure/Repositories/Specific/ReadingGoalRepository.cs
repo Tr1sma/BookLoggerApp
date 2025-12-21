@@ -17,6 +17,7 @@ public class ReadingGoalRepository : Repository<ReadingGoal>, IReadingGoalReposi
     {
         var now = DateTime.UtcNow;
         return await _dbSet
+            .AsNoTracking()
             .Where(rg => !rg.IsCompleted && rg.EndDate >= now)
             .OrderBy(rg => rg.EndDate)
             .ToListAsync();
@@ -25,6 +26,7 @@ public class ReadingGoalRepository : Repository<ReadingGoal>, IReadingGoalReposi
     public async Task<IEnumerable<ReadingGoal>> GetCompletedGoalsAsync()
     {
         return await _dbSet
+            .AsNoTracking()
             .Where(rg => rg.IsCompleted)
             .OrderByDescending(rg => rg.EndDate)
             .ToListAsync();
@@ -33,6 +35,7 @@ public class ReadingGoalRepository : Repository<ReadingGoal>, IReadingGoalReposi
     public async Task<IEnumerable<ReadingGoal>> GetGoalsInRangeAsync(DateTime startDate, DateTime endDate)
     {
         return await _dbSet
+            .AsNoTracking()
             .Where(rg => rg.StartDate <= endDate && rg.EndDate >= startDate)
             .OrderBy(rg => rg.StartDate)
             .ToListAsync();

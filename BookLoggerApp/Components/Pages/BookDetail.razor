@@ -71,14 +71,38 @@
                         </span>
                     </div>
 
-                    @if (ViewModel.Book.OverallRating.HasValue)
+                    <div class="book-meta-item">
+                        <span class="book-meta-label">Shelves</span>
+                        <div class="book-meta-value">
+                            @if (ViewModel.Book.BookShelves != null && ViewModel.Book.BookShelves.Any())
+                            {
+                                <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                    @foreach (var bs in ViewModel.Book.BookShelves)
+                                    {
+                                        <span style="background-color: var(--bg-secondary, #eee); padding: 2px 8px; border-radius: 12px; font-size: 0.9em;">
+                                            @bs.Shelf.Icon @bs.Shelf.Name
+                                        </span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span>None</span>
+                            }
+                        </div>
+                    </div>
+
+                    @if (ViewModel.Book.AverageRating.HasValue)
                     {
                         <div class="book-meta-item">
                             <span class="book-meta-label">Rating</span>
                             <span class="book-meta-value">
+                                @{
+                                    var rating = (int)Math.Round(ViewModel.Book.AverageRating.Value);
+                                }
                                 @for (int i = 1; i <= 5; i++)
                                 {
-                                    <span class="star @(i <= ViewModel.Book.OverallRating.Value ? "filled" : "empty")">★</span>
+                                    <span class="star @(i <= rating ? "filled" : "empty")">★</span>
                                 }
                             </span>
                         </div>
@@ -164,10 +188,7 @@
                                 Rating="@ViewModel.Book.WorldBuildingRating"
                                 RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.WorldBuilding, r)" />
 
-                    <RatingInput Emoji="⭐"
-                                Label="Overall"
-                                Rating="@ViewModel.Book.OverallRating"
-                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.Overall, r)" />
+
                 </div>
 
                 @if (ViewModel.Book.AverageRating.HasValue)
@@ -238,6 +259,20 @@
                 }
             </div>
         }
+        <!-- Notes Section -->
+        <div class="book-notes-section" style="margin-top: 2rem; padding: 1.5rem; background: var(--card-bg, #fff); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary, #333);">📝 Book Notes</h3>
+            <p class="section-hint" style="font-size: 0.9rem; color: var(--text-secondary, #666); margin-bottom: 0.5rem;">Write your thoughts, quotes, or analysis here. Auto-saved.</p>
+            <textarea class="form-control notes-editor" 
+                      placeholder="Write your notes here..."
+                      style="width: 100%; min-height: 200px; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical; background-color: var(--bg-tertiary); color: #ffffff;"
+                      @bind="ViewModel.Book.Notes"
+                      @bind:after="SaveNotes"></textarea>
+            @if (_isSavingNotes)
+            {
+                <div class="saving-indicator" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--accent-color, #4facfe);">Saving...</div>
+            }
+        </div>
     }
 </div>
 
@@ -429,5 +464,20 @@
 
         await ViewModel.UpdateRatingAsync(category, rating);
         await InvokeAsync(StateHasChanged);
+    }
+    private bool _isSavingNotes = false;
+
+    private async Task SaveNotes()
+    {
+        if (ViewModel.Book == null) return;
+        
+        _isSavingNotes = true;
+        StateHasChanged();
+        
+        // Debounce/delay could be added here if needed, but for now direct save on blur/after
+        await ViewModel.UpdateNotesAsync(ViewModel.Book.Notes ?? string.Empty);
+        
+        _isSavingNotes = false;
+        StateHasChanged();
     }
 }

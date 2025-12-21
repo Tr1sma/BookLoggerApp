@@ -144,6 +144,31 @@
                 </div>
             </section>
 
+            <!-- Shelves -->
+            <section class="form-section">
+                <h2>Shelves</h2>
+                <div class="form-hint">Assign this book to manual shelves. Auto-sort shelves are populated automatically.</div>
+                
+                <div class="genres-selection"> <!-- Reusing genres style for grid layout -->
+                    @if (ViewModel.AvailableShelves.Any())
+                    {
+                        @foreach (var shelf in ViewModel.AvailableShelves)
+                        {
+                            <label class="genre-checkbox">
+                                <input type="checkbox" 
+                                       checked="@ViewModel.SelectedShelfIds.Contains(shelf.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleShelf(shelf.Id, e.Value as bool? ?? false))" />
+                                <span>@shelf.Icon @shelf.Name</span>
+                            </label>
+                        }
+                    }
+                    else
+                    {
+                        <p>No manual shelves available. Create them on the Bookshelf page.</p>
+                    }
+                </div>
+            </section>
+
             <!-- Cover Image -->
             <section class="form-section">
                 <h2>Cover Image</h2>
@@ -364,6 +389,18 @@
         else if (!isSelected && ViewModel.SelectedGenreIds.Contains(genreId))
         {
             ViewModel.SelectedGenreIds.Remove(genreId);
+        }
+    }
+
+    private void ToggleShelf(Guid shelfId, bool isSelected)
+    {
+        if (isSelected && !ViewModel.SelectedShelfIds.Contains(shelfId))
+        {
+            ViewModel.SelectedShelfIds.Add(shelfId);
+        }
+        else if (!isSelected && ViewModel.SelectedShelfIds.Contains(shelfId))
+        {
+            ViewModel.SelectedShelfIds.Remove(shelfId);
         }
     }
 

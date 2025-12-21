@@ -9,18 +9,23 @@ public partial class SettingsViewModel : ViewModelBase
 {
     private readonly IImportExportService _importExportService;
     private readonly IAppSettingsProvider _settingsProvider;
+    private readonly IFileSaverService _fileSaverService;
 
-    public SettingsViewModel(IImportExportService importExportService, IAppSettingsProvider settingsProvider)
+    public SettingsViewModel(
+        IImportExportService importExportService, 
+        IAppSettingsProvider settingsProvider,
+        IFileSaverService fileSaverService)
     {
         _importExportService = importExportService;
         _settingsProvider = settingsProvider;
+        _fileSaverService = fileSaverService;
     }
 
     [ObservableProperty]
     private AppSettings _settings = new();
 
     [ObservableProperty]
-    private string _appVersion = "0.3.19";
+    private string _appVersion = "0.4.0";
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -47,7 +52,8 @@ public partial class SettingsViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             var json = await _importExportService.ExportToJsonAsync();
-            // TODO: Save to file using platform-specific file picker
+            var fileName = $"BookLoggerExport_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+            await _fileSaverService.SaveFileAsync(fileName, json);
         }, "Failed to export data");
     }
 
