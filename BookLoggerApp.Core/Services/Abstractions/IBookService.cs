@@ -16,6 +16,7 @@ public interface IBookService
 
     // Advanced Queries
     Task<IReadOnlyList<Book>> GetByStatusAsync(ReadingStatus status, CancellationToken ct = default);
+    Task<Book?> GetCurrentlyReadingBookAsync(CancellationToken ct = default);
     Task<IReadOnlyList<Book>> GetByGenreAsync(Guid genreId, CancellationToken ct = default);
     Task<IReadOnlyList<Book>> SearchAsync(string query, CancellationToken ct = default);
     Task<Book?> GetByISBNAsync(string isbn, CancellationToken ct = default);
@@ -29,6 +30,7 @@ public interface IBookService
     // Statistics
     Task<int> GetTotalCountAsync(CancellationToken ct = default);
     Task<int> GetCountByStatusAsync(ReadingStatus status, CancellationToken ct = default);
+    Task<int> GetCompletedCountByDateRangeAsync(DateTime start, DateTime end, CancellationToken ct = default);
 
     // Status Updates
     Task StartReadingAsync(Guid bookId, CancellationToken ct = default);

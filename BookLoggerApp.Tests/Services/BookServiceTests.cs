@@ -165,4 +165,57 @@ public class BookServiceTests : IDisposable
         var allBooks = await _service.GetAllAsync();
         allBooks.Should().HaveCount(3);
     }
+
+    [Fact]
+    public async Task GetCompletedCountByDateRangeAsync_ShouldReturnCorrectCount()
+    {
+        // Arrange
+        var today = DateTime.UtcNow;
+        var start = today.Date;
+        var end = today.Date.AddDays(1).AddTicks(-1);
+
+        // Book completed today
+        await _service.AddAsync(new Book
+        {
+            Title = "Book 1",
+            Status = ReadingStatus.Completed,
+            DateCompleted = today
+        });
+
+        // Book completed yesterday (outside range)
+        await _service.AddAsync(new Book
+        {
+            Title = "Book 2",
+            Status = ReadingStatus.Completed,
+            DateCompleted = today.AddDays(-1)
+        });
+
+        // Book reading (not completed)
+        await _service.AddAsync(new Book
+        {
+            Title = "Book 3",
+            Status = ReadingStatus.Reading
+        });
+
+        // Act
+        var count = await _service.GetCompletedCountByDateRangeAsync(start, end);
+
+        // Assert
+        count.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetCurrentlyReadingBookAsync_ShouldReturnFirstReadingBook()
+    {
+        // Arrange
+        await _service.AddAsync(new Book { Title = "Book 1", Status = ReadingStatus.Completed });
+        await _service.AddAsync(new Book { Title = "Book 2", Status = ReadingStatus.Reading });
+
+        // Act
+        var book = await _service.GetCurrentlyReadingBookAsync();
+
+        // Assert
+        book.Should().NotBeNull();
+        book!.Title.Should().Be("Book 2");
+    }
 }

@@ -84,6 +84,11 @@ public class BookService : IBookService
         return books.ToList();
     }
 
+    public async Task<Book?> GetCurrentlyReadingBookAsync(CancellationToken ct = default)
+    {
+        return await _unitOfWork.Books.FirstOrDefaultAsync(b => b.Status == ReadingStatus.Reading, ct);
+    }
+
     public async Task<IReadOnlyList<Book>> GetByGenreAsync(Guid genreId, CancellationToken ct = default)
     {
         var books = await _unitOfWork.Books.GetBooksByGenreAsync(genreId);
@@ -136,6 +141,14 @@ public class BookService : IBookService
     public async Task<int> GetCountByStatusAsync(ReadingStatus status, CancellationToken ct = default)
     {
         return await _unitOfWork.Books.CountAsync(b => b.Status == status);
+    }
+
+    public async Task<int> GetCompletedCountByDateRangeAsync(DateTime start, DateTime end, CancellationToken ct = default)
+    {
+        return await _unitOfWork.Books.CountAsync(b => b.Status == ReadingStatus.Completed &&
+            b.DateCompleted != null &&
+            b.DateCompleted >= start &&
+            b.DateCompleted <= end, ct);
     }
 
     public async Task StartReadingAsync(Guid bookId, CancellationToken ct = default)

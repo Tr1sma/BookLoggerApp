@@ -57,17 +57,14 @@ public partial class DashboardViewModel : ViewModelBase
         await ExecuteSafelyWithDbAsync(async () =>
         {
             // Currently Reading Book
-            var readingBooks = await _bookService.GetByStatusAsync(ReadingStatus.Reading);
-            CurrentlyReading = readingBooks.FirstOrDefault();
+            CurrentlyReading = await _bookService.GetCurrentlyReadingBookAsync();
 
             // This Week Stats
             var weekStart = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
             var weekEnd = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
 
             // Calculate books read this week (completed books)
-            var completedBooksThisWeek = await _bookService.GetByStatusAsync(ReadingStatus.Completed);
-            BooksReadThisWeek = completedBooksThisWeek.Count(b => b.DateCompleted.HasValue && 
-                b.DateCompleted.Value >= weekStart && b.DateCompleted.Value <= weekEnd);
+            BooksReadThisWeek = await _bookService.GetCompletedCountByDateRangeAsync(weekStart, weekEnd);
 
             // Get sessions this week
             var weekSessions = await _progressService.GetSessionsInRangeAsync(weekStart, weekEnd);

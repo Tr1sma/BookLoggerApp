@@ -48,6 +48,11 @@ public class MockBookService : IBookService
         return Task.FromResult<IReadOnlyList<Book>>(Array.Empty<Book>());
     }
 
+    public Task<Book?> GetCurrentlyReadingBookAsync(CancellationToken ct = default)
+    {
+        return Task.FromResult<Book?>(null);
+    }
+
     public Task<IReadOnlyList<Book>> GetByGenreAsync(Guid genreId, CancellationToken ct = default)
     {
         return Task.FromResult<IReadOnlyList<Book>>(Array.Empty<Book>());
@@ -82,6 +87,11 @@ public class MockBookService : IBookService
     }
 
     public Task<int> GetCountByStatusAsync(ReadingStatus status, CancellationToken ct = default)
+    {
+        return Task.FromResult(0);
+    }
+
+    public Task<int> GetCompletedCountByDateRangeAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
         return Task.FromResult(0);
     }
