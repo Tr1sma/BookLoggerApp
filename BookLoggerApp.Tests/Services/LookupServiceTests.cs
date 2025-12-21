@@ -18,15 +18,41 @@ public class LookupServiceTests
     {
         // Arrange
         var isbn = "9780140449136"; // The Odyssey by Homer
+        
+        var jsonResponse = @"{
+          ""items"": [
+            {
+              ""volumeInfo"": {
+                ""title"": ""The Odyssey"",
+                ""authors"": [""Homer""],
+                ""industryIdentifiers"": [
+                  { ""type"": ""ISBN_13"", ""identifier"": ""9780140449136"" }
+                ]
+              }
+            }
+          ]
+        }";
+
+        var mockHandler = new MockHttpMessageHandler((request) =>
+        {
+            request.RequestUri!.ToString().Should().Contain(isbn);
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent(jsonResponse)
+            };
+        });
+
+        var httpClient = new HttpClient(mockHandler);
+        var service = new LookupService(httpClient);
 
         // Act
-        var result = await _service.LookupByISBNAsync(isbn);
+        var result = await service.LookupByISBNAsync(isbn);
 
         // Assert
         result.Should().NotBeNull();
-        result!.Title.Should().NotBeNullOrEmpty();
-        result.Author.Should().NotBeNullOrEmpty();
-        result.ISBN.Should().NotBeNullOrEmpty();
+        result!.Title.Should().Be("The Odyssey");
+        result.Author.Should().Be("Homer");
+        result.ISBN.Should().Be(isbn);
     }
 
     [Fact]
@@ -118,13 +144,44 @@ public class LookupServiceTests
     {
         // Arrange
         var query = "The Great Gatsby";
+        
+        var jsonResponse = @"{
+          ""items"": [
+            {
+              ""volumeInfo"": {
+                ""title"": ""The Great Gatsby"",
+                ""authors"": [""F. Scott Fitzgerald""],
+                ""industryIdentifiers"": [
+                  { ""type"": ""ISBN_13"", ""identifier"": ""9780743273565"" }
+                ]
+              }
+            }
+          ]
+        }";
+
+        string? capturedUrl = null;
+        var mockHandler = new MockHttpMessageHandler((request) =>
+        {
+            capturedUrl = request.RequestUri!.AbsoluteUri;
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent(jsonResponse)
+            };
+        });
+
+        var httpClient = new HttpClient(mockHandler);
+        var service = new LookupService(httpClient);
 
         // Act
-        var result = await _service.SearchBooksAsync(query);
+        var result = await service.SearchBooksAsync(query);
 
         // Assert
         result.Should().NotBeEmpty();
         result.Should().HaveCountGreaterThan(0);
+        result.First().Title.Should().Be("The Great Gatsby");
+        
+        capturedUrl.Should().NotBeNull();
+        capturedUrl.Should().Contain("The%20Great%20Gatsby");
     }
 
     [Fact]

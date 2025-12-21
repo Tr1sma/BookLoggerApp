@@ -1,8 +1,9 @@
 @page "/settings"
 @using BookLoggerApp.Core.ViewModels
 @inject SettingsViewModel ViewModel
+@inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 
-<PageTitle>Settings - BookLogger</PageTitle>
+<PageTitle>Settings - LoveLit</PageTitle>
 
 <div class="settings-container">
     <h1 class="settings-title">Settings</h1>
@@ -21,7 +22,7 @@
         <section class="settings-section">
             <h2>About</h2>
             <div class="about-info">
-                <p class="app-name">Book Logger</p>
+                <p class="app-name">LoveLit</p>
                 <p class="app-version">Version @ViewModel.AppVersion</p>
             </div>
         </section>
@@ -345,19 +346,44 @@
 
     private bool IsDeleteConfirmed => _deleteConfirmText.Equals("DELETE", StringComparison.Ordinal);
 
+    private Func<Task<bool>>? _navBackHandler;
+    private Func<Task<bool>>? _modalBackHandler;
+
     protected override async Task OnInitializedAsync()
     {
+        // Register navigation back handler (Settings -> Bookshelf)
+        _navBackHandler = async () => 
+        {
+            Navigation.NavigateTo("/");
+            return true;
+        };
+        BackButtonService.Register(_navBackHandler);
+
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
 
     private void ShowDeleteConfirmation()
     {
         _deleteConfirmText = string.Empty;
+        
+         // Register modal back handler
+        _modalBackHandler = async () =>
+        {
+            HideDeleteConfirmation();
+            return true;
+        };
+        BackButtonService.Register(_modalBackHandler);
+        
         _showDeleteConfirmation = true;
     }
 
     private void HideDeleteConfirmation()
     {
+        if (_modalBackHandler != null)
+        {
+            BackButtonService.Unregister(_modalBackHandler);
+            _modalBackHandler = null;
+        }
         _showDeleteConfirmation = false;
         _deleteConfirmText = string.Empty;
     }
@@ -367,16 +393,34 @@
         if (!IsDeleteConfirmed) return;
 
         _showDeleteConfirmation = false;
+        if (_modalBackHandler != null)
+        {
+            BackButtonService.Unregister(_modalBackHandler);
+            _modalBackHandler = null;
+        }
+
         await ViewModel.DeleteAllDataCommand.ExecuteAsync(null);
 
         if (string.IsNullOrEmpty(ViewModel.ErrorMessage))
         {
             _showSuccessModal = true;
+            // Register success modal handler (just close/navigate)
+             _modalBackHandler = async () =>
+            {
+                CloseSuccessAndNavigate();
+                return true;
+            };
+            BackButtonService.Register(_modalBackHandler);
         }
     }
 
     private void CloseSuccessAndNavigate()
     {
+        if (_modalBackHandler != null)
+        {
+            BackButtonService.Unregister(_modalBackHandler);
+            _modalBackHandler = null;
+        }
         _showSuccessModal = false;
         // Force page refresh to reflect reset state
         Navigation.NavigateTo("/", forceLoad: true);
@@ -384,4 +428,18 @@
 
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
+    
+    public void Dispose()
+    {
+        if (_navBackHandler != null)
+        {
+            BackButtonService.Unregister(_navBackHandler);
+            _navBackHandler = null;
+        }
+         if (_modalBackHandler != null)
+        {
+            BackButtonService.Unregister(_modalBackHandler);
+            _modalBackHandler = null;
+        }
+    }
 }
