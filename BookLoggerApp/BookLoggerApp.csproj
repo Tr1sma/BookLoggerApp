@@ -24,7 +24,7 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
         <!-- Display name -->
-        <ApplicationTitle>Book Logger</ApplicationTitle>
+        <ApplicationTitle>LoveLit</ApplicationTitle>
 
         <!-- App Identifier -->
         <ApplicationId>com.companyname.bookloggerapp</ApplicationId>

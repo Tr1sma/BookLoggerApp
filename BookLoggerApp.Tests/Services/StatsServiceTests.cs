@@ -384,7 +384,7 @@ public class StatsServiceTests : IDisposable
             PlotRating = 4,
             WritingStyleRating = 5,
             SpiceLevelRating = 3,
-
+            PacingRating = 4,
             WorldBuildingRating = 5
         };
         await _unitOfWork.Books.AddAsync(book);
