@@ -8,9 +8,10 @@
 @inject BookshelfViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
+@inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @implements IDisposable
 
-<PageTitle>Bookshelf - BookLogger</PageTitle>
+<PageTitle>Bookshelf - LoveLit</PageTitle>
 
 <div class="bookshelf-container">
     <!-- Reading Goal Header -->
@@ -273,6 +274,10 @@
     private bool isWateringPlant;
 
 
+
+    // Back handler
+    private Func<Task<bool>>? _activeBackHandler;
+
     protected override async Task OnInitializedAsync()
     {
         GoalService.GoalsChanged += OnGoalsChanged;
@@ -291,6 +296,11 @@
     public void Dispose()
     {
         GoalService.GoalsChanged -= OnGoalsChanged;
+        if (_activeBackHandler != null)
+        {
+            BackButtonService.Unregister(_activeBackHandler);
+            _activeBackHandler = null;
+        }
     }
 
     private void ToggleFilters() => filtersExpanded = !filtersExpanded;
@@ -305,10 +315,27 @@
     {
         newShelfName = "";
         newShelfRule = ShelfAutoSortRule.None;
+        
+        // Register back handler
+        _activeBackHandler = async () => 
+        { 
+            CloseAddShelfModal(); 
+            return true; 
+        };
+        BackButtonService.Register(_activeBackHandler);
+        
         showAddShelfModal = true;
     }
 
-    private void CloseAddShelfModal() => showAddShelfModal = false;
+    private void CloseAddShelfModal() 
+    {
+        if (_activeBackHandler != null)
+        {
+            BackButtonService.Unregister(_activeBackHandler);
+            _activeBackHandler = null;
+        }
+        showAddShelfModal = false;
+    }
 
     private async Task CreateShelf()
     {
@@ -323,11 +350,25 @@
     private void HandleDeleteShelf(Guid shelfId)
     {
         shelfToDeleteId = shelfId;
+        
+        // Register back handler
+        _activeBackHandler = async () => 
+        { 
+            CloseDeleteShelfModal(); 
+            return true; 
+        };
+        BackButtonService.Register(_activeBackHandler);
+        
         showDeleteShelfModal = true;
     }
 
     private void CloseDeleteShelfModal()
     {
+        if (_activeBackHandler != null)
+        {
+            BackButtonService.Unregister(_activeBackHandler);
+            _activeBackHandler = null;
+        }
         showDeleteShelfModal = false;
         shelfToDeleteId = null;
     }
@@ -378,9 +419,27 @@
     private void HandlePlantClick(UserPlant plant) 
     {
         selectedPlant = plant;
+        
+        // Register back handler
+        _activeBackHandler = async () => 
+        { 
+            ClosePlantDetail(); 
+            return true; 
+        };
+        BackButtonService.Register(_activeBackHandler);
+        
         showPlantDetail = true;
     }
-    private void ClosePlantDetail() { showPlantDetail = false; selectedPlant = null; }
+    private void ClosePlantDetail() 
+    { 
+        if (_activeBackHandler != null)
+        {
+            BackButtonService.Unregister(_activeBackHandler);
+            _activeBackHandler = null;
+        }
+        showPlantDetail = false; 
+        selectedPlant = null; 
+    }
     private async Task HandleWaterPlantFromModal() { if (selectedPlant != null) await ViewModel.WaterPlantCommand.ExecuteAsync(selectedPlant.Id); }
     private async Task HandleDeletePlantFromModal() { if (selectedPlant != null) { await ViewModel.DeletePlantCommand.ExecuteAsync(selectedPlant.Id); ClosePlantDetail(); } }
     private async Task HandleRemovePlant(Guid plantId) => await ViewModel.RemovePlantFromBookshelfCommand.ExecuteAsync(plantId);
@@ -388,10 +447,26 @@
     
     private void HandleAddPlant(int pos) 
     { 
+         // Register back handler
+        _activeBackHandler = async () => 
+        { 
+            ClosePlantSelector(); 
+            return true; 
+        };
+        BackButtonService.Register(_activeBackHandler);
+        
          showPlantSelector = true;
     }
 
-    private void ClosePlantSelector() => showPlantSelector = false;
+    private void ClosePlantSelector() 
+    {
+        if (_activeBackHandler != null)
+        {
+            BackButtonService.Unregister(_activeBackHandler);
+            _activeBackHandler = null;
+        }
+        showPlantSelector = false;
+    }
 
     private async Task SelectPlantForBookshelf(UserPlant plant)
     {

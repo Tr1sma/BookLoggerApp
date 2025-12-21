@@ -4,8 +4,10 @@
 @using BookLoggerApp.Components.Shared
 @inject PlantShopViewModel ViewModel
 @inject NavigationManager Navigation
+@inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@implements IDisposable
 
-<PageTitle>Plant Shop - BookLogger</PageTitle>
+<PageTitle>Plant Shop - LoveLit</PageTitle>
 
 <div class="plant-shop-container">
     <!-- Header -->
@@ -53,7 +55,7 @@
                     UserLevel="@ViewModel.UserLevel"
                     CurrentPrice="@ViewModel.GetDynamicPrice(species.Id)"
                     IsSelected="@(ViewModel.SelectedSpecies?.Id == species.Id)"
-                    OnSelect="() => ViewModel.SelectSpeciesCommand.Execute(species)" />
+                    OnSelect="() => SelectSpecies(species)" />
             }
         </div>
 
@@ -69,11 +71,11 @@
     <!-- Purchase Modal -->
     @if (ViewModel.SelectedSpecies != null)
     {
-        <div class="purchase-modal-overlay" @onclick="ViewModel.ClearSelectionCommand.Execute">
+        <div class="purchase-modal-overlay" @onclick="ClearSelection">
             <div class="purchase-modal" @onclick:stopPropagation="true">
                 <div class="modal-header">
                     <h2>Purchase @ViewModel.SelectedSpecies.Name</h2>
-                    <button class="btn-close" @onclick="ViewModel.ClearSelectionCommand.Execute">×</button>
+                    <button class="btn-close" @onclick="ClearSelection">×</button>
                 </div>
 
                 <div class="modal-body">
@@ -116,7 +118,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="ViewModel.ClearSelectionCommand.Execute">
+                    <button class="btn btn-secondary" @onclick="ClearSelection">
                         Cancel
                     </button>
                     <button class="btn btn-primary"
@@ -148,8 +150,19 @@
 </div>
 
 @code {
+    private Func<Task<bool>>? _navBackHandler;
+    private Func<Task<bool>>? _modalBackHandler;
+
     protected override async Task OnInitializedAsync()
     {
+         // Register navigation back handler (Shop -> Bookshelf)
+        _navBackHandler = async () => 
+        {
+            Navigation.NavigateTo("/");
+            return true;
+        };
+        BackButtonService.Register(_navBackHandler);
+        
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
 
@@ -177,6 +190,44 @@
             {
                 StateHasChanged(); // Force UI update if there was an error
             }
+        }
+
+    }
+    
+    private void SelectSpecies(BookLoggerApp.Core.Models.PlantSpecies species)
+    {
+        ViewModel.SelectSpeciesCommand.Execute(species);
+        
+        // Register modal back handler
+        _modalBackHandler = async () =>
+        {
+            ClearSelection();
+            return true;
+        };
+        BackButtonService.Register(_modalBackHandler);
+    }
+    
+    private void ClearSelection()
+    {
+        ViewModel.ClearSelectionCommand.Execute(null);
+        if (_modalBackHandler != null)
+        {
+            BackButtonService.Unregister(_modalBackHandler);
+            _modalBackHandler = null;
+        }
+    }
+    
+    public void Dispose()
+    {
+        if (_navBackHandler != null)
+        {
+            BackButtonService.Unregister(_navBackHandler);
+            _navBackHandler = null;
+        }
+         if (_modalBackHandler != null)
+        {
+            BackButtonService.Unregister(_modalBackHandler);
+            _modalBackHandler = null;
         }
     }
 }

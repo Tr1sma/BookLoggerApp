@@ -4,9 +4,10 @@
 @using BookLoggerApp.Core.Models
 @inject StatsViewModel ViewModel
 @inject NavigationManager NavigationManager
+@inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @implements IDisposable
 
-<PageTitle>Level Overview - BookLogger</PageTitle>
+<PageTitle>Level Overview - LoveLit</PageTitle>
 
 <link rel="stylesheet" href="css/stats.css" />
 
@@ -291,9 +292,21 @@
     private RatingCategory? selectedCategory = null;
     private string? _currentUrl;
 
+    private Func<Task<bool>>? _backHandler;
+    
     protected override async Task OnInitializedAsync()
     {
         NavigationManager.LocationChanged += OnLocationChanged;
+        
+        // Register back handler to valid custom routing
+        _backHandler = async () =>
+        {
+            // Navigate to bookshelf (root)
+            NavigationManager.NavigateTo("/");
+            return true;
+        };
+        BackButtonService.Register(_backHandler);
+        
         await LoadDataAsync();
     }
 
@@ -330,6 +343,11 @@
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
+        if (_backHandler != null)
+        {
+            BackButtonService.Unregister(_backHandler);
+            _backHandler = null;
+        }
     }
 
     private string FormatMinutes(int minutes)
