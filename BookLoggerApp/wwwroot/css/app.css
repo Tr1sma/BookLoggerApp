@@ -5,37 +5,37 @@
     --primary-hover: #E8C4A0;
     --secondary-color: #8B7355;
     --accent-color: #C9A97F;
-    
+
     /* Text colors */
     --text-primary: #F5E6D3;
     --text-secondary: #C9B5A0;
     --text-muted: #8B7968;
-    
+
     /* Background colors - warm, cozy tones */
     --bg-primary: #1A1410;
     --bg-secondary: #2D2419;
     --bg-tertiary: #3D3126;
     --card-bg: #2D2419;
     --card-hover: #3D3126;
-    
+
     /* Border and shadow */
     --border-color: #4A3F32;
     --border-light: #3D3126;
-    --shadow: 0 4px 12px rgba(0,0,0,0.4);
-    --shadow-hover: 0 8px 24px rgba(0,0,0,0.5);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
     --glow: 0 0 20px rgba(212, 165, 116, 0.15);
-    
+
     /* UI elements */
     --border-radius: 12px;
     --border-radius-lg: 16px;
     --transition: all 0.3s ease;
-    
+
     /* Status colors with warm tones */
     --status-planned: #7B8FA3;
     --status-reading: #D4A574;
     --status-completed: #88A67E;
     --status-abandoned: #A67874;
-    
+
     /* Gradient accents */
     --gradient-warm: linear-gradient(135deg, #D4A574 0%, #C9A97F 100%);
     --gradient-card: linear-gradient(145deg, #2D2419 0%, #251E15 100%);
@@ -75,6 +75,7 @@
  * Respektiert Nutzer-Systemeinstellungen
  */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -95,21 +96,59 @@
     color: #C49664;
 }
 
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    aspect-ratio: 1;  /* Forces square shape */
-    flex-shrink: 0;   /* Prevents squishing in flex container */
-    border: 3px solid #3d3329;
-    border-top-color: #C49664;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
+.heart-loader {
+    background-color: #C49664;
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    position: relative;
+    transform: rotate(45deg);
+    animation: heartbeat 1.2s infinite ease-in-out;
+    margin-bottom: 2rem;
+    top: 0;
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
+.heart-loader:before,
+.heart-loader:after {
+    content: "";
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: #C49664;
+    border-radius: 50%;
+}
+
+.heart-loader:before {
+    left: -25px;
+}
+
+.heart-loader:after {
+    top: -25px;
+}
+
+@keyframes heartbeat {
+    0% {
+        transform: scale(0.95) rotate(45deg);
+    }
+
+    5% {
+        transform: scale(1.1) rotate(45deg);
+    }
+
+    39% {
+        transform: scale(0.85) rotate(45deg);
+    }
+
+    45% {
+        transform: scale(1) rotate(45deg);
+    }
+
+    60% {
+        transform: scale(0.95) rotate(45deg);
+    }
+
+    100% {
+        transform: scale(0.9) rotate(45deg);
     }
 }
 
@@ -120,7 +159,8 @@
 }
 
 /* Global Styles */
-html, body {
+html,
+body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     color: var(--text-primary);
     background: var(--bg-primary);
@@ -140,20 +180,16 @@ body::before {
     width: 100%;
     height: 100%;
     background-image:
-        repeating-linear-gradient(
-            0deg,
+        repeating-linear-gradient(0deg,
             rgba(255, 255, 255, 0.01) 0px,
             transparent 1px,
             transparent 2px,
-            rgba(255, 255, 255, 0.01) 3px
-        ),
-        repeating-linear-gradient(
-            90deg,
+            rgba(255, 255, 255, 0.01) 3px),
+        repeating-linear-gradient(90deg,
             rgba(255, 255, 255, 0.01) 0px,
             transparent 1px,
             transparent 2px,
-            rgba(255, 255, 255, 0.01) 3px
-        );
+            rgba(255, 255, 255, 0.01) 3px);
     pointer-events: none;
     opacity: 0.3;
     z-index: -1;
@@ -168,7 +204,12 @@ html {
     scroll-behavior: smooth;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     color: var(--text-primary);
     margin: 0 0 0.75rem 0;
     font-weight: 600;
@@ -198,7 +239,8 @@ p {
     line-height: 1.7;
 }
 
-a, .btn-link {
+a,
+.btn-link {
     color: var(--primary-color);
     text-decoration: none;
     transition: var(--transition);
@@ -253,7 +295,11 @@ a:hover {
     background: #B68884;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
 }
@@ -265,7 +311,12 @@ a:hover {
 }
 
 /* Forms */
-.form-control, input[type="text"], input[type="number"], input[type="date"], select, textarea {
+.form-control,
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
     padding: 0.6rem 0.85rem;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -275,7 +326,10 @@ a:hover {
     transition: var(--transition);
 }
 
-.form-control:focus, input:focus, select:focus, textarea:focus {
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
     border-color: var(--primary-color);
     background: var(--card-hover);
     outline: none;
@@ -453,7 +507,8 @@ h1:focus {
 }
 
 /* Loading & Alerts */
-.loading, .loading-spinner {
+.loading,
+.loading-spinner {
     text-align: center;
     padding: 3rem 1.5rem;
     color: var(--text-secondary);
@@ -476,6 +531,7 @@ h1:focus {
 
 /* Tablets */
 @media (max-width: 1024px) {
+
     .dashboard-container,
     .bookshelf-container,
     .settings-container,
@@ -499,6 +555,7 @@ h1:focus {
 
 /* Standard Mobile (768px and below) */
 @media (max-width: 768px) {
+
     .dashboard-container,
     .bookshelf-container,
     .settings-container,
@@ -540,7 +597,12 @@ h1:focus {
         font-size: 0.85rem;
     }
 
-    .form-control, input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    .form-control,
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
         padding: 0.55rem 0.75rem;
         font-size: 0.85rem;
     }
@@ -556,6 +618,7 @@ h1:focus {
 
 /* Compact Mobile (640px and below) */
 @media (max-width: 640px) {
+
     .dashboard-container,
     .bookshelf-container,
     .settings-container,
@@ -590,7 +653,12 @@ h1:focus {
         font-size: 0.8rem;
     }
 
-    .form-control, input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    .form-control,
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
         padding: 0.5rem 0.7rem;
         font-size: 0.8rem;
     }
@@ -616,6 +684,7 @@ h1:focus {
 
 /* Very Small Mobile (400px and below) */
 @media (max-width: 400px) {
+
     .dashboard-container,
     .bookshelf-container,
     .settings-container,
@@ -648,13 +717,20 @@ h1:focus {
     .btn {
         padding: 0.5rem 0.9rem;
         font-size: 0.75rem;
-        min-height: 44px; /* Maintain touch target */
+        min-height: 44px;
+        /* Maintain touch target */
     }
 
-    .form-control, input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    .form-control,
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
         padding: 0.5rem 0.65rem;
         font-size: 0.75rem;
-        min-height: 44px; /* Maintain touch target */
+        min-height: 44px;
+        /* Maintain touch target */
     }
 
     .nav-link {
@@ -679,13 +755,15 @@ h1:focus {
         font-size: 0.8rem;
     }
 
-    .loading, .loading-spinner {
+    .loading,
+    .loading-spinner {
         padding: 2rem 1rem;
     }
 }
 
 /* Large Screens */
 @media (min-width: 1920px) {
+
     .dashboard-container,
     .bookshelf-container,
     .stats-container {
@@ -726,7 +804,8 @@ h1:focus {
 /* Status bar safe area - works for Android and iOS */
 .status-bar-safe-area {
     display: block;
-    height: 24px;  /* Minimal padding for Android status bar */
+    height: 24px;
+    /* Minimal padding for Android status bar */
     background-color: var(--bg-primary);
     width: 100%;
     position: sticky;
@@ -741,7 +820,8 @@ h1:focus {
         padding-top: env(safe-area-inset-top, 0px);
     }
 
-    .flex-column, .navbar-brand {
+    .flex-column,
+    .navbar-brand {
         padding-left: env(safe-area-inset-left);
     }
 }
@@ -788,6 +868,7 @@ h1:focus {
         opacity: 0;
         transform: translateY(20px) scale(0.96);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -815,7 +896,7 @@ h1:focus {
     background: var(--gradient-warm);
     color: var(--bg-primary);
     border: none;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -850,8 +931,8 @@ h1:focus {
 
 @media (max-width: 768px) {
     .fab-container {
-        bottom: 5.5rem; /* Account for bottom nav if present, or just some padding */
+        bottom: 5.5rem;
+        /* Account for bottom nav if present, or just some padding */
         right: 1.5rem;
     }
 }
-
