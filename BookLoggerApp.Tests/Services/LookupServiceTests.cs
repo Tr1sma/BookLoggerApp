@@ -159,9 +159,10 @@ public class LookupServiceTests
           ]
         }";
 
+        string? capturedUrl = null;
         var mockHandler = new MockHttpMessageHandler((request) =>
         {
-            request.RequestUri!.ToString().Should().Contain(Uri.EscapeDataString(query));
+            capturedUrl = request.RequestUri!.AbsoluteUri;
             return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
             {
                 Content = new StringContent(jsonResponse)
@@ -178,6 +179,9 @@ public class LookupServiceTests
         result.Should().NotBeEmpty();
         result.Should().HaveCountGreaterThan(0);
         result.First().Title.Should().Be("The Great Gatsby");
+        
+        capturedUrl.Should().NotBeNull();
+        capturedUrl.Should().Contain("The%20Great%20Gatsby");
     }
 
     [Fact]
