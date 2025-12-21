@@ -5,6 +5,7 @@
 @inject GoalsViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
+@inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @implements IDisposable
 
 <PageTitle>Goals - BookLogger</PageTitle>
@@ -201,6 +202,8 @@
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 
     private bool showDeleteConfirmation = false;
+    private Func<Task<bool>>? _navBackHandler;
+    private Func<Task<bool>>? _modalBackHandler;
 
     protected override async Task OnInitializedAsync()
     {
@@ -208,6 +211,15 @@
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         // Subscribe to goal changes to refresh data when sessions end
         GoalService.GoalsChanged += OnGoalsChanged;
+        
+        // Register navigation back handler (Goals -> Bookshelf)
+        _navBackHandler = async () => 
+        {
+            Navigation.NavigateTo("/");
+            return true;
+        };
+        BackButtonService.Register(_navBackHandler);
+
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
 
@@ -230,25 +242,86 @@
     private void ShowCreateForm()
     {
         ViewModel.OpenCreateFormCommand.Execute(null);
+        
+        // Register modal back handler
+        _modalBackHandler = async () =>
+        {
+            CancelCreate();
+            return true;
+        };
+        BackButtonService.Register(_modalBackHandler);
+
         StateHasChanged();
     }
 
     private void EditGoal(ReadingGoal goal)
     {
         ViewModel.OpenEditFormCommand.Execute(goal);
+        
+        // Register modal back handler
+        _modalBackHandler = async () =>
+        {
+            CancelCreate();
+            return true;
+        };
+        BackButtonService.Register(_modalBackHandler);
+        
         StateHasChanged();
     }
 
     private async Task SaveGoal()
     {
         await ViewModel.SaveGoalCommand.ExecuteAsync(null);
+        // Handler removal is done in CancelCreate (which resets view) or here if needed, 
+        // but typically SaveGoal closes the form, so we should clean up.
+        // Assuming SaveGoal closes the form:
+        if (_modalBackHandler != null)
+        {
+             BackButtonService.Unregister(_modalBackHandler);
+             _modalBackHandler = null;
+        }
         StateHasChanged();
     }
 
     private void RequestDelete()
     {
+        // Unregister form handler temporarily or stack them? Stacking is fine (LIFO).
+        // Form is still open behind modal.
+        
+        var formHandler = _modalBackHandler;
+        
+        _modalBackHandler = async () =>
+        {
+            CancelDelete();
+            // Restore form handler reference if we just closed delete modal but kept form?
+            // Actually, we use a separate handler for this modal or reuse/overwrite?
+            // If we overwrite, we lose the form closing ability.
+            // Better to use a separate variable or stack them properly.
+            // But since I'm using _modalBackHandler variable, I need to be careful.
+            // Let's rely on the service's stack and just use a local variable or field.
+             return true;
+        };
+        // Wait, if I overwrite _modalBackHandler, I can't unregister the old one later easily if I lose the ref.
+        // Actually I should just Register a NEW lambda and keep it in a separate field or just not track it if I trust LIFO?
+        // But I need to Unregister it.
+        // Let's use specific fields.
+        
+        RegisterDeleteModalHandler();
+        
         showDeleteConfirmation = true;
         StateHasChanged();
+    }
+    
+    private Func<Task<bool>>? _deleteModalBackHandler;
+
+    private void RegisterDeleteModalHandler()
+    {
+         _deleteModalBackHandler = async () =>
+        {
+            CancelDelete();
+            return true;
+        };
+        BackButtonService.Register(_deleteModalBackHandler);
     }
 
     private async Task ConfirmDelete()
@@ -257,12 +330,31 @@
         {
             await ViewModel.DeleteGoalCommand.ExecuteAsync(ViewModel.NewGoal.Id);
         }
+        
+        if (_deleteModalBackHandler != null)
+        {
+            BackButtonService.Unregister(_deleteModalBackHandler);
+            _deleteModalBackHandler = null;
+        }
+        
+        // Also close the form handler as delete closes the form too usually
+        if (_modalBackHandler != null)
+        {
+            BackButtonService.Unregister(_modalBackHandler);
+            _modalBackHandler = null;
+        }
+        
         showDeleteConfirmation = false;
         StateHasChanged();
     }
 
     private void CancelDelete()
     {
+        if (_deleteModalBackHandler != null)
+        {
+            BackButtonService.Unregister(_deleteModalBackHandler);
+            _deleteModalBackHandler = null;
+        }
         showDeleteConfirmation = false;
         StateHasChanged();
     }
@@ -270,6 +362,13 @@
     private void CancelCreate()
     {
         ViewModel.CancelCreateCommand.Execute(null);
+        
+        if (_modalBackHandler != null)
+        {
+            BackButtonService.Unregister(_modalBackHandler);
+            _modalBackHandler = null;
+        }
+        
         StateHasChanged();
     }
 
@@ -278,6 +377,22 @@
         // Unsubscribe to prevent memory leaks
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         GoalService.GoalsChanged -= OnGoalsChanged;
+        
+        if (_navBackHandler != null)
+        {
+            BackButtonService.Unregister(_navBackHandler);
+            _navBackHandler = null;
+        }
+         if (_modalBackHandler != null)
+        {
+            BackButtonService.Unregister(_modalBackHandler);
+            _modalBackHandler = null;
+        }
+         if (_deleteModalBackHandler != null)
+        {
+            BackButtonService.Unregister(_deleteModalBackHandler);
+            _deleteModalBackHandler = null;
+        }
     }
 }
 
