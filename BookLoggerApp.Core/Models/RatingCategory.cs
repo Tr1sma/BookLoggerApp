@@ -11,5 +11,5 @@ public enum RatingCategory
     SpiceLevel = 3,
     Pacing = 4,
     WorldBuilding = 5,
-    Overall = 6
+
 }

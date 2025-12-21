@@ -24,10 +24,20 @@ public class AppDbContext : DbContext
     public DbSet<UserPlant> UserPlants => Set<UserPlant>();
     public DbSet<ShopItem> ShopItems => Set<ShopItem>();
     public DbSet<AppSettings> AppSettings => Set<AppSettings>();
+    public DbSet<BookRatingSummary> BookRatingSummaries => Set<BookRatingSummary>(); // View
+    public DbSet<Shelf> Shelves => Set<Shelf>();
+    public DbSet<BookShelf> BookShelves => Set<BookShelf>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Configure Many-to-Many for Book <-> Shelf
+        modelBuilder.Entity<BookShelf>()
+            .HasKey(bs => new { bs.BookId, bs.ShelfId });
+
+        // Configure BookRatingSummary as Keyless (View)
+        modelBuilder.Entity<BookRatingSummary>().HasNoKey();
 
         // Apply all configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
@@ -48,7 +58,11 @@ public class AppDbContext : DbContext
             Mystery = Guid.Parse("00000000-0000-0000-0000-000000000005"),
             Romance = Guid.Parse("00000000-0000-0000-0000-000000000006"),
             Biography = Guid.Parse("00000000-0000-0000-0000-000000000007"),
-            History = Guid.Parse("00000000-0000-0000-0000-000000000008")
+            History = Guid.Parse("00000000-0000-0000-0000-000000000008"),
+            DarkRomance = Guid.Parse("00000000-0000-0000-0000-000000000009"),
+            Krimi = Guid.Parse("00000000-0000-0000-0000-000000000010"),
+            Comedy = Guid.Parse("00000000-0000-0000-0000-000000000011"),
+            Thriller = Guid.Parse("00000000-0000-0000-0000-000000000012")
         };
 
         modelBuilder.Entity<Genre>().HasData(
@@ -59,7 +73,11 @@ public class AppDbContext : DbContext
             new Genre { Id = genreIds.Mystery, Name = "Mystery", Icon = "🔍", ColorHex = "#e74c3c" },
             new Genre { Id = genreIds.Romance, Name = "Romance", Icon = "💕", ColorHex = "#e91e63" },
             new Genre { Id = genreIds.Biography, Name = "Biography", Icon = "👤", ColorHex = "#f39c12" },
-            new Genre { Id = genreIds.History, Name = "History", Icon = "📜", ColorHex = "#95a5a6" }
+            new Genre { Id = genreIds.History, Name = "History", Icon = "📜", ColorHex = "#95a5a6" },
+            new Genre { Id = genreIds.DarkRomance, Name = "Dark Romance", Icon = "🖤", ColorHex = "#880e4f" },
+            new Genre { Id = genreIds.Krimi, Name = "Krimi", Icon = "🔦", ColorHex = "#34495e" },
+            new Genre { Id = genreIds.Comedy, Name = "Comedy", Icon = "🎭", ColorHex = "#f1c40f" },
+            new Genre { Id = genreIds.Thriller, Name = "Thriller", Icon = "😱", ColorHex = "#c0392b" }
         );
 
         // Seed PlantSpecies

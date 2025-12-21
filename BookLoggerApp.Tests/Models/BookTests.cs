@@ -119,21 +119,7 @@ public class BookTests
         average.Value.Should().BeApproximately(4.33, 0.01);
     }
 
-    [Fact]
-    public void AverageRating_WithOnlyOverallRating_ShouldReturnOverallRating()
-    {
-        // Arrange
-        var book = new Book
-        {
-            OverallRating = 4
-        };
 
-        // Act
-        var average = book.AverageRating;
-
-        // Assert
-        average.Should().Be(4);
-    }
 
     [Fact]
     public void AverageRating_WithNoRatings_ShouldReturnNull()
@@ -170,36 +156,7 @@ public class BookTests
         average.Value.Should().BeApproximately(4.0, 0.01); // (5 + 3 + 4) / 3
     }
 
-    [Fact]
-    public void Rating_ObsoleteProperty_ShouldRedirectToOverallRating()
-    {
-        // Arrange
-        var book = new Book();
 
-        // Act - Set via obsolete Rating property
-#pragma warning disable CS0618 // Type or member is obsolete
-        book.Rating = 4;
-
-        // Assert - Should be reflected in OverallRating
-        book.OverallRating.Should().Be(4);
-        book.Rating.Should().Be(4);
-#pragma warning restore CS0618
-    }
-
-    [Fact]
-    public void OverallRating_ShouldBeAccessibleViaObsoleteRating()
-    {
-        // Arrange
-        var book = new Book
-        {
-            OverallRating = 5
-        };
-
-        // Act & Assert - Obsolete Rating should return OverallRating
-#pragma warning disable CS0618
-        book.Rating.Should().Be(5);
-#pragma warning restore CS0618
-    }
 
     [Theory]
     [InlineData(1, 2, 3, 4, 5, 5, 3.33)]

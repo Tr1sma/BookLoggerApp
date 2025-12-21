@@ -59,13 +59,6 @@ public class RatingCategoryInfo
                 DisplayName = "World Building",
                 Description = "World building quality"
             },
-            new()
-            {
-                Category = RatingCategory.Overall,
-                Emoji = "⭐",
-                DisplayName = "Overall",
-                Description = "Overall rating"
-            }
         };
     }
 

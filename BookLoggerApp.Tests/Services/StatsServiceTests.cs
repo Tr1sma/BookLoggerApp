@@ -184,7 +184,7 @@ public class StatsServiceTests : IDisposable
             SpiceLevelRating = 3,
             PacingRating = 4,
             WorldBuildingRating = 5,
-            OverallRating = 4
+
         });
         await _context.SaveChangesAsync();
 
@@ -192,14 +192,13 @@ public class StatsServiceTests : IDisposable
         var averages = await _service.GetAllAverageRatingsAsync();
 
         // Assert
-        averages.Should().HaveCount(7);
+        averages.Should().HaveCount(6);
         averages[RatingCategory.Characters].Should().Be(5.0);
         averages[RatingCategory.Plot].Should().Be(4.0);
         averages[RatingCategory.WritingStyle].Should().Be(5.0);
         averages[RatingCategory.SpiceLevel].Should().Be(3.0);
         averages[RatingCategory.Pacing].Should().Be(4.0);
         averages[RatingCategory.WorldBuilding].Should().Be(5.0);
-        averages[RatingCategory.Overall].Should().Be(4.0);
     }
 
     [Fact]
@@ -256,7 +255,7 @@ public class StatsServiceTests : IDisposable
                 Title = $"Book {i}",
                 Author = "Author",
                 Status = ReadingStatus.Completed,
-                OverallRating = i % 5 + 1
+                CharactersRating = i % 5 + 1
             });
         }
         await _context.SaveChangesAsync();
@@ -309,7 +308,7 @@ public class StatsServiceTests : IDisposable
             Title = "Completed Book 1",
             Author = "Author",
             Status = ReadingStatus.Completed,
-            OverallRating = 5
+            CharactersRating = 5
         });
 
         await _unitOfWork.Books.AddAsync(new Book
@@ -317,7 +316,7 @@ public class StatsServiceTests : IDisposable
             Title = "Completed Book 2",
             Author = "Author",
             Status = ReadingStatus.Completed,
-            OverallRating = 4
+            CharactersRating = 4
         });
 
         await _unitOfWork.Books.AddAsync(new Book
@@ -325,7 +324,7 @@ public class StatsServiceTests : IDisposable
             Title = "Reading Book",
             Author = "Author",
             Status = ReadingStatus.Reading,
-            OverallRating = 3
+            CharactersRating = 3
         });
         await _context.SaveChangesAsync();
 
@@ -373,7 +372,6 @@ public class StatsServiceTests : IDisposable
     [InlineData(RatingCategory.SpiceLevel)]
     [InlineData(RatingCategory.Pacing)]
     [InlineData(RatingCategory.WorldBuilding)]
-    [InlineData(RatingCategory.Overall)]
     public async Task GetAverageRatingByCategoryAsync_AllCategories_ShouldWork(RatingCategory category)
     {
         // Arrange
@@ -386,9 +384,8 @@ public class StatsServiceTests : IDisposable
             PlotRating = 4,
             WritingStyleRating = 5,
             SpiceLevelRating = 3,
-            PacingRating = 4,
-            WorldBuildingRating = 5,
-            OverallRating = 4
+
+            WorldBuildingRating = 5
         };
         await _unitOfWork.Books.AddAsync(book);
         await _context.SaveChangesAsync();
