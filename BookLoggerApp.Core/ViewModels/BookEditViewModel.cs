@@ -69,7 +69,7 @@ public partial class BookEditViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             AvailableGenres = (await _genreService.GetAllAsync()).ToList();
-            
+
             // Load and filter shelves (manual only for editing)
             var allShelves = await _shelfService.GetAllShelvesAsync();
             AvailableShelves = allShelves.Where(s => s.AutoSortRule == ShelfAutoSortRule.None).ToList();
@@ -149,16 +149,14 @@ public partial class BookEditViewModel : ViewModelBase
             else
             {
                 // Update existing book
+                // Always save changes first to persist any property edits (Title, Author, Spine Mode, etc.)
+                await _bookService.UpdateAsync(Book);
+
                 if (isBeingCompleted)
                 {
-                    // Book is being marked as completed - use CompleteBookAsync for XP
+                    // Book is being marked as completed - use CompleteBookAsync for XP and side effects
                     await _bookService.CompleteBookAsync(Book.Id);
                     ShowBookCompletionCelebration = true;
-                }
-                else
-                {
-                    // Normal update
-                    await _bookService.UpdateAsync(Book);
                 }
             }
 
@@ -179,7 +177,7 @@ public partial class BookEditViewModel : ViewModelBase
                 {
                     await _genreService.AddGenreToBookAsync(Book.Id, genreId);
                 }
-                
+
                 // Update Shelves (Similar logic)
                 // Note: GetWithDetailsAsync was called in Load, but Book might be fresh if AddAsync was just called
                 // We should re-fetch with details to be safe or rely on what we have if loaded
@@ -187,21 +185,21 @@ public partial class BookEditViewModel : ViewModelBase
                 if (bookWithShelves != null)
                 {
                     var currentShelfIds = bookWithShelves.BookShelves.Select(bs => bs.ShelfId).ToHashSet();
-                    
+
                     // Remove from deselected manual shelves
-                    foreach(var shelfId in currentShelfIds.Where(id => !SelectedShelfIds.Contains(id)))
+                    foreach (var shelfId in currentShelfIds.Where(id => !SelectedShelfIds.Contains(id)))
                     {
-                         // Verify it is a manual shelf? (UI only shows manual, but safety check or just assume)
-                         // For now assume filtering happened in UI/ViewModel
-                         var shelf = AvailableShelves.FirstOrDefault(s => s.Id == shelfId);
-                         if (shelf != null) // Only remove if it's one of the manual shelves we allow editing
-                         {
-                             await _shelfService.RemoveBookFromShelfAsync(shelfId, Book.Id);
-                         }
+                        // Verify it is a manual shelf? (UI only shows manual, but safety check or just assume)
+                        // For now assume filtering happened in UI/ViewModel
+                        var shelf = AvailableShelves.FirstOrDefault(s => s.Id == shelfId);
+                        if (shelf != null) // Only remove if it's one of the manual shelves we allow editing
+                        {
+                            await _shelfService.RemoveBookFromShelfAsync(shelfId, Book.Id);
+                        }
                     }
-                    
+
                     // Add to newly selected shelves
-                    foreach(var shelfId in SelectedShelfIds.Where(id => !currentShelfIds.Contains(id)))
+                    foreach (var shelfId in SelectedShelfIds.Where(id => !currentShelfIds.Contains(id)))
                     {
                         await _shelfService.AddBookToShelfAsync(shelfId, Book.Id);
                     }
