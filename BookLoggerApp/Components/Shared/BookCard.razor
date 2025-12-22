@@ -2,73 +2,73 @@
 
 <div class="book-card @(IsInBookshelf ? "in-bookshelf-book" : "compact") @(IsInBookshelf ? "" : "")"
      draggable="@(IsDraggable ? "true" : "false")"
-     @onclick="HandleClick"
-     @ondragstart="HandleDragStartInternal"
-     @ondragend="HandleDragEnd">
+@onclick="HandleClick"
+@ondragstart="HandleDragStartInternal"
+@ondragend="HandleDragEnd">
     <div class="@(IsInBookshelf ? "book-cover-wrapper" : "book-cover-thumbnail")" style="@GetSpineStyle()">
-        @if (!string.IsNullOrEmpty(_coverImageDataUrl))
+        @if (!string.IsNullOrEmpty(_coverImageDataUrl) && (!IsInBookshelf || Book.UsesCoverAsSpine))
         {
-            <img src="@_coverImageDataUrl"
-                 alt="@Book.Title"
-                 class="book-cover-image"
-                 @ondragstart:preventDefault="true" />
+                <img src="@_coverImageDataUrl"
+                     alt="@Book.Title"
+                     class="book-cover-image"
+            @ondragstart:preventDefault="true" />
         }
     </div>
 
     @if (IsInBookshelf)
     {
-        <!-- Spine view: title and author on the spine -->
-        <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
+            <!-- Spine view: title and author on the spine -->
+            <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
             @GetStatusIcon()
-        </div>
-        <div class="book-card-body">
-            <h3 class="book-title">@Book.Title</h3>
-            <p class="book-author">@Book.Author</p>
-        </div>
+            </div>
+            <div class="book-card-body">
+                <h3 class="book-title">@Book.Title</h3>
+                <p class="book-author">@Book.Author</p>
+            </div>
         @if (Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Reading || Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Completed)
         {
-            <div class="book-progress">
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: @Book.ProgressPercentage%"></div>
-                </div>
-            </div>
+                    <div class="book-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: @Book.ProgressPercentage%"></div>
+                        </div>
+                    </div>
         }
     }
     else
     {
-        <!-- Compact card view: horizontal layout -->
-        <div class="book-card-content">
-            <div class="book-card-header">
-                <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
+            <!-- Compact card view: horizontal layout -->
+            <div class="book-card-content">
+                <div class="book-card-header">
+                    <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
                     @GetStatusIcon()
+                    </div>
+                    <button class="btn-icon-compact" @onclick:stopPropagation="true" @onclick="HandleDelete" title="Delete">
+                        🗑️
+                    </button>
                 </div>
-                <button class="btn-icon-compact" @onclick:stopPropagation="true" @onclick="HandleDelete" title="Delete">
-                    🗑️
-                </button>
-            </div>
-            <h3 class="book-title">@Book.Title</h3>
-            <p class="book-author">@Book.Author</p>
+                <h3 class="book-title">@Book.Title</h3>
+                <p class="book-author">@Book.Author</p>
             @if (Book.AverageRating.HasValue)
             {
-                <div class="book-rating">
+                        <div class="book-rating">
                     @{
                         var rating = (int)Math.Round(Book.AverageRating.Value);
                     }
                     @for (int i = 1; i <= 5; i++)
                     {
-                        <span class="star @(i <= rating ? "filled" : "empty")">★</span>
+                                    <span class="star @(i <= rating ? "filled" : "empty")">★</span>
                     }
-                </div>
+                        </div>
             }
-            @if (Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Reading || Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Completed)
+            @if (Book.Status == BookLoggerApp.Core.Models.ReadingStatus.Reading)
             {
-                <div class="book-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: @Book.ProgressPercentage%"></div>
-                    </div>
-                </div>
+                        <div class="book-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: @Book.ProgressPercentage%"></div>
+                            </div>
+                        </div>
             }
-        </div>
+            </div>
     }
 </div>
 
