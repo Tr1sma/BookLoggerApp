@@ -1,4 +1,5 @@
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -173,5 +174,126 @@ public class ShelfService : IShelfService
                  .Select(bs => bs.Book)
                  .ToListAsync();
          }
+    }
+
+    public async Task AddPlantToShelfAsync(Guid shelfId, Guid plantId)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+
+        var exists = await context.PlantShelves
+            .AnyAsync(ps => ps.ShelfId == shelfId && ps.PlantId == plantId);
+
+        if (!exists)
+        {
+            // Determine position (last across BOTH books and plants)
+            var maxBookPos = await context.BookShelves
+                .Where(bs => bs.ShelfId == shelfId)
+                .MaxAsync(bs => (int?)bs.Position) ?? -1;
+
+            var maxPlantPos = await context.PlantShelves
+                .Where(ps => ps.ShelfId == shelfId)
+                .MaxAsync(ps => (int?)ps.Position) ?? -1;
+
+            var maxPos = Math.Max(maxBookPos, maxPlantPos);
+
+            context.PlantShelves.Add(new PlantShelf
+            {
+                ShelfId = shelfId,
+                PlantId = plantId,
+                Position = maxPos + 1
+            });
+            await context.SaveChangesAsync();
+        }
+    }
+
+    public async Task RemovePlantFromShelfAsync(Guid shelfId, Guid plantId)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var plantShelf = await context.PlantShelves
+            .FirstOrDefaultAsync(ps => ps.ShelfId == shelfId && ps.PlantId == plantId);
+
+        if (plantShelf != null)
+        {
+            context.PlantShelves.Remove(plantShelf);
+            await context.SaveChangesAsync();
+        }
+    }
+
+    public async Task UpdatePlantPositionAsync(Guid shelfId, Guid plantId, int newPosition)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var targetEntry = await context.PlantShelves
+            .FirstOrDefaultAsync(ps => ps.ShelfId == shelfId && ps.PlantId == plantId);
+
+        if (targetEntry != null)
+        {
+            targetEntry.Position = newPosition;
+            await context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<List<ShelfItemDto>> GetShelfItemsAsync(Guid shelfId)
+    {
+         using var context = await _contextFactory.CreateDbContextAsync();
+         var shelf = await context.Shelves.FindAsync(shelfId);
+         if (shelf == null) return new List<ShelfItemDto>();
+
+         // If auto-sort, currently ignored or we can treat as books only.
+         // User said plants only on manual shelves.
+
+         var bookItems = await context.BookShelves
+             .Where(bs => bs.ShelfId == shelfId)
+             .Include(bs => bs.Book)
+             .Select(bs => new ShelfItemDto
+             {
+                 ItemId = bs.BookId,
+                 Type = ShelfItemType.Book,
+                 Position = bs.Position,
+                 Book = bs.Book
+             })
+             .ToListAsync();
+
+         var plantItems = await context.PlantShelves
+             .Where(ps => ps.ShelfId == shelfId)
+             .Include(ps => ps.Plant)
+             .ThenInclude(p => p.Species)
+             .Select(ps => new ShelfItemDto
+             {
+                 ItemId = ps.PlantId,
+                 Type = ShelfItemType.Plant,
+                 Position = ps.Position,
+                 Plant = ps.Plant
+             })
+             .ToListAsync();
+
+         return bookItems.Concat(plantItems)
+             .OrderBy(i => i.Position)
+             .ToList();
+    }
+
+    public async Task ReorderShelfItemsAsync(Guid shelfId, List<ShelfItemDto> itemsInOrder)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+
+        // Load all existing links
+        var bookShelves = await context.BookShelves.Where(bs => bs.ShelfId == shelfId).ToListAsync();
+        var plantShelves = await context.PlantShelves.Where(ps => ps.ShelfId == shelfId).ToListAsync();
+
+        for (int i = 0; i < itemsInOrder.Count; i++)
+        {
+            var item = itemsInOrder[i];
+            if (item.Type == ShelfItemType.Book)
+            {
+                var link = bookShelves.FirstOrDefault(bs => bs.BookId == item.ItemId);
+                if (link != null) link.Position = i;
+            }
+            else
+            {
+                var link = plantShelves.FirstOrDefault(ps => ps.PlantId == item.ItemId);
+                if (link != null) link.Position = i;
+            }
+        }
+
+        await context.SaveChangesAsync();
     }
 }

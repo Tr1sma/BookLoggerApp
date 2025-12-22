@@ -13,7 +13,6 @@ public partial class BookshelfViewModel : ViewModelBase
     private readonly IGenreService _genreService;
     private readonly IPlantService _plantService;
     private readonly IGoalService _goalService;
-
     private readonly IShelfService _shelfService;
 
     public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IShelfService shelfService)
@@ -33,9 +32,7 @@ public partial class BookshelfViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<Book> _books = new(); 
 
-    [ObservableProperty]
-    private ObservableCollection<UserPlant> _bookshelfPlants = new();
-
+    // Plants that are NOT on any shelf
     [ObservableProperty]
     private ObservableCollection<UserPlant> _availablePlants = new();
 
@@ -119,8 +116,9 @@ public partial class BookshelfViewModel : ViewModelBase
             var shelfViewModels = new List<ShelfViewModel>();
             foreach (var shelf in shelves)
             {
-                var books = await _shelfService.GetBooksForShelfAsync(shelf.Id);
-                shelfViewModels.Add(new ShelfViewModel { Shelf = shelf, Books = new ObservableCollection<Book>(books) });
+                var items = await _shelfService.GetShelfItemsAsync(shelf.Id);
+                var viewModels = items.Select(i => new ShelfItemViewModel(i)).ToList();
+                shelfViewModels.Add(new ShelfViewModel { Shelf = shelf, Items = new ObservableCollection<ShelfItemViewModel>(viewModels) });
             }
             Shelves = new ObservableCollection<ShelfViewModel>(shelfViewModels);
 
@@ -130,14 +128,10 @@ public partial class BookshelfViewModel : ViewModelBase
 
             Genres = (await _genreService.GetAllAsync()).ToList();
 
-            // Load plants in bookshelf
+            // Load available plants for placement (those not in any PlantShelf)
             var allPlants = await _plantService.GetAllAsync();
-            BookshelfPlants = new ObservableCollection<UserPlant>(
-                allPlants.Where(p => p.IsInBookshelf));
-
-            // Load available plants for placement
             AvailablePlants = new ObservableCollection<UserPlant>(
-                allPlants.Where(p => !p.IsInBookshelf));
+                allPlants.Where(p => !p.PlantShelves.Any()));
 
             // Calculate goal statistics
             await CalculateGoalStatsAsync();
@@ -200,6 +194,42 @@ public partial class BookshelfViewModel : ViewModelBase
             await _shelfService.RemoveBookFromShelfAsync(args.shelfId, args.bookId);
             await LoadAsync();
         }, "Failed to remove book from shelf");
+    }
+
+    [RelayCommand]
+    public async Task AddPlantToShelfAsync((Guid plantId, Guid shelfId) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _shelfService.AddPlantToShelfAsync(args.shelfId, args.plantId);
+            await LoadAsync();
+        }, "Failed to add plant");
+    }
+
+    [RelayCommand]
+    public async Task RemovePlantFromShelfAsync((Guid plantId, Guid shelfId) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _shelfService.RemovePlantFromShelfAsync(args.shelfId, args.plantId);
+            await LoadAsync();
+        }, "Failed to remove plant");
+    }
+
+    [RelayCommand]
+    public async Task UpdateShelfOrderAsync((Guid shelfId, List<ShelfItemViewModel> items) args)
+    {
+         await ExecuteSafelyAsync(async () =>
+         {
+             var dtos = args.items.Select((vm, index) => new ShelfItemDto
+             {
+                 ItemId = vm.ItemId,
+                 Type = vm.Type,
+                 Position = index
+             }).ToList();
+
+             await _shelfService.ReorderShelfItemsAsync(args.shelfId, dtos);
+         }, "Failed to update order");
     }
 
     // ... (Keep existing goal stats and search logic, update Search to filter shelves maybe?)
@@ -313,47 +343,6 @@ public partial class BookshelfViewModel : ViewModelBase
         await LoadAsync(); // Reload to show shelves again
     }
 
-    // ... (Keep existing plant commands)
-    [RelayCommand]
-    public async Task PlacePlantInBookshelfAsync((Guid plantId, string position) args)
-    {
-        await ExecuteSafelyAsync(async () =>
-        {
-            var plant = AvailablePlants.FirstOrDefault(p => p.Id == args.plantId);
-            if (plant == null)
-            {
-                SetError("Plant not found");
-                return;
-            }
-
-            plant.IsInBookshelf = true;
-            plant.BookshelfPosition = args.position;
-            await _plantService.UpdateAsync(plant);
-
-            // Move from available to bookshelf
-            AvailablePlants.Remove(plant);
-            BookshelfPlants.Add(plant);
-        }, "Failed to place plant");
-    }
-
-    [RelayCommand]
-    public async Task RemovePlantFromBookshelfAsync(Guid plantId)
-    {
-        await ExecuteSafelyAsync(async () =>
-        {
-            var plant = BookshelfPlants.FirstOrDefault(p => p.Id == plantId);
-            if (plant == null) return;
-
-            plant.IsInBookshelf = false;
-            plant.BookshelfPosition = null;
-            await _plantService.UpdateAsync(plant);
-
-            // Move from bookshelf to available
-            BookshelfPlants.Remove(plant);
-            AvailablePlants.Add(plant);
-        }, "Failed to remove plant");
-    }
-
     [RelayCommand]
     public async Task WaterPlantAsync(Guid plantId)
     {
@@ -361,17 +350,7 @@ public partial class BookshelfViewModel : ViewModelBase
         {
             await _plantService.WaterPlantAsync(plantId);
 
-            // Refresh plant data
-            var plant = BookshelfPlants.FirstOrDefault(p => p.Id == plantId);
-            if (plant != null)
-            {
-                var updatedPlant = await _plantService.GetByIdAsync(plantId);
-                if (updatedPlant != null)
-                {
-                    var index = BookshelfPlants.IndexOf(plant);
-                    BookshelfPlants[index] = updatedPlant;
-                }
-            }
+            await LoadAsync();
         }, "Failed to water plant");
     }
 
@@ -381,67 +360,9 @@ public partial class BookshelfViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             await _plantService.DeleteAsync(plantId);
-
-            // Remove from bookshelf or available lists
-            var plantInBookshelf = BookshelfPlants.FirstOrDefault(p => p.Id == plantId);
-            if (plantInBookshelf != null)
-            {
-                BookshelfPlants.Remove(plantInBookshelf);
-            }
-
-            var plantAvailable = AvailablePlants.FirstOrDefault(p => p.Id == plantId);
-            if (plantAvailable != null)
-            {
-                AvailablePlants.Remove(plantAvailable);
-            }
+            await LoadAsync();
         }, "Failed to delete plant");
     }
-
-    [RelayCommand]
-    public async Task MovePlantToPositionAsync((Guid plantId, string position) args)
-    {
-        await ExecuteSafelyAsync(async () =>
-        {
-            var plant = BookshelfPlants.FirstOrDefault(p => p.Id == args.plantId);
-            if (plant == null)
-            {
-                SetError("Plant not found");
-                return;
-            }
-
-            plant.BookshelfPosition = args.position;
-            await _plantService.UpdateAsync(plant);
-
-            // Reload to reflect new positions
-            await LoadAsync();
-        }, "Failed to move plant");
-    }
-
-    [RelayCommand]
-    public async Task MoveBookToPositionAsync((Guid bookId, string position) args)
-    {
-        // This is legacy single-shelf positioning. 
-        // We might want to adapt this to shelf-specific positioning later.
-        // For now, keep it compatible or ignore if not using this field anymore.
-        
-        await ExecuteSafelyAsync(async () =>
-        {
-            var book = Books.FirstOrDefault(b => b.Id == args.bookId);
-            if (book == null)
-            {
-                SetError("Book not found");
-                return;
-            }
-
-            book.BookshelfPosition = args.position;
-            await _bookService.UpdateAsync(book);
-
-            // Reload to reflect new positions
-            await LoadAsync();
-        }, "Failed to move book");
-    }
-
-
 }
 
 public partial class ShelfViewModel : ObservableObject
@@ -450,12 +371,8 @@ public partial class ShelfViewModel : ObservableObject
     private Shelf _shelf = null!;
 
     [ObservableProperty]
-    private ObservableCollection<Book> _books = new();
+    private ObservableCollection<ShelfItemViewModel> _items = new();
 
     [ObservableProperty]
     private bool _isExpanded = true;
 }
-
-
-
-

@@ -5,6 +5,7 @@
 @using BookLoggerApp.Core.Enums
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Components.Shared
+@using System.Collections.ObjectModel
 @inject BookshelfViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
@@ -40,7 +41,6 @@
         </button>
 
         <div class="bookshelf-filters @(filtersExpanded ? "expanded" : "collapsed")">
-            <!-- Existing filters... -->
              <div class="filter-group">
                 <label>Sort by:</label>
                 <select value="@ViewModel.SortBy" @onchange="@((ChangeEventArgs e) => { ViewModel.SortBy = e.Value?.ToString() ?? "Title"; HandleSearch(); })">
@@ -50,7 +50,6 @@
                     <option value="Status">Status</option>
                 </select>
             </div>
-            <!-- ... (Keeping filters simple for now, as search clears shelves) -->
              <div class="filter-group">
                 <button class="btn btn-secondary" @onclick="HandleClearFilters">Clear Filters</button>
             </div>
@@ -88,7 +87,7 @@
         <div class="shelves-container">
             @foreach (var shelfVM in ViewModel.Shelves)
             {
-                <div class="shelf-section @(draggedBookId.HasValue ? "drag-target" : "") @(shelfVM.IsExpanded ? "" : "collapsed")" 
+                <div class="shelf-section @(draggedItem != null ? "drag-target" : "") @(shelfVM.IsExpanded ? "" : "collapsed")"
                      @ondragenter="@(() => { /* Visual feedback handling in CSS */ })"
                      @ondragover:preventDefault
                      @ondrop="@(() => HandleDropOnShelf(shelfVM.Shelf.Id))">
@@ -100,7 +99,6 @@
                                 ▼
                             </button>
                             <h3>@shelfVM.Shelf.Name</h3>
-                            <!-- Icon removed as requested -->
                         </div>
                         
                         <div class="shelf-actions">
@@ -114,39 +112,41 @@
                     @if (shelfVM.IsExpanded)
                     {
                         <div class="shelf-books">
-                            <!-- Books -->
-                            @foreach (var book in shelfVM.Books)
+                            <!-- Mixed Items -->
+                            @foreach (var item in shelfVM.Items)
                             {
-                                 <div class="shelf-slot">
-                                    <BookCard Book="@book"
-                                              IsInBookshelf="true"
-                                              IsDraggable="true"
-                                              OnClick="() => HandleBookClick(book)"
-                                              OnDragStart="() => HandleDragStartBook(book.Id)"
-                                              OnDelete="() => HandleRemoveBookFromShelf(book.Id, shelfVM.Shelf.Id)" />
+                                 <div class="shelf-slot"
+                                      ondragover="event.preventDefault();"
+                                      @ondrop="@(() => HandleDropOnItem(item, shelfVM.Shelf.Id))"
+                                      @ondrop:stopPropagation="true">
+
+                                    @if (item.Type == ShelfItemType.Book && item.Book != null)
+                                    {
+                                        <BookCard Book="@item.Book"
+                                                  IsInBookshelf="true"
+                                                  IsDraggable="true"
+                                                  OnClick="() => HandleBookClick(item.Book)"
+                                                  OnDragStart="() => HandleDragStart(item)"
+                                                  OnDelete="() => HandleRemoveBookFromShelf(item.Book.Id, shelfVM.Shelf.Id)" />
+                                    }
+                                    else if (item.Type == ShelfItemType.Plant && item.Plant != null)
+                                    {
+                                        <PlantCard Plant="@item.Plant"
+                                                   IsInBookshelf="true"
+                                                   IsDraggable="true"
+                                                   OnClick="() => HandlePlantClick(item.Plant)"
+                                                   OnRemove="() => HandleRemovePlant(item.Plant.Id, shelfVM.Shelf.Id)" />
+                                    }
                                 </div>
                             }
                             
-                            <!-- Plants (First shelf only for compatibility) -->
-                            @if (shelfVM == ViewModel.Shelves.FirstOrDefault())
+                            <!-- Add Plant Button (Manual Shelf Only) -->
+                            @if (shelfVM.Shelf.AutoSortRule == ShelfAutoSortRule.None)
                             {
-                                @foreach (var plant in ViewModel.BookshelfPlants)
-                                {
-                                    <div class="shelf-slot">
-                                        <PlantCard Plant="@plant"
-                                                   IsInBookshelf="true"
-                                                   IsDraggable="false" 
-                                                   OnClick="() => HandlePlantClick(plant)" 
-                                                   OnRemove="() => HandleRemovePlant(plant.Id)" />
-                                    </div>
-                                }
-                                 @if (ViewModel.AvailablePlants.Any())
-                                 {
-                                     <div class="empty-slot" @onclick="() => HandleAddPlant(0)">
-                                        <div class="empty-slot-icon">🌱</div>
-                                        <div class="empty-slot-text">Add Plant</div>
-                                    </div>
-                                 }
+                                 <div class="empty-slot" @onclick="() => HandleAddPlant(shelfVM.Shelf.Id)">
+                                    <div class="empty-slot-icon">🌱</div>
+                                    <div class="empty-slot-text">Add Plant</div>
+                                </div>
                             }
                         </div>
                         <div class="shelf-wood-base"></div>
@@ -155,6 +155,7 @@
             }
         </div>
     }
+
     <!-- Floating Action Buttons -->
     <div class="fab-container">
         <button class="fab-button secondary" @onclick="OpenAddShelfModal" title="New Shelf">
@@ -194,7 +195,6 @@
     </div>
 }
 
-<!-- ... Plant/Book Modals (Keep existing ones) ... -->
 <!-- Plant Detail Modal -->
 @if (showPlantDetail && selectedPlant != null)
 {
@@ -245,6 +245,7 @@
         </div>
     </div>
 }
+
 <!-- Delete Shelf Confirmation Modal -->
 @if (showDeleteShelfModal)
 {
@@ -266,16 +267,15 @@
     private string newShelfName = "";
     private ShelfAutoSortRule newShelfRule = ShelfAutoSortRule.None;
 
-    private Guid? draggedBookId;
+    private ShelfItemViewModel? draggedItem;
     
     // Plant state
     private bool showPlantDetail;
     private UserPlant? selectedPlant;
     private bool isWateringPlant;
+    private bool showPlantSelector;
+    private Guid targetShelfIdForAdd; // Store shelf ID for adding plant
 
-
-
-    // Back handler
     private Func<Task<bool>>? _activeBackHandler;
 
     protected override async Task OnInitializedAsync()
@@ -315,25 +315,14 @@
     {
         newShelfName = "";
         newShelfRule = ShelfAutoSortRule.None;
-        
-        // Register back handler
-        _activeBackHandler = async () => 
-        { 
-            CloseAddShelfModal(); 
-            return true; 
-        };
+        _activeBackHandler = async () => { CloseAddShelfModal(); return true; };
         BackButtonService.Register(_activeBackHandler);
-        
         showAddShelfModal = true;
     }
 
     private void CloseAddShelfModal() 
     {
-        if (_activeBackHandler != null)
-        {
-            BackButtonService.Unregister(_activeBackHandler);
-            _activeBackHandler = null;
-        }
+        if (_activeBackHandler != null) { BackButtonService.Unregister(_activeBackHandler); _activeBackHandler = null; }
         showAddShelfModal = false;
     }
 
@@ -350,25 +339,14 @@
     private void HandleDeleteShelf(Guid shelfId)
     {
         shelfToDeleteId = shelfId;
-        
-        // Register back handler
-        _activeBackHandler = async () => 
-        { 
-            CloseDeleteShelfModal(); 
-            return true; 
-        };
+        _activeBackHandler = async () => { CloseDeleteShelfModal(); return true; };
         BackButtonService.Register(_activeBackHandler);
-        
         showDeleteShelfModal = true;
     }
 
     private void CloseDeleteShelfModal()
     {
-        if (_activeBackHandler != null)
-        {
-            BackButtonService.Unregister(_activeBackHandler);
-            _activeBackHandler = null;
-        }
+        if (_activeBackHandler != null) { BackButtonService.Unregister(_activeBackHandler); _activeBackHandler = null; }
         showDeleteShelfModal = false;
         shelfToDeleteId = null;
     }
@@ -383,97 +361,137 @@
     }
 
     // Drag & Drop
+    private void HandleDragStart(ShelfItemViewModel item)
+    {
+        draggedItem = item;
+    }
+
+    // Legacy method for Search Results drag (needs adapter if book search results return Books not ItemViewModels)
+    // Actually Search Results iterate ViewModel.Books which are Books.
+    // So we need HandleDragStartBook.
     private void HandleDragStartBook(Guid bookId)
     {
-        draggedBookId = bookId;
+        // Create temporary ViewModel for drag context
+        draggedItem = new ShelfItemViewModel(new ShelfItemDto
+        {
+            ItemId = bookId,
+            Type = ShelfItemType.Book
+            // Book ref not strictly needed for ID-based ops
+        });
     }
 
     private async Task HandleDropOnShelf(Guid shelfId)
     {
-        if (draggedBookId.HasValue)
+        if (draggedItem != null)
         {
-            // Add book to shelf
-            await ViewModel.MoveBookToShelfAsync((draggedBookId.Value, shelfId));
-            draggedBookId = null;
+            if (draggedItem.Type == ShelfItemType.Book)
+            {
+                 await ViewModel.MoveBookToShelfCommand.ExecuteAsync((draggedItem.ItemId, shelfId));
+            }
+            else
+            {
+                 await ViewModel.AddPlantToShelfCommand.ExecuteAsync((draggedItem.ItemId, shelfId));
+            }
+            draggedItem = null;
         }
+    }
+
+    private async Task HandleDropOnItem(ShelfItemViewModel targetItem, Guid shelfId)
+    {
+        if (draggedItem == null) return;
+        if (draggedItem.ItemId == targetItem.ItemId && draggedItem.Type == targetItem.Type) return;
+
+        var shelfVM = ViewModel.Shelves.FirstOrDefault(s => s.Shelf.Id == shelfId);
+        if (shelfVM == null) return;
+
+        var items = shelfVM.Items.ToList();
+
+        // Check if dragged item is in this list
+        var existingItem = items.FirstOrDefault(i => i.ItemId == draggedItem.ItemId && i.Type == draggedItem.Type);
+
+        if (existingItem != null)
+        {
+            // Reorder within same shelf
+            var existingIndex = items.IndexOf(existingItem);
+            items.RemoveAt(existingIndex);
+
+            var targetIndex = items.IndexOf(targetItem);
+             if (targetIndex < 0) targetIndex = items.Count;
+
+            items.Insert(targetIndex, existingItem);
+
+            // Optimistic update
+            shelfVM.Items = new ObservableCollection<ShelfItemViewModel>(items);
+
+            await ViewModel.UpdateShelfOrderCommand.ExecuteAsync((shelfId, items));
+        }
+        else
+        {
+            // Dropped from another shelf (or search)
+            // Perform standard Move/Add first (append)
+            if (draggedItem.Type == ShelfItemType.Book)
+                 await ViewModel.MoveBookToShelfCommand.ExecuteAsync((draggedItem.ItemId, shelfId));
+            else
+                 await ViewModel.AddPlantToShelfCommand.ExecuteAsync((draggedItem.ItemId, shelfId));
+
+            // Note: Insertion at specific index for cross-shelf drop is hard because we need to reload to get the new object
+            // For V1, just append. User can reorder after.
+        }
+
+        draggedItem = null;
     }
 
     private async Task HandleRemoveBookFromShelf(Guid bookId, Guid shelfId)
     {
-         // On the shelf view, the 'delete' type action removes it from the shelf, not the library
-         // Unless it's the AutoSort shelf? 
-         // For manual shelves: Remove from shelf.
-         // For AutoSort shelves: Can't really remove unless changing status.
-         // Let's assume standard behavior is Remove from Shelf.
-         
          await ViewModel.RemoveBookFromShelfCommand.ExecuteAsync((bookId, shelfId));
     }
     
     private void HandleDeleteBook(Guid bookId)
     {
-        // For search results view, delete permanently
          ViewModel.DeleteBookCommand.ExecuteAsync(bookId);
     }
 
-    // Plant stubs
+    // Plant Actions
     private void HandlePlantClick(UserPlant plant) 
     {
         selectedPlant = plant;
-        
-        // Register back handler
-        _activeBackHandler = async () => 
-        { 
-            ClosePlantDetail(); 
-            return true; 
-        };
+        _activeBackHandler = async () => { ClosePlantDetail(); return true; };
         BackButtonService.Register(_activeBackHandler);
-        
         showPlantDetail = true;
     }
+
     private void ClosePlantDetail() 
     { 
-        if (_activeBackHandler != null)
-        {
-            BackButtonService.Unregister(_activeBackHandler);
-            _activeBackHandler = null;
-        }
+        if (_activeBackHandler != null) { BackButtonService.Unregister(_activeBackHandler); _activeBackHandler = null; }
         showPlantDetail = false; 
         selectedPlant = null; 
     }
+
     private async Task HandleWaterPlantFromModal() { if (selectedPlant != null) await ViewModel.WaterPlantCommand.ExecuteAsync(selectedPlant.Id); }
     private async Task HandleDeletePlantFromModal() { if (selectedPlant != null) { await ViewModel.DeletePlantCommand.ExecuteAsync(selectedPlant.Id); ClosePlantDetail(); } }
-    private async Task HandleRemovePlant(Guid plantId) => await ViewModel.RemovePlantFromBookshelfCommand.ExecuteAsync(plantId);
-    private bool showPlantSelector;
     
-    private void HandleAddPlant(int pos) 
+    private async Task HandleRemovePlant(Guid plantId, Guid shelfId)
+    {
+        await ViewModel.RemovePlantFromShelfCommand.ExecuteAsync((plantId, shelfId));
+    }
+
+    private void HandleAddPlant(Guid shelfId)
     { 
-         // Register back handler
-        _activeBackHandler = async () => 
-        { 
-            ClosePlantSelector(); 
-            return true; 
-        };
+         targetShelfIdForAdd = shelfId;
+        _activeBackHandler = async () => { ClosePlantSelector(); return true; };
         BackButtonService.Register(_activeBackHandler);
-        
          showPlantSelector = true;
     }
 
     private void ClosePlantSelector() 
     {
-        if (_activeBackHandler != null)
-        {
-            BackButtonService.Unregister(_activeBackHandler);
-            _activeBackHandler = null;
-        }
+        if (_activeBackHandler != null) { BackButtonService.Unregister(_activeBackHandler); _activeBackHandler = null; }
         showPlantSelector = false;
     }
 
     private async Task SelectPlantForBookshelf(UserPlant plant)
     {
-        // 0 implies append, or we could track specific position if needed
-        await ViewModel.PlacePlantInBookshelfAsync((plant.Id, "0"));
+        await ViewModel.AddPlantToShelfCommand.ExecuteAsync((plant.Id, targetShelfIdForAdd));
         ClosePlantSelector();
     }
-
-    private string GetPlantStatusIcon(PlantStatus status) => status switch { PlantStatus.Healthy => "😊", PlantStatus.Thirsty => "😰", _ => "🌱" };
 }

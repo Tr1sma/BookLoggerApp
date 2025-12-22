@@ -67,18 +67,7 @@ public class UserPlant
     /// </summary>
     public bool IsActive { get; set; } = false;
 
-    /// <summary>
-    /// Optional: Position in bookshelf (for decorative placement).
-    /// Format: "shelf-index:slot-index" (e.g., "0:3" = first shelf, 4th slot)
-    /// Null if not placed in bookshelf.
-    /// </summary>
-    [MaxLength(20)]
-    public string? BookshelfPosition { get; set; }
-
-    /// <summary>
-    /// Whether the plant is displayed in the bookshelf.
-    /// </summary>
-    public bool IsInBookshelf { get; set; } = false;
+    public ICollection<PlantShelf> PlantShelves { get; set; } = new List<PlantShelf>();
 
     // Concurrency Control
     [Timestamp]

@@ -27,6 +27,7 @@ public class AppDbContext : DbContext
     public DbSet<BookRatingSummary> BookRatingSummaries => Set<BookRatingSummary>(); // View
     public DbSet<Shelf> Shelves => Set<Shelf>();
     public DbSet<BookShelf> BookShelves => Set<BookShelf>();
+    public DbSet<PlantShelf> PlantShelves => Set<PlantShelf>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +36,10 @@ public class AppDbContext : DbContext
         // Configure Many-to-Many for Book <-> Shelf
         modelBuilder.Entity<BookShelf>()
             .HasKey(bs => new { bs.BookId, bs.ShelfId });
+
+        // Configure Many-to-Many for Plant <-> Shelf
+        modelBuilder.Entity<PlantShelf>()
+            .HasKey(ps => new { ps.PlantId, ps.ShelfId });
 
         // Configure BookRatingSummary as Keyless (View)
         modelBuilder.Entity<BookRatingSummary>().HasNoKey();

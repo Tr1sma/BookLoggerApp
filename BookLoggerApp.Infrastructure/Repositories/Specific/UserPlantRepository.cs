@@ -24,6 +24,7 @@ public class UserPlantRepository : Repository<UserPlant>, IUserPlantRepository
     {
         return await _dbSet
             .Include(up => up.Species)
+            .Include(up => up.PlantShelves)
             .OrderByDescending(up => up.PlantedAt)
             .ToListAsync();
     }
