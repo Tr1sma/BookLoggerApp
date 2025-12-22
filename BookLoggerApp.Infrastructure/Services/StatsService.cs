@@ -30,8 +30,7 @@ public class StatsService : IStatsService
 
     public async Task<int> GetTotalMinutesReadAsync(CancellationToken ct = default)
     {
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
-        return allSessions.Sum(s => s.Minutes);
+        return await _unitOfWork.ReadingSessions.GetTotalMinutesAsync(ct);
     }
 
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
