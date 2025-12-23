@@ -127,15 +127,12 @@ public class StatsService : IStatsService
 
     public async Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Context.Books
-            .Include(b => b.BookGenres)
-            .ThenInclude(bg => bg.Genre)
-            .ToListAsync();
-
-        return books
-            .SelectMany(b => b.BookGenres.Select(bg => bg.Genre.Name))
-            .GroupBy(name => name)
-            .ToDictionary(g => g.Key, g => g.Count());
+        // Optimized: Use server-side aggregation on BookGenres table instead of loading all books into memory.
+        return await _unitOfWork.Context.BookGenres
+            .AsNoTracking()
+            .GroupBy(bg => bg.Genre.Name)
+            .Select(g => new { Name = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Name, x => x.Count, ct);
     }
 
     public async Task<string?> GetFavoriteGenreAsync(CancellationToken ct = default)
