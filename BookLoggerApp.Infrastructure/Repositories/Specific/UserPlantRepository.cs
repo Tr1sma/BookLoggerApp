@@ -23,6 +23,7 @@ public class UserPlantRepository : Repository<UserPlant>, IUserPlantRepository
     public async Task<IEnumerable<UserPlant>> GetUserPlantsAsync()
     {
         return await _dbSet
+            .AsNoTracking()
             .Include(up => up.Species)
             .OrderByDescending(up => up.PlantedAt)
             .ToListAsync();
