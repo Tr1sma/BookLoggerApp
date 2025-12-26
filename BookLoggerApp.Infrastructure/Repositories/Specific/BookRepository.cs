@@ -26,6 +26,7 @@ public class BookRepository : Repository<Book>, IBookRepository
     public async Task<IEnumerable<Book>> GetBooksByGenreAsync(Guid genreId)
     {
         return await _dbSet
+            .AsNoTracking()
             .Where(b => b.BookGenres.Any(bg => bg.GenreId == genreId))
             .Include(b => b.BookGenres)
                 .ThenInclude(bg => bg.Genre)
@@ -35,6 +36,7 @@ public class BookRepository : Repository<Book>, IBookRepository
     public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm)
     {
         return await _dbSet
+            .AsNoTracking()
             .Where(b => EF.Functions.Like(b.Title, $"%{searchTerm}%") ||
                        EF.Functions.Like(b.Author, $"%{searchTerm}%") ||
                        (b.ISBN != null && EF.Functions.Like(b.ISBN, $"%{searchTerm}%")))
@@ -59,6 +61,7 @@ public class BookRepository : Repository<Book>, IBookRepository
     public async Task<IEnumerable<Book>> GetRecentBooksAsync(int count = 10)
     {
         return await _dbSet
+            .AsNoTracking()
             .OrderByDescending(b => b.DateAdded)
             .Take(count)
             .ToListAsync();
@@ -67,6 +70,7 @@ public class BookRepository : Repository<Book>, IBookRepository
     public async Task<IEnumerable<Book>> GetBooksByAuthorAsync(string author)
     {
         return await _dbSet
+            .AsNoTracking()
             .Where(b => EF.Functions.Like(b.Author, author))
             .OrderByDescending(b => b.DateAdded)
             .ToListAsync();
