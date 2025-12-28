@@ -77,4 +77,21 @@ public class BookRepository : Repository<Book>, IBookRepository
         return await _dbSet
             .FirstOrDefaultAsync(b => b.ISBN == isbn);
     }
+
+    public async Task<int> GetTotalPagesByStatusAsync(ReadingStatus status, CancellationToken ct = default)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Where(b => b.Status == status && b.PageCount.HasValue)
+            .SumAsync(b => b.PageCount!.Value, ct);
+    }
+
+    public async Task<int> GetCountByStatusAndYearAsync(ReadingStatus status, int year, CancellationToken ct = default)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .CountAsync(b => b.Status == status &&
+                             b.DateCompleted.HasValue &&
+                             b.DateCompleted.Value.Year == year, ct);
+    }
 }
