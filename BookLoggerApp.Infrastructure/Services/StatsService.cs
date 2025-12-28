@@ -24,14 +24,12 @@ public class StatsService : IStatsService
 
     public async Task<int> GetTotalPagesReadAsync(CancellationToken ct = default)
     {
-        var completedBooks = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
-        return completedBooks.Where(b => b.PageCount.HasValue).Sum(b => b.PageCount!.Value);
+        return await _unitOfWork.Books.GetTotalPagesByStatusAsync(ReadingStatus.Completed, ct);
     }
 
     public async Task<int> GetTotalMinutesReadAsync(CancellationToken ct = default)
     {
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
-        return allSessions.Sum(s => s.Minutes);
+        return await _unitOfWork.ReadingSessions.GetTotalMinutesAsync(ct);
     }
 
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
@@ -121,8 +119,7 @@ public class StatsService : IStatsService
 
     public async Task<int> GetBooksCompletedInYearAsync(int year, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
-        return books.Count(b => b.DateCompleted.HasValue && b.DateCompleted.Value.Year == year);
+        return await _unitOfWork.Books.GetCountByStatusAndYearAsync(ReadingStatus.Completed, year, ct);
     }
 
     public async Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default)
