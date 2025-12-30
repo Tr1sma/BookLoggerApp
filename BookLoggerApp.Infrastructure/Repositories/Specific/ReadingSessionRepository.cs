@@ -57,4 +57,14 @@ public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSess
     {
         return await _dbSet.SumAsync(rs => rs.Minutes, ct);
     }
+
+    public async Task<IReadOnlyList<DateTime>> GetDistinctSessionDatesAsync(CancellationToken ct = default)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Select(s => s.StartedAt.Date)
+            .Distinct()
+            .OrderByDescending(d => d)
+            .ToListAsync(ct);
+    }
 }

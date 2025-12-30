@@ -190,30 +190,26 @@ public class ProgressService : IProgressService
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
     {
         var today = DateTime.UtcNow.Date;
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
+        // Optimized: Only fetch distinct dates instead of all session objects
+        var distinctDates = await _unitOfWork.ReadingSessions.GetDistinctSessionDatesAsync(ct);
 
-        var sessionsByDate = allSessions
-            .GroupBy(s => s.StartedAt.Date)
-            .OrderByDescending(g => g.Key)
-            .ToList();
-
-        if (!sessionsByDate.Any())
+        if (!distinctDates.Any())
             return 0;
 
         // Check if user read today or yesterday
-        var mostRecentDate = sessionsByDate.First().Key;
+        var mostRecentDate = distinctDates[0];
         if ((today - mostRecentDate).Days > 1)
             return 0; // Streak broken
 
         int streak = 0;
         var currentDate = today;
 
-        foreach (var group in sessionsByDate)
+        foreach (var date in distinctDates)
         {
-            if ((currentDate - group.Key).Days <= 1)
+            if ((currentDate - date).Days <= 1)
             {
                 streak++;
-                currentDate = group.Key;
+                currentDate = date;
             }
             else
             {
