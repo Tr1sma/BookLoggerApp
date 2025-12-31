@@ -1,0 +1,3 @@
+## 2024-12-31 - [Entity Framework Core Tracking Behavior]
+**Learning:** `Repository.UpdateAsync` correctly handles detached entities by checking their tracking state and attaching them if necessary. This confirms that it is safe to use `.AsNoTracking()` for data retrieval methods, even if the retrieved entities might be updated later, provided that the update logic uses the repository's `UpdateAsync` method.
+**Action:** Always verify if `UpdateAsync` logic supports detached entities before adding `.AsNoTracking()` to retrieval methods. If supported, default to `.AsNoTracking()` for all collection retrieval methods and search methods to improve performance.
