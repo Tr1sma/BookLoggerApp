@@ -30,8 +30,9 @@ public class StatsService : IStatsService
 
     public async Task<int> GetTotalMinutesReadAsync(CancellationToken ct = default)
     {
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
-        return allSessions.Sum(s => s.Minutes);
+        // Optimization: Use repository method to perform aggregation in the database
+        // instead of fetching all sessions into memory.
+        return await _unitOfWork.ReadingSessions.GetTotalMinutesAsync(ct);
     }
 
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
