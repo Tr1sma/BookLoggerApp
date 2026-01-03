@@ -182,7 +182,25 @@ public class StatsService : IStatsService
     public async Task<double> GetAverageRatingByCategoryAsync(RatingCategory category, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
     {
         var books = await GetFilteredBooksAsync(startDate, endDate, ct);
+        return CalculateCategoryAverage(books, category);
+    }
 
+    public async Task<Dictionary<RatingCategory, double>> GetAllAverageRatingsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
+    {
+        var result = new Dictionary<RatingCategory, double>();
+        // Optimization: Fetch filtered books once instead of for each category
+        var books = await GetFilteredBooksAsync(startDate, endDate, ct);
+
+        foreach (RatingCategory category in Enum.GetValues(typeof(RatingCategory)))
+        {
+            result[category] = CalculateCategoryAverage(books, category);
+        }
+
+        return result;
+    }
+
+    private double CalculateCategoryAverage(IEnumerable<Book> books, RatingCategory category)
+    {
         var ratings = category switch
         {
             RatingCategory.Characters => books.Where(b => b.CharactersRating.HasValue).Select(b => b.CharactersRating!.Value),
@@ -196,19 +214,6 @@ public class StatsService : IStatsService
 
         var ratingList = ratings.ToList();
         return ratingList.Any() ? ratingList.Average() : 0;
-    }
-
-    public async Task<Dictionary<RatingCategory, double>> GetAllAverageRatingsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
-    {
-        var result = new Dictionary<RatingCategory, double>();
-
-        foreach (RatingCategory category in Enum.GetValues(typeof(RatingCategory)))
-        {
-            var average = await GetAverageRatingByCategoryAsync(category, startDate, endDate, ct);
-            result[category] = average;
-        }
-
-        return result;
     }
 
     public async Task<List<BookRatingSummary>> GetTopRatedBooksAsync(int count = 10, RatingCategory? category = null, CancellationToken ct = default)
