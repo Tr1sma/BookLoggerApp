@@ -182,8 +182,31 @@ public class StatsService : IStatsService
     public async Task<double> GetAverageRatingByCategoryAsync(RatingCategory category, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
     {
         var books = await GetFilteredBooksAsync(startDate, endDate, ct);
+        var ratings = GetRatingsForCategory(books, category);
+        var ratingList = ratings.ToList();
+        return ratingList.Any() ? ratingList.Average() : 0;
+    }
 
-        var ratings = category switch
+    public async Task<Dictionary<RatingCategory, double>> GetAllAverageRatingsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
+    {
+        // ⚡ Bolt Optimization: Fetch books once instead of 6 times
+        // This reduces database queries from N (number of categories) to 1
+        var books = await GetFilteredBooksAsync(startDate, endDate, ct);
+        var result = new Dictionary<RatingCategory, double>();
+
+        foreach (RatingCategory category in Enum.GetValues(typeof(RatingCategory)))
+        {
+            var ratings = GetRatingsForCategory(books, category);
+            var ratingList = ratings.ToList();
+            result[category] = ratingList.Any() ? ratingList.Average() : 0;
+        }
+
+        return result;
+    }
+
+    private IEnumerable<int> GetRatingsForCategory(IEnumerable<Book> books, RatingCategory category)
+    {
+        return category switch
         {
             RatingCategory.Characters => books.Where(b => b.CharactersRating.HasValue).Select(b => b.CharactersRating!.Value),
             RatingCategory.Plot => books.Where(b => b.PlotRating.HasValue).Select(b => b.PlotRating!.Value),
@@ -193,22 +216,6 @@ public class StatsService : IStatsService
             RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).Select(b => b.WorldBuildingRating!.Value),
             _ => Enumerable.Empty<int>()
         };
-
-        var ratingList = ratings.ToList();
-        return ratingList.Any() ? ratingList.Average() : 0;
-    }
-
-    public async Task<Dictionary<RatingCategory, double>> GetAllAverageRatingsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
-    {
-        var result = new Dictionary<RatingCategory, double>();
-
-        foreach (RatingCategory category in Enum.GetValues(typeof(RatingCategory)))
-        {
-            var average = await GetAverageRatingByCategoryAsync(category, startDate, endDate, ct);
-            result[category] = average;
-        }
-
-        return result;
     }
 
     public async Task<List<BookRatingSummary>> GetTopRatedBooksAsync(int count = 10, RatingCategory? category = null, CancellationToken ct = default)
