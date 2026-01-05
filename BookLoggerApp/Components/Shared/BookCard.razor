@@ -146,37 +146,8 @@
             return $"background-image: url('{_coverImageDataUrl}'); background-size: cover; background-position: center;";
         }
 
-        // Use custom spine color if set, otherwise generate based on book ID
-        var colors = new Dictionary<string, (string dark, string light)>
-        {
-            { "red", ("8B4513", "A0522D") },
-            { "blue", ("2C4A6B", "3A5F7D") },
-            { "green", ("3D5A3D", "4A6B4A") },
-            { "purple", ("5D4E6D", "6F5F7F") },
-            { "brown", ("4A3426", "5C452F") },
-            { "gold", ("8B7355", "A68968") },
-            { "burgundy", ("6B3240", "7D4450") },
-            { "teal", ("2C5F5F", "3A7373") },
-            { "navy", ("1C2E4A", "2A3F5F") },
-            { "olive", ("4A4A2C", "5C5C3A") }
-        };
-
-        string dark, light;
-
-        if (!string.IsNullOrEmpty(Book.SpineColor) && colors.ContainsKey(Book.SpineColor.ToLower()))
-        {
-            // Use custom color
-            (dark, light) = colors[Book.SpineColor.ToLower()];
-        }
-        else
-        {
-            // Generate color based on book ID hash
-            var colorList = colors.Values.ToArray();
-            var hash = Book.Id.GetHashCode();
-            var colorIndex = Math.Abs(hash) % colorList.Length;
-            (dark, light) = colorList[colorIndex];
-        }
-
+        // Use centralized helper for colors
+        var (dark, light) = BookLoggerApp.Core.Helpers.SpineColorHelper.GetColors(Book.SpineColor, Book.Id);
         return $"background: linear-gradient(to right, #{dark}, #{light}, #{dark});";
     }
 
