@@ -127,15 +127,11 @@ public class StatsService : IStatsService
 
     public async Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Context.Books
-            .Include(b => b.BookGenres)
-            .ThenInclude(bg => bg.Genre)
-            .ToListAsync();
-
-        return books
-            .SelectMany(b => b.BookGenres.Select(bg => bg.Genre.Name))
-            .GroupBy(name => name)
-            .ToDictionary(g => g.Key, g => g.Count());
+        // Optimization: Perform aggregation in database instead of memory to avoid loading all books
+        return await _unitOfWork.Context.BookGenres
+            .GroupBy(bg => bg.Genre.Name)
+            .Select(g => new { Name = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Name, x => x.Count, ct);
     }
 
     public async Task<string?> GetFavoriteGenreAsync(CancellationToken ct = default)
