@@ -7,6 +7,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.IO.Compression;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
@@ -21,12 +22,14 @@ public class ImportExportService : IImportExportService
     private readonly IFileSystem _fileSystem;
     private readonly IAppSettingsProvider _appSettingsProvider;
     private readonly string _backupDirectory;
+    private readonly string _basePath;
 
     public ImportExportService(
         IDbContextFactory<AppDbContext> contextFactory,
         IFileSystem fileSystem,
         IAppSettingsProvider appSettingsProvider,
-        ILogger<ImportExportService>? logger = null)
+        ILogger<ImportExportService>? logger = null,
+        string? appDataPath = null)
     {
         _contextFactory = contextFactory;
         _fileSystem = fileSystem;
@@ -34,8 +37,8 @@ public class ImportExportService : IImportExportService
         _logger = logger;
 
         // Set up backup directory
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        _backupDirectory = _fileSystem.CombinePath(appDataPath, "backups");
+        _basePath = appDataPath ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        _backupDirectory = _fileSystem.CombinePath(_basePath, "backups");
         _fileSystem.CreateDirectory(_backupDirectory);
     }
 
@@ -288,7 +291,7 @@ public class ImportExportService : IImportExportService
     {
         try
         {
-            _logger?.LogInformation("Creating backup");
+            _logger?.LogInformation("Creating backup (ZIP format)");
 
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
@@ -300,30 +303,100 @@ public class ImportExportService : IImportExportService
                 throw new InvalidOperationException("Database file not found");
             }
 
-            // Create backup filename with timestamp
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var backupFileName = $"booklogger_backup_{timestamp}.db";
-            var backupPath = _fileSystem.CombinePath(_backupDirectory, backupFileName);
+            // Create temporary directory for staging backup files
+            var tempBackupDir = _fileSystem.CombinePath(_backupDirectory, $"temp_{Guid.NewGuid()}");
+            _fileSystem.CreateDirectory(tempBackupDir);
 
-            // Copy database file
-            _fileSystem.CopyFile(dbPath, backupPath, overwrite: true);
-
-            _logger?.LogInformation("Backup created at: {Path}", backupPath);
-
-            // Update AppSettings with last backup date
-            var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
-            if (settings != null)
+            try
             {
-                settings.LastBackupDate = DateTime.UtcNow;
-                await context.SaveChangesAsync(ct);
-            }
+                // 1. Copy Database
+                // We need to close connection or ensure WAL is checkpointed ideally, 
+                // but for SQLite simple copy usually works if file system allows read sharing.
+                // However, better safely:
+                var destDbPath = _fileSystem.CombinePath(tempBackupDir, "booklogger.db");
+                _fileSystem.CopyFile(dbPath, destDbPath, overwrite: true);
 
-            return backupPath;
+                // 2. Copy Covers
+                var coversSourceDir = _fileSystem.CombinePath(_basePath, "covers");
+                var coversDestDir = _fileSystem.CombinePath(tempBackupDir, "covers");
+
+                if (_fileSystem.DirectoryExists(coversSourceDir))
+                {
+                    _fileSystem.CreateDirectory(coversDestDir);
+                    // Manually copy files since IFileSystem might not have recursive copy
+                    // Assuming flat structure for covers as per ImageService
+                    // Validating ImageService implementation: it puts files directly in 'covers' dir.
+                    // We need to check if IFileSystem exposes GetFiles, if not we might need to rely on System.IO or concrete implementation.
+                    // Checking ImportExportService dependencies: it uses IFileSystem.
+                    
+                    // NOTE: Since IFileSystem abstraction might be limited, and we are in Infrastructure which has access to System.IO,
+                    // we can use standard DirectoryInfo if IFileSystem is too restrictive, BUT better to stick to injection if possible. 
+                    // However, standard System.IO.Compression.ZipFile.CreateFromDirectory works on file system paths.
+                    
+                    // Let's use the actual file system for the directory copy to be safe and simple 
+                    // since ZipFile.CreateFromDirectory is a static system method anyway.
+                    
+                    // We can't rely solely on _fileSystem interface for the ZipFile helper which requires string paths.
+                    // So we will assume standard IO access is permitted for these paths.
+                    
+                    CopyDirectory(coversSourceDir, coversDestDir);
+                }
+
+                // 3. Create ZIP
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var backupZipName = $"booklogger_backup_{timestamp}.zip";
+                var backupZipPath = _fileSystem.CombinePath(_backupDirectory, backupZipName);
+
+                // Ensure backup zip doesn't exist
+                if (File.Exists(backupZipPath)) File.Delete(backupZipPath);
+
+                ZipFile.CreateFromDirectory(tempBackupDir, backupZipPath);
+
+                _logger?.LogInformation("Backup created at: {Path}", backupZipPath);
+
+                // Update AppSettings
+                var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+                if (settings != null)
+                {
+                    settings.LastBackupDate = DateTime.UtcNow;
+                    await context.SaveChangesAsync(ct);
+                }
+
+                return backupZipPath;
+            }
+            finally
+            {
+                // Cleanup temp dir
+                if (Directory.Exists(tempBackupDir))
+                {
+                    Directory.Delete(tempBackupDir, true);
+                }
+            }
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Failed to create backup");
             throw;
+        }
+    }
+
+    private void CopyDirectory(string sourceDir, string destinationDir)
+    {
+        var dir = new DirectoryInfo(sourceDir);
+        if (!dir.Exists) return; // Should have been checked
+
+        Directory.CreateDirectory(destinationDir);
+
+        foreach (FileInfo file in dir.GetFiles())
+        {
+            string targetFilePath = Path.Combine(destinationDir, file.Name);
+            file.CopyTo(targetFilePath, true);
+        }
+
+        foreach (DirectoryInfo subDir in dir.GetDirectories())
+        {
+            string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
+            CopyDirectory(subDir.FullName, newDestinationDir);
         }
     }
 
@@ -333,31 +406,79 @@ public class ImportExportService : IImportExportService
         {
             _logger?.LogInformation("Restoring from backup: {Path}", backupPath);
 
-            if (!_fileSystem.FileExists(backupPath))
+            if (!File.Exists(backupPath))
             {
                 throw new FileNotFoundException("Backup file not found", backupPath);
             }
 
-            await using var context = await _contextFactory.CreateDbContextAsync(ct);
+            // Temp directory for extraction
+            var tempExtractDir = _fileSystem.CombinePath(_backupDirectory, $"restore_{Guid.NewGuid()}");
+            Directory.CreateDirectory(tempExtractDir);
 
-            // Get the current database file path
-            var dbPath = context.Database.GetConnectionString()?.Replace("Data Source=", "");
-
-            if (string.IsNullOrWhiteSpace(dbPath))
+            try
             {
-                throw new InvalidOperationException("Database path not found");
+                // 1. Extract ZIP
+                ZipFile.ExtractToDirectory(backupPath, tempExtractDir);
+
+                // 2. Validate Backup Content
+                var extractedDbPath = Path.Combine(tempExtractDir, "booklogger.db");
+                if (!File.Exists(extractedDbPath))
+                {
+                    throw new InvalidOperationException("Invalid backup: Missing database file");
+                }
+
+                await using var context = await _contextFactory.CreateDbContextAsync(ct);
+                
+                // Get current DB path
+                var currentDbPath = context.Database.GetConnectionString()?.Replace("Data Source=", "");
+                if (string.IsNullOrWhiteSpace(currentDbPath)) throw new InvalidOperationException("Current database path not found");
+
+                // 3. Close Connections & Restore DB
+                await context.Database.CloseConnectionAsync();
+                
+                // Wait a bit to ensure locks are released (SQLite can be sticky)
+                await Task.Delay(100, ct);
+
+                File.Copy(extractedDbPath, currentDbPath, true);
+
+                // 4. Restore Covers
+                var extractedCoversDir = Path.Combine(tempExtractDir, "covers");
+                if (Directory.Exists(extractedCoversDir))
+                {
+                    var targetCoversDir = _fileSystem.CombinePath(_basePath, "covers");
+
+                    // Clean target covers dir to remove orphaned images? 
+                    // User requested "Restore", usually enabling a clean slate or overwrite.
+                    // Let's clear target directory to ensure exact match with backup.
+                    if (Directory.Exists(targetCoversDir))
+                    {
+                        var dirInfo = new DirectoryInfo(targetCoversDir);
+                        foreach (var file in dirInfo.GetFiles()) file.Delete();
+                        foreach (var dir in dirInfo.GetDirectories()) dir.Delete(true);
+                    }
+                    else
+                    {
+                        Directory.CreateDirectory(targetCoversDir);
+                    }
+
+                    CopyDirectory(extractedCoversDir, targetCoversDir);
+                }
+
+                _logger?.LogInformation("Backup restored successfully");
+
+                // Invalidate AppSettings cache to load restored values
+                _appSettingsProvider.InvalidateCache();
+
+                // Reopen connection
+                await context.Database.OpenConnectionAsync(ct);
             }
-
-            // Close all connections
-            await context.Database.CloseConnectionAsync();
-
-            // Copy backup file over current database
-            _fileSystem.CopyFile(backupPath, dbPath, overwrite: true);
-
-            _logger?.LogInformation("Backup restored successfully");
-
-            // Reopen connection
-            await context.Database.OpenConnectionAsync(ct);
+            finally
+            {
+                if (Directory.Exists(tempExtractDir))
+                {
+                    Directory.Delete(tempExtractDir, true);
+                }
+            }
         }
         catch (Exception ex)
         {

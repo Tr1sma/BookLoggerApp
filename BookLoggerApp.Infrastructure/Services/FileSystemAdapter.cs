@@ -32,6 +32,11 @@ public class FileSystemAdapter : IFileSystem
         return File.Exists(path);
     }
 
+    public bool DirectoryExists(string path)
+    {
+        return Directory.Exists(path);
+    }
+
     public string CombinePath(params string[] paths)
     {
         return Path.Combine(paths);
