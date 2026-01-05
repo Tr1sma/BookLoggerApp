@@ -62,10 +62,21 @@
     font-size: 1.5rem;
 }
 
-.form-section:nth-child(2) h2::before { content: '📖'; }
-.form-section:nth-child(3) h2::before { content: '⭐'; }
-.form-section:nth-child(4) h2::before { content: '🏷️'; }
-.form-section:nth-child(5) h2::before { content: '🖼️'; }
+.form-section:nth-child(2) h2::before {
+    content: '📖';
+}
+
+.form-section:nth-child(3) h2::before {
+    content: '⭐';
+}
+
+.form-section:nth-child(4) h2::before {
+    content: '🏷️';
+}
+
+.form-section:nth-child(5) h2::before {
+    content: '🖼️';
+}
 
 /* Form Groups */
 .form-group {
@@ -204,7 +215,7 @@
     accent-color: var(--primary-color);
 }
 
-.genre-checkbox input[type="checkbox"]:checked + span {
+.genre-checkbox input[type="checkbox"]:checked+span {
     color: var(--primary-color);
     font-weight: 600;
 }
@@ -275,6 +286,7 @@
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -581,5 +593,86 @@
     .isbn-input-group .btn {
         padding: 0.5rem 0.75rem;
         font-size: 0.8rem;
+    }
+}
+
+/* Custom Color Picker */
+.custom-color-picker-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+}
+
+.custom-color-label {
+    display: flex;
+    flex-direction: column;
+    /* Stack icon and text */
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    /* Remove fixed width */
+    min-width: 45px;
+    height: 60px;
+    padding: 0 0.5rem;
+    /* Add padding */
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    position: relative;
+    transition: var(--transition);
+    gap: 2px;
+}
+
+.custom-color-label:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.custom-color-label input[type="color"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    padding: 0;
+    border: none;
+    z-index: 2;
+    /* Ensure input is on top */
+}
+
+.custom-color-label .spine-mode-icon {
+    font-size: 1.25rem;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.custom-text {
+    font-size: 0.7rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    pointer-events: none;
+    text-align: center;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .custom-color-label {
+        min-width: 38px;
+        height: 50px;
+    }
+
+    .custom-color-label .spine-mode-icon {
+        font-size: 1.1rem;
+    }
+
+    .custom-text {
+        font-size: 0.65rem;
+        display: none;
+        /* Hide text on very small screens if needed, or keep it */
     }
 }

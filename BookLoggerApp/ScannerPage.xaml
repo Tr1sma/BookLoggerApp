@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+             x:Class="BookLoggerApp.ScannerPage"
+             Title="Scan ISBN"
+             BackgroundColor="Black">
+
+    <Grid>
+        <!-- Camera View -->
+        <zxing:CameraBarcodeReaderView x:Name="cameraBarcodeReaderView"
+                                      IsDetecting="True"
+                                      IsTorchOn="False"
+                                      BarcodesDetected="CameraBarcodeReaderView_BarcodesDetected"/>
+
+        <!-- Overlay -->
+        <Grid RowDefinitions="*,300,*" ColumnDefinitions="*,300,*">
+            <BoxView Color="#AA000000" Grid.ColumnSpan="3"/>
+            <BoxView Color="#AA000000" Grid.Row="2" Grid.ColumnSpan="3"/>
+            <BoxView Color="#AA000000" Grid.Row="1" Grid.Column="0"/>
+            <BoxView Color="#AA000000" Grid.Row="1" Grid.Column="2"/>
+            
+            <!-- Scan Frame Border -->
+            <Border Grid.Row="1" Grid.Column="1"
+                    Stroke="#C49664"
+                    StrokeThickness="2"
+                    BackgroundColor="Transparent"/>
+        </Grid>
+
+        <!-- UI Controls -->
+        <VerticalStackLayout VerticalOptions="Start" Padding="20,40,20,0" Spacing="10">
+            <Label Text="Scan ISBN Barcode" 
+                   TextColor="White" 
+                   FontSize="20" 
+                   HorizontalOptions="Center"
+                   FontAttributes="Bold"/>
+            <Label Text="Position barcode within the frame" 
+                   TextColor="#CCCCCC" 
+                   FontSize="14" 
+                   HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+
+        <Button Text="Cancel"
+                Clicked="CancelButton_Clicked"
+                VerticalOptions="End"
+                HorizontalOptions="Center"
+                Margin="0,0,0,50"
+                BackgroundColor="#333333"
+                TextColor="White"
+                CornerRadius="20"
+                HeightRequest="40"
+                WidthRequest="120"/>
+        
+        <ImageButton Source="flashlight_icon.png"
+                     Clicked="FlashlightButton_Clicked"
+                     VerticalOptions="Start"
+                     HorizontalOptions="End"
+                     Margin="20,40,20,0"
+                     HeightRequest="40"
+                     WidthRequest="40"
+                     x:Name="FlashlightButton"/>
+    </Grid>
+</ContentPage>
