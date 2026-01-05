@@ -1,14 +1,12 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
 
-<div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")"
-     draggable="@(IsDraggable ? "true" : "false")"
-     @onclick="HandleClick"
-     @ondragstart="HandleDragStartInternal"
-     @ondragend="HandleDragEnd">
+<div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")" draggable="@(IsDraggable ? "true" : "false")"
+@onclick="HandleClick" @ondragstart="HandleDragStartInternal" @ondragend="HandleDragEnd">
     <div class="plant-pot-wrapper">
         <!-- Plant Image -->
-        <img src="@Plant.Species.ImagePath" alt="@Plant.Species.Name" class="plant-card-image" @ondragstart:preventDefault="true" />
+        <img src="@(Plant.Species?.ImagePath ?? "/images/unknown_plant.png")"
+            alt="@(Plant.Species?.Name ?? "Unknown Plant")" class="plant-card-image" draggable="false" />
 
         <div class="plant-status-badge status-@Plant.Status.ToString().ToLower()">
             @GetStatusIcon()
