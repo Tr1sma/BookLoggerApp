@@ -145,7 +145,7 @@ public class LookupService : ILookupService
                 ? string.Join(", ", volumeInfo.Authors)
                 : string.Empty,
             ISBN = isbn ?? string.Empty,
-            PageCount = volumeInfo.PageCount,
+            PageCount = volumeInfo.PageCount ?? volumeInfo.PrintedPageCount,
             Publisher = volumeInfo.Publisher,
             PublicationYear = publicationYear,
             Description = volumeInfo.Description,
@@ -175,6 +175,7 @@ public class LookupService : ILookupService
         public string? Description { get; set; }
         public List<GoogleBooksIdentifier>? IndustryIdentifiers { get; set; }
         public int? PageCount { get; set; }
+        public int? PrintedPageCount { get; set; }
         public List<string>? Categories { get; set; }
         public GoogleBooksImageLinks? ImageLinks { get; set; }
         public string? Language { get; set; }
