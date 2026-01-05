@@ -15,17 +15,15 @@
 
 <div class="bookshelf-container">
     <!-- Reading Goal Header -->
-    <GoalHeader TbrCount="@ViewModel.TbrCount"
-                GoalTarget="@ViewModel.GoalTarget"
-                BooksRead="@ViewModel.BooksReadThisYear"
-                BooksRemaining="@ViewModel.BooksRemainingToGoal" />
+    <GoalHeader TbrCount="@ViewModel.TbrCount" GoalTarget="@ViewModel.GoalTarget"
+        BooksRead="@ViewModel.BooksReadThisYear" BooksRemaining="@ViewModel.BooksRemainingToGoal" />
 
     <!-- Header & Controls -->
     <div class="bookshelf-header">
         <h1>📚 My Bookshelf</h1>
         <div class="bookshelf-controls">
-            <input type="text" class="search-input" placeholder="🔍 Search books..."
-                   @bind="ViewModel.SearchQuery" @bind:event="oninput" @onchange="HandleSearch" />
+            <input type="text" class="search-input" placeholder="🔍 Search books..." @bind="ViewModel.SearchQuery"
+            @bind:event="oninput" @onchange="HandleSearch" />
         </div>
     </div>
 
@@ -41,9 +39,10 @@
 
         <div class="bookshelf-filters @(filtersExpanded ? "expanded" : "collapsed")">
             <!-- Existing filters... -->
-             <div class="filter-group">
+            <div class="filter-group">
                 <label>Sort by:</label>
-                <select value="@ViewModel.SortBy" @onchange="@((ChangeEventArgs e) => { ViewModel.SortBy = e.Value?.ToString() ?? "Title"; HandleSearch(); })">
+                <select value="@ViewModel.SortBy"
+                @onchange="@((ChangeEventArgs e) => { ViewModel.SortBy = e.Value?.ToString() ?? "Title"; HandleSearch(); })">
                     <option value="Title">Title</option>
                     <option value="Author">Author</option>
                     <option value="DateAdded">Date Added</option>
@@ -51,7 +50,7 @@
                 </select>
             </div>
             <!-- ... (Keeping filters simple for now, as search clears shelves) -->
-             <div class="filter-group">
+            <div class="filter-group">
                 <button class="btn btn-secondary" @onclick="HandleClearFilters">Clear Filters</button>
             </div>
         </div>
@@ -62,24 +61,21 @@
     {
         <div class="loading">Loading your books...</div>
     }
-    else if (!string.IsNullOrEmpty(ViewModel.SearchQuery) || ViewModel.FilterStatus.HasValue || ViewModel.FilterGenreId.HasValue)
+    else if (!string.IsNullOrEmpty(ViewModel.SearchQuery) || ViewModel.FilterStatus.HasValue ||
+    ViewModel.FilterGenreId.HasValue)
     {
         <!-- Search Results View (Flat Grid) -->
         <div class="search-results-label">Search Results: @ViewModel.Books.Count book(s)</div>
         <div class="book-grid">
-             <div class="shelf-row">
+            <div class="shelf-row">
                 @foreach (var book in ViewModel.Books)
                 {
                     <div class="shelf-slot">
-                        <BookCard Book="@book"
-                                  IsInBookshelf="true"
-                                  IsDraggable="true"
-                                  OnClick="() => HandleBookClick(book)"
-                                  OnDragStart="() => HandleDragStartBook(book.Id)"
-                                  OnDelete="() => HandleDeleteBook(book.Id)" />
+                        <BookCard Book="@book" IsInBookshelf="true" IsDraggable="true" OnClick="() => HandleBookClick(book)"
+                            OnDragStart="() => HandleDragStartItem(book.Id)" OnDelete="() => HandleDeleteBook(book.Id)" />
                     </div>
                 }
-             </div>
+            </div>
         </div>
     }
     else
@@ -88,65 +84,75 @@
         <div class="shelves-container">
             @foreach (var shelfVM in ViewModel.Shelves)
             {
-                <div class="shelf-section @(draggedBookId.HasValue ? "drag-target" : "") @(shelfVM.IsExpanded ? "" : "collapsed")" 
-                     @ondragenter="@(() => { /* Visual feedback handling in CSS */ })"
-                     @ondragover:preventDefault
-                     @ondrop="@(() => HandleDropOnShelf(shelfVM.Shelf.Id))">
-                    
+                <div class="shelf-section @(draggedItemId.HasValue ? "drag-target" : "") @(shelfVM.IsExpanded ? "" : "collapsed")"
+                @ondragenter="@(() => { /* Visual feedback handling in CSS */ })" @ondragover:preventDefault
+                @ondrop="@(() => HandleDropOnShelf(shelfVM.Shelf.Id))">
+
+
                     <div class="shelf-header">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <button class="btn-icon toggle-icon @(shelfVM.IsExpanded ? "" : "collapsed")" 
-                                    @onclick="() => shelfVM.IsExpanded = !shelfVM.IsExpanded">
+                            <button class="btn-icon toggle-icon @(shelfVM.IsExpanded ? "" : "collapsed")"
+                            @onclick="() => shelfVM.IsExpanded = !shelfVM.IsExpanded">
                                 ▼
                             </button>
                             <h3>@shelfVM.Shelf.Name</h3>
-                            <!-- Icon removed as requested -->
+                            <!-- Reordering Controls -->
+                            <div class="shelf-reorder-controls" style="display: flex; gap: 2px; margin-left: 10px;">
+                                <button class="btn-icon small"
+                                @onclick="() => ViewModel.MoveShelfUpCommand.ExecuteAsync(shelfVM.Shelf.Id)"
+                                    disabled="@(ViewModel.Shelves.IndexOf(shelfVM) == 0)" title="Move Up">
+                                    ⬆️
+                                </button>
+                                <button class="btn-icon small"
+                                @onclick="() => ViewModel.MoveShelfDownCommand.ExecuteAsync(shelfVM.Shelf.Id)"
+                                    disabled="@(ViewModel.Shelves.IndexOf(shelfVM) == ViewModel.Shelves.Count - 1)"
+                                    title="Move Down">
+                                    ⬇️
+                                </button>
+                            </div>
                         </div>
-                        
+
                         <div class="shelf-actions">
-                             @if (shelfVM.Shelf.SortOrder > 0) 
-                             {
-                                 <button class="btn-icon" @onclick="() => HandleDeleteShelf(shelfVM.Shelf.Id)" title="Delete Shelf">🗑️</button>
-                             }
+                            @if (shelfVM.Shelf.SortOrder > 0)
+                            {
+                                <button class="btn-icon" @onclick="() => HandleDeleteShelf(shelfVM.Shelf.Id)"
+                                    title="Delete Shelf">🗑️</button>
+                            }
                         </div>
                     </div>
-
                     @if (shelfVM.IsExpanded)
                     {
                         <div class="shelf-books">
-                            <!-- Books -->
-                            @foreach (var book in shelfVM.Books)
+                            <!-- Mixed Items Loop -->
+                            @foreach (var item in shelfVM.Items)
                             {
-                                 <div class="shelf-slot">
-                                    <BookCard Book="@book"
-                                              IsInBookshelf="true"
-                                              IsDraggable="true"
-                                              OnClick="() => HandleBookClick(book)"
-                                              OnDragStart="() => HandleDragStartBook(book.Id)"
-                                              OnDelete="() => HandleRemoveBookFromShelf(book.Id, shelfVM.Shelf.Id)" />
-                                </div>
-                            }
-                            
-                            <!-- Plants (First shelf only for compatibility) -->
-                            @if (shelfVM == ViewModel.Shelves.FirstOrDefault())
-                            {
-                                @foreach (var plant in ViewModel.BookshelfPlants)
+                                @if (item.Type == ShelfItemType.Book && item.Book != null)
                                 {
-                                    <div class="shelf-slot">
-                                        <PlantCard Plant="@plant"
-                                                   IsInBookshelf="true"
-                                                   IsDraggable="false" 
-                                                   OnClick="() => HandlePlantClick(plant)" 
-                                                   OnRemove="() => HandleRemovePlant(plant.Id)" />
+                                    <div class="shelf-slot" draggable="true" @ondragstart="() => HandleDragStartItem(item.Book.Id)"
+                                    @ondrop="() => HandleDropOnItem(item.Book.Id, shelfVM.Shelf.Id)" @ondragover:preventDefault>
+                                        <BookCard Book="@item.Book" IsInBookshelf="true" IsDraggable="false"
+                                            OnClick="() => HandleBookClick(item.Book)"
+                                            OnDelete="() => HandleRemoveBookFromShelf(item.Book.Id, shelfVM.Shelf.Id)" />
                                     </div>
                                 }
-                                 @if (ViewModel.AvailablePlants.Any())
-                                 {
-                                     <div class="empty-slot" @onclick="() => HandleAddPlant(0)">
-                                        <div class="empty-slot-icon">🌱</div>
-                                        <div class="empty-slot-text">Add Plant</div>
+                                else if (item.Type == ShelfItemType.Plant && item.Plant != null)
+                                {
+                                    <div class="shelf-slot" draggable="true" @ondragstart="() => HandleDragStartItem(item.Plant.Id)"
+                                    @ondrop="() => HandleDropOnItem(item.Plant.Id, shelfVM.Shelf.Id)" @ondragover:preventDefault>
+                                        <PlantCard Plant="@item.Plant" IsInBookshelf="true" IsDraggable="false"
+                                            OnClick="() => HandlePlantClick(item.Plant)"
+                                            OnRemove="() => HandleRemovePlant(item.Plant.Id, shelfVM.Shelf.Id)" />
                                     </div>
-                                 }
+                                }
+                            }
+
+                            <!-- Add Plant Button -->
+                            @if (ViewModel.AvailablePlants.Any())
+                            {
+                                <div class="empty-slot" @onclick="() => HandleAddPlant(shelfVM.Shelf.Id)">
+                                    <div class="empty-slot-icon">🌱</div>
+                                    <div class="empty-slot-text">Add Plant</div>
+                                </div>
                             }
                         </div>
                         <div class="shelf-wood-base"></div>
@@ -205,10 +211,8 @@
                 <button class="btn-close" @onclick="ClosePlantDetail">×</button>
             </div>
             <div class="modal-body">
-                <PlantWidget Plant="@selectedPlant"
-                             OnWater="HandleWaterPlantFromModal"
-                             OnDelete="HandleDeletePlantFromModal"
-                             IsWatering="@isWateringPlant" />
+                <PlantWidget Plant="@selectedPlant" OnWater="HandleWaterPlantFromModal"
+                    OnDelete="HandleDeletePlantFromModal" IsWatering="@isWateringPlant" />
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" @onclick="ClosePlantDetail">Close</button>
@@ -228,7 +232,8 @@
                 {
                     @foreach (var plant in ViewModel.AvailablePlants)
                     {
-                        <div class="plant-select-item" @onclick="() => SelectPlantForBookshelf(plant)" style="cursor: pointer; transform: scale(0.9);">
+                        <div class="plant-select-item" @onclick="() => SelectPlantForBookshelf(plant)"
+                            style="cursor: pointer; transform: scale(0.9);">
                             <PlantCard Plant="@plant" IsInBookshelf="false" IsDraggable="false" />
                         </div>
                     }
@@ -236,7 +241,8 @@
                 else
                 {
                     <p style="color: #ccc; width: 100%; text-align: center;">No plants available. Visit the shop?</p>
-                    <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/shop"))" style="width: 100%;">Go to Shop</button>
+                    <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/shop"))" style="width: 100%;">Go
+                        to Shop</button>
                 }
             </div>
             <div class="modal-actions">
@@ -266,8 +272,8 @@
     private string newShelfName = "";
     private ShelfAutoSortRule newShelfRule = ShelfAutoSortRule.None;
 
-    private Guid? draggedBookId;
-    
+
+
     // Plant state
     private bool showPlantDetail;
     private UserPlant? selectedPlant;
@@ -304,9 +310,14 @@
     }
 
     private void ToggleFilters() => filtersExpanded = !filtersExpanded;
-    private bool HasActiveFilters() => ViewModel.FilterStatus.HasValue || ViewModel.FilterGenreId.HasValue || !string.IsNullOrWhiteSpace(ViewModel.SearchQuery);
+    private bool HasActiveFilters() => ViewModel.FilterStatus.HasValue || ViewModel.FilterGenreId.HasValue ||
+    !string.IsNullOrWhiteSpace(ViewModel.SearchQuery);
     private void HandleSearch() => ViewModel.SearchCommand.ExecuteAsync(null);
-    private async Task HandleClearFilters() { ViewModel.ClearFiltersCommand.Execute(null); await ViewModel.LoadCommand.ExecuteAsync(null); }
+    private async Task HandleClearFilters()
+    {
+        ViewModel.ClearFiltersCommand.Execute(null); await
+        ViewModel.LoadCommand.ExecuteAsync(null);
+    }
     private void NavigateToAddBook() => Navigation.NavigateTo("/books/new");
     private void HandleBookClick(Book book) => Navigation.NavigateTo($"/books/{book.Id}");
 
@@ -315,19 +326,19 @@
     {
         newShelfName = "";
         newShelfRule = ShelfAutoSortRule.None;
-        
+
         // Register back handler
-        _activeBackHandler = async () => 
-        { 
-            CloseAddShelfModal(); 
-            return true; 
+        _activeBackHandler = async () =>
+        {
+            CloseAddShelfModal();
+            return true;
         };
         BackButtonService.Register(_activeBackHandler);
-        
+
         showAddShelfModal = true;
     }
 
-    private void CloseAddShelfModal() 
+    private void CloseAddShelfModal()
     {
         if (_activeBackHandler != null)
         {
@@ -350,15 +361,15 @@
     private void HandleDeleteShelf(Guid shelfId)
     {
         shelfToDeleteId = shelfId;
-        
+
         // Register back handler
-        _activeBackHandler = async () => 
-        { 
-            CloseDeleteShelfModal(); 
-            return true; 
+        _activeBackHandler = async () =>
+        {
+            CloseDeleteShelfModal();
+            return true;
         };
         BackButtonService.Register(_activeBackHandler);
-        
+
         showDeleteShelfModal = true;
     }
 
@@ -383,82 +394,131 @@
     }
 
     // Drag & Drop
-    private void HandleDragStartBook(Guid bookId)
+    private Guid? draggedItemId;
+
+    private void HandleDragStartItem(Guid itemId)
     {
-        draggedBookId = bookId;
+        draggedItemId = itemId;
     }
 
     private async Task HandleDropOnShelf(Guid shelfId)
     {
-        if (draggedBookId.HasValue)
+        // This is for dropping on the empty space of a shelf (append)
+        // For now, let's assume it calls a move to shelf command without position (append)
+        if (draggedItemId.HasValue)
         {
-            // Add book to shelf
-            await ViewModel.MoveBookToShelfAsync((draggedBookId.Value, shelfId));
-            draggedBookId = null;
+            // We need to know if it's a book or plant to call the right method.
+            // Or we check both. Simpler: Just try both or have VM handle it.
+            // Since we only have ID, we might need a unified Move command in VM that figures it out.
+            // OR: We iterate VM items to find type.
+
+            // For MVP: Check shelves for the item to know its type?
+            // Actually, `BookCard` and `PlantCard` are distinct.
+            // Let's defer to VM: `MoveItemToShelfAsync`?
+            // But we have `MoveBookToShelfAsync` and `AddPlantToShelfAsync`.
+            // Let's inspect `ViewModel.Items`? No `Items` is on `ShelfViewModel`.
+
+            // Hack for now: Try finding in Books or Plants list
+            var isBook = ViewModel.Books.Any(b => b.Id == draggedItemId.Value);
+            if (isBook)
+            {
+                await ViewModel.MoveBookToShelfAsync((draggedItemId.Value, shelfId));
+            }
+            else
+            {
+                // Assume plant
+                await ViewModel.AddPlantToShelfAsync((draggedItemId.Value, shelfId));
+            }
+
+            draggedItemId = null;
+        }
+    }
+
+    private async Task HandleDropOnItem(Guid targetItemId, Guid shelfId)
+    {
+        if (draggedItemId.HasValue && draggedItemId.Value != targetItemId)
+        {
+            await ViewModel.ReorderShelfItemsAsync((shelfId, draggedItemId.Value, targetItemId));
+            draggedItemId = null;
         }
     }
 
     private async Task HandleRemoveBookFromShelf(Guid bookId, Guid shelfId)
     {
-         // On the shelf view, the 'delete' type action removes it from the shelf, not the library
-         // Unless it's the AutoSort shelf? 
-         // For manual shelves: Remove from shelf.
-         // For AutoSort shelves: Can't really remove unless changing status.
-         // Let's assume standard behavior is Remove from Shelf.
-         
-         await ViewModel.RemoveBookFromShelfCommand.ExecuteAsync((bookId, shelfId));
+        // On the shelf view, the 'delete' type action removes it from the shelf, not the library
+        // Unless it's the AutoSort shelf?
+        // For manual shelves: Remove from shelf.
+        // For AutoSort shelves: Can't really remove unless changing status.
+        // Let's assume standard behavior is Remove from Shelf.
+
+        await ViewModel.RemoveBookFromShelfCommand.ExecuteAsync((bookId, shelfId));
     }
-    
+
     private void HandleDeleteBook(Guid bookId)
     {
         // For search results view, delete permanently
-         ViewModel.DeleteBookCommand.ExecuteAsync(bookId);
+        ViewModel.DeleteBookCommand.ExecuteAsync(bookId);
     }
 
     // Plant stubs
-    private void HandlePlantClick(UserPlant plant) 
+    private void HandlePlantClick(UserPlant plant)
     {
         selectedPlant = plant;
-        
+
         // Register back handler
-        _activeBackHandler = async () => 
-        { 
-            ClosePlantDetail(); 
-            return true; 
+        _activeBackHandler = async () =>
+        {
+            ClosePlantDetail();
+            return true;
         };
         BackButtonService.Register(_activeBackHandler);
-        
+
         showPlantDetail = true;
     }
-    private void ClosePlantDetail() 
-    { 
+    private void ClosePlantDetail()
+    {
         if (_activeBackHandler != null)
         {
             BackButtonService.Unregister(_activeBackHandler);
             _activeBackHandler = null;
         }
-        showPlantDetail = false; 
-        selectedPlant = null; 
+        showPlantDetail = false;
+        selectedPlant = null;
     }
-    private async Task HandleWaterPlantFromModal() { if (selectedPlant != null) await ViewModel.WaterPlantCommand.ExecuteAsync(selectedPlant.Id); }
-    private async Task HandleDeletePlantFromModal() { if (selectedPlant != null) { await ViewModel.DeletePlantCommand.ExecuteAsync(selectedPlant.Id); ClosePlantDetail(); } }
-    private async Task HandleRemovePlant(Guid plantId) => await ViewModel.RemovePlantFromBookshelfCommand.ExecuteAsync(plantId);
+    private async Task HandleWaterPlantFromModal()
+    {
+        if (selectedPlant != null) await
+        ViewModel.WaterPlantCommand.ExecuteAsync(selectedPlant.Id);
+    }
+    private async Task HandleDeletePlantFromModal()
+    {
+        if (selectedPlant != null)
+        {
+            await
+            ViewModel.DeletePlantCommand.ExecuteAsync(selectedPlant.Id); ClosePlantDetail();
+        }
+    }
+    private async Task HandleRemovePlant(Guid plantId, Guid shelfId) => await
+    ViewModel.RemovePlantFromShelfCommand.ExecuteAsync((plantId, shelfId));
     private bool showPlantSelector;
-    
-    private void HandleAddPlant(int pos) 
-    { 
-         // Register back handler
-        _activeBackHandler = async () => 
-        { 
-            ClosePlantSelector(); 
-            return true; 
+    private Guid? targetShelfForPlant;
+
+    private void HandleAddPlant(Guid shelfId)
+    {
+        targetShelfForPlant = shelfId;
+
+        // Register back handler
+        _activeBackHandler = async () =>
+        {
+            ClosePlantSelector();
+            return true;
         };
         BackButtonService.Register(_activeBackHandler);
-        
-         showPlantSelector = true;
+
+        showPlantSelector = true;
     }
 
-    private void ClosePlantSelector() 
+    private void ClosePlantSelector()
     {
         if (_activeBackHandler != null)
         {
@@ -466,14 +526,22 @@
             _activeBackHandler = null;
         }
         showPlantSelector = false;
+        targetShelfForPlant = null;
     }
 
     private async Task SelectPlantForBookshelf(UserPlant plant)
     {
-        // 0 implies append, or we could track specific position if needed
-        await ViewModel.PlacePlantInBookshelfAsync((plant.Id, "0"));
+        if (targetShelfForPlant.HasValue)
+        {
+            await ViewModel.AddPlantToShelfCommand.ExecuteAsync((plant.Id, targetShelfForPlant.Value));
+        }
         ClosePlantSelector();
     }
 
-    private string GetPlantStatusIcon(PlantStatus status) => status switch { PlantStatus.Healthy => "😊", PlantStatus.Thirsty => "😰", _ => "🌱" };
+    private string GetPlantStatusIcon(PlantStatus status) => status switch
+    {
+        PlantStatus.Healthy => "😊",
+        PlantStatus.Thirsty => "😰",
+        _ => "🌱"
+    };
 }
