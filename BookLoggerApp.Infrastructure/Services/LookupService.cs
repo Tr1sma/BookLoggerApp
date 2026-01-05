@@ -35,7 +35,8 @@ public class LookupService : ILookupService
             _logger?.LogInformation("Looking up book by ISBN: {ISBN}", isbn);
 
             // Query Google Books API by ISBN
-            var url = $"{GoogleBooksApiBaseUrl}?q=isbn:{isbn}";
+            // Fix: Use Uri.EscapeDataString to prevent parameter injection
+            var url = $"{GoogleBooksApiBaseUrl}?q=isbn:{Uri.EscapeDataString(isbn)}";
             var response = await _httpClient.GetAsync(url, ct);
 
             if (!response.IsSuccessStatusCode)
