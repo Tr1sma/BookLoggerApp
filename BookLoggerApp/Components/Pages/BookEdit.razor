@@ -4,9 +4,13 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Components.Shared
 @using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Core.Helpers
 @inject BookEditViewModel ViewModel
-@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject NavigationManager Navigation
 @inject IImageService ImageService
+@inject BookLoggerApp.Core.Services.Abstractions.IBookService BookService
+@inject BookLoggerApp.Core.Services.Abstractions.IStatsService StatsService
+@inject BookLoggerApp.Services.IScannerService ScannerService
 
 <PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? "Add Book" : "Edit Book") - LoveLit</PageTitle>
 
@@ -47,7 +51,7 @@
                         <input id="isbn" type="text" @bind="ViewModel.Book.ISBN" maxlength="13" placeholder="Enter ISBN-10 or ISBN-13" />
                         <button type="button"
                                 class="btn btn-success"
-                                @onclick="OpenBarcodeScanner">
+                                @onclick="ScanIsbnAsync">
                             📷 Scan
                         </button>
                         <button type="button"
@@ -224,6 +228,16 @@
                                         title="@color.Key">
                                 </button>
                             }
+                            
+                            <!-- Custom Color Picker -->
+                            <div class="custom-color-picker-container">
+                                <label class="custom-color-label" title="Custom Color">
+                                    <span class="spine-mode-icon">🎨</span>
+                                    <input type="color" 
+                                           value="@GetCustomColorValue()" 
+                                           @onchange="@(e => SetCustomSpineColor(e.Value?.ToString()))" />
+                                </label>
+                            </div>
                         </div>
                     </div>
                 }
@@ -246,12 +260,6 @@
     }
 </div>
 
-<!-- Barcode Scanner -->
-<IsbnBarcodeScanner
-    IsVisible="@_showScanner"
-    OnBarcodeScanned="HandleBarcodeScanned"
-    OnClose="CloseBarcodeScanner" />
-
 <!-- Book Completion Celebration -->
 <BookCompletionCelebration
     IsVisible="@ViewModel.ShowBookCompletionCelebration"
@@ -269,7 +277,6 @@
 @code {
     [Parameter] public Guid Id { get; set; }
 
-    private bool _showScanner = false;
     private string? _coverPreviewUrl;
 
     protected override async Task OnInitializedAsync()
@@ -424,47 +431,20 @@
         StateHasChanged();
     }
 
-    private void OpenBarcodeScanner()
+    private async Task ScanIsbnAsync()
     {
-        _showScanner = true;
-    }
-
-    private void CloseBarcodeScanner()
-    {
-        _showScanner = false;
-    }
-
-    private async Task HandleBarcodeScanned(string isbn)
-    {
-        if (ViewModel.Book != null)
+        var isbn = await ScannerService.ScanBarcodeAsync();
+        if (!string.IsNullOrEmpty(isbn))
         {
-            // Set the ISBN
             ViewModel.Book.ISBN = isbn;
-
-            // Close the scanner
-            _showScanner = false;
-
-            // Automatically trigger the lookup
-            await Task.Delay(100); // Small delay to ensure UI updates
             await HandleIsbnLookup();
         }
     }
 
-    private Dictionary<string, (string dark, string light)> GetSpineColors()
+
+    private IReadOnlyDictionary<string, (string dark, string light)> GetSpineColors()
     {
-        return new Dictionary<string, (string dark, string light)>
-        {
-            { "red", ("8B4513", "A0522D") },
-            { "blue", ("2C4A6B", "3A5F7D") },
-            { "green", ("3D5A3D", "4A6B4A") },
-            { "purple", ("5D4E6D", "6F5F7F") },
-            { "brown", ("4A3426", "5C452F") },
-            { "gold", ("8B7355", "A68968") },
-            { "burgundy", ("6B3240", "7D4450") },
-            { "teal", ("2C5F5F", "3A7373") },
-            { "navy", ("1C2E4A", "2A3F5F") },
-            { "olive", ("4A4A2C", "5C5C3A") }
-        };
+        return SpineColorHelper.Palette;
     }
 
     private void SetSpineColor(string color)
@@ -474,6 +454,24 @@
             ViewModel.Book.SpineColor = color;
             ViewModel.Book.UsesCoverAsSpine = false;
         }
+    }
+
+    private void SetCustomSpineColor(string? colorCode)
+    {
+        if (ViewModel.Book != null && !string.IsNullOrEmpty(colorCode))
+        {
+            ViewModel.Book.SpineColor = colorCode;
+            ViewModel.Book.UsesCoverAsSpine = false;
+        }
+    }
+
+    private string GetCustomColorValue()
+    {
+        if (ViewModel.Book?.SpineColor != null && ViewModel.Book.SpineColor.StartsWith("#"))
+        {
+            return ViewModel.Book.SpineColor;
+        }
+        return "#000000"; // Default
     }
 
     private void SetSpineMode(bool useCoverAsSpine)

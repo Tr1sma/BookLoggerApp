@@ -7,6 +7,7 @@ using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using ZXing.Net.Maui.Controls;
 
 public static class MauiProgram
 {
@@ -15,7 +16,8 @@ public static class MauiProgram
         System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Started ===");
 
         var builder = MauiApp.CreateBuilder();
-        builder.UseMauiApp<App>();
+        builder.UseMauiApp<App>()
+               .UseBarcodeReader();
         builder.Services.AddMauiBlazorWebView();
 
         // Configure platform-specific handlers
@@ -125,6 +127,7 @@ public static class MauiProgram
 
         // Register MAUI-specific services
         builder.Services.AddSingleton<BookLoggerApp.Services.IPermissionService, BookLoggerApp.Services.PermissionService>();
+        builder.Services.AddSingleton<BookLoggerApp.Services.IScannerService, BookLoggerApp.Services.ScannerService>();
     }
 
     private static void RegisterViewModels(MauiAppBuilder builder)
