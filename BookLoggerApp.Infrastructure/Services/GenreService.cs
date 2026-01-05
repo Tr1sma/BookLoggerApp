@@ -44,6 +44,7 @@ public class GenreService : IGenreService
     public async Task<Genre> AddAsync(Genre genre, CancellationToken ct = default)
     {
         var result = await _unitOfWork.Genres.AddAsync(genre, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
         // Invalidate cache when genres are modified
         _cache.Remove(CacheKey);
         return result;
@@ -52,6 +53,7 @@ public class GenreService : IGenreService
     public async Task UpdateAsync(Genre genre, CancellationToken ct = default)
     {
         await _unitOfWork.Genres.UpdateAsync(genre, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
         // Invalidate cache when genres are modified
         _cache.Remove(CacheKey);
     }
@@ -62,6 +64,7 @@ public class GenreService : IGenreService
         if (genre != null)
         {
             await _unitOfWork.Genres.DeleteAsync(genre, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
             // Invalidate cache when genres are modified
             _cache.Remove(CacheKey);
         }
@@ -81,6 +84,7 @@ public class GenreService : IGenreService
         };
 
         await _unitOfWork.BookGenres.AddAsync(bookGenre);
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task RemoveGenreFromBookAsync(Guid bookId, Guid genreId, CancellationToken ct = default)
@@ -89,6 +93,7 @@ public class GenreService : IGenreService
         if (bookGenre != null)
         {
             await _unitOfWork.BookGenres.DeleteAsync(bookGenre);
+            await _unitOfWork.SaveChangesAsync(ct);
         }
     }
 
