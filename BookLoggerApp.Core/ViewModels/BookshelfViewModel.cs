@@ -70,7 +70,7 @@ public partial class BookshelfViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             // 1. Fetch data
             var shelves = await _shelfService.GetAllShelvesAsync();

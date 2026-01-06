@@ -66,7 +66,7 @@ public partial class BookEditViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync(Guid? bookId)
     {
-        await ExecuteSafelyAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             AvailableGenres = (await _genreService.GetAllAsync()).ToList();
 

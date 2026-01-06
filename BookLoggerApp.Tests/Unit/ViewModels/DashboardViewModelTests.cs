@@ -18,6 +18,7 @@ public class DashboardViewModelTests
 
     public DashboardViewModelTests()
     {
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
         _bookService = Substitute.For<IBookService>();
         _progressService = Substitute.For<IProgressService>();
         _goalService = Substitute.For<IGoalService>();

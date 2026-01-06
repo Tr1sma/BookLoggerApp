@@ -17,6 +17,7 @@ public class StatsViewModelTests
 
     public StatsViewModelTests()
     {
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
         _statsService = Substitute.For<IStatsService>();
         _settingsProvider = Substitute.For<IAppSettingsProvider>();
         _plantService = Substitute.For<IPlantService>();
