@@ -10,15 +10,21 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IImportExportService _importExportService;
     private readonly IAppSettingsProvider _settingsProvider;
     private readonly IFileSaverService _fileSaverService;
+    private readonly IShareService _shareService;
+    private readonly IFilePickerService _filePickerService;
 
     public SettingsViewModel(
         IImportExportService importExportService, 
         IAppSettingsProvider settingsProvider,
-        IFileSaverService fileSaverService)
+        IFileSaverService fileSaverService,
+        IShareService shareService,
+        IFilePickerService filePickerService)
     {
         _importExportService = importExportService;
         _settingsProvider = settingsProvider;
         _fileSaverService = fileSaverService;
+        _shareService = shareService;
+        _filePickerService = filePickerService;
     }
 
     [ObservableProperty]
@@ -73,6 +79,38 @@ public partial class SettingsViewModel : ViewModelBase
         {
             await _importExportService.DeleteAllDataAsync();
         }, "Failed to delete data");
+    }
+
+    [RelayCommand]
+    public async Task BackupToCloudAsync()
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            // 1. Create ZIP Backup
+            var backupPath = await _importExportService.CreateBackupAsync();
+
+            // 2. Share File
+            await _shareService.ShareFileAsync("BookLogger Backup", backupPath, "application/zip");
+        }, "Failed to backup data");
+    }
+
+    [RelayCommand]
+    public async Task RestoreFromBackupAsync()
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            // 1. Pick File
+            var filePath = await _filePickerService.PickFileAsync("Select Backup File", ".zip");
+            
+            if (string.IsNullOrEmpty(filePath)) return; // User cancelled
+
+            // 2. Restore
+            await _importExportService.RestoreFromBackupAsync(filePath);
+
+            // 3. Reload settings/data
+             await LoadAsync();
+            
+        }, "Failed to restore backup");
     }
 }
 

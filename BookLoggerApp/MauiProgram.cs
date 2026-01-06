@@ -128,6 +128,8 @@ public static class MauiProgram
         // Register MAUI-specific services
         builder.Services.AddSingleton<BookLoggerApp.Services.IPermissionService, BookLoggerApp.Services.PermissionService>();
         builder.Services.AddSingleton<BookLoggerApp.Services.IScannerService, BookLoggerApp.Services.ScannerService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IShareService, BookLoggerApp.Services.ShareService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFilePickerService, BookLoggerApp.Services.FilePickerService>();
     }
 
     private static void RegisterViewModels(MauiAppBuilder builder)
