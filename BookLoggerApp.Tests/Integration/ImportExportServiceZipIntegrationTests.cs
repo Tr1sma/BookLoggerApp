@@ -49,7 +49,7 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
 
         public SqliteDbContextFactory(string dbPath)
         {
-            _connectionString = $"Data Source={dbPath}";
+            _connectionString = $"Data Source={dbPath};Pooling=false";
         }
 
         public AppDbContext CreateDbContext()
@@ -114,7 +114,6 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         using (var context = targetFactory.CreateDbContext())
         {
             context.Database.EnsureCreated();
-            // Verify empty
             context.Books.Count().Should().Be(0);
         }
 

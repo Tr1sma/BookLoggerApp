@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="lilyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#E1BEE7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9C27B0;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="lilyLeafGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#81C784;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#388E3C;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="potGradLily" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4A574;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Pot -->
+  <path d="M 65 150 L 72 185 L 128 185 L 135 150 Z" fill="url(#potGradLily)" stroke="#6B5638" stroke-width="2"/>
+  <ellipse cx="100" cy="150" rx="38" ry="11" fill="#A67C52" stroke="#6B5638" stroke-width="2"/>
+  
+  <!-- Soil -->
+  <ellipse cx="100" cy="150" rx="34" ry="7" fill="#5D4E37"/>
+  
+  <!-- Stems -->
+  <path d="M 100 150 Q 95 120 100 90" fill="none" stroke="#4CAF50" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 100 130 Q 80 125 70 135" fill="none" stroke="#4CAF50" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 100 130 Q 120 125 130 135" fill="none" stroke="#4CAF50" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Leaves -->
+  <ellipse cx="68" cy="140" rx="15" ry="8" fill="url(#lilyLeafGrad)" stroke="#2E7D32" stroke-width="1.5" transform="rotate(-20 68 140)"/>
+  <ellipse cx="132" cy="140" rx="15" ry="8" fill="url(#lilyLeafGrad)" stroke="#2E7D32" stroke-width="1.5" transform="rotate(20 132 140)"/>
+  
+  <!-- Lily petals -->
+  <ellipse cx="85" cy="75" rx="12" ry="20" fill="url(#lilyGrad)" stroke="#7B1FA2" stroke-width="1.5" transform="rotate(-30 85 75)"/>
+  <ellipse cx="115" cy="75" rx="12" ry="20" fill="url(#lilyGrad)" stroke="#7B1FA2" stroke-width="1.5" transform="rotate(30 115 75)"/>
+  <ellipse cx="100" cy="65" rx="10" ry="22" fill="url(#lilyGrad)" stroke="#7B1FA2" stroke-width="1.5"/>
+  <ellipse cx="90" cy="82" rx="10" ry="18" fill="url(#lilyGrad)" stroke="#7B1FA2" stroke-width="1.5" transform="rotate(-50 90 82)"/>
+  <ellipse cx="110" cy="82" rx="10" ry="18" fill="url(#lilyGrad)" stroke="#7B1FA2" stroke-width="1.5" transform="rotate(50 110 82)"/>
+  
+  <!-- Flower center -->
+  <circle cx="100" cy="80" r="8" fill="#FFD54F" stroke="#F9A825" stroke-width="1"/>
+  
+  <!-- Center details -->
+  <circle cx="97" cy="78" r="2" fill="#FF8F00"/>
+  <circle cx="103" cy="78" r="2" fill="#FF8F00"/>
+  <circle cx="100" cy="83" r="2" fill="#FF8F00"/>
+</svg>

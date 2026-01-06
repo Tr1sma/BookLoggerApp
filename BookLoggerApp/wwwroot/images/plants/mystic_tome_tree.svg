@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="mysticTrunkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#5D4037;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3E2723;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mysticLeafGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4DB6AC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00695C;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glowGrad" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#E1BEE7;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#7B1FA2;stop-opacity:0.3" />
+    </radialGradient>
+    <linearGradient id="potGradMystic" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4A574;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Magical glow background -->
+  <ellipse cx="100" cy="80" rx="60" ry="50" fill="url(#glowGrad)" opacity="0.4"/>
+  
+  <!-- Pot -->
+  <path d="M 60 160 L 68 192 L 132 192 L 140 160 Z" fill="url(#potGradMystic)" stroke="#6B5638" stroke-width="2"/>
+  <ellipse cx="100" cy="160" rx="42" ry="12" fill="#A67C52" stroke="#6B5638" stroke-width="2"/>
+  
+  <!-- Soil -->
+  <ellipse cx="100" cy="160" rx="38" ry="8" fill="#5D4E37"/>
+  
+  <!-- Trunk -->
+  <path d="M 100 160 Q 95 140 100 120 Q 105 100 100 80 Q 95 60 100 45" fill="none" stroke="url(#mysticTrunkGrad)" stroke-width="14" stroke-linecap="round"/>
+  
+  <!-- Branches -->
+  <path d="M 100 90 Q 70 85 55 70" fill="none" stroke="#5D4037" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 100 90 Q 130 85 145 70" fill="none" stroke="#5D4037" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 100 70 Q 80 55 70 45" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 100 70 Q 120 55 130 45" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Book-shaped leaves -->
+  <rect x="50" y="60" width="16" height="12" rx="2" fill="url(#mysticLeafGrad)" stroke="#004D40" stroke-width="1" transform="rotate(-15 58 66)"/>
+  <rect x="65" y="40" width="14" height="10" rx="2" fill="url(#mysticLeafGrad)" stroke="#004D40" stroke-width="1" transform="rotate(-10 72 45)"/>
+  <rect x="95" y="30" width="16" height="12" rx="2" fill="url(#mysticLeafGrad)" stroke="#004D40" stroke-width="1"/>
+  <rect x="120" y="40" width="14" height="10" rx="2" fill="url(#mysticLeafGrad)" stroke="#004D40" stroke-width="1" transform="rotate(10 127 45)"/>
+  <rect x="134" y="60" width="16" height="12" rx="2" fill="url(#mysticLeafGrad)" stroke="#004D40" stroke-width="1" transform="rotate(15 142 66)"/>
+  <rect x="140" y="75" width="12" height="9" rx="2" fill="url(#mysticLeafGrad)" stroke="#004D40" stroke-width="1" transform="rotate(20 146 79)"/>
+  <rect x="48" y="75" width="12" height="9" rx="2" fill="url(#mysticLeafGrad)" stroke="#004D40" stroke-width="1" transform="rotate(-20 54 79)"/>
+  
+  <!-- Magical sparkles -->
+  <circle cx="100" cy="25" r="4" fill="#E1BEE7" opacity="0.9"/>
+  <circle cx="45" cy="55" r="3" fill="#CE93D8" opacity="0.8"/>
+  <circle cx="155" cy="55" r="3" fill="#CE93D8" opacity="0.8"/>
+  <circle cx="75" cy="35" r="2.5" fill="#BA68C8" opacity="0.9"/>
+  <circle cx="125" cy="35" r="2.5" fill="#BA68C8" opacity="0.9"/>
+  <circle cx="60" cy="85" r="2" fill="#AB47BC" opacity="0.7"/>
+  <circle cx="140" cy="85" r="2" fill="#AB47BC" opacity="0.7"/>
+</svg>

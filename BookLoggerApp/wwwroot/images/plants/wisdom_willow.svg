@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="willowTrunkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8D6E63;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5D4037;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="willowLeafGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#AED581;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#689F38;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="potGradWillow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4A574;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Pot -->
+  <path d="M 60 155 L 68 190 L 132 190 L 140 155 Z" fill="url(#potGradWillow)" stroke="#6B5638" stroke-width="2"/>
+  <ellipse cx="100" cy="155" rx="42" ry="12" fill="#A67C52" stroke="#6B5638" stroke-width="2"/>
+  
+  <!-- Soil -->
+  <ellipse cx="100" cy="155" rx="38" ry="8" fill="#5D4E37"/>
+  
+  <!-- Trunk -->
+  <path d="M 100 155 Q 98 130 100 100 Q 102 80 100 60" fill="none" stroke="url(#willowTrunkGrad)" stroke-width="10" stroke-linecap="round"/>
+  <path d="M 100 155 Q 98 130 100 100 Q 102 80 100 60" fill="none" stroke="#5D4037" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Drooping branches with leaves -->
+  <path d="M 100 70 Q 60 65 45 100" fill="none" stroke="#8BC34A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 100 70 Q 55 70 40 110" fill="none" stroke="#8BC34A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 100 70 Q 65 75 50 120" fill="none" stroke="#7CB342" stroke-width="2" stroke-linecap="round"/>
+  
+  <path d="M 100 70 Q 140 65 155 100" fill="none" stroke="#8BC34A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 100 70 Q 145 70 160 110" fill="none" stroke="#8BC34A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 100 70 Q 135 75 150 120" fill="none" stroke="#7CB342" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Leaf clusters -->
+  <ellipse cx="45" cy="105" rx="6" ry="12" fill="url(#willowLeafGrad)" stroke="#558B2F" stroke-width="1" transform="rotate(20 45 105)"/>
+  <ellipse cx="40" cy="115" rx="5" ry="10" fill="url(#willowLeafGrad)" stroke="#558B2F" stroke-width="1" transform="rotate(25 40 115)"/>
+  <ellipse cx="50" cy="125" rx="5" ry="10" fill="url(#willowLeafGrad)" stroke="#558B2F" stroke-width="1" transform="rotate(15 50 125)"/>
+  
+  <ellipse cx="155" cy="105" rx="6" ry="12" fill="url(#willowLeafGrad)" stroke="#558B2F" stroke-width="1" transform="rotate(-20 155 105)"/>
+  <ellipse cx="160" cy="115" rx="5" ry="10" fill="url(#willowLeafGrad)" stroke="#558B2F" stroke-width="1" transform="rotate(-25 160 115)"/>
+  <ellipse cx="150" cy="125" rx="5" ry="10" fill="url(#willowLeafGrad)" stroke="#558B2F" stroke-width="1" transform="rotate(-15 150 125)"/>
+  
+  <!-- Wisdom sparkles -->
+  <circle cx="100" cy="55" r="3" fill="#FFD700" opacity="0.9"/>
+  <circle cx="55" cy="90" r="2" fill="#FFD700" opacity="0.7"/>
+  <circle cx="145" cy="90" r="2" fill="#FFD700" opacity="0.7"/>
+</svg>
