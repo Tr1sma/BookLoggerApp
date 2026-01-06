@@ -1,0 +1,4 @@
+## 2024-05-23 - Zip Slip Vulnerability in ImportExportService
+**Vulnerability:** The `RestoreFromBackupAsync` method used `ZipFile.ExtractToDirectory` without validating that the extracted file paths were contained within the destination directory. This could allow an attacker to write files outside the intended directory via a crafted zip archive containing `../` traversal sequences.
+**Learning:** Even if modern frameworks (like .NET 6+) offer some protection, explicit path validation ("Defense in Depth") is crucial for critical file operations. Always ensure the resolved full path starts with the intended target directory *and* includes a trailing separator to prevent partial path matching bypasses.
+**Prevention:** Replace convenient one-liners like `ExtractToDirectory` with manual iteration and validation loops when handling untrusted archives. Verify `!destinationPath.StartsWith(targetDir + Path.DirectorySeparatorChar)` before writing.
