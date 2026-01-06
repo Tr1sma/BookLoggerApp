@@ -16,6 +16,7 @@ public class ReadingViewModelTests
 
     public ReadingViewModelTests()
     {
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
         _progressService = Substitute.For<IProgressService>();
         _bookService = Substitute.For<IBookService>();
         _progressionService = Substitute.For<IProgressionService>();
