@@ -160,6 +160,27 @@ public partial class BookEditViewModel : ViewModelBase
                 }
             }
 
+            // Auto-select shelf if none selected
+            if (SelectedShelfIds.Count == 0 && AvailableShelves.Any())
+            {
+                // Try to find "Main Shelf" (case-insensitive)
+                var mainShelf = AvailableShelves.FirstOrDefault(s => s.Name.Equals("Main Shelf", StringComparison.OrdinalIgnoreCase));
+                
+                if (mainShelf != null)
+                {
+                    SelectedShelfIds.Add(mainShelf.Id);
+                }
+                else
+                {
+                    // Fallback to random shelf
+                    var randomShelf = AvailableShelves.OrderBy(_ => Guid.NewGuid()).FirstOrDefault();
+                    if (randomShelf != null)
+                    {
+                        SelectedShelfIds.Add(randomShelf.Id);
+                    }
+                }
+            }
+
             // Update genres
             if (Book.Id != Guid.Empty)
             {

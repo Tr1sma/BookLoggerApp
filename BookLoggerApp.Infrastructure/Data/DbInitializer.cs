@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.Infrastructure;
+using BookLoggerApp.Infrastructure.Data.SeedData;
 
 namespace BookLoggerApp.Infrastructure.Data;
 
@@ -44,8 +45,14 @@ public static class DbInitializer
             // Recalculate user level from TotalXp (fixes corrupted data)
             await RecalculateUserLevelAsync(scope.ServiceProvider, logger);
 
-            // Fix plant image paths
+            // Fix plant image paths (Existing logic) - We can keep it or let Sync handle it, 
+            // but the robust Sync below handles everything including images.
+            // However, FixPlantImagePathsAsync handles some legacy cleanup (removing leading slash). 
+            // Let's keep it for safety but run the sync AFTER to ensure stats are correct.
             await FixPlantImagePathsAsync(dbContext, logger);
+
+            // Robust Sync: Ensure all plant definitions exactly match code (Prod Fix)
+            await EnsurePlantDataSyncedAsync(dbContext, logger);
 
             // Validate seed data
             await ValidateSeedDataAsync(dbContext, logger);
@@ -192,6 +199,67 @@ public static class DbInitializer
         if (settingsCount == 0)
         {
             logger?.LogWarning("No AppSettings found in database. Seed data may not have been applied.");
+        }
+    }
+
+
+    private static async Task EnsurePlantDataSyncedAsync(AppDbContext context, ILogger? logger)
+    {
+        logger?.LogInformation("=== SYNCING PLANT DATA (PROD FIX) ===");
+        
+        var definedPlants = PlantSeedData.GetPlants().ToList();
+        var existingPlants = await context.PlantSpecies.ToDictionaryAsync(p => p.Id);
+        
+        bool hasChanges = false;
+        
+        foreach (var def in definedPlants)
+        {
+            if (existingPlants.TryGetValue(def.Id, out var existing))
+            {
+                // Update properties if changed
+                if (existing.UnlockLevel != def.UnlockLevel ||
+                    existing.BaseCost != def.BaseCost ||
+                    existing.GrowthRate != def.GrowthRate ||
+                    existing.XpBoostPercentage != def.XpBoostPercentage ||
+                    existing.MaxLevel != def.MaxLevel ||
+                    existing.WaterIntervalDays != def.WaterIntervalDays ||
+                    existing.ImagePath != def.ImagePath ||
+                    existing.Name != def.Name ||
+                    existing.Description != def.Description ||
+                    existing.IsAvailable != def.IsAvailable)
+                {
+                    logger?.LogInformation("Updating plant '{Name}' stats...", def.Name);
+                    
+                    existing.UnlockLevel = def.UnlockLevel;
+                    existing.BaseCost = def.BaseCost;
+                    existing.GrowthRate = def.GrowthRate;
+                    existing.XpBoostPercentage = def.XpBoostPercentage;
+                    existing.MaxLevel = def.MaxLevel;
+                    existing.WaterIntervalDays = def.WaterIntervalDays;
+                    existing.ImagePath = def.ImagePath;
+                    existing.Name = def.Name;
+                    existing.Description = def.Description;
+                    existing.IsAvailable = def.IsAvailable;
+                    
+                    hasChanges = true;
+                }
+            }
+            else
+            {
+                logger?.LogInformation("Adding missing plant '{Name}'...", def.Name);
+                context.PlantSpecies.Add(def);
+                hasChanges = true;
+            }
+        }
+        
+        if (hasChanges)
+        {
+            await context.SaveChangesAsync();
+            logger?.LogInformation("Plant data synced successfully.");
+        }
+        else
+        {
+            logger?.LogInformation("Plant data is already up to date.");
         }
     }
 }

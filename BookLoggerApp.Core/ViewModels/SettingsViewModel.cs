@@ -31,7 +31,7 @@ public partial class SettingsViewModel : ViewModelBase
     private AppSettings _settings = new();
 
     [ObservableProperty]
-    private string _appVersion = "0.4.11";
+    private string _appVersion = "0.5.01";
 
     [RelayCommand]
     public async Task LoadAsync()
