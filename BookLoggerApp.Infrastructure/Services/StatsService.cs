@@ -24,14 +24,17 @@ public class StatsService : IStatsService
 
     public async Task<int> GetTotalPagesReadAsync(CancellationToken ct = default)
     {
-        var completedBooks = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
-        return completedBooks.Where(b => b.PageCount.HasValue).Sum(b => b.PageCount!.Value);
+        // Optimized: Calculate sum in database to avoid loading all completed book entities.
+        // Direct context usage sanctioned for aggregation optimizations.
+        return await _unitOfWork.Context.Set<Book>()
+            .Where(b => b.Status == ReadingStatus.Completed && b.PageCount.HasValue)
+            .SumAsync(b => b.PageCount!.Value, ct);
     }
 
     public async Task<int> GetTotalMinutesReadAsync(CancellationToken ct = default)
     {
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
-        return allSessions.Sum(s => s.Minutes);
+        // Optimized: Use repository method for database-side aggregation.
+        return await _unitOfWork.ReadingSessions.GetTotalMinutesAsync(ct);
     }
 
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
