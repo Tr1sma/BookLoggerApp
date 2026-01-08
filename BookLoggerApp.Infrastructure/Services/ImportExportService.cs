@@ -417,8 +417,38 @@ public class ImportExportService : IImportExportService
 
             try
             {
-                // 1. Extract ZIP
-                ZipFile.ExtractToDirectory(backupPath, tempExtractDir);
+                // 1. Extract ZIP Securely (prevent Zip Slip)
+                using (var archive = ZipFile.OpenRead(backupPath))
+                {
+                    foreach (var entry in archive.Entries)
+                    {
+                        var destinationPath = Path.GetFullPath(Path.Combine(tempExtractDir, entry.FullName));
+                        var baseDir = Path.GetFullPath(tempExtractDir);
+
+                        // Ensure the destination path is within the base directory
+                        if (!destinationPath.StartsWith(baseDir + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+                        {
+                            throw new IOException($"Zip slip attempt detected: {entry.FullName}");
+                        }
+
+                        // Ensure target directory exists
+                        var dir = Path.GetDirectoryName(destinationPath);
+                        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                        {
+                            Directory.CreateDirectory(dir);
+                        }
+
+                        // Handle directory entries (entries ending with /)
+                        if (string.IsNullOrEmpty(entry.Name))
+                        {
+                            if (!Directory.Exists(destinationPath))
+                                Directory.CreateDirectory(destinationPath);
+                            continue;
+                        }
+
+                        entry.ExtractToFile(destinationPath, true);
+                    }
+                }
 
                 // 2. Validate Backup Content
                 var extractedDbPath = Path.Combine(tempExtractDir, "booklogger.db");
