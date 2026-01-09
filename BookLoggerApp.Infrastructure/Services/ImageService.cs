@@ -126,12 +126,30 @@ public class ImageService : IImageService
         {
             _logger?.LogInformation("Downloading image from URL: {Url}", url);
 
-            var response = await _httpClient.GetAsync(url, ct);
+            // Sentinel: Security enhancement - Use ResponseHeadersRead to inspect headers before downloading body
+            // This prevents downloading massive files (DoS risk) or wrong content types
+            var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
 
             if (!response.IsSuccessStatusCode)
             {
                 _logger?.LogWarning("Failed to download image from {Url}. Status: {StatusCode}",
                     url, response.StatusCode);
+                return null;
+            }
+
+            // Sentinel: Check Content-Length (Max 10MB)
+            if (response.Content.Headers.ContentLength > 10 * 1024 * 1024)
+            {
+                _logger?.LogWarning("Image too large ({Size} bytes) from {Url}",
+                    response.Content.Headers.ContentLength, url);
+                return null;
+            }
+
+            // Sentinel: Check Content-Type
+            var contentType = response.Content.Headers.ContentType?.MediaType;
+            if (string.IsNullOrEmpty(contentType) || !contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger?.LogWarning("Invalid content type ({Type}) from {Url}", contentType, url);
                 return null;
             }
 
