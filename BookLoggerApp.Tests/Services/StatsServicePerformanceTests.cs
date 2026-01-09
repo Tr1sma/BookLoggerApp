@@ -80,4 +80,43 @@ public class StatsServicePerformanceTests : IDisposable
         // Assert
         totalPages.Should().Be(300);
     }
+
+    [Fact]
+    public async Task GetBooksCompletedInYearAsync_ShouldCountDatabaseSide_AndBeCorrect()
+    {
+        // Arrange
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Completed Last Year",
+            Status = ReadingStatus.Completed,
+            DateCompleted = new DateTime(2023, 1, 1)
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Completed This Year 1",
+            Status = ReadingStatus.Completed,
+            DateCompleted = new DateTime(2024, 1, 1)
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Completed This Year 2",
+            Status = ReadingStatus.Completed,
+            DateCompleted = new DateTime(2024, 6, 1)
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Reading",
+            Status = ReadingStatus.Reading,
+            DateCompleted = new DateTime(2024, 1, 1) // Should be ignored because not completed status (logic check)
+        });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var count2024 = await _service.GetBooksCompletedInYearAsync(2024);
+        var count2023 = await _service.GetBooksCompletedInYearAsync(2023);
+
+        // Assert
+        count2024.Should().Be(2);
+        count2023.Should().Be(1);
+    }
 }
