@@ -123,8 +123,11 @@ public class StatsService : IStatsService
 
     public async Task<int> GetBooksCompletedInYearAsync(int year, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
-        return books.Count(b => b.DateCompleted.HasValue && b.DateCompleted.Value.Year == year);
+        // Optimized: Count directly in database to avoid loading all completed books.
+        return await _unitOfWork.Context.Set<Book>()
+            .CountAsync(b => b.Status == ReadingStatus.Completed &&
+                             b.DateCompleted.HasValue &&
+                             b.DateCompleted.Value.Year == year, ct);
     }
 
     public async Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default)
