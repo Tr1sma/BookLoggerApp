@@ -18,6 +18,7 @@ public class BookEditViewModelTests
 
     public BookEditViewModelTests()
     {
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
         _bookService = Substitute.For<IBookService>();
         _genreService = Substitute.For<IGenreService>();
         _lookupService = Substitute.For<ILookupService>();

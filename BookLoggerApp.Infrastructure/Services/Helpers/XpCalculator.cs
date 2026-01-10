@@ -29,8 +29,9 @@ public static class XpCalculator
 
     public static int GetXpForLevel(int level)
     {
-        // Exponential growth: Level 1 = 100 XP, Level 2 = 250 XP, Level 3 = 500 XP, etc.
-        return (int)(100 * Math.Pow(1.5, level - 1));
+        // Quadratic growth: Level 1 = 100 XP, Level 2 = 400 XP, Level 10 = 10,000 XP
+        // Formula: 100 * Level^2
+        return 100 * level * level;
     }
 
     public static int CalculateLevelFromXp(int totalXp)

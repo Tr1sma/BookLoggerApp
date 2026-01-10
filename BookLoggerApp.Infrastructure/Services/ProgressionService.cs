@@ -143,12 +143,12 @@ public class ProgressionService : IProgressionService
             return null;
 
         // Calculate coins awarded (sum of all levels gained)
-        // Formula: Level × 50 coins per level
-        // Example: Level 3 → Level 5 = (4 × 50) + (5 × 50) = 200 + 250 = 450 coins
+        // Formula: Level × 20 coins per level
+        // Example: Level 3 → Level 5 = (4 × 20) + (5 × 20) = 80 + 100 = 180 coins
         int coinsAwarded = 0;
         for (int level = oldLevel + 1; level <= newLevel; level++)
         {
-            coinsAwarded += level * 50;
+            coinsAwarded += level * 20;
         }
 
         int newCoins;

@@ -34,7 +34,7 @@ public partial class UserProgressViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             var settings = await _settingsProvider.GetSettingsAsync();
 

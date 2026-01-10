@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Infrastructure.Data.SeedData;
 
 namespace BookLoggerApp.Infrastructure.Data;
 
@@ -86,57 +87,7 @@ public class AppDbContext : DbContext
         );
 
         // Seed PlantSpecies
-        var plantIds = new
-        {
-            StarterSprout = Guid.Parse("10000000-0000-0000-0000-000000000001"),
-            BookwormFern = Guid.Parse("10000000-0000-0000-0000-000000000002"),
-            ReadingCactus = Guid.Parse("10000000-0000-0000-0000-000000000003")
-        };
-
-        modelBuilder.Entity<PlantSpecies>().HasData(
-            new PlantSpecies
-            {
-                Id = plantIds.StarterSprout,
-                Name = "Starter Sprout",
-                Description = "A simple plant for beginners. Grows quickly!",
-                ImagePath = "images/plants/starter_sprout.svg",
-                MaxLevel = 10,
-                WaterIntervalDays = 3,
-                GrowthRate = 1.2,
-                XpBoostPercentage = 0.05m, // 5% base boost, +0.5% per level (max 10% at level 10)
-                BaseCost = 500,
-                UnlockLevel = 1,
-                IsAvailable = true
-            },
-            new PlantSpecies
-            {
-                Id = plantIds.BookwormFern,
-                Name = "Bookworm Fern",
-                Description = "A lush fern for dedicated readers.",
-                ImagePath = "images/plants/bookworm_fern.svg",
-                MaxLevel = 12,
-                WaterIntervalDays = 4,
-                GrowthRate = 1.0,
-                XpBoostPercentage = 0.08m, // 8% base boost, +0.5% per level (max 14% at level 12)
-                BaseCost = 750,
-                UnlockLevel = 5,
-                IsAvailable = true
-            },
-            new PlantSpecies
-            {
-                Id = plantIds.ReadingCactus,
-                Name = "Reading Cactus",
-                Description = "Low maintenance, high rewards.",
-                ImagePath = "images/plants/reading_cactus.svg",
-                MaxLevel = 15,
-                WaterIntervalDays = 7,
-                GrowthRate = 0.8,
-                XpBoostPercentage = 0.10m, // 10% base boost, +1% per level (max 25% at level 15)
-                BaseCost = 1000,
-                UnlockLevel = 10,
-                IsAvailable = true
-            }
-        );
+        modelBuilder.Entity<PlantSpecies>().HasData(PlantSeedData.GetPlants());
 
         // Seed AppSettings (default)
         modelBuilder.Entity<AppSettings>().HasData(

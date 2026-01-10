@@ -62,7 +62,7 @@ public partial class ReadingViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync(Guid sessionId)
     {
-        await ExecuteSafelyAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             // Load existing session or create new one
             var sessions = await _progressService.GetSessionsByBookAsync(sessionId);
@@ -96,7 +96,7 @@ public partial class ReadingViewModel : ViewModelBase
     [RelayCommand]
     public async Task StartAsync(Guid bookId)
     {
-        await ExecuteSafelyAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             Session = await _progressService.StartSessionAsync(bookId);
             Book = await _bookService.GetByIdAsync(bookId);

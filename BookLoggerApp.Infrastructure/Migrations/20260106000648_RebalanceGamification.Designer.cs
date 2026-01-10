@@ -3,6 +3,7 @@ using System;
 using BookLoggerApp.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,12 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookLoggerApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260106000648_RebalanceGamification")]
+    partial class RebalanceGamification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Annotation", b =>
                 {
@@ -514,20 +517,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("10000000-0000-0000-0000-000000000004"),
-                            BaseCost = 600,
-                            Description = "A growing seedling nurtured by stories.",
-                            GrowthRate = 1.1000000000000001,
-                            ImagePath = "images/plants/story_seedling.svg",
-                            IsAvailable = true,
-                            MaxLevel = 11,
-                            Name = "Story Seedling",
-                            UnlockLevel = 3,
-                            WaterIntervalDays = 4,
-                            XpBoostPercentage = 0.06m
-                        },
-                        new
-                        {
                             Id = new Guid("10000000-0000-0000-0000-000000000002"),
                             BaseCost = 750,
                             Description = "A lush fern for dedicated readers.",
@@ -536,23 +525,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             MaxLevel = 12,
                             Name = "Bookworm Fern",
-                            UnlockLevel = 8,
+                            UnlockLevel = 10,
                             WaterIntervalDays = 4,
                             XpBoostPercentage = 0.08m
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000005"),
-                            BaseCost = 850,
-                            Description = "A beautiful lily that blooms with every chapter.",
-                            GrowthRate = 0.90000000000000002,
-                            ImagePath = "images/plants/literary_lily.svg",
-                            IsAvailable = true,
-                            MaxLevel = 14,
-                            Name = "Literary Lily",
-                            UnlockLevel = 14,
-                            WaterIntervalDays = 5,
-                            XpBoostPercentage = 0.09m
                         },
                         new
                         {
@@ -564,51 +539,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             MaxLevel = 15,
                             Name = "Reading Cactus",
-                            UnlockLevel = 21,
+                            UnlockLevel = 20,
                             WaterIntervalDays = 7,
                             XpBoostPercentage = 0.10m
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000006"),
-                            BaseCost = 1500,
-                            Description = "A wise tree that stands the test of time.",
-                            GrowthRate = 0.69999999999999996,
-                            ImagePath = "images/plants/wisdom_willow.svg",
-                            IsAvailable = true,
-                            MaxLevel = 18,
-                            Name = "Wisdom Willow",
-                            UnlockLevel = 28,
-                            WaterIntervalDays = 8,
-                            XpBoostPercentage = 0.12m
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000007"),
-                            BaseCost = 2500,
-                            Description = "An ancient bonsai radiating knowledge.",
-                            GrowthRate = 0.59999999999999998,
-                            ImagePath = "images/plants/ancient_bonsai.svg",
-                            IsAvailable = true,
-                            MaxLevel = 20,
-                            Name = "Ancient Knowledge Bonsai",
-                            UnlockLevel = 31,
-                            WaterIntervalDays = 10,
-                            XpBoostPercentage = 0.15m
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000008"),
-                            BaseCost = 5000,
-                            Description = "A legendary tree with leaves like parchment.",
-                            GrowthRate = 0.5,
-                            ImagePath = "images/plants/mystic_tome_tree.svg",
-                            IsAvailable = true,
-                            MaxLevel = 25,
-                            Name = "Mystic Tome Tree",
-                            UnlockLevel = 32,
-                            WaterIntervalDays = 14,
-                            XpBoostPercentage = 0.20m
                         });
                 });
 

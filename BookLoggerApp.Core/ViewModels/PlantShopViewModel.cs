@@ -43,7 +43,7 @@ public partial class PlantShopViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             // Load user stats
             UserCoins = await _settingsProvider.GetUserCoinsAsync();
