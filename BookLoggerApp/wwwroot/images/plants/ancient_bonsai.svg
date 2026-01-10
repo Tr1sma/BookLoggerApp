@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bonsaiTrunkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6D4C41;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3E2723;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bonsaiLeafGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2E7D32;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1B5E20;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="potGradBonsai" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#78909C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#455A64;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Decorative pot (different style for bonsai) -->
+  <rect x="55" y="160" width="90" height="30" rx="3" fill="url(#potGradBonsai)" stroke="#37474F" stroke-width="2"/>
+  <rect x="50" y="155" width="100" height="10" rx="2" fill="#607D8B" stroke="#37474F" stroke-width="1.5"/>
+  
+  <!-- Pot decorations -->
+  <line x1="70" y1="165" x2="70" y2="185" stroke="#37474F" stroke-width="1" opacity="0.5"/>
+  <line x1="100" y1="165" x2="100" y2="185" stroke="#37474F" stroke-width="1" opacity="0.5"/>
+  <line x1="130" y1="165" x2="130" y2="185" stroke="#37474F" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Soil/Moss -->
+  <ellipse cx="100" cy="158" rx="45" ry="6" fill="#4CAF50"/>
+  <circle cx="85" cy="157" r="3" fill="#66BB6A"/>
+  <circle cx="115" cy="157" r="3" fill="#66BB6A"/>
+  
+  <!-- Trunk - curved bonsai style -->
+  <path d="M 100 155 Q 85 140 90 120 Q 95 100 85 85 Q 80 75 90 65" fill="none" stroke="url(#bonsaiTrunkGrad)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 90 100 Q 105 95 115 85" fill="none" stroke="url(#bonsaiTrunkGrad)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 85 85 Q 70 80 60 75" fill="none" stroke="url(#bonsaiTrunkGrad)" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Foliage clouds -->
+  <ellipse cx="90" cy="55" rx="25" ry="18" fill="url(#bonsaiLeafGrad)" stroke="#1B5E20" stroke-width="1.5"/>
+  <ellipse cx="75" cy="65" rx="18" ry="14" fill="url(#bonsaiLeafGrad)" stroke="#1B5E20" stroke-width="1.5"/>
+  <ellipse cx="60" cy="70" rx="15" ry="12" fill="url(#bonsaiLeafGrad)" stroke="#1B5E20" stroke-width="1.5"/>
+  
+  <ellipse cx="115" cy="75" rx="20" ry="15" fill="url(#bonsaiLeafGrad)" stroke="#1B5E20" stroke-width="1.5"/>
+  <ellipse cx="130" cy="80" rx="15" ry="12" fill="url(#bonsaiLeafGrad)" stroke="#1B5E20" stroke-width="1.5"/>
+  
+  <!-- Ancient wisdom symbols -->
+  <circle cx="105" cy="50" r="3" fill="#FFD700" opacity="0.9"/>
+  <circle cx="55" cy="65" r="2.5" fill="#FFD700" opacity="0.8"/>
+  <circle cx="140" cy="75" r="2" fill="#FFD700" opacity="0.7"/>
+</svg>

@@ -9,14 +9,11 @@ namespace BookLoggerApp.Core.ViewModels;
 /// <summary>
 /// VM for listing and adding books.
 /// </summary>
-public partial class BookListViewModel : ObservableObject
+public partial class BookListViewModel : ViewModelBase
 {
     private readonly IBookService _books;
 
     public ObservableCollection<Book> Items { get; } = new();
-
-    [ObservableProperty]
-    private bool _isBusy;
 
     [ObservableProperty]
     private string _newTitle = string.Empty;
@@ -32,18 +29,12 @@ public partial class BookListViewModel : ObservableObject
     [RelayCommand]
     public async Task LoadAsync()
     {
-        if (IsBusy) return;
-        try
+        await ExecuteSafelyWithDbAsync(async () =>
         {
-            IsBusy = true;
             Items.Clear();
             var all = await _books.GetAllAsync();
             foreach (var b in all) Items.Add(b);
-        }
-        finally
-        {
-            IsBusy = false;
-        }
+        }, "Failed to load books");
     }
 
     [RelayCommand(CanExecute = nameof(CanAdd))]

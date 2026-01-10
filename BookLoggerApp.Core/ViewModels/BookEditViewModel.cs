@@ -66,7 +66,7 @@ public partial class BookEditViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync(Guid? bookId)
     {
-        await ExecuteSafelyAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             AvailableGenres = (await _genreService.GetAllAsync()).ToList();
 
@@ -157,6 +157,27 @@ public partial class BookEditViewModel : ViewModelBase
                     // Book is being marked as completed - use CompleteBookAsync for XP and side effects
                     await _bookService.CompleteBookAsync(Book.Id);
                     ShowBookCompletionCelebration = true;
+                }
+            }
+
+            // Auto-select shelf if none selected
+            if (SelectedShelfIds.Count == 0 && AvailableShelves.Any())
+            {
+                // Try to find "Main Shelf" (case-insensitive)
+                var mainShelf = AvailableShelves.FirstOrDefault(s => s.Name.Equals("Main Shelf", StringComparison.OrdinalIgnoreCase));
+                
+                if (mainShelf != null)
+                {
+                    SelectedShelfIds.Add(mainShelf.Id);
+                }
+                else
+                {
+                    // Fallback to random shelf
+                    var randomShelf = AvailableShelves.OrderBy(_ => Guid.NewGuid()).FirstOrDefault();
+                    if (randomShelf != null)
+                    {
+                        SelectedShelfIds.Add(randomShelf.Id);
+                    }
                 }
             }
 

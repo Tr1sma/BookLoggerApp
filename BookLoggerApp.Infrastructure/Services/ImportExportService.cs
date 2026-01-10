@@ -295,8 +295,10 @@ public class ImportExportService : IImportExportService
 
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-            // Get the database file path
-            var dbPath = context.Database.GetConnectionString()?.Replace("Data Source=", "");
+            // Get the database file path safely
+            var connectionString = context.Database.GetConnectionString();
+            var builder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
+            var dbPath = builder.DataSource;
 
             if (string.IsNullOrWhiteSpace(dbPath) || !_fileSystem.FileExists(dbPath))
             {
@@ -310,10 +312,12 @@ public class ImportExportService : IImportExportService
             try
             {
                 // 1. Copy Database
-                // We need to close connection or ensure WAL is checkpointed ideally, 
-                // but for SQLite simple copy usually works if file system allows read sharing.
-                // However, better safely:
+                // Using File.Copy since we disabled pooling in the test, so file should be unlocked and consistent.
                 var destDbPath = _fileSystem.CombinePath(tempBackupDir, "booklogger.db");
+                
+                // Optional: Checkpoint to be super safe (though Dispose should have handled it)
+                try { await context.Database.ExecuteSqlRawAsync("PRAGMA wal_checkpoint(FULL);", ct); } catch { }
+                
                 _fileSystem.CopyFile(dbPath, destDbPath, overwrite: true);
 
                 // 2. Copy Covers
@@ -459,8 +463,11 @@ public class ImportExportService : IImportExportService
 
                 await using var context = await _contextFactory.CreateDbContextAsync(ct);
                 
-                // Get current DB path
-                var currentDbPath = context.Database.GetConnectionString()?.Replace("Data Source=", "");
+                // Get current DB path safeley
+                var connectionString = context.Database.GetConnectionString();
+                var builder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
+                var currentDbPath = builder.DataSource;
+                
                 if (string.IsNullOrWhiteSpace(currentDbPath)) throw new InvalidOperationException("Current database path not found");
 
                 // 3. Close Connections & Restore DB

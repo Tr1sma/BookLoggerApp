@@ -36,7 +36,7 @@ public partial class GoalsViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             var active = await _goalService.GetActiveGoalsAsync();
             ActiveGoals = active.ToList();

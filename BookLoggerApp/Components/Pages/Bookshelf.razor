@@ -68,13 +68,12 @@
         <div class="search-results-label">Search Results: @ViewModel.Books.Count book(s)</div>
         <div class="book-grid">
             <div class="shelf-row">
-                @foreach (var book in ViewModel.Books)
-                {
+                <Virtualize Items="@ViewModel.Books" Context="book" OverscanCount="5">
                     <div class="shelf-slot">
                         <BookCard Book="@book" IsInBookshelf="true" IsDraggable="true" OnClick="() => HandleBookClick(book)"
                             OnDragStart="() => HandleDragStartItem(book.Id)" OnDelete="() => HandleDeleteBook(book.Id)" />
                     </div>
-                }
+                </Virtualize>
             </div>
         </div>
     }

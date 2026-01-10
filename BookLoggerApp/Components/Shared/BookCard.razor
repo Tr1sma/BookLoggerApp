@@ -1,11 +1,14 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IImageService ImageService
 
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+
 <div class="book-card @(IsInBookshelf ? "in-bookshelf-book" : "compact") @(IsInBookshelf ? "" : "")"
      draggable="@(IsDraggable ? "true" : "false")"
 @onclick="HandleClick"
 @ondragstart="HandleDragStartInternal"
 @ondragend="HandleDragEnd">
-    <div class="@(IsInBookshelf ? "book-cover-wrapper" : "book-cover-thumbnail")" style="@GetSpineStyle()">
+    <div @ref="_imageContainer" class="@(IsInBookshelf ? "book-cover-wrapper" : "book-cover-thumbnail")" style="@GetSpineStyle()">
         @if (!string.IsNullOrEmpty(_coverImageDataUrl) && (!IsInBookshelf || Book.UsesCoverAsSpine))
         {
                 <img src="@_coverImageDataUrl"
@@ -84,6 +87,27 @@
     private bool _isDragging = false;
     private string? _coverImageDataUrl;
     private Guid _lastBookId;
+    
+    // Lazy loading
+    private ElementReference _imageContainer;
+    private DotNetObjectReference<BookCard>? _dotNetHelper;
+    private bool _isImageLoaded = false;
+    private bool _observerRegistered = false;
+
+    protected override void OnInitialized()
+    {
+        // Don't auto-load image here anymore. Wait for observer.
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && ! _observerRegistered)
+        {
+            _dotNetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("lazyLoading.observe", _imageContainer, _dotNetHelper);
+            _observerRegistered = true;
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -91,8 +115,40 @@
         if (Book != null && Book.Id != _lastBookId)
         {
             _lastBookId = Book.Id;
-            await LoadCoverImageAsync();
+            // Reset state for new book
+            _isImageLoaded = false;
+            _coverImageDataUrl = null;
+            
+            // If we already have an observer, we might need to re-trigger or simpler: just wait for scroll.
+            // But if the element is already in view, the observer might not fire again if we don't reset it.
+            // Actually, for a recycled component (virtualization), the element ref stays same but content changes.
+            // But here we are NOT using virtualization for the shelf slots yet (grid), only maybe searching.
+            // Safest: if we already fired, we might need to check visibility again? 
+            // In Blazor, if parameters change, we might want to attempt load if we were already loaded?
+            // Let's rely on the observer. If the ID changes, we reset _isImageLoaded.
+            // If the element is currently visible, we might want to re-force load.
+            // For now, let's just clear and wait for observer callback (or manual re-observe if needed).
+            
+            // Re-observe if we swapped books?
+             if (_observerRegistered && _dotNetHelper != null)
+             {
+                 // Small delay to ensure render info is up to date?
+                 // Actually, standard IntersectionObserver continues observing the element.
+                 // But we unobserved it in JS after trigger!
+                 // So we MUST re-observe.
+                 await JSRuntime.InvokeVoidAsync("lazyLoading.observe", _imageContainer, _dotNetHelper);
+             }
         }
+    }
+
+    [JSInvokable]
+    public async Task LoadImage()
+    {
+        if (_isImageLoaded) return;
+
+        await LoadCoverImageAsync();
+        _isImageLoaded = true;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadCoverImageAsync()
@@ -121,6 +177,7 @@
                 return;
 
             // Read the file and convert to Base64
+            // Optimization: if it is very large, maybe resize? (Future todo)
             var imageBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
             var base64 = Convert.ToBase64String(imageBytes);
 
@@ -140,12 +197,12 @@
 
     private string GetSpineStyle()
     {
-        // If UsesCoverAsSpine is true and we have a cover image, use it as background
-        if (Book.UsesCoverAsSpine && !string.IsNullOrEmpty(_coverImageDataUrl))
+        // If lazy loaded image is ready (and using cover as spine)
+        if (_isImageLoaded && Book.UsesCoverAsSpine && !string.IsNullOrEmpty(_coverImageDataUrl))
         {
             return $"background-image: url('{_coverImageDataUrl}'); background-size: cover; background-position: center;";
         }
-
+        
         // Use centralized helper for colors
         var (dark, light) = BookLoggerApp.Core.Helpers.SpineColorHelper.GetColors(Book.SpineColor, Book.Id);
         return $"background: linear-gradient(to right, #{dark}, #{light}, #{dark});";
@@ -197,6 +254,23 @@
     private async Task HandleDelete()
     {
         await OnDelete.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try 
+        {
+            if (_observerRegistered)
+            {
+                await JSRuntime.InvokeVoidAsync("lazyLoading.unobserve", _imageContainer);
+            }
+            _dotNetHelper?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            // Ignore disposal errors (e.g. if JS runtime is gone)
+            System.Diagnostics.Debug.WriteLine($"Error disposing BookCard: {ex.Message}");
+        }
     }
 }
 

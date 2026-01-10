@@ -114,7 +114,7 @@ public partial class StatsViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             TotalBooksRead = await _statsService.GetTotalBooksReadAsync();
             TotalPagesRead = await _statsService.GetTotalPagesReadAsync();
