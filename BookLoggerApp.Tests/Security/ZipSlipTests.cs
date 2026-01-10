@@ -1,4 +1,6 @@
 using System.IO.Compression;
+
+using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Services;
@@ -19,6 +21,36 @@ public class MockFileSystem : IFileSystem
     public void CreateDirectory(string path) { }
     public void CopyFile(string source, string dest, bool overwrite) { }
     public string CombinePath(params string[] paths) => Path.Combine(paths);
+
+    public Task<string> ReadAllTextAsync(string path, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task WriteAllTextAsync(string path, string content, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<byte[]> ReadAllBytesAsync(string path, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task WriteAllBytesAsync(string path, byte[] content, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void DeleteFile(string path)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Stream OpenWrite(string path)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 /// <summary>
@@ -26,10 +58,47 @@ public class MockFileSystem : IFileSystem
 /// </summary>
 public class MockAppSettingsProvider : IAppSettingsProvider
 {
+    public event EventHandler? ProgressionChanged;
+
     public AppSettings GetSettings() => new AppSettings();
     public Task<AppSettings> GetSettingsAsync(CancellationToken ct = default) => Task.FromResult(new AppSettings());
     public Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default) => Task.CompletedTask;
     public void InvalidateCache() { }
+
+    Task<AppSettings> IAppSettingsProvider.GetSettingsAsync(CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetUserCoinsAsync(CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetUserLevelAsync(CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SpendCoinsAsync(int amount, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task AddCoinsAsync(int amount, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task IncrementPlantsPurchasedAsync(CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class ZipSlipTests
