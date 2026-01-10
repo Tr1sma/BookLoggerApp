@@ -8,12 +8,22 @@ namespace BookLoggerApp.Infrastructure.Services;
 /// </summary>
 public class ImageService : IImageService
 {
+    private const long MaxImageSize = 10 * 1024 * 1024; // 10MB
+    private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "image/bmp"
+    };
+
     private readonly string _imagesDirectory;
     private readonly HttpClient _httpClient;
     private readonly ILogger<ImageService>? _logger;
     private readonly IFileSystem _fileSystem;
 
-    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null)
+    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null, HttpClient? httpClient = null)
     {
         _fileSystem = fileSystem;
         _logger = logger;
@@ -26,7 +36,7 @@ public class ImageService : IImageService
         _fileSystem.CreateDirectory(_imagesDirectory);
 
         // Initialize HttpClient for downloading images
-        _httpClient = new HttpClient
+        _httpClient = httpClient ?? new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(30)
         };
@@ -126,7 +136,8 @@ public class ImageService : IImageService
         {
             _logger?.LogInformation("Downloading image from URL: {Url}", url);
 
-            var response = await _httpClient.GetAsync(url, ct);
+            // Sentinel: Use ResponseHeadersRead to validate headers before downloading body
+            using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -135,8 +146,44 @@ public class ImageService : IImageService
                 return null;
             }
 
-            var stream = await response.Content.ReadAsStreamAsync(ct);
-            return stream;
+            // Sentinel: Validate Content-Type
+            var contentType = response.Content.Headers.ContentType?.MediaType;
+            if (string.IsNullOrEmpty(contentType) || !AllowedContentTypes.Contains(contentType))
+            {
+                _logger?.LogWarning("Rejected image download from {Url} due to invalid Content-Type: {ContentType}", url, contentType);
+                return null;
+            }
+
+            // Sentinel: Validate Content-Length if present
+            if (response.Content.Headers.ContentLength.HasValue)
+            {
+                if (response.Content.Headers.ContentLength.Value > MaxImageSize)
+                {
+                    _logger?.LogWarning("Rejected image download from {Url} due to size: {Size} bytes", url, response.Content.Headers.ContentLength.Value);
+                    return null;
+                }
+            }
+
+            // Sentinel: Read stream with size limit
+            using var networkStream = await response.Content.ReadAsStreamAsync(ct);
+            var memoryStream = new MemoryStream();
+
+            var buffer = new byte[8192];
+            long totalBytesRead = 0;
+            int bytesRead;
+            while ((bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+            {
+                totalBytesRead += bytesRead;
+                if (totalBytesRead > MaxImageSize)
+                {
+                    _logger?.LogWarning("Rejected image download from {Url} because it exceeded max size while reading", url);
+                    return null;
+                }
+                await memoryStream.WriteAsync(buffer, 0, bytesRead, ct);
+            }
+
+            memoryStream.Position = 0;
+            return memoryStream;
         }
         catch (Exception ex)
         {
