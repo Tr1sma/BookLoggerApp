@@ -123,8 +123,11 @@ public class StatsService : IStatsService
 
     public async Task<int> GetBooksCompletedInYearAsync(int year, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
-        return books.Count(b => b.DateCompleted.HasValue && b.DateCompleted.Value.Year == year);
+        // Optimized: Calculate count in database to avoid loading all completed books.
+        return await _unitOfWork.Context.Set<Book>()
+            .AsNoTracking()
+            .Where(b => b.Status == ReadingStatus.Completed && b.DateCompleted.HasValue && b.DateCompleted.Value.Year == year)
+            .CountAsync(ct);
     }
 
     public async Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default)
@@ -181,21 +184,36 @@ public class StatsService : IStatsService
 
     public async Task<double> GetAverageRatingByCategoryAsync(RatingCategory category, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
     {
-        var books = await GetFilteredBooksAsync(startDate, endDate, ct);
+        // Optimized: Calculate average in database to avoid loading all completed books.
+        var query = _unitOfWork.Context.Set<Book>()
+            .AsNoTracking()
+            .Where(b => b.Status == ReadingStatus.Completed);
 
-        var ratings = category switch
+        if (startDate.HasValue)
         {
-            RatingCategory.Characters => books.Where(b => b.CharactersRating.HasValue).Select(b => b.CharactersRating!.Value),
-            RatingCategory.Plot => books.Where(b => b.PlotRating.HasValue).Select(b => b.PlotRating!.Value),
-            RatingCategory.WritingStyle => books.Where(b => b.WritingStyleRating.HasValue).Select(b => b.WritingStyleRating!.Value),
-            RatingCategory.SpiceLevel => books.Where(b => b.SpiceLevelRating.HasValue).Select(b => b.SpiceLevelRating!.Value),
-            RatingCategory.Pacing => books.Where(b => b.PacingRating.HasValue).Select(b => b.PacingRating!.Value),
-            RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).Select(b => b.WorldBuildingRating!.Value),
-            _ => Enumerable.Empty<int>()
+            query = query.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value <= endDate.Value);
+        }
+
+        IQueryable<int?> ratingQuery = category switch
+        {
+            RatingCategory.Characters => query.Select(b => b.CharactersRating),
+            RatingCategory.Plot => query.Select(b => b.PlotRating),
+            RatingCategory.WritingStyle => query.Select(b => b.WritingStyleRating),
+            RatingCategory.SpiceLevel => query.Select(b => b.SpiceLevelRating),
+            RatingCategory.Pacing => query.Select(b => b.PacingRating),
+            RatingCategory.WorldBuilding => query.Select(b => b.WorldBuildingRating),
+            _ => null
         };
 
-        var ratingList = ratings.ToList();
-        return ratingList.Any() ? ratingList.Average() : 0;
+        if (ratingQuery == null)
+            return 0;
+
+        return (await ratingQuery.AverageAsync(ct)) ?? 0;
     }
 
     public async Task<Dictionary<RatingCategory, double>> GetAllAverageRatingsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
@@ -256,23 +274,4 @@ public class StatsService : IStatsService
             .ToList();
     }
 
-    /// <summary>
-    /// Helper method to filter books by date range.
-    /// </summary>
-    private async Task<List<Book>> GetFilteredBooksAsync(DateTime? startDate, DateTime? endDate, CancellationToken ct = default)
-    {
-        var books = (await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed)).ToList();
-
-        if (startDate.HasValue)
-        {
-            books = books.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value >= startDate.Value).ToList();
-        }
-
-        if (endDate.HasValue)
-        {
-            books = books.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value <= endDate.Value).ToList();
-        }
-
-        return books;
-    }
 }
