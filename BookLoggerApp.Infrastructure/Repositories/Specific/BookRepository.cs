@@ -102,7 +102,7 @@ public class BookRepository : Repository<Book>, IBookRepository
         if (endDate.HasValue)
             query = query.Where(b => b.DateCompleted <= endDate.Value);
 
-        IQueryable<int?> ratingQuery = category switch
+        IQueryable<int?>? ratingQuery = category switch
         {
             RatingCategory.Characters => query.Select(b => b.CharactersRating),
             RatingCategory.Plot => query.Select(b => b.PlotRating),
@@ -117,6 +117,6 @@ public class BookRepository : Repository<Book>, IBookRepository
 
         return await ratingQuery
             .Where(r => r.HasValue)
-            .AverageAsync(r => (double?)r.Value, ct) ?? 0;
+            .AverageAsync(r => (double?)r, ct) ?? 0;
     }
 }
