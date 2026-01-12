@@ -2,3 +2,11 @@
 **Vulnerability:** The `RestoreFromBackupAsync` method used `ZipFile.ExtractToDirectory` without validating that the extracted file paths were contained within the destination directory. This could allow an attacker to write files outside the intended directory via a crafted zip archive containing `../` traversal sequences.
 **Learning:** Even if modern frameworks (like .NET 6+) offer some protection, explicit path validation ("Defense in Depth") is crucial for critical file operations. Always ensure the resolved full path starts with the intended target directory *and* includes a trailing separator to prevent partial path matching bypasses.
 **Prevention:** Replace convenient one-liners like `ExtractToDirectory` with manual iteration and validation loops when handling untrusted archives. Verify `!destinationPath.StartsWith(targetDir + Path.DirectorySeparatorChar)` before writing.
+
+## 2024-05-24 - Zip Bomb Vulnerability in ImportExportService
+**Vulnerability:** The `RestoreFromBackupAsync` method extracted files without checking the total size or number of entries. A malicious "Zip Bomb" (e.g., highly compressed file) could cause Denial of Service (DoS) by exhausting disk space or memory during extraction.
+**Learning:** Validating individual file paths (Zip Slip) is not enough; you must also validate resource consumption. Compressed archives can expand to orders of magnitude larger than their compressed size.
+**Prevention:** Implement resource limits during extraction:
+1. Limit total number of entries (e.g., 10,000).
+2. Limit total uncompressed size (e.g., 1GB).
+3. Validate these limits incrementally inside the extraction loop.

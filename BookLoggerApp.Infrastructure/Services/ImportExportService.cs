@@ -24,6 +24,10 @@ public class ImportExportService : IImportExportService
     private readonly string _backupDirectory;
     private readonly string _basePath;
 
+    // Security constraints for zip extraction (Zip Bomb protection)
+    private const long MaxTotalExtractionSize = 1024L * 1024L * 1024L; // 1 GB
+    private const int MaxEntryCount = 10000;
+
     public ImportExportService(
         IDbContextFactory<AppDbContext> contextFactory,
         IFileSystem fileSystem,
@@ -422,11 +426,28 @@ public class ImportExportService : IImportExportService
             try
             {
                 // 1. Extract ZIP securely
-                // Sentinel: Manual extraction with path validation to prevent Zip Slip vulnerability
+                // Sentinel: Manual extraction with path validation to prevent Zip Slip and Zip Bomb vulnerabilities
                 using (var archive = ZipFile.OpenRead(backupPath))
                 {
+                    long totalSize = 0;
+                    int entryCount = 0;
+
                     foreach (var entry in archive.Entries)
                     {
+                        // Check for Zip Bomb (too many entries)
+                        entryCount++;
+                        if (entryCount > MaxEntryCount)
+                        {
+                            throw new IOException("Zip Bomb detected: Too many entries in archive.");
+                        }
+
+                        // Check for Zip Bomb (total uncompressed size)
+                        totalSize += entry.Length;
+                        if (totalSize > MaxTotalExtractionSize)
+                        {
+                            throw new IOException("Zip Bomb detected: Total extraction size exceeds limit.");
+                        }
+
                         var destinationPath = Path.GetFullPath(Path.Combine(tempExtractDir, entry.FullName));
                         var tempDirFullPath = Path.GetFullPath(tempExtractDir);
 
@@ -435,6 +456,7 @@ public class ImportExportService : IImportExportService
                             tempDirFullPath += Path.DirectorySeparatorChar;
                         }
 
+                        // Check for Zip Slip
                         if (!destinationPath.StartsWith(tempDirFullPath, StringComparison.OrdinalIgnoreCase))
                         {
                             throw new IOException($"Zip Slip vulnerability detected: {entry.FullName}");
