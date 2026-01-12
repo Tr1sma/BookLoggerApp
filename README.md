@@ -14,7 +14,7 @@ Gebaut mit **.NET 10 MAUI Blazor Hybrid** und **SQLite**.
 - **Umfassende Buch-Verwaltung**: Bücher hinzufügen, bearbeiten und löschen.
 - **Detaillierter Lesestatus**: Geplant, Am Lesen, Abgeschlossen, Abgebrochen.
 - **Spine-Ansicht**: Personalisiere den Buchrücken für das virtuelle Regal (Farbe oder Bild).
-- **Drag & Drop**: Sortiere deine Bücher im Regal per Drag & Drop.
+- **Drag & Drop**: Sortiere deine Bücher im Regal per Drag & Drop. (BETA)
 
 ### ⭐ Erweitertes Bewertungssystem
 
