@@ -97,10 +97,10 @@ public class BookRepository : Repository<Book>, IBookRepository
         var query = _dbSet.AsNoTracking().Where(b => b.Status == ReadingStatus.Completed);
 
         if (startDate.HasValue)
-            query = query.Where(b => b.DateCompleted >= startDate.Value);
+            query = query.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value >= startDate.Value);
 
         if (endDate.HasValue)
-            query = query.Where(b => b.DateCompleted <= endDate.Value);
+            query = query.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value <= endDate.Value);
 
         IQueryable<int?>? ratingQuery = category switch
         {
