@@ -13,7 +13,8 @@ public class ImageService : IImageService
     private readonly ILogger<ImageService>? _logger;
     private readonly IFileSystem _fileSystem;
 
-    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null)
+    // Fix: Allow HttpClient injection for testing
+    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null, HttpClient? httpClient = null)
     {
         _fileSystem = fileSystem;
         _logger = logger;
@@ -26,7 +27,7 @@ public class ImageService : IImageService
         _fileSystem.CreateDirectory(_imagesDirectory);
 
         // Initialize HttpClient for downloading images
-        _httpClient = new HttpClient
+        _httpClient = httpClient ?? new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(30)
         };
@@ -126,12 +127,30 @@ public class ImageService : IImageService
         {
             _logger?.LogInformation("Downloading image from URL: {Url}", url);
 
-            var response = await _httpClient.GetAsync(url, ct);
+            // Fix: Use HttpCompletionOption.ResponseHeadersRead to check headers before downloading body
+            // This allows us to validate Content-Type and Content-Length before consuming resources
+            var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
 
             if (!response.IsSuccessStatusCode)
             {
                 _logger?.LogWarning("Failed to download image from {Url}. Status: {StatusCode}",
                     url, response.StatusCode);
+                return null;
+            }
+
+            // Validate Content-Type
+            var contentType = response.Content.Headers.ContentType?.MediaType;
+            if (contentType == null || !contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                 _logger?.LogWarning("Invalid content type for image download: {ContentType}", contentType);
+                 return null;
+            }
+
+            // Validate Content-Length if present (e.g. max 10MB)
+            var contentLength = response.Content.Headers.ContentLength;
+            if (contentLength > 10 * 1024 * 1024)
+            {
+                _logger?.LogWarning("Image too large: {Size} bytes", contentLength);
                 return null;
             }
 
