@@ -86,6 +86,11 @@ public class BookRepository : Repository<Book>, IBookRepository
 
     public async Task<int> GetCountByCompletionYearAsync(int year, CancellationToken ct = default)
     {
+        if (year < 1 || year > 9999)
+        {
+            return 0;
+        }
+
         var startOfYear = new DateTime(year, 1, 1);
         var startOfNextYear = startOfYear.AddYears(1);
 
