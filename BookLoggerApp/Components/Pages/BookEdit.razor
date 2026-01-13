@@ -148,6 +148,27 @@
                 </div>
             </section>
 
+            <!-- Tropes -->
+            @if (ViewModel.AvailableTropes.Any())
+            {
+                <section class="form-section">
+                    <h2>Tropes & Tags</h2>
+                    <div class="form-hint">Select matching tropes based on your selected genres.</div>
+                    
+                    <div class="genres-selection">
+                        @foreach (var trope in ViewModel.AvailableTropes)
+                        {
+                            <label class="genre-checkbox">
+                                <input type="checkbox" 
+                                       checked="@ViewModel.SelectedTropeIds.Contains(trope.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleTrope(trope.Id, e.Value as bool? ?? false))" />
+                                <span>@trope.Name</span>
+                            </label>
+                        }
+                    </div>
+                </section>
+            }
+
             <!-- Shelves -->
             <section class="form-section">
                 <h2>Shelves</h2>
@@ -389,15 +410,20 @@
         }
     }
 
-    private void ToggleGenre(Guid genreId, bool isSelected)
+    private async Task ToggleGenre(Guid genreId, bool isSelected)
     {
-        if (isSelected && !ViewModel.SelectedGenreIds.Contains(genreId))
+        await ViewModel.ToggleGenreAsync(genreId, isSelected);
+    }
+
+    private void ToggleTrope(Guid tropeId, bool isSelected)
+    {
+        if (isSelected && !ViewModel.SelectedTropeIds.Contains(tropeId))
         {
-            ViewModel.SelectedGenreIds.Add(genreId);
+            ViewModel.SelectedTropeIds.Add(tropeId);
         }
-        else if (!isSelected && ViewModel.SelectedGenreIds.Contains(genreId))
+        else if (!isSelected && ViewModel.SelectedTropeIds.Contains(tropeId))
         {
-            ViewModel.SelectedGenreIds.Remove(genreId);
+            ViewModel.SelectedTropeIds.Remove(tropeId);
         }
     }
 

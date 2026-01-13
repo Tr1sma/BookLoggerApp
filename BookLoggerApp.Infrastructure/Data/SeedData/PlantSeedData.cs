@@ -135,7 +135,7 @@ public static class PlantSeedData
             GrowthRate = 0.5,
             XpBoostPercentage = 0.20m,
             BaseCost = 5000,
-            UnlockLevel = 32,
+            UnlockLevel = 33,
             IsAvailable = true
         };
     }

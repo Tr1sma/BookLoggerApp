@@ -37,9 +37,13 @@ public class BookRepository : Repository<Book>, IBookRepository
         return await _dbSet
             .Where(b => EF.Functions.Like(b.Title, $"%{searchTerm}%") ||
                        EF.Functions.Like(b.Author, $"%{searchTerm}%") ||
-                       (b.ISBN != null && EF.Functions.Like(b.ISBN, $"%{searchTerm}%")))
+                       (b.ISBN != null && EF.Functions.Like(b.ISBN, $"%{searchTerm}%")) ||
+                       b.BookGenres.Any(bg => EF.Functions.Like(bg.Genre.Name, $"%{searchTerm}%")) ||
+                       b.BookTropes.Any(bt => EF.Functions.Like(bt.Trope.Name, $"%{searchTerm}%")))
             .Include(b => b.BookGenres)
                 .ThenInclude(bg => bg.Genre)
+            .Include(b => b.BookTropes)
+                .ThenInclude(bt => bt.Trope)
             .ToListAsync();
     }
 
@@ -48,6 +52,8 @@ public class BookRepository : Repository<Book>, IBookRepository
         return await _dbSet
             .Include(b => b.BookGenres)
                 .ThenInclude(bg => bg.Genre)
+            .Include(b => b.BookTropes)
+                .ThenInclude(bt => bt.Trope)
             .Include(b => b.ReadingSessions)
             .Include(b => b.Quotes)
             .Include(b => b.Annotations)
@@ -85,12 +91,43 @@ public class BookRepository : Repository<Book>, IBookRepository
             return 0;
         }
 
-        var start = new DateTime(year, 1, 1);
-        var end = start.AddYears(1);
+        var startOfYear = new DateTime(year, 1, 1);
+        var startOfNextYear = startOfYear.AddYears(1);
 
         return await _dbSet
-            .CountAsync(b => b.Status == ReadingStatus.Completed &&
-                             b.DateCompleted >= start &&
-                             b.DateCompleted < end, ct);
+            .AsNoTracking()
+            .Where(b => b.Status == ReadingStatus.Completed
+                        && b.DateCompleted.HasValue
+                        && b.DateCompleted.Value >= startOfYear
+                        && b.DateCompleted.Value < startOfNextYear)
+            .CountAsync(ct);
+    }
+
+    public async Task<double> GetAverageRatingByCategoryAsync(RatingCategory category, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
+    {
+        var query = _dbSet.AsNoTracking().Where(b => b.Status == ReadingStatus.Completed);
+
+        if (startDate.HasValue)
+            query = query.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value >= startDate.Value);
+
+        if (endDate.HasValue)
+            query = query.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value <= endDate.Value);
+
+        IQueryable<int?>? ratingQuery = category switch
+        {
+            RatingCategory.Characters => query.Select(b => b.CharactersRating),
+            RatingCategory.Plot => query.Select(b => b.PlotRating),
+            RatingCategory.WritingStyle => query.Select(b => b.WritingStyleRating),
+            RatingCategory.SpiceLevel => query.Select(b => b.SpiceLevelRating),
+            RatingCategory.Pacing => query.Select(b => b.PacingRating),
+            RatingCategory.WorldBuilding => query.Select(b => b.WorldBuildingRating),
+            _ => null
+        };
+
+        if (ratingQuery == null) return 0;
+
+        return await ratingQuery
+            .Where(r => r.HasValue)
+            .AverageAsync(r => (double?)r, ct) ?? 0;
     }
 }

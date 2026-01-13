@@ -27,6 +27,17 @@
             </div>
         </section>
 
+        <!-- Migration Diagnostics -->
+         <section class="settings-section">
+            <h2>Data Recovery Diagnostics</h2>
+            <div class="migration-log-container">
+                <textarea class="migration-log" readonly>@ViewModel.MigrationLog</textarea>
+            </div>
+             <p class="description" style="margin-top: 0.5rem; font-size: 0.8rem;">
+                If data is missing, screenshot this log and send it to support.
+            </p>
+        </section>
+
         <!-- Backup & Restore -->
         <section class="settings-section">
             <h2>Backup & Restore</h2>
@@ -367,6 +378,23 @@
         padding: 1rem;
         border-radius: 8px;
         border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .migration-log-container {
+        width: 100%;
+    }
+
+    .migration-log {
+        width: 100%;
+        height: 150px;
+        background: var(--bg-primary);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.5rem;
+        font-family: monospace;
+        font-size: 0.8rem;
+        resize: vertical;
     }
 </style>
 

@@ -1,3 +1,4 @@
+using System.Net.Http;
 using BookLoggerApp.Core.Services.Abstractions;
 using Microsoft.Extensions.Logging;
 
@@ -13,8 +14,13 @@ public class ImageService : IImageService
     private readonly ILogger<ImageService>? _logger;
     private readonly IFileSystem _fileSystem;
 
-    // Fix: Allow HttpClient injection for testing
-    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null, HttpClient? httpClient = null)
+    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null)
+        : this(fileSystem, logger, null)
+    {
+    }
+
+    // Internal constructor for testing to allow injecting HttpClient
+    internal ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger, HttpClient? httpClient)
     {
         _fileSystem = fileSystem;
         _logger = logger;
@@ -127,35 +133,59 @@ public class ImageService : IImageService
         {
             _logger?.LogInformation("Downloading image from URL: {Url}", url);
 
-            // Fix: Use HttpCompletionOption.ResponseHeadersRead to check headers before downloading body
-            // This allows us to validate Content-Type and Content-Length before consuming resources
+            // Sentinel: Security enhancement - Use ResponseHeadersRead to inspect headers before downloading body
+            // This prevents downloading massive files (DoS risk) or wrong content types
             var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
 
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                _logger?.LogWarning("Failed to download image from {Url}. Status: {StatusCode}",
-                    url, response.StatusCode);
-                return null;
-            }
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger?.LogWarning("Failed to download image from {Url}. Status: {StatusCode}",
+                        url, response.StatusCode);
+                    response.Dispose();
+                    return null;
+                }
 
-            // Validate Content-Type
-            var contentType = response.Content.Headers.ContentType?.MediaType;
-            if (contentType == null || !contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                // Sentinel: Check Content-Length (Max 10MB)
+                // If Content-Length is missing, we must be careful.
+                if (response.Content.Headers.ContentLength.HasValue)
+                {
+                    if (response.Content.Headers.ContentLength > 10 * 1024 * 1024)
+                    {
+                        _logger?.LogWarning("Image too large ({Size} bytes) from {Url}",
+                            response.Content.Headers.ContentLength, url);
+                        response.Dispose();
+                        return null;
+                    }
+                }
+                else
+                {
+                    // Warn about missing content length
+                    _logger?.LogWarning("Missing Content-Length header from {Url}. Proceeding with caution.", url);
+                }
+
+                // Sentinel: Check Content-Type
+                var contentType = response.Content.Headers.ContentType?.MediaType;
+                if (string.IsNullOrEmpty(contentType) || !contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger?.LogWarning("Invalid content type ({Type}) from {Url}", contentType, url);
+                    response.Dispose();
+                    return null;
+                }
+
+                // We do NOT dispose response here because the stream we return
+                // depends on the response connection. The caller must dispose the stream.
+                // However, Stream content usually disposes the parent response?
+                // HttpClient streams often do.
+                var stream = await response.Content.ReadAsStreamAsync(ct);
+                return stream;
+            }
+            catch
             {
-                 _logger?.LogWarning("Invalid content type for image download: {ContentType}", contentType);
-                 return null;
+                response.Dispose();
+                throw;
             }
-
-            // Validate Content-Length if present (e.g. max 10MB)
-            var contentLength = response.Content.Headers.ContentLength;
-            if (contentLength > 10 * 1024 * 1024)
-            {
-                _logger?.LogWarning("Image too large: {Size} bytes", contentLength);
-                return null;
-            }
-
-            var stream = await response.Content.ReadAsStreamAsync(ct);
-            return stream;
         }
         catch (Exception ex)
         {

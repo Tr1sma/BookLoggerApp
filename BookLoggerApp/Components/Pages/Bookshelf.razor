@@ -22,8 +22,9 @@
     <div class="bookshelf-header">
         <h1>📚 My Bookshelf</h1>
         <div class="bookshelf-controls">
-            <input type="text" class="search-input" placeholder="🔍 Search books..." @bind="ViewModel.SearchQuery"
-            @bind:event="oninput" @onchange="HandleSearch" />
+            <input type="text" class="search-input" placeholder="🔍 Search books..." 
+                   value="@ViewModel.SearchQuery"
+                   @oninput="HandleSearchInput" />
         </div>
     </div>
 
@@ -311,6 +312,29 @@
     private void ToggleFilters() => filtersExpanded = !filtersExpanded;
     private bool HasActiveFilters() => ViewModel.FilterStatus.HasValue || ViewModel.FilterGenreId.HasValue ||
     !string.IsNullOrWhiteSpace(ViewModel.SearchQuery);
+    private System.Timers.Timer? _searchTimer;
+
+    private void HandleSearchInput(ChangeEventArgs e)
+    {
+        var searchText = e.Value?.ToString() ?? "";
+        ViewModel.SearchQuery = searchText;
+
+        _searchTimer?.Stop();
+        _searchTimer?.Dispose();
+
+        _searchTimer = new System.Timers.Timer(300);
+        _searchTimer.Elapsed += async (sender, args) =>
+        {
+            _searchTimer.Stop();
+             await InvokeAsync(async () =>
+             {
+                 await ViewModel.SearchCommand.ExecuteAsync(null);
+                 StateHasChanged();
+             });
+        };
+        _searchTimer.Start();
+    }
+
     private void HandleSearch() => ViewModel.SearchCommand.ExecuteAsync(null);
     private async Task HandleClearFilters()
     {
