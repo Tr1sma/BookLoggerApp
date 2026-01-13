@@ -28,4 +28,5 @@ public class Genre
 
     // Navigation Properties
     public ICollection<BookGenre> BookGenres { get; set; } = new List<BookGenre>();
+    public ICollection<Trope> Tropes { get; set; } = new List<Trope>();
 }

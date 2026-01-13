@@ -1,4 +1,4 @@
-using BookLoggerApp.Infrastructure.Services.Helpers;
+using BookLoggerApp.Core.Helpers;
 using FluentAssertions;
 using Xunit;
 

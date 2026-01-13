@@ -12,26 +12,38 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IFileSaverService _fileSaverService;
     private readonly IShareService _shareService;
     private readonly IFilePickerService _filePickerService;
+    private readonly IMigrationService _migrationService;
+
 
     public SettingsViewModel(
         IImportExportService importExportService, 
         IAppSettingsProvider settingsProvider,
         IFileSaverService fileSaverService,
         IShareService shareService,
-        IFilePickerService filePickerService)
+        IFilePickerService filePickerService,
+        IMigrationService migrationService)
+
     {
         _importExportService = importExportService;
         _settingsProvider = settingsProvider;
         _fileSaverService = fileSaverService;
         _shareService = shareService;
         _filePickerService = filePickerService;
+        _migrationService = migrationService;
+
+        MigrationLog = _migrationService.GetMigrationLog();
+
     }
 
     [ObservableProperty]
     private AppSettings _settings = new();
 
     [ObservableProperty]
-    private string _appVersion = "0.5.01";
+    private string _appVersion = "0.5.2";
+
+    [ObservableProperty]
+    private string _migrationLog;
+
 
     [RelayCommand]
     public async Task LoadAsync()

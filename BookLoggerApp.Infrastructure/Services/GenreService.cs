@@ -105,4 +105,46 @@ public class GenreService : IGenreService
             .Select(bg => bg.Genre)
             .ToListAsync(ct);
     }
+
+
+    public async Task<IReadOnlyList<Trope>> GetTropesForGenreAsync(Guid genreId, CancellationToken ct = default)
+    {
+        return (await _unitOfWork.Tropes.FindAsync(t => t.GenreId == genreId)).ToList();
+    }
+
+    public async Task<IReadOnlyList<Trope>> GetTropesForBookAsync(Guid bookId, CancellationToken ct = default)
+    {
+        return await _unitOfWork.Context.BookTropes
+            .Where(bt => bt.BookId == bookId)
+            .Include(bt => bt.Trope)
+            .Select(bt => bt.Trope)
+            .ToListAsync(ct);
+    }
+
+    public async Task AddTropeToBookAsync(Guid bookId, Guid tropeId, CancellationToken ct = default)
+    {
+        var existing = await _unitOfWork.BookTropes.FindAsync(bt => bt.BookId == bookId && bt.TropeId == tropeId);
+        if (existing.Any())
+            return;
+
+        var bookTrope = new BookTrope
+        {
+            BookId = bookId,
+            TropeId = tropeId,
+            AddedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.BookTropes.AddAsync(bookTrope);
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task RemoveTropeFromBookAsync(Guid bookId, Guid tropeId, CancellationToken ct = default)
+    {
+        var bookTrope = (await _unitOfWork.BookTropes.FindAsync(bt => bt.BookId == bookId && bt.TropeId == tropeId)).FirstOrDefault();
+        if (bookTrope != null)
+        {
+            await _unitOfWork.BookTropes.DeleteAsync(bookTrope);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+    }
 }

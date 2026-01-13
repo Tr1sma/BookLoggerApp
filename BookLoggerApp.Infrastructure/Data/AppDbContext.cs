@@ -29,6 +29,8 @@ public class AppDbContext : DbContext
     public DbSet<Shelf> Shelves => Set<Shelf>();
     public DbSet<BookShelf> BookShelves => Set<BookShelf>();
     public DbSet<PlantShelf> PlantShelves => Set<PlantShelf>();
+    public DbSet<Trope> Tropes => Set<Trope>();
+    public DbSet<BookTrope> BookTropes => Set<BookTrope>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +43,20 @@ public class AppDbContext : DbContext
         // Configure Many-to-Many for Plant <-> Shelf
         modelBuilder.Entity<PlantShelf>()
             .HasKey(ps => new { ps.PlantId, ps.ShelfId });
+
+        // Configure Many-to-Many for Book <-> Trope
+        modelBuilder.Entity<BookTrope>()
+            .HasKey(bt => new { bt.BookId, bt.TropeId });
+
+        modelBuilder.Entity<BookTrope>()
+            .HasOne(bt => bt.Book)
+            .WithMany(b => b.BookTropes)
+            .HasForeignKey(bt => bt.BookId);
+
+        modelBuilder.Entity<BookTrope>()
+            .HasOne(bt => bt.Trope)
+            .WithMany(t => t.BookTropes)
+            .HasForeignKey(bt => bt.TropeId);
 
         // Configure BookRatingSummary as Keyless (View)
         modelBuilder.Entity<BookRatingSummary>().HasNoKey();
@@ -107,5 +123,8 @@ public class AppDbContext : DbContext
                 CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
+
+        // Seed Tropes
+        modelBuilder.Entity<Trope>().HasData(TropeSeedData.GetTropes());
     }
 }

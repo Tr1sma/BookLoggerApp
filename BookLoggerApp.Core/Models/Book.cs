@@ -74,6 +74,7 @@ public class Book
 
     // Navigation Properties
     public ICollection<BookGenre> BookGenres { get; set; } = new List<BookGenre>();
+    public ICollection<BookTrope> BookTropes { get; set; } = new List<BookTrope>();
     public ICollection<ReadingSession> ReadingSessions { get; set; } = new List<ReadingSession>();
     public ICollection<Quote> Quotes { get; set; } = new List<Quote>();
     public ICollection<Annotation> Annotations { get; set; } = new List<Annotation>();

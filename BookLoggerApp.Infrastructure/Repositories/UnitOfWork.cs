@@ -28,6 +28,8 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Annotation>? _annotations;
     private IRepository<PlantSpecies>? _plantSpecies;
     private IRepository<AppSettings>? _appSettings;
+    private IRepository<Trope>? _tropes;
+    private IRepository<BookTrope>? _bookTropes;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -47,6 +49,8 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Annotation> Annotations => _annotations ??= new Repository<Annotation>(_context);
     public IRepository<PlantSpecies> PlantSpecies => _plantSpecies ??= new Repository<PlantSpecies>(_context);
     public IRepository<AppSettings> AppSettingsRepo => _appSettings ??= new Repository<AppSettings>(_context);
+    public IRepository<Trope> Tropes => _tropes ??= new Repository<Trope>(_context);
+    public IRepository<BookTrope> BookTropes => _bookTropes ??= new Repository<BookTrope>(_context);
 
     // ===== Direct Context Access =====
     public AppDbContext Context => _context;

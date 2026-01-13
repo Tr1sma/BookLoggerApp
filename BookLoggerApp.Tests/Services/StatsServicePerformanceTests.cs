@@ -80,4 +80,80 @@ public class StatsServicePerformanceTests : IDisposable
         // Assert
         totalPages.Should().Be(300);
     }
+
+    [Fact]
+    public async Task GetBooksCompletedInYearAsync_ShouldCountDatabaseSide_AndBeCorrect()
+    {
+        // Arrange
+        var year = 2023;
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Completed 2023 1",
+            Status = ReadingStatus.Completed,
+            DateCompleted = new DateTime(year, 1, 1)
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Completed 2023 2",
+            Status = ReadingStatus.Completed,
+            DateCompleted = new DateTime(year, 12, 31)
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Completed 2022",
+            Status = ReadingStatus.Completed,
+            DateCompleted = new DateTime(year - 1, 1, 1)
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Reading",
+            Status = ReadingStatus.Reading
+        });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var count = await _service.GetBooksCompletedInYearAsync(year);
+
+        // Assert
+        count.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetAverageRatingByCategoryAsync_ShouldCalculateDatabaseSide_AndBeCorrect()
+    {
+        // Arrange
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Book 1",
+            Status = ReadingStatus.Completed,
+            DateCompleted = DateTime.UtcNow,
+            CharactersRating = 4
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Book 2",
+            Status = ReadingStatus.Completed,
+            DateCompleted = DateTime.UtcNow,
+            CharactersRating = 2
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Book 3",
+            Status = ReadingStatus.Reading, // Should be ignored
+            CharactersRating = 5
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Book 4",
+            Status = ReadingStatus.Completed, // No rating, should be ignored
+            DateCompleted = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
+
+        // Assert
+        average.Should().Be(3);
+    }
 }

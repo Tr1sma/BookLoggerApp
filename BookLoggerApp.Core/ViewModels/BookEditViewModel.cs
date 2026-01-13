@@ -43,6 +43,12 @@ public partial class BookEditViewModel : ViewModelBase
     private List<Guid> _selectedShelfIds = new();
 
     [ObservableProperty]
+    private List<Trope> _availableTropes = new();
+
+    [ObservableProperty]
+    private List<Guid> _selectedTropeIds = new();
+
+    [ObservableProperty]
     private bool _isLookingUpIsbn;
 
     [ObservableProperty]
@@ -81,6 +87,8 @@ public partial class BookEditViewModel : ViewModelBase
                 {
                     SelectedGenreIds = Book.BookGenres.Select(bg => bg.GenreId).ToList();
                     SelectedShelfIds = Book.BookShelves.Select(bs => bs.ShelfId).ToList();
+                    SelectedTropeIds = Book.BookTropes.Select(bt => bt.TropeId).ToList();
+                    await UpdateAvailableTropesAsync();
                     _originalStatus = Book.Status;
                 }
             }
@@ -225,6 +233,24 @@ public partial class BookEditViewModel : ViewModelBase
                         await _shelfService.AddBookToShelfAsync(shelfId, Book.Id);
                     }
                 }
+
+
+
+                // Update Tropes
+                var currentTropes = await _genreService.GetTropesForBookAsync(Book.Id);
+                var currentTropeIds = currentTropes.Select(t => t.Id).ToHashSet();
+
+                // Remove tropes
+                foreach (var tropeId in currentTropeIds.Where(id => !SelectedTropeIds.Contains(id)))
+                {
+                    await _genreService.RemoveTropeFromBookAsync(Book.Id, tropeId);
+                }
+
+                // Add tropes
+                foreach (var tropeId in SelectedTropeIds.Where(id => !currentTropeIds.Contains(id)))
+                {
+                    await _genreService.AddTropeToBookAsync(Book.Id, tropeId);
+                }
             }
         }, "Failed to save book");
     }
@@ -355,6 +381,46 @@ public partial class BookEditViewModel : ViewModelBase
         }, "Buch konnte nicht gelöscht werden");
 
         IsDeleting = false;
+    }
+
+
+    partial void OnSelectedGenreIdsChanged(List<Guid> value)
+    {
+        _ = UpdateAvailableTropesAsync();
+    }
+
+    public async Task ToggleGenreAsync(Guid genreId, bool isSelected)
+    {
+        if (isSelected && !SelectedGenreIds.Contains(genreId))
+        {
+            SelectedGenreIds.Add(genreId);
+        }
+        else if (!isSelected && SelectedGenreIds.Contains(genreId))
+        {
+            SelectedGenreIds.Remove(genreId);
+        }
+
+        // Manually trigger updates since we modified the list in-place
+        await UpdateAvailableTropesAsync();
+    }
+
+    private async Task UpdateAvailableTropesAsync()
+    {
+        if (SelectedGenreIds == null || !SelectedGenreIds.Any())
+        {
+            AvailableTropes = new List<Trope>();
+            return;
+        }
+
+        var allTropes = new List<Trope>();
+        foreach (var genreId in SelectedGenreIds)
+        {
+            var tropes = await _genreService.GetTropesForGenreAsync(genreId);
+            allTropes.AddRange(tropes);
+        }
+        
+        // Use AvailableTropes setter to notify UI
+        AvailableTropes = allTropes.DistinctBy(t => t.Id).OrderBy(t => t.Name).ToList();
     }
 }
 

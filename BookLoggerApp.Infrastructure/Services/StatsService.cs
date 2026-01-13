@@ -181,21 +181,8 @@ public class StatsService : IStatsService
 
     public async Task<double> GetAverageRatingByCategoryAsync(RatingCategory category, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
     {
-        var books = await GetFilteredBooksAsync(startDate, endDate, ct);
-
-        var ratings = category switch
-        {
-            RatingCategory.Characters => books.Where(b => b.CharactersRating.HasValue).Select(b => b.CharactersRating!.Value),
-            RatingCategory.Plot => books.Where(b => b.PlotRating.HasValue).Select(b => b.PlotRating!.Value),
-            RatingCategory.WritingStyle => books.Where(b => b.WritingStyleRating.HasValue).Select(b => b.WritingStyleRating!.Value),
-            RatingCategory.SpiceLevel => books.Where(b => b.SpiceLevelRating.HasValue).Select(b => b.SpiceLevelRating!.Value),
-            RatingCategory.Pacing => books.Where(b => b.PacingRating.HasValue).Select(b => b.PacingRating!.Value),
-            RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).Select(b => b.WorldBuildingRating!.Value),
-            _ => Enumerable.Empty<int>()
-        };
-
-        var ratingList = ratings.ToList();
-        return ratingList.Any() ? ratingList.Average() : 0;
+        // Optimized: Calculate average directly in database to avoid loading all completed books
+        return await _unitOfWork.Books.GetAverageRatingByCategoryAsync(category, startDate, endDate, ct);
     }
 
     public async Task<Dictionary<RatingCategory, double>> GetAllAverageRatingsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
@@ -256,23 +243,4 @@ public class StatsService : IStatsService
             .ToList();
     }
 
-    /// <summary>
-    /// Helper method to filter books by date range.
-    /// </summary>
-    private async Task<List<Book>> GetFilteredBooksAsync(DateTime? startDate, DateTime? endDate, CancellationToken ct = default)
-    {
-        var books = (await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed)).ToList();
-
-        if (startDate.HasValue)
-        {
-            books = books.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value >= startDate.Value).ToList();
-        }
-
-        if (endDate.HasValue)
-        {
-            books = books.Where(b => b.DateCompleted.HasValue && b.DateCompleted.Value <= endDate.Value).ToList();
-        }
-
-        return books;
-    }
 }

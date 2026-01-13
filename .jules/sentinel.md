@@ -3,6 +3,11 @@
 **Learning:** Even if modern frameworks (like .NET 6+) offer some protection, explicit path validation ("Defense in Depth") is crucial for critical file operations. Always ensure the resolved full path starts with the intended target directory *and* includes a trailing separator to prevent partial path matching bypasses.
 **Prevention:** Replace convenient one-liners like `ExtractToDirectory` with manual iteration and validation loops when handling untrusted archives. Verify `!destinationPath.StartsWith(targetDir + Path.DirectorySeparatorChar)` before writing.
 
+
+## 2024-05-23 - Unrestricted Image Download (DoS Risk)
+**Vulnerability:** `ImageService.DownloadImageFromUrlAsync` used `HttpClient.GetAsync` without `HttpCompletionOption.ResponseHeadersRead`, causing the entire response body to be buffered into memory before any checks could be performed. This exposed the application to Denial of Service (DoS) via "zip bomb" or massive file attacks.
+**Learning:** `HttpClient.GetAsync` defaults to buffering the entire response. For file downloads, always use `HttpCompletionOption.ResponseHeadersRead` to inspect headers (Content-Length, Content-Type) *before* committing to download the body.
+**Prevention:** Always validate `Content-Length` and `Content-Type` headers before reading the response stream for external resources. Enforce reasonable size limits (e.g., 10MB for images).
 ## 2024-05-24 - Zip Bomb Vulnerability in ImportExportService
 **Vulnerability:** The `RestoreFromBackupAsync` method extracted files without checking the total size or number of entries. A malicious "Zip Bomb" (e.g., highly compressed file) could cause Denial of Service (DoS) by exhausting disk space or memory during extraction.
 **Learning:** Validating individual file paths (Zip Slip) is not enough; you must also validate resource consumption. Compressed archives can expand to orders of magnitude larger than their compressed size.
@@ -10,3 +15,4 @@
 1. Limit total number of entries (e.g., 10,000).
 2. Limit total uncompressed size (e.g., 1GB).
 3. Validate these limits incrementally inside the extraction loop.
+

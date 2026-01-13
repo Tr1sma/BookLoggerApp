@@ -3,6 +3,7 @@ using System;
 using BookLoggerApp.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookLoggerApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260113203255_AddTropes")]
+    partial class AddTropes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -624,7 +627,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             MaxLevel = 25,
                             Name = "Mystic Tome Tree",
-                            UnlockLevel = 33,
+                            UnlockLevel = 32,
                             WaterIntervalDays = 14,
                             XpBoostPercentage = 0.20m
                         });
@@ -1012,24 +1015,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("aabac8c9-9716-8d1f-f85a-605d6802b65b"),
-                            GenreId = new Guid("00000000-0000-0000-0000-000000000006"),
-                            Name = "Forbidden Love"
-                        },
-                        new
-                        {
-                            Id = new Guid("bcf86d7a-5a84-7610-bfee-55b48021c895"),
-                            GenreId = new Guid("00000000-0000-0000-0000-000000000006"),
-                            Name = "Sport Romance"
-                        },
-                        new
-                        {
-                            Id = new Guid("459f13f2-50a9-33b5-ecc9-9be1ac33e38b"),
-                            GenreId = new Guid("00000000-0000-0000-0000-000000000006"),
-                            Name = "Age Gap"
-                        },
-                        new
-                        {
                             Id = new Guid("3e760546-f353-89c0-95b6-b175c95fe25b"),
                             GenreId = new Guid("00000000-0000-0000-0000-000000000005"),
                             Name = "Whodunit"
@@ -1099,12 +1084,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Id = new Guid("a70c1aed-7321-998c-b263-e829a9a9553c"),
                             GenreId = new Guid("00000000-0000-0000-0000-000000000009"),
                             Name = "Obsessive Love"
-                        },
-                        new
-                        {
-                            Id = new Guid("ff194c52-0e9e-0247-d43b-68eb1803a73d"),
-                            GenreId = new Guid("00000000-0000-0000-0000-000000000009"),
-                            Name = "Enemies to Lovers"
                         },
                         new
                         {
