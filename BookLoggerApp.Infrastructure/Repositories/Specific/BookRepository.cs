@@ -130,4 +130,28 @@ public class BookRepository : Repository<Book>, IBookRepository
             .Where(r => r.HasValue)
             .AverageAsync(r => (double?)r, ct) ?? 0;
     }
+
+    public async Task<double> GetGlobalAverageRatingAsync(CancellationToken ct = default)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Select(b => new
+            {
+                Sum = (double)((b.CharactersRating ?? 0) +
+                               (b.PlotRating ?? 0) +
+                               (b.WritingStyleRating ?? 0) +
+                               (b.SpiceLevelRating ?? 0) +
+                               (b.PacingRating ?? 0) +
+                               (b.WorldBuildingRating ?? 0)),
+                Count = (double)((b.CharactersRating != null ? 1 : 0) +
+                                 (b.PlotRating != null ? 1 : 0) +
+                                 (b.WritingStyleRating != null ? 1 : 0) +
+                                 (b.SpiceLevelRating != null ? 1 : 0) +
+                                 (b.PacingRating != null ? 1 : 0) +
+                                 (b.WorldBuildingRating != null ? 1 : 0))
+            })
+            .Where(x => x.Count > 0)
+            .Select(x => x.Sum / x.Count)
+            .AverageAsync(x => (double?)x, ct) ?? 0;
+    }
 }

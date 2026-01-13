@@ -150,13 +150,8 @@ public class StatsService : IStatsService
 
     public async Task<double> GetAverageRatingAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync();
-        var ratedBooks = books.Where(b => b.AverageRating.HasValue).ToList();
-
-        if (!ratedBooks.Any())
-            return 0;
-
-        return ratedBooks.Average(b => b.AverageRating!.Value);
+        // Optimized: Calculate global average rating in database to avoid loading all books into memory.
+        return await _unitOfWork.Books.GetGlobalAverageRatingAsync(ct);
     }
 
     public async Task<double> GetAveragePagesPerDayAsync(int days = 30, CancellationToken ct = default)
