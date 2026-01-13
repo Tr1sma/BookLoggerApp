@@ -123,7 +123,7 @@ public class StatsService : IStatsService
 
     public async Task<int> GetBooksCompletedInYearAsync(int year, CancellationToken ct = default)
     {
-        // Optimized: Count directly in database to avoid loading all completed books
+        // Optimized: Calculate count in database to avoid loading all completed books into memory.
         return await _unitOfWork.Books.GetCountByCompletionYearAsync(year, ct);
     }
 

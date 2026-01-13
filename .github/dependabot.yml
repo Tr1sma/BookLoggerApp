@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget" # Geändert von "" zu "nuget" für .NET
+    directory: "/" 
+    schedule:
+      interval: "weekly"
+    # Optional: Gruppen bilden, um PR-Spam zu reduzieren
+    groups:
+       dependencies:
+         patterns:
+           - "*"
