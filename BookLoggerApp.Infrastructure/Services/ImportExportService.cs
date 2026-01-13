@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using FluentValidation;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
@@ -21,6 +22,7 @@ public class ImportExportService : IImportExportService
     private readonly ILogger<ImportExportService>? _logger;
     private readonly IFileSystem _fileSystem;
     private readonly IAppSettingsProvider _appSettingsProvider;
+    private readonly IValidator<Book>? _bookValidator;
     private readonly string _backupDirectory;
     private readonly string _basePath;
 
@@ -33,12 +35,14 @@ public class ImportExportService : IImportExportService
         IFileSystem fileSystem,
         IAppSettingsProvider appSettingsProvider,
         ILogger<ImportExportService>? logger = null,
-        string? appDataPath = null)
+        string? appDataPath = null,
+        IValidator<Book>? bookValidator = null)
     {
         _contextFactory = contextFactory;
         _fileSystem = fileSystem;
         _appSettingsProvider = appSettingsProvider;
         _logger = logger;
+        _bookValidator = bookValidator;
 
         // Set up backup directory
         _basePath = appDataPath ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -190,6 +194,18 @@ public class ImportExportService : IImportExportService
             int importedCount = 0;
             foreach (var book in books)
             {
+                // Sentinel: Validate imported data to prevent corrupted/malicious entries
+                if (_bookValidator != null)
+                {
+                    var validationResult = await _bookValidator.ValidateAsync(book, ct);
+                    if (!validationResult.IsValid)
+                    {
+                        _logger?.LogWarning("Skipping invalid book in JSON import: {Title}. Errors: {Errors}",
+                            book.Title, string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
+                        continue;
+                    }
+                }
+
                 // Check if book already exists (by ISBN or Title+Author)
                 var existingBook = await context.Books
                     .FirstOrDefaultAsync(b =>
@@ -267,6 +283,18 @@ public class ImportExportService : IImportExportService
                         DateStarted = record.DateStarted,
                         DateCompleted = record.DateCompleted
                     };
+
+                    // Sentinel: Validate imported data to prevent corrupted/malicious entries
+                    if (_bookValidator != null)
+                    {
+                        var validationResult = await _bookValidator.ValidateAsync(book, ct);
+                        if (!validationResult.IsValid)
+                        {
+                            _logger?.LogWarning("Skipping invalid book in CSV import: {Title}. Errors: {Errors}",
+                                book.Title, string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
+                            continue;
+                        }
+                    }
 
                     context.Books.Add(book);
                     importedCount++;
