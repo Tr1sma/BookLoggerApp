@@ -15,4 +15,5 @@ public interface IBookRepository : IRepository<Book>
     Task<IEnumerable<Book>> GetRecentBooksAsync(int count = 10);
     Task<IEnumerable<Book>> GetBooksByAuthorAsync(string author);
     Task<Book?> GetBookByISBNAsync(string isbn);
+    Task<int> GetCountByCompletionYearAsync(int year, CancellationToken ct = default);
 }
