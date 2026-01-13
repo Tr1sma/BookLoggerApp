@@ -19,8 +19,8 @@ public class ImageService : IImageService
     {
     }
 
-    // Internal constructor for testing to allow injecting HttpClient
-    internal ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger, HttpClient? httpClient)
+    // Public constructor for testing to allow injecting HttpClient
+    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger, HttpClient? httpClient)
     {
         _fileSystem = fileSystem;
         _logger = logger;
