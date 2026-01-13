@@ -3,7 +3,7 @@ using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
-using BookLoggerApp.Infrastructure.Services.Helpers;
+using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp.Infrastructure.Services;
 

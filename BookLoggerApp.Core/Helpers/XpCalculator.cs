@@ -1,4 +1,4 @@
-namespace BookLoggerApp.Infrastructure.Services.Helpers;
+namespace BookLoggerApp.Core.Helpers;
 
 /// <summary>
 /// Helper class for calculating XP earned from reading sessions.
