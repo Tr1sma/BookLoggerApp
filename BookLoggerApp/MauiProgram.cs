@@ -73,6 +73,9 @@ public static class MauiProgram
     {
         var dbPath = PlatformsDbPath.GetDatabasePath();
 
+        // Perform migration check (XP-based recovery)
+        DatabaseMigrationHelper.MigrateIfNecessary(dbPath);
+
         // Register DbContextFactory for creating DbContext instances on demand
         // This is the recommended approach for Blazor to avoid concurrency issues
         builder.Services.AddDbContextFactory<AppDbContext>(options =>
@@ -130,6 +133,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<BookLoggerApp.Services.IScannerService, BookLoggerApp.Services.ScannerService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IShareService, BookLoggerApp.Services.ShareService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFilePickerService, BookLoggerApp.Services.FilePickerService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IMigrationService, BookLoggerApp.Services.MigrationService>();
     }
 
     private static void RegisterViewModels(MauiAppBuilder builder)
