@@ -145,4 +145,40 @@ public class BookRepositoryTests : IDisposable
         recentBooks.Should().HaveCount(2);
         recentBooks.First().Title.Should().Be("Book 3");
     }
+    [Fact]
+    public async Task SearchBooksAsync_ShouldFindBooksByGenreOrTrope()
+    {
+        // Arrange
+        var fantasyGenre = new Genre { Name = "Fantasy" };
+        var sciFiGenre = new Genre { Name = "Sci-Fi" };
+        
+        var magicTrope = new Trope { Name = "Magic" };
+        var spaceTrope = new Trope { Name = "Space Opera" };
+
+        var book1 = new Book { Title = "Book 1", Author = "Author A" };
+        book1.BookGenres.Add(new BookGenre { Book = book1, Genre = fantasyGenre });
+        book1.BookTropes.Add(new BookTrope { Book = book1, Trope = magicTrope });
+
+        var book2 = new Book { Title = "Book 2", Author = "Author B" };
+        book2.BookGenres.Add(new BookGenre { Book = book2, Genre = sciFiGenre });
+        book2.BookTropes.Add(new BookTrope { Book = book2, Trope = spaceTrope });
+
+        await _repository.AddAsync(book1);
+        await _repository.AddAsync(book2);
+        await _context.SaveChangesAsync();
+
+        // Act - Search by Genre
+        var fantasyBooks = await _repository.SearchBooksAsync("Fantasy");
+        var sciFiBooks = await _repository.SearchBooksAsync("Sci-Fi");
+
+        // Act - Search by Trope
+        var magicBooks = await _repository.SearchBooksAsync("Magic");
+        var spaceBooks = await _repository.SearchBooksAsync("Space");
+
+        // Assert
+        fantasyBooks.Should().ContainSingle().Which.Title.Should().Be("Book 1");
+        sciFiBooks.Should().ContainSingle().Which.Title.Should().Be("Book 2");
+        magicBooks.Should().ContainSingle().Which.Title.Should().Be("Book 1");
+        spaceBooks.Should().ContainSingle().Which.Title.Should().Be("Book 2");
+    }
 }

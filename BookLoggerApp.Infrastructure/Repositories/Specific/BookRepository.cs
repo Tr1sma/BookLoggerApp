@@ -37,9 +37,13 @@ public class BookRepository : Repository<Book>, IBookRepository
         return await _dbSet
             .Where(b => EF.Functions.Like(b.Title, $"%{searchTerm}%") ||
                        EF.Functions.Like(b.Author, $"%{searchTerm}%") ||
-                       (b.ISBN != null && EF.Functions.Like(b.ISBN, $"%{searchTerm}%")))
+                       (b.ISBN != null && EF.Functions.Like(b.ISBN, $"%{searchTerm}%")) ||
+                       b.BookGenres.Any(bg => EF.Functions.Like(bg.Genre.Name, $"%{searchTerm}%")) ||
+                       b.BookTropes.Any(bt => EF.Functions.Like(bt.Trope.Name, $"%{searchTerm}%")))
             .Include(b => b.BookGenres)
                 .ThenInclude(bg => bg.Genre)
+            .Include(b => b.BookTropes)
+                .ThenInclude(bt => bt.Trope)
             .ToListAsync();
     }
 
