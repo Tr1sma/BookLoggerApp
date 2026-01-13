@@ -77,4 +77,20 @@ public class BookRepository : Repository<Book>, IBookRepository
         return await _dbSet
             .FirstOrDefaultAsync(b => b.ISBN == isbn);
     }
+
+    public async Task<int> GetCountByCompletionYearAsync(int year, CancellationToken ct = default)
+    {
+        if (year < 1 || year > 9999)
+        {
+            return 0;
+        }
+
+        var start = new DateTime(year, 1, 1);
+        var end = start.AddYears(1);
+
+        return await _dbSet
+            .CountAsync(b => b.Status == ReadingStatus.Completed &&
+                             b.DateCompleted >= start &&
+                             b.DateCompleted < end, ct);
+    }
 }
