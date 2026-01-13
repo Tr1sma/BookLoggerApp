@@ -18,4 +18,10 @@ public interface IGenreService
     Task AddGenreToBookAsync(Guid bookId, Guid genreId, CancellationToken ct = default);
     Task RemoveGenreFromBookAsync(Guid bookId, Guid genreId, CancellationToken ct = default);
     Task<IReadOnlyList<Genre>> GetGenresForBookAsync(Guid bookId, CancellationToken ct = default);
+
+    // Trope Management
+    Task<IReadOnlyList<Trope>> GetTropesForGenreAsync(Guid genreId, CancellationToken ct = default);
+    Task<IReadOnlyList<Trope>> GetTropesForBookAsync(Guid bookId, CancellationToken ct = default);
+    Task AddTropeToBookAsync(Guid bookId, Guid tropeId, CancellationToken ct = default);
+    Task RemoveTropeFromBookAsync(Guid bookId, Guid tropeId, CancellationToken ct = default);
 }

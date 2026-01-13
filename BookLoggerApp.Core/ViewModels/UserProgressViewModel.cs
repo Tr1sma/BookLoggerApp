@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp.Core.ViewModels;
 
@@ -48,18 +49,15 @@ public partial class UserProgressViewModel : ViewModelBase
 
     private void CalculateProgress()
     {
-        // Use exponential growth formula: Level N requires 100 * (1.5^(N-1)) XP
-        // This matches the XpCalculator in Infrastructure
-
         // Calculate XP accumulated for current level
         int xpForPreviousLevels = 0;
         for (int i = 1; i < CurrentLevel; i++)
         {
-            xpForPreviousLevels += GetXpForLevel(i);
+            xpForPreviousLevels += XpCalculator.GetXpForLevel(i);
         }
 
         CurrentLevelXp = TotalXp - xpForPreviousLevels;
-        NextLevelXp = GetXpForLevel(CurrentLevel);
+        NextLevelXp = XpCalculator.GetXpForLevel(CurrentLevel);
 
         // Calculate percentage (0-100)
         if (NextLevelXp > 0)
@@ -74,11 +72,10 @@ public partial class UserProgressViewModel : ViewModelBase
 
     /// <summary>
     /// Calculate XP required for a specific level (matches XpCalculator logic).
-    /// Exponential growth: Level 1 = 100 XP, Level 2 = 150 XP, Level 3 = 225 XP, etc.
     /// </summary>
     private static int GetXpForLevel(int level)
     {
-        return (int)(100 * Math.Pow(1.5, level - 1));
+        return XpCalculator.GetXpForLevel(level);
     }
 
     /// <summary>

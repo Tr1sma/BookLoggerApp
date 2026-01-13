@@ -48,6 +48,8 @@ public class BookRepository : Repository<Book>, IBookRepository
         return await _dbSet
             .Include(b => b.BookGenres)
                 .ThenInclude(bg => bg.Genre)
+            .Include(b => b.BookTropes)
+                .ThenInclude(bt => bt.Trope)
             .Include(b => b.ReadingSessions)
             .Include(b => b.Quotes)
             .Include(b => b.Annotations)

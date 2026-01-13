@@ -64,6 +64,16 @@ public interface IUnitOfWork : IDisposable
     /// </summary>
     IRepository<AppSettings> AppSettingsRepo { get; }
 
+    /// <summary>
+    /// Repository for Trope entities.
+    /// </summary>
+    IRepository<Trope> Tropes { get; }
+
+    /// <summary>
+    /// Repository for BookTrope junction entities.
+    /// </summary>
+    IRepository<BookTrope> BookTropes { get; }
+
     // ===== Direct Context Access =====
 
     /// <summary>
