@@ -7,16 +7,16 @@ Gebaut mit **.NET 10 MAUI Blazor Hybrid** und **SQLite**.
 
 ---
 
-## 🚀 Features
+## Features
 
-### 📚 Bibliotheks-Management
+### Bibliotheks-Management
 
 - **Umfassende Buch-Verwaltung**: Bücher hinzufügen, bearbeiten und löschen.
 - **Detaillierter Lesestatus**: Geplant, Am Lesen, Abgeschlossen, Abgebrochen.
 - **Spine-Ansicht**: Personalisiere den Buchrücken für das virtuelle Regal (Farbe oder Bild).
 - **Drag & Drop**: Sortiere deine Bücher im Regal per Drag & Drop. (BETA)
 
-### ⭐ Erweitertes Bewertungssystem
+### Erweitertes Bewertungssystem
 
 Statt einer einfachen 5-Sterne-Wertung bietet die App ein **Multi-Kategorie-Rating** (1-5 Sterne):
 
@@ -27,14 +27,14 @@ Statt einer einfachen 5-Sterne-Wertung bietet die App ein **Multi-Kategorie-Rati
 - ⏱️ Pacing
 - 🌍 World Building
 
-### ⏱️ Lesesessions & Tracking
+### Lesesessions & Tracking
 
 - **Aktiver Lese-Timer**: Starte Sessions, pausiere und setze sie fort.
 - **Echtzeit-Tracking**: Erfassung von Lesezeit, gelesenen Seiten und XP.
 - **Session-Zusammenfassung**: Detaillierte Übersicht nach jeder Session.
 - **Streaks**: Verfolge deine täglichen Lesegewohnheiten.
 
-### 🎮 Gamification & Belohnungen
+### Gamification & Belohnungen
 
 - **Level-System**: Sammle XP durch Lesen und steige im Level auf.
 - **Virtueller Garten**:
@@ -44,22 +44,22 @@ Statt einer einfachen 5-Sterne-Wertung bietet die App ein **Multi-Kategorie-Rati
 - **Achievements**: Schalte Meilensteine und Erfolge frei.
 - **Leseziele**: Setze dir Ziele (z.B. "30 Minuten täglich") und verfolge den Fortschritt.
 
-### 📊 Statistiken & Analytics
+### Statistiken & Analytics
 
 - **Dashboards**: Visuelle Aufbereitung deiner Lesegewohnheiten.
 - **Trends**: Verlauf der Leseaktivität über die Zeit.
 - **Genre-Analyse**: Welches Genre liest du am meisten?
 - **Rating-Insights**: Durchschnittsbewertungen pro Kategorie (z.B. "Wie bewerte ich Plot vs. Charaktere?").
 
-### 💾 Daten & Sicherheit
+### Daten & Sicherheit
 
 - **Offline-First**: Alle Daten liegen lokal auf deinem Gerät (SQLite).
 - **Import/Export**:
-  - 📤 Export als JSON (Vollständiges Backup) oder CSV (Tabellenkalkulation).
-  - 📥 Import von Daten aus JSON/CSV.
+  - Export als JSON (Vollständiges Backup) oder CSV (Tabellenkalkulation).
+  - Import von Daten aus JSON/CSV.
 - **Backup**: Erstelle und wiederherstelle vollständige Datenbank-Backups.
 
-### 🎨 Technik & Design
+### Technik & Design
 
 - **Modernes UI**: Responsives Blazor Hybrid Interface.
 - **Dark Mode**: Augenfreundliches, warmes "Cozy"-Theme.
@@ -67,7 +67,7 @@ Statt einer einfachen 5-Sterne-Wertung bietet die App ein **Multi-Kategorie-Rati
 
 ---
 
-## 🔧 Tech Stack
+## Tech Stack
 - [.NET 10 MAUI Blazor Hybrid](https://learn.microsoft.com/dotnet/maui)
 - SQLite für lokale Datenspeicherung
 - MVVM + Dependency Injection
@@ -95,7 +95,7 @@ Statt einer einfachen 5-Sterne-Wertung bietet die App ein **Multi-Kategorie-Rati
 
 ---
 
-## 📂 Projektstruktur
+## Projektstruktur
 
 ```bash
 BookLoggerApp/                    # Presentation Layer (MAUI + Blazor)
@@ -117,7 +117,7 @@ BookLoggerApp.Tests/              # Unit Tests (xUnit + FluentAssertions)
 
 ---
 
-## 🛠️ Entwicklung
+## Entwicklung
 
 ### Voraussetzungen
 
