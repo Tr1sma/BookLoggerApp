@@ -113,12 +113,27 @@ public partial class BookshelfViewModel : ViewModelBase
 
                 var items = new List<ShelfItemViewModel>();
 
-                // Books
-                foreach (var bookShelf in fullShelf.BookShelves)
+                // Books - For Auto-Sort shelves, we need to use GetBooksForShelfAsync
+                // which dynamically filters books by status instead of using BookShelves relation
+                if (fullShelf.AutoSortRule != ShelfAutoSortRule.None)
                 {
-                    if (bookShelf.Book != null)
+                    // Auto-Sort shelf: Get books dynamically based on status
+                    var booksForShelf = await _shelfService.GetBooksForShelfAsync(fullShelf.Id);
+                    int position = 0;
+                    foreach (var book in booksForShelf)
                     {
-                        items.Add(new ShelfItemViewModel(bookShelf.Book, bookShelf.Position));
+                        items.Add(new ShelfItemViewModel(book, position++));
+                    }
+                }
+                else
+                {
+                    // Manual shelf: Use the BookShelves relation
+                    foreach (var bookShelf in fullShelf.BookShelves)
+                    {
+                        if (bookShelf.Book != null)
+                        {
+                            items.Add(new ShelfItemViewModel(bookShelf.Book, bookShelf.Position));
+                        }
                     }
                 }
 
