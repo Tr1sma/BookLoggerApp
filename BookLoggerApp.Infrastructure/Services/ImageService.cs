@@ -18,7 +18,6 @@ public class ImageService : IImageService
         : this(fileSystem, logger, null)
     {
     }
-
     // Public constructor for testing or custom HttpClient usage
     public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger, HttpClient? httpClient)
     {
