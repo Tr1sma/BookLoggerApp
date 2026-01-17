@@ -51,6 +51,7 @@ public partial class SettingsViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             Settings = await _settingsProvider.GetSettingsAsync();
+            MigrationLog = _migrationService.GetMigrationLog();
         }, "Failed to load settings");
     }
 
@@ -112,17 +113,33 @@ public partial class SettingsViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             // 1. Pick File
+            AppendLog("Opening file picker...");
             var filePath = await _filePickerService.PickFileAsync("Select Backup File", ".zip");
+            AppendLog($"Picker returned path: {filePath ?? "NULL"}");
             
-            if (string.IsNullOrEmpty(filePath)) return; // User cancelled
+            if (string.IsNullOrEmpty(filePath))
+            {
+                AppendLog("Restore cancelled or path is empty.");
+                // User might have thought they selected a file but the picker failed.
+                SetError("File selection failed or was cancelled. If you selected a file from Google Drive, try saving it to your device storage first.");
+                return; 
+            }
 
             // 2. Restore
+            AppendLog($"Calling RestoreFromBackupAsync with {filePath}");
             await _importExportService.RestoreFromBackupAsync(filePath);
 
             // 3. Reload settings/data
              await LoadAsync();
+             AppendLog("Settings reloaded.");
             
         }, "Failed to restore backup");
+    }
+    private void AppendLog(string message)
+    {
+        _migrationService.Log(message);
+        // Refresh local property from source of truth
+        MigrationLog = _migrationService.GetMigrationLog();
     }
 }
 
