@@ -1,0 +1,1 @@
+Auf der Stats seite stimmt der Fortschritt balcken und die prozent zahl nicht mit dem aktuellen tatsächlichen fortschritt . da steht z.b. 623%. Das liegt daran das hier noch die alte formel verwendet wird anstatt die neue die zum level berechnen genutzt wird
