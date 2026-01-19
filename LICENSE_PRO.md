@@ -1,6 +1,6 @@
 # Pro-Lizenz – Book Logger App
 
-Copyright (c) 2025 Ben Sowieja
+Copyright (c) 2026 Ben Sowieja
 
 ---
 
