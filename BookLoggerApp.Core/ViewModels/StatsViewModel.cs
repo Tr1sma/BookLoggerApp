@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Helpers;
 using System.Collections.ObjectModel;
 
 namespace BookLoggerApp.Core.ViewModels;
@@ -194,6 +195,9 @@ public partial class StatsViewModel : ViewModelBase
         TotalXp = settings.TotalXp;
         TotalCoins = settings.Coins;
 
+        // Recalculate level from total XP to ensure consistency and fix sync bugs
+        CurrentLevel = XpCalculator.CalculateLevelFromXp(TotalXp);
+
         // Calculate XP for current level progress
         CalculateProgress();
 
@@ -226,18 +230,17 @@ public partial class StatsViewModel : ViewModelBase
 
     private void CalculateProgress()
     {
-        // Use exponential growth formula: Level N requires 100 * (1.5^(N-1)) XP
-        // This matches the XpCalculator in Infrastructure
-
+        // Use uniform logic from XpCalculator
+        
         // Calculate XP accumulated for current level
         int xpForPreviousLevels = 0;
         for (int i = 1; i < CurrentLevel; i++)
         {
-            xpForPreviousLevels += GetXpForLevel(i);
+            xpForPreviousLevels += BookLoggerApp.Core.Helpers.XpCalculator.GetXpForLevel(i);
         }
 
         CurrentLevelXp = TotalXp - xpForPreviousLevels;
-        NextLevelXp = GetXpForLevel(CurrentLevel);
+        NextLevelXp = BookLoggerApp.Core.Helpers.XpCalculator.GetXpForLevel(CurrentLevel);
 
         // Calculate percentage (0-100)
         if (NextLevelXp > 0)
@@ -252,11 +255,10 @@ public partial class StatsViewModel : ViewModelBase
 
     /// <summary>
     /// Calculate XP required for a specific level (matches XpCalculator logic).
-    /// Exponential growth: Level 1 = 100 XP, Level 2 = 150 XP, Level 3 = 225 XP, etc.
     /// </summary>
     private static int GetXpForLevel(int level)
     {
-        return (int)(100 * Math.Pow(1.5, level - 1));
+        return BookLoggerApp.Core.Helpers.XpCalculator.GetXpForLevel(level);
     }
 
     private void GenerateLevelMilestones()

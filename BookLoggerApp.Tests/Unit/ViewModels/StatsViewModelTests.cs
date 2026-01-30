@@ -69,23 +69,53 @@ public class StatsViewModelTests
     public async Task LoadAsync_Should_Calculate_Level_Progress_Correctly()
     {
         // Arrange
-        var settings = new AppSettings { UserLevel = 2, TotalXp = 175 }; // Level 1 is 100xp, so 75xp into Level 2 (which needs 150xp total delta? No, formula is different)
-        // Formula: Level 1 = 100 XP. Level 2 req 150 XP. Cumulative: L1=100.
-        // wait, source code: GetXpForLevel(1) = 100. xpForPreviousLevels(level 2) loops i=1 to 1. sums GetXpForLevel(1) = 100.
+        var settings = new AppSettings { UserLevel = 2, TotalXp = 175 }; 
+        // Formula: Level 1 = 100 XP. Level 2 req 400 XP. Cumulative: L1=100.
         // CurrentLevelXp = TotalXp (175) - 100 = 75.
-        // NextLevelXp = GetXpForLevel(2) = 100 * 1.5^1 = 150.
-        // Percentage = 75 / 150 = 50%
+        // NextLevelXp = GetXpForLevel(2) = 100 * 2^2 = 400.
+        // Percentage = 75 / 400 = 18.75%
         
         _settingsProvider.GetSettingsAsync().Returns(settings);
         _plantService.GetAllAsync().Returns(new List<UserPlant>());
+        _plantService.CalculateTotalXpBoostAsync().Returns(0m);
+        // Note: CalculateTotalXpBoostAsync is needed because LoadAsync calls it
 
         // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
         // Assert
-        _viewModel.ProgressPercentage.Should().Be(50m);
+        _viewModel.ProgressPercentage.Should().Be(18.75m);
         _viewModel.CurrentLevelXp.Should().Be(75);
-        _viewModel.NextLevelXp.Should().Be(150);
+        _viewModel.NextLevelXp.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WithStaleLevel_Should_Recalculate_Level()
+    {
+        // Arrange
+        // Scenario: stored Level 1, but TotalXp = 600.
+        // Level 1 cost: 100. (Total 100)
+        // Level 2 cost: 400. (Total 500)
+        // Level 3 cost: 900. (Total 1400)
+        // With 600 XP: 
+        // > 100 (L1 done) -> Lev 2. Rem 500.
+        // > 400 (L2 done) -> Lev 3. Rem 100.
+        // < 900. Stop.
+        // Should be Level 3.
+        
+        var settings = new AppSettings { UserLevel = 1, TotalXp = 600 };
+        _settingsProvider.GetSettingsAsync().Returns(settings);
+        _plantService.GetAllAsync().Returns(new List<UserPlant>());
+        _plantService.CalculateTotalXpBoostAsync().Returns(0m);
+
+        // Act
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+
+        // Assert
+        _viewModel.CurrentLevel.Should().Be(3);
+        _viewModel.CurrentLevelXp.Should().Be(100);
+        _viewModel.NextLevelXp.Should().Be(900);
+        _viewModel.ProgressPercentage.Should().BeApproximately(11.11m, 0.01m);
     }
 
     [Fact]
