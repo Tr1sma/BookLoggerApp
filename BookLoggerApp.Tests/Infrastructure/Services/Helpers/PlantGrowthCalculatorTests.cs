@@ -9,6 +9,7 @@ public class PlantGrowthCalculatorTests
 {
     #region XP Calculation Tests
 
+
     [Theory]
     [InlineData(1, 0)]      // Level 1 requires 0 XP
     [InlineData(2, 150)]    // Level 2 requires 100 * 1.5^1 = 150 XP
