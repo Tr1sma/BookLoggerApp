@@ -39,8 +39,11 @@ public partial class UserProgressViewModel : ViewModelBase
         {
             var settings = await _settingsProvider.GetSettingsAsync();
 
-            CurrentLevel = settings.UserLevel;
             TotalXp = settings.TotalXp;
+
+            // Recalculate level from total XP to ensure consistency
+            // This fixes the bug where progress > 100% if stored level is stale
+            CurrentLevel = XpCalculator.CalculateLevelFromXp(TotalXp);
 
             // Calculate XP for current level progress
             CalculateProgress();
