@@ -477,10 +477,19 @@ public class ImportExportService : IImportExportService
                 }
 
                 // 2. Validate Backup Content
-                var extractedDbPath = Path.Combine(tempExtractDir, "booklogger.db");
-                if (!File.Exists(extractedDbPath))
+                // Case-insensitive search for database file
+                var extractedDbPath = Directory.GetFiles(tempExtractDir, "booklogger.db", SearchOption.TopDirectoryOnly)
+                    .FirstOrDefault();
+
+                // If not found, try any .db file (fallback)
+                if (string.IsNullOrEmpty(extractedDbPath))
                 {
-                    throw new InvalidOperationException("Invalid backup: Missing database file");
+                    extractedDbPath = Directory.GetFiles(tempExtractDir, "*.db", SearchOption.TopDirectoryOnly).FirstOrDefault();
+                }
+
+                if (string.IsNullOrEmpty(extractedDbPath) || !File.Exists(extractedDbPath))
+                {
+                    throw new InvalidOperationException("Invalid backup: Missing database file (booklogger.db)");
                 }
 
                 await using var context = await _contextFactory.CreateDbContextAsync(ct);
@@ -495,14 +504,35 @@ public class ImportExportService : IImportExportService
                 // 3. Close Connections & Restore DB
                 await context.Database.CloseConnectionAsync();
                 
+                // Dispose the context BEFORE copying to release all handles
+                await context.DisposeAsync();
+                
+                // Clear SQLite connection pool to ensure no stale connections
+                Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+                
                 // Wait a bit to ensure locks are released (SQLite can be sticky)
-                await Task.Delay(100, ct);
+                await Task.Delay(200, ct);
 
                 File.Copy(extractedDbPath, currentDbPath, true);
+                
+                // Also delete any WAL/SHM files that might cause issues
+                var walPath = currentDbPath + "-wal";
+                var shmPath = currentDbPath + "-shm";
+                if (File.Exists(walPath)) File.Delete(walPath);
+                if (File.Exists(shmPath)) File.Delete(shmPath);
+
+                // Start Modification: Run migrations on a FRESH context after file copy
+                _logger?.LogInformation("Applying migrations to restored database...");
+                await using var freshContext = await _contextFactory.CreateDbContextAsync(ct);
+                await freshContext.Database.MigrateAsync(ct);
+                // End Modification
 
                 // 4. Restore Covers
-                var extractedCoversDir = Path.Combine(tempExtractDir, "covers");
-                if (Directory.Exists(extractedCoversDir))
+                // Case-insensitive search for covers directory
+                var extractedCoversDir = Directory.GetDirectories(tempExtractDir, "covers", SearchOption.TopDirectoryOnly)
+                    .FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(extractedCoversDir) && Directory.Exists(extractedCoversDir))
                 {
                     var targetCoversDir = _fileSystem.CombinePath(_basePath, "covers");
 
