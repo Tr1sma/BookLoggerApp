@@ -75,16 +75,29 @@ public class ShelfService : IShelfService
 
         if (!exists)
         {
-            // Determine position (last)
-            var maxPos = await context.BookShelves
+            var bookShelves = await context.BookShelves
                 .Where(bs => bs.ShelfId == shelfId)
-                .MaxAsync(bs => (int?)bs.Position) ?? -1;
+                .ToListAsync();
+
+            foreach (var bookShelf in bookShelves)
+            {
+                bookShelf.Position += 1;
+            }
+
+            var plantShelves = await context.PlantShelves
+                .Where(ps => ps.ShelfId == shelfId)
+                .ToListAsync();
+
+            foreach (var plantShelf in plantShelves)
+            {
+                plantShelf.Position += 1;
+            }
 
             context.BookShelves.Add(new BookShelf
             {
                 ShelfId = shelfId,
                 BookId = bookId,
-                Position = maxPos + 1
+                Position = 0
             });
             await context.SaveChangesAsync();
         }
@@ -166,7 +179,9 @@ public class ShelfService : IShelfService
                     query = query.Where(b => b.Status == ReadingStatus.Abandoned);
                     break;
             }
-            return await query.ToListAsync();
+            return await query
+                .OrderByDescending(b => b.DateAdded)
+                .ToListAsync();
         }
         else
         {
