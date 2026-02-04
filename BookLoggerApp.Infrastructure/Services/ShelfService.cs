@@ -75,22 +75,36 @@ public class ShelfService : IShelfService
 
         if (!exists)
         {
-            var bookShelves = await context.BookShelves
-                .Where(bs => bs.ShelfId == shelfId)
-                .ToListAsync();
-
-            foreach (var bookShelf in bookShelves)
+            if (context.Database.IsRelational())
             {
-                bookShelf.Position += 1;
+                await context.BookShelves
+                    .Where(bs => bs.ShelfId == shelfId)
+                    .ExecuteUpdateAsync(update => update.SetProperty(bs => bs.Position, bs => bs.Position + 1));
+
+                // Books and plants share the same shelf positions, so shift them too.
+                await context.PlantShelves
+                    .Where(ps => ps.ShelfId == shelfId)
+                    .ExecuteUpdateAsync(update => update.SetProperty(ps => ps.Position, ps => ps.Position + 1));
             }
-
-            var plantShelves = await context.PlantShelves
-                .Where(ps => ps.ShelfId == shelfId)
-                .ToListAsync();
-
-            foreach (var plantShelf in plantShelves)
+            else
             {
-                plantShelf.Position += 1;
+                var bookShelves = await context.BookShelves
+                    .Where(bs => bs.ShelfId == shelfId)
+                    .ToListAsync();
+
+                foreach (var bookShelf in bookShelves)
+                {
+                    bookShelf.Position += 1;
+                }
+
+                var plantShelves = await context.PlantShelves
+                    .Where(ps => ps.ShelfId == shelfId)
+                    .ToListAsync();
+
+                foreach (var plantShelf in plantShelves)
+                {
+                    plantShelf.Position += 1;
+                }
             }
 
             context.BookShelves.Add(new BookShelf
