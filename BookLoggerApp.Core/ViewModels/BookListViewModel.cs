@@ -47,7 +47,7 @@ public partial class BookListViewModel : ViewModelBase
             Status = ReadingStatus.Planned
         };
         await _books.AddAsync(book);
-        Items.Add(book);
+        Items.Insert(0, book);
 
         NewTitle = string.Empty;
         NewAuthor = string.Empty;

@@ -34,12 +34,40 @@ public class ProgressService : IProgressService
 
     public async Task<ReadingSession> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
     {
-        // Calculate XP
+        // Get active plant for boost calculation
+        var activePlant = await _plantService.GetActivePlantAsync(ct);
+
+        // Check for reading streak
         var hasStreak = await HasReadingStreakAsync(ct);
-        session.XpEarned = XpCalculator.CalculateXpForSession(session.Minutes, session.PagesRead, hasStreak);
+
+        // Award XP using the progression system (with plant boost and streak bonus)
+        var progressionResult = await _progressionService.AwardSessionXpAsync(
+            session.Minutes,
+            session.PagesRead,
+            activePlant?.Id,
+            hasStreak
+        );
+
+        session.XpEarned = progressionResult.XpEarned;
 
         var result = await _unitOfWork.ReadingSessions.AddAsync(session);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        // Record reading day for active plant (for plant leveling)
+        // Plants level up based on reading days (15+ min sessions), not XP
+        if (activePlant != null)
+        {
+            await _plantService.RecordReadingDayAsync(
+                activePlant.Id,
+                session.StartedAt,
+                session.Minutes,
+                ct
+            );
+        }
+
+        // Notify that goals may have changed
+        _goalService.NotifyGoalsChanged();
+
         return result;
     }
 
