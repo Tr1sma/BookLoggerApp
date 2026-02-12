@@ -16,5 +16,5 @@
 - **ViewModels**: Inherit from ViewModelBase, use `[ObservableProperty]` for CommunityToolkit.Mvvm
 - **Validation**: FluentValidation in Core/Validators, custom exceptions in Core/Exceptions
 - **Testing**: xUnit + FluentAssertions, arrange-act-assert pattern
-- **Architecture**: Layered (Core→Infrastructure→UI), DI with specific lifetimes (services=singleton, repos=transient)
+- **Architecture**: Layered (Core→Infrastructure→UI), DI with specific lifetimes (business services=transient, platform services=singleton, UnitOfWork=transient)
 - **EF Core**: SQLite with migrations, RowVersion for concurrency, async operations
