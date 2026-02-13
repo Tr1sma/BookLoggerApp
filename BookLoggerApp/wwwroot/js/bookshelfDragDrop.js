@@ -16,7 +16,7 @@ window.bookshelfDragDrop = {
     _autoScrollRaf: null,
     _autoScrollEdge: 60,
     _autoScrollSpeed: 8,
-    _contextMenuPrevented: false,
+    _boundTouchMovePrevent: null,
 
     // ─── Public API ───────────────────────────────────────
 
@@ -29,7 +29,7 @@ window.bookshelfDragDrop = {
         this._boundPointerDown = this._onPointerDown.bind(this);
         this._boundPointerMove = this._onPointerMove.bind(this);
         this._boundPointerUp = this._onPointerUp.bind(this);
-        this._boundPointerCancel = this._onPointerUp.bind(this);
+        this._boundPointerCancel = this._onPointerCancel.bind(this);
         this._boundContextMenu = this._onContextMenu.bind(this);
 
         this._container.addEventListener('pointerdown', this._boundPointerDown);
@@ -89,7 +89,7 @@ window.bookshelfDragDrop = {
         var self = this;
         this._longPressTimer = setTimeout(function () {
             self._longPressTriggered = true;
-            self._activateDrag(slot, e.clientX, e.clientY, e.pointerId);
+            self._activateDrag(slot, self._startX, self._startY, self._pointerId);
         }, this._longPressDelay);
     },
 
@@ -128,7 +128,25 @@ window.bookshelfDragDrop = {
             this._completeDrop();
         }
 
-        // Reset state (but don't reset _draggedSlot until after cleanup)
+        // Reset state
+        this._draggedSlot = null;
+        this._pointerId = null;
+    },
+
+    _onPointerCancel: function (e) {
+        // Browser took over the gesture (e.g. scrolling).
+        // If drag was active, this should not happen (touchmove prevention should block it),
+        // but as a safety net, complete the drop with whatever target we have.
+        this._cancelLongPress();
+
+        if (this._draggedSlot) {
+            this._draggedSlot.classList.remove('long-press-active');
+        }
+
+        if (this._dragActive) {
+            this._completeDrop();
+        }
+
         this._draggedSlot = null;
         this._pointerId = null;
     },
@@ -140,10 +158,39 @@ window.bookshelfDragDrop = {
         }
     },
 
+    // ─── Touch scroll prevention ──────────────────────────
+    // The browser decides at touchstart time (based on CSS touch-action)
+    // whether to handle scrolling. Since we activate drag 400ms later,
+    // touch-action: none set at that point is too late. Instead, we use
+    // a non-passive touchmove listener that calls preventDefault() to
+    // stop the browser from scrolling (and firing pointercancel).
+
+    _preventTouchMove: function (e) {
+        e.preventDefault();
+    },
+
+    _startTouchMovePrevention: function () {
+        if (!this._boundTouchMovePrevent) {
+            this._boundTouchMovePrevent = this._preventTouchMove.bind(this);
+        }
+        document.addEventListener('touchmove', this._boundTouchMovePrevent, { passive: false });
+    },
+
+    _stopTouchMovePrevention: function () {
+        if (this._boundTouchMovePrevent) {
+            document.removeEventListener('touchmove', this._boundTouchMovePrevent);
+        }
+    },
+
     // ─── Drag Activation ──────────────────────────────────
 
     _activateDrag: function (slot, x, y, pointerId) {
         this._dragActive = true;
+
+        // CRITICAL: Prevent browser from stealing the touch gesture for scrolling.
+        // This must happen before the user starts moving, so the browser's
+        // touchmove handler sees our preventDefault() call.
+        this._startTouchMovePrevention();
 
         // Capture pointer for reliable tracking even outside container
         try {
@@ -157,7 +204,7 @@ window.bookshelfDragDrop = {
         slot.classList.remove('long-press-active');
         slot.classList.add('dragging');
 
-        // Prevent scrolling and text selection during drag
+        // Prevent text selection during drag
         document.body.classList.add('drag-active');
 
         // Haptic feedback
@@ -344,6 +391,7 @@ window.bookshelfDragDrop = {
         }
 
         var target = this._dropTarget;
+        var dotNetRef = this._dotNetRef;
 
         if (target && target.type === 'slot') {
             var targetSlot = target.element;
@@ -358,11 +406,11 @@ window.bookshelfDragDrop = {
 
             if (sourceShelfId === targetShelfId) {
                 // Same shelf: reorder
-                this._dotNetRef.invokeMethodAsync('OnReorderItem',
-                    sourceShelfId, sourceItemId, sourceItemType, targetItemId);
+                dotNetRef.invokeMethodAsync('OnReorderItem',
+                    sourceShelfId, sourceItemId, sourceItemType, targetItemId)
+                    .catch(function (err) { console.error('OnReorderItem failed:', err); });
             } else {
                 // Different shelf: move between shelves
-                // Calculate position based on target item's index
                 var targetItems = targetSection.querySelectorAll('.shelf-slot');
                 var position = -1;
                 for (var i = 0; i < targetItems.length; i++) {
@@ -371,15 +419,17 @@ window.bookshelfDragDrop = {
                         break;
                     }
                 }
-                this._dotNetRef.invokeMethodAsync('OnMoveItemToShelf',
-                    sourceShelfId, targetShelfId, sourceItemId, sourceItemType, position);
+                dotNetRef.invokeMethodAsync('OnMoveItemToShelf',
+                    sourceShelfId, targetShelfId, sourceItemId, sourceItemType, position)
+                    .catch(function (err) { console.error('OnMoveItemToShelf failed:', err); });
             }
         } else if (target && target.type === 'section') {
-            var targetShelfId = target.element.dataset.shelfId;
-            if (targetShelfId && targetShelfId !== sourceShelfId) {
+            var sectionShelfId = target.element.dataset.shelfId;
+            if (sectionShelfId && sectionShelfId !== sourceShelfId) {
                 // Append to end of target shelf
-                this._dotNetRef.invokeMethodAsync('OnMoveItemToShelf',
-                    sourceShelfId, targetShelfId, sourceItemId, sourceItemType, -1);
+                dotNetRef.invokeMethodAsync('OnMoveItemToShelf',
+                    sourceShelfId, sectionShelfId, sourceItemId, sourceItemType, -1)
+                    .catch(function (err) { console.error('OnMoveItemToShelf failed:', err); });
             }
         }
 
@@ -396,6 +446,9 @@ window.bookshelfDragDrop = {
     },
 
     _cleanup: function () {
+        // Stop preventing touch scrolling
+        this._stopTouchMovePrevention();
+
         // Remove ghost
         if (this._ghost && this._ghost.parentNode) {
             this._ghost.parentNode.removeChild(this._ghost);
