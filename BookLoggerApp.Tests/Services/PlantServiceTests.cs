@@ -18,6 +18,7 @@ public class PlantServiceTests : IDisposable
     private readonly IUnitOfWork _unitOfWork;
     private readonly DbContextTestHelper _dbHelper;
     private readonly IMemoryCache _cache;
+    private readonly AppSettingsProvider _settingsProvider;
 
     public PlantServiceTests()
     {
@@ -31,9 +32,9 @@ public class PlantServiceTests : IDisposable
 
         _unitOfWork = new UnitOfWork(_dbHelper.Context);
         var contextFactory = new TestDbContextFactory(_dbHelper.DatabaseName);
-        var settingsProvider = new AppSettingsProvider(contextFactory);
+        _settingsProvider = new AppSettingsProvider(contextFactory);
         var logger = NullLogger<PlantService>.Instance;
-        _plantService = new PlantService(_unitOfWork, settingsProvider, _cache, logger);
+        _plantService = new PlantService(_unitOfWork, _settingsProvider, _cache, logger);
     }
 
     public void Dispose()
@@ -756,6 +757,93 @@ public class PlantServiceTests : IDisposable
         var afterDay6 = await _plantService.GetByIdAsync(plant.Id);
         afterDay6!.CurrentLevel.Should().Be(3);
         afterDay6.ReadingDaysCount.Should().Be(6);
+    }
+
+    #endregion
+
+    #region Coin Reward Tests
+
+    [Fact]
+    public async Task AddExperienceAsync_WhenLevelUp_ShouldAwardCoins()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Coin Earning Plant");
+        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
+
+        // Act - Add enough XP to reach level 2 (150 XP needed)
+        await _plantService.AddExperienceAsync(plant.Id, 150);
+
+        // Assert - Should award 100 coins for 1 level gained
+        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
+        finalCoins.Should().Be(initialCoins + 100);
+    }
+
+    [Fact]
+    public async Task AddExperienceAsync_WhenMultipleLevelUps_ShouldAwardCoinsForEachLevel()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Multi Level Coin Plant");
+        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
+
+        // Act - Add enough XP to reach level 3 (375 XP needed: 150 for L2 + 225 for L3)
+        await _plantService.AddExperienceAsync(plant.Id, 375);
+
+        // Assert - Should award 200 coins for 2 levels gained (2 * 100)
+        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
+        finalCoins.Should().Be(initialCoins + 200);
+    }
+
+    [Fact]
+    public async Task AddExperienceAsync_WhenNoLevelUp_ShouldNotAwardCoins()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "No Level Plant");
+        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
+
+        // Act - Add XP but not enough to level up
+        await _plantService.AddExperienceAsync(plant.Id, 50);
+
+        // Assert - Coins should remain unchanged
+        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
+        finalCoins.Should().Be(initialCoins);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_WhenLevelUp_ShouldAwardCoins()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies(growthRate: 1.0);
+        var plant = await SeedUserPlant(species.Id, "Reading Coin Plant");
+        var day1 = DateTime.UtcNow.Date;
+        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
+
+        // Act - 3 reading days at GrowthRate 1.0 reaches level 2
+        await _plantService.RecordReadingDayAsync(plant.Id, day1, 20);
+        await _plantService.RecordReadingDayAsync(plant.Id, day1.AddDays(1), 20);
+        await _plantService.RecordReadingDayAsync(plant.Id, day1.AddDays(2), 20);
+
+        // Assert - Should award 100 coins for 1 level gained
+        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
+        finalCoins.Should().Be(initialCoins + 100);
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_WhenNoLevelUp_ShouldNotAwardCoins()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies(growthRate: 1.0);
+        var plant = await SeedUserPlant(species.Id, "No Level Reading Plant");
+        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
+
+        // Act - Only 1 reading day, not enough for level up
+        await _plantService.RecordReadingDayAsync(plant.Id, DateTime.UtcNow.Date, 20);
+
+        // Assert - Coins should remain unchanged
+        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
+        finalCoins.Should().Be(initialCoins);
     }
 
     #endregion

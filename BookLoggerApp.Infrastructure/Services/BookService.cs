@@ -35,7 +35,7 @@ public class BookService : IBookService
     public async Task<IReadOnlyList<Book>> GetAllAsync(CancellationToken ct = default)
     {
         var books = await _unitOfWork.Books.GetAllAsync();
-        return books.ToList();
+        return books.OrderByDescending(b => b.DateAdded).ToList();
     }
 
     public async Task<Book?> GetByIdAsync(Guid id, CancellationToken ct = default)

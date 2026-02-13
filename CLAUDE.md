@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BookLoggerApp is a .NET 10 MAUI Blazor Hybrid Android app for managing and tracking books. It uses Entity Framework Core with SQLite for local data storage and follows a layered architecture with Repository and Unit of Work patterns.
+BookLoggerApp (branded as **LoveLit**) is a .NET 10 MAUI Blazor Hybrid Android app for managing and tracking books. It uses Entity Framework Core with SQLite for local data storage and follows a layered architecture with Repository and Unit of Work patterns. It includes gamification features (XP/levels, plant growing, shop) — see `XP_CALCULATION_GUIDE.md` for the full progression system.
 
 ## Build and Test Commands
 
@@ -35,6 +35,16 @@ dotnet ef database update --project BookLoggerApp.Infrastructure --startup-proje
 dotnet ef migrations list --project BookLoggerApp.Infrastructure --startup-project BookLoggerApp
 ```
 
+## Code Style
+
+- `.editorconfig` enforces: UTF-8, LF line endings, 4-space indent, trim trailing whitespace
+- C#: braces on new line (`csharp_new_line_before_open_brace = all`), `var` for apparent types
+- System directives first, separate import groups, no unnecessary `this.` qualification
+- Nullable reference types enabled
+- Async methods should accept `CancellationToken` parameters
+- ViewModels use `[ObservableProperty]` attribute (CommunityToolkit.Mvvm source generators)
+- Testing: xUnit + FluentAssertions, arrange-act-assert pattern
+
 ## Architecture
 
 ### Project Structure
@@ -45,147 +55,110 @@ The solution follows a layered architecture with four main projects:
    - Domain models and entities
    - Service interfaces in `Services/Abstractions/`
    - ViewModels using CommunityToolkit.Mvvm
+   - Helper classes: `XpCalculator`, `SpineColorHelper` in `Helpers/`
    - Custom exceptions in `Exceptions/`
    - FluentValidation validators in `Validators/`
 
 2. **BookLoggerApp.Infrastructure** - Infrastructure layer (net10.0)
    - Entity Framework Core `AppDbContext` and entity configurations
-   - Repository implementations (generic and specific)
-   - Unit of Work pattern implementation
+   - Unit of Work pattern implementation (individual repositories are NOT registered in DI)
    - Service implementations in `Services/`
+   - Helper: `PlantGrowthCalculator` in `Services/Helpers/`
    - Database initialization via `DbInitializer`
 
-3. **BookLoggerApp** - Presentation layer (multi-targeted)
-   - Targets: net10.0-android, net10.0-ios, net10.0-maccatalyst, net10.0-windows
+3. **BookLoggerApp** - Presentation layer (net10.0-android primarily)
    - Blazor components and pages in `Components/`
    - Entry point: `MauiProgram.cs` for DI configuration
-   - Platform-specific implementations in `Platforms/`
+   - MAUI-specific services in `Services/` (permissions, scanner, file picker, migration)
+   - Platform-specific: `CustomWebChromeClient` (Android) for camera/WebView permissions
 
 4. **BookLoggerApp.Tests** - Test project (net10.0)
-   - Uses xUnit as test framework
-   - Uses FluentAssertions for assertions
-   - Uses EF Core InMemory provider for database tests
+   - Uses xUnit, FluentAssertions, NSubstitute (mocking), EF Core InMemory provider
+   - Test helpers: `TestDbContext`, `TestDbContextFactory`, `DbContextTestHelper`
+   - Mock services: `MockBookService`, `MockGoalService`, `MockPlantService`, `MockProgressionService`
 
 ### Core Architecture Patterns
 
-**Layered Architecture:**
-- Domain layer (Core) contains business logic and is framework-agnostic
-- Infrastructure layer implements data access and external dependencies
-- Presentation layer (MAUI Blazor) contains UI and user interaction logic
-
-**Repository Pattern:**
+**Repository + Unit of Work:**
 - Generic `IRepository<T>` for common CRUD operations
-- Specific repositories for complex queries: `IBookRepository`, `IReadingSessionRepository`, `IReadingGoalRepository`, `IUserPlantRepository`
-- All repositories located in `BookLoggerApp.Infrastructure/Repositories/`
-
-**Unit of Work Pattern:**
-- `IUnitOfWork` coordinates repositories and manages transactions
-- Ensures consistency across multiple repository operations
-- Implemented in `BookLoggerApp.Infrastructure/Repositories/UnitOfWork.cs`
+- Specific repositories: `IBookRepository`, `IReadingSessionRepository`, `IReadingGoalRepository`, `IUserPlantRepository`
+- Only `IUnitOfWork` is registered in DI (transient) — it creates all repositories internally with a shared DbContext
+- All services should use `IUnitOfWork`, not direct repository injection
 
 **Entity Framework Core:**
-- `AppDbContext` manages entity configurations
-- Entity configurations in `BookLoggerApp.Infrastructure/Data/Configurations/`
-- Uses SQLite provider with EF Core migrations
-- Database path resolved via `PlatformsDbPath.GetDatabasePath()` in `BookLoggerApp.Infrastructure/PlatformsDbPath.cs`
-- Default database file: `booklogger.db3` in `Environment.SpecialFolder.LocalApplicationData`
+- `AppDbContext` manages entity configurations (in `Data/Configurations/`)
+- SQLite provider with EF Core migrations
+- Database path: `PlatformsDbPath.GetDatabasePath()` → `booklogger.db3` in `LocalApplicationData`
+- Both `DbContextFactory<AppDbContext>` and direct `AppDbContext` registered as **transient**
 
-**Dependency Injection:**
-- All services registered in `MauiProgram.cs:CreateMauiApp()`
-- `DbContextFactory<AppDbContext>` registered for on-demand context creation (recommended for Blazor)
-- `AppDbContext` also registered as **transient** for compatibility
-- Repositories registered as **transient** (gets fresh DbContext each time)
-- Services registered as **singletons** (shares UnitOfWork for transaction consistency)
-- ViewModels are registered as **transient**
-- Validators are registered as **transient**
+**Dependency Injection (MauiProgram.cs):**
+- `DbContext` and `DbContextFactory`: **transient**
+- `IUnitOfWork`: **transient**
+- Business services (BookService, ProgressService, etc.): **transient** — avoids DbContext tracking issues in Blazor
+- Singletons: `IFileSystem`, `IFileSaverService`, `IBackButtonService`, `IAppSettingsProvider`, `IPermissionService`, `IScannerService`, `IShareService`, `IFilePickerService`, `IMigrationService`
+- ViewModels: **transient**
+- Validators: **transient**
 - Registration methods: `RegisterDatabase()`, `RegisterRepositories()`, `RegisterBusinessServices()`, `RegisterViewModels()`, `RegisterValidators()`
 
 **Service Layer:**
-- Service interfaces defined in `BookLoggerApp.Core/Services/Abstractions/`
-- Service implementations in `BookLoggerApp.Infrastructure/Services/`
-- Key services include:
-  - `IBookService` - Book CRUD operations
-  - `IProgressService` - Reading session tracking
-  - `IProgressionService` - Level and XP progression system
-  - `IGoalService` - Reading goals management
-  - `IPlantService` - Gamification plant system
-  - `IStatsService` - Statistics and analytics
-  - `IGenreService` - Genre management
-  - `IQuoteService`, `IAnnotationService` - Book annotations
-  - `IImageService` - Image handling
-  - `IImportExportService` - Data import/export
-  - `IValidationService` - FluentValidation integration
-  - `INotificationService` - Notifications
-  - `ILookupService` - External book API lookups
-  - `IAppSettingsProvider` - App configuration
+- Service interfaces in `BookLoggerApp.Core/Services/Abstractions/`
+- Implementations in `BookLoggerApp.Infrastructure/Services/`
+- Key services: `IBookService`, `IProgressService`, `IProgressionService`, `IGoalService`, `IPlantService`, `IStatsService`, `IGenreService`, `IQuoteService`, `IAnnotationService`, `IImageService`, `IImportExportService`, `IValidationService`, `INotificationService`, `ILookupService`, `IShelfService`, `IAppSettingsProvider`
+- MAUI-specific (in `BookLoggerApp/Services/`): `IPermissionService`, `IScannerService`, `IShareService`, `IFilePickerService`, `IMigrationService`
 
 **Exception Handling:**
-- Custom exception hierarchy in `BookLoggerApp.Core/Exceptions/`
-- Base exception: `BookLoggerException`
-- Specific exceptions: `EntityNotFoundException`, `ConcurrencyException`, `InsufficientFundsException`, `ValidationException`
-- Global exception handler configured in `MauiProgram.cs:SetupGlobalExceptionHandler()`
-- Handles both `AppDomain.UnhandledException` and `TaskScheduler.UnobservedTaskException`
+- Custom hierarchy in `BookLoggerApp.Core/Exceptions/`: `BookLoggerException` → `EntityNotFoundException`, `ConcurrencyException`, `InsufficientFundsException`, `ValidationException`
+- Global handler in `MauiProgram.cs:SetupGlobalExceptionHandler()` catches `AppDomain.UnhandledException` and `TaskScheduler.UnobservedTaskException`
 
 **Validation:**
-- Uses FluentValidation for model validation
-- Validators in `BookLoggerApp.Core/Validators/`
-- Validators for: `Book`, `ReadingSession`, `ReadingGoal`, `UserPlant`
+- FluentValidation validators in `BookLoggerApp.Core/Validators/` for `Book`, `ReadingSession`, `ReadingGoal`, `UserPlant`
 - Integrated via `IValidationService`
 
 **Database Initialization:**
-- Async initialization via `DbInitializer.InitializeAsync()` in `MauiProgram.cs:InitializeDatabase()`
-- Runs fire-and-forget in background task
-- Creates database schema and seeds initial data
+- `DbInitializer.InitializeAsync()` runs fire-and-forget in background
+- ViewModels should call `DbInitializer.EnsureInitializedAsync()` before querying data
 
 **ViewModels:**
-- Located in `BookLoggerApp.Core/ViewModels/`
-- All ViewModels inherit from `ViewModelBase`
-- ViewModels: `BookListViewModel`, `BookDetailViewModel`, `BookEditViewModel`, `BookshelfViewModel`, `ReadingViewModel`, `DashboardViewModel`, `GoalsViewModel`, `StatsViewModel`, `SettingsViewModel`, `PlantShopViewModel`, `UserProgressViewModel`
-- Use CommunityToolkit.Mvvm for observable properties and commands
+- Located in `BookLoggerApp.Core/ViewModels/`, all inherit `ViewModelBase`
+- `BookListViewModel`, `BookDetailViewModel`, `BookEditViewModel`, `BookshelfViewModel`, `ReadingViewModel`, `DashboardViewModel`, `GoalsViewModel`, `StatsViewModel`, `SettingsViewModel`, `PlantShopViewModel`, `UserProgressViewModel`, `ShelfItemViewModel`
 
 **Domain Models:**
-- Core entities: `Book`, `ReadingSession`, `ReadingGoal`, `UserPlant`, `PlantSpecies`, `Genre`, `BookGenre`, `Quote`, `Annotation`, `ShopItem`, `AppSettings`
+- Core entities: `Book`, `ReadingSession`, `ReadingGoal`, `UserPlant`, `PlantSpecies`, `Genre`, `BookGenre`, `Quote`, `Annotation`, `ShopItem`, `AppSettings`, `Shelf`, `BookShelf`, `PlantShelf`, `Trope`, `BookTrope`
 - Result objects: `ProgressionResult`, `LevelUpResult`, `SessionEndResult`, `BookRatingSummary`
-- Supporting types: `RatingCategory`, `LevelMilestone`, `PlantBoostInfo`
+- Supporting types: `RatingCategory`, `RatingCategoryInfo`, `LevelMilestone`, `PlantBoostInfo`
 
 ### Blazor UI Structure
 
 - Components in `BookLoggerApp/Components/`
 - Pages: `Books.razor`, `BookDetail.razor`, `BookEdit.razor`, `Bookshelf.razor`, `Dashboard.razor`, `Reading.razor`, `Goals.razor`, `Stats.razor`, `Settings.razor`, `PlantShop.razor`
 - Layout: `MainLayout.razor`, `NavMenu.razor`
-- Routing defined in `Routes.razor`
 
 ### CSS Structure
 
 CSS files are in `BookLoggerApp/wwwroot/css/`:
 - `app.css` - Global styles, CSS variables, loading spinner, status bar safe area
-- `components.css` - Book cards (spine view), stat cards, goal cards, plant widgets, buttons, forms
-- `dashboard.css` - Dashboard page layout and sections
-- `stats.css` - Stats/Level overview page with progression system
-- `ratings.css` - Multi-category rating system components
-- `bookdetail.css` - Book detail page layout
-- `reading.css` - Reading session page
-- `reading-timer-inline.css` - Inline timer component
+- `components.css` - Book cards (spine view), stat cards, goal cards, buttons, forms
+- `dashboard.css`, `stats.css`, `ratings.css`, `bookdetail.css`, `bookedit.css`, `bookshelf.css`
+- `reading.css`, `reading-timer-inline.css`, `quicktimer.css`
+- `plantshop.css`, `plantwidget.css`, `plant-selection.css`
+- `userprogress.css`, `bottomnav.css`, `celebrations.css`
 
 **Mobile-First Design:**
 - Breakpoints: 768px (tablet), 640px (mobile), 480px (small mobile), 400px (very small)
-- All pages should have responsive breakpoints for these screen sizes
 - Use CSS variables from `app.css` for consistent theming (cozy dark brown theme)
 
 ## CI/CD
 
 GitHub Actions workflow (`.github/workflows/ci.yml`) runs on pushes to `main` and PRs:
-- Builds Core and Tests projects only (not Infrastructure or MAUI app)
+- Builds Core and Tests projects only (not Infrastructure or MAUI app — avoids platform-specific complexity)
 - Runs xUnit tests with trx output
 - Publishes test results using dorny/test-reporter
-- **Note:** CI currently uses .NET 9.0.x SDK - update to .NET 10 when merging migration branch
+- **Note:** CI currently uses .NET 9.0.x SDK — update to .NET 10 when ready
 
 ## Important Notes
 
-- The MAUI app project and Infrastructure project are NOT built in CI (avoids MAUI platform-specific complexity)
-- Services are Singletons, but DbContext is transient via DbContextFactory to avoid concurrency issues in Blazor
-- Database initialization is fire-and-forget but provides `DbInitializer.EnsureInitializedAsync()` for ViewModels to await
 - Main branch for PRs: `main`
-- Development branch: `dev`
+- Development uses versioned feature branches (`V1`, `V2`, ... `V5`)
+- App name displayed on device: "LoveLit" (configured in `BookLoggerApp.csproj` as `ApplicationTitle`)
 - Project uses latest C# language version (`<LangVersion>latest</LangVersion>`) and .NET 10
-- App name displayed on device: "Book Logger" (configured in `BookLoggerApp.csproj` as `ApplicationTitle`)
+- Key NuGet packages: `ZXing.Net.Maui.Controls` (barcode scanning), `CsvHelper` (CSV import/export)
