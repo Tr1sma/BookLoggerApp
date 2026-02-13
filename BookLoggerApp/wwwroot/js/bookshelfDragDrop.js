@@ -1,0 +1,431 @@
+window.bookshelfDragDrop = {
+    _dotNetRef: null,
+    _container: null,
+    _longPressTimer: null,
+    _longPressDelay: 400,
+    _dragActive: false,
+    _ghost: null,
+    _draggedSlot: null,
+    _startX: 0,
+    _startY: 0,
+    _pointerId: null,
+    _moveThreshold: 10,
+    _longPressTriggered: false,
+    _dropTarget: null,
+    _dropIndicator: null,
+    _autoScrollRaf: null,
+    _autoScrollEdge: 60,
+    _autoScrollSpeed: 8,
+    _contextMenuPrevented: false,
+
+    // ─── Public API ───────────────────────────────────────
+
+    init: function (dotNetRef) {
+        this.dispose();
+        this._dotNetRef = dotNetRef;
+        this._container = document.querySelector('.shelves-container');
+        if (!this._container) return;
+
+        this._boundPointerDown = this._onPointerDown.bind(this);
+        this._boundPointerMove = this._onPointerMove.bind(this);
+        this._boundPointerUp = this._onPointerUp.bind(this);
+        this._boundPointerCancel = this._onPointerUp.bind(this);
+        this._boundContextMenu = this._onContextMenu.bind(this);
+
+        this._container.addEventListener('pointerdown', this._boundPointerDown);
+        document.addEventListener('pointermove', this._boundPointerMove);
+        document.addEventListener('pointerup', this._boundPointerUp);
+        document.addEventListener('pointercancel', this._boundPointerCancel);
+        document.addEventListener('contextmenu', this._boundContextMenu);
+    },
+
+    dispose: function () {
+        this._cancelLongPress();
+        this._cleanup();
+
+        if (this._container) {
+            this._container.removeEventListener('pointerdown', this._boundPointerDown);
+        }
+        document.removeEventListener('pointermove', this._boundPointerMove);
+        document.removeEventListener('pointerup', this._boundPointerUp);
+        document.removeEventListener('pointercancel', this._boundPointerCancel);
+        document.removeEventListener('contextmenu', this._boundContextMenu);
+
+        this._dotNetRef = null;
+        this._container = null;
+    },
+
+    // ─── Event Handlers ───────────────────────────────────
+
+    _onPointerDown: function (e) {
+        // Only primary button (left click / single touch)
+        if (e.button !== 0) return;
+
+        // Ignore interactive elements
+        var tag = e.target.tagName.toLowerCase();
+        if (['button', 'input', 'select', 'textarea', 'a'].indexOf(tag) !== -1 ||
+            e.target.closest('button, input, select, textarea, a, .btn-icon, .shelf-reorder-controls, .shelf-actions')) {
+            return;
+        }
+
+        // Find the shelf-slot ancestor
+        var slot = e.target.closest('.shelf-slot');
+        if (!slot) return;
+
+        // Check if this slot is inside an auto-sort shelf
+        var section = slot.closest('.shelf-section');
+        if (section && section.dataset.autoSort === 'true') return;
+
+        this._startX = e.clientX;
+        this._startY = e.clientY;
+        this._pointerId = e.pointerId;
+        this._draggedSlot = slot;
+        this._longPressTriggered = false;
+
+        // Visual feedback: slight scale on press
+        slot.classList.add('long-press-active');
+
+        // Start long-press timer
+        var self = this;
+        this._longPressTimer = setTimeout(function () {
+            self._longPressTriggered = true;
+            self._activateDrag(slot, e.clientX, e.clientY, e.pointerId);
+        }, this._longPressDelay);
+    },
+
+    _onPointerMove: function (e) {
+        if (!this._draggedSlot) return;
+
+        // Before drag activation: check if user moved too far (= scrolling)
+        if (!this._dragActive) {
+            var dx = e.clientX - this._startX;
+            var dy = e.clientY - this._startY;
+            if (Math.sqrt(dx * dx + dy * dy) > this._moveThreshold) {
+                this._cancelLongPress();
+                if (this._draggedSlot) {
+                    this._draggedSlot.classList.remove('long-press-active');
+                }
+                this._draggedSlot = null;
+            }
+            return;
+        }
+
+        // Active drag: move ghost and find drop targets
+        e.preventDefault();
+        this._moveGhost(e.clientX, e.clientY);
+        this._findAndHighlightDropTarget(e.clientX, e.clientY);
+        this._handleAutoScroll(e.clientY);
+    },
+
+    _onPointerUp: function (e) {
+        this._cancelLongPress();
+
+        if (this._draggedSlot) {
+            this._draggedSlot.classList.remove('long-press-active');
+        }
+
+        if (this._dragActive) {
+            this._completeDrop();
+        }
+
+        // Reset state (but don't reset _draggedSlot until after cleanup)
+        this._draggedSlot = null;
+        this._pointerId = null;
+    },
+
+    _onContextMenu: function (e) {
+        // Suppress context menu during long-press / drag
+        if (this._longPressTriggered || this._dragActive) {
+            e.preventDefault();
+        }
+    },
+
+    // ─── Drag Activation ──────────────────────────────────
+
+    _activateDrag: function (slot, x, y, pointerId) {
+        this._dragActive = true;
+
+        // Capture pointer for reliable tracking even outside container
+        try {
+            this._container.setPointerCapture(pointerId);
+        } catch (_) { /* ignore if already released */ }
+
+        // Create ghost
+        this._createGhost(slot, x, y);
+
+        // Mark original as dragging
+        slot.classList.remove('long-press-active');
+        slot.classList.add('dragging');
+
+        // Prevent scrolling and text selection during drag
+        document.body.classList.add('drag-active');
+
+        // Haptic feedback
+        if (navigator.vibrate) {
+            navigator.vibrate(30);
+        }
+    },
+
+    _createGhost: function (slot, x, y) {
+        var rect = slot.getBoundingClientRect();
+        var ghost = slot.cloneNode(true);
+        ghost.className = 'drag-ghost';
+        ghost.style.width = rect.width + 'px';
+        ghost.style.height = rect.height + 'px';
+        ghost.style.left = (x - rect.width / 2) + 'px';
+        ghost.style.top = (y - rect.height / 2) + 'px';
+        document.body.appendChild(ghost);
+        this._ghost = ghost;
+        this._ghostOffsetX = rect.width / 2;
+        this._ghostOffsetY = rect.height / 2;
+    },
+
+    _moveGhost: function (x, y) {
+        if (!this._ghost) return;
+        this._ghost.style.left = (x - this._ghostOffsetX) + 'px';
+        this._ghost.style.top = (y - this._ghostOffsetY) + 'px';
+    },
+
+    // ─── Drop Target Detection ────────────────────────────
+
+    _findAndHighlightDropTarget: function (x, y) {
+        // Temporarily hide ghost so elementsFromPoint can see through it
+        if (this._ghost) {
+            this._ghost.style.display = 'none';
+        }
+
+        var elements = document.elementsFromPoint(x, y);
+
+        if (this._ghost) {
+            this._ghost.style.display = '';
+        }
+
+        // Clear previous highlights
+        this._clearDropHighlights();
+
+        var targetSlot = null;
+        var targetSection = null;
+
+        for (var i = 0; i < elements.length; i++) {
+            if (!targetSlot) {
+                var slot = elements[i].closest('.shelf-slot');
+                if (slot && slot !== this._draggedSlot && !this._isInAutoSortShelf(slot)) {
+                    targetSlot = slot;
+                }
+            }
+            if (!targetSection) {
+                var section = elements[i].closest('.shelf-section');
+                if (section && section.dataset.autoSort !== 'true') {
+                    targetSection = section;
+                }
+            }
+            if (targetSlot && targetSection) break;
+        }
+
+        if (targetSlot) {
+            // Show drop indicator relative to the target slot
+            var slotRect = targetSlot.getBoundingClientRect();
+            var insertBefore = x < (slotRect.left + slotRect.width / 2);
+            this._showDropIndicator(targetSlot, insertBefore);
+            this._dropTarget = {
+                type: 'slot',
+                element: targetSlot,
+                insertBefore: insertBefore
+            };
+        } else if (targetSection) {
+            // Dropping on shelf empty space (append)
+            targetSection.classList.add('drop-target-active');
+            this._dropTarget = {
+                type: 'section',
+                element: targetSection
+            };
+        } else {
+            this._dropTarget = null;
+        }
+    },
+
+    _showDropIndicator: function (targetSlot, before) {
+        this._removeDropIndicator();
+
+        var indicator = document.createElement('div');
+        indicator.className = 'drop-indicator';
+        var parent = targetSlot.parentElement;
+        if (!parent) return;
+
+        // Position the indicator relative to the parent container
+        parent.style.position = 'relative';
+
+        var slotRect = targetSlot.getBoundingClientRect();
+        var parentRect = parent.getBoundingClientRect();
+
+        if (before) {
+            indicator.style.left = (slotRect.left - parentRect.left - 2) + 'px';
+        } else {
+            indicator.style.left = (slotRect.right - parentRect.left - 1) + 'px';
+        }
+
+        parent.appendChild(indicator);
+        this._dropIndicator = indicator;
+    },
+
+    _removeDropIndicator: function () {
+        if (this._dropIndicator && this._dropIndicator.parentNode) {
+            this._dropIndicator.parentNode.removeChild(this._dropIndicator);
+        }
+        this._dropIndicator = null;
+    },
+
+    _clearDropHighlights: function () {
+        this._removeDropIndicator();
+        var actives = document.querySelectorAll('.drop-target-active');
+        for (var i = 0; i < actives.length; i++) {
+            actives[i].classList.remove('drop-target-active');
+        }
+    },
+
+    _isInAutoSortShelf: function (element) {
+        var section = element.closest('.shelf-section');
+        return section && section.dataset.autoSort === 'true';
+    },
+
+    // ─── Auto-Scroll ──────────────────────────────────────
+
+    _handleAutoScroll: function (y) {
+        var viewH = window.innerHeight;
+        var shouldScroll = false;
+        var direction = 0;
+
+        if (y < this._autoScrollEdge) {
+            shouldScroll = true;
+            direction = -1;
+        } else if (y > viewH - this._autoScrollEdge) {
+            shouldScroll = true;
+            direction = 1;
+        }
+
+        if (shouldScroll && !this._autoScrollRaf) {
+            var self = this;
+            var scroll = function () {
+                window.scrollBy(0, self._autoScrollSpeed * direction);
+                if (self._dragActive) {
+                    self._autoScrollRaf = requestAnimationFrame(scroll);
+                }
+            };
+            this._autoScrollRaf = requestAnimationFrame(scroll);
+        } else if (!shouldScroll) {
+            this._stopAutoScroll();
+        }
+    },
+
+    _stopAutoScroll: function () {
+        if (this._autoScrollRaf) {
+            cancelAnimationFrame(this._autoScrollRaf);
+            this._autoScrollRaf = null;
+        }
+    },
+
+    // ─── Drop Completion ──────────────────────────────────
+
+    _completeDrop: function () {
+        if (!this._dotNetRef || !this._draggedSlot) {
+            this._cleanup();
+            return;
+        }
+
+        var sourceSlot = this._draggedSlot;
+        var sourceItemId = sourceSlot.dataset.itemId;
+        var sourceItemType = sourceSlot.dataset.itemType;
+        var sourceSection = sourceSlot.closest('.shelf-section');
+        var sourceShelfId = sourceSection ? sourceSection.dataset.shelfId : null;
+
+        if (!sourceItemId || !sourceShelfId) {
+            this._cleanup();
+            return;
+        }
+
+        var target = this._dropTarget;
+
+        if (target && target.type === 'slot') {
+            var targetSlot = target.element;
+            var targetItemId = targetSlot.dataset.itemId;
+            var targetSection = targetSlot.closest('.shelf-section');
+            var targetShelfId = targetSection ? targetSection.dataset.shelfId : null;
+
+            if (!targetItemId || !targetShelfId) {
+                this._cleanup();
+                return;
+            }
+
+            if (sourceShelfId === targetShelfId) {
+                // Same shelf: reorder
+                this._dotNetRef.invokeMethodAsync('OnReorderItem',
+                    sourceShelfId, sourceItemId, sourceItemType, targetItemId);
+            } else {
+                // Different shelf: move between shelves
+                // Calculate position based on target item's index
+                var targetItems = targetSection.querySelectorAll('.shelf-slot');
+                var position = -1;
+                for (var i = 0; i < targetItems.length; i++) {
+                    if (targetItems[i] === targetSlot) {
+                        position = target.insertBefore ? i : i + 1;
+                        break;
+                    }
+                }
+                this._dotNetRef.invokeMethodAsync('OnMoveItemToShelf',
+                    sourceShelfId, targetShelfId, sourceItemId, sourceItemType, position);
+            }
+        } else if (target && target.type === 'section') {
+            var targetShelfId = target.element.dataset.shelfId;
+            if (targetShelfId && targetShelfId !== sourceShelfId) {
+                // Append to end of target shelf
+                this._dotNetRef.invokeMethodAsync('OnMoveItemToShelf',
+                    sourceShelfId, targetShelfId, sourceItemId, sourceItemType, -1);
+            }
+        }
+
+        this._cleanup();
+    },
+
+    // ─── Cleanup ──────────────────────────────────────────
+
+    _cancelLongPress: function () {
+        if (this._longPressTimer) {
+            clearTimeout(this._longPressTimer);
+            this._longPressTimer = null;
+        }
+    },
+
+    _cleanup: function () {
+        // Remove ghost
+        if (this._ghost && this._ghost.parentNode) {
+            this._ghost.parentNode.removeChild(this._ghost);
+        }
+        this._ghost = null;
+
+        // Remove dragging class
+        if (this._draggedSlot) {
+            this._draggedSlot.classList.remove('dragging');
+            this._draggedSlot.classList.remove('long-press-active');
+        }
+
+        // Release pointer capture
+        if (this._pointerId != null && this._container) {
+            try {
+                this._container.releasePointerCapture(this._pointerId);
+            } catch (_) { /* ignore */ }
+        }
+
+        // Clear highlights
+        this._clearDropHighlights();
+
+        // Stop auto-scroll
+        this._stopAutoScroll();
+
+        // Reset body state
+        document.body.classList.remove('drag-active');
+
+        this._dragActive = false;
+        this._dropTarget = null;
+        this._longPressTriggered = false;
+    }
+};

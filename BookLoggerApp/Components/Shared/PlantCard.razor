@@ -1,8 +1,8 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
 
-<div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")" draggable="@(IsDraggable ? "true" : "false")"
-@onclick="HandleClick" @ondragstart="HandleDragStartInternal" @ondragend="HandleDragEnd">
+<div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")"
+     @onclick="HandleClick">
     <div class="plant-pot-wrapper">
         <!-- Plant Image -->
         <img src="@(Plant.Species?.ImagePath ?? "/images/unknown_plant.png")"
@@ -29,13 +29,9 @@
     [Parameter] public UserPlant Plant { get; set; } = null!;
     [Parameter] public EventCallback OnClick { get; set; }
     [Parameter] public EventCallback OnRemove { get; set; }
-    [Parameter] public EventCallback OnDragStart { get; set; }
     [Parameter] public bool IsInBookshelf { get; set; }
     [Parameter] public bool ShowProgress { get; set; } = true;
     [Parameter] public bool ShowActions { get; set; } = true;
-    [Parameter] public bool IsDraggable { get; set; } = false;
-
-    private bool _isDragging = false;
 
     private string GetStatusIcon()
     {
@@ -51,37 +47,7 @@
 
     private async Task HandleClick()
     {
-        // Don't trigger click if we were dragging
-        if (_isDragging)
-        {
-            _isDragging = false;
-            return;
-        }
         await OnClick.InvokeAsync();
-    }
-
-    private async Task HandleDragStartInternal(Microsoft.AspNetCore.Components.Web.DragEventArgs e)
-    {
-        if (!IsDraggable) return;
-
-        System.Diagnostics.Debug.WriteLine($"PlantCard: Drag started for plant {Plant.Name} (ID: {Plant.Id})");
-        _isDragging = true;
-
-        // Set effectAllowed to enable drop
-        // Note: DataTransfer is not directly accessible in Blazor, but setting effectAllowed helps
-
-        await OnDragStart.InvokeAsync();
-    }
-
-    private void HandleDragEnd(Microsoft.AspNetCore.Components.Web.DragEventArgs e)
-    {
-        System.Diagnostics.Debug.WriteLine($"PlantCard: Drag ended for plant {Plant.Name}");
-        // Reset dragging flag after a short delay to prevent click
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(100);
-            _isDragging = false;
-        });
     }
 
     private async Task HandleRemove()
