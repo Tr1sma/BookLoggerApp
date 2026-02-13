@@ -17,7 +17,8 @@
       "Bash(find:*)",
       "Bash(cmd.exe /c \"rmdir /s /q bin\")",
       "Bash(cmd.exe /c \"rmdir /s /q obj\")",
-      "WebSearch"
+      "WebSearch",
+      "Bash(dotnet add:*)"
     ],
     "deny": [],
     "ask": []

@@ -163,23 +163,13 @@
                 return;
             }
 
-            // Get the full path from ImageService
-            var fullPath = await ImageService.GetCoverImagePathAsync(Book.Id);
-
-            if (string.IsNullOrEmpty(fullPath) || !System.IO.File.Exists(fullPath))
+            // Get resized image from service (automatically cached as thumbnail)
+            var result = await ImageService.GetResizedCoverImageAsync(Book.Id);
+            if (result == null)
                 return;
 
-            // Read the file and convert to Base64
-            // Optimization: if it is very large, maybe resize? (Future todo)
-            var imageBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
-            var base64 = Convert.ToBase64String(imageBytes);
-
-            // Determine MIME type
-            var mimeType = fullPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
-                ? "image/png"
-                : "image/jpeg";
-
-            _coverImageDataUrl = $"data:{mimeType};base64,{base64}";
+            var (bytes, mimeType) = result.Value;
+            _coverImageDataUrl = $"data:{mimeType};base64,{Convert.ToBase64String(bytes)}";
         }
         catch (Exception ex)
         {
