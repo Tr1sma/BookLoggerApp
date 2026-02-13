@@ -10,6 +10,7 @@
 @inject IGoalService GoalService
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject WishlistViewModel WishlistVM
+@inject BookLoggerApp.Services.IScannerService ScannerService
 @implements IDisposable
 
 <PageTitle>Bookshelf - LoveLit</PageTitle>
@@ -254,7 +255,7 @@
                         </div>
                     </div>
                     <div class="wishlist-card-actions" @onclick:stopPropagation="true">
-                        <button class="btn-icon" @onclick="() => HandleMoveToLibrary(book.Id)" title="Move to Library">
+                        <button class="btn-icon" @onclick="() => NavigateToEditBook(book.Id)" title="Edit & Add to Shelf">
                             📚
                         </button>
                         <button class="btn-icon danger" @onclick="() => HandleRemoveFromWishlist(book.Id)" title="Remove">
@@ -383,8 +384,13 @@
                         <input type="text" class="form-control" placeholder="Enter ISBN..."
                                @bind="WishlistVM.NewIsbn" />
                     </div>
-                    <button class="btn-icon" style="width:38px;height:38px;border-radius:8px;background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);cursor:pointer;"
-                            @onclick="HandleWishlistLookup" disabled="@WishlistVM.IsLookingUp">
+                    <button class="btn-icon wishlist-isbn-btn"
+                            @onclick="ScanWishlistIsbnAsync" title="Scan Barcode">
+                        📷
+                    </button>
+                    <button class="btn-icon wishlist-isbn-btn"
+                            @onclick="HandleWishlistLookup" disabled="@WishlistVM.IsLookingUp"
+                            title="Lookup ISBN">
                         🔍
                     </button>
                 </div>
@@ -737,6 +743,8 @@
         _ => "🌱"
     };
 
+    private void NavigateToEditBook(Guid bookId) => Navigation.NavigateTo($"/books/{bookId}/edit");
+
     // ===== Wishlist Tab Methods =====
 
     private async Task SwitchTab(string tab)
@@ -775,12 +783,6 @@
         await WishlistVM.SortCommand.ExecuteAsync(null);
     }
 
-    private async Task HandleMoveToLibrary(Guid bookId)
-    {
-        await WishlistVM.MoveToLibraryCommand.ExecuteAsync(bookId);
-        StateHasChanged();
-    }
-
     private async Task HandleRemoveFromWishlist(Guid bookId)
     {
         await WishlistVM.RemoveFromWishlistCommand.ExecuteAsync(bookId);
@@ -809,6 +811,17 @@
             _activeBackHandler = null;
         }
         showAddToWishlistModal = false;
+    }
+
+    private async Task ScanWishlistIsbnAsync()
+    {
+        var isbn = await ScannerService.ScanBarcodeAsync();
+        if (!string.IsNullOrEmpty(isbn))
+        {
+            WishlistVM.NewIsbn = isbn;
+            await WishlistVM.LookupByIsbnCommand.ExecuteAsync(null);
+            StateHasChanged();
+        }
     }
 
     private async Task HandleWishlistLookup()
