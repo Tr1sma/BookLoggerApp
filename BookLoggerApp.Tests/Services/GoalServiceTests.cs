@@ -150,4 +150,93 @@ public class GoalServiceTests : IDisposable
         updated1!.IsCompleted.Should().BeTrue();
         updated2!.IsCompleted.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task ExcludeBookFromGoalAsync_ShouldExcludeBook()
+    {
+        // Arrange
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Read 5 books",
+            Type = GoalType.Books,
+            Target = 5,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        var book = new Book
+        {
+            Title = "Test Book",
+            Author = "Author",
+            Status = ReadingStatus.Completed,
+            DateCompleted = DateTime.UtcNow
+        };
+        await _unitOfWork.Books.AddAsync(book);
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        await _service.ExcludeBookFromGoalAsync(goal.Id, book.Id);
+
+        // Assert
+        var exclusions = await _service.GetExcludedBooksAsync(goal.Id);
+        exclusions.Should().HaveCount(1);
+        exclusions.First().BookId.Should().Be(book.Id);
+    }
+
+    [Fact]
+    public async Task IncludeBookInGoalAsync_ShouldRemoveExclusion()
+    {
+        // Arrange
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Read 5 books",
+            Type = GoalType.Books,
+            Target = 5,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        var book = new Book
+        {
+            Title = "Test Book",
+            Author = "Author",
+            Status = ReadingStatus.Completed,
+            DateCompleted = DateTime.UtcNow
+        };
+        await _unitOfWork.Books.AddAsync(book);
+        await _unitOfWork.SaveChangesAsync();
+
+        await _service.ExcludeBookFromGoalAsync(goal.Id, book.Id);
+
+        // Act
+        await _service.IncludeBookInGoalAsync(goal.Id, book.Id);
+
+        // Assert
+        var exclusions = await _service.GetExcludedBooksAsync(goal.Id);
+        exclusions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetActiveGoalsAsync_ShouldNotCountExcludedBooks()
+    {
+        // Arrange: Create a goal and two completed books within the goal's date range
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Read 3 books",
+            Type = GoalType.Books,
+            Target = 3,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        var book1 = new Book { Title = "Book 1", Author = "A", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        var book2 = new Book { Title = "Book 2", Author = "B", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        var book3 = new Book { Title = "Book 3", Author = "C", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        await _unitOfWork.Books.AddAsync(book1);
+        await _unitOfWork.Books.AddAsync(book2);
+        await _unitOfWork.Books.AddAsync(book3);
+        await _unitOfWork.SaveChangesAsync();
+
+        // TODO(human): Exclude one book and verify the goal progress reflects the exclusion
+    }
 }

@@ -31,6 +31,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Trope>? _tropes;
     private IRepository<BookTrope>? _bookTropes;
     private IRepository<WishlistInfo>? _wishlistInfos;
+    private IRepository<GoalExcludedBook>? _goalExcludedBooks;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -53,6 +54,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Trope> Tropes => _tropes ??= new Repository<Trope>(_context);
     public IRepository<BookTrope> BookTropes => _bookTropes ??= new Repository<BookTrope>(_context);
     public IRepository<WishlistInfo> WishlistInfos => _wishlistInfos ??= new Repository<WishlistInfo>(_context);
+    public IRepository<GoalExcludedBook> GoalExcludedBooks => _goalExcludedBooks ??= new Repository<GoalExcludedBook>(_context);
 
     // ===== Direct Context Access =====
     public AppDbContext Context => _context;
