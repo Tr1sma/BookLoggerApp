@@ -61,6 +61,7 @@ public class ImportExportService : IImportExportService
                 .Include(b => b.ReadingSessions)
                 .Include(b => b.Quotes)
                 .Include(b => b.Annotations)
+                .Include(b => b.WishlistInfo)
                 .ToListAsync(ct);
 
             var goals = await context.ReadingGoals.ToListAsync(ct);
@@ -587,6 +588,7 @@ public class ImportExportService : IImportExportService
             context.Quotes.RemoveRange(context.Quotes);
             context.ReadingSessions.RemoveRange(context.ReadingSessions);
             context.BookGenres.RemoveRange(context.BookGenres);
+            context.WishlistInfos.RemoveRange(context.WishlistInfos);
 
             // 2. Delete main entities
             context.Books.RemoveRange(context.Books);

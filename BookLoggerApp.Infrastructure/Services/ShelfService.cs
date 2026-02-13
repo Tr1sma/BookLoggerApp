@@ -170,6 +170,9 @@ public class ShelfService : IShelfService
                 case ShelfAutoSortRule.StatusAbandoned:
                     query = query.Where(b => b.Status == ReadingStatus.Abandoned);
                     break;
+                case ShelfAutoSortRule.StatusWishlist:
+                    query = query.Where(b => b.Status == ReadingStatus.Wishlist);
+                    break;
             }
             return await query.OrderByDescending(b => b.DateAdded).ToListAsync();
         }

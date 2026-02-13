@@ -35,6 +35,7 @@
     --status-reading: #D4A574;
     --status-completed: #88A67E;
     --status-abandoned: #A67874;
+    --status-wishlist: #C9A97F;
 
     /* Gradient accents */
     --gradient-warm: linear-gradient(135deg, #D4A574 0%, #C9A97F 100%);

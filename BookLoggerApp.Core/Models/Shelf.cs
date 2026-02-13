@@ -41,5 +41,6 @@ public enum ShelfAutoSortRule
     StatusPlanned = 1,
     StatusReading = 2,
     StatusCompleted = 3,
-    StatusAbandoned = 4
+    StatusAbandoned = 4,
+    StatusWishlist = 5
 }

@@ -9,6 +9,7 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@inject WishlistViewModel WishlistVM
 @implements IDisposable
 
 <PageTitle>Bookshelf - LoveLit</PageTitle>
@@ -18,11 +19,29 @@
     <GoalHeader TbrCount="@ViewModel.TbrCount" GoalTarget="@ViewModel.GoalTarget"
         BooksRead="@ViewModel.BooksReadThisYear" BooksRemaining="@ViewModel.BooksRemainingToGoal" />
 
+    <!-- Tab Bar -->
+    <div class="bookshelf-tabs">
+        <button class="tab-btn @(activeTab == "shelves" ? "active" : "")"
+                @onclick='() => SwitchTab("shelves")'>
+            Shelves
+        </button>
+        <button class="tab-btn @(activeTab == "wishlist" ? "active" : "")"
+                @onclick='() => SwitchTab("wishlist")'>
+            Wishlist
+            @if (WishlistVM.WishlistCount > 0)
+            {
+                <span class="wishlist-count-badge">@WishlistVM.WishlistCount</span>
+            }
+        </button>
+    </div>
+
+    @if (activeTab == "shelves")
+    {
     <!-- Header & Controls -->
     <div class="bookshelf-header">
-        <h1>📚 My Bookshelf</h1>
+        <h1>My Bookshelf</h1>
         <div class="bookshelf-controls">
-            <input type="text" class="search-input" placeholder="🔍 Search books..." 
+            <input type="text" class="search-input" placeholder="Search books..."
                    value="@ViewModel.SearchQuery"
                    @oninput="HandleSearchInput" />
         </div>
@@ -161,7 +180,7 @@
             }
         </div>
     }
-    <!-- Floating Action Buttons -->
+    <!-- Floating Action Buttons (Shelves Tab) -->
     <div class="fab-container">
         <button class="fab-button secondary" @onclick="OpenAddShelfModal" title="New Shelf">
             📚
@@ -170,6 +189,90 @@
             +
         </button>
     </div>
+    } @* end activeTab == "shelves" *@
+
+    @if (activeTab == "wishlist")
+    {
+    <!-- Wishlist Content -->
+    <div class="wishlist-controls">
+        <input type="text" class="search-input" placeholder="Search wishlist..."
+               value="@WishlistVM.SearchQuery"
+               @oninput="HandleWishlistSearchInput" />
+        <select class="wishlist-sort-select" value="@WishlistVM.SortBy"
+                @onchange="HandleWishlistSort">
+            <option value="DateAdded">Date Added</option>
+            <option value="Priority">Priority</option>
+            <option value="Title">Title</option>
+            <option value="Author">Author</option>
+        </select>
+    </div>
+
+    @if (WishlistVM.IsBusy)
+    {
+        <div class="loading">Loading wishlist...</div>
+    }
+    else if (!WishlistVM.WishlistBooks.Any())
+    {
+        <div class="wishlist-empty">
+            <div class="wishlist-empty-icon">💝</div>
+            <div class="wishlist-empty-text">Your wishlist is empty</div>
+            <div class="wishlist-empty-hint">Tap + to add books you want to read</div>
+        </div>
+    }
+    else
+    {
+        <div class="wishlist-book-list">
+            @foreach (var book in WishlistVM.WishlistBooks)
+            {
+                <div class="wishlist-card" @onclick="() => HandleBookClick(book)">
+                    <div class="wishlist-card-cover">
+                        @if (!string.IsNullOrEmpty(book.CoverImagePath))
+                        {
+                            <img src="@book.CoverImagePath" alt="@book.Title" />
+                        }
+                        else
+                        {
+                            <span class="no-cover">📖</span>
+                        }
+                    </div>
+                    <div class="wishlist-card-info">
+                        <div class="wishlist-card-title">@book.Title</div>
+                        <div class="wishlist-card-author">@book.Author</div>
+                        <div class="wishlist-card-meta">
+                            @if (book.WishlistInfo != null)
+                            {
+                                <span class="wishlist-priority priority-@book.WishlistInfo.Priority.ToString().ToLower()">
+                                    @book.WishlistInfo.Priority
+                                </span>
+                                @if (!string.IsNullOrEmpty(book.WishlistInfo.RecommendedBy))
+                                {
+                                    <span class="wishlist-card-recommended">
+                                        via @book.WishlistInfo.RecommendedBy
+                                    </span>
+                                }
+                            }
+                        </div>
+                    </div>
+                    <div class="wishlist-card-actions" @onclick:stopPropagation="true">
+                        <button class="btn-icon" @onclick="() => HandleMoveToLibrary(book.Id)" title="Move to Library">
+                            📚
+                        </button>
+                        <button class="btn-icon danger" @onclick="() => HandleRemoveFromWishlist(book.Id)" title="Remove">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Floating Action Button (Wishlist Tab) -->
+    <div class="fab-container">
+        <button class="fab-button" @onclick="OpenAddToWishlistModal" title="Add to Wishlist">
+            +
+        </button>
+    </div>
+    } @* end activeTab == "wishlist" *@
 </div>
 
 <!-- Add Shelf Modal -->
@@ -189,6 +292,7 @@
                     <option value="@ShelfAutoSortRule.StatusPlanned">Planned (TBR)</option>
                     <option value="@ShelfAutoSortRule.StatusReading">Currently Reading</option>
                     <option value="@ShelfAutoSortRule.StatusCompleted">Read / Completed</option>
+                    <option value="@ShelfAutoSortRule.StatusWishlist">Wishlist</option>
                 </select>
                 <small>Auto-sort shelves automatically include books matching the status.</small>
             </div>
@@ -266,13 +370,78 @@
     </div>
 }
 
+<!-- Add to Wishlist Modal -->
+@if (showAddToWishlistModal)
+{
+    <div class="modal-overlay" @onclick="CloseAddToWishlistModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <h3>Add to Wishlist</h3>
+            <div class="wishlist-form">
+                <div class="wishlist-isbn-row">
+                    <div class="form-group">
+                        <label>ISBN</label>
+                        <input type="text" class="form-control" placeholder="Enter ISBN..."
+                               @bind="WishlistVM.NewIsbn" />
+                    </div>
+                    <button class="btn-icon" style="width:38px;height:38px;border-radius:8px;background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);cursor:pointer;"
+                            @onclick="HandleWishlistLookup" disabled="@WishlistVM.IsLookingUp">
+                        🔍
+                    </button>
+                </div>
+                @if (WishlistVM.LookupMessage != null)
+                {
+                    <div class="wishlist-lookup-msg @(WishlistVM.LookupMessage.Contains("found") ? "success" : "error")">
+                        @WishlistVM.LookupMessage
+                    </div>
+                }
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" class="form-control" placeholder="Book title..."
+                           @bind="WishlistVM.NewTitle" />
+                </div>
+                <div class="form-group">
+                    <label>Author *</label>
+                    <input type="text" class="form-control" placeholder="Author name..."
+                           @bind="WishlistVM.NewAuthor" />
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <div class="priority-select">
+                        <button class="priority-option @(WishlistVM.NewPriority == WishlistPriority.Low ? "selected" : "")"
+                                @onclick="() => WishlistVM.NewPriority = WishlistPriority.Low">Low</button>
+                        <button class="priority-option @(WishlistVM.NewPriority == WishlistPriority.Medium ? "selected" : "")"
+                                @onclick="() => WishlistVM.NewPriority = WishlistPriority.Medium">Medium</button>
+                        <button class="priority-option @(WishlistVM.NewPriority == WishlistPriority.High ? "selected" : "")"
+                                @onclick="() => WishlistVM.NewPriority = WishlistPriority.High">High</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Recommended by</label>
+                    <input type="text" class="form-control" placeholder="Who recommended this?"
+                           @bind="WishlistVM.NewRecommendedBy" />
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea class="form-control" placeholder="Why do you want to read this?"
+                              @bind="WishlistVM.NewWishlistNotes"></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="CloseAddToWishlistModal">Cancel</button>
+                <button class="btn btn-primary" @onclick="HandleAddToWishlist"
+                        disabled="@(string.IsNullOrWhiteSpace(WishlistVM.NewTitle))">Add</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
+    private string activeTab = "shelves";
     private bool filtersExpanded = false;
     private bool showAddShelfModal = false;
     private string newShelfName = "";
     private ShelfAutoSortRule newShelfRule = ShelfAutoSortRule.None;
-
-
+    private bool showAddToWishlistModal = false;
 
     // Plant state
     private bool showPlantDetail;
@@ -567,4 +736,91 @@
         PlantStatus.Thirsty => "😰",
         _ => "🌱"
     };
+
+    // ===== Wishlist Tab Methods =====
+
+    private async Task SwitchTab(string tab)
+    {
+        activeTab = tab;
+        if (tab == "wishlist")
+        {
+            await WishlistVM.LoadCommand.ExecuteAsync(null);
+        }
+    }
+
+    private System.Timers.Timer? _wishlistSearchTimer;
+
+    private void HandleWishlistSearchInput(ChangeEventArgs e)
+    {
+        WishlistVM.SearchQuery = e.Value?.ToString() ?? "";
+
+        _wishlistSearchTimer?.Stop();
+        _wishlistSearchTimer?.Dispose();
+        _wishlistSearchTimer = new System.Timers.Timer(300);
+        _wishlistSearchTimer.Elapsed += async (sender, args) =>
+        {
+            _wishlistSearchTimer?.Stop();
+            await InvokeAsync(async () =>
+            {
+                await WishlistVM.SearchCommand.ExecuteAsync(null);
+                StateHasChanged();
+            });
+        };
+        _wishlistSearchTimer.Start();
+    }
+
+    private async Task HandleWishlistSort(ChangeEventArgs e)
+    {
+        WishlistVM.SortBy = e.Value?.ToString() ?? "DateAdded";
+        await WishlistVM.SortCommand.ExecuteAsync(null);
+    }
+
+    private async Task HandleMoveToLibrary(Guid bookId)
+    {
+        await WishlistVM.MoveToLibraryCommand.ExecuteAsync(bookId);
+        StateHasChanged();
+    }
+
+    private async Task HandleRemoveFromWishlist(Guid bookId)
+    {
+        await WishlistVM.RemoveFromWishlistCommand.ExecuteAsync(bookId);
+        StateHasChanged();
+    }
+
+    private void OpenAddToWishlistModal()
+    {
+        WishlistVM.ClearAddForm();
+
+        _activeBackHandler = async () =>
+        {
+            CloseAddToWishlistModal();
+            return true;
+        };
+        BackButtonService.Register(_activeBackHandler);
+
+        showAddToWishlistModal = true;
+    }
+
+    private void CloseAddToWishlistModal()
+    {
+        if (_activeBackHandler != null)
+        {
+            BackButtonService.Unregister(_activeBackHandler);
+            _activeBackHandler = null;
+        }
+        showAddToWishlistModal = false;
+    }
+
+    private async Task HandleWishlistLookup()
+    {
+        await WishlistVM.LookupByIsbnCommand.ExecuteAsync(null);
+        StateHasChanged();
+    }
+
+    private async Task HandleAddToWishlist()
+    {
+        await WishlistVM.AddToWishlistCommand.ExecuteAsync(null);
+        CloseAddToWishlistModal();
+        StateHasChanged();
+    }
 }

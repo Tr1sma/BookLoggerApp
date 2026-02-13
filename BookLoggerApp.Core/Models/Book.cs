@@ -80,6 +80,9 @@ public class Book
     public ICollection<Annotation> Annotations { get; set; } = new List<Annotation>();
     public ICollection<BookShelf> BookShelves { get; set; } = new List<BookShelf>();
 
+    // Wishlist metadata (1:1, only for Wishlist status books)
+    public WishlistInfo? WishlistInfo { get; set; }
+
     // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }
@@ -125,5 +128,6 @@ public enum ReadingStatus
     Planned = 0,
     Reading = 1,
     Completed = 2,
-    Abandoned = 3
+    Abandoned = 3,
+    Wishlist = 4
 }
