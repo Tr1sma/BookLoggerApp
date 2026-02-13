@@ -30,6 +30,11 @@ public interface IGoalService
     Task UpdateGoalProgressAsync(Guid goalId, int progress, CancellationToken ct = default);
     Task CheckAndCompleteGoalsAsync(CancellationToken ct = default);
 
+    // Book Exclusion
+    Task<IReadOnlyList<GoalExcludedBook>> GetExcludedBooksAsync(Guid goalId, CancellationToken ct = default);
+    Task ExcludeBookFromGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default);
+    Task IncludeBookInGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default);
+
     /// <summary>
     /// Notifies subscribers that goal progress may have changed.
     /// Call this after completing a reading session or finishing a book.

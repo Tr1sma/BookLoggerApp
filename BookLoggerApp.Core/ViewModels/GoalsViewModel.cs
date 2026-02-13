@@ -9,10 +9,12 @@ namespace BookLoggerApp.Core.ViewModels;
 public partial class GoalsViewModel : ViewModelBase
 {
     private readonly IGoalService _goalService;
+    private readonly IBookService _bookService;
 
-    public GoalsViewModel(IGoalService goalService)
+    public GoalsViewModel(IGoalService goalService, IBookService bookService)
     {
         _goalService = goalService;
+        _bookService = bookService;
     }
 
     [ObservableProperty]
@@ -32,6 +34,19 @@ public partial class GoalsViewModel : ViewModelBase
 
     [ObservableProperty]
     private string? _statusMessage;
+
+    // Exclusion modal state
+    [ObservableProperty]
+    private bool _showExcludeModal = false;
+
+    [ObservableProperty]
+    private ReadingGoal? _excludeModalGoal;
+
+    [ObservableProperty]
+    private List<Book> _allBooks = new();
+
+    [ObservableProperty]
+    private HashSet<Guid> _excludedBookIds = new();
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -164,6 +179,60 @@ public partial class GoalsViewModel : ViewModelBase
             await _goalService.UpdateAsync(goal);
             await LoadAsync();
         }, "Failed to update goal");
+    }
+
+    [RelayCommand]
+    public async Task OpenExcludeModalAsync(ReadingGoal goal)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            ExcludeModalGoal = goal;
+
+            // Load all books
+            var books = await _bookService.GetAllAsync();
+            AllBooks = books.OrderBy(b => b.Title).ToList();
+
+            // Load current exclusions for this goal
+            var exclusions = await _goalService.GetExcludedBooksAsync(goal.Id);
+            ExcludedBookIds = exclusions.Select(e => e.BookId).ToHashSet();
+
+            ShowExcludeModal = true;
+        }, "Fehler beim Laden der Bücher");
+    }
+
+    [RelayCommand]
+    public async Task ToggleBookExclusionAsync(Guid bookId)
+    {
+        if (ExcludeModalGoal == null) return;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            if (ExcludedBookIds.Contains(bookId))
+            {
+                await _goalService.IncludeBookInGoalAsync(ExcludeModalGoal.Id, bookId);
+                ExcludedBookIds.Remove(bookId);
+            }
+            else
+            {
+                await _goalService.ExcludeBookFromGoalAsync(ExcludeModalGoal.Id, bookId);
+                ExcludedBookIds.Add(bookId);
+            }
+
+            // Force UI update by replacing the set
+            ExcludedBookIds = new HashSet<Guid>(ExcludedBookIds);
+        }, "Fehler beim Ändern der Ausschließung");
+    }
+
+    [RelayCommand]
+    public async Task CloseExcludeModalAsync()
+    {
+        ShowExcludeModal = false;
+        ExcludeModalGoal = null;
+        AllBooks = new();
+        ExcludedBookIds = new();
+
+        // Reload goals to reflect updated progress
+        await LoadAsync();
     }
 }
 
