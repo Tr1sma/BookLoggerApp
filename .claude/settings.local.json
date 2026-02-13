@@ -16,7 +16,8 @@
       "Bash(dotnet ef migrations list:*)",
       "Bash(find:*)",
       "Bash(cmd.exe /c \"rmdir /s /q bin\")",
-      "Bash(cmd.exe /c \"rmdir /s /q obj\")"
+      "Bash(cmd.exe /c \"rmdir /s /q obj\")",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

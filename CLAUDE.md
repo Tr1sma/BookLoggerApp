@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BookLoggerApp (branded as **LoveLit**) is a .NET 10 MAUI Blazor Hybrid Android app for managing and tracking books. It uses Entity Framework Core with SQLite for local data storage and follows a layered architecture with Repository and Unit of Work patterns. It includes gamification features (XP/levels, plant growing, shop) — see `XP_CALCULATION_GUIDE.md` for the full progression system.
+BookLoggerApp (branded as **BookHeart**) is a .NET 10 MAUI Blazor Hybrid Android app for managing and tracking books. It uses Entity Framework Core with SQLite for local data storage and follows a layered architecture with Repository and Unit of Work patterns. It includes gamification features (XP/levels, plant growing, shop) — see `XP_CALCULATION_GUIDE.md` for the full progression system.
 
 ## Build and Test Commands
 
@@ -159,6 +159,6 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) runs on pushes to `main` an
 
 - Main branch for PRs: `main`
 - Development uses versioned feature branches (`V1`, `V2`, ... `V5`)
-- App name displayed on device: "LoveLit" (configured in `BookLoggerApp.csproj` as `ApplicationTitle`)
+- App name displayed on device: "BookHeart" (configured in `BookLoggerApp.csproj` as `ApplicationTitle`)
 - Project uses latest C# language version (`<LangVersion>latest</LangVersion>`) and .NET 10
 - Key NuGet packages: `ZXing.Net.Maui.Controls` (barcode scanning), `CsvHelper` (CSV import/export)
