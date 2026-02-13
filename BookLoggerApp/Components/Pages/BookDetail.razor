@@ -6,6 +6,7 @@
 @inject BookDetailViewModel ViewModel
 @inject IProgressService ProgressService
 @inject IImageService ImageService
+@inject IWishlistService WishlistService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 <PageTitle>@(ViewModel.Book?.Title ?? "Book Details") - LoveLit</PageTitle>
@@ -150,6 +151,39 @@
                 }
             </div>
         </div>
+
+        <!-- Wishlist Info Section -->
+        @if (ViewModel.Book.Status == ReadingStatus.Wishlist && ViewModel.Book.WishlistInfo != null)
+        {
+            <div class="wishlist-info-section">
+                <h3>Wishlist Details</h3>
+                <div class="wishlist-meta-grid">
+                    <div class="wishlist-meta-item">
+                        <span class="book-meta-label">Priority</span>
+                        <span class="wishlist-priority priority-@ViewModel.Book.WishlistInfo.Priority.ToString().ToLower()">
+                            @GetPriorityLabel(ViewModel.Book.WishlistInfo.Priority)
+                        </span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(ViewModel.Book.WishlistInfo.RecommendedBy))
+                    {
+                        <div class="wishlist-meta-item">
+                            <span class="book-meta-label">Recommended by</span>
+                            <span class="book-meta-value">@ViewModel.Book.WishlistInfo.RecommendedBy</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewModel.Book.WishlistInfo.WishlistNotes))
+                    {
+                        <div class="wishlist-meta-item">
+                            <span class="book-meta-label">Notes</span>
+                            <span class="book-meta-value">@ViewModel.Book.WishlistInfo.WishlistNotes</span>
+                        </div>
+                    }
+                </div>
+                <button class="btn btn-primary" style="margin-top: 1rem;" @onclick="HandleMoveToLibrary">
+                    Move to Library
+                </button>
+            </div>
+        }
 
         <!-- Book Ratings Section -->
         @if (ViewModel.Book.Status == ReadingStatus.Completed)
@@ -355,6 +389,7 @@
             ReadingStatus.Reading => "📖",
             ReadingStatus.Completed => "✅",
             ReadingStatus.Abandoned => "❌",
+            ReadingStatus.Wishlist => "💝",
             _ => ""
         };
     }
@@ -465,6 +500,21 @@
         await ViewModel.UpdateRatingAsync(category, rating);
         await InvokeAsync(StateHasChanged);
     }
+    private string GetPriorityLabel(BookLoggerApp.Core.Enums.WishlistPriority priority) => priority switch
+    {
+        BookLoggerApp.Core.Enums.WishlistPriority.High => "High",
+        BookLoggerApp.Core.Enums.WishlistPriority.Medium => "Medium",
+        BookLoggerApp.Core.Enums.WishlistPriority.Low => "Low",
+        _ => "Medium"
+    };
+
+    private async Task HandleMoveToLibrary()
+    {
+        if (ViewModel.Book == null) return;
+        await WishlistService.MoveToLibraryAsync(ViewModel.Book.Id);
+        Navigation.NavigateTo("/bookshelf");
+    }
+
     private bool _isSavingNotes = false;
 
     private async Task SaveNotes()
