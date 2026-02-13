@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using BookLoggerApp.Core.Services.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -10,16 +12,16 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class LookupService : ILookupService
 {
     private const string GoogleBooksApiBaseUrl = "https://www.googleapis.com/books/v1/volumes";
+    private const int MaxRetries = 3;
+    private static readonly int[] RetryDelaysMs = [1000, 3000, 6000];
+    private const string? GoogleBooksApiKey = ApiKeys.GoogleBooks;
     private readonly HttpClient _httpClient;
     private readonly ILogger<LookupService>? _logger;
 
-    public LookupService(HttpClient? httpClient = null, ILogger<LookupService>? logger = null)
+    public LookupService(HttpClient httpClient, ILogger<LookupService>? logger = null)
     {
         _logger = logger;
-        _httpClient = httpClient ?? new HttpClient
-        {
-            Timeout = TimeSpan.FromSeconds(10)
-        };
+        _httpClient = httpClient;
     }
 
     public async Task<BookMetadata?> LookupByISBNAsync(string isbn, CancellationToken ct = default)
@@ -27,50 +29,26 @@ public class LookupService : ILookupService
         if (string.IsNullOrWhiteSpace(isbn))
             return null;
 
-        try
+        // Clean ISBN (remove dashes and spaces)
+        isbn = isbn.Replace("-", "").Replace(" ", "");
+
+        _logger?.LogInformation("Looking up book by ISBN: {ISBN}", isbn);
+
+        var url = BuildUrl($"q=isbn:{Uri.EscapeDataString(isbn)}");
+        var searchResult = await GetWithRetryAsync<GoogleBooksSearchResult>(url, ct);
+
+        if (searchResult?.Items == null || searchResult.Items.Count == 0)
         {
-            // Clean ISBN (remove dashes and spaces)
-            isbn = isbn.Replace("-", "").Replace(" ", "");
-
-            _logger?.LogInformation("Looking up book by ISBN: {ISBN}", isbn);
-
-            // Query Google Books API by ISBN
-            // Fix: Use Uri.EscapeDataString to prevent parameter injection
-            var url = $"{GoogleBooksApiBaseUrl}?q=isbn:{Uri.EscapeDataString(isbn)}";
-            var response = await _httpClient.GetAsync(url, ct);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger?.LogWarning("Google Books API returned status {StatusCode} for ISBN {ISBN}",
-                    response.StatusCode, isbn);
-                return null;
-            }
-
-            var json = await response.Content.ReadAsStringAsync(ct);
-            var searchResult = JsonSerializer.Deserialize<GoogleBooksSearchResult>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (searchResult?.Items == null || searchResult.Items.Count == 0)
-            {
-                _logger?.LogInformation("No results found for ISBN: {ISBN}", isbn);
-                return null;
-            }
-
-            // Take the first result
-            var volumeInfo = searchResult.Items[0].VolumeInfo;
-            var metadata = MapToBookMetadata(volumeInfo, isbn);
-
-            _logger?.LogInformation("Found book: {Title} by {Author}", metadata.Title, metadata.Author);
-
-            return metadata;
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, "Failed to lookup ISBN: {ISBN}", isbn);
+            _logger?.LogInformation("No results found for ISBN: {ISBN}", isbn);
             return null;
         }
+
+        var volumeInfo = searchResult.Items[0].VolumeInfo;
+        var metadata = MapToBookMetadata(volumeInfo, isbn);
+
+        _logger?.LogInformation("Found book: {Title} by {Author}", metadata.Title, metadata.Author);
+
+        return metadata;
     }
 
     public async Task<IReadOnlyList<BookMetadata>> SearchBooksAsync(string query, CancellationToken ct = default)
@@ -78,47 +56,55 @@ public class LookupService : ILookupService
         if (string.IsNullOrWhiteSpace(query))
             return Array.Empty<BookMetadata>();
 
-        try
+        _logger?.LogInformation("Searching books with query: {Query}", query);
+
+        var url = BuildUrl($"q={Uri.EscapeDataString(query)}&maxResults=10");
+        var searchResult = await GetWithRetryAsync<GoogleBooksSearchResult>(url, ct);
+
+        if (searchResult?.Items == null || searchResult.Items.Count == 0)
         {
-            _logger?.LogInformation("Searching books with query: {Query}", query);
-
-            // Query Google Books API
-            var url = $"{GoogleBooksApiBaseUrl}?q={Uri.EscapeDataString(query)}&maxResults=10";
-            var response = await _httpClient.GetAsync(url, ct);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger?.LogWarning("Google Books API returned status {StatusCode} for query {Query}",
-                    response.StatusCode, query);
-                return Array.Empty<BookMetadata>();
-            }
-
-            var json = await response.Content.ReadAsStringAsync(ct);
-            var searchResult = JsonSerializer.Deserialize<GoogleBooksSearchResult>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (searchResult?.Items == null || searchResult.Items.Count == 0)
-            {
-                _logger?.LogInformation("No results found for query: {Query}", query);
-                return Array.Empty<BookMetadata>();
-            }
-
-            // Map all results
-            var results = searchResult.Items
-                .Select(item => MapToBookMetadata(item.VolumeInfo, null))
-                .ToList();
-
-            _logger?.LogInformation("Found {Count} books for query: {Query}", results.Count, query);
-
-            return results;
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, "Failed to search books with query: {Query}", query);
+            _logger?.LogInformation("No results found for query: {Query}", query);
             return Array.Empty<BookMetadata>();
         }
+
+        var results = searchResult.Items
+            .Select(item => MapToBookMetadata(item.VolumeInfo, null))
+            .ToList();
+
+        _logger?.LogInformation("Found {Count} books for query: {Query}", results.Count, query);
+
+        return results;
+    }
+
+    private static string BuildUrl(string queryParams)
+    {
+        var url = $"{GoogleBooksApiBaseUrl}?{queryParams}";
+        if (!string.IsNullOrWhiteSpace(GoogleBooksApiKey))
+            url += $"&key={Uri.EscapeDataString(GoogleBooksApiKey)}";
+        return url;
+    }
+
+    private async Task<T?> GetWithRetryAsync<T>(string url, CancellationToken ct)
+    {
+        var response = await _httpClient.GetAsync(url, ct);
+
+        for (int i = 0; i < MaxRetries && response.StatusCode == HttpStatusCode.TooManyRequests; i++)
+        {
+            _logger?.LogWarning("Retry {RetryCount}/{MaxRetries} after 429 Too Many Requests", i + 1, MaxRetries);
+            await Task.Delay(RetryDelaysMs[i], ct);
+            response = await _httpClient.GetAsync(url, ct);
+        }
+
+        if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            throw new HttpRequestException("Google Books API rate limit exceeded. Please try again later.", null, HttpStatusCode.TooManyRequests);
+
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync(ct);
+        return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
     }
 
     private BookMetadata MapToBookMetadata(GoogleBooksVolumeInfo volumeInfo, string? isbn)

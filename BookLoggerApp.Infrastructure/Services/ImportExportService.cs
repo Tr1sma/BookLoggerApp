@@ -557,9 +557,6 @@ public class ImportExportService : IImportExportService
 
                 // Invalidate AppSettings cache to load restored values
                 _appSettingsProvider.InvalidateCache();
-
-                // Reopen connection
-                await context.Database.OpenConnectionAsync(ct);
             }
             finally
             {
