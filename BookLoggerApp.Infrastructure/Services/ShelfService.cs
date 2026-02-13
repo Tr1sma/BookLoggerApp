@@ -58,11 +58,88 @@ public class ShelfService : IShelfService
     public async Task DeleteShelfAsync(Guid id)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
-        var shelf = await context.Shelves.FindAsync(id);
-        if (shelf != null)
+        using var transaction = await context.Database.BeginTransactionAsync();
+        try
         {
+            var shelf = await context.Shelves.FindAsync(id);
+            if (shelf == null) return;
+
+            // Find or create the Main shelf (SortOrder == 0)
+            var mainShelf = await context.Shelves
+                .FirstOrDefaultAsync(s => s.SortOrder == 0 && s.Id != id);
+
+            if (mainShelf == null)
+            {
+                mainShelf = new Shelf { Name = "Main Shelf", SortOrder = 0 };
+                context.Shelves.Add(mainShelf);
+                await context.SaveChangesAsync();
+            }
+
+            // Get current max position on the Main shelf
+            var maxPos = Math.Max(
+                await context.BookShelves.Where(bs => bs.ShelfId == mainShelf.Id)
+                    .MaxAsync(bs => (int?)bs.Position) ?? -1,
+                await context.PlantShelves.Where(ps => ps.ShelfId == mainShelf.Id)
+                    .MaxAsync(ps => (int?)ps.Position) ?? -1);
+
+            // Move books to Main shelf (skip duplicates already on Main shelf)
+            var booksToMove = await context.BookShelves
+                .Where(bs => bs.ShelfId == id)
+                .ToListAsync();
+
+            var existingBookIds = await context.BookShelves
+                .Where(bs => bs.ShelfId == mainShelf.Id)
+                .Select(bs => bs.BookId)
+                .ToHashSetAsync();
+
+            foreach (var bs in booksToMove)
+            {
+                context.BookShelves.Remove(bs);
+                if (!existingBookIds.Contains(bs.BookId))
+                {
+                    maxPos++;
+                    context.BookShelves.Add(new BookShelf
+                    {
+                        ShelfId = mainShelf.Id,
+                        BookId = bs.BookId,
+                        Position = maxPos
+                    });
+                }
+            }
+
+            // Move plants to Main shelf (skip duplicates already on Main shelf)
+            var plantsToMove = await context.PlantShelves
+                .Where(ps => ps.ShelfId == id)
+                .ToListAsync();
+
+            var existingPlantIds = await context.PlantShelves
+                .Where(ps => ps.ShelfId == mainShelf.Id)
+                .Select(ps => ps.PlantId)
+                .ToHashSetAsync();
+
+            foreach (var ps in plantsToMove)
+            {
+                context.PlantShelves.Remove(ps);
+                if (!existingPlantIds.Contains(ps.PlantId))
+                {
+                    maxPos++;
+                    context.PlantShelves.Add(new PlantShelf
+                    {
+                        ShelfId = mainShelf.Id,
+                        PlantId = ps.PlantId,
+                        Position = maxPos
+                    });
+                }
+            }
+
             context.Shelves.Remove(shelf);
             await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
         }
     }
 
