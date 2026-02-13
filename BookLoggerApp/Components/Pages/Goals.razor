@@ -82,9 +82,6 @@
                     {
                         <div class="goal-item" @onclick="() => OpenExcludeModal(goal)">
                             <GoalCard Goal="@goal" />
-                            <div class="goal-item-actions">
-                                <button class="btn btn-sm btn-secondary" @onclick="() => EditGoal(goal)" @onclick:stopPropagation="true">✏️</button>
-                            </div>
                         </div>
                     }
                 </div>
@@ -105,9 +102,6 @@
                     {
                         <div class="goal-item" @onclick="() => OpenExcludeModal(goal)">
                             <GoalCard Goal="@goal" />
-                            <div class="goal-item-actions">
-                                <button class="btn btn-sm btn-secondary" @onclick="() => EditGoal(goal)" @onclick:stopPropagation="true">✏️</button>
-                            </div>
                         </div>
                     }
                 </div>
@@ -140,11 +134,49 @@
     <div class="modal-overlay" @onclick="CloseExcludeModal">
         <div class="exclude-modal" @onclick:stopPropagation="true">
             <div class="exclude-modal-header">
-                <h3>📚 Bücher ausschließen</h3>
-                <p class="exclude-modal-subtitle">@ViewModel.ExcludeModalGoal.Title</p>
+                <h3>🎯 Ziel bearbeiten</h3>
             </div>
 
             <div class="exclude-modal-body">
+                <!-- Edit Fields -->
+                @if (ViewModel.NewGoal != null)
+                {
+                    <div class="modal-edit-section">
+                        <div class="form-group">
+                            <label>Title:</label>
+                            <input @bind="ViewModel.NewGoal.Title" @bind:event="oninput" placeholder="e.g., Read 5 books this month" />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Type:</label>
+                                <select @bind="ViewModel.NewGoal.Type">
+                                    <option value="@BookLoggerApp.Core.Enums.GoalType.Books">Books</option>
+                                    <option value="@BookLoggerApp.Core.Enums.GoalType.Pages">Pages</option>
+                                    <option value="@BookLoggerApp.Core.Enums.GoalType.Minutes">Minutes</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Target:</label>
+                                <input type="number" @bind="ViewModel.NewGoal.Target" min="1" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Start Date:</label>
+                                <input type="date" @bind="ViewModel.NewGoal.StartDate" />
+                            </div>
+                            <div class="form-group">
+                                <label>End Date:</label>
+                                <input type="date" @bind="ViewModel.NewGoal.EndDate" />
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="modal-section-divider"></div>
+
+                <!-- Exclude books section -->
+                <h4 class="exclude-section-title">📚 Bücher ausschließen</h4>
                 @if (!ViewModel.AllBooks.Any())
                 {
                     <p class="no-books-message">Keine Bücher vorhanden.</p>
@@ -178,7 +210,11 @@
             </div>
 
             <div class="exclude-modal-footer">
-                <button class="btn btn-primary" @onclick="CloseExcludeModal">Fertig</button>
+                <div class="footer-top-row">
+                    <button class="btn btn-danger" @onclick="RequestDelete">Löschen</button>
+                    <button class="btn btn-secondary" @onclick="CloseExcludeModal">Abbrechen</button>
+                </div>
+                <button class="btn btn-primary footer-save-btn" @onclick="SaveGoalFromModal">Speichern</button>
             </div>
         </div>
     </div>
@@ -192,19 +228,6 @@
     }
     .goal-item:hover {
         transform: translateY(-2px);
-    }
-    .goal-item-actions {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-    }
-    .goal-item-actions .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.8rem;
-        border-radius: 4px;
-        background: var(--card-bg, #fff);
-        border: 1px solid var(--border-color, #ddd);
-        cursor: pointer;
     }
     .goal-form {
         background: var(--card-bg, #fff);
@@ -356,11 +379,42 @@
     .toggle-excluded {
         color: #dc3545;
     }
+    .modal-edit-section {
+        margin-bottom: 0.5rem;
+    }
+    .modal-edit-section .form-group {
+        margin-bottom: 0.75rem;
+    }
+    .modal-edit-section .form-row {
+        display: flex;
+        gap: 1rem;
+    }
+    .modal-edit-section .form-row .form-group {
+        flex: 1;
+    }
+    .modal-section-divider {
+        height: 1px;
+        background: var(--border-color, #eee);
+        margin: 1rem 0;
+    }
+    .exclude-section-title {
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+    }
     .exclude-modal-footer {
         padding: 1rem 1.5rem;
         border-top: 1px solid var(--border-color, #eee);
         display: flex;
-        justify-content: flex-end;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .footer-top-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+    .footer-save-btn {
+        width: 100%;
     }
     .no-books-message {
         text-align: center;
@@ -426,21 +480,6 @@
         StateHasChanged();
     }
 
-    private void EditGoal(ReadingGoal goal)
-    {
-        ViewModel.OpenEditFormCommand.Execute(goal);
-
-        // Register modal back handler
-        _modalBackHandler = async () =>
-        {
-            CancelCreate();
-            return true;
-        };
-        BackButtonService.Register(_modalBackHandler);
-
-        StateHasChanged();
-    }
-
     private async Task OpenExcludeModal(ReadingGoal goal)
     {
         _excludeModalBackHandler = async () =>
@@ -483,6 +522,12 @@
         StateHasChanged();
     }
 
+    private async Task SaveGoalFromModal()
+    {
+        await ViewModel.SaveGoalCommand.ExecuteAsync(null);
+        await CloseExcludeModal();
+    }
+
     private void RequestDelete()
     {
         RegisterDeleteModalHandler();
@@ -522,6 +567,18 @@
         }
 
         showDeleteConfirmation = false;
+
+        // Close exclude modal if it was open
+        if (ViewModel.ShowExcludeModal)
+        {
+            if (_excludeModalBackHandler != null)
+            {
+                BackButtonService.Unregister(_excludeModalBackHandler);
+                _excludeModalBackHandler = null;
+            }
+            await ViewModel.CloseExcludeModalCommand.ExecuteAsync(null);
+        }
+
         StateHasChanged();
     }
 
