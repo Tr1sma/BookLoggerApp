@@ -224,12 +224,12 @@ public class GoalService : IGoalService
 
     public async Task IncludeBookInGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default)
     {
-        var exclusion = await _unitOfWork.GoalExcludedBooks.FirstOrDefaultAsync(
-            e => e.ReadingGoalId == goalId && e.BookId == bookId);
+        var exclusion = await _unitOfWork.Context.Set<GoalExcludedBook>()
+            .FirstOrDefaultAsync(e => e.ReadingGoalId == goalId && e.BookId == bookId, ct);
 
         if (exclusion != null)
         {
-            await _unitOfWork.GoalExcludedBooks.DeleteAsync(exclusion);
+            _unitOfWork.Context.Set<GoalExcludedBook>().Remove(exclusion);
             await _unitOfWork.SaveChangesAsync(ct);
         }
     }

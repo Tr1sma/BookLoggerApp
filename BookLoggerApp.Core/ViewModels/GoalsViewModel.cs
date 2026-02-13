@@ -188,6 +188,23 @@ public partial class GoalsViewModel : ViewModelBase
         {
             ExcludeModalGoal = goal;
 
+            // Set up editing (same copy pattern as OpenEditForm)
+            NewGoal = new ReadingGoal
+            {
+                Id = goal.Id,
+                Title = goal.Title,
+                Description = goal.Description,
+                Type = goal.Type,
+                Target = goal.Target,
+                Current = goal.Current,
+                StartDate = goal.StartDate,
+                EndDate = goal.EndDate,
+                IsCompleted = goal.IsCompleted,
+                CompletedAt = goal.CompletedAt,
+                RowVersion = goal.RowVersion
+            };
+            IsEditing = true;
+
             // Load all books
             var books = await _bookService.GetAllAsync();
             AllBooks = books.OrderBy(b => b.Title).ToList();
@@ -230,6 +247,8 @@ public partial class GoalsViewModel : ViewModelBase
         ExcludeModalGoal = null;
         AllBooks = new();
         ExcludedBookIds = new();
+        NewGoal = null;
+        IsEditing = false;
 
         // Reload goals to reflect updated progress
         await LoadAsync();
