@@ -65,4 +65,19 @@ public class MockGoalService : IGoalService
     {
         return Task.CompletedTask;
     }
+
+    public Task<IReadOnlyList<GoalExcludedBook>> GetExcludedBooksAsync(Guid goalId, CancellationToken ct = default)
+    {
+        return Task.FromResult<IReadOnlyList<GoalExcludedBook>>(Array.Empty<GoalExcludedBook>());
+    }
+
+    public Task ExcludeBookFromGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task IncludeBookInGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default)
+    {
+        return Task.CompletedTask;
+    }
 }

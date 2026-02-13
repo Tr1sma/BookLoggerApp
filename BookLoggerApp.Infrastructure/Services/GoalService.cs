@@ -3,6 +3,7 @@ using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
@@ -91,13 +92,21 @@ public class GoalService : IGoalService
         var books = await _unitOfWork.Books.GetAllAsync();
         var sessions = await _unitOfWork.ReadingSessions.GetAllAsync();
 
+        // Load all exclusions in one query
+        var allExclusions = await _unitOfWork.GoalExcludedBooks.GetAllAsync();
+
         foreach (var goal in goals)
         {
+            var excludedBookIds = allExclusions
+                .Where(e => e.ReadingGoalId == goal.Id)
+                .Select(e => e.BookId)
+                .ToHashSet();
+
             goal.Current = goal.Type switch
             {
-                GoalType.Books => CalculateBooksProgress(books, goal),
-                GoalType.Pages => CalculatePagesProgress(sessions, goal),
-                GoalType.Minutes => CalculateMinutesProgress(sessions, goal),
+                GoalType.Books => CalculateBooksProgress(books, goal, excludedBookIds),
+                GoalType.Pages => CalculatePagesProgress(sessions, goal, excludedBookIds),
+                GoalType.Minutes => CalculateMinutesProgress(sessions, goal, excludedBookIds),
                 _ => goal.Current
             };
 
@@ -112,38 +121,41 @@ public class GoalService : IGoalService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    private int CalculateBooksProgress(IEnumerable<Book> books, ReadingGoal goal)
+    private int CalculateBooksProgress(IEnumerable<Book> books, ReadingGoal goal, HashSet<Guid> excludedBookIds)
     {
         // Use date-only comparison to include all books completed on the start/end days
         var startDate = goal.StartDate.Date;
         var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
 
         return books.Count(b =>
+            !excludedBookIds.Contains(b.Id) &&
             b.Status == ReadingStatus.Completed &&
             b.DateCompleted.HasValue &&
             b.DateCompleted.Value >= startDate &&
             b.DateCompleted.Value <= endDate);
     }
 
-    private int CalculatePagesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal)
+    private int CalculatePagesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal, HashSet<Guid> excludedBookIds)
     {
         // Use date-only comparison to include all sessions on the start/end days
         var startDate = goal.StartDate.Date;
         var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
 
         return sessions
-            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
+            .Where(s => !excludedBookIds.Contains(s.BookId) &&
+                        s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
             .Sum(s => s.PagesRead ?? 0);
     }
 
-    private int CalculateMinutesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal)
+    private int CalculateMinutesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal, HashSet<Guid> excludedBookIds)
     {
         // Use date-only comparison to include all sessions on the start/end days
         var startDate = goal.StartDate.Date;
         var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
 
         return sessions
-            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
+            .Where(s => !excludedBookIds.Contains(s.BookId) &&
+                        s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
             .Sum(s => s.Minutes);
     }
 
@@ -186,5 +198,39 @@ public class GoalService : IGoalService
 
         // Single SaveChanges for all updates
         await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<GoalExcludedBook>> GetExcludedBooksAsync(Guid goalId, CancellationToken ct = default)
+    {
+        var exclusions = await _unitOfWork.GoalExcludedBooks.FindAsync(e => e.ReadingGoalId == goalId);
+        return exclusions.ToList();
+    }
+
+    public async Task ExcludeBookFromGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default)
+    {
+        var exists = await _unitOfWork.GoalExcludedBooks.ExistsAsync(
+            e => e.ReadingGoalId == goalId && e.BookId == bookId);
+
+        if (!exists)
+        {
+            await _unitOfWork.GoalExcludedBooks.AddAsync(new GoalExcludedBook
+            {
+                ReadingGoalId = goalId,
+                BookId = bookId
+            });
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+    }
+
+    public async Task IncludeBookInGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default)
+    {
+        var exclusion = await _unitOfWork.GoalExcludedBooks.FirstOrDefaultAsync(
+            e => e.ReadingGoalId == goalId && e.BookId == bookId);
+
+        if (exclusion != null)
+        {
+            await _unitOfWork.GoalExcludedBooks.DeleteAsync(exclusion);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
     }
 }
