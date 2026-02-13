@@ -79,6 +79,11 @@ public interface IUnitOfWork : IDisposable
     /// </summary>
     IRepository<WishlistInfo> WishlistInfos { get; }
 
+    /// <summary>
+    /// Repository for GoalExcludedBook junction entities.
+    /// </summary>
+    IRepository<GoalExcludedBook> GoalExcludedBooks { get; }
+
     // ===== Direct Context Access =====
 
     /// <summary>
