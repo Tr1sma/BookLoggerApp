@@ -534,8 +534,7 @@
 }
 
 body.drag-active {
-    touch-action: none;
     user-select: none;
-    overflow: hidden;
+    -webkit-user-select: none;
 }
 
