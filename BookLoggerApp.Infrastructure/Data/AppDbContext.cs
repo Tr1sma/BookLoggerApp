@@ -31,6 +31,7 @@ public class AppDbContext : DbContext
     public DbSet<PlantShelf> PlantShelves => Set<PlantShelf>();
     public DbSet<Trope> Tropes => Set<Trope>();
     public DbSet<BookTrope> BookTropes => Set<BookTrope>();
+    public DbSet<WishlistInfo> WishlistInfos => Set<WishlistInfo>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

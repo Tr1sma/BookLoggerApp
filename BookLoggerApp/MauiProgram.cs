@@ -130,6 +130,7 @@ public static class MauiProgram
         });
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Infrastructure.Services.NotificationService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IShelfService, BookLoggerApp.Infrastructure.Services.ShelfService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IWishlistService, BookLoggerApp.Infrastructure.Services.WishlistService>();
 
         // Register MAUI-specific services
         builder.Services.AddSingleton<BookLoggerApp.Services.IPermissionService, BookLoggerApp.Services.PermissionService>();
@@ -152,6 +153,7 @@ public static class MauiProgram
         builder.Services.AddTransient<SettingsViewModel>();
         builder.Services.AddTransient<PlantShopViewModel>();
         builder.Services.AddTransient<UserProgressViewModel>();
+        builder.Services.AddTransient<WishlistViewModel>();
     }
 
     private static void RegisterValidators(MauiAppBuilder builder)

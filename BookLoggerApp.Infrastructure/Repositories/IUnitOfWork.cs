@@ -74,6 +74,11 @@ public interface IUnitOfWork : IDisposable
     /// </summary>
     IRepository<BookTrope> BookTropes { get; }
 
+    /// <summary>
+    /// Repository for WishlistInfo entities.
+    /// </summary>
+    IRepository<WishlistInfo> WishlistInfos { get; }
+
     // ===== Direct Context Access =====
 
     /// <summary>
