@@ -67,6 +67,84 @@
                 Delete All Data
             </button>
         </section>
+
+        <!-- Privacy & Legal -->
+        <section class="settings-section privacy-section">
+            <h2>Privacy & Legal</h2>
+            <button class="privacy-toggle" @onclick="TogglePrivacyPolicy">
+                <span>Privacy Policy</span>
+                <span class="toggle-icon">@(_showPrivacyPolicy ? "▲" : "▼")</span>
+            </button>
+
+            @if (_showPrivacyPolicy)
+            {
+                <div class="privacy-content">
+                    <p class="privacy-updated">Last updated: February 2026</p>
+
+                    <h3>Overview</h3>
+                    <p>
+                        BookHeart is an offline-first book tracking app. Your data is stored
+                        locally on your device and is never transmitted to our servers. We do not
+                        collect, store, or share any personal information.
+                    </p>
+
+                    <h3>Data Storage</h3>
+                    <p>
+                        All your books, reading sessions, goals, plants, and settings are stored
+                        in a local database (SQLite) on your device. This data never leaves your
+                        device unless you explicitly use the Backup & Restore feature.
+                    </p>
+
+                    <h3>Camera Permission</h3>
+                    <p>
+                        BookHeart requests camera access solely for scanning book barcodes (ISBN).
+                        No photos or videos are captured, stored, or transmitted. Camera access
+                        is optional and can be denied without affecting other app features.
+                    </p>
+
+                    <h3>Network Usage</h3>
+                    <p>
+                        When you look up a book by ISBN, BookHeart sends the ISBN number to the
+                        Google Books API to retrieve book metadata (title, author, cover image).
+                        No personal data or device identifiers are included in these requests.
+                        The app functions fully offline without this feature.
+                    </p>
+
+                    <h3>Third-Party Services</h3>
+                    <p>
+                        BookHeart does not include any advertising, analytics, or tracking SDKs.
+                        The only external service used is the Google Books API for optional book
+                        metadata lookup.
+                    </p>
+
+                    <h3>Data Deletion</h3>
+                    <p>
+                        You can delete all your data at any time using the "Delete All Data"
+                        option in Settings. Uninstalling the app also removes all stored data
+                        from your device.
+                    </p>
+
+                    <h3>Children's Privacy</h3>
+                    <p>
+                        BookHeart does not knowingly collect any information from children.
+                        The app does not require account creation or any personal information
+                        to function.
+                    </p>
+
+                    <h3>Changes to This Policy</h3>
+                    <p>
+                        Any changes to this privacy policy will be reflected in app updates.
+                        The "Last updated" date at the top indicates the most recent revision.
+                    </p>
+
+                    <h3>Contact</h3>
+                    <p>
+                        If you have questions about this privacy policy, please open an issue
+                        on our GitHub repository or contact us via the Play Store listing.
+                    </p>
+                </div>
+            }
+        </section>
     }
 </div>
 
@@ -396,14 +474,65 @@
         font-size: 0.8rem;
         resize: vertical;
     }
+
+    /* Privacy & Legal */
+    .privacy-section {
+        margin-top: 1rem;
+    }
+
+    .privacy-toggle {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 0.75rem 0;
+        background: none;
+        border: none;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .toggle-icon {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+    }
+
+    .privacy-content {
+        padding: 0.5rem 0;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .privacy-content h3 {
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        margin: 1rem 0 0.4rem 0;
+        font-weight: 600;
+    }
+
+    .privacy-content p {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        line-height: 1.6;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .privacy-updated {
+        font-style: italic;
+        color: var(--text-secondary);
+        font-size: 0.8rem !important;
+    }
 </style>
 
 @code {
     private bool _showDeleteConfirmation = false;
     private bool _showSuccessModal = false;
+    private bool _showPrivacyPolicy = false;
     private string _deleteConfirmText = string.Empty;
 
     private bool IsDeleteConfirmed => _deleteConfirmText.Equals("DELETE", StringComparison.Ordinal);
+
+    private void TogglePrivacyPolicy() => _showPrivacyPolicy = !_showPrivacyPolicy;
 
     private Func<Task<bool>>? _navBackHandler;
     private Func<Task<bool>>? _modalBackHandler;
