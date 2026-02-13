@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 
@@ -5,18 +6,26 @@ namespace BookLoggerApp.Tests.TestHelpers;
 
 /// <summary>
 /// Mock implementation of IProgressionService for testing purposes.
-/// Returns default/empty values for all operations.
+/// Calculates XP using XpCalculator (without plant boost or settings persistence).
 /// </summary>
 public class MockProgressionService : IProgressionService
 {
     public Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, bool hasStreak = false)
     {
+        var (minutesXp, pagesXp, longSessionXp, streakXp) = XpCalculator.CalculateSessionXpBreakdown(minutes, pagesRead, hasStreak);
+        int baseXp = minutesXp + pagesXp + longSessionXp + streakXp;
+
         return Task.FromResult(new ProgressionResult
         {
-            XpEarned = 0,
-            BaseXp = 0,
+            XpEarned = baseXp,
+            BaseXp = baseXp,
+            MinutesXp = minutesXp,
+            PagesXp = pagesXp,
+            LongSessionBonusXp = longSessionXp,
+            StreakBonusXp = streakXp,
             BoostedXp = 0,
             PlantBoostPercentage = 0,
+            NewTotalXp = baseXp,
             LevelUp = null
         });
     }

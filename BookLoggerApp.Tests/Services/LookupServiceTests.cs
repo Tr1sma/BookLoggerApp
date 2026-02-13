@@ -10,7 +10,7 @@ public class LookupServiceTests
 
     public LookupServiceTests()
     {
-        _service = new LookupService();
+        _service = new LookupService(new HttpClient());
     }
 
     [Fact]
@@ -59,10 +59,19 @@ public class LookupServiceTests
     public async Task LookupByISBNAsync_WithInvalidISBN_ShouldReturnNull()
     {
         // Arrange
-        var isbn = "0000000000000"; // Invalid ISBN
+        var isbn = "0000000000000";
+        var emptyResponse = @"{ ""totalItems"": 0 }";
+
+        var mockHandler = new MockHttpMessageHandler((request) =>
+            new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent(emptyResponse)
+            });
+
+        var service = new LookupService(new HttpClient(mockHandler));
 
         // Act
-        var result = await _service.LookupByISBNAsync(isbn);
+        var result = await service.LookupByISBNAsync(isbn);
 
         // Assert
         result.Should().BeNull();
@@ -103,8 +112,11 @@ public class LookupServiceTests
         var mockHandler = new MockHttpMessageHandler((request) =>
         {
             // Verify that the service STRIPPED the dashes before calling the API
-            request.RequestUri!.ToString().Should().Contain(cleanIsbn);
-            request.RequestUri!.ToString().Should().NotContain("-");
+            var query = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query);
+            var isbnQuery = query["q"];
+            isbnQuery.Should().NotBeNull();
+            isbnQuery.Should().Contain(cleanIsbn);
+            isbnQuery.Should().NotContain("-");
 
             return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
             {

@@ -170,10 +170,14 @@ public class PlantService : IPlantService
         // Update level if changed
         if (newLevel > plant.CurrentLevel)
         {
+            int levelsGained = newLevel - plant.CurrentLevel;
             plant.CurrentLevel = newLevel;
 
-            // TODO: Award coins for level up (requires IStatsService or AppSettings repository)
-            // settings.Coins += 100;
+            // Award 100 coins per level gained
+            int coinsAwarded = levelsGained * 100;
+            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
+            _logger.LogInformation("Plant {PlantId} leveled up to {Level}, awarded {Coins} coins",
+                plantId, newLevel, coinsAwarded);
         }
 
         try
@@ -229,9 +233,14 @@ public class PlantService : IPlantService
         // Update level if changed
         if (newLevel > plant.CurrentLevel)
         {
+            int levelsGained = newLevel - plant.CurrentLevel;
             plant.CurrentLevel = newLevel;
-            _logger.LogInformation("Plant {PlantId} leveled up to {Level} after {ReadingDays} reading days",
-                plantId, newLevel, plant.ReadingDaysCount);
+
+            // Award 100 coins per level gained
+            int coinsAwarded = levelsGained * 100;
+            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
+            _logger.LogInformation("Plant {PlantId} leveled up to {Level} after {ReadingDays} reading days, awarded {Coins} coins",
+                plantId, newLevel, plant.ReadingDaysCount, coinsAwarded);
         }
 
         try
