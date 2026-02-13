@@ -24,4 +24,8 @@ public interface IShelfService
 
     // Positioning
     Task UpdateShelfPositionsAsync(Guid shelfId, Dictionary<Guid, int> bookPositions, Dictionary<Guid, int> plantPositions);
+
+    // Cross-shelf movement
+    Task MoveBookBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid bookId, int targetPosition);
+    Task MovePlantBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid plantId, int targetPosition);
 }
