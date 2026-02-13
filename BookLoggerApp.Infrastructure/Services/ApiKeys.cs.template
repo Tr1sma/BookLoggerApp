@@ -1,0 +1,10 @@
+namespace BookLoggerApp.Infrastructure.Services;
+
+/// <summary>
+/// API keys for external services. This file is gitignored — do not check in.
+/// Copy this file to ApiKeys.cs and fill in your keys.
+/// </summary>
+internal static class ApiKeys
+{
+    internal const string? GoogleBooks = null; // Get yours at https://console.cloud.google.com/apis/credentials
+}

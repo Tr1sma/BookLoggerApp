@@ -72,11 +72,11 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         var sourceCoversDir = Path.Combine(sourceDir, "covers");
         Directory.CreateDirectory(sourceCoversDir);
 
-        // a) Create DB with data
+        // a) Create DB with data (use Migrate so __EFMigrationsHistory is populated)
         var sourceFactory = new SqliteDbContextFactory(sourceDbPath);
         using (var context = sourceFactory.CreateDbContext())
         {
-            context.Database.EnsureCreated();
+            await context.Database.MigrateAsync();
             context.Books.Add(new Book { Title = "Backup Test Book", CoverImagePath = "covers/test.jpg" });
             await context.SaveChangesAsync();
         }
@@ -113,7 +113,7 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         var targetFactory = new SqliteDbContextFactory(targetDbPath);
         using (var context = targetFactory.CreateDbContext())
         {
-            context.Database.EnsureCreated();
+            await context.Database.MigrateAsync();
             context.Books.Count().Should().Be(0);
         }
 
