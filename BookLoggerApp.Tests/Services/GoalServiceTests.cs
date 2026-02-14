@@ -331,4 +331,191 @@ public class GoalServiceTests : IDisposable
         var exclusions = await _service.GetExcludedBooksAsync(goal.Id);
         exclusions.Should().BeEmpty();
     }
+
+    // ===== Genre Filter Tests =====
+
+    [Fact]
+    public async Task AddGenreToGoalAsync_ShouldAddGenre()
+    {
+        // Arrange
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Read Fantasy books",
+            Type = GoalType.Books,
+            Target = 5,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        var genre = (await _unitOfWork.Genres.GetAllAsync()).First();
+
+        // Act
+        await _service.AddGenreToGoalAsync(goal.Id, genre.Id);
+
+        // Assert
+        var goalGenres = await _service.GetGoalGenresAsync(goal.Id);
+        goalGenres.Should().HaveCount(1);
+        goalGenres.First().GenreId.Should().Be(genre.Id);
+    }
+
+    [Fact]
+    public async Task AddGenreToGoalAsync_ShouldBeIdempotent()
+    {
+        // Arrange
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Read Fantasy books",
+            Type = GoalType.Books,
+            Target = 5,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        var genre = (await _unitOfWork.Genres.GetAllAsync()).First();
+
+        // Act: Add same genre twice
+        await _service.AddGenreToGoalAsync(goal.Id, genre.Id);
+        await _service.AddGenreToGoalAsync(goal.Id, genre.Id);
+
+        // Assert: Should still only have one entry
+        var goalGenres = await _service.GetGoalGenresAsync(goal.Id);
+        goalGenres.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task RemoveGenreFromGoalAsync_ShouldRemoveGenre()
+    {
+        // Arrange
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Read Fantasy books",
+            Type = GoalType.Books,
+            Target = 5,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        var genre = (await _unitOfWork.Genres.GetAllAsync()).First();
+        await _service.AddGenreToGoalAsync(goal.Id, genre.Id);
+
+        // Act
+        await _service.RemoveGenreFromGoalAsync(goal.Id, genre.Id);
+
+        // Assert
+        var goalGenres = await _service.GetGoalGenresAsync(goal.Id);
+        goalGenres.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetActiveGoalsAsync_WithGenreFilter_ShouldOnlyCountMatchingBooks()
+    {
+        // Arrange: Use seeded genres (Fantasy and Romance)
+        var allGenres = (await _unitOfWork.Genres.GetAllAsync()).ToList();
+        var fantasy = allGenres.First(g => g.Name == "Fantasy");
+        var romance = allGenres.First(g => g.Name == "Romance");
+
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Read 3 Fantasy books",
+            Type = GoalType.Books,
+            Target = 3,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        // Add Fantasy genre filter to goal
+        await _service.AddGenreToGoalAsync(goal.Id, fantasy.Id);
+
+        // Create books: 2 Fantasy, 1 Romance (no Fantasy)
+        var book1 = new Book { Title = "Fantasy Book 1", Author = "A", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        var book2 = new Book { Title = "Fantasy Book 2", Author = "B", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        var book3 = new Book { Title = "Romance Book", Author = "C", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        await _unitOfWork.Books.AddAsync(book1);
+        await _unitOfWork.Books.AddAsync(book2);
+        await _unitOfWork.Books.AddAsync(book3);
+        await _unitOfWork.SaveChangesAsync();
+
+        // Assign genres via BookGenre
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book1.Id, GenreId = fantasy.Id });
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book2.Id, GenreId = fantasy.Id });
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book3.Id, GenreId = romance.Id });
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        var activeGoals = await _service.GetActiveGoalsAsync();
+
+        // Assert: Only 2 Fantasy books should count (Romance book excluded by genre filter)
+        var loadedGoal = activeGoals.First();
+        loadedGoal.Current.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetActiveGoalsAsync_WithoutGenreFilter_ShouldCountAllBooks()
+    {
+        // Arrange: Goal without any genre filter (backward-compatible)
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Read 3 books",
+            Type = GoalType.Books,
+            Target = 3,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        var book1 = new Book { Title = "Book 1", Author = "A", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        var book2 = new Book { Title = "Book 2", Author = "B", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        await _unitOfWork.Books.AddAsync(book1);
+        await _unitOfWork.Books.AddAsync(book2);
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        var activeGoals = await _service.GetActiveGoalsAsync();
+
+        // Assert: All books should count (no genre filter)
+        var loadedGoal = activeGoals.First();
+        loadedGoal.Current.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetActiveGoalsAsync_WithMultipleGenres_ShouldUseOrLogic()
+    {
+        // Arrange: Goal with Fantasy OR Romance genre filter
+        var allGenres = (await _unitOfWork.Genres.GetAllAsync()).ToList();
+        var fantasy = allGenres.First(g => g.Name == "Fantasy");
+        var romance = allGenres.First(g => g.Name == "Romance");
+        var mystery = allGenres.First(g => g.Name == "Mystery");
+
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Read Fantasy or Romance",
+            Type = GoalType.Books,
+            Target = 5,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        await _service.AddGenreToGoalAsync(goal.Id, fantasy.Id);
+        await _service.AddGenreToGoalAsync(goal.Id, romance.Id);
+
+        // Create books: 1 Fantasy, 1 Romance, 1 Mystery
+        var book1 = new Book { Title = "Fantasy Book", Author = "A", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        var book2 = new Book { Title = "Romance Book", Author = "B", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        var book3 = new Book { Title = "Mystery Book", Author = "C", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        await _unitOfWork.Books.AddAsync(book1);
+        await _unitOfWork.Books.AddAsync(book2);
+        await _unitOfWork.Books.AddAsync(book3);
+        await _unitOfWork.SaveChangesAsync();
+
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book1.Id, GenreId = fantasy.Id });
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book2.Id, GenreId = romance.Id });
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book3.Id, GenreId = mystery.Id });
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        var activeGoals = await _service.GetActiveGoalsAsync();
+
+        // Assert: Fantasy + Romance = 2 books (Mystery excluded by genre filter)
+        var loadedGoal = activeGoals.First();
+        loadedGoal.Current.Should().Be(2);
+    }
 }

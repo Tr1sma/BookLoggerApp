@@ -61,6 +61,24 @@
                     <label>End Date:</label>
                     <input type="date" @bind="ViewModel.NewGoal.EndDate" />
                 </div>
+                @if (ViewModel.AllGenres.Any())
+                {
+                    <div class="form-group">
+                        <label>Genre-Filter (optional):</label>
+                        <p class="genre-filter-hint">Nur Bücher mit mindestens einem dieser Genres zählen zum Fortschritt.</p>
+                        <div class="goal-genres-selection">
+                            @foreach (var genre in ViewModel.AllGenres)
+                            {
+                                <label class="genre-checkbox">
+                                    <input type="checkbox"
+                                           checked="@ViewModel.SelectedGenreIds.Contains(genre.Id)"
+                                           @onchange="@((ChangeEventArgs e) => ToggleGenreForCreate(genre.Id, e.Value as bool? ?? false))" />
+                                    <span>@genre.Icon @genre.Name</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+                }
                 <div class="form-actions">
                     <button class="btn btn-primary" @onclick="SaveGoal">@(ViewModel.IsEditing ? "Update" : "Create")</button>
                     @if (ViewModel.IsEditing)
@@ -174,6 +192,25 @@
                 }
 
                 <div class="modal-section-divider"></div>
+
+                <!-- Genre filter section -->
+                @if (ViewModel.AllGenres.Any())
+                {
+                    <h4 class="exclude-section-title">🏷️ Genre-Filter</h4>
+                    <p class="genre-filter-hint">Nur Bücher mit mindestens einem dieser Genres zählen zum Fortschritt.</p>
+                    <div class="goal-genres-selection">
+                        @foreach (var genre in ViewModel.AllGenres)
+                        {
+                            <label class="genre-checkbox">
+                                <input type="checkbox"
+                                       checked="@ViewModel.SelectedGenreIds.Contains(genre.Id)"
+                                       @onchange="@(() => ToggleGoalGenre(genre.Id))" />
+                                <span>@genre.Icon @genre.Name</span>
+                            </label>
+                        }
+                    </div>
+                    <div class="modal-section-divider"></div>
+                }
 
                 <!-- Exclude books section -->
                 <h4 class="exclude-section-title">📚 Bücher ausschließen</h4>
@@ -421,6 +458,17 @@
         color: var(--text-muted, #888);
         padding: 2rem 0;
     }
+    .goal-genres-selection {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .genre-filter-hint {
+        font-size: 0.85rem;
+        color: var(--text-muted, #888);
+        margin-bottom: 0.75rem;
+    }
 </style>
 
 @code {
@@ -508,6 +556,24 @@
     private async Task ToggleExclusion(Guid bookId)
     {
         await ViewModel.ToggleBookExclusionCommand.ExecuteAsync(bookId);
+        StateHasChanged();
+    }
+
+    private async Task ToggleGoalGenre(Guid genreId)
+    {
+        await ViewModel.ToggleGoalGenreCommand.ExecuteAsync(genreId);
+        StateHasChanged();
+    }
+
+    private void ToggleGenreForCreate(Guid genreId, bool isSelected)
+    {
+        if (isSelected)
+            ViewModel.SelectedGenreIds.Add(genreId);
+        else
+            ViewModel.SelectedGenreIds.Remove(genreId);
+
+        // Force UI update
+        ViewModel.SelectedGenreIds = new HashSet<Guid>(ViewModel.SelectedGenreIds);
         StateHasChanged();
     }
 

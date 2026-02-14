@@ -10,11 +10,13 @@ public partial class GoalsViewModel : ViewModelBase
 {
     private readonly IGoalService _goalService;
     private readonly IBookService _bookService;
+    private readonly IGenreService _genreService;
 
-    public GoalsViewModel(IGoalService goalService, IBookService bookService)
+    public GoalsViewModel(IGoalService goalService, IBookService bookService, IGenreService genreService)
     {
         _goalService = goalService;
         _bookService = bookService;
+        _genreService = genreService;
     }
 
     [ObservableProperty]
@@ -48,11 +50,21 @@ public partial class GoalsViewModel : ViewModelBase
     [ObservableProperty]
     private HashSet<Guid> _excludedBookIds = new();
 
+    // Genre filter state
+    [ObservableProperty]
+    private List<Genre> _allGenres = new();
+
+    [ObservableProperty]
+    private HashSet<Guid> _selectedGenreIds = new();
+
     [RelayCommand]
     public async Task LoadAsync()
     {
         await ExecuteSafelyWithDbAsync(async () =>
         {
+            var genres = await _genreService.GetAllAsync();
+            AllGenres = genres.OrderBy(g => g.Name).ToList();
+
             var active = await _goalService.GetActiveGoalsAsync();
             ActiveGoals = active.ToList();
 
@@ -67,6 +79,7 @@ public partial class GoalsViewModel : ViewModelBase
         StatusMessage = null;
         ShowCreateForm = true;
         IsEditing = false;
+        SelectedGenreIds = new();
         // For Books goals, default to yearly tracking (Jan 1 - Dec 31)
         // For other goals, use current date as start
         var startOfYear = new DateTime(DateTime.UtcNow.Year, 1, 1);
@@ -136,7 +149,12 @@ public partial class GoalsViewModel : ViewModelBase
             }
             else
             {
-                await _goalService.AddAsync(NewGoal);
+                var created = await _goalService.AddAsync(NewGoal);
+                // Persist selected genres for the newly created goal
+                foreach (var genreId in SelectedGenreIds)
+                {
+                    await _goalService.AddGenreToGoalAsync(created.Id, genreId);
+                }
                 StatusMessage = "Ziel erstellt";
             }
             
@@ -213,8 +231,35 @@ public partial class GoalsViewModel : ViewModelBase
             var exclusions = await _goalService.GetExcludedBooksAsync(goal.Id);
             ExcludedBookIds = exclusions.Select(e => e.BookId).ToHashSet();
 
+            // Load current genre filter for this goal
+            var goalGenres = await _goalService.GetGoalGenresAsync(goal.Id);
+            SelectedGenreIds = goalGenres.Select(gg => gg.GenreId).ToHashSet();
+
             ShowExcludeModal = true;
         }, "Fehler beim Laden der Bücher");
+    }
+
+    [RelayCommand]
+    public async Task ToggleGoalGenreAsync(Guid genreId)
+    {
+        if (ExcludeModalGoal == null) return;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            if (SelectedGenreIds.Contains(genreId))
+            {
+                await _goalService.RemoveGenreFromGoalAsync(ExcludeModalGoal.Id, genreId);
+                SelectedGenreIds.Remove(genreId);
+            }
+            else
+            {
+                await _goalService.AddGenreToGoalAsync(ExcludeModalGoal.Id, genreId);
+                SelectedGenreIds.Add(genreId);
+            }
+
+            // Force UI update by replacing the set
+            SelectedGenreIds = new HashSet<Guid>(SelectedGenreIds);
+        }, "Fehler beim Ändern des Genre-Filters");
     }
 
     [RelayCommand]
@@ -247,6 +292,7 @@ public partial class GoalsViewModel : ViewModelBase
         ExcludeModalGoal = null;
         AllBooks = new();
         ExcludedBookIds = new();
+        SelectedGenreIds = new();
         NewGoal = null;
         IsEditing = false;
 

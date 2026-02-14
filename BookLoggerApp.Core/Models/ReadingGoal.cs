@@ -32,6 +32,7 @@ public class ReadingGoal
 
     // Navigation Properties
     public ICollection<GoalExcludedBook> ExcludedBooks { get; set; } = new List<GoalExcludedBook>();
+    public ICollection<GoalGenre> GoalGenres { get; set; } = new List<GoalGenre>();
 
     // Concurrency Control
     [Timestamp]

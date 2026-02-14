@@ -84,6 +84,11 @@ public interface IUnitOfWork : IDisposable
     /// </summary>
     IRepository<GoalExcludedBook> GoalExcludedBooks { get; }
 
+    /// <summary>
+    /// Repository for GoalGenre junction entities.
+    /// </summary>
+    IRepository<GoalGenre> GoalGenres { get; }
+
     // ===== Direct Context Access =====
 
     /// <summary>

@@ -35,6 +35,11 @@ public interface IGoalService
     Task ExcludeBookFromGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default);
     Task IncludeBookInGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default);
 
+    // Genre Filter
+    Task<IReadOnlyList<GoalGenre>> GetGoalGenresAsync(Guid goalId, CancellationToken ct = default);
+    Task AddGenreToGoalAsync(Guid goalId, Guid genreId, CancellationToken ct = default);
+    Task RemoveGenreFromGoalAsync(Guid goalId, Guid genreId, CancellationToken ct = default);
+
     /// <summary>
     /// Notifies subscribers that goal progress may have changed.
     /// Call this after completing a reading session or finishing a book.
