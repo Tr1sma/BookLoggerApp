@@ -80,4 +80,19 @@ public class MockGoalService : IGoalService
     {
         return Task.CompletedTask;
     }
+
+    public Task<IReadOnlyList<GoalGenre>> GetGoalGenresAsync(Guid goalId, CancellationToken ct = default)
+    {
+        return Task.FromResult<IReadOnlyList<GoalGenre>>(Array.Empty<GoalGenre>());
+    }
+
+    public Task AddGenreToGoalAsync(Guid goalId, Guid genreId, CancellationToken ct = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveGenreFromGoalAsync(Guid goalId, Guid genreId, CancellationToken ct = default)
+    {
+        return Task.CompletedTask;
+    }
 }
