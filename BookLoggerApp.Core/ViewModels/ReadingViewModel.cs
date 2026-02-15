@@ -7,18 +7,25 @@ using Timer = System.Timers.Timer;
 
 namespace BookLoggerApp.Core.ViewModels;
 
-public partial class ReadingViewModel : ViewModelBase
+public partial class ReadingViewModel : ViewModelBase, IDisposable
 {
     private readonly IProgressService _progressService;
     private readonly IBookService _bookService;
     private readonly IProgressionService _progressionService;
+    private readonly ITimerStateService _timerStateService;
     private Timer? _timer;
 
-    public ReadingViewModel(IProgressService progressService, IBookService bookService, IProgressionService progressionService)
+    public ReadingViewModel(
+        IProgressService progressService,
+        IBookService bookService,
+        IProgressionService progressionService,
+        ITimerStateService timerStateService)
     {
         _progressService = progressService;
         _bookService = bookService;
         _progressionService = progressionService;
+        _timerStateService = timerStateService;
+        _timerStateService.AppResumed += OnAppResumed;
     }
 
     [ObservableProperty]
@@ -303,6 +310,22 @@ public partial class ReadingViewModel : ViewModelBase
     {
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
+    }
+
+    private void OnAppResumed()
+    {
+        if (!IsPaused && Session != null)
+        {
+            // Recalculate elapsed from the original session start time
+            ElapsedTime = DateTime.UtcNow - SessionStartTime;
+            StartTimer();
+        }
+    }
+
+    public void Dispose()
+    {
+        _timerStateService.AppResumed -= OnAppResumed;
+        StopTimer();
     }
 }
 
