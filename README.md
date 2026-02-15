@@ -150,13 +150,13 @@ dotnet ef database update --project BookLoggerApp.Infrastructure --startup-proje
 
 ---
 
-## 📜 Lizenz
+## Lizenz
 
 Dieses Projekt ist **nicht frei für Änderungen, Forks oder Weiterverkauf**.  
 Details siehe [`LICENSE.md`](LICENSE.md).
 
 ---
 
-## 👨‍💻 Autor
+## Autor
 Entwickelt von **Ben Sowieja**  
 

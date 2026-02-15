@@ -3,6 +3,7 @@
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
+@inject ITimerStateService TimerStateService
 
 @if (Book != null && IsVisible)
 {
@@ -97,12 +98,27 @@
     private int PagesRead { get; set; }
     private System.Threading.Timer? _timer;
 
+    protected override void OnInitialized()
+    {
+        TimerStateService.AppResumed += OnAppResumed;
+    }
+
     protected override void OnParametersSet()
     {
         // Reset when book changes
         if (Book != null && !IsRunning)
         {
             ResetTimer();
+        }
+    }
+
+    private void OnAppResumed()
+    {
+        if (IsRunning && StartTime.HasValue)
+        {
+            ElapsedTime = DateTime.UtcNow - StartTime.Value;
+            StartTimer();
+            InvokeAsync(StateHasChanged);
         }
     }
 
@@ -242,6 +258,7 @@
 
     public void Dispose()
     {
+        TimerStateService.AppResumed -= OnAppResumed;
         StopTimer();
     }
 }
