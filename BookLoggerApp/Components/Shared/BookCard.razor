@@ -80,12 +80,17 @@
     [Parameter] public bool IsInBookshelf { get; set; }
     private string? _coverImageDataUrl;
     private Guid _lastBookId;
-    
+
     // Lazy loading
     private ElementReference _imageContainer;
     private DotNetObjectReference<BookCard>? _dotNetHelper;
     private bool _isImageLoaded = false;
     private bool _observerRegistered = false;
+
+    // ShouldRender optimization: skip Blazor diff when parameters haven't meaningfully changed
+    private bool _shouldRender = true;
+
+    protected override bool ShouldRender() => _shouldRender;
 
     protected override void OnInitialized()
     {
@@ -107,30 +112,21 @@
         // Only reload if book changed
         if (Book != null && Book.Id != _lastBookId)
         {
+            _shouldRender = true;
             _lastBookId = Book.Id;
             // Reset state for new book
             _isImageLoaded = false;
             _coverImageDataUrl = null;
-            
-            // If we already have an observer, we might need to re-trigger or simpler: just wait for scroll.
-            // But if the element is already in view, the observer might not fire again if we don't reset it.
-            // Actually, for a recycled component (virtualization), the element ref stays same but content changes.
-            // But here we are NOT using virtualization for the shelf slots yet (grid), only maybe searching.
-            // Safest: if we already fired, we might need to check visibility again? 
-            // In Blazor, if parameters change, we might want to attempt load if we were already loaded?
-            // Let's rely on the observer. If the ID changes, we reset _isImageLoaded.
-            // If the element is currently visible, we might want to re-force load.
-            // For now, let's just clear and wait for observer callback (or manual re-observe if needed).
-            
-            // Re-observe if we swapped books?
+
+            // Re-observe if we swapped books (observer unobserves after trigger)
              if (_observerRegistered && _dotNetHelper != null)
              {
-                 // Small delay to ensure render info is up to date?
-                 // Actually, standard IntersectionObserver continues observing the element.
-                 // But we unobserved it in JS after trigger!
-                 // So we MUST re-observe.
                  await JSRuntime.InvokeVoidAsync("lazyLoading.observe", _imageContainer, _dotNetHelper);
              }
+        }
+        else
+        {
+            _shouldRender = false;
         }
     }
 
@@ -141,6 +137,7 @@
 
         await LoadCoverImageAsync();
         _isImageLoaded = true;
+        _shouldRender = true;
         await InvokeAsync(StateHasChanged);
     }
 

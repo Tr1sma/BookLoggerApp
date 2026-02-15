@@ -21,7 +21,6 @@ window.bookshelfDragDrop = {
     _lastMoveX: 0,
     _lastMoveY: 0,
     _dropTargetCache: null,
-    _dropTargetCacheDirty: false,
     _activeDropHighlight: null,
 
     // ─── Public API ───────────────────────────────────────
@@ -218,7 +217,6 @@ window.bookshelfDragDrop = {
 
         // Cache drop target positions for fast hit-testing during drag
         this._buildDropTargetCache();
-        this._dropTargetCacheDirty = false;
 
         // Mark original as dragging
         slot.classList.remove('long-press-active');
@@ -292,12 +290,6 @@ window.bookshelfDragDrop = {
     },
 
     _findDropTargetFromCache: function (x, y) {
-        // Rebuild cache if invalidated (e.g. by auto-scroll)
-        if (this._dropTargetCacheDirty) {
-            this._buildDropTargetCache();
-            this._dropTargetCacheDirty = false;
-        }
-
         var cache = this._dropTargetCache;
         if (!cache) return;
 
@@ -435,9 +427,15 @@ window.bookshelfDragDrop = {
         if (shouldScroll && !this._autoScrollRaf) {
             var self = this;
             var scroll = function () {
+                var scrollBefore = window.pageYOffset;
                 window.scrollBy(0, self._autoScrollSpeed * direction);
-                // Cached rects are stale after scrolling
-                self._dropTargetCacheDirty = true;
+                var scrollDelta = window.pageYOffset - scrollBefore;
+
+                // Offset cached rects instead of expensive full rebuild
+                if (scrollDelta !== 0) {
+                    self._offsetDropTargetCache(0, -scrollDelta);
+                }
+
                 if (self._dragActive) {
                     self._autoScrollRaf = requestAnimationFrame(scroll);
                 }
@@ -445,6 +443,27 @@ window.bookshelfDragDrop = {
             this._autoScrollRaf = requestAnimationFrame(scroll);
         } else if (!shouldScroll) {
             this._stopAutoScroll();
+        }
+    },
+
+    _offsetDropTargetCache: function (dx, dy) {
+        var cache = this._dropTargetCache;
+        if (!cache) return;
+
+        for (var i = 0; i < cache.slots.length; i++) {
+            var s = cache.slots[i];
+            s.top += dy;
+            s.bottom += dy;
+            s.left += dx;
+            s.right += dx;
+            s.centerX += dx;
+        }
+        for (var j = 0; j < cache.sections.length; j++) {
+            var sec = cache.sections[j];
+            sec.top += dy;
+            sec.bottom += dy;
+            sec.left += dx;
+            sec.right += dx;
         }
     },
 

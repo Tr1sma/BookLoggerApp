@@ -28,7 +28,8 @@
     /* UI elements */
     --border-radius: 12px;
     --border-radius-lg: 16px;
-    --transition: all 0.3s ease;
+    --transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease,
+                  opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 
     /* Status colors with warm tones */
     --status-planned: #7B8FA3;
@@ -172,38 +173,11 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle texture overlay for cozy feeling */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image:
-        repeating-linear-gradient(0deg,
-            rgba(255, 255, 255, 0.01) 0px,
-            transparent 1px,
-            transparent 2px,
-            rgba(255, 255, 255, 0.01) 3px),
-        repeating-linear-gradient(90deg,
-            rgba(255, 255, 255, 0.01) 0px,
-            transparent 1px,
-            transparent 2px,
-            rgba(255, 255, 255, 0.01) 3px);
-    pointer-events: none;
-    opacity: 0.3;
-    z-index: -1;
-}
 
 * {
     box-sizing: border-box;
 }
 
-/* Smooth scrolling for better UX */
-html {
-    scroll-behavior: smooth;
-}
 
 h1,
 h2,
