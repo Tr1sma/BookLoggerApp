@@ -492,10 +492,10 @@
     z-index: 10000;
     pointer-events: none;
     opacity: 0.85;
-    transform: scale(1.05) rotate(2deg);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(212, 165, 116, 0.2);
+    /* Transform set via JS (translate + scale + rotate) */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     border-radius: 4px;
-    will-change: transform, left, top;
+    will-change: transform;
 }
 
 .shelf-slot.dragging {
@@ -519,13 +519,7 @@
     border-radius: 2px;
     z-index: 100;
     pointer-events: none;
-    box-shadow: 0 0 8px rgba(212, 165, 116, 0.6);
-    animation: dropIndicatorPulse 1s ease-in-out infinite;
-}
-
-@keyframes dropIndicatorPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; box-shadow: 0 0 16px rgba(212, 165, 116, 0.8); }
+    box-shadow: 0 0 6px rgba(212, 165, 116, 0.4);
 }
 
 .shelf-slot.long-press-active {
@@ -536,5 +530,16 @@
 body.drag-active {
     user-select: none;
     -webkit-user-select: none;
+}
+
+/* Suppress expensive transitions and pseudo-elements during drag */
+body.drag-active .book-card,
+body.drag-active .shelf-slot {
+    transition: none !important;
+}
+
+body.drag-active .shelf-row::before,
+body.drag-active .shelf-row::after {
+    display: none;
 }
 

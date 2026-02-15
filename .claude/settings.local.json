@@ -19,7 +19,8 @@
       "Bash(cmd.exe /c \"rmdir /s /q obj\")",
       "WebSearch",
       "Bash(dotnet add:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(Select-String -Pattern \"error|Build succeeded|failed\")"
     ],
     "deny": [],
     "ask": []
