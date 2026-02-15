@@ -213,10 +213,8 @@
 .shelf-slot {
     display: inline-block;
     transition: transform 0.2s ease;
-}
-
-.shelf-slot {
     touch-action: auto;
+    contain: layout style;
 }
 
 /* Wooden shelf edge (bottom border) - Enhanced prominent edge */
@@ -496,6 +494,7 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     border-radius: 4px;
     will-change: transform;
+    contain: strict;
 }
 
 .shelf-slot.dragging {
@@ -541,5 +540,21 @@ body.drag-active .shelf-slot {
 body.drag-active .shelf-row::before,
 body.drag-active .shelf-row::after {
     display: none;
+}
+
+/* Also suppress book texture overlays and heavy shadows during drag */
+body.drag-active .book-card::before {
+    display: none;
+}
+
+body.drag-active .shelf-books {
+    box-shadow: none !important;
+}
+
+body.drag-active .book-card {
+    box-shadow:
+        -2px 0 3px rgba(0, 0, 0, 0.3),
+        2px 0 3px rgba(0, 0, 0, 0.3),
+        0 3px 6px rgba(0, 0, 0, 0.4) !important;
 }
 

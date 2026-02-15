@@ -103,9 +103,15 @@
     {
         <!-- Shelves View -->
         <div class="shelves-container">
-            @foreach (var shelfVM in ViewModel.Shelves)
+            @{ var hasAvailablePlants = ViewModel.AvailablePlants.Any(); }
+            @for (var shelfIndex = 0; shelfIndex < ViewModel.Shelves.Count; shelfIndex++)
             {
-                <div class="shelf-section @(shelfVM.IsExpanded ? "" : "collapsed")"
+                var shelfVM = ViewModel.Shelves[shelfIndex];
+                var isFirst = shelfIndex == 0;
+                var isLast = shelfIndex == ViewModel.Shelves.Count - 1;
+
+                <div @key="shelfVM.Shelf.Id"
+                     class="shelf-section @(shelfVM.IsExpanded ? "" : "collapsed")"
                      data-shelf-id="@shelfVM.Shelf.Id"
                      data-auto-sort="@(shelfVM.Shelf.AutoSortRule != ShelfAutoSortRule.None ? "true" : "false")">
 
@@ -120,12 +126,12 @@
                             <div class="shelf-reorder-controls" style="display: flex; gap: 2px; margin-left: 10px;">
                                 <button class="btn-icon small"
                                 @onclick="() => ViewModel.MoveShelfUpCommand.ExecuteAsync(shelfVM.Shelf.Id)"
-                                    disabled="@(ViewModel.Shelves.IndexOf(shelfVM) == 0)" title="Move Up">
+                                    disabled="@isFirst" title="Move Up">
                                     ⬆️
                                 </button>
                                 <button class="btn-icon small"
                                 @onclick="() => ViewModel.MoveShelfDownCommand.ExecuteAsync(shelfVM.Shelf.Id)"
-                                    disabled="@(ViewModel.Shelves.IndexOf(shelfVM) == ViewModel.Shelves.Count - 1)"
+                                    disabled="@isLast"
                                     title="Move Down">
                                     ⬇️
                                 </button>
@@ -148,7 +154,8 @@
                             {
                                 @if (item.Type == ShelfItemType.Book && item.Book != null)
                                 {
-                                    <div class="shelf-slot"
+                                    <div @key="item.Book.Id"
+                                         class="shelf-slot"
                                          data-item-id="@item.Book.Id"
                                          data-item-type="Book"
                                          data-shelf-id="@shelfVM.Shelf.Id">
@@ -159,7 +166,8 @@
                                 }
                                 else if (item.Type == ShelfItemType.Plant && item.Plant != null)
                                 {
-                                    <div class="shelf-slot"
+                                    <div @key="item.Plant.Id"
+                                         class="shelf-slot"
                                          data-item-id="@item.Plant.Id"
                                          data-item-type="Plant"
                                          data-shelf-id="@shelfVM.Shelf.Id">
@@ -171,7 +179,7 @@
                             }
 
                             <!-- Add Plant Button -->
-                            @if (ViewModel.AvailablePlants.Any())
+                            @if (hasAvailablePlants)
                             {
                                 <div class="empty-slot" @onclick="() => HandleAddPlant(shelfVM.Shelf.Id)">
                                     <div class="empty-slot-icon">🌱</div>
