@@ -32,6 +32,8 @@ public class AppDbContext : DbContext
     public DbSet<Trope> Tropes => Set<Trope>();
     public DbSet<BookTrope> BookTropes => Set<BookTrope>();
     public DbSet<WishlistInfo> WishlistInfos => Set<WishlistInfo>();
+    public DbSet<GoalExcludedBook> GoalExcludedBooks => Set<GoalExcludedBook>();
+    public DbSet<GoalGenre> GoalGenres => Set<GoalGenre>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +46,38 @@ public class AppDbContext : DbContext
         // Configure Many-to-Many for Plant <-> Shelf
         modelBuilder.Entity<PlantShelf>()
             .HasKey(ps => new { ps.PlantId, ps.ShelfId });
+
+        // Configure Many-to-Many for ReadingGoal <-> Book (excluded books)
+        modelBuilder.Entity<GoalExcludedBook>()
+            .HasKey(ge => new { ge.ReadingGoalId, ge.BookId });
+
+        modelBuilder.Entity<GoalExcludedBook>()
+            .HasOne(ge => ge.ReadingGoal)
+            .WithMany(rg => rg.ExcludedBooks)
+            .HasForeignKey(ge => ge.ReadingGoalId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GoalExcludedBook>()
+            .HasOne(ge => ge.Book)
+            .WithMany()
+            .HasForeignKey(ge => ge.BookId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Configure Many-to-Many for ReadingGoal <-> Genre (goal genre filter)
+        modelBuilder.Entity<GoalGenre>()
+            .HasKey(gg => new { gg.ReadingGoalId, gg.GenreId });
+
+        modelBuilder.Entity<GoalGenre>()
+            .HasOne(gg => gg.ReadingGoal)
+            .WithMany(rg => rg.GoalGenres)
+            .HasForeignKey(gg => gg.ReadingGoalId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GoalGenre>()
+            .HasOne(gg => gg.Genre)
+            .WithMany()
+            .HasForeignKey(gg => gg.GenreId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Configure Many-to-Many for Book <-> Trope
         modelBuilder.Entity<BookTrope>()

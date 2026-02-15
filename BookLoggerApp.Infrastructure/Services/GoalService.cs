@@ -3,6 +3,7 @@ using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
@@ -91,13 +92,70 @@ public class GoalService : IGoalService
         var books = await _unitOfWork.Books.GetAllAsync();
         var sessions = await _unitOfWork.ReadingSessions.GetAllAsync();
 
+        // Load all exclusions in one query
+        var allExclusions = await _unitOfWork.GoalExcludedBooks.GetAllAsync();
+
+        // Load all goal-genre associations in one query
+        var allGoalGenres = await _unitOfWork.GoalGenres.GetAllAsync();
+        var anyGoalHasGenres = allGoalGenres.Any();
+
+        // Load book-genre associations only if at least one goal uses genre filtering
+        IEnumerable<BookGenre>? allBookGenres = null;
+        if (anyGoalHasGenres)
+        {
+            allBookGenres = await _unitOfWork.BookGenres.GetAllAsync();
+        }
+
+        // Build genre lookup for populating GoalGenres on each goal (for UI display)
+        Dictionary<Guid, Genre>? genreLookup = null;
+        if (anyGoalHasGenres)
+        {
+            var genres = await _unitOfWork.Genres.GetAllAsync();
+            genreLookup = genres.ToDictionary(g => g.Id);
+        }
+
         foreach (var goal in goals)
         {
+            var excludedBookIds = allExclusions
+                .Where(e => e.ReadingGoalId == goal.Id)
+                .Select(e => e.BookId)
+                .ToHashSet();
+
+            // Build genre-matching book IDs (null = no genre filter)
+            HashSet<Guid>? genreMatchingBookIds = null;
+            var goalGenreIds = allGoalGenres
+                .Where(gg => gg.ReadingGoalId == goal.Id)
+                .Select(gg => gg.GenreId)
+                .ToHashSet();
+
+            if (goalGenreIds.Count > 0 && allBookGenres != null)
+            {
+                // OR-logic: book matches if it has ANY of the goal's genres
+                genreMatchingBookIds = allBookGenres
+                    .Where(bg => goalGenreIds.Contains(bg.GenreId))
+                    .Select(bg => bg.BookId)
+                    .ToHashSet();
+
+                // Populate GoalGenres navigation for UI display
+                if (genreLookup != null)
+                {
+                    goal.GoalGenres = goalGenreIds
+                        .Where(gid => genreLookup.ContainsKey(gid))
+                        .Select(gid => new GoalGenre
+                        {
+                            ReadingGoalId = goal.Id,
+                            GenreId = gid,
+                            Genre = genreLookup[gid]
+                        })
+                        .ToList();
+                }
+            }
+
             goal.Current = goal.Type switch
             {
-                GoalType.Books => CalculateBooksProgress(books, goal),
-                GoalType.Pages => CalculatePagesProgress(sessions, goal),
-                GoalType.Minutes => CalculateMinutesProgress(sessions, goal),
+                GoalType.Books => CalculateBooksProgress(books, goal, excludedBookIds, genreMatchingBookIds),
+                GoalType.Pages => CalculatePagesProgress(sessions, goal, excludedBookIds, genreMatchingBookIds),
+                GoalType.Minutes => CalculateMinutesProgress(sessions, goal, excludedBookIds, genreMatchingBookIds),
                 _ => goal.Current
             };
 
@@ -112,38 +170,44 @@ public class GoalService : IGoalService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    private int CalculateBooksProgress(IEnumerable<Book> books, ReadingGoal goal)
+    private int CalculateBooksProgress(IEnumerable<Book> books, ReadingGoal goal, HashSet<Guid> excludedBookIds, HashSet<Guid>? genreMatchingBookIds)
     {
         // Use date-only comparison to include all books completed on the start/end days
         var startDate = goal.StartDate.Date;
         var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
 
         return books.Count(b =>
+            !excludedBookIds.Contains(b.Id) &&
+            (genreMatchingBookIds == null || genreMatchingBookIds.Contains(b.Id)) &&
             b.Status == ReadingStatus.Completed &&
             b.DateCompleted.HasValue &&
             b.DateCompleted.Value >= startDate &&
             b.DateCompleted.Value <= endDate);
     }
 
-    private int CalculatePagesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal)
+    private int CalculatePagesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal, HashSet<Guid> excludedBookIds, HashSet<Guid>? genreMatchingBookIds)
     {
         // Use date-only comparison to include all sessions on the start/end days
         var startDate = goal.StartDate.Date;
         var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
 
         return sessions
-            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
+            .Where(s => !excludedBookIds.Contains(s.BookId) &&
+                        (genreMatchingBookIds == null || genreMatchingBookIds.Contains(s.BookId)) &&
+                        s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
             .Sum(s => s.PagesRead ?? 0);
     }
 
-    private int CalculateMinutesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal)
+    private int CalculateMinutesProgress(IEnumerable<ReadingSession> sessions, ReadingGoal goal, HashSet<Guid> excludedBookIds, HashSet<Guid>? genreMatchingBookIds)
     {
         // Use date-only comparison to include all sessions on the start/end days
         var startDate = goal.StartDate.Date;
         var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1); // End of day
 
         return sessions
-            .Where(s => s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
+            .Where(s => !excludedBookIds.Contains(s.BookId) &&
+                        (genreMatchingBookIds == null || genreMatchingBookIds.Contains(s.BookId)) &&
+                        s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
             .Sum(s => s.Minutes);
     }
 
@@ -186,5 +250,73 @@ public class GoalService : IGoalService
 
         // Single SaveChanges for all updates
         await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<GoalExcludedBook>> GetExcludedBooksAsync(Guid goalId, CancellationToken ct = default)
+    {
+        var exclusions = await _unitOfWork.GoalExcludedBooks.FindAsync(e => e.ReadingGoalId == goalId);
+        return exclusions.ToList();
+    }
+
+    public async Task ExcludeBookFromGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default)
+    {
+        var exists = await _unitOfWork.GoalExcludedBooks.ExistsAsync(
+            e => e.ReadingGoalId == goalId && e.BookId == bookId);
+
+        if (!exists)
+        {
+            await _unitOfWork.GoalExcludedBooks.AddAsync(new GoalExcludedBook
+            {
+                ReadingGoalId = goalId,
+                BookId = bookId
+            });
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+    }
+
+    public async Task IncludeBookInGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default)
+    {
+        var exclusion = await _unitOfWork.Context.Set<GoalExcludedBook>()
+            .FirstOrDefaultAsync(e => e.ReadingGoalId == goalId && e.BookId == bookId, ct);
+
+        if (exclusion != null)
+        {
+            _unitOfWork.Context.Set<GoalExcludedBook>().Remove(exclusion);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+    }
+
+    public async Task<IReadOnlyList<GoalGenre>> GetGoalGenresAsync(Guid goalId, CancellationToken ct = default)
+    {
+        var goalGenres = await _unitOfWork.GoalGenres.FindAsync(gg => gg.ReadingGoalId == goalId);
+        return goalGenres.ToList();
+    }
+
+    public async Task AddGenreToGoalAsync(Guid goalId, Guid genreId, CancellationToken ct = default)
+    {
+        var exists = await _unitOfWork.GoalGenres.ExistsAsync(
+            gg => gg.ReadingGoalId == goalId && gg.GenreId == genreId);
+
+        if (!exists)
+        {
+            await _unitOfWork.GoalGenres.AddAsync(new GoalGenre
+            {
+                ReadingGoalId = goalId,
+                GenreId = genreId
+            });
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+    }
+
+    public async Task RemoveGenreFromGoalAsync(Guid goalId, Guid genreId, CancellationToken ct = default)
+    {
+        var goalGenre = await _unitOfWork.Context.Set<GoalGenre>()
+            .FirstOrDefaultAsync(gg => gg.ReadingGoalId == goalId && gg.GenreId == genreId, ct);
+
+        if (goalGenre != null)
+        {
+            _unitOfWork.Context.Set<GoalGenre>().Remove(goalGenre);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
     }
 }

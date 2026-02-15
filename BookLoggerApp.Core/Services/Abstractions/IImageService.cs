@@ -47,4 +47,15 @@ public interface IImageService
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The relative path to the saved image, or null if download failed.</returns>
     Task<string?> SaveCoverImageFromUrlAsync(string imageUrl, Guid bookId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets a resized cover image for efficient display. Returns cached thumbnail if available,
+    /// otherwise resizes the original and caches the result.
+    /// </summary>
+    /// <param name="bookId">The book ID.</param>
+    /// <param name="maxWidth">Maximum width in pixels (default 400).</param>
+    /// <param name="maxHeight">Maximum height in pixels (default 600).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Tuple of (image bytes, MIME type), or null if no cover image exists.</returns>
+    Task<(byte[] Bytes, string MimeType)?> GetResizedCoverImageAsync(Guid bookId, int maxWidth = 400, int maxHeight = 600, CancellationToken ct = default);
 }

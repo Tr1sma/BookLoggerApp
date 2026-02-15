@@ -14,6 +14,7 @@ public class BookEditViewModelTests
     private readonly ILookupService _lookupService;
     private readonly IImageService _imageService;
     private readonly IShelfService _shelfService;
+    private readonly IWishlistService _wishlistService;
     private readonly BookEditViewModel _viewModel;
 
     public BookEditViewModelTests()
@@ -24,6 +25,7 @@ public class BookEditViewModelTests
         _lookupService = Substitute.For<ILookupService>();
         _imageService = Substitute.For<IImageService>();
         _shelfService = Substitute.For<IShelfService>();
+        _wishlistService = Substitute.For<IWishlistService>();
 
         _genreService.GetAllAsync().Returns(new List<Genre>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
@@ -33,7 +35,8 @@ public class BookEditViewModelTests
             _genreService,
             _lookupService,
             _imageService,
-            _shelfService
+            _shelfService,
+            _wishlistService
         );
     }
 

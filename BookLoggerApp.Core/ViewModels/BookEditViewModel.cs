@@ -12,19 +12,22 @@ public partial class BookEditViewModel : ViewModelBase
     private readonly ILookupService _lookupService;
     private readonly IImageService _imageService;
     private readonly IShelfService _shelfService;
+    private readonly IWishlistService _wishlistService;
 
     public BookEditViewModel(
         IBookService bookService,
         IGenreService genreService,
         ILookupService lookupService,
         IImageService imageService,
-        IShelfService shelfService)
+        IShelfService shelfService,
+        IWishlistService wishlistService)
     {
         _bookService = bookService;
         _genreService = genreService;
         _lookupService = lookupService;
         _imageService = imageService;
         _shelfService = shelfService;
+        _wishlistService = wishlistService;
     }
 
     [ObservableProperty]
@@ -90,6 +93,13 @@ public partial class BookEditViewModel : ViewModelBase
                     SelectedTropeIds = Book.BookTropes.Select(bt => bt.TropeId).ToList();
                     await UpdateAvailableTropesAsync();
                     _originalStatus = Book.Status;
+
+                    // Wishlist isn't a selectable status in the dropdown —
+                    // auto-switch to Planned so the value matches a visible option
+                    if (Book.Status == ReadingStatus.Wishlist)
+                    {
+                        Book.Status = ReadingStatus.Planned;
+                    }
                 }
             }
             else
@@ -130,6 +140,10 @@ public partial class BookEditViewModel : ViewModelBase
                                    _originalStatus.HasValue &&
                                    _originalStatus.Value != ReadingStatus.Completed;
 
+            // Check if book is leaving wishlist status
+            var isLeavingWishlist = _originalStatus == ReadingStatus.Wishlist &&
+                                   Book.Status != ReadingStatus.Wishlist;
+
             if (isNewBook)
             {
                 // New book
@@ -165,6 +179,12 @@ public partial class BookEditViewModel : ViewModelBase
                     // Book is being marked as completed - use CompleteBookAsync for XP and side effects
                     await _bookService.CompleteBookAsync(Book.Id);
                     ShowBookCompletionCelebration = true;
+                }
+
+                if (isLeavingWishlist)
+                {
+                    // Book left wishlist — remove WishlistInfo metadata
+                    await _wishlistService.ClearWishlistInfoAsync(Book.Id);
                 }
             }
 

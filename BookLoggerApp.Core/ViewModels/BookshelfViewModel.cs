@@ -523,7 +523,22 @@ public partial class BookshelfViewModel : ViewModelBase
         }, "Failed to reorder items");
     }
 
+    [RelayCommand]
+    public async Task MoveItemBetweenShelvesAsync(
+        (Guid sourceShelfId, Guid targetShelfId, Guid itemId, ShelfItemType type, int position) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            if (args.type == ShelfItemType.Book)
+                await _shelfService.MoveBookBetweenShelvesAsync(
+                    args.sourceShelfId, args.targetShelfId, args.itemId, args.position);
+            else
+                await _shelfService.MovePlantBetweenShelvesAsync(
+                    args.sourceShelfId, args.targetShelfId, args.itemId, args.position);
 
+            await LoadAsync();
+        }, "Failed to move item between shelves");
+    }
 }
 
 public partial class ShelfViewModel : ObservableObject
