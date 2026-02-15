@@ -4,6 +4,7 @@
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
+@inject ITimerStateService TimerStateService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 @if (Book != null)
@@ -156,8 +157,23 @@
     private bool ShowLevelUpCelebration { get; set; }
     private LevelUpResult? LevelUpResult { get; set; }
 
+    // State restoration tracking
+    private bool _stateRestoreAttempted;
+
+    protected override void OnInitialized()
+    {
+        TimerStateService.AppResumed += OnAppResumed;
+    }
+
     protected override void OnParametersSet()
     {
+        // Try to restore persisted timer state once when the Book parameter is first available
+        if (Book != null && !_stateRestoreAttempted)
+        {
+            _stateRestoreAttempted = true;
+            TryRestoreTimerState();
+        }
+
         // Initialize CurrentPageInput when book loads or after reset
         // Also update if book has progressed beyond current input (e.g., after saving a session)
         if (Book != null)
@@ -175,6 +191,54 @@
         }
     }
 
+    private void TryRestoreTimerState()
+    {
+        if (Book == null) return;
+
+        var state = TimerStateService.LoadState();
+
+        // TODO(human): Implement the restoration decision logic.
+        // You have access to:
+        //   - state (TimerStateData?) with SessionId, BookId, StartTimeUtc, IsRunning, PausedElapsed
+        //   - Book.Id (Guid) to check if the saved state belongs to this book
+        //   - DateTime.UtcNow to check how old the saved state is
+        //
+        // If you decide to restore, set:
+        //   - CurrentSessionId = state.SessionId
+        //   - StartTime = state.StartTimeUtc (or adjusted for pause)
+        //   - IsRunning / ElapsedTime / PausedTime accordingly
+        //   - Call StartTimer() if the timer should be running
+        //
+        // If you decide NOT to restore (e.g., state is null, wrong book, too old),
+        // call TimerStateService.ClearState() to clean up stale data.
+    }
+
+    private void OnAppResumed()
+    {
+        if (IsRunning && StartTime.HasValue)
+        {
+            // Recalculate elapsed time from the original start time —
+            // DateTime.UtcNow - StartTime correctly accounts for background time
+            ElapsedTime = DateTime.UtcNow - StartTime.Value;
+            StartTimer();
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void PersistTimerState()
+    {
+        if (Book == null || !CurrentSessionId.HasValue || !StartTime.HasValue) return;
+
+        TimerStateService.SaveState(new TimerStateData
+        {
+            SessionId = CurrentSessionId.Value,
+            BookId = Book.Id,
+            StartTimeTicks = StartTime.Value.Ticks,
+            IsRunning = IsRunning,
+            PausedElapsedTicks = IsRunning ? 0 : PausedTime.Ticks
+        });
+    }
+
     private async Task HandleStart()
     {
         if (Book == null) return;
@@ -190,6 +254,7 @@
             PausedTime = TimeSpan.Zero;
             ElapsedTime = TimeSpan.Zero;
             StartTimer();
+            PersistTimerState();
         }
         catch (Exception ex)
         {
@@ -202,6 +267,7 @@
         IsRunning = false;
         PausedTime = ElapsedTime;
         StopTimer();
+        PersistTimerState();
     }
 
     private void HandleResume()
@@ -209,6 +275,7 @@
         StartTime = DateTime.UtcNow - PausedTime;
         IsRunning = true;
         StartTimer();
+        PersistTimerState();
     }
 
     private async Task HandleSave()
@@ -216,6 +283,7 @@
         if (Book == null || ElapsedTime.TotalSeconds == 0 || !CurrentSessionId.HasValue) return;
 
         StopTimer();
+        TimerStateService.ClearState();
 
         try
         {
@@ -257,6 +325,7 @@
     private void HandleCancel()
     {
         StopTimer();
+        TimerStateService.ClearState();
         ResetTimer();
     }
 
@@ -374,6 +443,7 @@
 
     public void Dispose()
     {
+        TimerStateService.AppResumed -= OnAppResumed;
         StopTimer();
     }
 }
