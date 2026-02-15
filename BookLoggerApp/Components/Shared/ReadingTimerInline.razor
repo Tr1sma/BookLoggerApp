@@ -196,21 +196,40 @@
         if (Book == null) return;
 
         var state = TimerStateService.LoadState();
+        if (state == null || state.BookId != Book.Id)
+        {
+            // No saved state or it belongs to a different book — nothing to restore
+            if (state != null) TimerStateService.ClearState();
+            return;
+        }
 
-        // TODO(human): Implement the restoration decision logic.
-        // You have access to:
-        //   - state (TimerStateData?) with SessionId, BookId, StartTimeUtc, IsRunning, PausedElapsed
-        //   - Book.Id (Guid) to check if the saved state belongs to this book
-        //   - DateTime.UtcNow to check how old the saved state is
-        //
-        // If you decide to restore, set:
-        //   - CurrentSessionId = state.SessionId
-        //   - StartTime = state.StartTimeUtc (or adjusted for pause)
-        //   - IsRunning / ElapsedTime / PausedTime accordingly
-        //   - Call StartTimer() if the timer should be running
-        //
-        // If you decide NOT to restore (e.g., state is null, wrong book, too old),
-        // call TimerStateService.ClearState() to clean up stale data.
+        // Discard sessions older than 12 hours (user likely forgot to stop the timer)
+        var elapsed = DateTime.UtcNow - state.StartTimeUtc;
+        if (elapsed.TotalHours > 12)
+        {
+            TimerStateService.ClearState();
+            return;
+        }
+
+        CurrentSessionId = state.SessionId;
+
+        if (state.IsRunning)
+        {
+            // Timer was actively running — resume it
+            StartTime = state.StartTimeUtc;
+            ElapsedTime = DateTime.UtcNow - state.StartTimeUtc;
+            PausedTime = TimeSpan.Zero;
+            IsRunning = true;
+            StartTimer();
+        }
+        else
+        {
+            // Timer was paused — restore paused state
+            StartTime = DateTime.UtcNow - state.PausedElapsed;
+            PausedTime = state.PausedElapsed;
+            ElapsedTime = state.PausedElapsed;
+            IsRunning = false;
+        }
     }
 
     private void OnAppResumed()
