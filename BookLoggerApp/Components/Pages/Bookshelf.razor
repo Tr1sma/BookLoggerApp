@@ -483,10 +483,10 @@
 
     private async void OnGoalsChanged(object? sender, EventArgs e)
     {
-        _jsInitialized = false;
         await InvokeAsync(async () =>
         {
-            await ViewModel.LoadCommand.ExecuteAsync(null);
+            // Only refresh goal header stats — shelves are unchanged
+            await ViewModel.RefreshGoalStatsAsync();
             StateHasChanged();
         });
     }
@@ -624,8 +624,8 @@
         var sourceGuid = Guid.Parse(itemId);
         var targetGuid = Guid.Parse(targetItemId);
         await ViewModel.ReorderShelfItemsAsync((shelfGuid, sourceGuid, targetGuid));
-        _jsInitialized = false;
         StateHasChanged();
+        // JS drag-drop stays initialized — Blazor diffs the DOM, no re-init needed
     }
 
     [JSInvokable]
@@ -636,9 +636,13 @@
         var targetGuid = Guid.Parse(targetShelfId);
         var itemGuid = Guid.Parse(itemId);
         var type = itemType == "Plant" ? ShelfItemType.Plant : ShelfItemType.Book;
-        await ViewModel.MoveItemBetweenShelvesAsync((sourceGuid, targetGuid, itemGuid, type, position));
-        _jsInitialized = false;
+
+        // Optimistic in-memory move for instant visual feedback
+        ViewModel.MoveItemBetweenShelvesInMemory(sourceGuid, targetGuid, itemGuid, type, position);
         StateHasChanged();
+
+        // Persist to database in background (no full reload)
+        await ViewModel.PersistCrossShelfMoveAsync(sourceGuid, targetGuid, itemGuid, type, position);
     }
 
     private async Task HandleRemoveBookFromShelf(Guid bookId, Guid shelfId)

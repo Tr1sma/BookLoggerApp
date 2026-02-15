@@ -17,6 +17,12 @@ window.bookshelfDragDrop = {
     _autoScrollEdge: 60,
     _autoScrollSpeed: 8,
     _boundTouchMovePrevent: null,
+    _rafId: null,
+    _lastMoveX: 0,
+    _lastMoveY: 0,
+    _dropTargetCache: null,
+    _dropTargetCacheDirty: false,
+    _activeDropHighlight: null,
 
     // ─── Public API ───────────────────────────────────────
 
@@ -110,11 +116,21 @@ window.bookshelfDragDrop = {
             return;
         }
 
-        // Active drag: move ghost and find drop targets
+        // Active drag: store latest coordinates, schedule rAF
         e.preventDefault();
-        this._moveGhost(e.clientX, e.clientY);
-        this._findAndHighlightDropTarget(e.clientX, e.clientY);
-        this._handleAutoScroll(e.clientY);
+        this._lastMoveX = e.clientX;
+        this._lastMoveY = e.clientY;
+
+        if (!this._rafId) {
+            var self = this;
+            this._rafId = requestAnimationFrame(function () {
+                self._rafId = null;
+                if (!self._dragActive) return;
+                self._moveGhost(self._lastMoveX, self._lastMoveY);
+                self._findDropTargetFromCache(self._lastMoveX, self._lastMoveY);
+                self._handleAutoScroll(self._lastMoveY);
+            });
+        }
     },
 
     _onPointerUp: function (e) {
@@ -200,6 +216,10 @@ window.bookshelfDragDrop = {
         // Create ghost
         this._createGhost(slot, x, y);
 
+        // Cache drop target positions for fast hit-testing during drag
+        this._buildDropTargetCache();
+        this._dropTargetCacheDirty = false;
+
         // Mark original as dragging
         slot.classList.remove('long-press-active');
         slot.classList.add('dragging');
@@ -219,8 +239,9 @@ window.bookshelfDragDrop = {
         ghost.className = 'drag-ghost';
         ghost.style.width = rect.width + 'px';
         ghost.style.height = rect.height + 'px';
-        ghost.style.left = (x - rect.width / 2) + 'px';
-        ghost.style.top = (y - rect.height / 2) + 'px';
+        ghost.style.left = '0px';
+        ghost.style.top = '0px';
+        ghost.style.transform = 'translate(' + (x - rect.width / 2) + 'px, ' + (y - rect.height / 2) + 'px) scale(1.05) rotate(2deg)';
         document.body.appendChild(ghost);
         this._ghost = ghost;
         this._ghostOffsetX = rect.width / 2;
@@ -229,90 +250,146 @@ window.bookshelfDragDrop = {
 
     _moveGhost: function (x, y) {
         if (!this._ghost) return;
-        this._ghost.style.left = (x - this._ghostOffsetX) + 'px';
-        this._ghost.style.top = (y - this._ghostOffsetY) + 'px';
+        this._ghost.style.transform = 'translate(' + (x - this._ghostOffsetX) + 'px, ' + (y - this._ghostOffsetY) + 'px) scale(1.05) rotate(2deg)';
     },
 
-    // ─── Drop Target Detection ────────────────────────────
+    // ─── Drop Target Cache & Detection ───────────────────
 
-    _findAndHighlightDropTarget: function (x, y) {
-        // Temporarily hide ghost so elementsFromPoint can see through it
-        if (this._ghost) {
-            this._ghost.style.display = 'none';
+    _buildDropTargetCache: function () {
+        var slots = this._container.querySelectorAll('.shelf-slot');
+        var sections = this._container.querySelectorAll('.shelf-section');
+        var cache = { slots: [], sections: [] };
+
+        for (var i = 0; i < slots.length; i++) {
+            var slot = slots[i];
+            if (slot === this._draggedSlot) continue;
+            if (this._isInAutoSortShelf(slot)) continue;
+            var rect = slot.getBoundingClientRect();
+            cache.slots.push({
+                element: slot,
+                left: rect.left,
+                right: rect.right,
+                top: rect.top,
+                bottom: rect.bottom,
+                centerX: rect.left + rect.width / 2
+            });
         }
 
-        var elements = document.elementsFromPoint(x, y);
-
-        if (this._ghost) {
-            this._ghost.style.display = '';
+        for (var j = 0; j < sections.length; j++) {
+            var section = sections[j];
+            if (section.dataset.autoSort === 'true') continue;
+            var sRect = section.getBoundingClientRect();
+            cache.sections.push({
+                element: section,
+                left: sRect.left,
+                right: sRect.right,
+                top: sRect.top,
+                bottom: sRect.bottom
+            });
         }
 
-        // Clear previous highlights
-        this._clearDropHighlights();
+        this._dropTargetCache = cache;
+    },
+
+    _findDropTargetFromCache: function (x, y) {
+        // Rebuild cache if invalidated (e.g. by auto-scroll)
+        if (this._dropTargetCacheDirty) {
+            this._buildDropTargetCache();
+            this._dropTargetCacheDirty = false;
+        }
+
+        var cache = this._dropTargetCache;
+        if (!cache) return;
+
+        // Clear previous highlight (tracked single element, no querySelectorAll)
+        this._clearDropHighlightsFast();
 
         var targetSlot = null;
-        var targetSection = null;
+        var insertBefore = false;
 
-        for (var i = 0; i < elements.length; i++) {
-            if (!targetSlot) {
-                var slot = elements[i].closest('.shelf-slot');
-                if (slot && slot !== this._draggedSlot && !this._isInAutoSortShelf(slot)) {
-                    targetSlot = slot;
-                }
+        // Simple AABB hit-test against cached rects
+        for (var i = 0; i < cache.slots.length; i++) {
+            var s = cache.slots[i];
+            if (x >= s.left && x <= s.right && y >= s.top && y <= s.bottom) {
+                targetSlot = s;
+                insertBefore = x < s.centerX;
+                break;
             }
-            if (!targetSection) {
-                var section = elements[i].closest('.shelf-section');
-                if (section && section.dataset.autoSort !== 'true') {
-                    targetSection = section;
-                }
-            }
-            if (targetSlot && targetSection) break;
         }
 
         if (targetSlot) {
-            // Show drop indicator relative to the target slot
-            var slotRect = targetSlot.getBoundingClientRect();
-            var insertBefore = x < (slotRect.left + slotRect.width / 2);
-            this._showDropIndicator(targetSlot, insertBefore);
+            this._showDropIndicatorFast(targetSlot.element, insertBefore);
             this._dropTarget = {
                 type: 'slot',
-                element: targetSlot,
+                element: targetSlot.element,
                 insertBefore: insertBefore
             };
-        } else if (targetSection) {
-            // Dropping on shelf empty space (append)
-            targetSection.classList.add('drop-target-active');
+            return;
+        }
+
+        // Check section hit (dropping on empty shelf area)
+        var targetSection = null;
+        for (var j = 0; j < cache.sections.length; j++) {
+            var sec = cache.sections[j];
+            if (x >= sec.left && x <= sec.right && y >= sec.top && y <= sec.bottom) {
+                targetSection = sec;
+                break;
+            }
+        }
+
+        if (targetSection) {
+            targetSection.element.classList.add('drop-target-active');
+            this._activeDropHighlight = targetSection.element;
             this._dropTarget = {
                 type: 'section',
-                element: targetSection
+                element: targetSection.element
             };
         } else {
             this._dropTarget = null;
         }
     },
 
-    _showDropIndicator: function (targetSlot, before) {
-        this._removeDropIndicator();
-
-        var indicator = document.createElement('div');
-        indicator.className = 'drop-indicator';
+    _showDropIndicatorFast: function (targetSlot, before) {
         var parent = targetSlot.parentElement;
         if (!parent) return;
 
-        // Position the indicator relative to the parent container
+        // Create indicator once, reuse it across frames
+        if (!this._dropIndicator) {
+            this._dropIndicator = document.createElement('div');
+            this._dropIndicator.className = 'drop-indicator';
+        }
+
         parent.style.position = 'relative';
 
+        // Use cached rects from the cache when possible
         var slotRect = targetSlot.getBoundingClientRect();
         var parentRect = parent.getBoundingClientRect();
 
         if (before) {
-            indicator.style.left = (slotRect.left - parentRect.left - 2) + 'px';
+            this._dropIndicator.style.left = (slotRect.left - parentRect.left - 2) + 'px';
         } else {
-            indicator.style.left = (slotRect.right - parentRect.left - 1) + 'px';
+            this._dropIndicator.style.left = (slotRect.right - parentRect.left - 1) + 'px';
         }
 
-        parent.appendChild(indicator);
-        this._dropIndicator = indicator;
+        // Only re-append if moved to a different parent
+        if (this._dropIndicator.parentNode !== parent) {
+            if (this._dropIndicator.parentNode) {
+                this._dropIndicator.parentNode.removeChild(this._dropIndicator);
+            }
+            parent.appendChild(this._dropIndicator);
+        }
+    },
+
+    _clearDropHighlightsFast: function () {
+        // Remove indicator from DOM (but keep the element for reuse)
+        if (this._dropIndicator && this._dropIndicator.parentNode) {
+            this._dropIndicator.parentNode.removeChild(this._dropIndicator);
+        }
+        // Clear tracked highlight (single element, no querySelectorAll)
+        if (this._activeDropHighlight) {
+            this._activeDropHighlight.classList.remove('drop-target-active');
+            this._activeDropHighlight = null;
+        }
     },
 
     _removeDropIndicator: function () {
@@ -324,6 +401,11 @@ window.bookshelfDragDrop = {
 
     _clearDropHighlights: function () {
         this._removeDropIndicator();
+        if (this._activeDropHighlight) {
+            this._activeDropHighlight.classList.remove('drop-target-active');
+            this._activeDropHighlight = null;
+        }
+        // Fallback: catch any stale highlights
         var actives = document.querySelectorAll('.drop-target-active');
         for (var i = 0; i < actives.length; i++) {
             actives[i].classList.remove('drop-target-active');
@@ -354,6 +436,8 @@ window.bookshelfDragDrop = {
             var self = this;
             var scroll = function () {
                 window.scrollBy(0, self._autoScrollSpeed * direction);
+                // Cached rects are stale after scrolling
+                self._dropTargetCacheDirty = true;
                 if (self._dragActive) {
                     self._autoScrollRaf = requestAnimationFrame(scroll);
                 }
@@ -446,6 +530,12 @@ window.bookshelfDragDrop = {
     },
 
     _cleanup: function () {
+        // Cancel pending animation frame
+        if (this._rafId) {
+            cancelAnimationFrame(this._rafId);
+            this._rafId = null;
+        }
+
         // Stop preventing touch scrolling
         this._stopTouchMovePrevention();
 
@@ -468,11 +558,14 @@ window.bookshelfDragDrop = {
             } catch (_) { /* ignore */ }
         }
 
-        // Clear highlights
+        // Clear highlights (full cleanup with fallback querySelectorAll)
         this._clearDropHighlights();
 
         // Stop auto-scroll
         this._stopAutoScroll();
+
+        // Clear drop target cache
+        this._dropTargetCache = null;
 
         // Reset body state
         document.body.classList.remove('drag-active');
