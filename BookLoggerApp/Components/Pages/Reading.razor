@@ -1,8 +1,10 @@
 @page "/reading/{SessionId:guid}"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Components.Shared
 @inject ReadingViewModel ViewModel
+@inject ITimerStateService TimerStateService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @implements IDisposable
 
@@ -147,13 +149,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        TimerStateService.AppResumed += OnAppResumed;
         await ViewModel.LoadCommand.ExecuteAsync(SessionId);
-        
-        // Start auto-refresh timer if session is active
-        if (ViewModel.Session != null && !ViewModel.IsPaused)
-        {
-            StartAutoRefresh();
-        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -164,10 +161,10 @@
         }
     }
 
-    private void StartAutoRefresh()
+    private void OnAppResumed()
     {
-        // In a real implementation, this would use a timer to refresh the UI
-        // For MAUI, we can use Device.StartTimer or similar
+        // Force UI refresh when app returns from background
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task HandlePageChange()
@@ -229,7 +226,8 @@
 
     public void Dispose()
     {
-        // Cleanup if needed
+        TimerStateService.AppResumed -= OnAppResumed;
+        ViewModel.Dispose();
     }
 }
 
