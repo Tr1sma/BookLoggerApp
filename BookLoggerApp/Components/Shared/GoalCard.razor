@@ -1,5 +1,16 @@
 <div class="goal-card">
     <h4>@Goal.Title</h4>
+    @if (Goal.GoalGenres.Any())
+    {
+        <div class="goal-genre-badges">
+            @foreach (var gg in Goal.GoalGenres)
+            {
+                <span class="genre-badge" style="background-color: @(gg.Genre?.ColorHex ?? "#666")20; color: @(gg.Genre?.ColorHex ?? "#666"); border-color: @(gg.Genre?.ColorHex ?? "#666")40">
+                    @gg.Genre?.Icon @gg.Genre?.Name
+                </span>
+            }
+        </div>
+    }
     @if (!string.IsNullOrEmpty(Goal.Description))
     {
         <p class="goal-description">@Goal.Description</p>
@@ -13,6 +24,26 @@
         <p class="goal-date">Until @Goal.EndDate.ToString("yyyy-MM-dd")</p>
     }
 </div>
+
+<style>
+    .goal-genre-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-bottom: 0.5rem;
+    }
+    .genre-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: 1px solid;
+        white-space: nowrap;
+    }
+</style>
 
 @code {
     [Parameter] public BookLoggerApp.Core.Models.ReadingGoal Goal { get; set; } = null!;

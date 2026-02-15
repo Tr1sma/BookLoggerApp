@@ -148,6 +148,17 @@ public class WishlistService : IWishlistService
         return await context.Books.CountAsync(b => b.Status == ReadingStatus.Wishlist, ct);
     }
 
+    public async Task ClearWishlistInfoAsync(Guid bookId, CancellationToken ct = default)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var info = await context.WishlistInfos.FindAsync(new object[] { bookId }, ct);
+        if (info != null)
+        {
+            context.WishlistInfos.Remove(info);
+            await context.SaveChangesAsync(ct);
+        }
+    }
+
     public async Task<IReadOnlyList<Book>> SearchWishlistAsync(string query, CancellationToken ct = default)
     {
         await using var context = await _contextFactory.CreateDbContextAsync(ct);

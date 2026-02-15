@@ -3,11 +3,8 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 
-<div class="book-card @(IsInBookshelf ? "in-bookshelf-book" : "compact") @(IsInBookshelf ? "" : "")"
-     draggable="@(IsDraggable ? "true" : "false")"
-@onclick="HandleClick"
-@ondragstart="HandleDragStartInternal"
-@ondragend="HandleDragEnd">
+<div class="book-card @(IsInBookshelf ? "in-bookshelf-book" : "compact")"
+     @onclick="HandleClick">
     <div @ref="_imageContainer" class="@(IsInBookshelf ? "book-cover-wrapper" : "book-cover-thumbnail")" style="@GetSpineStyle()">
         @if (!string.IsNullOrEmpty(_coverImageDataUrl) && (!IsInBookshelf || Book.UsesCoverAsSpine))
         {
@@ -80,11 +77,7 @@
     [Parameter] public EventCallback OnClick { get; set; }
     [Parameter] public EventCallback OnDelete { get; set; }
     [Parameter] public EventCallback OnQuickTimer { get; set; }
-    [Parameter] public EventCallback OnDragStart { get; set; }
     [Parameter] public bool IsInBookshelf { get; set; }
-    [Parameter] public bool IsDraggable { get; set; } = false;
-
-    private bool _isDragging = false;
     private string? _coverImageDataUrl;
     private Guid _lastBookId;
     
@@ -170,23 +163,13 @@
                 return;
             }
 
-            // Get the full path from ImageService
-            var fullPath = await ImageService.GetCoverImagePathAsync(Book.Id);
-
-            if (string.IsNullOrEmpty(fullPath) || !System.IO.File.Exists(fullPath))
+            // Get resized image from service (automatically cached as thumbnail)
+            var result = await ImageService.GetResizedCoverImageAsync(Book.Id);
+            if (result == null)
                 return;
 
-            // Read the file and convert to Base64
-            // Optimization: if it is very large, maybe resize? (Future todo)
-            var imageBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
-            var base64 = Convert.ToBase64String(imageBytes);
-
-            // Determine MIME type
-            var mimeType = fullPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
-                ? "image/png"
-                : "image/jpeg";
-
-            _coverImageDataUrl = $"data:{mimeType};base64,{base64}";
+            var (bytes, mimeType) = result.Value;
+            _coverImageDataUrl = $"data:{mimeType};base64,{Convert.ToBase64String(bytes)}";
         }
         catch (Exception ex)
         {
@@ -223,33 +206,7 @@
 
     private async Task HandleClick()
     {
-        // Don't trigger click if we were dragging
-        if (_isDragging)
-        {
-            _isDragging = false;
-            return;
-        }
         await OnClick.InvokeAsync();
-    }
-
-    private async Task HandleDragStartInternal(Microsoft.AspNetCore.Components.Web.DragEventArgs e)
-    {
-        if (!IsDraggable) return;
-
-        System.Diagnostics.Debug.WriteLine($"BookCard: Drag started for book {Book.Title}");
-        _isDragging = true;
-        await OnDragStart.InvokeAsync();
-    }
-
-    private void HandleDragEnd(Microsoft.AspNetCore.Components.Web.DragEventArgs e)
-    {
-        System.Diagnostics.Debug.WriteLine($"BookCard: Drag ended for book {Book.Title}");
-        // Reset dragging flag after a short delay to prevent click
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(100);
-            _isDragging = false;
-        });
     }
 
     private async Task HandleDelete()

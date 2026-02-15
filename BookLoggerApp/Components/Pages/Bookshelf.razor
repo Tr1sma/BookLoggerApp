@@ -10,9 +10,11 @@
 @inject IGoalService GoalService
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject WishlistViewModel WishlistVM
-@implements IDisposable
+@inject BookLoggerApp.Services.IScannerService ScannerService
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
-<PageTitle>Bookshelf - LoveLit</PageTitle>
+<PageTitle>Bookshelf - BookHeart</PageTitle>
 
 <div class="bookshelf-container">
     <!-- Reading Goal Header -->
@@ -90,8 +92,8 @@
             <div class="shelf-row">
                 <Virtualize Items="@ViewModel.Books" Context="book" OverscanCount="5">
                     <div class="shelf-slot">
-                        <BookCard Book="@book" IsInBookshelf="true" IsDraggable="true" OnClick="() => HandleBookClick(book)"
-                            OnDragStart="() => HandleDragStartItem(book.Id)" OnDelete="() => HandleDeleteBook(book.Id)" />
+                        <BookCard Book="@book" IsInBookshelf="true" OnClick="() => HandleBookClick(book)"
+                            OnDelete="() => HandleDeleteBook(book.Id)" />
                     </div>
                 </Virtualize>
             </div>
@@ -103,10 +105,9 @@
         <div class="shelves-container">
             @foreach (var shelfVM in ViewModel.Shelves)
             {
-                <div class="shelf-section @(draggedItemId.HasValue ? "drag-target" : "") @(shelfVM.IsExpanded ? "" : "collapsed")"
-                @ondragenter="@(() => { /* Visual feedback handling in CSS */ })" @ondragover:preventDefault
-                @ondrop="@(() => HandleDropOnShelf(shelfVM.Shelf.Id))">
-
+                <div class="shelf-section @(shelfVM.IsExpanded ? "" : "collapsed")"
+                     data-shelf-id="@shelfVM.Shelf.Id"
+                     data-auto-sort="@(shelfVM.Shelf.AutoSortRule != ShelfAutoSortRule.None ? "true" : "false")">
 
                     <div class="shelf-header">
                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -147,18 +148,22 @@
                             {
                                 @if (item.Type == ShelfItemType.Book && item.Book != null)
                                 {
-                                    <div class="shelf-slot" draggable="true" @ondragstart="() => HandleDragStartItem(item.Book.Id)"
-                                    @ondrop="() => HandleDropOnItem(item.Book.Id, shelfVM.Shelf.Id)" @ondragover:preventDefault>
-                                        <BookCard Book="@item.Book" IsInBookshelf="true" IsDraggable="false"
+                                    <div class="shelf-slot"
+                                         data-item-id="@item.Book.Id"
+                                         data-item-type="Book"
+                                         data-shelf-id="@shelfVM.Shelf.Id">
+                                        <BookCard Book="@item.Book" IsInBookshelf="true"
                                             OnClick="() => HandleBookClick(item.Book)"
                                             OnDelete="() => HandleRemoveBookFromShelf(item.Book.Id, shelfVM.Shelf.Id)" />
                                     </div>
                                 }
                                 else if (item.Type == ShelfItemType.Plant && item.Plant != null)
                                 {
-                                    <div class="shelf-slot" draggable="true" @ondragstart="() => HandleDragStartItem(item.Plant.Id)"
-                                    @ondrop="() => HandleDropOnItem(item.Plant.Id, shelfVM.Shelf.Id)" @ondragover:preventDefault>
-                                        <PlantCard Plant="@item.Plant" IsInBookshelf="true" IsDraggable="false"
+                                    <div class="shelf-slot"
+                                         data-item-id="@item.Plant.Id"
+                                         data-item-type="Plant"
+                                         data-shelf-id="@shelfVM.Shelf.Id">
+                                        <PlantCard Plant="@item.Plant" IsInBookshelf="true"
                                             OnClick="() => HandlePlantClick(item.Plant)"
                                             OnRemove="() => HandleRemovePlant(item.Plant.Id, shelfVM.Shelf.Id)" />
                                     </div>
@@ -254,7 +259,7 @@
                         </div>
                     </div>
                     <div class="wishlist-card-actions" @onclick:stopPropagation="true">
-                        <button class="btn-icon" @onclick="() => HandleMoveToLibrary(book.Id)" title="Move to Library">
+                        <button class="btn-icon" @onclick="() => NavigateToEditBook(book.Id)" title="Edit & Add to Shelf">
                             📚
                         </button>
                         <button class="btn-icon danger" @onclick="() => HandleRemoveFromWishlist(book.Id)" title="Remove">
@@ -338,7 +343,7 @@
                     {
                         <div class="plant-select-item" @onclick="() => SelectPlantForBookshelf(plant)"
                             style="cursor: pointer; transform: scale(0.9);">
-                            <PlantCard Plant="@plant" IsInBookshelf="false" IsDraggable="false" />
+                            <PlantCard Plant="@plant" IsInBookshelf="false" />
                         </div>
                     }
                 }
@@ -361,7 +366,7 @@
     <div class="modal-overlay" @onclick="CloseDeleteShelfModal">
         <div class="modal-content" @onclick:stopPropagation="true">
             <h3>Delete Shelf</h3>
-            <p>Are you sure you want to delete this shelf? Books will remain in your library.</p>
+            <p>Are you sure you want to delete this shelf? All items will be moved to the Main Shelf.</p>
             <div class="modal-actions">
                 <button class="btn btn-secondary" @onclick="CloseDeleteShelfModal">Cancel</button>
                 <button class="btn btn-danger" @onclick="ConfirmDeleteShelf">Delete</button>
@@ -383,8 +388,13 @@
                         <input type="text" class="form-control" placeholder="Enter ISBN..."
                                @bind="WishlistVM.NewIsbn" />
                     </div>
-                    <button class="btn-icon" style="width:38px;height:38px;border-radius:8px;background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);cursor:pointer;"
-                            @onclick="HandleWishlistLookup" disabled="@WishlistVM.IsLookingUp">
+                    <button class="btn-icon wishlist-isbn-btn"
+                            @onclick="ScanWishlistIsbnAsync" title="Scan Barcode">
+                        📷
+                    </button>
+                    <button class="btn-icon wishlist-isbn-btn"
+                            @onclick="HandleWishlistLookup" disabled="@WishlistVM.IsLookingUp"
+                            title="Lookup ISBN">
                         🔍
                     </button>
                 </div>
@@ -448,7 +458,9 @@
     private UserPlant? selectedPlant;
     private bool isWateringPlant;
 
-
+    // JS Drag & Drop interop
+    private DotNetObjectReference<Bookshelf>? _dotNetHelper;
+    private bool _jsInitialized = false;
 
     // Back handler
     private Func<Task<bool>>? _activeBackHandler;
@@ -459,8 +471,19 @@
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_jsInitialized && ViewModel.Shelves.Any() && activeTab == "shelves")
+        {
+            _dotNetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("bookshelfDragDrop.init", _dotNetHelper);
+            _jsInitialized = true;
+        }
+    }
+
     private async void OnGoalsChanged(object? sender, EventArgs e)
     {
+        _jsInitialized = false;
         await InvokeAsync(async () =>
         {
             await ViewModel.LoadCommand.ExecuteAsync(null);
@@ -468,7 +491,7 @@
         });
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         GoalService.GoalsChanged -= OnGoalsChanged;
         if (_activeBackHandler != null)
@@ -476,6 +499,12 @@
             BackButtonService.Unregister(_activeBackHandler);
             _activeBackHandler = null;
         }
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("bookshelfDragDrop.dispose");
+        }
+        catch { /* Ignore if JS runtime already gone */ }
+        _dotNetHelper?.Dispose();
     }
 
     private void ToggleFilters() => filtersExpanded = !filtersExpanded;
@@ -507,8 +536,9 @@
     private void HandleSearch() => ViewModel.SearchCommand.ExecuteAsync(null);
     private async Task HandleClearFilters()
     {
-        ViewModel.ClearFiltersCommand.Execute(null); await
-        ViewModel.LoadCommand.ExecuteAsync(null);
+        ViewModel.ClearFiltersCommand.Execute(null);
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+        _jsInitialized = false;
     }
     private void NavigateToAddBook() => Navigation.NavigateTo("/books/new");
     private void HandleBookClick(Book book) => Navigation.NavigateTo($"/books/{book.Id}");
@@ -585,54 +615,30 @@
         }
     }
 
-    // Drag & Drop
-    private Guid? draggedItemId;
+    // ─── JS Drag & Drop Callbacks ───
 
-    private void HandleDragStartItem(Guid itemId)
+    [JSInvokable]
+    public async Task OnReorderItem(string sourceShelfId, string itemId, string itemType, string targetItemId)
     {
-        draggedItemId = itemId;
+        var shelfGuid = Guid.Parse(sourceShelfId);
+        var sourceGuid = Guid.Parse(itemId);
+        var targetGuid = Guid.Parse(targetItemId);
+        await ViewModel.ReorderShelfItemsAsync((shelfGuid, sourceGuid, targetGuid));
+        _jsInitialized = false;
+        StateHasChanged();
     }
 
-    private async Task HandleDropOnShelf(Guid shelfId)
+    [JSInvokable]
+    public async Task OnMoveItemToShelf(string sourceShelfId, string targetShelfId,
+        string itemId, string itemType, int position)
     {
-        // This is for dropping on the empty space of a shelf (append)
-        // For now, let's assume it calls a move to shelf command without position (append)
-        if (draggedItemId.HasValue)
-        {
-            // We need to know if it's a book or plant to call the right method.
-            // Or we check both. Simpler: Just try both or have VM handle it.
-            // Since we only have ID, we might need a unified Move command in VM that figures it out.
-            // OR: We iterate VM items to find type.
-
-            // For MVP: Check shelves for the item to know its type?
-            // Actually, `BookCard` and `PlantCard` are distinct.
-            // Let's defer to VM: `MoveItemToShelfAsync`?
-            // But we have `MoveBookToShelfAsync` and `AddPlantToShelfAsync`.
-            // Let's inspect `ViewModel.Items`? No `Items` is on `ShelfViewModel`.
-
-            // Hack for now: Try finding in Books or Plants list
-            var isBook = ViewModel.Books.Any(b => b.Id == draggedItemId.Value);
-            if (isBook)
-            {
-                await ViewModel.MoveBookToShelfAsync((draggedItemId.Value, shelfId));
-            }
-            else
-            {
-                // Assume plant
-                await ViewModel.AddPlantToShelfAsync((draggedItemId.Value, shelfId));
-            }
-
-            draggedItemId = null;
-        }
-    }
-
-    private async Task HandleDropOnItem(Guid targetItemId, Guid shelfId)
-    {
-        if (draggedItemId.HasValue && draggedItemId.Value != targetItemId)
-        {
-            await ViewModel.ReorderShelfItemsAsync((shelfId, draggedItemId.Value, targetItemId));
-            draggedItemId = null;
-        }
+        var sourceGuid = Guid.Parse(sourceShelfId);
+        var targetGuid = Guid.Parse(targetShelfId);
+        var itemGuid = Guid.Parse(itemId);
+        var type = itemType == "Plant" ? ShelfItemType.Plant : ShelfItemType.Book;
+        await ViewModel.MoveItemBetweenShelvesAsync((sourceGuid, targetGuid, itemGuid, type, position));
+        _jsInitialized = false;
+        StateHasChanged();
     }
 
     private async Task HandleRemoveBookFromShelf(Guid bookId, Guid shelfId)
@@ -737,6 +743,8 @@
         _ => "🌱"
     };
 
+    private void NavigateToEditBook(Guid bookId) => Navigation.NavigateTo($"/books/{bookId}/edit");
+
     // ===== Wishlist Tab Methods =====
 
     private async Task SwitchTab(string tab)
@@ -745,6 +753,10 @@
         if (tab == "wishlist")
         {
             await WishlistVM.LoadCommand.ExecuteAsync(null);
+        }
+        else if (tab == "shelves")
+        {
+            _jsInitialized = false;
         }
     }
 
@@ -775,12 +787,6 @@
         await WishlistVM.SortCommand.ExecuteAsync(null);
     }
 
-    private async Task HandleMoveToLibrary(Guid bookId)
-    {
-        await WishlistVM.MoveToLibraryCommand.ExecuteAsync(bookId);
-        StateHasChanged();
-    }
-
     private async Task HandleRemoveFromWishlist(Guid bookId)
     {
         await WishlistVM.RemoveFromWishlistCommand.ExecuteAsync(bookId);
@@ -809,6 +815,17 @@
             _activeBackHandler = null;
         }
         showAddToWishlistModal = false;
+    }
+
+    private async Task ScanWishlistIsbnAsync()
+    {
+        var isbn = await ScannerService.ScanBarcodeAsync();
+        if (!string.IsNullOrEmpty(isbn))
+        {
+            WishlistVM.NewIsbn = isbn;
+            await WishlistVM.LookupByIsbnCommand.ExecuteAsync(null);
+            StateHasChanged();
+        }
     }
 
     private async Task HandleWishlistLookup()
