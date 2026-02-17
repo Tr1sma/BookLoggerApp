@@ -30,6 +30,10 @@ public class ReadingGoal
     public bool IsCompleted { get; set; } = false;
     public DateTime? CompletedAt { get; set; }
 
+    // Navigation Properties
+    public ICollection<GoalExcludedBook> ExcludedBooks { get; set; } = new List<GoalExcludedBook>();
+    public ICollection<GoalGenre> GoalGenres { get; set; } = new List<GoalGenre>();
+
     // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }

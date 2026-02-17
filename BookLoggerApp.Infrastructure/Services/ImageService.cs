@@ -1,6 +1,7 @@
 using System.Net.Http;
 using BookLoggerApp.Core.Services.Abstractions;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
@@ -10,6 +11,7 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class ImageService : IImageService
 {
     private readonly string _imagesDirectory;
+    private readonly string _thumbnailsDirectory;
     private readonly HttpClient _httpClient;
     private readonly ILogger<ImageService>? _logger;
     private readonly IFileSystem _fileSystem;
@@ -27,9 +29,11 @@ public class ImageService : IImageService
         // Get the app's local data directory
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         _imagesDirectory = _fileSystem.CombinePath(appDataPath, "covers");
+        _thumbnailsDirectory = _fileSystem.CombinePath(_imagesDirectory, "thumbs");
 
-        // Ensure directory exists
+        // Ensure directories exist
         _fileSystem.CreateDirectory(_imagesDirectory);
+        _fileSystem.CreateDirectory(_thumbnailsDirectory);
 
         // Initialize HttpClient for downloading images
         _httpClient = httpClient ?? new HttpClient
@@ -54,6 +58,9 @@ public class ImageService : IImageService
             await imageStream.CopyToAsync(fileStream, ct);
 
             _logger?.LogInformation("Cover image saved for book {BookId} at {Path}", bookId, fullPath);
+
+            // Invalidate cached thumbnail
+            DeleteThumbnail(bookId);
 
             // Return relative path
             return _fileSystem.CombinePath("covers", fileName);
@@ -113,6 +120,9 @@ public class ImageService : IImageService
             {
                 _fileSystem.DeleteFile(pngPath);
             }
+
+            // Delete cached thumbnail
+            DeleteThumbnail(bookId);
 
             return Task.CompletedTask;
         }
@@ -212,6 +222,101 @@ public class ImageService : IImageService
         {
             _logger?.LogError(ex, "Failed to save cover image from URL for book {BookId}", bookId);
             return null;
+        }
+    }
+
+    public async Task<(byte[] Bytes, string MimeType)?> GetResizedCoverImageAsync(
+        Guid bookId, int maxWidth = 400, int maxHeight = 600, CancellationToken ct = default)
+    {
+        try
+        {
+            // Check for cached thumbnail first
+            var thumbPath = _fileSystem.CombinePath(_thumbnailsDirectory, $"{bookId}.jpg");
+            if (_fileSystem.FileExists(thumbPath))
+            {
+                var cachedBytes = await _fileSystem.ReadAllBytesAsync(thumbPath, ct);
+                return (cachedBytes, "image/jpeg");
+            }
+
+            // Get original image path
+            var originalPath = await GetCoverImagePathAsync(bookId, ct);
+            if (originalPath == null)
+                return null;
+
+            var originalBytes = await _fileSystem.ReadAllBytesAsync(originalPath, ct);
+            if (originalBytes.Length == 0)
+                return null;
+
+            // Decode with SkiaSharp
+            using var original = SKBitmap.Decode(originalBytes);
+            if (original == null)
+            {
+                _logger?.LogWarning("Failed to decode cover image for book {BookId}", bookId);
+                return null;
+            }
+
+            // If already small enough, cache as-is and return
+            if (original.Width <= maxWidth && original.Height <= maxHeight)
+            {
+                await _fileSystem.WriteAllBytesAsync(thumbPath, originalBytes, ct);
+                var mimeType = originalPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                    ? "image/png" : "image/jpeg";
+                return (originalBytes, mimeType);
+            }
+
+            // Calculate new dimensions maintaining aspect ratio
+            var ratioX = (float)maxWidth / original.Width;
+            var ratioY = (float)maxHeight / original.Height;
+            var ratio = Math.Min(ratioX, ratioY);
+            var newWidth = (int)(original.Width * ratio);
+            var newHeight = (int)(original.Height * ratio);
+
+            // Resize
+            using var resized = original.Resize(
+                new SKImageInfo(newWidth, newHeight),
+                new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
+
+            if (resized == null)
+            {
+                _logger?.LogWarning("Failed to resize cover image for book {BookId}", bookId);
+                return null;
+            }
+
+            // Encode to JPEG (quality 85 is a good balance of size vs quality)
+            using var image = SKImage.FromBitmap(resized);
+            using var data = image.Encode(SKEncodedImageFormat.Jpeg, 85);
+            var resizedBytes = data.ToArray();
+
+            // Cache to disk
+            await _fileSystem.WriteAllBytesAsync(thumbPath, resizedBytes, ct);
+
+            _logger?.LogInformation(
+                "Resized cover image for book {BookId}: {OrigW}x{OrigH} -> {NewW}x{NewH} ({OrigSize} -> {NewSize} bytes)",
+                bookId, original.Width, original.Height, newWidth, newHeight,
+                originalBytes.Length, resizedBytes.Length);
+
+            return (resizedBytes, "image/jpeg");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to get resized cover image for book {BookId}", bookId);
+            return null;
+        }
+    }
+
+    private void DeleteThumbnail(Guid bookId)
+    {
+        try
+        {
+            var thumbPath = _fileSystem.CombinePath(_thumbnailsDirectory, $"{bookId}.jpg");
+            if (_fileSystem.FileExists(thumbPath))
+            {
+                _fileSystem.DeleteFile(thumbPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to delete thumbnail for book {BookId}", bookId);
         }
     }
 }

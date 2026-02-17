@@ -58,11 +58,88 @@ public class ShelfService : IShelfService
     public async Task DeleteShelfAsync(Guid id)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
-        var shelf = await context.Shelves.FindAsync(id);
-        if (shelf != null)
+        using var transaction = await context.Database.BeginTransactionAsync();
+        try
         {
+            var shelf = await context.Shelves.FindAsync(id);
+            if (shelf == null) return;
+
+            // Find or create the Main shelf (SortOrder == 0)
+            var mainShelf = await context.Shelves
+                .FirstOrDefaultAsync(s => s.SortOrder == 0 && s.Id != id);
+
+            if (mainShelf == null)
+            {
+                mainShelf = new Shelf { Name = "Main Shelf", SortOrder = 0 };
+                context.Shelves.Add(mainShelf);
+                await context.SaveChangesAsync();
+            }
+
+            // Get current max position on the Main shelf
+            var maxPos = Math.Max(
+                await context.BookShelves.Where(bs => bs.ShelfId == mainShelf.Id)
+                    .MaxAsync(bs => (int?)bs.Position) ?? -1,
+                await context.PlantShelves.Where(ps => ps.ShelfId == mainShelf.Id)
+                    .MaxAsync(ps => (int?)ps.Position) ?? -1);
+
+            // Move books to Main shelf (skip duplicates already on Main shelf)
+            var booksToMove = await context.BookShelves
+                .Where(bs => bs.ShelfId == id)
+                .ToListAsync();
+
+            var existingBookIds = await context.BookShelves
+                .Where(bs => bs.ShelfId == mainShelf.Id)
+                .Select(bs => bs.BookId)
+                .ToHashSetAsync();
+
+            foreach (var bs in booksToMove)
+            {
+                context.BookShelves.Remove(bs);
+                if (!existingBookIds.Contains(bs.BookId))
+                {
+                    maxPos++;
+                    context.BookShelves.Add(new BookShelf
+                    {
+                        ShelfId = mainShelf.Id,
+                        BookId = bs.BookId,
+                        Position = maxPos
+                    });
+                }
+            }
+
+            // Move plants to Main shelf (skip duplicates already on Main shelf)
+            var plantsToMove = await context.PlantShelves
+                .Where(ps => ps.ShelfId == id)
+                .ToListAsync();
+
+            var existingPlantIds = await context.PlantShelves
+                .Where(ps => ps.ShelfId == mainShelf.Id)
+                .Select(ps => ps.PlantId)
+                .ToHashSetAsync();
+
+            foreach (var ps in plantsToMove)
+            {
+                context.PlantShelves.Remove(ps);
+                if (!existingPlantIds.Contains(ps.PlantId))
+                {
+                    maxPos++;
+                    context.PlantShelves.Add(new PlantShelf
+                    {
+                        ShelfId = mainShelf.Id,
+                        PlantId = ps.PlantId,
+                        Position = maxPos
+                    });
+                }
+            }
+
             context.Shelves.Remove(shelf);
             await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
         }
     }
 
@@ -275,6 +352,128 @@ public class ShelfService : IShelfService
                         ps.Position = newPos;
                     }
                 }
+            }
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task MoveBookBetweenShelvesAsync(
+        Guid sourceShelfId, Guid targetShelfId, Guid bookId, int targetPosition)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            // 1. Remove from source shelf
+            var sourceEntry = await context.BookShelves
+                .FirstOrDefaultAsync(bs => bs.ShelfId == sourceShelfId && bs.BookId == bookId);
+            if (sourceEntry != null)
+                context.BookShelves.Remove(sourceEntry);
+
+            // 2. Check if already on target shelf
+            var existsOnTarget = await context.BookShelves
+                .AnyAsync(bs => bs.ShelfId == targetShelfId && bs.BookId == bookId);
+
+            if (!existsOnTarget)
+            {
+                int insertPos = targetPosition;
+                if (insertPos < 0)
+                {
+                    // Append: find max position across books and plants
+                    var maxPos = Math.Max(
+                        await context.BookShelves.Where(bs => bs.ShelfId == targetShelfId)
+                            .MaxAsync(bs => (int?)bs.Position) ?? -1,
+                        await context.PlantShelves.Where(ps => ps.ShelfId == targetShelfId)
+                            .MaxAsync(ps => (int?)ps.Position) ?? -1);
+                    insertPos = maxPos + 1;
+                }
+                else
+                {
+                    // Shift items at targetPosition and beyond
+                    var booksToShift = await context.BookShelves
+                        .Where(bs => bs.ShelfId == targetShelfId && bs.Position >= insertPos)
+                        .ToListAsync();
+                    foreach (var b in booksToShift) b.Position++;
+
+                    var plantsToShift = await context.PlantShelves
+                        .Where(ps => ps.ShelfId == targetShelfId && ps.Position >= insertPos)
+                        .ToListAsync();
+                    foreach (var p in plantsToShift) p.Position++;
+                }
+
+                context.BookShelves.Add(new BookShelf
+                {
+                    ShelfId = targetShelfId,
+                    BookId = bookId,
+                    Position = insertPos
+                });
+            }
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task MovePlantBetweenShelvesAsync(
+        Guid sourceShelfId, Guid targetShelfId, Guid plantId, int targetPosition)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            // 1. Remove from source shelf
+            var sourceEntry = await context.PlantShelves
+                .FirstOrDefaultAsync(ps => ps.ShelfId == sourceShelfId && ps.PlantId == plantId);
+            if (sourceEntry != null)
+                context.PlantShelves.Remove(sourceEntry);
+
+            // 2. Check if already on target shelf
+            var existsOnTarget = await context.PlantShelves
+                .AnyAsync(ps => ps.ShelfId == targetShelfId && ps.PlantId == plantId);
+
+            if (!existsOnTarget)
+            {
+                int insertPos = targetPosition;
+                if (insertPos < 0)
+                {
+                    var maxPos = Math.Max(
+                        await context.BookShelves.Where(bs => bs.ShelfId == targetShelfId)
+                            .MaxAsync(bs => (int?)bs.Position) ?? -1,
+                        await context.PlantShelves.Where(ps => ps.ShelfId == targetShelfId)
+                            .MaxAsync(ps => (int?)ps.Position) ?? -1);
+                    insertPos = maxPos + 1;
+                }
+                else
+                {
+                    var booksToShift = await context.BookShelves
+                        .Where(bs => bs.ShelfId == targetShelfId && bs.Position >= insertPos)
+                        .ToListAsync();
+                    foreach (var b in booksToShift) b.Position++;
+
+                    var plantsToShift = await context.PlantShelves
+                        .Where(ps => ps.ShelfId == targetShelfId && ps.Position >= insertPos)
+                        .ToListAsync();
+                    foreach (var p in plantsToShift) p.Position++;
+                }
+
+                context.PlantShelves.Add(new PlantShelf
+                {
+                    ShelfId = targetShelfId,
+                    PlantId = plantId,
+                    Position = insertPos
+                });
             }
 
             await context.SaveChangesAsync();

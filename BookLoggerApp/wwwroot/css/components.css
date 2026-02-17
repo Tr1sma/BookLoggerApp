@@ -4,11 +4,12 @@
     width: clamp(35px, 7vw, 100px);
     height: clamp(110px, 16vh, 280px);
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
     border-radius: 4px 4px 2px 2px;
     overflow: visible;
+    contain: layout style;
 
     /* Enhanced 3D Book Spine Effect with depth */
     background: linear-gradient(to right,
@@ -21,47 +22,21 @@
             rgba(0, 0, 0, 0.1) 97%,
             rgba(0, 0, 0, 0.4) 100%);
 
-    /* Multi-layer shadow for enhanced depth */
+    /* Consolidated shadow for depth (reduced from 7 to 3 for GPU performance) */
     box-shadow:
-        -3px 0 5px rgba(0, 0, 0, 0.4),
-        3px 0 5px rgba(0, 0, 0, 0.4),
-        0 4px 10px rgba(0, 0, 0, 0.5),
-        0 2px 4px rgba(0, 0, 0, 0.3),
-        inset -3px 0 4px rgba(0, 0, 0, 0.25),
-        inset 3px 0 4px rgba(0, 0, 0, 0.25),
-        inset 0 -2px 3px rgba(0, 0, 0, 0.15);
+        0 0 5px 2px rgba(0, 0, 0, 0.35),
+        0 4px 10px rgba(0, 0, 0, 0.45),
+        inset 0 0 4px 1px rgba(0, 0, 0, 0.2);
 }
 
-/* Subtle texture overlay */
-.book-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image:
-        repeating-linear-gradient(90deg,
-            transparent,
-            transparent 1px,
-            rgba(0, 0, 0, 0.02) 1px,
-            rgba(0, 0, 0, 0.02) 2px);
-    pointer-events: none;
-    z-index: 1;
-    opacity: 0.3;
-}
 
 .book-card:hover {
     transform: translateY(-14px) scale(1.03);
-    /* Enhanced hover shadow with glow effect */
+    /* Consolidated hover shadow with glow (reduced from 7 to 3 for GPU performance) */
     box-shadow:
-        -4px 0 8px rgba(0, 0, 0, 0.5),
-        4px 0 8px rgba(0, 0, 0, 0.5),
-        0 16px 32px rgba(0, 0, 0, 0.6),
-        0 8px 16px rgba(0, 0, 0, 0.4),
-        0 0 24px rgba(212, 165, 116, 0.3),
-        inset -3px 0 4px rgba(0, 0, 0, 0.25),
-        inset 3px 0 4px rgba(0, 0, 0, 0.25);
+        0 0 8px 3px rgba(0, 0, 0, 0.4),
+        0 12px 28px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(212, 165, 116, 0.25);
     z-index: 10;
 }
 
@@ -333,10 +308,6 @@
     border-radius: var(--border-radius);
 }
 
-/* Keep texture overlay for cozy feel */
-.book-card.compact::before {
-    opacity: 0.2;
-}
 
 .book-card.compact:hover {
     transform: translateY(-2px);

@@ -3,6 +3,7 @@ using System;
 using BookLoggerApp.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookLoggerApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260213114325_AddGoalExcludedBooks")]
+    partial class AddGoalExcludedBooks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
@@ -456,21 +459,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.HasIndex("BookId");
 
                     b.ToTable("GoalExcludedBooks");
-                });
-
-            modelBuilder.Entity("BookLoggerApp.Core.Models.GoalGenre", b =>
-                {
-                    b.Property<Guid>("ReadingGoalId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("GenreId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("ReadingGoalId", "GenreId");
-
-                    b.HasIndex("GenreId");
-
-                    b.ToTable("GoalGenres");
                 });
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.PlantShelf", b =>
@@ -1353,25 +1341,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Navigation("ReadingGoal");
                 });
 
-            modelBuilder.Entity("BookLoggerApp.Core.Models.GoalGenre", b =>
-                {
-                    b.HasOne("BookLoggerApp.Core.Models.Genre", "Genre")
-                        .WithMany()
-                        .HasForeignKey("GenreId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BookLoggerApp.Core.Models.ReadingGoal", "ReadingGoal")
-                        .WithMany("GoalGenres")
-                        .HasForeignKey("ReadingGoalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Genre");
-
-                    b.Navigation("ReadingGoal");
-                });
-
             modelBuilder.Entity("BookLoggerApp.Core.Models.PlantShelf", b =>
                 {
                     b.HasOne("BookLoggerApp.Core.Models.UserPlant", "Plant")
@@ -1488,8 +1457,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
             modelBuilder.Entity("BookLoggerApp.Core.Models.ReadingGoal", b =>
                 {
                     b.Navigation("ExcludedBooks");
-
-                    b.Navigation("GoalGenres");
                 });
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Shelf", b =>

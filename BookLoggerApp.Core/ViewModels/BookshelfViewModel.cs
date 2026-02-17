@@ -523,7 +523,83 @@ public partial class BookshelfViewModel : ViewModelBase
         }, "Failed to reorder items");
     }
 
+    [RelayCommand]
+    public async Task MoveItemBetweenShelvesAsync(
+        (Guid sourceShelfId, Guid targetShelfId, Guid itemId, ShelfItemType type, int position) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            if (args.type == ShelfItemType.Book)
+                await _shelfService.MoveBookBetweenShelvesAsync(
+                    args.sourceShelfId, args.targetShelfId, args.itemId, args.position);
+            else
+                await _shelfService.MovePlantBetweenShelvesAsync(
+                    args.sourceShelfId, args.targetShelfId, args.itemId, args.position);
 
+            await LoadAsync();
+        }, "Failed to move item between shelves");
+    }
+
+    /// <summary>
+    /// Optimistic in-memory move for instant visual feedback during drag-and-drop.
+    /// Does NOT persist to DB — call PersistCrossShelfMoveAsync afterward.
+    /// </summary>
+    public void MoveItemBetweenShelvesInMemory(
+        Guid sourceShelfId, Guid targetShelfId, Guid itemId, ShelfItemType type, int position)
+    {
+        var sourceShelf = Shelves.FirstOrDefault(s => s.Shelf.Id == sourceShelfId);
+        var targetShelf = Shelves.FirstOrDefault(s => s.Shelf.Id == targetShelfId);
+        if (sourceShelf == null || targetShelf == null) return;
+
+        var item = sourceShelf.Items.FirstOrDefault(i => i.Id == itemId);
+        if (item == null) return;
+
+        // Remove from source
+        sourceShelf.Items.Remove(item);
+
+        // Recalculate source positions
+        for (int i = 0; i < sourceShelf.Items.Count; i++)
+            sourceShelf.Items[i].Position = i;
+
+        // Insert into target at the right position
+        int insertAt = position >= 0 && position <= targetShelf.Items.Count
+            ? position
+            : targetShelf.Items.Count;
+
+        targetShelf.Items.Insert(insertAt, item);
+
+        // Recalculate target positions
+        for (int i = 0; i < targetShelf.Items.Count; i++)
+            targetShelf.Items[i].Position = i;
+    }
+
+    /// <summary>
+    /// Persists a cross-shelf move to the database without reloading all shelves.
+    /// </summary>
+    public async Task PersistCrossShelfMoveAsync(
+        Guid sourceShelfId, Guid targetShelfId, Guid itemId, ShelfItemType type, int position)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            if (type == ShelfItemType.Book)
+                await _shelfService.MoveBookBetweenShelvesAsync(
+                    sourceShelfId, targetShelfId, itemId, position);
+            else
+                await _shelfService.MovePlantBetweenShelvesAsync(
+                    sourceShelfId, targetShelfId, itemId, position);
+        }, "Failed to persist shelf move");
+    }
+
+    /// <summary>
+    /// Refreshes only the goal header stats without reloading all shelf data.
+    /// </summary>
+    public async Task RefreshGoalStatsAsync()
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            await CalculateGoalStatsAsync();
+        }, "Failed to refresh goal stats");
+    }
 }
 
 public partial class ShelfViewModel : ObservableObject
