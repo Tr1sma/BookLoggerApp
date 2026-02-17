@@ -213,14 +213,8 @@
 .shelf-slot {
     display: inline-block;
     transition: transform 0.2s ease;
-}
-
-.shelf-slot[draggable="true"] {
-    cursor: move;
-}
-
-.shelf-slot[draggable="true"]:hover {
-    transform: translateY(-4px);
+    touch-action: auto;
+    contain: layout style;
 }
 
 /* Wooden shelf edge (bottom border) - Enhanced prominent edge */
@@ -487,5 +481,80 @@
         height: 52px;
         font-size: 1.75rem;
     }
+}
+
+/* ─── Drag & Drop - Touch/Pointer Based ─── */
+
+.drag-ghost {
+    position: fixed;
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 0.85;
+    /* Transform set via JS (translate + scale + rotate) */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    will-change: transform;
+    contain: strict;
+}
+
+.shelf-slot.dragging {
+    opacity: 0.3;
+    transform: scale(0.95);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.shelf-section.drop-target-active {
+    outline: 2px dashed var(--primary-color);
+    outline-offset: 4px;
+    background: rgba(212, 165, 116, 0.05);
+}
+
+.drop-indicator {
+    position: absolute;
+    top: 5%;
+    bottom: 5%;
+    width: 3px;
+    background: var(--primary-color);
+    border-radius: 2px;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: 0 0 6px rgba(212, 165, 116, 0.4);
+}
+
+.shelf-slot.long-press-active {
+    transform: scale(1.02);
+    transition: transform 0.3s ease;
+}
+
+body.drag-active {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Suppress expensive transitions and pseudo-elements during drag */
+body.drag-active .book-card,
+body.drag-active .shelf-slot {
+    transition: none !important;
+}
+
+body.drag-active .shelf-row::before,
+body.drag-active .shelf-row::after {
+    display: none;
+}
+
+/* Also suppress book texture overlays and heavy shadows during drag */
+body.drag-active .book-card::before {
+    display: none;
+}
+
+body.drag-active .shelf-books {
+    box-shadow: none !important;
+}
+
+body.drag-active .book-card {
+    box-shadow:
+        -2px 0 3px rgba(0, 0, 0, 0.3),
+        2px 0 3px rgba(0, 0, 0, 0.3),
+        0 3px 6px rgba(0, 0, 0, 0.4) !important;
 }
 

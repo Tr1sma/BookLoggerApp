@@ -16,4 +16,10 @@ public interface IWishlistService
     Task RemoveFromWishlistAsync(Guid bookId, CancellationToken ct = default);
     Task<int> GetWishlistCountAsync(CancellationToken ct = default);
     Task<IReadOnlyList<Book>> SearchWishlistAsync(string query, CancellationToken ct = default);
+
+    /// <summary>
+    /// Removes only the WishlistInfo metadata for a book (without changing the book itself).
+    /// Used when a book's status changes away from Wishlist via BookEdit.
+    /// </summary>
+    Task ClearWishlistInfoAsync(Guid bookId, CancellationToken ct = default);
 }
