@@ -22,7 +22,7 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
             .HasMaxLength(300);
 
         builder.Property(b => b.ISBN)
-            .HasMaxLength(13);
+            .HasMaxLength(20);
 
         builder.Property(b => b.CoverImagePath)
             .HasMaxLength(500);
@@ -31,7 +31,7 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
             .HasMaxLength(200);
 
         builder.Property(b => b.Language)
-            .HasMaxLength(10);
+            .HasMaxLength(50);
 
         builder.Property(b => b.Description)
             .HasMaxLength(2000);

@@ -400,6 +400,58 @@ public class StatsServiceTests : IDisposable
 
     #endregion
 
+    #region Argument Validation Tests
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(-100)]
+    public async Task GetAveragePagesPerDayAsync_WithZeroOrNegativeDays_ShouldThrowArgumentOutOfRangeException(int days)
+    {
+        // Act
+        var act = () => _service.GetAveragePagesPerDayAsync(days);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>()
+            .WithParameterName("days");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(-100)]
+    public async Task GetAverageMinutesPerDayAsync_WithZeroOrNegativeDays_ShouldThrowArgumentOutOfRangeException(int days)
+    {
+        // Act
+        var act = () => _service.GetAverageMinutesPerDayAsync(days);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>()
+            .WithParameterName("days");
+    }
+
+    [Fact]
+    public async Task GetAveragePagesPerDayAsync_WithPositiveDays_ShouldNotThrow()
+    {
+        // Act
+        var result = await _service.GetAveragePagesPerDayAsync(7);
+
+        // Assert
+        result.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    [Fact]
+    public async Task GetAverageMinutesPerDayAsync_WithPositiveDays_ShouldNotThrow()
+    {
+        // Act
+        var result = await _service.GetAverageMinutesPerDayAsync(7);
+
+        // Assert
+        result.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    #endregion
+
     #region Date Range Filter Tests
 
     [Fact]
