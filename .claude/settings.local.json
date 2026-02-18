@@ -20,7 +20,9 @@
       "WebSearch",
       "Bash(dotnet add:*)",
       "Bash(grep:*)",
-      "Bash(Select-String -Pattern \"error|Build succeeded|failed\")"
+      "Bash(Select-String -Pattern \"error|Build succeeded|failed\")",
+      "Bash(git -C /c/Users/ben.sowieja/source/repos/Tr1sma/BookLoggerApp branch -a)",
+      "Bash(FINDSTR:*)"
     ],
     "deny": [],
     "ask": []

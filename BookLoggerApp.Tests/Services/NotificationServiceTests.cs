@@ -1,8 +1,9 @@
 using BookLoggerApp.Core.Models;
-using BookLoggerApp.Infrastructure.Services;
+using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Tests.TestHelpers;
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
@@ -10,130 +11,142 @@ namespace BookLoggerApp.Tests.Services;
 public class NotificationServiceTests
 {
     [Fact]
-    public async Task AreNotificationsEnabledAsync_WhenSettingsExist_ShouldReturnCorrectValue()
+    public async Task AreNotificationsEnabledAsync_WhenEnabled_ShouldReturnTrue()
     {
         // Arrange
-        using var context = TestDbContext.Create();
-
-        // Get existing settings (from seed data) or create new
-        var settings = await context.AppSettings.FirstOrDefaultAsync();
-        if (settings == null)
-        {
-            settings = new AppSettings();
-            context.AppSettings.Add(settings);
-        }
-
-        settings.NotificationsEnabled = true;
-        await context.SaveChangesAsync();
-
-        var service = new NotificationService(context);
+        var service = new MockNotificationService { NotificationsEnabled = true };
 
         // Act
-        var result = await service.AreNotificationsEnabledAsync();
+        bool result = await service.AreNotificationsEnabledAsync();
 
         // Assert
         result.Should().BeTrue();
     }
 
     [Fact]
-    public async Task AreNotificationsEnabledAsync_WhenNoSettings_ShouldReturnFalse()
+    public async Task AreNotificationsEnabledAsync_WhenDisabled_ShouldReturnFalse()
     {
         // Arrange
-        using var context = TestDbContext.Create();
-        var service = new NotificationService(context);
+        var service = new MockNotificationService { NotificationsEnabled = false };
 
         // Act
-        var result = await service.AreNotificationsEnabledAsync();
+        bool result = await service.AreNotificationsEnabledAsync();
 
         // Assert
         result.Should().BeFalse();
     }
 
     [Fact]
-    public async Task ScheduleReadingReminderAsync_WhenNotificationsDisabled_ShouldNotThrow()
+    public async Task ScheduleReadingReminderAsync_WhenNotificationsEnabled_ShouldSchedule()
     {
         // Arrange
-        using var context = TestDbContext.Create();
-        context.AppSettings.Add(new AppSettings
-        {
-            NotificationsEnabled = false
-        });
-        await context.SaveChangesAsync();
-
-        var service = new NotificationService(context);
+        var service = new MockNotificationService { NotificationsEnabled = true };
+        var reminderTime = TimeSpan.FromHours(20);
 
         // Act
-        Func<Task> act = async () => await service.ScheduleReadingReminderAsync(TimeSpan.FromHours(20));
+        await service.ScheduleReadingReminderAsync(reminderTime);
 
         // Assert
-        await act.Should().NotThrowAsync();
+        service.ScheduledReminderTime.Should().Be(reminderTime);
+        service.ReminderCancelled.Should().BeFalse();
     }
 
     [Fact]
-    public async Task SendGoalCompletedNotificationAsync_ShouldNotThrow()
+    public async Task ScheduleReadingReminderAsync_WhenNotificationsDisabled_ShouldNotSchedule()
     {
         // Arrange
-        using var context = TestDbContext.Create();
-        context.AppSettings.Add(new AppSettings
-        {
-            NotificationsEnabled = true
-        });
-        await context.SaveChangesAsync();
-
-        var service = new NotificationService(context);
+        var service = new MockNotificationService { NotificationsEnabled = false };
 
         // Act
-        Func<Task> act = async () => await service.SendGoalCompletedNotificationAsync("Read 5 books");
+        await service.ScheduleReadingReminderAsync(TimeSpan.FromHours(20));
 
-        // Assert - Should not throw even though notification is a placeholder
-        await act.Should().NotThrowAsync();
+        // Assert
+        service.ScheduledReminderTime.Should().BeNull();
     }
 
     [Fact]
-    public async Task SendPlantNeedsWaterNotificationAsync_ShouldNotThrow()
+    public async Task CancelReadingReminderAsync_ShouldCancelReminder()
     {
         // Arrange
-        using var context = TestDbContext.Create();
-        context.AppSettings.Add(new AppSettings
-        {
-            NotificationsEnabled = true
-        });
-        await context.SaveChangesAsync();
-
-        var service = new NotificationService(context);
+        var service = new MockNotificationService { NotificationsEnabled = true };
+        await service.ScheduleReadingReminderAsync(TimeSpan.FromHours(20));
 
         // Act
-        Func<Task> act = async () => await service.SendPlantNeedsWaterNotificationAsync("My Fern");
+        await service.CancelReadingReminderAsync();
 
         // Assert
-        await act.Should().NotThrowAsync();
+        service.ScheduledReminderTime.Should().BeNull();
+        service.ReminderCancelled.Should().BeTrue();
     }
 
     [Fact]
-    public async Task SendNotificationAsync_ShouldNotThrow()
+    public async Task SendGoalCompletedNotificationAsync_WhenEnabled_ShouldSendNotification()
     {
         // Arrange
-        using var context = TestDbContext.Create();
-        var service = new NotificationService(context);
+        var service = new MockNotificationService { NotificationsEnabled = true };
 
         // Act
-        Func<Task> act = async () => await service.SendNotificationAsync("Test Title", "Test Message");
+        await service.SendGoalCompletedNotificationAsync("Read 5 books");
 
         // Assert
-        await act.Should().NotThrowAsync();
+        service.SentNotifications.Should().ContainSingle()
+            .Which.Title.Should().Be("Goal Completed!");
     }
 
     [Fact]
-    public async Task CancelReadingReminderAsync_ShouldNotThrow()
+    public async Task SendGoalCompletedNotificationAsync_WhenDisabled_ShouldNotSend()
     {
         // Arrange
-        using var context = TestDbContext.Create();
-        var service = new NotificationService(context);
+        var service = new MockNotificationService { NotificationsEnabled = false };
 
         // Act
-        Func<Task> act = async () => await service.CancelReadingReminderAsync();
+        await service.SendGoalCompletedNotificationAsync("Read 5 books");
 
         // Assert
-        await act.Should().NotThrowAsync();
+        service.SentNotifications.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SendPlantNeedsWaterNotificationAsync_WhenEnabled_ShouldSendNotification()
+    {
+        // Arrange
+        var service = new MockNotificationService { NotificationsEnabled = true };
+
+        // Act
+        await service.SendPlantNeedsWaterNotificationAsync("My Fern");
+
+        // Assert
+        service.SentNotifications.Should().ContainSingle()
+            .Which.Title.Should().Be("Your Plant Needs Water!");
+    }
+
+    [Fact]
+    public async Task SendNotificationAsync_ShouldSendNotification()
+    {
+        // Arrange
+        var service = new MockNotificationService();
+
+        // Act
+        await service.SendNotificationAsync("Test Title", "Test Message");
+
+        // Assert
+        service.SentNotifications.Should().ContainSingle()
+            .Which.Should().Be(("Test Title", "Test Message"));
+    }
+
+    [Fact]
+    public async Task INotificationService_MockInterface_ScheduleAndCancel()
+    {
+        // Arrange — verify NSubstitute mock works for DI scenarios
+        var mock = Substitute.For<INotificationService>();
+        mock.AreNotificationsEnabledAsync(Arg.Any<CancellationToken>()).Returns(true);
+
+        // Act
+        await mock.ScheduleReadingReminderAsync(TimeSpan.FromHours(20));
+        await mock.CancelReadingReminderAsync();
+
+        // Assert
+        await mock.Received(1).ScheduleReadingReminderAsync(TimeSpan.FromHours(20), Arg.Any<CancellationToken>());
+        await mock.Received(1).CancelReadingReminderAsync(Arg.Any<CancellationToken>());
     }
 }

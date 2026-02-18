@@ -5,10 +5,10 @@
 ## Kurzbeschreibung / Short Description (max. 80 Zeichen)
 
 ### Deutsch
-Verfolge deine Bücher, Lesezeit und Ziele - offline & werbefrei
+Dein gemütliches Bücherregal mit Lese-Timer, XP & virtuellem Garten
 
 ### English
-Track your books, reading time and goals - offline & ad-free
+Your cozy bookshelf with reading timer, XP & virtual garden
 
 ---
 
@@ -16,103 +16,79 @@ Track your books, reading time and goals - offline & ad-free
 
 ### Deutsch
 
-📚 **Book Logger - Dein persönlicher Lese-Tracker**
+BookHeart ist dein persönlicher Lesebegleiter — eine liebevoll gestaltete App, die Bücherverwaltung mit Gamification verbindet. Verwalte deine Bibliothek, tracke deine Lesezeit und lass mit jeder gelesenen Seite deinen virtuellen Garten wachsen.
 
-Verwalte deine Buchsammlung, verfolge deinen Lesefortschritt und erreiche deine Leseziele!
+📚 DEIN VIRTUELLES BÜCHERREGAL
+Erstelle deine persönliche Bibliothek mit allen Details: Titel, Autor, Genre, Tropes, Seitenzahl und Cover. Ordne deine Bücher in einem wunderschönen Buchrücken-Regal an und sortiere sie per Drag & Drop ganz nach deinem Geschmack. Scanne Barcodes, um Bücher blitzschnell hinzuzufügen.
 
-**FUNKTIONEN**
+⏱️ LESE-TIMER & TRACKING
+Starte eine Lesesession, pausiere und setze sie jederzeit fort. BookHeart erfasst automatisch deine Lesezeit und gelesene Seiten. Nach jeder Session bekommst du eine detaillierte Zusammenfassung. Baue Lese-Streaks auf und bleib motiviert!
 
-📖 **Buchverwaltung**
-• Bücher manuell hinzufügen oder ISBN scannen
-• Automatisches Ausfüllen von Buchdaten via Google Books
-• Cover-Bilder und detaillierte Buchinformationen
+🎯 LESEZIELE
+Setze dir persönliche Ziele — ob Minuten pro Tag, Seiten pro Woche oder Bücher pro Monat. Verfolge deinen Fortschritt und erreiche deine Leseziele Schritt für Schritt.
 
-⏱️ **Lese-Timer**
-• Integrierter Timer für Lesesitzungen
-• Automatische Berechnung von Seiten pro Stunde
-• Fortschrittsanzeige in Prozent
+⭐ DETAILLIERTES BEWERTUNGSSYSTEM
+Vergiss einfache 5-Sterne-Bewertungen! Bewerte deine Bücher in 6 Kategorien: Charaktere, Plot, Schreibstil, Spice Level, Pacing und World Building. So weißt du immer genau, was dir an einem Buch gefallen hat — und was nicht.
 
-🎯 **Leseziele**
-• Tages-, Wochen- oder Monatsziele setzen
-• Ziele für Bücher, Seiten oder Lesezeit
-• Fortschrittsverfolgung in Echtzeit
+🌱 GAMIFICATION & VIRTUELLER GARTEN
+Sammle XP durch Lesen und steige im Level auf. Verdiene Münzen und kaufe im Shop neue Pflanzenarten für deinen virtuellen Garten. Deine Pflanzen wachsen mit deiner Lesezeit — je mehr du liest, desto prächtiger wird dein Garten!
 
-📊 **Statistiken**
-• Detaillierte Lesestatistiken
-• Leseserien und Streaks
-• Top bewertete Bücher nach Kategorie
+📊 STATISTIKEN & INSIGHTS
+Entdecke deine Lesegewohnheiten mit übersichtlichen Dashboards. Welches Genre liest du am meisten? Wie bewerte ich Plot vs. Charaktere? Wie hat sich meine Leseaktivität entwickelt? BookHeart gibt dir die Antworten.
 
-⭐ **Bewertungen**
-• 7 Bewertungskategorien
-• Charaktere, Plot, Schreibstil, Spannung, Pacing, Worldbuilding, Gesamt
+🔖 WUNSCHLISTE
+Entdeckt ein Buch, das du unbedingt lesen möchtest? Ab auf die Wunschliste! Organisiere deine zukünftigen Lektüren mit Prioritäten und verliere nie wieder ein Buch aus den Augen.
 
-🌱 **Gamification**
-• Sammle XP durch Lesen
-• Steige Level auf
-• Pflege virtuelle Pflanzen
-• Verdiene Münzen für den Pflanzenshop
+🔒 PRIVAT & OFFLINE
+Deine Daten gehören dir. Alles wird lokal auf deinem Gerät gespeichert — kein Account, kein Server, keine Cloud. Erstelle jederzeit vollständige Backups und exportiere deine Bibliothek als JSON oder CSV.
 
-📚 **Bücherregal**
-• Visuelle Buchdarstellung
-• Drag & Drop Organisation
-• Filter nach Status
+✨ WEITERE HIGHLIGHTS
+• Gemütliches Dark-Mode-Design
+• ISBN-Barcode-Scanner für schnelles Hinzufügen
+• Zitate und Anmerkungen zu deinen Büchern
+• Individuelle Regale für bessere Organisation
+• Vollständiger Import & Export
 
-**PRIVATSPHÄRE**
-✓ Alle Daten lokal auf deinem Gerät
-✓ Keine Registrierung erforderlich
-✓ Keine Werbung
-✓ Keine Datensammlung
+BookHeart wurde mit Liebe für Bücherwürmer entwickelt. Keine Werbung, keine In-App-Käufe, keine Datensammlung — nur du und deine Bücher.
 
 ---
 
 ### English
 
-📚 **Book Logger - Your Personal Reading Tracker**
+BookHeart is your personal reading companion — a lovingly designed app that combines book management with gamification. Manage your library, track your reading time and watch your virtual garden grow with every page you read.
 
-Manage your book collection, track your reading progress and achieve your reading goals!
+📚 YOUR VIRTUAL BOOKSHELF
+Build your personal library with all the details: title, author, genre, tropes, page count and cover. Arrange your books on a beautiful spine-view shelf and sort them with drag & drop however you like. Scan barcodes to add books in seconds.
 
-**FEATURES**
+⏱️ READING TIMER & TRACKING
+Start a reading session, pause and resume at any time. BookHeart automatically tracks your reading time and pages read. After each session, you get a detailed summary. Build reading streaks and stay motivated!
 
-📖 **Book Management**
-• Add books manually or scan ISBN
-• Auto-fill book data via Google Books
-• Cover images and detailed book information
+🎯 READING GOALS
+Set personal goals — whether minutes per day, pages per week or books per month. Track your progress and reach your reading goals step by step.
 
-⏱️ **Reading Timer**
-• Built-in timer for reading sessions
-• Automatic calculation of pages per hour
-• Progress display in percent
+⭐ DETAILED RATING SYSTEM
+Forget simple 5-star ratings! Rate your books across 6 categories: Characters, Plot, Writing Style, Spice Level, Pacing and World Building. Always know exactly what you loved about a book — and what you didn't.
 
-🎯 **Reading Goals**
-• Set daily, weekly or monthly goals
-• Goals for books, pages or reading time
-• Real-time progress tracking
+🌱 GAMIFICATION & VIRTUAL GARDEN
+Earn XP by reading and level up. Earn coins and buy new plant species in the shop for your virtual garden. Your plants grow with your reading time — the more you read, the more magnificent your garden becomes!
 
-📊 **Statistics**
-• Detailed reading statistics
-• Reading streaks
-• Top rated books by category
+📊 STATISTICS & INSIGHTS
+Discover your reading habits with clear dashboards. Which genre do you read the most? How do I rate Plot vs. Characters? How has my reading activity evolved? BookHeart has the answers.
 
-⭐ **Ratings**
-• 7 rating categories
-• Characters, plot, writing style, spice level, pacing, world building, overall
+🔖 WISHLIST
+Spotted a book you absolutely need to read? Add it to your wishlist! Organize your future reads with priorities and never lose track of a book again.
 
-🌱 **Gamification**
-• Earn XP by reading
-• Level up
-• Care for virtual plants
-• Earn coins for the plant shop
+🔒 PRIVATE & OFFLINE
+Your data belongs to you. Everything is stored locally on your device — no account, no server, no cloud. Create full backups anytime and export your library as JSON or CSV.
 
-📚 **Bookshelf**
-• Visual book display
-• Drag & drop organization
-• Filter by status
+✨ MORE HIGHLIGHTS
+• Cozy dark mode design
+• ISBN barcode scanner for quick adding
+• Quotes and annotations for your books
+• Custom shelves for better organization
+• Full import & export
 
-**PRIVACY**
-✓ All data stored locally on your device
-✓ No registration required
-✓ No advertisements
-✓ No data collection
+BookHeart was made with love for bookworms. No ads, no in-app purchases, no data collection — just you and your books.
 
 ---
 
@@ -124,9 +100,10 @@ Erste öffentliche Testversion!
 • Lese-Timer und Fortschrittsverfolgung
 • Leseziele setzen und verfolgen
 • Detaillierte Statistiken
-• Buchbewertungen in 7 Kategorien
+• Buchbewertungen in 6 Kategorien
 • Gamification mit Pflanzen und XP
-• Visuelles Bücherregal
+• Visuelles Bücherregal mit Drag & Drop
+• Wunschliste für zukünftige Lektüren
 • Komplett offline nutzbar
 
 ### English
@@ -135,7 +112,8 @@ First public test release!
 • Reading timer and progress tracking
 • Set and track reading goals
 • Detailed statistics
-• Book ratings in 7 categories
+• Book ratings in 6 categories
 • Gamification with plants and XP
-• Visual bookshelf
+• Visual bookshelf with drag & drop
+• Wishlist for future reads
 • Fully usable offline
