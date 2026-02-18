@@ -507,6 +507,10 @@
             BackButtonService.Unregister(_activeBackHandler);
             _activeBackHandler = null;
         }
+        _searchTimer?.Stop();
+        _searchTimer?.Dispose();
+        _wishlistSearchTimer?.Stop();
+        _wishlistSearchTimer?.Dispose();
         try
         {
             await JSRuntime.InvokeVoidAsync("bookshelfDragDrop.dispose");
@@ -531,12 +535,20 @@
         _searchTimer = new System.Timers.Timer(300);
         _searchTimer.Elapsed += async (sender, args) =>
         {
-            _searchTimer.Stop();
-             await InvokeAsync(async () =>
-             {
-                 await ViewModel.SearchCommand.ExecuteAsync(null);
-                 StateHasChanged();
-             });
+            _searchTimer?.Stop();
+            try
+            {
+                await InvokeAsync(async () =>
+                {
+                    await ViewModel.SearchCommand.ExecuteAsync(null);
+                    StateHasChanged();
+                });
+            }
+            catch (ObjectDisposedException) { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Search failed: {ex.Message}");
+            }
         };
         _searchTimer.Start();
     }
@@ -664,10 +676,10 @@
         await ViewModel.RemoveBookFromShelfCommand.ExecuteAsync((bookId, shelfId));
     }
 
-    private void HandleDeleteBook(Guid bookId)
+    private async Task HandleDeleteBook(Guid bookId)
     {
         // For search results view, delete permanently
-        ViewModel.DeleteBookCommand.ExecuteAsync(bookId);
+        await ViewModel.DeleteBookCommand.ExecuteAsync(bookId);
     }
 
     // Plant stubs
@@ -784,11 +796,19 @@
         _wishlistSearchTimer.Elapsed += async (sender, args) =>
         {
             _wishlistSearchTimer?.Stop();
-            await InvokeAsync(async () =>
+            try
             {
-                await WishlistVM.SearchCommand.ExecuteAsync(null);
-                StateHasChanged();
-            });
+                await InvokeAsync(async () =>
+                {
+                    await WishlistVM.SearchCommand.ExecuteAsync(null);
+                    StateHasChanged();
+                });
+            }
+            catch (ObjectDisposedException) { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Wishlist search failed: {ex.Message}");
+            }
         };
         _wishlistSearchTimer.Start();
     }

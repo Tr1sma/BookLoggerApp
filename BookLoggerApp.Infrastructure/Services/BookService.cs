@@ -166,7 +166,7 @@ public class BookService : IBookService
             throw new EntityNotFoundException(typeof(Book), bookId);
 
         book.Status = ReadingStatus.Completed;
-        book.DateCompleted = DateTime.UtcNow;
+        book.DateCompleted ??= DateTime.UtcNow;
         book.CurrentPage = book.PageCount ?? book.CurrentPage;
 
         try

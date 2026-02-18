@@ -17,7 +17,7 @@ public class ShelfService : IShelfService
 
     public async Task<List<Shelf>> GetAllShelvesAsync()
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         return await context.Shelves
             .OrderBy(s => s.SortOrder)
             .ToListAsync();
@@ -25,7 +25,7 @@ public class ShelfService : IShelfService
 
     public async Task<Shelf?> GetShelfByIdAsync(Guid id)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         return await context.Shelves
             .Include(s => s.BookShelves)
             .ThenInclude(bs => bs.Book)
@@ -37,7 +37,7 @@ public class ShelfService : IShelfService
 
     public async Task<Shelf> CreateShelfAsync(Shelf shelf)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
         // Assign sort order to be last
         var maxSortOrder = await context.Shelves.MaxAsync(s => (int?)s.SortOrder) ?? 0;
@@ -50,15 +50,15 @@ public class ShelfService : IShelfService
 
     public async Task UpdateShelfAsync(Shelf shelf)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         context.Shelves.Update(shelf);
         await context.SaveChangesAsync();
     }
 
     public async Task DeleteShelfAsync(Guid id)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
-        using var transaction = await context.Database.BeginTransactionAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
             var shelf = await context.Shelves.FindAsync(id);
@@ -145,7 +145,7 @@ public class ShelfService : IShelfService
 
     public async Task AddBookToShelfAsync(Guid shelfId, Guid bookId)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
         var exists = await context.BookShelves
             .AnyAsync(bs => bs.ShelfId == shelfId && bs.BookId == bookId);
@@ -174,7 +174,7 @@ public class ShelfService : IShelfService
 
     public async Task RemoveBookFromShelfAsync(Guid shelfId, Guid bookId)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         var bookShelf = await context.BookShelves
             .FirstOrDefaultAsync(bs => bs.ShelfId == shelfId && bs.BookId == bookId);
 
@@ -187,7 +187,7 @@ public class ShelfService : IShelfService
 
     public async Task ReorderShelvesAsync(List<Guid> shelfIdsInOrder)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
         var shelves = await context.Shelves
             .Where(s => shelfIdsInOrder.Contains(s.Id))
@@ -207,12 +207,7 @@ public class ShelfService : IShelfService
 
     public async Task UpdateBookPositionAsync(Guid shelfId, Guid bookId, int newPosition)
     {
-        // This is a bit complex due to reordering. 
-        // For now, a simple swap or shift approach is acceptable, but full list reorder is safer.
-        // Assuming we might just update the single item for now or handle list reorder logic.
-        // Will implement a rigorous re-indexer if drag-and-drop requires it commonly.
-
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         var targetEntry = await context.BookShelves
             .FirstOrDefaultAsync(bs => bs.ShelfId == shelfId && bs.BookId == bookId);
 
@@ -225,7 +220,7 @@ public class ShelfService : IShelfService
 
     public async Task<List<Book>> GetBooksForShelfAsync(Guid shelfId)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         var shelf = await context.Shelves.FindAsync(shelfId);
         if (shelf == null) return new List<Book>();
 
@@ -266,7 +261,7 @@ public class ShelfService : IShelfService
 
     public async Task AddPlantToShelfAsync(Guid shelfId, Guid plantId)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
         var exists = await context.PlantShelves
             .AnyAsync(ps => ps.ShelfId == shelfId && ps.PlantId == plantId);
@@ -295,7 +290,7 @@ public class ShelfService : IShelfService
 
     public async Task RemovePlantFromShelfAsync(Guid shelfId, Guid plantId)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         var plantShelf = await context.PlantShelves
             .FirstOrDefaultAsync(ps => ps.ShelfId == shelfId && ps.PlantId == plantId);
 
@@ -308,8 +303,10 @@ public class ShelfService : IShelfService
 
     public async Task<List<UserPlant>> GetPlantsForShelfAsync(Guid shelfId)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
         return await context.PlantShelves
+            .Include(ps => ps.Plant)
+                .ThenInclude(p => p.Species)
             .Where(ps => ps.ShelfId == shelfId)
             .OrderBy(ps => ps.Position)
             .Select(ps => ps.Plant)
@@ -318,8 +315,8 @@ public class ShelfService : IShelfService
 
     public async Task UpdateShelfPositionsAsync(Guid shelfId, Dictionary<Guid, int> bookPositions, Dictionary<Guid, int> plantPositions)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
-        var transaction = await context.Database.BeginTransactionAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
             if (bookPositions.Any())
@@ -367,8 +364,8 @@ public class ShelfService : IShelfService
     public async Task MoveBookBetweenShelvesAsync(
         Guid sourceShelfId, Guid targetShelfId, Guid bookId, int targetPosition)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
-        using var transaction = await context.Database.BeginTransactionAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
             // 1. Remove from source shelf
@@ -429,8 +426,8 @@ public class ShelfService : IShelfService
     public async Task MovePlantBetweenShelvesAsync(
         Guid sourceShelfId, Guid targetShelfId, Guid plantId, int targetPosition)
     {
-        using var context = await _contextFactory.CreateDbContextAsync();
-        using var transaction = await context.Database.BeginTransactionAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
             // 1. Remove from source shelf
