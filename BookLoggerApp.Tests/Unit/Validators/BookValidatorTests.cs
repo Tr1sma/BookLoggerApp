@@ -133,12 +133,33 @@ public class BookValidatorTests
     [Fact]
     public void Should_Have_Error_When_DateCompleted_Is_In_Future()
     {
-        var model = new Book 
-        { 
+        var model = new Book
+        {
             DateStarted = DateTime.UtcNow,
-            DateCompleted = DateTime.UtcNow.AddDays(1) 
+            DateCompleted = DateTime.UtcNow.AddDays(1)
         };
         var result = _validator.TestValidate(model);
         result.ShouldHaveValidationErrorFor(x => x.DateCompleted);
+    }
+
+    [Fact]
+    public void Should_Not_Have_Error_When_ISBN_Is_Hyphenated_ISBN13()
+    {
+        // Arrange - "978-3-16-148410-0" is 17 characters (valid hyphenated ISBN-13)
+        var model = new Book { ISBN = "978-3-16-148410-0" };
+
+        // Act
+        var result = _validator.TestValidate(model);
+
+        // Assert
+        result.ShouldNotHaveValidationErrorFor(x => x.ISBN);
+    }
+
+    [Fact]
+    public void Should_Not_Have_Error_When_ISBN_Is_Exactly_20_Characters()
+    {
+        var model = new Book { ISBN = new string('1', 20) };
+        var result = _validator.TestValidate(model);
+        result.ShouldNotHaveValidationErrorFor(x => x.ISBN);
     }
 }
