@@ -161,6 +161,9 @@ public class StatsService : IStatsService
 
     public async Task<double> GetAveragePagesPerDayAsync(int days = 30, CancellationToken ct = default)
     {
+        if (days <= 0)
+            throw new ArgumentOutOfRangeException(nameof(days), "Days must be greater than zero.");
+
         var start = DateTime.UtcNow.AddDays(-days);
         var end = DateTime.UtcNow;
 
@@ -170,6 +173,9 @@ public class StatsService : IStatsService
 
     public async Task<double> GetAverageMinutesPerDayAsync(int days = 30, CancellationToken ct = default)
     {
+        if (days <= 0)
+            throw new ArgumentOutOfRangeException(nameof(days), "Days must be greater than zero.");
+
         var start = DateTime.UtcNow.AddDays(-days);
         var end = DateTime.UtcNow;
 
