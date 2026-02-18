@@ -27,6 +27,71 @@
             </div>
         </section>
 
+        <!-- Notifications -->
+        <section class="settings-section">
+            <h2>Notifications</h2>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-label">Enable Notifications</span>
+                    <span class="setting-description">Allow BookHeart to send you notifications</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox"
+                           checked="@ViewModel.Settings.NotificationsEnabled"
+                           @onchange="@(async (ChangeEventArgs e) => await ViewModel.ToggleNotificationsCommand.ExecuteAsync((bool)(e.Value ?? false)))" />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            @if (ViewModel.Settings.NotificationsEnabled)
+            {
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">Daily Reading Reminder</span>
+                        <span class="setting-description">Get a daily nudge to read</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox"
+                               checked="@ViewModel.Settings.ReadingRemindersEnabled"
+                               @onchange="@(async (ChangeEventArgs e) => await ViewModel.ToggleReadingRemindersCommand.ExecuteAsync((bool)(e.Value ?? false)))" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                @if (ViewModel.Settings.ReadingRemindersEnabled)
+                {
+                    <div class="setting-row time-picker-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Reminder Time</span>
+                            <span class="setting-description">When should we remind you?</span>
+                        </div>
+                        <div class="time-picker">
+                            <select class="time-select"
+                                    value="@ViewModel.ReminderHour"
+                                    @onchange="@(async (ChangeEventArgs e) => { ViewModel.ReminderHour = int.Parse(e.Value?.ToString() ?? "20"); await ViewModel.UpdateReminderTimeCommand.ExecuteAsync(null); })">
+                                @for (int h = 0; h < 24; h++)
+                                {
+                                    var hour = h;
+                                    <option value="@hour">@hour.ToString("D2")</option>
+                                }
+                            </select>
+                            <span class="time-separator">:</span>
+                            <select class="time-select"
+                                    value="@ViewModel.ReminderMinute"
+                                    @onchange="@(async (ChangeEventArgs e) => { ViewModel.ReminderMinute = int.Parse(e.Value?.ToString() ?? "0"); await ViewModel.UpdateReminderTimeCommand.ExecuteAsync(null); })">
+                                @for (int m = 0; m < 60; m += 15)
+                                {
+                                    var minute = m;
+                                    <option value="@minute">@minute.ToString("D2")</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                }
+            }
+        </section>
+
         <!-- Migration Diagnostics -->
          <section class="settings-section">
             <h2>Data Recovery Diagnostics</h2>
@@ -442,6 +507,127 @@
 
     .success-modal .modal-footer {
         justify-content: center;
+    }
+
+    /* Setting Rows */
+    .setting-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .setting-row:last-child {
+        border-bottom: none;
+    }
+
+    .setting-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .setting-label {
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .setting-description {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 48px;
+        height: 26px;
+        flex-shrink: 0;
+        margin-left: 1rem;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 26px;
+        transition: all 0.3s ease;
+    }
+
+    .toggle-slider::before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 2px;
+        bottom: 2px;
+        background-color: var(--text-secondary);
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+        transform: translateX(22px);
+        background-color: var(--bg-primary);
+    }
+
+    /* Time Picker */
+    .time-picker-row {
+        flex-wrap: wrap;
+    }
+
+    .time-picker {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        flex-shrink: 0;
+        margin-left: 1rem;
+    }
+
+    .time-select {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.95rem;
+        text-align: center;
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+        min-width: 52px;
+    }
+
+    .time-select:focus {
+        outline: none;
+        border-color: var(--accent-color);
+    }
+
+    .time-separator {
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        font-weight: 600;
     }
 
     .loading {

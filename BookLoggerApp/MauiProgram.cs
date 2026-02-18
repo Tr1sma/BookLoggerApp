@@ -7,6 +7,7 @@ using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Plugin.LocalNotification;
 using ZXing.Net.Maui.Controls;
 
 public static class MauiProgram
@@ -17,7 +18,8 @@ public static class MauiProgram
 
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>()
-               .UseBarcodeReader();
+               .UseBarcodeReader()
+               .UseLocalNotification();
         builder.Services.AddMauiBlazorWebView();
 
         // Configure platform-specific handlers
@@ -128,7 +130,7 @@ public static class MauiProgram
         {
             client.Timeout = TimeSpan.FromSeconds(10);
         });
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Infrastructure.Services.NotificationService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Services.NotificationService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IShelfService, BookLoggerApp.Infrastructure.Services.ShelfService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IWishlistService, BookLoggerApp.Infrastructure.Services.WishlistService>();
 

@@ -13,16 +13,17 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IShareService _shareService;
     private readonly IFilePickerService _filePickerService;
     private readonly IMigrationService _migrationService;
+    private readonly INotificationService _notificationService;
 
 
     public SettingsViewModel(
-        IImportExportService importExportService, 
+        IImportExportService importExportService,
         IAppSettingsProvider settingsProvider,
         IFileSaverService fileSaverService,
         IShareService shareService,
         IFilePickerService filePickerService,
-        IMigrationService migrationService)
-
+        IMigrationService migrationService,
+        INotificationService notificationService)
     {
         _importExportService = importExportService;
         _settingsProvider = settingsProvider;
@@ -30,9 +31,9 @@ public partial class SettingsViewModel : ViewModelBase
         _shareService = shareService;
         _filePickerService = filePickerService;
         _migrationService = migrationService;
+        _notificationService = notificationService;
 
         MigrationLog = _migrationService.GetMigrationLog();
-
     }
 
     [ObservableProperty]
@@ -44,6 +45,67 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string _migrationLog;
 
+    [ObservableProperty]
+    private int _reminderHour = 20;
+
+    [ObservableProperty]
+    private int _reminderMinute = 0;
+
+    [RelayCommand]
+    public async Task ToggleNotificationsAsync(bool enabled)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            Settings.NotificationsEnabled = enabled;
+            if (!enabled)
+            {
+                Settings.ReadingRemindersEnabled = false;
+                await _notificationService.CancelReadingReminderAsync();
+            }
+            await SaveSettingsInternalAsync();
+        }, "Failed to update notification settings");
+    }
+
+    [RelayCommand]
+    public async Task ToggleReadingRemindersAsync(bool enabled)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            Settings.ReadingRemindersEnabled = enabled;
+            if (enabled)
+            {
+                var time = new TimeSpan(ReminderHour, ReminderMinute, 0);
+                Settings.ReminderTime = time;
+                await _notificationService.ScheduleReadingReminderAsync(time);
+            }
+            else
+            {
+                await _notificationService.CancelReadingReminderAsync();
+            }
+            await SaveSettingsInternalAsync();
+        }, "Failed to update reminder settings");
+    }
+
+    [RelayCommand]
+    public async Task UpdateReminderTimeAsync()
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            var time = new TimeSpan(ReminderHour, ReminderMinute, 0);
+            Settings.ReminderTime = time;
+            if (Settings.ReadingRemindersEnabled)
+            {
+                await _notificationService.ScheduleReadingReminderAsync(time);
+            }
+            await SaveSettingsInternalAsync();
+        }, "Failed to update reminder time");
+    }
+
+    private async Task SaveSettingsInternalAsync()
+    {
+        Settings.UpdatedAt = DateTime.UtcNow;
+        await _settingsProvider.UpdateSettingsAsync(Settings);
+    }
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -52,6 +114,12 @@ public partial class SettingsViewModel : ViewModelBase
         {
             Settings = await _settingsProvider.GetSettingsAsync();
             MigrationLog = _migrationService.GetMigrationLog();
+
+            if (Settings.ReminderTime.HasValue)
+            {
+                ReminderHour = Settings.ReminderTime.Value.Hours;
+                ReminderMinute = Settings.ReminderTime.Value.Minutes;
+            }
         }, "Failed to load settings");
     }
 
