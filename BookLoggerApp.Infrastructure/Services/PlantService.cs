@@ -423,7 +423,9 @@ public class PlantService : IPlantService
             // Calculate boost for this plant
             // Formula: baseBoost + (currentLevel * (baseBoost / maxLevel))
             decimal baseBoost = plant.Species.XpBoostPercentage;
-            decimal levelBonus = plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel);
+            decimal levelBonus = plant.Species.MaxLevel > 0
+                ? plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel)
+                : 0m;
             decimal plantBoost = baseBoost + levelBonus;
 
             totalBoost += plantBoost;

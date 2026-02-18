@@ -32,13 +32,16 @@ public class AnnotationService : IAnnotationService
         if (annotation.CreatedAt == default)
             annotation.CreatedAt = DateTime.UtcNow;
 
-        return await _unitOfWork.Annotations.AddAsync(annotation);
+        var result = await _unitOfWork.Annotations.AddAsync(annotation);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return result;
     }
 
     public async Task UpdateAsync(Annotation annotation, CancellationToken ct = default)
     {
         annotation.UpdatedAt = DateTime.UtcNow;
         await _unitOfWork.Annotations.UpdateAsync(annotation);
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -47,6 +50,7 @@ public class AnnotationService : IAnnotationService
         if (annotation != null)
         {
             await _unitOfWork.Annotations.DeleteAsync(annotation);
+            await _unitOfWork.SaveChangesAsync(ct);
         }
     }
 
