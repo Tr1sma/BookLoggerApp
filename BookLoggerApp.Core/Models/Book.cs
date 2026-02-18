@@ -19,7 +19,7 @@ public class Book
     [MaxLength(300)]
     public string Author { get; set; } = string.Empty;
 
-    [MaxLength(13)]
+    [MaxLength(20)]
     public string? ISBN { get; set; }
 
     [MaxLength(200)]

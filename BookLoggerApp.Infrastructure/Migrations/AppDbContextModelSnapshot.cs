@@ -180,11 +180,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ISBN")
-                        .HasMaxLength(13)
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Language")
-                        .HasMaxLength(10)
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Notes")
