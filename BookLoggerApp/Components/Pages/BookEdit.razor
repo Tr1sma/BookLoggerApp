@@ -48,7 +48,7 @@
                 <div class="form-group">
                     <label for="isbn">ISBN</label>
                     <div class="isbn-input-group">
-                        <input id="isbn" type="text" @bind="ViewModel.Book.ISBN" maxlength="13" placeholder="Enter ISBN-10 or ISBN-13" />
+                        <input id="isbn" type="text" @bind="ViewModel.Book.ISBN" maxlength="20" placeholder="Enter ISBN-10 or ISBN-13" />
                         <button type="button"
                                 class="btn btn-success"
                                 @onclick="ScanIsbnAsync">
