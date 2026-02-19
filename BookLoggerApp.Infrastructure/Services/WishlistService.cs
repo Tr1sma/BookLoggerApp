@@ -41,7 +41,6 @@ public class WishlistService : IWishlistService
         book.DateAdded = DateTime.UtcNow;
 
         context.Books.Add(book);
-        await context.SaveChangesAsync(ct);
 
         if (info != null)
         {
@@ -49,7 +48,6 @@ public class WishlistService : IWishlistService
             if (info.DateAddedToWishlist == default)
                 info.DateAddedToWishlist = DateTime.UtcNow;
             context.WishlistInfos.Add(info);
-            await context.SaveChangesAsync(ct);
         }
         else
         {
@@ -59,13 +57,16 @@ public class WishlistService : IWishlistService
                 Priority = WishlistPriority.Medium,
                 DateAddedToWishlist = DateTime.UtcNow
             });
-            await context.SaveChangesAsync(ct);
         }
 
+        // Single SaveChangesAsync ensures Book + WishlistInfo are saved atomically
+        await context.SaveChangesAsync(ct);
+
         // Reload with WishlistInfo included
-        return (await context.Books
+        var result = await context.Books
             .Include(b => b.WishlistInfo)
-            .FirstOrDefaultAsync(b => b.Id == book.Id, ct))!;
+            .FirstOrDefaultAsync(b => b.Id == book.Id, ct);
+        return result ?? throw new Core.Exceptions.EntityNotFoundException(typeof(Book), book.Id);
     }
 
     public async Task<Book?> AddToWishlistByIsbnAsync(string isbn, CancellationToken ct = default)

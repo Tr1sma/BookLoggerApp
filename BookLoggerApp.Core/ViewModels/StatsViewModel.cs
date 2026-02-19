@@ -167,21 +167,11 @@ public partial class StatsViewModel : ViewModelBase
     /// </summary>
     public async Task FilterTopBooksByCategoryAsync(RatingCategory? category = null)
     {
-        System.Diagnostics.Debug.WriteLine($"FilterTopBooksByCategoryAsync called with category: {category}");
-
-        try
+        await ExecuteSafelyAsync(async () =>
         {
             var topBooks = await _statsService.GetTopRatedBooksAsync(10, category);
-            System.Diagnostics.Debug.WriteLine($"Got {topBooks.Count} books from service");
-
             TopRatedBooks = new ObservableCollection<BookRatingSummary>(topBooks);
-            System.Diagnostics.Debug.WriteLine($"TopRatedBooks updated, count: {TopRatedBooks.Count}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"ERROR in FilterTopBooksByCategoryAsync: {ex}");
-            throw;
-        }
+        }, "Failed to filter top books");
     }
 
     /// <summary>
@@ -209,8 +199,13 @@ public partial class StatsViewModel : ViewModelBase
 
         foreach (var plant in plants)
         {
+            if (plant.Species == null)
+                continue;
+
             var baseBoost = plant.Species.XpBoostPercentage;
-            var levelBonus = plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel);
+            var levelBonus = plant.Species.MaxLevel > 0
+                ? plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel)
+                : 0m;
             var totalBoost = baseBoost + levelBonus;
 
             plantBoostList.Add(new PlantBoostInfo
@@ -242,10 +237,10 @@ public partial class StatsViewModel : ViewModelBase
         CurrentLevelXp = TotalXp - xpForPreviousLevels;
         NextLevelXp = BookLoggerApp.Core.Helpers.XpCalculator.GetXpForLevel(CurrentLevel);
 
-        // Calculate percentage (0-100)
+        // Calculate percentage (0-100), clamped to valid range
         if (NextLevelXp > 0)
         {
-            ProgressPercentage = (decimal)CurrentLevelXp / NextLevelXp * 100m;
+            ProgressPercentage = Math.Clamp((decimal)CurrentLevelXp / NextLevelXp * 100m, 0m, 100m);
         }
         else
         {

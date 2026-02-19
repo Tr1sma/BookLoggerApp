@@ -138,7 +138,7 @@ public class ImportExportService : IImportExportService
                 b.DateAdded,
                 b.DateStarted,
                 b.DateCompleted,
-                Genres = string.Join(";", b.BookGenres.Select(bg => bg.Genre.Name))
+                Genres = string.Join(";", b.BookGenres.Where(bg => bg.Genre != null).Select(bg => bg.Genre.Name))
             });
 
             await csv.WriteRecordsAsync(flatBooks, ct);
@@ -239,6 +239,10 @@ public class ImportExportService : IImportExportService
 
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
+            // Pre-load existing genres for efficient find-or-create
+            var existingGenres = await context.Genres.ToListAsync(ct);
+            var genreLookup = existingGenres.ToDictionary(g => g.Name, StringComparer.OrdinalIgnoreCase);
+
             int importedCount = 0;
             foreach (var record in records)
             {
@@ -270,6 +274,28 @@ public class ImportExportService : IImportExportService
                     };
 
                     context.Books.Add(book);
+
+                    // Restore genre associations from CSV
+                    if (!string.IsNullOrWhiteSpace(record.Genres))
+                    {
+                        var genreNames = record.Genres.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        foreach (var genreName in genreNames)
+                        {
+                            if (!genreLookup.TryGetValue(genreName, out var genre))
+                            {
+                                genre = new Genre { Name = genreName };
+                                context.Genres.Add(genre);
+                                genreLookup[genreName] = genre;
+                            }
+
+                            context.BookGenres.Add(new BookGenre
+                            {
+                                BookId = book.Id,
+                                GenreId = genre.Id
+                            });
+                        }
+                    }
+
                     importedCount++;
                 }
                 else
@@ -583,16 +609,22 @@ public class ImportExportService : IImportExportService
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
             // Delete in correct order to respect foreign key constraints
-            // 1. Delete child entities first
+            // 1. Delete junction/child entities first
             context.Annotations.RemoveRange(context.Annotations);
             context.Quotes.RemoveRange(context.Quotes);
             context.ReadingSessions.RemoveRange(context.ReadingSessions);
             context.BookGenres.RemoveRange(context.BookGenres);
+            context.BookTropes.RemoveRange(context.BookTropes);
+            context.BookShelves.RemoveRange(context.BookShelves);
+            context.PlantShelves.RemoveRange(context.PlantShelves);
             context.WishlistInfos.RemoveRange(context.WishlistInfos);
+            context.GoalExcludedBooks.RemoveRange(context.GoalExcludedBooks);
+            context.GoalGenres.RemoveRange(context.GoalGenres);
 
             // 2. Delete main entities
             context.Books.RemoveRange(context.Books);
             context.ReadingGoals.RemoveRange(context.ReadingGoals);
+            context.Shelves.RemoveRange(context.Shelves);
             context.UserPlants.RemoveRange(context.UserPlants);
             context.ShopItems.RemoveRange(context.ShopItems);
 

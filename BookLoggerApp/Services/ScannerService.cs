@@ -3,21 +3,27 @@ namespace BookLoggerApp.Services;
 public class ScannerService : IScannerService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IPermissionService _permissionService;
 
-    public ScannerService(IServiceProvider serviceProvider)
+    public ScannerService(IServiceProvider serviceProvider, IPermissionService permissionService)
     {
         _serviceProvider = serviceProvider;
+        _permissionService = permissionService;
     }
 
     public async Task<string?> ScanBarcodeAsync()
     {
+        // Check camera permission each time (user may have granted "only this time")
+        bool hasPermission = await _permissionService.RequestCameraPermissionAsync();
+        if (!hasPermission)
+        {
+            return null;
+        }
+
         var tcs = new TaskCompletionSource<string?>();
 
-        try 
+        try
         {
-            // Create the scanner page
-            // Note: In a more complex app, we might want to resolve this from DI if it had dependencies
-            // For now, simpler is cleaner for "ScannerPage" which is just a view
             var scannerPage = new ScannerPage();
             scannerPage.AssignTaskCompletionSource(tcs);
             

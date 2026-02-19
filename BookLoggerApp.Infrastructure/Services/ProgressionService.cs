@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.Helpers;
@@ -104,27 +105,31 @@ public class ProgressionService : IProgressionService
 
     public async Task<decimal> GetTotalPlantBoostAsync()
     {
-        // Get all user's plants
+        // Get all user's plants (Species is eagerly loaded via Include)
         var userPlants = await _plantService.GetAllAsync();
 
-        if (!userPlants.Any())
+        // Filter out dead plants — they should not provide XP boosts
+        var alivePlants = userPlants.Where(p => p.Status != PlantStatus.Dead).ToList();
+
+        if (!alivePlants.Any())
             return 0m;
 
         decimal totalBoost = 0m;
 
-        foreach (var plant in userPlants)
+        foreach (var plant in alivePlants)
         {
-            // Get the plant species
-            var species = await _plantService.GetSpeciesByIdAsync(plant.SpeciesId);
-            if (species == null)
+            // Species is already loaded via Include in GetAllAsync — no extra DB query needed
+            if (plant.Species == null)
                 continue;
 
             // Calculate boost for this plant
             // Formula: baseBoost + (levelBonus per level)
             // Example: StarterSprout = 5% base + 0.5% per level
             // At level 5: 5% + (5 * 0.5%) = 7.5%
-            decimal baseBoost = species.XpBoostPercentage;
-            decimal levelBonus = plant.CurrentLevel * (species.XpBoostPercentage / species.MaxLevel);
+            decimal baseBoost = plant.Species.XpBoostPercentage;
+            decimal levelBonus = plant.Species.MaxLevel > 0
+                ? plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel)
+                : 0m;
             decimal plantBoost = baseBoost + levelBonus;
 
             totalBoost += plantBoost;
@@ -143,12 +148,12 @@ public class ProgressionService : IProgressionService
             return null;
 
         // Calculate coins awarded (sum of all levels gained)
-        // Formula: Level × 20 coins per level
-        // Example: Level 3 → Level 5 = (4 × 20) + (5 × 20) = 80 + 100 = 180 coins
+        // Formula: Level × 50 coins per level
+        // Example: Level 3 → Level 5 = (4 × 50) + (5 × 50) = 200 + 250 = 450 coins
         int coinsAwarded = 0;
         for (int level = oldLevel + 1; level <= newLevel; level++)
         {
-            coinsAwarded += level * 20;
+            coinsAwarded += level * 50;
         }
 
         int newCoins;

@@ -33,14 +33,28 @@
 
     private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
-        // Refresh progress data when navigation occurs
-        await RefreshAsync();
+        try
+        {
+            await RefreshAsync();
+        }
+        catch (ObjectDisposedException) { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"UserProgressWidget refresh failed: {ex.Message}");
+        }
     }
 
     private async void OnProgressionChanged(object? sender, EventArgs e)
     {
-        // Refresh progress data when XP/level/coins change
-        await RefreshAsync();
+        try
+        {
+            await RefreshAsync();
+        }
+        catch (ObjectDisposedException) { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"UserProgressWidget refresh failed: {ex.Message}");
+        }
     }
 
     private void NavigateToLevelOverview()

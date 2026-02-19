@@ -114,6 +114,8 @@ public class GoalService : IGoalService
             genreLookup = genres.ToDictionary(g => g.Id);
         }
 
+        bool anyGoalNewlyCompleted = false;
+
         foreach (var goal in goals)
         {
             var excludedBookIds = allExclusions
@@ -163,11 +165,18 @@ public class GoalService : IGoalService
             if (goal.Current >= goal.Target && !goal.IsCompleted)
             {
                 goal.IsCompleted = true;
+                goal.CompletedAt = DateTime.UtcNow;
                 await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+                anyGoalNewlyCompleted = true;
             }
         }
 
-        await _unitOfWork.SaveChangesAsync(ct);
+        // Only persist changes when a goal was actually newly completed,
+        // not on every read. Current is computed dynamically each time.
+        if (anyGoalNewlyCompleted)
+        {
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
     }
 
     private int CalculateBooksProgress(IEnumerable<Book> books, ReadingGoal goal, HashSet<Guid> excludedBookIds, HashSet<Guid>? genreMatchingBookIds)
@@ -229,6 +238,7 @@ public class GoalService : IGoalService
         if (goal.Current >= goal.Target)
         {
             goal.IsCompleted = true;
+            goal.CompletedAt = DateTime.UtcNow;
         }
 
         await _unitOfWork.ReadingGoals.UpdateAsync(goal);
@@ -244,6 +254,7 @@ public class GoalService : IGoalService
             if (goal.Current >= goal.Target)
             {
                 goal.IsCompleted = true;
+                goal.CompletedAt = DateTime.UtcNow;
                 await _unitOfWork.ReadingGoals.UpdateAsync(goal);
             }
         }
