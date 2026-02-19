@@ -27,12 +27,35 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
         _logger = logger;
     }
 
+    public async Task<bool> RequestNotificationPermissionAsync()
+    {
+        try
+        {
+            var result = await LocalNotificationCenter.Current.RequestNotificationPermission();
+            _logger?.LogInformation("Notification permission request result: {Result}", result);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to request notification permission");
+            return false;
+        }
+    }
+
     public async Task ScheduleReadingReminderAsync(TimeSpan time, CancellationToken ct = default)
     {
         bool enabled = await AreNotificationsEnabledAsync(ct);
         if (!enabled)
         {
             _logger?.LogInformation("Notifications are disabled, skipping reminder schedule");
+            return;
+        }
+
+        // Verify OS-level permission is still granted (user may have revoked it)
+        bool hasPermission = await RequestNotificationPermissionAsync();
+        if (!hasPermission)
+        {
+            _logger?.LogWarning("OS notification permission not granted, skipping reminder schedule");
             return;
         }
 

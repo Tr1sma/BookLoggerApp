@@ -33,12 +33,15 @@ public class QuoteService : IQuoteService
         if (quote.CreatedAt == default)
             quote.CreatedAt = DateTime.UtcNow;
 
-        return await _unitOfWork.Quotes.AddAsync(quote);
+        var result = await _unitOfWork.Quotes.AddAsync(quote);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return result;
     }
 
     public async Task UpdateAsync(Quote quote, CancellationToken ct = default)
     {
         await _unitOfWork.Quotes.UpdateAsync(quote);
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -47,6 +50,7 @@ public class QuoteService : IQuoteService
         if (quote != null)
         {
             await _unitOfWork.Quotes.DeleteAsync(quote);
+            await _unitOfWork.SaveChangesAsync(ct);
         }
     }
 
@@ -80,5 +84,6 @@ public class QuoteService : IQuoteService
 
         quote.IsFavorite = !quote.IsFavorite;
         await _unitOfWork.Quotes.UpdateAsync(quote);
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 }

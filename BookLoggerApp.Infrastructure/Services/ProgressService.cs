@@ -109,7 +109,7 @@ public class ProgressService : IProgressService
 
         session.EndedAt = DateTime.UtcNow;
         session.PagesRead = pagesRead;
-        session.Minutes = (int)(session.EndedAt.Value - session.StartedAt).TotalMinutes;
+        session.Minutes = Math.Max(0, (int)(session.EndedAt.Value - session.StartedAt).TotalMinutes);
 
         // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
