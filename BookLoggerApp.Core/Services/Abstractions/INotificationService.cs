@@ -46,4 +46,11 @@ public interface INotificationService
     /// <param name="ct">Cancellation token.</param>
     /// <returns>True if notifications are enabled, false otherwise.</returns>
     Task<bool> AreNotificationsEnabledAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Requests the OS-level notification permission from the user.
+    /// On Android 13+ this triggers the system permission dialog.
+    /// </summary>
+    /// <returns>True if permission was granted, false otherwise.</returns>
+    Task<bool> RequestNotificationPermissionAsync();
 }
