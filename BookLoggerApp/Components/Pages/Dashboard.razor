@@ -156,13 +156,20 @@
 
     private async void OnGoalsChanged(object? sender, EventArgs e)
     {
-        // Reload dashboard data when goals change
-        await InvokeAsync(async () =>
+        try
         {
-            await ViewModel.LoadCommand.ExecuteAsync(null);
-            await LoadCoverImageAsync();
-            StateHasChanged();
-        });
+            // Reload dashboard data when goals change
+            await InvokeAsync(async () =>
+            {
+                await ViewModel.LoadCommand.ExecuteAsync(null);
+                await LoadCoverImageAsync();
+                StateHasChanged();
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to refresh dashboard on goal change: {ex.Message}");
+        }
     }
 
     public void Dispose()

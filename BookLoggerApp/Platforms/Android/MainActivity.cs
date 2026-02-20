@@ -10,12 +10,48 @@ namespace BookLoggerApp
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-            
+
+            // Register notification channels with proper importance before any notifications are scheduled.
+            // Without this, auto-created channels default to IMPORTANCE_DEFAULT which won't wake the device.
+            CreateNotificationChannels();
+
             // Use AndroidX OnBackPressedDispatcher which works for all Android versions
             // and integrates with MAUI/AppCompat correctly.
             OnBackPressedDispatcher.AddCallback(this, new BackPressCallback(this));
-            
+
             System.Diagnostics.Debug.WriteLine("=== MainActivity: Registered AndroidX BackPressCallback ===");
+        }
+
+        private void CreateNotificationChannels()
+        {
+            if (Build.VERSION.SdkInt < BuildVersionCodes.O)
+                return;
+
+            var notificationManager = (Android.App.NotificationManager?)GetSystemService(NotificationService);
+            if (notificationManager == null)
+                return;
+
+            // Reading reminders: HIGH importance so they wake the device and show heads-up
+            var reminderChannel = new Android.App.NotificationChannel(
+                "bookheart_reminders",
+                "Reading Reminders",
+                Android.App.NotificationImportance.High)
+            {
+                Description = "Daily reading reminder notifications"
+            };
+            notificationManager.CreateNotificationChannel(reminderChannel);
+
+            // General notifications (goal completed, plant water): DEFAULT importance
+            var generalChannel = new Android.App.NotificationChannel(
+                "bookheart_general",
+                "General",
+                Android.App.NotificationImportance.Default)
+            {
+                Description = "Goal completions, plant notifications"
+            };
+            notificationManager.CreateNotificationChannel(generalChannel);
+
+            System.Diagnostics.Debug.WriteLine("=== MainActivity: Notification channels created ===");
         }
 
         // We do NOT override OnBackPressed anymore, allowing the Dispatcher to handle flow.

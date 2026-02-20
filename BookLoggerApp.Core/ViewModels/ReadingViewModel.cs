@@ -71,9 +71,8 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     {
         await ExecuteSafelyWithDbAsync(async () =>
         {
-            // Load existing session or create new one
-            var sessions = await _progressService.GetSessionsByBookAsync(sessionId);
-            Session = sessions.FirstOrDefault(s => s.Id == sessionId);
+            // Load existing session by its ID
+            Session = await _progressService.GetSessionByIdAsync(sessionId);
 
             if (Session == null)
             {

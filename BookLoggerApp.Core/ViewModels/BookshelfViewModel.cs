@@ -158,25 +158,21 @@ public partial class BookshelfViewModel : ViewModelBase
             }
 
             // 3. Migration: Check for orphan legacy plants
+            // Migrate them to the first shelf without recursive reload.
+            // The migrated plants are added to the in-memory data directly.
             var firstShelf = shelfViewModels.FirstOrDefault();
             if (firstShelf != null)
             {
-                bool migrationHappened = false;
                 foreach (var legacyPlant in legacyPlants)
                 {
                     if (!plantsOnShelvesIds.Contains(legacyPlant.Id))
                     {
-                        // Migrating orphan plant to first shelf
                         await _shelfService.AddPlantToShelfAsync(firstShelf.Shelf.Id, legacyPlant.Id);
-                        migrationHappened = true;
+                        // Reflect migration in the in-memory model immediately
+                        int nextPos = firstShelf.Items.Count;
+                        firstShelf.Items.Add(new ShelfItemViewModel(legacyPlant, nextPos));
+                        plantsOnShelvesIds.Add(legacyPlant.Id);
                     }
-                }
-
-                if (migrationHappened)
-                {
-                    // Reload to reflect changes
-                    await LoadAsync();
-                    return;
                 }
             }
 
@@ -297,39 +293,31 @@ public partial class BookshelfViewModel : ViewModelBase
 
     private async Task CalculateGoalStatsAsync()
     {
-        // ... (Keep existing logic using _books which contains all books)
         // Count TBR (To Be Read) books - those with "Planned" status
         TbrCount = Books.Count(b => b.Status == ReadingStatus.Planned);
 
-        // Get active yearly book goal
+        // Use UtcNow consistently — goals and DateCompleted are stored in UTC
+        int currentYear = DateTime.UtcNow.Year;
+
+        // GetActiveGoalsAsync already calculates correct progress (goal.Current)
+        // accounting for excluded books, genre filters, and exact date ranges
         var activeGoals = await _goalService.GetActiveGoalsAsync();
         var yearlyBookGoal = activeGoals
             .Where(g => g.Type == GoalType.Books)
-            .Where(g => g.StartDate.Year == DateTime.Now.Year || g.EndDate.Year == DateTime.Now.Year)
+            .Where(g => g.StartDate.Year == currentYear || g.EndDate.Year == currentYear)
             .OrderByDescending(g => g.Target)
             .FirstOrDefault();
 
         if (yearlyBookGoal != null)
         {
             GoalTarget = yearlyBookGoal.Target;
-
-            // Count books read this year (completed status and completed this year)
-            BooksReadThisYear = Books.Count(b =>
-                b.Status == ReadingStatus.Completed &&
-                b.DateCompleted.HasValue &&
-                b.DateCompleted.Value.Year == DateTime.Now.Year);
-
-            // Calculate books remaining
+            BooksReadThisYear = yearlyBookGoal.Current;
             BooksRemainingToGoal = GoalTarget - BooksReadThisYear;
         }
         else
         {
-            // No active goal found
             GoalTarget = 0;
-            BooksReadThisYear = Books.Count(b =>
-                b.Status == ReadingStatus.Completed &&
-                b.DateCompleted.HasValue &&
-                b.DateCompleted.Value.Year == DateTime.Now.Year);
+            BooksReadThisYear = 0;
             BooksRemainingToGoal = 0;
         }
     }

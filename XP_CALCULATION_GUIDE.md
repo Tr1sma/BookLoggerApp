@@ -69,24 +69,24 @@ Final XP = 545 × (1 + 0.345) = 545 × 1.345 = 733 XP
 
 ## 🎖️ Level Progression
 
-### Exponential Growth Formula
+### Quadratic Growth Formula
 ```
-XP Required for Level N = 100 × (1.5 ^ (N - 1))
+XP Required for Level N = 100 × N²
 ```
 
 ### Level Requirements Table
 | Level | XP Required (This Level) | Cumulative Total XP |
 |-------|-------------------------|---------------------|
 | 1     | 100                     | 0                   |
-| 2     | 150                     | 100                 |
-| 3     | 225                     | 250                 |
-| 4     | 337                     | 475                 |
-| 5     | 506                     | 812                 |
-| 6     | 759                     | 1,318               |
-| 7     | 1,138                   | 2,077               |
-| 8     | 1,708                   | 3,215               |
-| 9     | 2,562                   | 4,923               |
-| 10    | 3,843                   | 7,485               |
+| 2     | 400                     | 100                 |
+| 3     | 900                     | 500                 |
+| 4     | 1,600                   | 1,400               |
+| 5     | 2,500                   | 3,000               |
+| 6     | 3,600                   | 5,500               |
+| 7     | 4,900                   | 9,100               |
+| 8     | 6,400                   | 14,000              |
+| 9     | 8,100                   | 20,400              |
+| 10    | 10,000                  | 28,500              |
 
 ### Calculating Level from Total XP
 The system iterates through levels, subtracting required XP until insufficient XP remains:
@@ -102,7 +102,7 @@ while (totalXp >= xpRequired)
     xpRequired = GetXpForLevel(level);
 }
 
-return level - 1; // Completed level
+return level; // Current level (in progress)
 ```
 
 ---
@@ -136,7 +136,7 @@ Coins = (4 × 50) + (5 × 50) = 200 + 250 = 450 coins
 
 ### Key Files
 
-1. **`XpCalculator.cs`** (`BookLoggerApp.Infrastructure/Services/Helpers/`)
+1. **`XpCalculator.cs`** (`BookLoggerApp.Core/Helpers/`)
    - Contains all base formulas and constants
    - Pure calculation logic, no state
 
@@ -279,30 +279,33 @@ Bonus from Plants: 971 - 845 = 126 XP
 
 ### Step 3: Add to User
 ```
-Old Total XP: 1,200
-New Total XP: 1,200 + 971 = 2,171
+Old Total XP: 450
+New Total XP: 450 + 971 = 1,421
 ```
 
 ### Step 4: Check Level-Up
 ```
-Old Level: CalculateLevelFromXp(1,200) = Level 5
-New Level: CalculateLevelFromXp(2,171) = Level 7
+Old Level: CalculateLevelFromXp(450) = Level 2
+  → 450 - 100 (Lv1) = 350, 350 < 400 (Lv2) → Level 2
 
-Levels Gained: 7 - 5 = 2 levels
+New Level: CalculateLevelFromXp(1,421) = Level 4
+  → 1,421 - 100 (Lv1) = 1,321 - 400 (Lv2) = 921 - 900 (Lv3) = 21, 21 < 1,600 (Lv4) → Level 4
+
+Levels Gained: 4 - 2 = 2 levels
 ```
 
 ### Step 5: Award Coins
 ```
-Level 6 Coins: 6 × 50 = 300
-Level 7 Coins: 7 × 50 = 350
+Level 3 Coins: 3 × 50 = 150
+Level 4 Coins: 4 × 50 = 200
 ────────────────────────────────
-Total Coins:            = 650
+Total Coins:            = 350
 ```
 
 ### Final Result
 - **XP Earned**: 971 (845 base + 126 plant bonus)
-- **Level Up**: 5 → 7
-- **Coins Earned**: 650
+- **Level Up**: 2 → 4
+- **Coins Earned**: 350
 
 ---
 
@@ -352,18 +355,18 @@ Total Coins:            = 650
    - Expected: 500 × 1.10 = 550 XP
 
 6. **Level-Up**
-   - User at 95 XP (Level 1), earns 50 XP
+   - User at 95 XP (Level 1), earns 50 XP → total 145 XP
    - Expected: Level 2, +100 coins (2×50)
 
 7. **Multi-Level**
-   - User at 750 XP (Level 4), earns 800 XP
+   - User at 2,900 XP (Level 4), earns 3,000 XP → total 5,900 XP
    - Expected: Level 6, +550 coins (5×50 + 6×50)
 
 ---
 
 ## 📚 References
 
-- **XpCalculator**: `BookLoggerApp.Infrastructure/Services/Helpers/XpCalculator.cs`
+- **XpCalculator**: `BookLoggerApp.Core/Helpers/XpCalculator.cs`
 - **ProgressionService**: `BookLoggerApp.Infrastructure/Services/ProgressionService.cs`
 - **ProgressService**: `BookLoggerApp.Infrastructure/Services/ProgressService.cs`
 - **ReadingViewModel**: `BookLoggerApp.Core/ViewModels/ReadingViewModel.cs`
@@ -371,5 +374,5 @@ Total Coins:            = 650
 
 ---
 
-*Last Updated: Phase 9 - November 2025*
+*Last Updated: February 2026 - Fixed quadratic XP formula documentation*
 *Version: V2 Progression System*

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using BookLoggerApp.Core.Enums;
@@ -137,6 +138,18 @@ public partial class WishlistViewModel : ViewModelBase
             {
                 LookupMessage = "No book found for this ISBN.";
             }
+        }
+        catch (HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
+        {
+            LookupMessage = "No internet connection. Please check your network and try again.";
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        {
+            LookupMessage = "Too many requests. Please wait a moment and try again.";
+        }
+        catch (TaskCanceledException)
+        {
+            LookupMessage = "Request timed out. Please try again.";
         }
         catch (Exception ex)
         {

@@ -62,10 +62,10 @@ public partial class UserProgressViewModel : ViewModelBase
         CurrentLevelXp = TotalXp - xpForPreviousLevels;
         NextLevelXp = XpCalculator.GetXpForLevel(CurrentLevel);
 
-        // Calculate percentage (0-100)
+        // Calculate percentage (0-100), clamped to valid range
         if (NextLevelXp > 0)
         {
-            ProgressPercentage = (decimal)CurrentLevelXp / NextLevelXp * 100m;
+            ProgressPercentage = Math.Clamp((decimal)CurrentLevelXp / NextLevelXp * 100m, 0m, 100m);
         }
         else
         {
