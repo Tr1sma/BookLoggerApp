@@ -520,14 +520,18 @@
     private async Task SaveNotes()
     {
         if (ViewModel.Book == null) return;
-        
+
         _isSavingNotes = true;
         StateHasChanged();
-        
-        // Debounce/delay could be added here if needed, but for now direct save on blur/after
-        await ViewModel.UpdateNotesAsync(ViewModel.Book.Notes ?? string.Empty);
-        
-        _isSavingNotes = false;
-        StateHasChanged();
+
+        try
+        {
+            await ViewModel.UpdateNotesAsync(ViewModel.Book.Notes ?? string.Empty);
+        }
+        finally
+        {
+            _isSavingNotes = false;
+            StateHasChanged();
+        }
     }
 }

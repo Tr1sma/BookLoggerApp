@@ -84,7 +84,8 @@ public class ImportExportService : IImportExportService
             var options = new JsonSerializerOptions
             {
                 WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
             };
 
             var json = JsonSerializer.Serialize(exportData, options);

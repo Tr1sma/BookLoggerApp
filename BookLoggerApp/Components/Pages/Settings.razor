@@ -81,7 +81,7 @@
                             <select class="time-select"
                                     value="@ViewModel.ReminderMinute"
                                     @onchange="@(async (ChangeEventArgs e) => { ViewModel.ReminderMinute = int.Parse(e.Value?.ToString() ?? "0"); await ViewModel.UpdateReminderTimeCommand.ExecuteAsync(null); })">
-                                @for (int m = 0; m < 60; m += 15)
+                                @for (int m = 0; m < 60; m++)
                                 {
                                     var minute = m;
                                     <option value="@minute">@minute.ToString("D2")</option>

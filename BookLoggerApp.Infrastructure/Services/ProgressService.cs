@@ -170,6 +170,11 @@ public class ProgressService : IProgressService
         }
     }
 
+    public async Task<ReadingSession?> GetSessionByIdAsync(Guid sessionId, CancellationToken ct = default)
+    {
+        return await _unitOfWork.ReadingSessions.GetByIdAsync(sessionId, ct);
+    }
+
     public async Task<IReadOnlyList<ReadingSession>> GetSessionsByBookAsync(Guid bookId, CancellationToken ct = default)
     {
         var sessions = await _unitOfWork.ReadingSessions.GetSessionsByBookAsync(bookId);
@@ -218,9 +223,14 @@ public class ProgressService : IProgressService
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
     {
         var today = DateTime.UtcNow.Date;
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
 
-        var sessionsByDate = allSessions
+        // Only load sessions from the last year instead of ALL sessions.
+        // A streak longer than 365 days is unrealistic, and this avoids
+        // loading thousands of records for long-time users.
+        var recentSessions = await _unitOfWork.ReadingSessions
+            .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow);
+
+        var sessionsByDate = recentSessions
             .GroupBy(s => s.StartedAt.Date)
             .OrderByDescending(g => g.Key)
             .ToList();

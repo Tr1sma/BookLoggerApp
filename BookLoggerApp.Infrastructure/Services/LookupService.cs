@@ -86,25 +86,35 @@ public class LookupService : ILookupService
 
     private async Task<T?> GetWithRetryAsync<T>(string url, CancellationToken ct)
     {
-        var response = await _httpClient.GetAsync(url, ct);
-
-        for (int i = 0; i < MaxRetries && response.StatusCode == HttpStatusCode.TooManyRequests; i++)
+        HttpResponseMessage? response = null;
+        try
         {
-            _logger?.LogWarning("Retry {RetryCount}/{MaxRetries} after 429 Too Many Requests", i + 1, MaxRetries);
-            await Task.Delay(RetryDelaysMs[i], ct);
             response = await _httpClient.GetAsync(url, ct);
+
+            for (int i = 0; i < MaxRetries && response.StatusCode == HttpStatusCode.TooManyRequests; i++)
+            {
+                _logger?.LogWarning("Retry {RetryCount}/{MaxRetries} after 429 Too Many Requests", i + 1, MaxRetries);
+                response.Dispose();
+                response = null;
+                await Task.Delay(RetryDelaysMs[i], ct);
+                response = await _httpClient.GetAsync(url, ct);
+            }
+
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                throw new HttpRequestException("Google Books API rate limit exceeded. Please try again later.", null, HttpStatusCode.TooManyRequests);
+
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync(ct);
+            return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
         }
-
-        if (response.StatusCode == HttpStatusCode.TooManyRequests)
-            throw new HttpRequestException("Google Books API rate limit exceeded. Please try again later.", null, HttpStatusCode.TooManyRequests);
-
-        response.EnsureSuccessStatusCode();
-
-        var json = await response.Content.ReadAsStringAsync(ct);
-        return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
+        finally
         {
-            PropertyNameCaseInsensitive = true
-        });
+            response?.Dispose();
+        }
     }
 
     private BookMetadata MapToBookMetadata(GoogleBooksVolumeInfo volumeInfo, string? isbn)

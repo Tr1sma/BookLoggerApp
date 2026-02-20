@@ -505,12 +505,19 @@
 
     private async void OnGoalsChanged(object? sender, EventArgs e)
     {
-        // Reload goals data when goals change
-        await InvokeAsync(async () =>
+        try
         {
-            await ViewModel.LoadCommand.ExecuteAsync(null);
-            StateHasChanged();
-        });
+            // Reload goals data when goals change
+            await InvokeAsync(async () =>
+            {
+                await ViewModel.LoadCommand.ExecuteAsync(null);
+                StateHasChanged();
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to refresh goals on change: {ex.Message}");
+        }
     }
 
     private void ShowCreateForm()

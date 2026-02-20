@@ -483,6 +483,7 @@
     {
         if (!_jsInitialized && ViewModel.Shelves.Any() && activeTab == "shelves")
         {
+            _dotNetHelper?.Dispose();
             _dotNetHelper = DotNetObjectReference.Create(this);
             await JSRuntime.InvokeVoidAsync("bookshelfDragDrop.init", _dotNetHelper);
             _jsInitialized = true;
@@ -491,12 +492,19 @@
 
     private async void OnGoalsChanged(object? sender, EventArgs e)
     {
-        await InvokeAsync(async () =>
+        try
         {
-            // Only refresh goal header stats — shelves are unchanged
-            await ViewModel.RefreshGoalStatsAsync();
-            StateHasChanged();
-        });
+            await InvokeAsync(async () =>
+            {
+                // Only refresh goal header stats — shelves are unchanged
+                await ViewModel.RefreshGoalStatsAsync();
+                StateHasChanged();
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to refresh bookshelf goal stats: {ex.Message}");
+        }
     }
 
     public async ValueTask DisposeAsync()

@@ -210,9 +210,11 @@ public class BookService : IBookService
             await _unitOfWork.Books.UpdateAsync(book);
             await _unitOfWork.SaveChangesAsync(ct);
 
-            // Notify goals changed if book was completed
+            // Award XP and notify goals if book was auto-completed
             if (wasCompleted)
             {
+                var activePlant = await _plantService.GetActivePlantAsync(ct);
+                await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
                 _goalService.NotifyGoalsChanged();
             }
         }

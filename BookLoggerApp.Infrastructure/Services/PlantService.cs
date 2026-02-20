@@ -158,6 +158,10 @@ public class PlantService : IPlantService
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
 
+        // Dead plants don't earn experience (consistent with RecordReadingDayAsync)
+        if (plant.Status == PlantStatus.Dead)
+            return;
+
         plant.Experience += xp;
 
         // Use PlantGrowthCalculator for level calculation

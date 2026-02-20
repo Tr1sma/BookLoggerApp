@@ -171,10 +171,12 @@ public class ProgressionService : IProgressionService
         }
         else
         {
-            // Fetch, update, and save settings ourselves (backwards compatibility)
-            // In this case we can use AddCoinsAsync since we control the full save
-            await _settingsProvider.AddCoinsAsync(coinsAwarded);
+            // Fetch settings, apply both coins and level atomically, then save once.
+            // Previously this called AddCoinsAsync (separate save) then UpdateSettingsAsync
+            // (another save), which could lose coin updates in a race condition.
+            _settingsProvider.InvalidateCache();
             var settings = await _settingsProvider.GetSettingsAsync();
+            settings.Coins += coinsAwarded;
             settings.UserLevel = newLevel;
             settings.UpdatedAt = DateTime.UtcNow;
             await _settingsProvider.UpdateSettingsAsync(settings);
