@@ -133,6 +133,7 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Services.NotificationService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IShelfService, BookLoggerApp.Infrastructure.Services.ShelfService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IWishlistService, BookLoggerApp.Infrastructure.Services.WishlistService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IReadingStatsCardService, BookLoggerApp.Infrastructure.Services.ReadingStatsCardService>();
 
         // Register timer state service as Singleton (must survive across component lifetimes)
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.ITimerStateService, BookLoggerApp.Services.TimerStateService>();

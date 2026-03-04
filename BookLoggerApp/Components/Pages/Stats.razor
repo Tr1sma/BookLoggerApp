@@ -5,6 +5,9 @@
 @inject StatsViewModel ViewModel
 @inject NavigationManager NavigationManager
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@inject BookLoggerApp.Core.Services.Abstractions.IReadingStatsCardService StatsCardService
+@inject BookLoggerApp.Core.Services.Abstractions.IShareService ShareService
+@inject BookLoggerApp.Core.Services.Abstractions.IStatsService StatsService
 @implements IDisposable
 
 <PageTitle>Level Overview - BookHeart</PageTitle>
@@ -98,6 +101,22 @@
                     <span class="stat-chip-label">avg</span>
                 </span>
             </div>
+        </section>
+
+        <!-- Share Stats Card Button -->
+        <section class="share-card-section">
+            <button class="btn share-card-btn" @onclick="ShareMonthlyCard" disabled="@isGeneratingCard">
+                @if (isGeneratingCard)
+                {
+                    <span class="share-spinner"></span>
+                    <span>Wird erstellt...</span>
+                }
+                else
+                {
+                    <span>📤</span>
+                    <span>Mein Lese-Monat teilen</span>
+                }
+            </button>
         </section>
 
         <!-- Plant Boost Section -->
@@ -291,6 +310,7 @@
 @code {
     private RatingCategory? selectedCategory = null;
     private string? _currentUrl;
+    private bool isGeneratingCard = false;
 
     private Func<Task<bool>>? _backHandler;
     
@@ -337,6 +357,47 @@
                 await LoadDataAsync();
                 StateHasChanged();
             });
+        }
+    }
+
+    private async Task ShareMonthlyCard()
+    {
+        if (isGeneratingCard) return;
+
+        try
+        {
+            isGeneratingCard = true;
+            StateHasChanged();
+
+            var now = DateTime.UtcNow;
+            var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            var monthEnd = now;
+
+            var stats = new BookLoggerApp.Core.Models.MonthlyReadingStats
+            {
+                Year = now.Year,
+                Month = now.Month,
+                BooksCompleted = ViewModel.TotalBooksRead,
+                PagesRead = await StatsService.GetPagesReadInRangeAsync(monthStart, monthEnd),
+                MinutesRead = ViewModel.TotalMinutesRead,
+                CurrentStreak = ViewModel.CurrentStreak,
+                AverageRating = ViewModel.AverageRating,
+                FavoriteGenre = ViewModel.FavoriteGenre,
+                CurrentLevel = ViewModel.CurrentLevel,
+                TotalXp = ViewModel.TotalXp
+            };
+
+            string filePath = await StatsCardService.GenerateMonthlyCardAsync(stats);
+            await ShareService.ShareFileAsync("Mein Lese-Monat", filePath, "image/png");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error generating stats card: {ex.Message}");
+        }
+        finally
+        {
+            isGeneratingCard = false;
+            StateHasChanged();
         }
     }
 

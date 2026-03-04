@@ -1158,6 +1158,59 @@
     }
 }
 
+/* ===== Share Stats Card Button ===== */
+.share-card-section {
+    margin-bottom: 1.25rem;
+    animation: slideUp 0.6s ease 0.2s both;
+}
+
+.share-card-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color, #D4A574) 0%, #C9A97F 100%);
+    color: #1A1410;
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 15px rgba(212, 165, 116, 0.3);
+}
+
+.share-card-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 165, 116, 0.4);
+}
+
+.share-card-btn:active {
+    transform: translateY(0);
+}
+
+.share-card-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.share-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(26, 20, 16, 0.3);
+    border-top-color: #1A1410;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 /* ===== Color Scheme Consistency ===== */
 /* The design uses the cozy brown theme from app.css throughout */
 /* All colors use CSS variables for consistency */
