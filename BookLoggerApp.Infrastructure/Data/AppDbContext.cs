@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data.SeedData;
 
@@ -34,6 +36,7 @@ public class AppDbContext : DbContext
     public DbSet<WishlistInfo> WishlistInfos => Set<WishlistInfo>();
     public DbSet<GoalExcludedBook> GoalExcludedBooks => Set<GoalExcludedBook>();
     public DbSet<GoalGenre> GoalGenres => Set<GoalGenre>();
+    public DbSet<SubscriptionInfo> SubscriptionInfos => Set<SubscriptionInfo>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -155,6 +158,16 @@ public class AppDbContext : DbContext
                 TotalXp = 0,
                 Coins = 100, // Starting coins
                 PlantsPurchased = 0, // Counter for dynamic plant pricing
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            }
+        );
+
+        // Seed SubscriptionInfo (default: Free tier)
+        modelBuilder.Entity<SubscriptionInfo>().HasData(
+            new SubscriptionInfo
+            {
+                Id = Guid.Parse("99999999-0000-0000-0000-000000000002"),
+                Tier = SubscriptionTier.Free,
                 CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );

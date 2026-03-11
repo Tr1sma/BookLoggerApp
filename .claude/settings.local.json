@@ -22,7 +22,16 @@
       "Bash(grep:*)",
       "Bash(Select-String -Pattern \"error|Build succeeded|failed\")",
       "Bash(git -C /c/Users/ben.sowieja/source/repos/Tr1sma/BookLoggerApp branch -a)",
-      "Bash(FINDSTR:*)"
+      "Bash(FINDSTR:*)",
+      "WebFetch(domain:www.nuget.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:startdebugging.net)",
+      "WebFetch(domain:developers.google.com)",
+      "Bash(tail:*)",
+      "Bash(dotnet nuget:*)",
+      "Bash(dotnet --version && dotnet msbuild \"C:\\\\Users\\\\Tristan\\\\source\\\\repos\\\\Tr1sma\\\\BookLoggerApp\\\\BookLoggerApp\\\\BookLoggerApp.csproj\" -t:_GetMauiVersion -p:TargetFramework=net10.0-android -verbosity:minimal 2>&1 | grep -i maui || dotnet msbuild \"C:\\\\Users\\\\Tristan\\\\source\\\\repos\\\\Tr1sma\\\\BookLoggerApp\\\\BookLoggerApp\\\\BookLoggerApp.csproj\" -getProperty:MauiVersion 2>&1)",
+      "Bash(dotnet msbuild:*)"
     ],
     "deny": [],
     "ask": []

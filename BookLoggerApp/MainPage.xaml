@@ -1,14 +1,23 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:BookLoggerApp"
              xmlns:components="clr-namespace:BookLoggerApp.Components"
+             xmlns:admob="clr-namespace:Plugin.AdMob;assembly=Plugin.AdMob"
              x:Class="BookLoggerApp.MainPage">
 
-    <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
-        <BlazorWebView.RootComponents>
-            <RootComponent Selector="#app" ComponentType="{x:Type components:Routes}" />
-        </BlazorWebView.RootComponents>
-    </BlazorWebView>
+    <Grid RowDefinitions="*,Auto" RowSpacing="0">
+        <BlazorWebView x:Name="blazorWebView" Grid.Row="0" HostPage="wwwroot/index.html">
+            <BlazorWebView.RootComponents>
+                <RootComponent Selector="#app" ComponentType="{x:Type components:Routes}" />
+            </BlazorWebView.RootComponents>
+        </BlazorWebView>
+
+        <!-- AdMob Banner: shown for Free-tier users, hidden for Premium -->
+        <admob:BannerAd x:Name="adBanner"
+                        Grid.Row="1"
+                        AdSize="Banner"
+                        IsVisible="False" />
+    </Grid>
 
 </ContentPage>

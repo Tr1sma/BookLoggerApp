@@ -7,6 +7,7 @@ using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Plugin.AdMob;
 using Plugin.LocalNotification;
 using ZXing.Net.Maui.Controls;
 
@@ -19,7 +20,15 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>()
                .UseBarcodeReader()
-               .UseLocalNotification();
+               .UseLocalNotification()
+               .UseAdMob();
+#if DEBUG
+        builder.UseConsentDebugSettings(new Plugin.AdMob.Configuration.ConsentDebugSettings
+        {
+            Geography = Plugin.AdMob.Configuration.ConsentDebugGeography.Eea,
+            Reset = true
+        });
+#endif
         builder.Services.AddMauiBlazorWebView();
 
         // Configure platform-specific handlers
@@ -40,6 +49,8 @@ public static class MauiProgram
         SetupGlobalExceptionHandler(app);
 
         InitializeDatabase(app);
+        InitializeBilling(app);
+        InitializeAds(app);
 
         System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Completed ===");
         return app;
@@ -124,6 +135,7 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider, BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.ISubscriptionService, BookLoggerApp.Infrastructure.Services.SubscriptionService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IProgressionService, BookLoggerApp.Infrastructure.Services.ProgressionService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
         builder.Services.AddHttpClient<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>(client =>
@@ -136,6 +148,12 @@ public static class MauiProgram
 
         // Register timer state service as Singleton (must survive across component lifetimes)
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.ITimerStateService, BookLoggerApp.Services.TimerStateService>();
+
+        // Register Billing Service as Singleton (platform-specific, survives across component lifetimes)
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IBillingService, BookLoggerApp.Services.BillingService>();
+
+        // Register Ad Service as Singleton (manages banner visibility and GDPR consent)
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAdService, BookLoggerApp.Services.AdService>();
 
         // Register MAUI-specific services
         builder.Services.AddSingleton<BookLoggerApp.Services.IPermissionService, BookLoggerApp.Services.PermissionService>();
@@ -228,6 +246,50 @@ public static class MauiProgram
             // Mark as observed to prevent app crash
             args.SetObserved();
         };
+    }
+
+    private static void InitializeAds(MauiApp app)
+    {
+        // Initialize ad service in background after database is ready.
+        // Checks subscription tier and shows/hides banner accordingly.
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.EnsureInitializedAsync();
+
+                var adService = app.Services.GetRequiredService<BookLoggerApp.Core.Services.Abstractions.IAdService>();
+                await adService.InitializeAsync();
+                System.Diagnostics.Debug.WriteLine("Ad service initialization completed");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ad initialization failed (non-fatal): {ex.Message}");
+            }
+        });
+    }
+
+    private static void InitializeBilling(MauiApp app)
+    {
+        // Restore purchases in the background after database is ready.
+        // This ensures auto-renewal detection, post-reinstall restore, and expired subscription downgrade.
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // Wait for database initialization before accessing subscription data
+                await BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.EnsureInitializedAsync();
+
+                var billingService = app.Services.GetRequiredService<BookLoggerApp.Core.Services.Abstractions.IBillingService>();
+                await billingService.RestorePurchasesAsync();
+                System.Diagnostics.Debug.WriteLine("Billing restore completed");
+            }
+            catch (Exception ex)
+            {
+                // Non-fatal: billing restore failure should not crash the app
+                System.Diagnostics.Debug.WriteLine($"Billing restore failed (non-fatal): {ex.Message}");
+            }
+        });
     }
 
     private static void InitializeDatabase(MauiApp app)
