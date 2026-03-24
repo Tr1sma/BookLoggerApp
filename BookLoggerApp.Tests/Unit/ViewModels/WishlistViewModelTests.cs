@@ -151,7 +151,7 @@ public class WishlistViewModelTests
     }
 
     [Fact]
-    public async Task ClearAddForm_Should_Reset_Lookup_Properties_And_Fire_PropertyChanged()
+    public void ClearAddForm_Should_Reset_Lookup_Properties_And_Fire_PropertyChanged()
     {
         // Arrange – set values first
         _viewModel.LookupPageCount = 300;
