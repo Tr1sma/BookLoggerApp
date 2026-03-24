@@ -371,3 +371,4 @@ FodyWeavers.xsd
 key.txt
 .gemini/
 gha-creds-*.json
+/BookLoggerApp.Infrastructure/Services/ApiKeys.cs
