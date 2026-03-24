@@ -94,9 +94,9 @@ public partial class WishlistViewModel : ViewModelBase
                 Author = NewAuthor.Trim(),
                 ISBN = string.IsNullOrWhiteSpace(NewIsbn) ? null : NewIsbn.Trim(),
                 Status = ReadingStatus.Wishlist,
-                PageCount = _lookupPageCount,
-                CoverImagePath = _lookupCoverUrl,
-                Description = _lookupDescription
+                PageCount = LookupPageCount,
+                CoverImagePath = LookupCoverUrl,
+                Description = LookupDescription
             };
 
             var info = new WishlistInfo
@@ -129,9 +129,9 @@ public partial class WishlistViewModel : ViewModelBase
             {
                 NewTitle = metadata.Title;
                 NewAuthor = metadata.Author;
-                _lookupPageCount = metadata.PageCount;
-                _lookupCoverUrl = metadata.CoverImageUrl;
-                _lookupDescription = metadata.Description;
+                LookupPageCount = metadata.PageCount;
+                LookupCoverUrl = metadata.CoverImageUrl;
+                LookupDescription = metadata.Description;
                 LookupMessage = "Book found!";
             }
             else
@@ -233,9 +233,9 @@ public partial class WishlistViewModel : ViewModelBase
         NewPriority = WishlistPriority.Medium;
         NewRecommendedBy = string.Empty;
         NewWishlistNotes = string.Empty;
-        _lookupPageCount = null;
-        _lookupCoverUrl = null;
-        _lookupDescription = null;
+        LookupPageCount = null;
+        LookupCoverUrl = null;
+        LookupDescription = null;
         LookupMessage = null;
     }
 }
