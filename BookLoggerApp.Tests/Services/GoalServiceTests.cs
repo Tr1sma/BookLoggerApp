@@ -29,6 +29,59 @@ public class GoalServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task GetActiveDailyGoalAsync_ShouldReturnGoalActiveForToday()
+    {
+        // Arrange
+        var todayGoal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Today Goal",
+            Type = GoalType.Pages,
+            Target = 30,
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(1),
+            IsCompleted = false
+        });
+
+        await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Future Goal",
+            Type = GoalType.Pages,
+            Target = 30,
+            StartDate = DateTime.UtcNow.AddDays(2),
+            EndDate = DateTime.UtcNow.AddDays(3),
+            IsCompleted = false
+        });
+
+        // Act
+        var goal = await _service.GetActiveDailyGoalAsync();
+
+        // Assert
+        goal.Should().NotBeNull();
+        goal!.Id.Should().Be(todayGoal.Id);
+    }
+
+    [Fact]
+    public async Task GetActiveDailyGoalAsync_ShouldReturnNullWhenNoGoalForToday()
+    {
+        // Arrange
+        await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Old Goal",
+            Type = GoalType.Pages,
+            Target = 10,
+            StartDate = DateTime.UtcNow.AddDays(-10),
+            EndDate = DateTime.UtcNow.AddDays(-5),
+            IsCompleted = false
+        });
+
+        // Act
+        var goal = await _service.GetActiveDailyGoalAsync();
+
+        // Assert
+        goal.Should().BeNull();
+    }
+
+    [Fact]
     public async Task UpdateGoalProgressAsync_ShouldUpdateProgress()
     {
         // Arrange

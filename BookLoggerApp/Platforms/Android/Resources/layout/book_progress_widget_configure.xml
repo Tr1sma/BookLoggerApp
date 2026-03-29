@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="#101522">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:text="Widget konfigurieren"
+        android:textColor="@android:color/white"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="18dp"
+        android:text="Wähle den Inhalt für dieses Widget."
+        android:textColor="#D9E2EC" />
+
+    <Button
+        android:id="@+id/widget_config_show_all"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="Alles anzeigen" />
+
+    <Button
+        android:id="@+id/widget_config_show_book"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="Nur aktuelles Buch" />
+
+    <Button
+        android:id="@+id/widget_config_show_streak"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="Nur Lese-Streak" />
+
+    <Button
+        android:id="@+id/widget_config_show_goal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nur Tagesziel" />
+</LinearLayout>

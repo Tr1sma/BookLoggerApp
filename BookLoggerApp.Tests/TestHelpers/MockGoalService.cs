@@ -46,6 +46,11 @@ public class MockGoalService : IGoalService
         return Task.FromResult<IReadOnlyList<ReadingGoal>>(Array.Empty<ReadingGoal>());
     }
 
+    public Task<ReadingGoal?> GetActiveDailyGoalAsync(CancellationToken ct = default)
+    {
+        return Task.FromResult<ReadingGoal?>(null);
+    }
+
     public Task<IReadOnlyList<ReadingGoal>> GetCompletedGoalsAsync(CancellationToken ct = default)
     {
         return Task.FromResult<IReadOnlyList<ReadingGoal>>(Array.Empty<ReadingGoal>());

@@ -73,6 +73,17 @@ public class GoalService : IGoalService
         return goalsList;
     }
 
+    public async Task<ReadingGoal?> GetActiveDailyGoalAsync(CancellationToken ct = default)
+    {
+        var today = DateTime.UtcNow.Date;
+        var activeGoals = await GetActiveGoalsAsync(ct);
+
+        return activeGoals
+            .Where(g => g.StartDate.Date <= today && g.EndDate.Date >= today)
+            .OrderBy(g => g.EndDate)
+            .FirstOrDefault();
+    }
+
     public async Task<IReadOnlyList<ReadingGoal>> GetCompletedGoalsAsync(CancellationToken ct = default)
     {
         var goals = await _unitOfWork.ReadingGoals.GetCompletedGoalsAsync();

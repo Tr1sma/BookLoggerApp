@@ -23,6 +23,7 @@ public interface IGoalService
 
     // Query Goals
     Task<IReadOnlyList<ReadingGoal>> GetActiveGoalsAsync(CancellationToken ct = default);
+    Task<ReadingGoal?> GetActiveDailyGoalAsync(CancellationToken ct = default);
     Task<IReadOnlyList<ReadingGoal>> GetCompletedGoalsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<ReadingGoal>> GetGoalsByTypeAsync(GoalType type, CancellationToken ct = default);
 
