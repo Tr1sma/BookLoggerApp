@@ -99,41 +99,38 @@ public class BookProgressWidgetProvider : AppWidgetProvider
         return PendingIntent.GetBroadcast(context, 0, intent, flags);
     }
 
-    private static void UpdateWidgetAsync(
+    private static async void UpdateWidgetAsync(
         Context context,
         AppWidgetManager appWidgetManager,
         int appWidgetId,
         IServiceProvider services)
     {
-        _ = Task.Run(async () =>
+        var dataService = services.GetService<IWidgetDataService>();
+
+        WidgetData widgetData;
+        try
         {
-            var dataService = services.GetService<IWidgetDataService>();
+            widgetData = dataService == null
+                ? CreateFallbackData()
+                : await dataService.GetWidgetDataAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            Android.Util.Log.Error("BookProgressWidget", $"Widget update failed: {ex}");
+            widgetData = CreateFallbackData();
+        }
 
-            WidgetData widgetData;
-            try
-            {
-                widgetData = dataService == null
-                    ? CreateFallbackData()
-                    : await dataService.GetWidgetDataAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Widget update failed: {ex}");
-                widgetData = CreateFallbackData();
-            }
+        var options = appWidgetManager.GetAppWidgetOptions(appWidgetId);
+        var useLargeLayout = (options?.GetInt(AppWidgetManager.OptionAppwidgetMinHeight) ?? 0) >= 220;
+        var layout = useLargeLayout
+            ? Resource.Layout.book_progress_widget_large
+            : Resource.Layout.book_progress_widget_compact;
 
-            var options = appWidgetManager.GetAppWidgetOptions(appWidgetId);
-            var useLargeLayout = (options?.GetInt(AppWidgetManager.OptionAppwidgetMinHeight) ?? 0) >= 220;
-            var layout = useLargeLayout
-                ? Resource.Layout.book_progress_widget_large
-                : Resource.Layout.book_progress_widget_compact;
-
-            var views = new RemoteViews(context.PackageName, layout);
-            var contentMode = GetContentMode(context, appWidgetId, options);
-            ApplyData(views, widgetData, contentMode);
-            views.SetOnClickPendingIntent(Resource.Id.widget_root, CreateRefreshPendingIntent(context));
-            appWidgetManager.UpdateAppWidget(appWidgetId, views);
-        });
+        var views = new RemoteViews(context.PackageName, layout);
+        var contentMode = GetContentMode(context, appWidgetId, options);
+        ApplyData(views, widgetData, contentMode);
+        views.SetOnClickPendingIntent(Resource.Id.widget_root, CreateRefreshPendingIntent(context));
+        appWidgetManager.UpdateAppWidget(appWidgetId, views);
     }
 
     private static string GetContentMode(Context context, int appWidgetId, Bundle? options)
