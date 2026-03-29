@@ -50,7 +50,7 @@ public class BookProgressWidgetProvider : AppWidgetProvider
 
         foreach (var appWidgetId in appWidgetIds)
         {
-            UpdateWidgetAsync(context, appWidgetManager, appWidgetId, services);
+            _ = UpdateWidgetAsync(context, appWidgetManager, appWidgetId, services);
         }
     }
 
@@ -99,7 +99,7 @@ public class BookProgressWidgetProvider : AppWidgetProvider
         return PendingIntent.GetBroadcast(context, 0, intent, flags);
     }
 
-    private static async void UpdateWidgetAsync(
+    private static async Task UpdateWidgetAsync(
         Context context,
         AppWidgetManager appWidgetManager,
         int appWidgetId,
