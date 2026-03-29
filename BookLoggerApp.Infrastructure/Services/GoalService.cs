@@ -79,7 +79,12 @@ public class GoalService : IGoalService
         var activeGoals = await GetActiveGoalsAsync(ct);
 
         return activeGoals
-            .Where(g => g.StartDate.Date <= today && g.EndDate.Date >= today)
+            .Where(g =>
+            {
+                var startDate = g.StartDate.Date;
+                var endDate = g.EndDate.Date;
+                return startDate <= today && endDate >= today;
+            })
             .OrderBy(g => g.EndDate)
             .FirstOrDefault();
     }
