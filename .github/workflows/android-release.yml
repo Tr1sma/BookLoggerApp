@@ -3,7 +3,7 @@ name: Android Release
 on:
   push:
     tags:
-      - 'v*'         # Trigger bei Tags wie v1.0.0, v1.2.3
+      - 'v*'         # Trigger bei Tags wie v1.0.0, v1.2.4
   workflow_dispatch: # Auch manuell über GitHub UI auslösbar
 
 jobs:
