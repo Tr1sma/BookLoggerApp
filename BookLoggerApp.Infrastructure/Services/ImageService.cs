@@ -183,12 +183,14 @@ public class ImageService : IImageService
                     return null;
                 }
 
-                // We do NOT dispose response here because the stream we return
-                // depends on the response connection. The caller must dispose the stream.
-                // However, Stream content usually disposes the parent response?
-                // HttpClient streams often do.
-                var stream = await response.Content.ReadAsStreamAsync(ct);
-                return stream;
+                // Copy the network stream to a MemoryStream so we can safely dispose the response.
+                // Content-Length is already validated above (max 10MB), so buffering is safe.
+                var networkStream = await response.Content.ReadAsStreamAsync(ct);
+                var memoryStream = new MemoryStream();
+                await networkStream.CopyToAsync(memoryStream, ct);
+                memoryStream.Position = 0;
+                response.Dispose();
+                return memoryStream;
             }
             catch
             {

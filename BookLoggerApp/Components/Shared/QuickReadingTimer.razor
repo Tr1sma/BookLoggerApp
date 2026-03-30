@@ -97,6 +97,7 @@
     private bool IsRunning { get; set; }
     private int PagesRead { get; set; }
     private System.Threading.Timer? _timer;
+    private Guid? _currentBookId;
 
     protected override void OnInitialized()
     {
@@ -105,9 +106,12 @@
 
     protected override void OnParametersSet()
     {
-        // Reset when book changes
-        if (Book != null && !IsRunning)
+        // Only reset when the book actually changes, not on every parent re-render.
+        // Without this check, pausing the timer (IsRunning=false) and having
+        // the parent re-render would wipe the user's elapsed time and pages.
+        if (Book != null && Book.Id != _currentBookId)
         {
+            _currentBookId = Book.Id;
             ResetTimer();
         }
     }
@@ -190,13 +194,14 @@
     {
         StopTimer();
         IsRunning = false;
+        _currentBookId = null;
         await OnClose.InvokeAsync();
     }
 
-    private void HandleOverlayClick()
+    private async Task HandleOverlayClick()
     {
         // Close when clicking outside the widget
-        _ = HandleClose();
+        await HandleClose();
     }
 
     private void IncrementPages()
@@ -223,9 +228,19 @@
 
     private int CalculateXP()
     {
-        var minuteXp = (int)ElapsedTime.TotalMinutes;
-        var pageXp = PagesRead * 2;
-        return minuteXp + pageXp;
+        // Use correct XP formula: 5 XP per minute, 20 XP per page (matches XpCalculator)
+        int minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes);
+        int pagesXp = PagesRead * 20;
+        int baseXp = (minutes * 5) + pagesXp;
+
+        // Add long session bonus (50 XP for 60+ minutes)
+        if (minutes >= 60)
+        {
+            baseXp += 50;
+        }
+
+        // Note: Streak bonus and plant boost are applied on save by ProgressService
+        return baseXp;
     }
 
     private string FormatTime(TimeSpan time)

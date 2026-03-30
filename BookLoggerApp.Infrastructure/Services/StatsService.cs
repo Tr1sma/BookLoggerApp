@@ -19,7 +19,7 @@ public class StatsService : IStatsService
 
     public async Task<int> GetTotalBooksReadAsync(CancellationToken ct = default)
     {
-        return await _unitOfWork.Books.CountAsync(b => b.Status == ReadingStatus.Completed);
+        return await _unitOfWork.Books.CountAsync(b => b.Status == ReadingStatus.Completed, ct);
     }
 
     public async Task<int> GetTotalPagesReadAsync(CancellationToken ct = default)
@@ -39,9 +39,14 @@ public class StatsService : IStatsService
     public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
     {
         var today = DateTime.UtcNow.Date;
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
 
-        var sessionsByDate = allSessions
+        // Only load sessions from the last year instead of ALL sessions.
+        // A streak longer than 365 days is unrealistic, and this avoids
+        // loading thousands of records for long-time users.
+        var recentSessions = await _unitOfWork.ReadingSessions
+            .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow);
+
+        var sessionsByDate = recentSessions
             .GroupBy(s => s.StartedAt.Date)
             .OrderByDescending(g => g.Key)
             .ToList();
@@ -74,7 +79,7 @@ public class StatsService : IStatsService
 
     public async Task<int> GetLongestStreakAsync(CancellationToken ct = default)
     {
-        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync();
+        var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
         var sessionDates = allSessions
             .Select(s => s.StartedAt.Date)
             .Distinct()
@@ -140,7 +145,7 @@ public class StatsService : IStatsService
 
     public async Task<string?> GetFavoriteGenreAsync(CancellationToken ct = default)
     {
-        var genreStats = await GetBooksByGenreAsync();
+        var genreStats = await GetBooksByGenreAsync(ct);
 
         if (!genreStats.Any())
             return null;
@@ -150,7 +155,7 @@ public class StatsService : IStatsService
 
     public async Task<double> GetAverageRatingAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync();
+        var books = await _unitOfWork.Books.GetAllAsync(ct);
         var ratedBooks = books.Where(b => b.AverageRating.HasValue).ToList();
 
         if (!ratedBooks.Any())
@@ -167,7 +172,7 @@ public class StatsService : IStatsService
         var start = DateTime.UtcNow.AddDays(-days);
         var end = DateTime.UtcNow;
 
-        var totalPages = await GetPagesReadInRangeAsync(start, end);
+        var totalPages = await GetPagesReadInRangeAsync(start, end, ct);
         return (double)totalPages / days;
     }
 
@@ -240,7 +245,7 @@ public class StatsService : IStatsService
 
     public async Task<List<BookRatingSummary>> GetBooksWithRatingsAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync();
+        var books = await _unitOfWork.Books.GetAllAsync(ct);
 
         return books
             .Where(b => b.Status == ReadingStatus.Completed)

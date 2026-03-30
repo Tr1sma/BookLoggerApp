@@ -58,39 +58,89 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    /* Align books to bottom */
-    gap: 10px;
-    padding: 5px 15px 8px 15px;
-    /* Reduced top, increased bottom for breathing room */
+    /* Align books to bottom of each row */
+    column-gap: 10px;
+    row-gap: 0;
+    /* No row gap — shelf board pseudo-element provides spacing */
+    padding: 5px 15px 0 15px;
     min-height: auto;
-    /* Let content dictate height */
 
-    /* Matches standard bookshelf look likely requested */
-    background-color: #2D251A;
     /* Dark chocolate/black background */
+    background-color: #2D251A;
     border-radius: 12px 12px 0 0;
-    /* Rounded top */
     overflow: hidden;
-    /* Ensure content stays within rounded corners */
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-    /* Inner shadow for depth */
     position: relative;
     contain: layout style;
+}
+
+/* Shelf board plank beneath each book — aligns across each flex row */
+.shelf-books ::deep .shelf-slot {
+    position: relative;
+    margin-bottom: 18px;
+    /* Space for the shelf board below */
+}
+
+.shelf-books ::deep .shelf-slot::after {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    left: -6px;
+    right: -6px;
+    height: 10px;
+    /* Wooden plank gradient */
+    background: linear-gradient(180deg,
+        #8B7355 0%,
+        #7A6348 20%,
+        #6B5544 50%,
+        #5A4A3A 80%,
+        #4A3F32 100%);
+    border-radius: 2px;
+    box-shadow:
+        0 3px 6px rgba(0, 0, 0, 0.5),
+        0 1px 2px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+/* Empty slot also gets the shelf board */
+.shelf-books ::deep .empty-slot {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.shelf-books ::deep .empty-slot::after {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    left: -6px;
+    right: -6px;
+    height: 10px;
+    background: linear-gradient(180deg,
+        #8B7355 0%,
+        #7A6348 20%,
+        #6B5544 50%,
+        #5A4A3A 80%,
+        #4A3F32 100%);
+    border-radius: 2px;
+    box-shadow:
+        0 3px 6px rgba(0, 0, 0, 0.5),
+        0 1px 2px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.3);
+    z-index: 1;
 }
 
 /* The visual shelf bar at the bottom */
 .shelf-wood-base {
     height: 12px;
     background: var(--gradient-warm);
-    /* Matches FAB button color */
-    /* Smooth wood gradient */
     border-radius: 0 0 8px 8px;
-    /* Rounded bottom corners */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     position: relative;
     z-index: 10;
     margin-top: -2px;
-    /* Connect seamlessly */
 }
 
 /* Dragging visual cues */

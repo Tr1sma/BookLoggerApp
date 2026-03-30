@@ -1607,8 +1607,10 @@ section h2 {
     -moz-user-select: none;
     -ms-user-select: none;
     /* Make plants slightly smaller than books (85%) */
-    transform: scale(0.85);
+    transform: scale(0.85) translateY(11px);
     transform-origin: bottom center;
+    margin-top: auto;
+    align-self: flex-end;
     opacity: 0.85;
     transition: all 0.3s ease;
 }
@@ -1624,7 +1626,7 @@ section h2 {
 
 .plant-card.in-bookshelf:hover {
     box-shadow: none !important;
-    transform: scale(0.9) translateY(-4px);
+    transform: scale(0.9) translateY(14px);
     transform-origin: bottom center;
     opacity: 1;
 }
