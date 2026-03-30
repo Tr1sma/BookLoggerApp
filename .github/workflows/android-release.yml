@@ -50,6 +50,7 @@ jobs:
           dotnet publish BookLoggerApp/BookLoggerApp.csproj \
             -f net10.0-android \
             -c Release \
+            --no-restore \
             -p:AndroidKeyStore=true \
             -p:AndroidSigningKeyStore="${{ github.workspace }}/BookLoggerApp/bookheart.keystore" \
             -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS" \
