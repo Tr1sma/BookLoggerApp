@@ -46,6 +46,7 @@ jobs:
         run: |
           dotnet publish BookLoggerApp/BookLoggerApp.csproj \
             -f net10.0-android \
+            -p:TargetFrameworks=net10.0-android \
             -c Release \
             -p:AndroidKeyStore=true \
             -p:AndroidSigningKeyStore="${{ github.workspace }}/BookLoggerApp/bookheart.keystore" \
