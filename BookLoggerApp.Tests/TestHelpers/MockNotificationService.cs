@@ -9,6 +9,7 @@ namespace BookLoggerApp.Tests.TestHelpers;
 public class MockNotificationService : INotificationService
 {
     public bool NotificationsEnabled { get; set; } = true;
+    public bool PermissionGranted { get; set; } = true;
 
     public List<(string Title, string Message)> SentNotifications { get; } = new();
     public TimeSpan? ScheduledReminderTime { get; private set; }
@@ -58,5 +59,10 @@ public class MockNotificationService : INotificationService
     public Task<bool> AreNotificationsEnabledAsync(CancellationToken ct = default)
     {
         return Task.FromResult(NotificationsEnabled);
+    }
+
+    public Task<bool> RequestNotificationPermissionAsync()
+    {
+        return Task.FromResult(PermissionGranted);
     }
 }

@@ -56,6 +56,19 @@ public partial class SettingsViewModel : ViewModelBase
     {
         await ExecuteSafelyAsync(async () =>
         {
+            if (enabled)
+            {
+                // Request OS-level notification permission (required on Android 13+)
+                bool granted = await _notificationService.RequestNotificationPermissionAsync();
+                if (!granted)
+                {
+                    Settings.NotificationsEnabled = false;
+                    OnPropertyChanged(nameof(Settings));
+                    SetError("Notification permission was denied. Please enable it in your device settings.");
+                    return;
+                }
+            }
+
             Settings.NotificationsEnabled = enabled;
             if (!enabled)
             {
@@ -71,6 +84,21 @@ public partial class SettingsViewModel : ViewModelBase
     {
         await ExecuteSafelyAsync(async () =>
         {
+            if (enabled)
+            {
+                // Re-verify OS permission before scheduling (may have been revoked since toggle)
+                bool granted = await _notificationService.RequestNotificationPermissionAsync();
+                if (!granted)
+                {
+                    Settings.NotificationsEnabled = false;
+                    Settings.ReadingRemindersEnabled = false;
+                    OnPropertyChanged(nameof(Settings));
+                    SetError("Notification permission was denied. Please enable it in your device settings.");
+                    await SaveSettingsInternalAsync();
+                    return;
+                }
+            }
+
             Settings.ReadingRemindersEnabled = enabled;
             if (enabled)
             {

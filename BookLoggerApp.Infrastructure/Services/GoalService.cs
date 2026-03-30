@@ -89,30 +89,32 @@ public class GoalService : IGoalService
         if (!goals.Any()) return;
 
         // Get all books and sessions for calculation
-        var books = await _unitOfWork.Books.GetAllAsync();
-        var sessions = await _unitOfWork.ReadingSessions.GetAllAsync();
+        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        var sessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
 
         // Load all exclusions in one query
-        var allExclusions = await _unitOfWork.GoalExcludedBooks.GetAllAsync();
+        var allExclusions = await _unitOfWork.GoalExcludedBooks.GetAllAsync(ct);
 
         // Load all goal-genre associations in one query
-        var allGoalGenres = await _unitOfWork.GoalGenres.GetAllAsync();
+        var allGoalGenres = await _unitOfWork.GoalGenres.GetAllAsync(ct);
         var anyGoalHasGenres = allGoalGenres.Any();
 
         // Load book-genre associations only if at least one goal uses genre filtering
         IEnumerable<BookGenre>? allBookGenres = null;
         if (anyGoalHasGenres)
         {
-            allBookGenres = await _unitOfWork.BookGenres.GetAllAsync();
+            allBookGenres = await _unitOfWork.BookGenres.GetAllAsync(ct);
         }
 
         // Build genre lookup for populating GoalGenres on each goal (for UI display)
         Dictionary<Guid, Genre>? genreLookup = null;
         if (anyGoalHasGenres)
         {
-            var genres = await _unitOfWork.Genres.GetAllAsync();
+            var genres = await _unitOfWork.Genres.GetAllAsync(ct);
             genreLookup = genres.ToDictionary(g => g.Id);
         }
+
+        bool anyGoalNewlyCompleted = false;
 
         foreach (var goal in goals)
         {
@@ -163,11 +165,18 @@ public class GoalService : IGoalService
             if (goal.Current >= goal.Target && !goal.IsCompleted)
             {
                 goal.IsCompleted = true;
+                goal.CompletedAt = DateTime.UtcNow;
                 await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+                anyGoalNewlyCompleted = true;
             }
         }
 
-        await _unitOfWork.SaveChangesAsync(ct);
+        // Only persist changes when a goal was actually newly completed,
+        // not on every read. Current is computed dynamically each time.
+        if (anyGoalNewlyCompleted)
+        {
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
     }
 
     private int CalculateBooksProgress(IEnumerable<Book> books, ReadingGoal goal, HashSet<Guid> excludedBookIds, HashSet<Guid>? genreMatchingBookIds)
@@ -229,6 +238,7 @@ public class GoalService : IGoalService
         if (goal.Current >= goal.Target)
         {
             goal.IsCompleted = true;
+            goal.CompletedAt = DateTime.UtcNow;
         }
 
         await _unitOfWork.ReadingGoals.UpdateAsync(goal);
@@ -244,6 +254,7 @@ public class GoalService : IGoalService
             if (goal.Current >= goal.Target)
             {
                 goal.IsCompleted = true;
+                goal.CompletedAt = DateTime.UtcNow;
                 await _unitOfWork.ReadingGoals.UpdateAsync(goal);
             }
         }

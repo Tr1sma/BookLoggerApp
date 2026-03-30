@@ -418,7 +418,9 @@ public partial class BookEditViewModel : ViewModelBase
 
     partial void OnSelectedGenreIdsChanged(List<Guid> value)
     {
-        _ = UpdateAvailableTropesAsync();
+        _ = ExecuteSafelyAsync(
+            () => UpdateAvailableTropesAsync(),
+            "Failed to update available tropes");
     }
 
     public async Task ToggleGenreAsync(Guid genreId, bool isSelected)

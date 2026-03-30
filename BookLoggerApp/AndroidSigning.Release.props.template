@@ -1,0 +1,18 @@
+<Project>
+  <!--
+    Android Release Signing Configuration
+    ======================================
+    1. Copy this file to AndroidSigning.Release.props (gitignored)
+    2. Generate your keystore: keytool -genkey -v -keystore bookheart.keystore -alias bookheart -keyalg RSA -keysize 2048 -validity 10000
+    3. Place bookheart.keystore next to this file (also gitignored)
+    4. Replace the placeholder values below with your real passwords
+  -->
+  <PropertyGroup Condition="$(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release'">
+    <AndroidKeyStore>true</AndroidKeyStore>
+    <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)bookheart.keystore</AndroidSigningKeyStore>
+    <AndroidSigningKeyAlias>bookheart</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass>REPLACE_WITH_KEY_PASSWORD</AndroidSigningKeyPass>
+    <AndroidSigningStorePass>REPLACE_WITH_STORE_PASSWORD</AndroidSigningStorePass>
+    <AndroidPackageFormat>aab</AndroidPackageFormat>
+  </PropertyGroup>
+</Project>

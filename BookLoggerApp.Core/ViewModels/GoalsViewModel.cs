@@ -37,6 +37,8 @@ public partial class GoalsViewModel : ViewModelBase
     [ObservableProperty]
     private string? _statusMessage;
 
+    private CancellationTokenSource? _statusClearCts;
+
     // Exclusion modal state
     [ObservableProperty]
     private bool _showExcludeModal = false;
@@ -97,7 +99,7 @@ public partial class GoalsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void OpenEditForm(ReadingGoal goal)
+    public async Task OpenEditFormAsync(ReadingGoal goal)
     {
         StatusMessage = null;
         // Create a copy to edit to avoid modifying the list directly before saving
@@ -115,6 +117,11 @@ public partial class GoalsViewModel : ViewModelBase
             CompletedAt = goal.CompletedAt,
             RowVersion = goal.RowVersion
         };
+
+        // Load existing genre associations for editing
+        var goalGenres = await _goalService.GetGoalGenresAsync(goal.Id);
+        SelectedGenreIds = goalGenres.Select(gg => gg.GenreId).ToHashSet();
+
         IsEditing = true;
         ShowCreateForm = true;
     }
@@ -145,6 +152,20 @@ public partial class GoalsViewModel : ViewModelBase
             if (IsEditing)
             {
                 await _goalService.UpdateAsync(NewGoal);
+
+                // Sync genre associations for the edited goal
+                var existingGenres = await _goalService.GetGoalGenresAsync(NewGoal.Id);
+                var existingGenreIds = existingGenres.Select(gg => gg.GenreId).ToHashSet();
+
+                foreach (var genreId in existingGenreIds.Where(id => !SelectedGenreIds.Contains(id)))
+                {
+                    await _goalService.RemoveGenreFromGoalAsync(NewGoal.Id, genreId);
+                }
+                foreach (var genreId in SelectedGenreIds.Where(id => !existingGenreIds.Contains(id)))
+                {
+                    await _goalService.AddGenreToGoalAsync(NewGoal.Id, genreId);
+                }
+
                 StatusMessage = "Update erfolgreich";
             }
             else
@@ -164,7 +185,7 @@ public partial class GoalsViewModel : ViewModelBase
             await LoadAsync();
 
             // Clear message after 3 seconds
-            _ = Task.Delay(3000).ContinueWith(_ => StatusMessage = null);
+            ScheduleStatusClear();
 
         }, IsEditing ? "Failed to update goal" : "Failed to create goal");
     }
@@ -184,7 +205,7 @@ public partial class GoalsViewModel : ViewModelBase
             await LoadAsync();
             
             // Clear message after 3 seconds
-            _ = Task.Delay(3000).ContinueWith(_ => StatusMessage = null);
+            ScheduleStatusClear();
 
         }, "Failed to delete goal");
     }
@@ -298,6 +319,24 @@ public partial class GoalsViewModel : ViewModelBase
 
         // Reload goals to reflect updated progress
         await LoadAsync();
+    }
+
+    private void ScheduleStatusClear()
+    {
+        _statusClearCts?.Cancel();
+        _statusClearCts?.Dispose();
+        _statusClearCts = new CancellationTokenSource();
+        _ = ClearStatusAfterDelayAsync(_statusClearCts.Token);
+    }
+
+    private async Task ClearStatusAfterDelayAsync(CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(3000, ct);
+            StatusMessage = null;
+        }
+        catch (TaskCanceledException) { }
     }
 }
 

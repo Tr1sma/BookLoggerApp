@@ -15,6 +15,7 @@ public interface IProgressService
     Task DeleteSessionAsync(Guid sessionId, CancellationToken ct = default);
 
     // Query Sessions
+    Task<ReadingSession?> GetSessionByIdAsync(Guid sessionId, CancellationToken ct = default);
     Task<IReadOnlyList<ReadingSession>> GetSessionsByBookAsync(Guid bookId, CancellationToken ct = default);
     Task<IReadOnlyList<ReadingSession>> GetRecentSessionsAsync(int count = 10, CancellationToken ct = default);
     Task<IReadOnlyList<ReadingSession>> GetSessionsInRangeAsync(DateTime start, DateTime end, CancellationToken ct = default);

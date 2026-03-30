@@ -1,6 +1,12 @@
 using BookLoggerApp.Core.Services.Abstractions;
 using Microsoft.Extensions.Logging;
 using Plugin.LocalNotification;
+#if ANDROID
+using Android.App;
+using Android.Content;
+using Android.OS;
+using Android.Provider;
+#endif
 
 namespace BookLoggerApp.Services;
 
@@ -27,12 +33,71 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
         _logger = logger;
     }
 
+    public async Task<bool> RequestNotificationPermissionAsync()
+    {
+        try
+        {
+            var result = await LocalNotificationCenter.Current.RequestNotificationPermission();
+            _logger?.LogInformation("Notification permission request result: {Result}", result);
+
+            if (result)
+            {
+                // Also verify exact alarm permission (needed for scheduled notifications on Android 12+)
+                EnsureExactAlarmPermission();
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to request notification permission");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// On Android 12+, checks if the app can schedule exact alarms.
+    /// If not, opens the system settings page so the user can grant the permission.
+    /// </summary>
+    private void EnsureExactAlarmPermission()
+    {
+#if ANDROID
+        if (Build.VERSION.SdkInt < BuildVersionCodes.S)
+            return;
+
+        var alarmManager = (AlarmManager?)Android.App.Application.Context.GetSystemService(Context.AlarmService);
+        if (alarmManager == null || alarmManager.CanScheduleExactAlarms())
+            return;
+
+        _logger?.LogWarning("Exact alarm permission not granted, opening system settings");
+
+        try
+        {
+            var intent = new Intent(Settings.ActionRequestScheduleExactAlarm);
+            intent.SetFlags(ActivityFlags.NewTask);
+            Android.App.Application.Context.StartActivity(intent);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to open exact alarm settings");
+        }
+#endif
+    }
+
     public async Task ScheduleReadingReminderAsync(TimeSpan time, CancellationToken ct = default)
     {
         bool enabled = await AreNotificationsEnabledAsync(ct);
         if (!enabled)
         {
             _logger?.LogInformation("Notifications are disabled, skipping reminder schedule");
+            return;
+        }
+
+        // Verify OS-level permission is still granted (user may have revoked it)
+        bool hasPermission = await RequestNotificationPermissionAsync();
+        if (!hasPermission)
+        {
+            _logger?.LogWarning("OS notification permission not granted, skipping reminder schedule");
             return;
         }
 
@@ -58,6 +123,8 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
                 Android = new Plugin.LocalNotification.AndroidOption.AndroidOptions
                 {
                     ChannelId = ReminderChannelId,
+                    Priority = Plugin.LocalNotification.AndroidOption.AndroidPriority.High,
+                    AutoCancel = true,
                 },
                 Schedule = new NotificationRequestSchedule
                 {

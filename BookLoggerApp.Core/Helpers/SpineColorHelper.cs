@@ -90,7 +90,7 @@ public static class SpineColorHelper
         // 3. Fallback: Hash-based color
         var colorList = _presetPalette.Values.ToList();
         var hash = bookId.GetHashCode();
-        var colorIndex = Math.Abs(hash) % colorList.Count;
+        var colorIndex = (hash & 0x7FFFFFFF) % colorList.Count;
         return colorList[colorIndex];
     }
 
