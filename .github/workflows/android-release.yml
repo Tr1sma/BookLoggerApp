@@ -35,12 +35,6 @@ jobs:
       - name: Create ApiKeys.cs from template
         run: cp BookLoggerApp.Infrastructure/Services/ApiKeys.cs.template BookLoggerApp.Infrastructure/Services/ApiKeys.cs
 
-      - name: Restore NuGet packages
-        run: |
-          dotnet restore BookLoggerApp.Core/BookLoggerApp.Core.csproj
-          dotnet restore BookLoggerApp.Infrastructure/BookLoggerApp.Infrastructure.csproj
-          dotnet restore BookLoggerApp/BookLoggerApp.csproj -p:TargetFramework=net10.0-android
-
       - name: Decode keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > BookLoggerApp/bookheart.keystore
 
@@ -53,7 +47,6 @@ jobs:
           dotnet publish BookLoggerApp/BookLoggerApp.csproj \
             -f net10.0-android \
             -c Release \
-            --no-restore \
             -p:AndroidKeyStore=true \
             -p:AndroidSigningKeyStore="${{ github.workspace }}/BookLoggerApp/bookheart.keystore" \
             -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS" \
