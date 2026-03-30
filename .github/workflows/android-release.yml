@@ -36,7 +36,7 @@ jobs:
         run: cp BookLoggerApp.Infrastructure/Services/ApiKeys.cs.template BookLoggerApp.Infrastructure/Services/ApiKeys.cs
 
       - name: Restore NuGet packages
-        run: dotnet restore BookLoggerApp/BookLoggerApp.csproj
+        run: dotnet restore BookLoggerApp/BookLoggerApp.csproj -p:TargetFramework=net10.0-android
 
       - name: Decode keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > BookLoggerApp/bookheart.keystore
