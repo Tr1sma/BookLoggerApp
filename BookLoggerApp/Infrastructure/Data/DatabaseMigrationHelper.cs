@@ -90,84 +90,84 @@ public static class DatabaseMigrationHelper
                     LogMessage("[DatabaseMigrationHelper] Legacy folder does not exist. Skipping backup check in that folder.");
                 }
 
-                // === DEEP SEARCH START ===
-                // If we still haven't found a legacy DB, let's search the ENTIRE app sandbox for ANY user files
-                if (!File.Exists(legacyDbPath))
-                {
-                    LogMessage("[DatabaseMigrationHelper] Initiating DEEP SEARCH for ANY user files...");
-                    try
-                    {
-                        var appRoot = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.Personal))?.Parent?.FullName;
-                        if (string.IsNullOrEmpty(appRoot))
-                        {
-                            var filesDir = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-                            appRoot = Directory.GetParent(filesDir)?.FullName;
-                            appRoot = Directory.GetParent(appRoot!)?.FullName;
-                        }
+                //// === DEEP SEARCH START ===
+                //// If we still haven't found a legacy DB, let's search the ENTIRE app sandbox for ANY user files
+                //if (!File.Exists(legacyDbPath))
+                //{
+                //    LogMessage("[DatabaseMigrationHelper] Initiating DEEP SEARCH for ANY user files...");
+                //    try
+                //    {
+                //        var appRoot = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.Personal))?.Parent?.FullName;
+                //        if (string.IsNullOrEmpty(appRoot))
+                //        {
+                //            var filesDir = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                //            appRoot = Directory.GetParent(filesDir)?.FullName;
+                //            appRoot = Directory.GetParent(appRoot!)?.FullName;
+                //        }
 
-                        if (!string.IsNullOrEmpty(appRoot) && Directory.Exists(appRoot))
-                        {
-                            LogMessage($"[DatabaseMigrationHelper] Searching from App Root: {appRoot}");
+                //        if (!string.IsNullOrEmpty(appRoot) && Directory.Exists(appRoot))
+                //        {
+                //            LogMessage($"[DatabaseMigrationHelper] Searching from App Root: {appRoot}");
 
-                            // SEARCH ALL FILES
-                            var allFiles = Directory.GetFiles(appRoot, "*", SearchOption.AllDirectories);
+                //            // SEARCH ALL FILES
+                //            var allFiles = Directory.GetFiles(appRoot, "*", SearchOption.AllDirectories);
 
-                            LogMessage($"[DatabaseMigrationHelper] Found {allFiles.Length} total files in sandbox.");
+                //            LogMessage($"[DatabaseMigrationHelper] Found {allFiles.Length} total files in sandbox.");
 
-                            foreach (var f in allFiles)
-                            {
-                                var info = new FileInfo(f);
-                                var name = info.Name.ToLower();
-                                var size = info.Length;
+                //            foreach (var f in allFiles)
+                //            {
+                //                var info = new FileInfo(f);
+                //                var name = info.Name.ToLower();
+                //                var size = info.Length;
 
-                                // Filter out obvious system/cache files to find the needle in the haystack
-                                if (name.EndsWith(".so") || name.EndsWith(".dex") || name.EndsWith(".xml") ||
-                                    name.EndsWith(".json") || name.Contains("cache") || size == 0)
-                                    continue;
+                //                // Filter out obvious system/cache files to find the needle in the haystack
+                //                if (name.EndsWith(".so") || name.EndsWith(".dex") || name.EndsWith(".xml") ||
+                //                    name.EndsWith(".json") || name.Contains("cache") || size == 0)
+                //                    continue;
 
-                                LogMessage($" - File: {f} (Size: {size})");
+                //                LogMessage($" - File: {f} (Size: {size})");
 
-                                // Check if this looks like a SQLite DB (sqlite header starts with "SQLite format 3")
-                                // Or simplistically, if it ends in .db3 or .db or has significant size and "book" in name
-                                bool looksLikeDb = name.EndsWith(".db3") || name.EndsWith(".db") || name.EndsWith(".sqlite");
+                //                // Check if this looks like a SQLite DB (sqlite header starts with "SQLite format 3")
+                //                // Or simplistically, if it ends in .db3 or .db or has significant size and "book" in name
+                //                bool looksLikeDb = name.EndsWith(".db3") || name.EndsWith(".db") || name.EndsWith(".sqlite");
 
-                                if (looksLikeDb && f != currentDbPath)
-                                {
-                                    LogMessage($"   -> CANDIDATE FOUND! Trying to migrate...");
-                                    try
-                                    {
-                                        long candidateXp = GetTotalXp(f);
+                //                if (looksLikeDb && f != currentDbPath)
+                //                {
+                //                    LogMessage($"   -> CANDIDATE FOUND! Trying to migrate...");
+                //                    try
+                //                    {
+                //                        long candidateXp = GetTotalXp(f);
 
-                                        if (candidateXp > 0)
-                                        {
-                                            LogMessage($"   -> VALID DB! XP: {candidateXp}");
+                //                        if (candidateXp > 0)
+                //                        {
+                //                            LogMessage($"   -> VALID DB! XP: {candidateXp}");
 
-                                            // Double check against current
-                                            long searchCurrentXp = GetTotalXp(currentDbPath);
-                                            LogMessage($"   -> Current XP: {searchCurrentXp}");
+                //                            // Double check against current
+                //                            long searchCurrentXp = GetTotalXp(currentDbPath);
+                //                            LogMessage($"   -> Current XP: {searchCurrentXp}");
 
-                                            if (candidateXp > searchCurrentXp)
-                                            {
-                                                legacyDbPath = f;
-                                                goto Migrationcheck;
-                                            }
-                                            else
-                                            {
-                                                LogMessage($"   -> Candidate valid but has less/equal XP. Ignoring.");
-                                            }
-                                        }
-                                    }
-                                    catch { /* Ignore unreadable files */ }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception searchEx)
-                    {
-                        LogMessage($"[DatabaseMigrationHelper] Deep search error: {searchEx.Message}");
-                    }
-                }
-                // === DEEP SEARCH END ===
+                //                            if (candidateXp > searchCurrentXp)
+                //                            {
+                //                                legacyDbPath = f;
+                //                                goto Migrationcheck;
+                //                            }
+                //                            else
+                //                            {
+                //                                LogMessage($"   -> Candidate valid but has less/equal XP. Ignoring.");
+                //                            }
+                //                        }
+                //                    }
+                //                    catch { /* Ignore unreadable files */ }
+                //                }
+                //            }
+                //        }
+                //    }
+                //    catch (Exception searchEx)
+                //    {
+                //        LogMessage($"[DatabaseMigrationHelper] Deep search error: {searchEx.Message}");
+                //    }
+                //}
+                //// === DEEP SEARCH END ===
             }
 
         Migrationcheck:
