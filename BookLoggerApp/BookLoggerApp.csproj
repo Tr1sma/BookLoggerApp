@@ -91,4 +91,7 @@
       <ProjectReference Include="..\BookLoggerApp.Infrastructure\BookLoggerApp.Infrastructure.csproj" />
     </ItemGroup>
 
+    <!-- Android Release Signing — local file with credentials, never committed -->
+    <Import Project="AndroidSigning.Release.props" Condition="Exists('AndroidSigning.Release.props')" />
+
 </Project>

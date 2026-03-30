@@ -369,6 +369,7 @@ FodyWeavers.xsd
 *.keystore
 *.jks
 key.txt
+BookLoggerApp/AndroidSigning.Release.props
 .gemini/
 gha-creds-*.json
 /BookLoggerApp.Infrastructure/Services/ApiKeys.cs

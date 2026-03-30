@@ -1,0 +1,65 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      - 'v*'         # Trigger bei Tags wie v1.0.0, v1.2.3
+  workflow_dispatch: # Auch manuell über GitHub UI auslösbar
+
+jobs:
+  build-aab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: 17
+
+      - name: Install MAUI Android workload
+        run: dotnet workload install maui-android
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-android-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-android-
+
+      - name: Create ApiKeys.cs from template
+        run: cp BookLoggerApp.Infrastructure/Services/ApiKeys.cs.template BookLoggerApp.Infrastructure/Services/ApiKeys.cs
+
+      - name: Restore NuGet packages
+        run: dotnet restore BookLoggerApp/BookLoggerApp.csproj -f net10.0-android
+
+      - name: Decode keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > BookLoggerApp/bookheart.keystore
+
+      - name: Build & sign AAB
+        env:
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+          ANDROID_STORE_PASS: ${{ secrets.ANDROID_STORE_PASS }}
+        run: |
+          dotnet publish BookLoggerApp/BookLoggerApp.csproj \
+            -f net10.0-android \
+            -c Release \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="${{ github.workspace }}/BookLoggerApp/bookheart.keystore" \
+            -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS" \
+            -p:AndroidSigningKeyPass="$ANDROID_KEY_PASS" \
+            -p:AndroidSigningStorePass="$ANDROID_STORE_PASS" \
+            -p:AndroidPackageFormat=aab
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bookheart-${{ github.ref_name }}-release
+          path: BookLoggerApp/bin/Release/net10.0-android/publish/*.aab
+          if-no-files-found: error
