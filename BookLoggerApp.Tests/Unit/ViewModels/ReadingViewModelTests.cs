@@ -13,6 +13,7 @@ public class ReadingViewModelTests
     private readonly IBookService _bookService;
     private readonly IProgressionService _progressionService;
     private readonly ITimerStateService _timerStateService;
+    private readonly IReviewService _reviewService;
     private readonly ReadingViewModel _viewModel;
 
     public ReadingViewModelTests()
@@ -22,8 +23,9 @@ public class ReadingViewModelTests
         _bookService = Substitute.For<IBookService>();
         _progressionService = Substitute.For<IProgressionService>();
         _timerStateService = Substitute.For<ITimerStateService>();
+        _reviewService = Substitute.For<IReviewService>();
 
-        _viewModel = new ReadingViewModel(_progressService, _bookService, _progressionService, _timerStateService);
+        _viewModel = new ReadingViewModel(_progressService, _bookService, _progressionService, _timerStateService, _reviewService);
     }
 
     [Fact]

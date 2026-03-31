@@ -3,6 +3,7 @@
 @implements IDisposable
 @inject SettingsViewModel ViewModel
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Settings - BookHeart</PageTitle>
 
@@ -93,17 +94,6 @@
             }
         </section>
 
-        <!-- Migration Diagnostics -->
-         <section class="settings-section">
-            <h2>Data Recovery Diagnostics</h2>
-            <div class="migration-log-container">
-                <textarea class="migration-log" readonly>@ViewModel.MigrationLog</textarea>
-            </div>
-             <p class="description" style="margin-top: 0.5rem; font-size: 0.8rem;">
-                If data is missing, screenshot this log and send it to support.
-            </p>
-        </section>
-
         <!-- Backup & Restore -->
         <section class="settings-section">
             <h2>Backup & Restore</h2>
@@ -118,6 +108,20 @@
                     <button class="btn btn-secondary" @onclick="() => ViewModel.RestoreFromBackupCommand.ExecuteAsync(null)">
                         Restore from Backup
                     </button>
+                </div>
+                <div class="support-callout">
+                    <p class="description support-description">
+                        If BookHeart helps you stay on top of your reading, you can support development here.
+                    </p>
+                    <div class="buy-me-a-coffee-actions">
+                        <div id="buy-me-a-coffee-widget" class="buy-me-a-coffee-widget"></div>
+                        <button id="buy-me-a-coffee-fallback"
+                                class="btn buy-me-a-coffee-fallback"
+                                type="button"
+                                @onclick="OpenBuyMeACoffee">
+                            Buy me a coffee
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -134,6 +138,25 @@
             </button>
         </section>
 
+        <!-- Migration Diagnostics -->
+        <section class="settings-section">
+            <button class="privacy-toggle" @onclick="ToggleMigrationLog">
+                <span>Data Recovery Diagnostics</span>
+                <span class="toggle-icon">@(_showMigrationLog ? "▲" : "▼")</span>
+            </button>
+            @if (_showMigrationLog)
+            {
+                <div class="privacy-content">
+                    <div class="migration-log-container">
+                        <textarea class="migration-log" readonly>@ViewModel.MigrationLog</textarea>
+                    </div>
+                    <p class="description" style="margin-top: 0.5rem; font-size: 0.8rem;">
+                        If data is missing, screenshot this log and send it to support.
+                    </p>
+                </div>
+            }
+        </section>
+
         <!-- Privacy & Legal -->
         <section class="settings-section privacy-section">
             <h2>Privacy & Legal</h2>
@@ -145,7 +168,7 @@
             @if (_showPrivacyPolicy)
             {
                 <div class="privacy-content">
-                    <p class="privacy-updated">Last updated: February 2026</p>
+                    <p class="privacy-updated">Last updated: April 2026</p>
 
                     <h3>Overview</h3>
                     <p>
@@ -330,6 +353,43 @@
         display: flex;
         gap: 1rem;
         flex-wrap: wrap;
+    }
+
+    .support-callout {
+        margin-top: 1.25rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .support-description {
+        margin-bottom: 0.75rem;
+    }
+
+    .buy-me-a-coffee-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .buy-me-a-coffee-widget {
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+    }
+
+    .buy-me-a-coffee-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #803900;
+        color: #ffffff;
+        border: 1px solid #ffffff;
+        min-height: 44px;
+    }
+
+    .buy-me-a-coffee-fallback:hover {
+        background: #95522a;
     }
 
     .danger-zone {
@@ -715,11 +775,14 @@
     private bool _showDeleteConfirmation = false;
     private bool _showSuccessModal = false;
     private bool _showPrivacyPolicy = false;
+    private bool _showMigrationLog = false;
     private string _deleteConfirmText = string.Empty;
 
     private bool IsDeleteConfirmed => _deleteConfirmText.Equals("DELETE", StringComparison.Ordinal);
 
     private void TogglePrivacyPolicy() => _showPrivacyPolicy = !_showPrivacyPolicy;
+
+    private void ToggleMigrationLog() => _showMigrationLog = !_showMigrationLog;
 
     private Func<Task<bool>>? _navBackHandler;
     private Func<Task<bool>>? _modalBackHandler;
@@ -735,6 +798,19 @@
         BackButtonService.Register(_navBackHandler);
 
         await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await JSRuntime.InvokeVoidAsync(
+            "settingsSupport.loadBuyMeACoffeeButton",
+            "buy-me-a-coffee-widget",
+            "buy-me-a-coffee-fallback");
     }
 
     private void ShowDeleteConfirmation()
@@ -799,6 +875,13 @@
         _showSuccessModal = false;
         // Force page refresh to reflect reset state
         Navigation.NavigateTo("/", forceLoad: true);
+    }
+
+    private async Task OpenBuyMeACoffee()
+    {
+        await Microsoft.Maui.ApplicationModel.Browser.Default.OpenAsync(
+            new Uri("https://buymeacoffee.com/tristanatzk"),
+            Microsoft.Maui.ApplicationModel.BrowserLaunchMode.SystemPreferred);
     }
 
     [Inject]

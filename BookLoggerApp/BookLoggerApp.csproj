@@ -92,6 +92,10 @@
       <ProjectReference Include="..\BookLoggerApp.Infrastructure\BookLoggerApp.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
+      <PackageReference Include="Xamarin.Google.Android.Play.Review" Version="2.0.2.7" />
+    </ItemGroup>
+
     <!-- Android Release Signing — local file with credentials, never committed -->
     <Import Project="AndroidSigning.Release.props" Condition="Exists('AndroidSigning.Release.props')" />
 

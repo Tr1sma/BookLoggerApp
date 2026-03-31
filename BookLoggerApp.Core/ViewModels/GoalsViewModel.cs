@@ -11,12 +11,14 @@ public partial class GoalsViewModel : ViewModelBase
     private readonly IGoalService _goalService;
     private readonly IBookService _bookService;
     private readonly IGenreService _genreService;
+    private readonly IReviewService _reviewService;
 
-    public GoalsViewModel(IGoalService goalService, IBookService bookService, IGenreService genreService)
+    public GoalsViewModel(IGoalService goalService, IBookService bookService, IGenreService genreService, IReviewService reviewService)
     {
         _goalService = goalService;
         _bookService = bookService;
         _genreService = genreService;
+        _reviewService = reviewService;
     }
 
     [ObservableProperty]
@@ -72,6 +74,16 @@ public partial class GoalsViewModel : ViewModelBase
 
             var completed = await _goalService.GetCompletedGoalsAsync();
             CompletedGoals = completed.ToList();
+
+            // Trigger review prompt if a goal was just completed (within last 2 minutes)
+            var justCompleted = CompletedGoals.Any(g =>
+                g.CompletedAt.HasValue &&
+                (DateTime.UtcNow - g.CompletedAt.Value).TotalMinutes < 2);
+
+            if (justCompleted)
+            {
+                await _reviewService.TryRequestReviewAsync();
+            }
         }, "Failed to load goals");
     }
 

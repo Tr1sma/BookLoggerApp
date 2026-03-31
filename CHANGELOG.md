@@ -19,8 +19,11 @@ Versionsschema:
 ### Hinzugefügt
 
 - Changelog Datei
+- Google Play In-App Review Integration: Review-Dialog nach Level-Up, Buch-Abschluss oder Leseziel-Erreichen (max. 2x/Monat, erst ab Level 6)
 
 ### Geändert
+
+- Buy-me-a-Coffee-Unterstützung direkt im Backup-&-Restore-Bereich der Einstellungen hinzugefügt
 
 ### Behoben
 
