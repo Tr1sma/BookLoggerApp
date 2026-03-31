@@ -13,18 +13,22 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private readonly IBookService _bookService;
     private readonly IProgressionService _progressionService;
     private readonly ITimerStateService _timerStateService;
+    private readonly IReviewService _reviewService;
     private Timer? _timer;
+    private bool _bookCompletedDuringSession;
 
     public ReadingViewModel(
         IProgressService progressService,
         IBookService bookService,
         IProgressionService progressionService,
-        ITimerStateService timerStateService)
+        ITimerStateService timerStateService,
+        IReviewService reviewService)
     {
         _progressService = progressService;
         _bookService = bookService;
         _progressionService = progressionService;
         _timerStateService = timerStateService;
+        _reviewService = reviewService;
         _timerStateService.AppResumed += OnAppResumed;
     }
 
@@ -165,7 +169,8 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             }
 
             // Check if book just completed
-            if (!wasCompleted && Book?.Status == ReadingStatus.Completed)
+            _bookCompletedDuringSession = !wasCompleted && Book?.Status == ReadingStatus.Completed;
+            if (_bookCompletedDuringSession)
             {
                 // Award Book Completion XP
                 var completionResult = await _progressionService.AwardBookCompletionXpAsync(null);
@@ -289,26 +294,31 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Called when session celebration is closed. Shows level-up celebration if applicable.
+    /// Called when session celebration is closed. Shows level-up celebration if applicable,
+    /// or triggers review prompt if book was completed without level-up.
     /// </summary>
-    public void OnSessionCelebrationClose()
+    public async Task OnSessionCelebrationClose()
     {
         ShowSessionCelebration = false;
 
-        // If there was a level-up, show that celebration next
         if (LevelUpResult != null)
         {
             ShowLevelUpCelebration = true;
         }
+        else if (_bookCompletedDuringSession)
+        {
+            await _reviewService.TryRequestReviewAsync();
+        }
     }
 
     /// <summary>
-    /// Called when level-up celebration is closed.
+    /// Called when level-up celebration is closed. Triggers review prompt.
     /// </summary>
-    public void OnLevelUpCelebrationClose()
+    public async Task OnLevelUpCelebrationClose()
     {
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
+        await _reviewService.TryRequestReviewAsync();
     }
 
     private void OnAppResumed()
