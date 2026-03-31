@@ -7,9 +7,9 @@ on:
   workflow_dispatch: # Manuell über GitHub UI auslösbar
     inputs:
       version:
-        description: 'Version (z.B. 0.6.4) — wird als ApplicationDisplayVersion verwendet'
+        description: 'Version 0.6.5'
         required: true
-        default: '0.0.0'
+        default: '0.6.5'
 
 jobs:
   build-aab:
