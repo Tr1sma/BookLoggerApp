@@ -34,6 +34,9 @@ public class AppSettings
     public int Coins { get; set; } = 0; // Currency for shop
     public int PlantsPurchased { get; set; } = 0; // Counter for dynamic plant pricing
 
+    // Review tracking
+    public DateTime? LastReviewPromptDate { get; set; }
+
     // Misc
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
