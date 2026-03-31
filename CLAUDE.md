@@ -184,6 +184,19 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) runs on pushes to `main` an
 - Supports `workflow_dispatch` for manual triggers
 - **Note:** CI currently uses .NET 9.0.x SDK — update to .NET 10 when ready
 
+## Versioning & Changelog
+
+- Versionsschema: `V0.x.y` bis zum Play-Store-Launch, dann `V1.0.0`
+- Tags werden **nur auf `main`** gesetzt (nie auf Feature-/Entwicklungsbranches)
+- Release-Workflow (`.github/workflows/android-release.yml`) wird automatisch bei Tags mit `V*` ausgelöst
+
+**CHANGELOG.md pflegen:**
+Nach jeder Änderung (Feature, Bugfix, Sicherheitspatch) einen Eintrag in `CHANGELOG.md` unter dem Abschnitt `## [Unveröffentlicht]` ergänzen. **Keine neue Versionssektion anlegen** — das passiert erst beim offiziellen Release. Kategorien:
+- `### Hinzugefügt` — neue Features
+- `### Geändert` — Änderungen an bestehender Funktionalität
+- `### Behoben` — Bugfixes
+- `### Sicherheit` — Sicherheitsrelevante Fixes
+
 ## Important Notes
 
 - Main branch for PRs: `main`

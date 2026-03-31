@@ -3,7 +3,7 @@ name: Android Release
 on:
   push:
     tags:
-      - 'v*'         # Trigger bei Tags wie v1.0.0, v1.2.4
+      - 'V*'         # Trigger bei Tags wie V0.6.3, V1.0.0
   workflow_dispatch: # Auch manuell über GitHub UI auslösbar
 
 jobs:
@@ -35,6 +35,20 @@ jobs:
       - name: Create ApiKeys.cs from template
         run: cp BookLoggerApp.Infrastructure/Services/ApiKeys.cs.template BookLoggerApp.Infrastructure/Services/ApiKeys.cs
 
+      - name: Extract version from tag
+        run: |
+          REF="${{ github.ref_name }}"
+          DISPLAY_VERSION="${REF#V}"
+          if echo "$DISPLAY_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$DISPLAY_VERSION"
+            VERSION_CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
+          else
+            DISPLAY_VERSION="0.0.0"
+            VERSION_CODE=${{ github.run_number }}
+          fi
+          echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+
       - name: Decode keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > BookLoggerApp/bookheart.keystore
 
@@ -47,6 +61,8 @@ jobs:
           dotnet publish BookLoggerApp/BookLoggerApp.csproj \
             -f net10.0-android \
             -c Release \
+            -p:ApplicationDisplayVersion=${{ env.DISPLAY_VERSION }} \
+            -p:ApplicationVersion=${{ env.VERSION_CODE }} \
             -p:AndroidKeyStore=true \
             -p:AndroidSigningKeyStore="${{ github.workspace }}/BookLoggerApp/bookheart.keystore" \
             -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS" \
