@@ -24,6 +24,8 @@ Versionsschema:
 
 ### Behoben
 
+- App-Absturz beim Start nach Play-Store-Installation behoben: IL-Linker-Trimming auf `partial` umgestellt (schützt EF Core, FluentValidation und Blazor vor Reflection-Stripping) und `AndroidEnableProfiledAot` ohne zugehörige `.aotprofile`-Datei entfernt
+
 ## [V0.6.3] - 2026-03-30
 
 ### Hinzugefügt
