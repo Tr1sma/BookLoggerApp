@@ -46,8 +46,10 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="$(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release'">
-   	 <RunAotCompilation>true</RunAotCompilation>
-    	<AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
+        <RunAotCompilation>true</RunAotCompilation>
+        <!-- AndroidEnableProfiledAot requires an .aotprofile file — omitted until profile is generated -->
+        <!-- Trim only SDK assemblies, not app code (protects EF Core, FluentValidation, Blazor reflection) -->
+        <TrimMode>partial</TrimMode>
     </PropertyGroup>
 
     <ItemGroup>
