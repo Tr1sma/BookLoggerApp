@@ -36,6 +36,7 @@ public class AppSettings
 
     // Review tracking
     public DateTime? LastReviewPromptDate { get; set; }
+    public int ReviewPromptMonthCount { get; set; } = 0; // Prompts shown in the month of LastReviewPromptDate
 
     // Misc
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
