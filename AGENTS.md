@@ -32,6 +32,17 @@ Tests use xUnit, FluentAssertions, NSubstitute, and EF Core InMemory. Add new te
 
 Prefer method names like `AddAsync_ShouldSetDateAdded` and keep `// Arrange`, `// Act`, `// Assert` blocks. There is no coverage gate in CI, so cover service, repository, and security regressions for every behavior change.
 
+## Changelog Guidelines
+
+After every change — whether feature, bugfix, or security patch — add an entry to `CHANGELOG.md` under the `## [Unveröffentlicht]` section. **Never create a new version section** — that only happens on an official release tag. Use these categories:
+
+- `### Hinzugefügt` for new functionality
+- `### Geändert` for changes to existing behavior
+- `### Behoben` for bug fixes
+- `### Sicherheit` for security-relevant fixes
+
+Keep entries user-facing and concise. One bullet per logical change. Skip internal refactors or dependency bumps unless they affect behavior.
+
 ## Commit & Pull Request Guidelines
 Recent commits favor short imperative subjects such as `Fix goal progress bug...`, `Added Notifications...`, and issue-linked messages like `Fixed Issue #159...`. Follow that pattern: one clear subject, optional issue reference, and no placeholder messages.
 
