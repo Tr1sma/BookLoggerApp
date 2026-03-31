@@ -50,11 +50,13 @@
         <!-- AndroidEnableProfiledAot requires an .aotprofile file — omitted until profile is generated -->
         <!-- Trim only SDK assemblies, not app code (protects EF Core, FluentValidation, Blazor reflection) -->
         <TrimMode>partial</TrimMode>
+        <!-- Workaround for MonoAOTCompiler race condition (IndexOutOfRangeException in PrecompileLibraryParallel) -->
+        <AndroidAotParallelism>1</AndroidAotParallelism>
     </PropertyGroup>
 
     <ItemGroup>
         <!-- App Icon -->
-        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#C49664" />
+        <MauiIcon Include="Resources\AppIcon\appicon512.png" />
 
         <!-- Splash Screen -->
         <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#C49664" BaseSize="128,128" />

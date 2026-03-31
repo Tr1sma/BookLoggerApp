@@ -355,9 +355,9 @@ public partial class BookEditViewModel : ViewModelBase
         {
             LookupMessage = "No internet connection. Please check your network and try again.";
         }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        catch (HttpRequestException ex)
         {
-            LookupMessage = "Too many requests. Please wait a moment and try again.";
+            LookupMessage = $"Lookup failed (HTTP {(int?)ex.StatusCode}): {ex.Message}";
         }
         catch (TaskCanceledException)
         {
