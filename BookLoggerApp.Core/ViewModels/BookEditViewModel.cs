@@ -13,6 +13,7 @@ public partial class BookEditViewModel : ViewModelBase
     private readonly IImageService _imageService;
     private readonly IShelfService _shelfService;
     private readonly IWishlistService _wishlistService;
+    private readonly IReviewService _reviewService;
 
     public BookEditViewModel(
         IBookService bookService,
@@ -20,7 +21,8 @@ public partial class BookEditViewModel : ViewModelBase
         ILookupService lookupService,
         IImageService imageService,
         IShelfService shelfService,
-        IWishlistService wishlistService)
+        IWishlistService wishlistService,
+        IReviewService reviewService)
     {
         _bookService = bookService;
         _genreService = genreService;
@@ -28,6 +30,7 @@ public partial class BookEditViewModel : ViewModelBase
         _imageService = imageService;
         _shelfService = shelfService;
         _wishlistService = wishlistService;
+        _reviewService = reviewService;
     }
 
     [ObservableProperty]
@@ -396,6 +399,12 @@ public partial class BookEditViewModel : ViewModelBase
                 SelectedGenreIds.Add(genreId);
             }
         }
+    }
+
+    public async Task OnBookCompletionCelebrationClose()
+    {
+        ShowBookCompletionCelebration = false;
+        await _reviewService.TryRequestReviewAsync();
     }
 
     [RelayCommand]

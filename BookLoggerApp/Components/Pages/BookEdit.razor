@@ -380,9 +380,9 @@
         }
     }
 
-    private void HandleCelebrationClose()
+    private async Task HandleCelebrationClose()
     {
-        ViewModel.ShowBookCompletionCelebration = false;
+        await ViewModel.OnBookCompletionCelebrationClose();
         if (ViewModel.Book != null)
         {
             Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");

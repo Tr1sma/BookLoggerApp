@@ -22,7 +22,8 @@
       "Bash(grep:*)",
       "Bash(Select-String -Pattern \"error|Build succeeded|failed\")",
       "Bash(git -C /c/Users/ben.sowieja/source/repos/Tr1sma/BookLoggerApp branch -a)",
-      "Bash(FINDSTR:*)"
+      "Bash(FINDSTR:*)",
+      "Read(//c/Users/ben.sowieja/.nuget/packages/xamarin.google.android.play.review/2.0.2.7/**)"
     ],
     "deny": [],
     "ask": []

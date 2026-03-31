@@ -179,9 +179,9 @@
         // Navigation will happen after user closes all celebrations
     }
 
-    private void HandleSessionCelebrationClose()
+    private async Task HandleSessionCelebrationClose()
     {
-        ViewModel.OnSessionCelebrationClose();
+        await ViewModel.OnSessionCelebrationClose();
 
         // If no level-up, navigate to bookshelf after session celebration
         if (ViewModel.LevelUpResult == null)
@@ -190,9 +190,9 @@
         }
     }
 
-    private void HandleLevelUpCelebrationClose()
+    private async Task HandleLevelUpCelebrationClose()
     {
-        ViewModel.OnLevelUpCelebrationClose();
+        await ViewModel.OnLevelUpCelebrationClose();
 
         // Navigate to bookshelf after level-up celebration
         Navigation.NavigateTo("/bookshelf");
