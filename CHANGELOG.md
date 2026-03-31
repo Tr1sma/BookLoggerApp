@@ -24,6 +24,7 @@ Versionsschema:
 ### Geändert
 
 - Buy-me-a-Coffee-Unterstützung direkt im Backup-&-Restore-Bereich der Einstellungen hinzugefügt
+- Layout der Settings Seite wurde Optimiert
 
 ### Behoben
 
