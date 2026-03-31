@@ -7,9 +7,9 @@ on:
   workflow_dispatch: # Manuell über GitHub UI auslösbar
     inputs:
       version:
-        description: 'Version 0.7.2'
+        description: 'Version 0.7.3'
         required: true
-        default: '0.7.2'
+        default: '0.7.3'
 
 jobs:
   build-aab:
@@ -37,8 +37,12 @@ jobs:
           key: nuget-android-${{ hashFiles('**/*.csproj') }}
           restore-keys: nuget-android-
 
-      - name: Create ApiKeys.cs from template
-        run: cp BookLoggerApp.Infrastructure/Services/ApiKeys.cs.template BookLoggerApp.Infrastructure/Services/ApiKeys.cs
+      - name: Create ApiKeys.cs with secrets
+        env:
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+        run: |
+          cp BookLoggerApp.Infrastructure/Services/ApiKeys.cs.template BookLoggerApp.Infrastructure/Services/ApiKeys.cs
+          sed -i "s|GoogleBooks = null|GoogleBooks = \"$GOOGLE_BOOKS_API_KEY\"|" BookLoggerApp.Infrastructure/Services/ApiKeys.cs
 
       - name: Extract version
         run: |
