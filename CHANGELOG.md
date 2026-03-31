@@ -25,6 +25,7 @@ Versionsschema:
 
 - Buy-me-a-Coffee-Unterstützung direkt im Backup-&-Restore-Bereich der Einstellungen hinzugefügt
 - Layout der Settings Seite wurde Optimiert
+- App-Symbol auf appicon512.png umgestellt
 
 ### Behoben
 
