@@ -9,6 +9,8 @@ namespace BookLoggerApp.Tests.TestHelpers;
 /// </summary>
 public class MockGoalService : IGoalService
 {
+    public bool NextRecalculateGoalProgressResult { get; set; }
+    public int RecalculateGoalProgressCallCount { get; private set; }
     public event EventHandler? GoalsChanged;
 
     public void NotifyGoalsChanged()
@@ -59,6 +61,12 @@ public class MockGoalService : IGoalService
     public Task UpdateGoalProgressAsync(Guid goalId, int progress, CancellationToken ct = default)
     {
         return Task.CompletedTask;
+    }
+
+    public Task<bool> RecalculateGoalProgressAsync(CancellationToken ct = default)
+    {
+        RecalculateGoalProgressCallCount++;
+        return Task.FromResult(NextRecalculateGoalProgressResult);
     }
 
     public Task CheckAndCompleteGoalsAsync(CancellationToken ct = default)

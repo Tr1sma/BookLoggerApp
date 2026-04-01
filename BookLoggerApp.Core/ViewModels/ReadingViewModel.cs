@@ -16,6 +16,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private readonly IReviewService _reviewService;
     private Timer? _timer;
     private bool _bookCompletedDuringSession;
+    private bool _goalCompletedDuringSession;
 
     public ReadingViewModel(
         IProgressService progressService,
@@ -116,6 +117,9 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             StartPage = Book?.CurrentPage ?? 0;
             CurrentPage = StartPage;
             XpEarned = 0;
+            _bookCompletedDuringSession = false;
+            _goalCompletedDuringSession = false;
+            LevelUpResult = null;
 
             // Set StartPage in the session
             Session.StartPage = StartPage;
@@ -155,6 +159,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             var result = await _progressService.EndSessionAsync(Session.Id, pagesRead);
             Session = result.Session;
             SessionProgressionResult = result.ProgressionResult;
+            _goalCompletedDuringSession = result.GoalCompleted;
 
             // Check if book was already completed before update
             var wasCompleted = Book?.Status == ReadingStatus.Completed;
@@ -305,9 +310,11 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
         {
             ShowLevelUpCelebration = true;
         }
-        else if (_bookCompletedDuringSession)
+        else if (_bookCompletedDuringSession || _goalCompletedDuringSession)
         {
             await _reviewService.TryRequestReviewAsync();
+            _bookCompletedDuringSession = false;
+            _goalCompletedDuringSession = false;
         }
     }
 
@@ -319,6 +326,8 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
         await _reviewService.TryRequestReviewAsync();
+        _bookCompletedDuringSession = false;
+        _goalCompletedDuringSession = false;
     }
 
     private void OnAppResumed()
