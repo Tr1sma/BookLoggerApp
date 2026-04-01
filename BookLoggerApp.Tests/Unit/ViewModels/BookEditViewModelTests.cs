@@ -179,4 +179,14 @@ public class BookEditViewModelTests
         await _bookService.Received(1).DeleteAsync(bookId);
         _viewModel.BookDeleted.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task OnBookCompletionCelebrationClose_Should_Request_Review()
+    {
+        // Act
+        await _viewModel.OnBookCompletionCelebrationClose();
+
+        // Assert
+        await _reviewService.Received(1).TryRequestReviewAsync(Arg.Any<CancellationToken>());
+    }
 }

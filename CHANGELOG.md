@@ -21,6 +21,8 @@ Versionsschema:
 ### Geändert
 
 ### Behoben
+- In-App-Review-Prompts zählen jetzt nur nach einem erfolgreich gestarteten nativen Review-Flow und werden zuverlässig nach Level-Up, Buchabschluss oder Zielerreichung ausgelöst
+- Android-Debug- und Test-Builds verwenden für In-App-Reviews nicht länger stillschweigend einen UI-losen Fake-Flow
 
 ## [V0.7.4] - 2026-04-01
 

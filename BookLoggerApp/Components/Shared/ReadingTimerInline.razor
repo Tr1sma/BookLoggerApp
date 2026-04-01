@@ -4,6 +4,7 @@
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
+@inject IReviewService ReviewService
 @inject ITimerStateService TimerStateService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
@@ -156,6 +157,8 @@
     private ProgressionResult? SessionProgressionResult { get; set; }
     private bool ShowLevelUpCelebration { get; set; }
     private LevelUpResult? LevelUpResult { get; set; }
+    private bool GoalCompletedDuringSession { get; set; }
+    private bool BookCompletedDuringSession { get; set; }
 
     // State restoration tracking
     private bool _stateRestoreAttempted;
@@ -307,6 +310,10 @@
         try
         {
             var pagesRead = CalculatePagesRead();
+            var bookCompletedDuringSession =
+                Book.Status != ReadingStatus.Completed &&
+                Book.PageCount.HasValue &&
+                CurrentPageInput >= Book.PageCount.Value;
 
             // End session using ProgressService which handles XP, streak, plant boost, level-ups
             var result = await ProgressService.EndSessionAsync(CurrentSessionId.Value, pagesRead);
@@ -322,6 +329,8 @@
 
             // Reset timer state
             ResetTimer();
+            GoalCompletedDuringSession = result.GoalCompleted;
+            BookCompletedDuringSession = bookCompletedDuringSession;
 
             // Notify parent to refresh
             await OnSessionSaved.InvokeAsync();
@@ -382,9 +391,11 @@
         IsRunning = false;
         CurrentPageInput = 0; // Reset to 0, will be re-initialized in OnParametersSet
         CurrentSessionId = null;
+        GoalCompletedDuringSession = false;
+        BookCompletedDuringSession = false;
     }
 
-    private void HandleSessionCelebrationClose()
+    private async Task HandleSessionCelebrationClose()
     {
         ShowSessionCelebration = false;
 
@@ -395,15 +406,27 @@
         }
         else
         {
+            if (BookCompletedDuringSession || GoalCompletedDuringSession)
+            {
+                await ReviewService.TryRequestReviewAsync();
+            }
+
+            GoalCompletedDuringSession = false;
+            BookCompletedDuringSession = false;
+
             // No level-up, navigate to bookshelf
             Navigation.NavigateTo("/bookshelf");
         }
     }
 
-    private void HandleLevelUpCelebrationClose()
+    private async Task HandleLevelUpCelebrationClose()
     {
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
+        GoalCompletedDuringSession = false;
+        BookCompletedDuringSession = false;
+
+        await ReviewService.TryRequestReviewAsync();
 
         // Navigate to bookshelf after level-up celebration
         Navigation.NavigateTo("/bookshelf");
