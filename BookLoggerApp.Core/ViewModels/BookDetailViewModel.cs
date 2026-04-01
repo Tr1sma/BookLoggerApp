@@ -13,22 +13,19 @@ public partial class BookDetailViewModel : ViewModelBase
     private readonly IQuoteService _quoteService;
     private readonly IAnnotationService _annotationService;
     private readonly IGenreService _genreService;
-    private readonly IReviewService _reviewService;
 
     public BookDetailViewModel(
         IBookService bookService,
         IProgressService progressService,
         IQuoteService quoteService,
         IAnnotationService annotationService,
-        IGenreService genreService,
-        IReviewService reviewService)
+        IGenreService genreService)
     {
         _bookService = bookService;
         _progressService = progressService;
         _quoteService = quoteService;
         _annotationService = annotationService;
         _genreService = genreService;
-        _reviewService = reviewService;
     }
 
     [ObservableProperty]
@@ -101,7 +98,6 @@ public partial class BookDetailViewModel : ViewModelBase
         {
             await _bookService.CompleteBookAsync(Book.Id);
             await LoadAsync(Book.Id); // Reload
-            await _reviewService.TryRequestReviewAsync();
         }, "Failed to complete book");
     }
 
@@ -136,11 +132,6 @@ public partial class BookDetailViewModel : ViewModelBase
                 StartedAt = DateTime.UtcNow
             });
             await LoadAsync(Book.Id); // Reload
-
-            if (result.ProgressionResult.LevelUp != null || result.GoalCompleted)
-            {
-                await _reviewService.TryRequestReviewAsync();
-            }
         }, "Failed to add session");
     }
 

@@ -143,8 +143,6 @@ public static class MauiProgram
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IShareService, BookLoggerApp.Services.ShareService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFilePickerService, BookLoggerApp.Services.FilePickerService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IMigrationService, BookLoggerApp.Services.MigrationService>();
-        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IReviewPlatformLauncher, BookLoggerApp.Services.ReviewPlatformLauncher>();
-        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IReviewService, BookLoggerApp.Infrastructure.Services.ReviewService>();
     }
 
     private static void RegisterViewModels(MauiAppBuilder builder)
