@@ -3,7 +3,6 @@
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
-@inject IReviewService ReviewService
 @inject ITimerStateService TimerStateService
 
 @if (Book != null && IsVisible)
@@ -158,14 +157,9 @@
 
         try
         {
-            bool bookCompleted =
-                Book.Status != ReadingStatus.Completed &&
-                PagesRead > 0 &&
-                Book.PageCount.HasValue &&
-                Book.CurrentPage + PagesRead >= Book.PageCount.Value;
 
             // Save session
-            var result = await ProgressService.AddSessionAsync(new ReadingSession
+            await ProgressService.AddSessionAsync(new ReadingSession
             {
                 BookId = Book.Id,
                 StartedAt = StartTime ?? DateTime.UtcNow,
@@ -182,19 +176,9 @@
                 await BookService.UpdateProgressAsync(Book.Id, currentPage);
             }
 
-            bool shouldRequestReview =
-                result.ProgressionResult.LevelUp != null ||
-                result.GoalCompleted ||
-                bookCompleted;
 
             // Notify parent and close
             await OnSessionSaved.InvokeAsync();
-
-            if (shouldRequestReview)
-            {
-                await ReviewService.TryRequestReviewAsync();
-            }
-
             await HandleClose();
 
             // Reset

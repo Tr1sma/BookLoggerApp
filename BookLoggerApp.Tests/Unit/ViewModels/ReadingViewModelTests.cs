@@ -13,7 +13,6 @@ public class ReadingViewModelTests
     private readonly IBookService _bookService;
     private readonly IProgressionService _progressionService;
     private readonly ITimerStateService _timerStateService;
-    private readonly IReviewService _reviewService;
     private readonly ReadingViewModel _viewModel;
 
     public ReadingViewModelTests()
@@ -23,9 +22,8 @@ public class ReadingViewModelTests
         _bookService = Substitute.For<IBookService>();
         _progressionService = Substitute.For<IProgressionService>();
         _timerStateService = Substitute.For<ITimerStateService>();
-        _reviewService = Substitute.For<IReviewService>();
 
-        _viewModel = new ReadingViewModel(_progressService, _bookService, _progressionService, _timerStateService, _reviewService);
+        _viewModel = new ReadingViewModel(_progressService, _bookService, _progressionService, _timerStateService);
     }
 
     [Fact]
@@ -83,15 +81,11 @@ public class ReadingViewModelTests
         await _viewModel.StartCommand.ExecuteAsync(bookId);
 
         // Act
-        await _viewModel.UpdatePageCommand.ExecuteAsync(20); // Read 10 pages (20 - 10)
+        await _viewModel.UpdatePageCommand.ExecuteAsync(20);
 
         // Assert
         _viewModel.CurrentPage.Should().Be(20);
-        
-        // Check session update
-        // Use Arg.Any or simply verify call happened, as object reference is mutable and NSubstitute captures reference
         await _progressService.Received().UpdateSessionAsync(session);
-        // Also verify property values on the session object invoked
         session.PagesRead.Should().Be(10);
         session.XpEarned.Should().Be(200);
     }
@@ -103,9 +97,9 @@ public class ReadingViewModelTests
         var bookId = Guid.NewGuid();
         var book = new Book { Id = bookId, CurrentPage = 10 };
         var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
-        
-        var endResult = new SessionEndResult 
-        { 
+
+        var endResult = new SessionEndResult
+        {
             Session = session,
             ProgressionResult = new ProgressionResult { XpEarned = 100 }
         };
@@ -126,7 +120,7 @@ public class ReadingViewModelTests
     }
 
     [Fact]
-    public async Task OnSessionCelebrationClose_Should_Request_Review_When_Goal_Completed_Without_LevelUp()
+    public async Task OnSessionCelebrationClose_Should_Clear_SessionCelebration_When_No_LevelUp()
     {
         // Arrange
         var bookId = Guid.NewGuid();
@@ -150,11 +144,12 @@ public class ReadingViewModelTests
         await _viewModel.OnSessionCelebrationClose();
 
         // Assert
-        await _reviewService.Received(1).TryRequestReviewAsync(Arg.Any<CancellationToken>());
+        _viewModel.ShowSessionCelebration.Should().BeFalse();
+        _viewModel.ShowLevelUpCelebration.Should().BeFalse();
     }
 
     [Fact]
-    public async Task OnLevelUpCelebrationClose_Should_Request_Review_And_Clear_LevelUp()
+    public async Task OnLevelUpCelebrationClose_Should_Clear_LevelUp()
     {
         // Arrange
         _viewModel.LevelUpResult = new LevelUpResult
@@ -164,12 +159,13 @@ public class ReadingViewModelTests
             CoinsAwarded = 10,
             NewTotalCoins = 110
         };
+        _viewModel.ShowLevelUpCelebration = true;
 
         // Act
         await _viewModel.OnLevelUpCelebrationClose();
 
         // Assert
         _viewModel.LevelUpResult.Should().BeNull();
-        await _reviewService.Received(1).TryRequestReviewAsync(Arg.Any<CancellationToken>());
+        _viewModel.ShowLevelUpCelebration.Should().BeFalse();
     }
 }

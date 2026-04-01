@@ -4,7 +4,6 @@
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
-@inject IReviewService ReviewService
 @inject ITimerStateService TimerStateService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
@@ -406,11 +405,6 @@
         }
         else
         {
-            if (BookCompletedDuringSession || GoalCompletedDuringSession)
-            {
-                await ReviewService.TryRequestReviewAsync();
-            }
-
             GoalCompletedDuringSession = false;
             BookCompletedDuringSession = false;
 
@@ -425,8 +419,6 @@
         LevelUpResult = null;
         GoalCompletedDuringSession = false;
         BookCompletedDuringSession = false;
-
-        await ReviewService.TryRequestReviewAsync();
 
         // Navigate to bookshelf after level-up celebration
         Navigation.NavigateTo("/bookshelf");

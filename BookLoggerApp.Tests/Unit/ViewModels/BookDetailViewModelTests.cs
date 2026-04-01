@@ -13,7 +13,6 @@ public class BookDetailViewModelTests
     private readonly IQuoteService _quoteService;
     private readonly IAnnotationService _annotationService;
     private readonly IGenreService _genreService;
-    private readonly IReviewService _reviewService;
     private readonly BookDetailViewModel _viewModel;
 
     public BookDetailViewModelTests()
@@ -25,19 +24,17 @@ public class BookDetailViewModelTests
         _quoteService = Substitute.For<IQuoteService>();
         _annotationService = Substitute.For<IAnnotationService>();
         _genreService = Substitute.For<IGenreService>();
-        _reviewService = Substitute.For<IReviewService>();
 
         _viewModel = new BookDetailViewModel(
             _bookService,
             _progressService,
             _quoteService,
             _annotationService,
-            _genreService,
-            _reviewService);
+            _genreService);
     }
 
     [Fact]
-    public async Task AddSessionAsync_Should_Request_Review_When_Goal_Completed()
+    public async Task AddSessionAsync_Should_Reload_Book_When_Session_Added()
     {
         // Arrange
         var book = new Book { Id = Guid.NewGuid(), Title = "Test", Author = "Author" };
@@ -56,11 +53,11 @@ public class BookDetailViewModelTests
         await _viewModel.AddSessionAsync(15);
 
         // Assert
-        await _reviewService.Received(1).TryRequestReviewAsync(Arg.Any<CancellationToken>());
+        await _bookService.Received(1).GetWithDetailsAsync(book.Id, Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task CompleteBookAsync_Should_Request_Review_After_Completion()
+    public async Task CompleteBookAsync_Should_Reload_Book_After_Completion()
     {
         // Arrange
         var book = new Book { Id = Guid.NewGuid(), Title = "Test", Author = "Author" };
@@ -73,7 +70,7 @@ public class BookDetailViewModelTests
 
         // Assert
         await _bookService.Received(1).CompleteBookAsync(book.Id, Arg.Any<CancellationToken>());
-        await _reviewService.Received(1).TryRequestReviewAsync(Arg.Any<CancellationToken>());
+        await _bookService.Received(1).GetWithDetailsAsync(book.Id, Arg.Any<CancellationToken>());
     }
 
     private void StubReload(Book book)
