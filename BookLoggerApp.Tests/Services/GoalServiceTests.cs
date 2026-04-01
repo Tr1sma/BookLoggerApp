@@ -116,6 +116,42 @@ public class GoalServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RecalculateGoalProgressAsync_ShouldMarkNewlyCompletedGoalsAndReturnTrue()
+    {
+        // Arrange
+        await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Read 30 minutes",
+            Type = GoalType.Minutes,
+            Target = 30,
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(1),
+            IsCompleted = false
+        });
+
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow.AddMinutes(-30),
+            EndedAt = DateTime.UtcNow,
+            Minutes = 30
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await _service.RecalculateGoalProgressAsync();
+
+        // Assert
+        result.Should().BeTrue();
+
+        var completedGoals = await _service.GetCompletedGoalsAsync();
+        completedGoals.Should().ContainSingle();
+        completedGoals[0].IsCompleted.Should().BeTrue();
+        completedGoals[0].CompletedAt.Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task CheckAndCompleteGoalsAsync_ShouldCompleteReachedGoals()
     {
         // Arrange

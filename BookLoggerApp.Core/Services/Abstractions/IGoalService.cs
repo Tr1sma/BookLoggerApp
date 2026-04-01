@@ -28,6 +28,7 @@ public interface IGoalService
 
     // Goal Progress Tracking
     Task UpdateGoalProgressAsync(Guid goalId, int progress, CancellationToken ct = default);
+    Task<bool> RecalculateGoalProgressAsync(CancellationToken ct = default);
     Task CheckAndCompleteGoalsAsync(CancellationToken ct = default);
 
     // Book Exclusion
