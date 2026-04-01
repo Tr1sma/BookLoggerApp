@@ -11,6 +11,7 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IBookService BookService
 @inject BookLoggerApp.Core.Services.Abstractions.IStatsService StatsService
 @inject BookLoggerApp.Services.IScannerService ScannerService
+@inject IReviewPromptService ReviewPromptService
 
 <PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? "Add Book" : "Edit Book") - BookHeart</PageTitle>
 
@@ -289,6 +290,14 @@
     Book="@ViewModel.Book"
     OnClose="HandleCelebrationClose" />
 
+@if (_showReviewPrompt)
+{
+    <ReviewPromptModal
+        IsVisible="@_showReviewPrompt"
+        OnClose="HandleReviewPromptClose"
+        OnNeverAskAgain="HandleNeverAskAgainAsync" />
+}
+
 <!-- Delete Confirmation Modal -->
 <DeleteConfirmationModal
     IsVisible="@ViewModel.ShowDeleteConfirmation"
@@ -301,6 +310,7 @@
     [Parameter] public Guid Id { get; set; }
 
     private string? _coverPreviewUrl;
+    private bool _showReviewPrompt;
 
     protected override async Task OnInitializedAsync()
     {
@@ -375,7 +385,7 @@
             }
             else
             {
-                Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+                NavigateToCurrentBook();
             }
         }
     }
@@ -383,10 +393,32 @@
     private async Task HandleCelebrationClose()
     {
         await ViewModel.OnBookCompletionCelebrationClose();
-        if (ViewModel.Book != null)
+        await TryShowReviewPromptOrNavigateAsync();
+    }
+
+    private Task HandleReviewPromptClose()
+    {
+        _showReviewPrompt = false;
+        NavigateToCurrentBook();
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleNeverAskAgainAsync()
+    {
+        _showReviewPrompt = false;
+        await ReviewPromptService.DisablePromptAsync();
+        NavigateToCurrentBook();
+    }
+
+    private async Task TryShowReviewPromptOrNavigateAsync()
+    {
+        if (await ReviewPromptService.TryStartPromptAsync())
         {
-            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+            _showReviewPrompt = true;
+            return;
         }
+
+        NavigateToCurrentBook();
     }
 
     private void ShowDeleteModal()
@@ -436,6 +468,18 @@
         else if (!isSelected && ViewModel.SelectedShelfIds.Contains(shelfId))
         {
             ViewModel.SelectedShelfIds.Remove(shelfId);
+        }
+    }
+
+    private void NavigateToCurrentBook()
+    {
+        if (ViewModel.Book != null)
+        {
+            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+        }
+        else
+        {
+            Navigation.NavigateTo("/bookshelf");
         }
     }
 

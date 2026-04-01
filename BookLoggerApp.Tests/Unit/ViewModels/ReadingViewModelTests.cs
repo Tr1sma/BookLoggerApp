@@ -116,6 +116,7 @@ public class ReadingViewModelTests
         // Assert
         await _progressService.Received(1).EndSessionAsync(session.Id, Arg.Any<int>());
         _viewModel.ShowSessionCelebration.Should().BeTrue();
+        _viewModel.HasReviewPromptMoment.Should().BeFalse();
         _viewModel.XpEarned.Should().Be(100);
     }
 
@@ -139,11 +140,13 @@ public class ReadingViewModelTests
 
         await _viewModel.StartCommand.ExecuteAsync(bookId);
         await _viewModel.EndSessionCommand.ExecuteAsync(null);
+        _viewModel.HasReviewPromptMoment.Should().BeTrue();
 
         // Act
         await _viewModel.OnSessionCelebrationClose();
 
         // Assert
+        _viewModel.HasReviewPromptMoment.Should().BeFalse();
         _viewModel.ShowSessionCelebration.Should().BeFalse();
         _viewModel.ShowLevelUpCelebration.Should().BeFalse();
     }
@@ -160,11 +163,13 @@ public class ReadingViewModelTests
             NewTotalCoins = 110
         };
         _viewModel.ShowLevelUpCelebration = true;
+        _viewModel.HasReviewPromptMoment.Should().BeTrue();
 
         // Act
         await _viewModel.OnLevelUpCelebrationClose();
 
         // Assert
+        _viewModel.HasReviewPromptMoment.Should().BeFalse();
         _viewModel.LevelUpResult.Should().BeNull();
         _viewModel.ShowLevelUpCelebration.Should().BeFalse();
     }
