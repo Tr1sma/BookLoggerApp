@@ -1,3 +1,4 @@
+using System.Net;
 using FluentAssertions;
 using BookLoggerApp.Infrastructure.Services;
 using Xunit;
@@ -133,6 +134,135 @@ public class LookupServiceTests
         // Assert
         result.Should().NotBeNull();
         result!.Title.Should().Be("The Odyssey");
+    }
+
+    [Fact]
+    public async Task LookupByISBNAsync_WithQuotaErrorOnApiKey_ShouldRetryWithoutApiKey()
+    {
+        // Arrange
+        var isbn = "9780140449136";
+        var requestCount = 0;
+
+        var jsonResponse = @"{
+          ""items"": [
+            {
+              ""volumeInfo"": {
+                ""title"": ""The Odyssey"",
+                ""authors"": [""Homer""]
+              }
+            }
+          ]
+        }";
+
+        var mockHandler = new MockHttpMessageHandler((request) =>
+        {
+            requestCount++;
+            var query = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query);
+            var key = query["key"];
+
+            if (requestCount == 1)
+            {
+                key.Should().Be("test-api-key");
+                return new HttpResponseMessage(HttpStatusCode.Forbidden)
+                {
+                    Content = new StringContent(@"{""error"":{""message"":""Quota exceeded for quota metric 'Queries'""}}")
+                };
+            }
+
+            key.Should().BeNull();
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(jsonResponse)
+            };
+        });
+
+        var service = new LookupService(new HttpClient(mockHandler), googleBooksApiKey: "test-api-key");
+
+        // Act
+        var result = await service.LookupByISBNAsync(isbn);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Title.Should().Be("The Odyssey");
+        requestCount.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task LookupByISBNAsync_AfterQuotaError_ShouldKeepUsingAnonymousRequests()
+    {
+        // Arrange
+        var callKeys = new List<string?>();
+        var requestCount = 0;
+
+        var jsonResponse = @"{
+          ""items"": [
+            {
+              ""volumeInfo"": {
+                ""title"": ""The Odyssey"",
+                ""authors"": [""Homer""]
+              }
+            }
+          ]
+        }";
+
+        var mockHandler = new MockHttpMessageHandler((request) =>
+        {
+            requestCount++;
+            var query = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query);
+            callKeys.Add(query["key"]);
+
+            if (requestCount == 1)
+            {
+                return new HttpResponseMessage(HttpStatusCode.Forbidden)
+                {
+                    Content = new StringContent(@"{""error"":{""message"":""dailyLimitExceeded""}}")
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(jsonResponse)
+            };
+        });
+
+        var service = new LookupService(new HttpClient(mockHandler), googleBooksApiKey: "test-api-key");
+
+        // Act
+        var firstLookup = await service.LookupByISBNAsync("9780140449136");
+        var secondLookup = await service.LookupByISBNAsync("9780743273565");
+
+        // Assert
+        firstLookup.Should().NotBeNull();
+        secondLookup.Should().NotBeNull();
+        requestCount.Should().Be(3);
+        callKeys.Should().Equal("test-api-key", null, null);
+    }
+
+    [Fact]
+    public async Task LookupByISBNAsync_WithNonQuotaApiKeyError_ShouldNotRetryWithoutApiKey()
+    {
+        // Arrange
+        var requestCount = 0;
+        var mockHandler = new MockHttpMessageHandler((request) =>
+        {
+            requestCount++;
+            var query = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query);
+            query["key"].Should().Be("test-api-key");
+
+            return new HttpResponseMessage(HttpStatusCode.BadRequest)
+            {
+                Content = new StringContent(@"{""error"":{""message"":""Invalid ISBN query""}}")
+            };
+        });
+
+        var service = new LookupService(new HttpClient(mockHandler), googleBooksApiKey: "test-api-key");
+
+        // Act
+        var action = async () => await service.LookupByISBNAsync("9780140449136");
+
+        // Assert
+        await action.Should().ThrowAsync<HttpRequestException>();
+        requestCount.Should().Be(1);
     }
 
     // Helper for mocking HttpClient

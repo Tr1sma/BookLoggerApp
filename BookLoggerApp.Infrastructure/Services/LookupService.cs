@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using BookLoggerApp.Core.Services.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -14,14 +13,26 @@ public class LookupService : ILookupService
     private const string GoogleBooksApiBaseUrl = "https://www.googleapis.com/books/v1/volumes";
     private const int MaxRetries = 3;
     private static readonly int[] RetryDelaysMs = [1000, 3000, 6000];
-    private const string? GoogleBooksApiKey = ApiKeys.GoogleBooks;
+    private const string QuotaKeyword = "quota";
+    private const string RateLimitKeyword = "rateLimitExceeded";
+    private const string DailyLimitKeyword = "dailyLimitExceeded";
+    private const string ResourceExhaustedKeyword = "RESOURCE_EXHAUSTED";
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
     private readonly HttpClient _httpClient;
     private readonly ILogger<LookupService>? _logger;
+    private readonly string? _googleBooksApiKey;
+    private bool _useApiKey = true;
 
-    public LookupService(HttpClient httpClient, ILogger<LookupService>? logger = null)
+    public LookupService(HttpClient httpClient, ILogger<LookupService>? logger = null, string? googleBooksApiKey = null)
     {
         _logger = logger;
         _httpClient = httpClient;
+        _googleBooksApiKey = string.IsNullOrWhiteSpace(googleBooksApiKey)
+            ? ApiKeys.GoogleBooks
+            : googleBooksApiKey;
     }
 
     public async Task<BookMetadata?> LookupByISBNAsync(string isbn, CancellationToken ct = default)
@@ -34,8 +45,8 @@ public class LookupService : ILookupService
 
         _logger?.LogInformation("Looking up book by ISBN: {ISBN}", isbn);
 
-        var url = BuildUrl($"q=isbn:{Uri.EscapeDataString(isbn)}");
-        var searchResult = await GetWithRetryAsync<GoogleBooksSearchResult>(url, ct);
+        var queryParams = $"q=isbn:{Uri.EscapeDataString(isbn)}";
+        var searchResult = await GetWithRetryAsync<GoogleBooksSearchResult>(queryParams, ct);
 
         if (searchResult?.Items == null || searchResult.Items.Count == 0)
         {
@@ -58,8 +69,8 @@ public class LookupService : ILookupService
 
         _logger?.LogInformation("Searching books with query: {Query}", query);
 
-        var url = BuildUrl($"q={Uri.EscapeDataString(query)}&maxResults=10");
-        var searchResult = await GetWithRetryAsync<GoogleBooksSearchResult>(url, ct);
+        var queryParams = $"q={Uri.EscapeDataString(query)}&maxResults=10";
+        var searchResult = await GetWithRetryAsync<GoogleBooksSearchResult>(queryParams, ct);
 
         if (searchResult?.Items == null || searchResult.Items.Count == 0)
         {
@@ -76,50 +87,91 @@ public class LookupService : ILookupService
         return results;
     }
 
-    private static string BuildUrl(string queryParams)
+    private string BuildUrl(string queryParams, bool includeApiKey)
     {
         var url = $"{GoogleBooksApiBaseUrl}?{queryParams}";
-        if (!string.IsNullOrWhiteSpace(GoogleBooksApiKey))
-            url += $"&key={Uri.EscapeDataString(GoogleBooksApiKey)}";
+        if (includeApiKey && !string.IsNullOrWhiteSpace(_googleBooksApiKey))
+            url += $"&key={Uri.EscapeDataString(_googleBooksApiKey)}";
         return url;
     }
 
-    private async Task<T?> GetWithRetryAsync<T>(string url, CancellationToken ct)
+    private async Task<T?> GetWithRetryAsync<T>(string queryParams, CancellationToken ct)
     {
         HttpResponseMessage? response = null;
         try
         {
-            response = await _httpClient.GetAsync(url, ct);
+            var shouldUseApiKey = _useApiKey && !string.IsNullOrWhiteSpace(_googleBooksApiKey);
+            response = await SendWithRetryAsync(BuildUrl(queryParams, includeApiKey: shouldUseApiKey), ct);
 
-            for (int i = 0; i < MaxRetries && response.StatusCode == HttpStatusCode.TooManyRequests; i++)
-            {
-                _logger?.LogWarning("Retry {RetryCount}/{MaxRetries} after 429 Too Many Requests", i + 1, MaxRetries);
-                response.Dispose();
-                response = null;
-                await Task.Delay(RetryDelaysMs[i], ct);
-                response = await _httpClient.GetAsync(url, ct);
-            }
-
-            if (!response.IsSuccessStatusCode)
+            if (shouldUseApiKey && !response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync(ct);
-                _logger?.LogError("Google Books API error {StatusCode}: {Body}", (int)response.StatusCode, body);
-                throw new HttpRequestException(
-                    $"HTTP {(int)response.StatusCode}: {body}",
-                    null,
-                    response.StatusCode);
+                if (IsQuotaOrRateLimitError(response.StatusCode, body))
+                {
+                    _logger?.LogWarning(
+                        "Google Books API key hit quota/rate limits ({StatusCode}). Retrying lookup without API key.",
+                        (int)response.StatusCode);
+
+                    _useApiKey = false;
+                    response.Dispose();
+                    response = await SendWithRetryAsync(BuildUrl(queryParams, includeApiKey: false), ct);
+                }
+                else
+                {
+                    ThrowHttpRequestException(response.StatusCode, body);
+                }
             }
 
             var json = await response.Content.ReadAsStringAsync(ct);
-            return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
+            if (!response.IsSuccessStatusCode)
             {
-                PropertyNameCaseInsensitive = true
-            });
+                ThrowHttpRequestException(response.StatusCode, json);
+            }
+
+            return JsonSerializer.Deserialize<T>(json, JsonOptions);
         }
         finally
         {
             response?.Dispose();
         }
+    }
+
+    private async Task<HttpResponseMessage> SendWithRetryAsync(string url, CancellationToken ct)
+    {
+        var response = await _httpClient.GetAsync(url, ct);
+
+        for (int i = 0; i < MaxRetries && response.StatusCode == HttpStatusCode.TooManyRequests; i++)
+        {
+            _logger?.LogWarning("Retry {RetryCount}/{MaxRetries} after 429 Too Many Requests", i + 1, MaxRetries);
+            response.Dispose();
+            await Task.Delay(RetryDelaysMs[i], ct);
+            response = await _httpClient.GetAsync(url, ct);
+        }
+
+        return response;
+    }
+
+    private static bool IsQuotaOrRateLimitError(HttpStatusCode statusCode, string body)
+    {
+        if (statusCode == HttpStatusCode.TooManyRequests)
+            return true;
+
+        if (statusCode != HttpStatusCode.Forbidden)
+            return false;
+
+        return body.Contains(QuotaKeyword, StringComparison.OrdinalIgnoreCase) ||
+               body.Contains(RateLimitKeyword, StringComparison.OrdinalIgnoreCase) ||
+               body.Contains(DailyLimitKeyword, StringComparison.OrdinalIgnoreCase) ||
+               body.Contains(ResourceExhaustedKeyword, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void ThrowHttpRequestException(HttpStatusCode statusCode, string body)
+    {
+        _logger?.LogError("Google Books API error {StatusCode}: {Body}", (int)statusCode, body);
+        throw new HttpRequestException(
+            $"HTTP {(int)statusCode}: {body}",
+            null,
+            statusCode);
     }
 
     private BookMetadata MapToBookMetadata(GoogleBooksVolumeInfo volumeInfo, string? isbn)

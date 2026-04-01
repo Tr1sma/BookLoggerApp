@@ -906,8 +906,8 @@ h1:focus {
 
 @media (max-width: 768px) {
     .fab-container {
-        bottom: 5.5rem;
-        /* Account for bottom nav if present, or just some padding */
+        bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+        /* Account for bottom nav + system nav bar */
         right: 1.5rem;
     }
 }
