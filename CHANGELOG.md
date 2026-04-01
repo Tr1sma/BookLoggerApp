@@ -19,6 +19,7 @@ Versionsschema:
 ### Hinzugefügt
 
 ### Geändert
+- Der komplexere Review-Flow wurde durch zwei einfache Modals ersetzt: erst App-Feedback, dann optional der Sprung zur Play-Store-Bewertung
 - Der vereinfachte Review-Dialog erscheint erst ab Level 7, hoechstens zweimal pro Monat und kann ueber "Nicht mehr fragen" dauerhaft abgeschaltet werden
 
 ### Behoben
