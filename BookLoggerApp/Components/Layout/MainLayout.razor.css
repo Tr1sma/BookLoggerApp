@@ -61,7 +61,7 @@ main {
     }
 
     main {
-        padding-bottom: 80px; /* Space for bottom navigation */
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); /* Space for bottom navigation + system nav bar */
     }
 }
 

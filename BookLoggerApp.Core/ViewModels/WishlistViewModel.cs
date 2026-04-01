@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Net;
 using System.Net.Http;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -143,9 +144,15 @@ public partial class WishlistViewModel : ViewModelBase
         {
             LookupMessage = "No internet connection. Please check your network and try again.";
         }
+        catch (HttpRequestException ex) when (IsQuotaExceeded(ex))
+        {
+            LookupMessage = "Google Books API quota reached. Please try again later.";
+        }
         catch (HttpRequestException ex)
         {
-            LookupMessage = $"Lookup failed (HTTP {(int?)ex.StatusCode}): {ex.Message}";
+            LookupMessage = ex.StatusCode.HasValue
+                ? $"Lookup failed (HTTP {(int)ex.StatusCode.Value}). Please try again."
+                : "Lookup failed. Please try again.";
         }
         catch (TaskCanceledException)
         {
@@ -237,5 +244,19 @@ public partial class WishlistViewModel : ViewModelBase
         _lookupCoverUrl = null;
         _lookupDescription = null;
         LookupMessage = null;
+    }
+
+    private static bool IsQuotaExceeded(HttpRequestException ex)
+    {
+        if (ex.StatusCode == HttpStatusCode.TooManyRequests)
+            return true;
+
+        if (ex.StatusCode != HttpStatusCode.Forbidden)
+            return false;
+
+        return ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
+               ex.Message.Contains("rateLimitExceeded", StringComparison.OrdinalIgnoreCase) ||
+               ex.Message.Contains("dailyLimitExceeded", StringComparison.OrdinalIgnoreCase) ||
+               ex.Message.Contains("RESOURCE_EXHAUSTED", StringComparison.OrdinalIgnoreCase);
     }
 }

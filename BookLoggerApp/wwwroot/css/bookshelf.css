@@ -436,7 +436,7 @@
 /* Floating Action Button for Add Book */
 .fab-add-book {
     position: fixed;
-    bottom: 80px;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     right: 20px;
     width: 56px;
     height: 56px;
@@ -475,7 +475,7 @@
 
 @media (max-width: 640px) {
     .fab-add-book {
-        bottom: 70px;
+        bottom: calc(70px + env(safe-area-inset-bottom, 0px));
         right: 16px;
         width: 52px;
         height: 52px;
