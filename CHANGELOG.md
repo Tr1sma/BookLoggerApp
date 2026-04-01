@@ -16,6 +16,15 @@ Versionsschema:
 
 ## [Unveröffentlicht]
 
+### Hinzugefügt
+
+### Geändert
+- Der "Wie Leveln Pflanzen?" Absatz auf der Plant Shop seite wurde auf Englisch Übersetzt
+
+### Behoben
+- Die untere NavBar von Android überdeckt jetzt nicht länger die In-App NavBar
+- ISBN-Autofill nutzt jetzt automatisch einen anonymen Fallback ohne API-Key, wenn Google Books für den Projekt-Key eine Quota-/Rate-Limit-Fehlermeldung liefert
+
 ## [V0.7.3] - 2026-03-31
 
 ### Hinzugefügt
