@@ -4,7 +4,12 @@ on:
   push:
     tags:
       - 'V*'         # Trigger bei Tags wie V0.6.3, V1.0.0
-  workflow_dispatch: # Auch manuell über GitHub UI auslösbar
+  workflow_dispatch: # Manuell über GitHub UI auslösbar
+    inputs:
+      version:
+        description: 'Version 0.7.3'
+        required: true
+        default: '0.7.3'
 
 jobs:
   build-aab:
@@ -32,13 +37,21 @@ jobs:
           key: nuget-android-${{ hashFiles('**/*.csproj') }}
           restore-keys: nuget-android-
 
-      - name: Create ApiKeys.cs from template
-        run: cp BookLoggerApp.Infrastructure/Services/ApiKeys.cs.template BookLoggerApp.Infrastructure/Services/ApiKeys.cs
-
-      - name: Extract version from tag
+      - name: Create ApiKeys.cs with secrets
+        env:
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
         run: |
-          REF="${{ github.ref_name }}"
-          DISPLAY_VERSION="${REF#V}"
+          cp BookLoggerApp.Infrastructure/Services/ApiKeys.cs.template BookLoggerApp.Infrastructure/Services/ApiKeys.cs
+          sed -i "s|GoogleBooks = null|GoogleBooks = \"$GOOGLE_BOOKS_API_KEY\"|" BookLoggerApp.Infrastructure/Services/ApiKeys.cs
+
+      - name: Extract version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            DISPLAY_VERSION="${{ github.event.inputs.version }}"
+          else
+            REF="${{ github.ref_name }}"
+            DISPLAY_VERSION="${REF#V}"
+          fi
           if echo "$DISPLAY_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             IFS='.' read -r MAJOR MINOR PATCH <<< "$DISPLAY_VERSION"
             VERSION_CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))

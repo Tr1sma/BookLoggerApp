@@ -16,6 +16,8 @@ Versionsschema:
 
 ## [Unveröffentlicht]
 
+## [V0.7.3] - 2026-03-31
+
 ### Hinzugefügt
 
 - Changelog Datei
@@ -25,8 +27,14 @@ Versionsschema:
 
 - Buy-me-a-Coffee-Unterstützung direkt im Backup-&-Restore-Bereich der Einstellungen hinzugefügt
 - Layout der Settings Seite wurde Optimiert
+- App-Symbol auf appicon512.png umgestellt
+- Google-Books-API-Key wird jetzt im CI-Release-Build via GitHub-Secret injiziert (behebt 429-Quota-Fehler bei ISBN-Suche in Play-Store-Versionen)
 
 ### Behoben
+
+- Release-Build-Fehler behoben: `MonoAOTCompiler`-Race-Condition (`IndexOutOfRangeException` in `PrecompileLibraryParallel`) durch `AndroidAotParallelism=1` umgangen
+- App-Absturz beim Start nach Play-Store-Installation behoben: IL-Linker-Trimming auf `partial` umgestellt (schützt EF Core, FluentValidation und Blazor vor Reflection-Stripping) und `AndroidEnableProfiledAot` ohne zugehörige `.aotprofile`-Datei entfernt
+- ISBN-Autofill schlägt in Play-Store-Builds nicht mehr mit „429 Quota exceeded" fehl
 
 ## [V0.6.3] - 2026-03-30
 
