@@ -100,10 +100,15 @@ public class LookupService : ILookupService
                 response = await _httpClient.GetAsync(url, ct);
             }
 
-            if (response.StatusCode == HttpStatusCode.TooManyRequests)
-                throw new HttpRequestException("Google Books API rate limit exceeded. Please try again later.", null, HttpStatusCode.TooManyRequests);
-
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(ct);
+                _logger?.LogError("Google Books API error {StatusCode}: {Body}", (int)response.StatusCode, body);
+                throw new HttpRequestException(
+                    $"HTTP {(int)response.StatusCode}: {body}",
+                    null,
+                    response.StatusCode);
+            }
 
             var json = await response.Content.ReadAsStringAsync(ct);
             return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
