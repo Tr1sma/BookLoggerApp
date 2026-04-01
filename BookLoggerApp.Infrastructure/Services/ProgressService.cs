@@ -32,7 +32,7 @@ public class ProgressService : IProgressService
         _goalService = goalService;
     }
 
-    public async Task<ReadingSession> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
+    public async Task<SessionSaveResult> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
     {
         // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
@@ -65,10 +65,17 @@ public class ProgressService : IProgressService
             );
         }
 
+        bool goalCompleted = await _goalService.RecalculateGoalProgressAsync(ct);
+
         // Notify that goals may have changed
         _goalService.NotifyGoalsChanged();
 
-        return result;
+        return new SessionSaveResult
+        {
+            Session = result,
+            ProgressionResult = progressionResult,
+            GoalCompleted = goalCompleted
+        };
     }
 
     public async Task<ReadingSession> StartSessionAsync(Guid bookId, CancellationToken ct = default)
@@ -143,6 +150,8 @@ public class ProgressService : IProgressService
         await _unitOfWork.ReadingSessions.UpdateAsync(session);
         await _unitOfWork.SaveChangesAsync(ct);
 
+        bool goalCompleted = await _goalService.RecalculateGoalProgressAsync(ct);
+
         // Notify that goals may have changed (pages/minutes progress)
         _goalService.NotifyGoalsChanged();
 
@@ -150,7 +159,8 @@ public class ProgressService : IProgressService
         return new SessionEndResult
         {
             Session = session,
-            ProgressionResult = progressionResult
+            ProgressionResult = progressionResult,
+            GoalCompleted = goalCompleted
         };
     }
 

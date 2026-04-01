@@ -178,6 +178,8 @@ public class BookService : IBookService
             var activePlant = await _plantService.GetActivePlantAsync(ct);
             await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
 
+            await _goalService.RecalculateGoalProgressAsync(ct);
+
             // Notify that goals may have changed (book completed)
             _goalService.NotifyGoalsChanged();
         }
@@ -215,6 +217,12 @@ public class BookService : IBookService
             {
                 var activePlant = await _plantService.GetActivePlantAsync(ct);
                 await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
+                await _goalService.RecalculateGoalProgressAsync(ct);
+                _goalService.NotifyGoalsChanged();
+            }
+            else
+            {
+                await _goalService.RecalculateGoalProgressAsync(ct);
                 _goalService.NotifyGoalsChanged();
             }
         }

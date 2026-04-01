@@ -124,4 +124,52 @@ public class ReadingViewModelTests
         _viewModel.ShowSessionCelebration.Should().BeTrue();
         _viewModel.XpEarned.Should().Be(100);
     }
+
+    [Fact]
+    public async Task OnSessionCelebrationClose_Should_Request_Review_When_Goal_Completed_Without_LevelUp()
+    {
+        // Arrange
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 10 };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult { XpEarned = 50 },
+            GoalCompleted = true
+        };
+
+        _bookService.GetByIdAsync(bookId).Returns(book);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+
+        // Act
+        await _viewModel.OnSessionCelebrationClose();
+
+        // Assert
+        await _reviewService.Received(1).TryRequestReviewAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task OnLevelUpCelebrationClose_Should_Request_Review_And_Clear_LevelUp()
+    {
+        // Arrange
+        _viewModel.LevelUpResult = new LevelUpResult
+        {
+            OldLevel = 5,
+            NewLevel = 6,
+            CoinsAwarded = 10,
+            NewTotalCoins = 110
+        };
+
+        // Act
+        await _viewModel.OnLevelUpCelebrationClose();
+
+        // Assert
+        _viewModel.LevelUpResult.Should().BeNull();
+        await _reviewService.Received(1).TryRequestReviewAsync(Arg.Any<CancellationToken>());
+    }
 }

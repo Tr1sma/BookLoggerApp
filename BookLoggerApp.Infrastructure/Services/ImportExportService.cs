@@ -380,7 +380,7 @@ public class ImportExportService : IImportExportService
 
                 // 3. Create ZIP
                 var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                var backupZipName = $"booklogger_backup_{timestamp}.zip";
+                var backupZipName = $"bookheart_backup_{timestamp}.zip";
                 var backupZipPath = _fileSystem.CombinePath(_backupDirectory, backupZipName);
 
                 // Ensure backup zip doesn't exist

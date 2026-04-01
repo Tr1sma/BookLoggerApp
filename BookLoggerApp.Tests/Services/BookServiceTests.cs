@@ -89,6 +89,7 @@ public class BookServiceTests : IDisposable
         updated!.Status.Should().Be(ReadingStatus.Completed);
         updated.DateCompleted.Should().NotBeNull();
         updated.CurrentPage.Should().Be(100); // Should set to PageCount
+        _goalService.RecalculateGoalProgressCallCount.Should().Be(1);
     }
 
     [Fact]
@@ -112,6 +113,7 @@ public class BookServiceTests : IDisposable
         updated!.Status.Should().Be(ReadingStatus.Completed);
         updated.DateCompleted.Should().NotBeNull();
         updated.CurrentPage.Should().Be(100);
+        _goalService.RecalculateGoalProgressCallCount.Should().Be(1);
     }
 
     [Fact]
