@@ -67,6 +67,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private LevelUpResult? _levelUpResult;
 
     public bool IsRunning => Session != null && !IsPaused;
+    public bool HasReviewPromptMoment => _bookCompletedDuringSession || _goalCompletedDuringSession || LevelUpResult != null;
 
     [RelayCommand]
     public async Task LoadAsync(Guid sessionId)

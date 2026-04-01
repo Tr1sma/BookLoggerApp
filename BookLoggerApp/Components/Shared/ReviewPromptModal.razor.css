@@ -1,0 +1,74 @@
+.review-prompt-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.review-prompt-modal {
+    width: min(100%, 26rem);
+    padding: 1.75rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(135deg, #3d3329 0%, #4a3f32 100%);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.review-prompt-title {
+    margin: 0 0 0.75rem;
+    color: #f4e7d3;
+    font-size: 1.35rem;
+    line-height: 1.2;
+}
+
+.review-prompt-text {
+    margin: 0 0 1.5rem;
+    color: rgba(244, 231, 211, 0.82);
+    line-height: 1.55;
+}
+
+.review-prompt-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.review-prompt-actions .btn {
+    min-width: 6.5rem;
+}
+
+.review-prompt-never-btn {
+    margin-right: auto;
+    border: 1px solid rgba(244, 231, 211, 0.18);
+    background: rgba(244, 231, 211, 0.08);
+    color: #f4e7d3;
+}
+
+.review-prompt-never-btn:hover,
+.review-prompt-never-btn:focus {
+    background: rgba(244, 231, 211, 0.14);
+    color: #fff3e4;
+}
+
+@media (max-width: 480px) {
+    .review-prompt-modal {
+        padding: 1.25rem;
+    }
+
+    .review-prompt-actions {
+        flex-direction: column;
+    }
+
+    .review-prompt-never-btn {
+        margin-right: 0;
+    }
+
+    .review-prompt-actions .btn {
+        width: 100%;
+    }
+}

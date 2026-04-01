@@ -19,7 +19,7 @@ Versionsschema:
 ### Hinzugefügt
 
 ### Geändert
-- Der Google-Play-In-App-Review-Prompt wurde mitsamt seinem internen Tracking aus der App entfernt
+- Der vereinfachte Review-Dialog erscheint erst ab Level 7, hoechstens zweimal pro Monat und kann ueber "Nicht mehr fragen" dauerhaft abgeschaltet werden
 
 ### Behoben
 
