@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background"
+    android:padding="12dp"
+    android:gravity="center"
+    android:id="@+id/widget_streak_root">
+
+    <!-- Fire emoji / streak icon -->
+    <TextView
+        android:id="@+id/widget_streak_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="&#128293;"
+        android:textSize="28sp"
+        android:gravity="center" />
+
+    <!-- Streak number -->
+    <TextView
+        android:id="@+id/widget_streak_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:textColor="@color/widget_text_primary"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="4dp" />
+
+    <!-- Label -->
+    <TextView
+        android:id="@+id/widget_streak_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tage Streak"
+        android:textColor="@color/widget_text_muted"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:layout_marginTop="2dp" />
+
+    <!-- Today status -->
+    <TextView
+        android:id="@+id/widget_streak_today"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="@color/widget_accent"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:layout_marginTop="4dp" />
+</LinearLayout>

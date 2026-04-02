@@ -18,6 +18,7 @@ Versionsschema:
 
 ### Hinzugefügt
 
+- Android Home Screen Widgets: Drei neue Widgets fuer den Android-Startbildschirm — "Aktuelles Buch" (Cover, Titel, Fortschrittsbalken), "Lese-Streak" (aktuelle Streak-Tage mit Heute-Status), und "Lese-Ziel" (Fortschritt zum aktiven Leseziel mit Konfigurationsauswahl). Widgets aktualisieren sich automatisch alle 30 Minuten und sofort nach Aenderungen in der App (Session beenden, Buch speichern, Ziel erstellen/loeschen). Design passend zum BookHeart Cozy Dark Mode Theme.
 - Regalfarbe anpassbar: In den Settings können die Farben der Bücherleisten (Planke unter jedem Buch) und der Regalleiste (untere Leiste jedes Regals) getrennt voneinander aus je 8 Holzfarb-Presets gewählt werden
 
 ### Geändert

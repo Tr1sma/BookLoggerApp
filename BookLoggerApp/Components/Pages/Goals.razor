@@ -7,6 +7,7 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
 @implements IDisposable
 
 <PageTitle>Goals - BookHeart</PageTitle>
@@ -587,6 +588,7 @@
     private async Task SaveGoal()
     {
         await ViewModel.SaveGoalCommand.ExecuteAsync(null);
+        WidgetUpdateService.NotifyDataChanged();
         if (_modalBackHandler != null)
         {
              BackButtonService.Unregister(_modalBackHandler);
@@ -598,6 +600,7 @@
     private async Task SaveGoalFromModal()
     {
         await ViewModel.SaveGoalCommand.ExecuteAsync(null);
+        WidgetUpdateService.NotifyDataChanged();
         await CloseExcludeModal();
     }
 
@@ -625,6 +628,7 @@
         if (ViewModel.NewGoal != null)
         {
             await ViewModel.DeleteGoalCommand.ExecuteAsync(ViewModel.NewGoal.Id);
+            WidgetUpdateService.NotifyDataChanged();
         }
 
         if (_deleteModalBackHandler != null)
