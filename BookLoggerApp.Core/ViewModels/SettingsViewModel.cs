@@ -51,6 +51,12 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private int _reminderMinute = 0;
 
+    [ObservableProperty]
+    private string _shelfLedgeColor = "#8B7355";
+
+    [ObservableProperty]
+    private string _shelfBaseColor = "#D4A574";
+
     [RelayCommand]
     public async Task ToggleNotificationsAsync(bool enabled)
     {
@@ -129,6 +135,28 @@ public partial class SettingsViewModel : ViewModelBase
         }, "Failed to update reminder time");
     }
 
+    [RelayCommand]
+    public async Task UpdateShelfLedgeColorAsync(string color)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            ShelfLedgeColor = color;
+            Settings.ShelfLedgeColor = color;
+            await SaveSettingsInternalAsync();
+        }, "Failed to update shelf ledge color");
+    }
+
+    [RelayCommand]
+    public async Task UpdateShelfBaseColorAsync(string color)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            ShelfBaseColor = color;
+            Settings.ShelfBaseColor = color;
+            await SaveSettingsInternalAsync();
+        }, "Failed to update shelf base color");
+    }
+
     private async Task SaveSettingsInternalAsync()
     {
         Settings.UpdatedAt = DateTime.UtcNow;
@@ -142,6 +170,9 @@ public partial class SettingsViewModel : ViewModelBase
         {
             Settings = await _settingsProvider.GetSettingsAsync();
             MigrationLog = _migrationService.GetMigrationLog();
+
+            ShelfLedgeColor = Settings.ShelfLedgeColor;
+            ShelfBaseColor = Settings.ShelfBaseColor;
 
             if (Settings.ReminderTime.HasValue)
             {

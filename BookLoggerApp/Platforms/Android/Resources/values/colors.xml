@@ -3,4 +3,15 @@
     <color name="colorPrimary">#512BD4</color>
     <color name="colorPrimaryDark">#2B0B98</color>
     <color name="colorAccent">#2B0B98</color>
+
+    <!-- Widget theme colors (matching app.css cozy dark mode) -->
+    <color name="widget_bg">#2D2419</color>
+    <color name="widget_surface">#3D3126</color>
+    <color name="widget_text_primary">#F5E6D3</color>
+    <color name="widget_text_secondary">#C9B5A0</color>
+    <color name="widget_text_muted">#8B7968</color>
+    <color name="widget_accent">#D4A574</color>
+    <color name="widget_progress_track">#4A3F32</color>
+    <color name="widget_streak_fire">#E8A838</color>
+    <color name="widget_goal_green">#88A67E</color>
 </resources>

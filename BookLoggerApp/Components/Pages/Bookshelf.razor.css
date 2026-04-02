@@ -88,13 +88,12 @@
     left: -6px;
     right: -6px;
     height: 10px;
-    /* Wooden plank gradient */
     background: linear-gradient(180deg,
-        #8B7355 0%,
-        #7A6348 20%,
-        #6B5544 50%,
-        #5A4A3A 80%,
-        #4A3F32 100%);
+        var(--shelf-ledge-color, #8B7355) 0%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 85%, black) 20%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 70%, black) 50%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 55%, black) 80%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 45%, black) 100%);
     border-radius: 2px;
     box-shadow:
         0 3px 6px rgba(0, 0, 0, 0.5),
@@ -118,11 +117,11 @@
     right: -6px;
     height: 10px;
     background: linear-gradient(180deg,
-        #8B7355 0%,
-        #7A6348 20%,
-        #6B5544 50%,
-        #5A4A3A 80%,
-        #4A3F32 100%);
+        var(--shelf-ledge-color, #8B7355) 0%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 85%, black) 20%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 70%, black) 50%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 55%, black) 80%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 45%, black) 100%);
     border-radius: 2px;
     box-shadow:
         0 3px 6px rgba(0, 0, 0, 0.5),
@@ -135,7 +134,9 @@
 /* The visual shelf bar at the bottom */
 .shelf-wood-base {
     height: 12px;
-    background: var(--gradient-warm);
+    background: linear-gradient(135deg,
+        var(--shelf-base-color, #D4A574) 0%,
+        color-mix(in srgb, var(--shelf-base-color, #D4A574) 90%, #C9A97F) 100%);
     border-radius: 0 0 8px 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     position: relative;

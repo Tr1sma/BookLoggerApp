@@ -155,6 +155,8 @@ public class AppDbContext : DbContext
                 TotalXp = 0,
                 Coins = 100, // Starting coins
                 PlantsPurchased = 0, // Counter for dynamic plant pricing
+                ShelfLedgeColor = "#8B7355",
+                ShelfBaseColor = "#D4A574",
                 CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
