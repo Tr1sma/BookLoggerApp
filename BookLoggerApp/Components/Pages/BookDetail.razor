@@ -7,7 +7,9 @@
 @inject IProgressService ProgressService
 @inject IImageService ImageService
 @inject IWishlistService WishlistService
+@inject IShareService ShareService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@implements IDisposable
 
 <PageTitle>@(ViewModel.Book?.Title ?? "Book Details") - BookHeart</PageTitle>
 
@@ -57,7 +59,25 @@
 
             <!-- Info Section -->
             <div class="book-info-section">
-                <h2>Book Information</h2>
+                <div class="book-info-header">
+                    <h2>Book Information</h2>
+                    @if (ViewModel.Book.Status == ReadingStatus.Completed && ViewModel.Sessions.Count > 0)
+                    {
+                        <button class="share-icon-btn"
+                                @onclick="HandleShareAsRecommendation"
+                                disabled="@ViewModel.IsGeneratingBookCard"
+                                title="Share as Recommendation">
+                            @if (ViewModel.IsGeneratingBookCard)
+                            {
+                                <span class="share-icon-spinner">...</span>
+                            }
+                            else
+                            {
+                                <span>📤</span>
+                            }
+                        </button>
+                    }
+                </div>
 
                 <div class="book-meta">
                     <div class="book-meta-item">
@@ -232,6 +252,7 @@
                         <span class="average-value">@ViewModel.Book.AverageRating.Value.ToString("F1") / 5.0</span>
                     </div>
                 }
+
             </div>
         }
 
@@ -317,6 +338,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        ViewModel.BookShareCardReady += OnBookShareCardReady;
         await LoadBookDataAsync();
     }
 
@@ -533,5 +555,24 @@
             _isSavingNotes = false;
             StateHasChanged();
         }
+    }
+
+    private async Task HandleShareAsRecommendation()
+    {
+        await ViewModel.GenerateAndShareBookCardCommand.ExecuteAsync(null);
+    }
+
+    private async void OnBookShareCardReady(byte[] cardBytes)
+    {
+        var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+        await File.WriteAllBytesAsync(filePath, cardBytes);
+        await ShareService.ShareFileAsync("Book Recommendation", filePath, "image/png");
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ViewModel.BookShareCardReady -= OnBookShareCardReady;
     }
 }
