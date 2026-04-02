@@ -8,7 +8,7 @@ namespace BookLoggerApp.Core.Services.Abstractions;
 public interface IProgressService
 {
     // Session Management
-    Task<ReadingSession> AddSessionAsync(ReadingSession session, CancellationToken ct = default);
+    Task<SessionSaveResult> AddSessionAsync(ReadingSession session, CancellationToken ct = default);
     Task<ReadingSession> StartSessionAsync(Guid bookId, CancellationToken ct = default);
     Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, CancellationToken ct = default);
     Task UpdateSessionAsync(ReadingSession session, CancellationToken ct = default);

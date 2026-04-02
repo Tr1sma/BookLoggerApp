@@ -55,7 +55,7 @@
   - Nach einem Level-Up
   - Nach dem Abschliessen eines Buches
   - Nach dem Erreichen eines Leseziels
-- [ ] Nicht zu oft anzeigen (max. 1x pro Monat)
+- [ ] Nicht zu oft anzeigen (max. 2x pro Monat)
 
 ---
 

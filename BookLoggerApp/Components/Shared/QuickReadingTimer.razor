@@ -157,8 +157,9 @@
 
         try
         {
+
             // Save session
-            var session = new ReadingSession
+            await ProgressService.AddSessionAsync(new ReadingSession
             {
                 BookId = Book.Id,
                 StartedAt = StartTime ?? DateTime.UtcNow,
@@ -166,9 +167,7 @@
                 Minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes),
                 PagesRead = PagesRead > 0 ? PagesRead : null,
                 XpEarned = CalculateXP()
-            };
-
-            await ProgressService.AddSessionAsync(session);
+            });
 
             // Update book progress if pages were read
             if (PagesRead > 0)
@@ -176,6 +175,7 @@
                 var currentPage = Book.CurrentPage + PagesRead;
                 await BookService.UpdateProgressAsync(Book.Id, currentPage);
             }
+
 
             // Notify parent and close
             await OnSessionSaved.InvokeAsync();
