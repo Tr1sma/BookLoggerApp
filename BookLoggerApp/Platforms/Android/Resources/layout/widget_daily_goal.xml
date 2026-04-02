@@ -29,7 +29,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Lese-Ziel"
+            android:text="Reading Goal"
             android:textColor="@color/widget_text_primary"
             android:textSize="13sp"
             android:textStyle="bold"
@@ -64,7 +64,7 @@
         android:id="@+id/widget_goal_detail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Kein aktives Ziel"
+        android:text="No active goal"
         android:textColor="@color/widget_text_muted"
         android:textSize="11sp"
         android:layout_marginTop="4dp" />

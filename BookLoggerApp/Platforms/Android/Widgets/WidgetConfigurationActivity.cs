@@ -14,7 +14,7 @@ namespace BookLoggerApp.Platforms.Android.Widgets;
 /// Lets the user pick which active reading goal to display.
 /// Uses native Android views (not Blazor) since this is a lightweight config screen.
 /// </summary>
-[Activity(Label = "Widget konfigurieren", Exported = true,
+[Activity(Label = "Configure Widget", Exported = true,
     Name = "com.bookheart.app.WidgetConfigurationActivity",
     Theme = "@android:style/Theme.Material.NoActionBar")]
 public class WidgetConfigurationActivity : Activity
@@ -74,9 +74,9 @@ public class WidgetConfigurationActivity : Activity
         {
             var unit = g.GoalType switch
             {
-                "Books" => "Buecher",
-                "Pages" => "Seiten",
-                "Minutes" => "Minuten",
+                "Books" => "Books",
+                "Pages" => "Pages",
+                "Minutes" => "Minutes",
                 _ => ""
             };
             return $"{g.Title}\n{g.Current}/{g.Target} {unit} — {g.ProgressPercentage}%";

@@ -7,7 +7,7 @@ using BookLoggerApp.Platforms.Android.Widgets.Services;
 
 namespace BookLoggerApp.Platforms.Android.Widgets;
 
-[BroadcastReceiver(Label = "Lese-Ziel", Exported = true)]
+[BroadcastReceiver(Label = "Reading Goal", Exported = true)]
 [IntentFilter(new[] { "android.appwidget.action.APPWIDGET_UPDATE" })]
 [MetaData("android.appwidget.provider", Resource = "@xml/widget_daily_goal_info")]
 public class DailyGoalWidgetProvider : AppWidgetProvider
@@ -68,9 +68,9 @@ public class DailyGoalWidgetProvider : AppWidgetProvider
                 // Goal type icon and detail text
                 var (icon, unit) = goalData.GoalType switch
                 {
-                    "Books" => ("\U0001F4DA", "Buecher"),
-                    "Pages" => ("\U0001F4C4", "Seiten"),
-                    "Minutes" => ("\u23F1\uFE0F", "Minuten"),
+                    "Books" => ("\U0001F4DA", "Books"),
+                    "Pages" => ("\U0001F4C4", "Pages"),
+                    "Minutes" => ("\u23F1\uFE0F", "Minutes"),
                     _ => ("\U0001F3AF", "")
                 };
                 views.SetTextViewText(Resource.Id.widget_goal_icon, icon);
@@ -79,17 +79,17 @@ public class DailyGoalWidgetProvider : AppWidgetProvider
             }
             else
             {
-                views.SetTextViewText(Resource.Id.widget_goal_title, "Kein aktives Ziel");
+                views.SetTextViewText(Resource.Id.widget_goal_title, "No active goal");
                 views.SetTextViewText(Resource.Id.widget_goal_icon, "\U0001F3AF");
                 views.SetProgressBar(Resource.Id.widget_goal_progress_bar, 100, 0, false);
                 views.SetTextViewText(Resource.Id.widget_goal_percent, "");
-                views.SetTextViewText(Resource.Id.widget_goal_detail, "Erstelle ein Ziel in BookHeart");
+                views.SetTextViewText(Resource.Id.widget_goal_detail, "Create a goal in BookHeart");
             }
         }
         catch
         {
             views.SetTextViewText(Resource.Id.widget_goal_title, "BookHeart");
-            views.SetTextViewText(Resource.Id.widget_goal_detail, "Tippe um zu oeffnen");
+            views.SetTextViewText(Resource.Id.widget_goal_detail, "Tap to open");
         }
 
         // Click opens the app
