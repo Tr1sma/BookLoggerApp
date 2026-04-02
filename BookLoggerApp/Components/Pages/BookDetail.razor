@@ -61,7 +61,7 @@
             <div class="book-info-section">
                 <div class="book-info-header">
                     <h2>Book Information</h2>
-                    @if (ViewModel.Book.Status == ReadingStatus.Completed && ViewModel.Sessions.Count > 0)
+                    @if (ViewModel.Book.Status == ReadingStatus.Completed)
                     {
                         <button class="share-icon-btn"
                                 @onclick="HandleShareAsRecommendation"
