@@ -10,6 +10,9 @@ public class StatsShareData
     public int PagesRead { get; set; }
     public int MinutesRead { get; set; }
     public string? FavoriteGenre { get; set; }
-    public List<(string Title, string Author)> TopBooks { get; set; } = new();
+    public List<(string Title, string Author, double? Rating)> TopBooks { get; set; } = new();
     public int UserLevel { get; set; }
+    public double? AverageRating { get; set; }
+    public int CurrentStreak { get; set; }
+    public int TotalBooks { get; set; }
 }

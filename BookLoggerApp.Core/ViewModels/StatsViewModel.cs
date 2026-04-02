@@ -14,6 +14,7 @@ public partial class StatsViewModel : ViewModelBase
     private readonly IPlantService _plantService;
     private readonly IShareCardService _shareCardService;
     private readonly IProgressService _progressService;
+    private readonly IBookService _bookService;
 
     /// <summary>
     /// Raised when a stats share card PNG is ready. The component handles file write + sharing.
@@ -25,13 +26,15 @@ public partial class StatsViewModel : ViewModelBase
         IAppSettingsProvider settingsProvider,
         IPlantService plantService,
         IShareCardService shareCardService,
-        IProgressService progressService)
+        IProgressService progressService,
+        IBookService bookService)
     {
         _statsService = statsService;
         _settingsProvider = settingsProvider;
         _plantService = plantService;
         _shareCardService = shareCardService;
         _progressService = progressService;
+        _bookService = bookService;
     }
 
     [ObservableProperty]
@@ -126,7 +129,7 @@ public partial class StatsViewModel : ViewModelBase
     // === Share Card Properties ===
 
     [ObservableProperty]
-    private string _selectedSharePeriod = "Month";
+    private string _selectedSharePeriod = DateTime.UtcNow.ToString("yyyy-MM");
 
     [ObservableProperty]
     private bool _showShareModal;
@@ -308,20 +311,25 @@ public partial class StatsViewModel : ViewModelBase
             }
 
             string? genre = await _statsService.GetFavoriteGenreAsync();
+            double avgRating = await _statsService.GetAverageRatingAsync();
+            int totalBooks = await _bookService.GetTotalCountAsync();
 
-            var topBooks = isAllTime
-                ? await _statsService.GetTopBooksInRangeAsync(new DateTime(2000, 1, 1), DateTime.UtcNow, 3)
-                : await _statsService.GetTopBooksInRangeAsync(start, end, 3);
+            var topBooks = await _statsService.GetTopBooksInRangeAsync(
+                isAllTime ? new DateTime(2000, 1, 1) : start,
+                isAllTime ? DateTime.UtcNow : end,
+                3);
 
             var data = new StatsShareData
             {
-                PeriodLabel = SelectedSharePeriod,
+                PeriodLabel = GetPeriodDisplayLabel(SelectedSharePeriod),
                 BooksCompleted = books,
                 PagesRead = pages,
                 MinutesRead = minutes,
                 FavoriteGenre = genre,
-                TopBooks = topBooks.Select(b => (b.Title, b.Author)).ToList(),
-                UserLevel = CurrentLevel
+                TopBooks = topBooks.Select(b => (b.Title, b.Author, b.AverageRating)).ToList(),
+                UserLevel = CurrentLevel,
+                AverageRating = avgRating > 0 ? avgRating : null,
+                TotalBooks = totalBooks
             };
 
             byte[] cardBytes = await _shareCardService.GenerateStatsCardAsync(data);
@@ -334,13 +342,48 @@ public partial class StatsViewModel : ViewModelBase
         IsGeneratingCard = false;
     }
 
-    private static (DateTime start, DateTime end) GetShareDateRange(string period) => period switch
+    private static (DateTime start, DateTime end) GetShareDateRange(string period)
     {
-        "Week"    => (DateTime.UtcNow.Date.AddDays(-6), DateTime.UtcNow),
-        "Quarter" => (DateTime.UtcNow.Date.AddDays(-89), DateTime.UtcNow),
-        "Year"    => (new DateTime(DateTime.UtcNow.Year, 1, 1), DateTime.UtcNow),
-        "All Time" => (new DateTime(2000, 1, 1), DateTime.UtcNow),
-        _ => (DateTime.UtcNow.Date.AddDays(-29), DateTime.UtcNow) // "Month"
+        if (period == "All Time")
+            return (new DateTime(2000, 1, 1), DateTime.UtcNow);
+
+        if (period == "Year")
+            return (new DateTime(DateTime.UtcNow.Year, 1, 1), DateTime.UtcNow);
+
+        // Specific year format (e.g., "2025", "2024")
+        if (period.Length == 4 && int.TryParse(period, out int yearOnly))
+        {
+            var yearStart = new DateTime(yearOnly, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var yearEnd = yearOnly == DateTime.UtcNow.Year
+                ? DateTime.UtcNow
+                : new DateTime(yearOnly, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+            return (yearStart, yearEnd);
+        }
+
+        // "yyyy-MM" specific month format
+        if (period.Length == 7 && period[4] == '-'
+            && int.TryParse(period[..4], out int year)
+            && int.TryParse(period[5..], out int month))
+        {
+            var start = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+            var end = start.AddMonths(1).AddTicks(-1);
+            return (start, end);
+        }
+
+        // Fallback: last 30 days
+        return (DateTime.UtcNow.Date.AddDays(-29), DateTime.UtcNow);
+    }
+
+    private static string GetPeriodDisplayLabel(string period) => period switch
+    {
+        "All Time" => "All Time",
+        "Year" => DateTime.UtcNow.Year.ToString(),
+        _ when period.Length == 4 && int.TryParse(period, out _) => period,
+        _ when period.Length == 7 && period[4] == '-'
+            && int.TryParse(period[..4], out int y)
+            && int.TryParse(period[5..], out int m)
+            => new DateTime(y, m, 1).ToString("MMMM yyyy"),
+        _ => period
     };
 
     private void GenerateLevelMilestones()

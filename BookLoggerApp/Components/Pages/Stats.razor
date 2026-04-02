@@ -302,12 +302,51 @@
             <p class="share-modal-subtitle">Choose a time period for your reading card</p>
 
             <div class="share-period-picker">
-                @foreach (var period in new[] { "Week", "Month", "Quarter", "Year", "All Time" })
-                {
-                    <button class="@("period-chip" + (ViewModel.SelectedSharePeriod == period ? " active" : ""))"
-                            @onclick="() => ViewModel.SelectedSharePeriod = period">
-                        @period
+                <div class="period-type-tabs">
+                    <button class="@("period-chip period-type" + (sharePeriodType == "alltime" ? " active" : ""))"
+                            @onclick='() => SelectPeriodType("alltime")'>
+                        All Time
                     </button>
+                    <button class="@("period-chip period-type" + (sharePeriodType == "year" ? " active" : ""))"
+                            @onclick='() => SelectPeriodType("year")'>
+                        Year
+                    </button>
+                    <button class="@("period-chip period-type" + (sharePeriodType == "month" ? " active" : ""))"
+                            @onclick='() => SelectPeriodType("month")'>
+                        Month
+                    </button>
+                </div>
+
+                @if (sharePeriodType == "year")
+                {
+                    <div class="period-sub-options">
+                        @for (int yi = DateTime.Now.Year; yi >= DateTime.Now.Year - 4; yi--)
+                        {
+                            var yearValue = yi.ToString();
+                            <button class="@("period-chip" + (ViewModel.SelectedSharePeriod == yearValue ? " active" : ""))"
+                                    @onclick="() => ViewModel.SelectedSharePeriod = yearValue">
+                                @yearValue
+                            </button>
+                        }
+                    </div>
+                }
+                else if (sharePeriodType == "month")
+                {
+                    <div class="period-sub-options">
+                        @{
+                            var mDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                        }
+                        @for (int mi = 0; mi < 12; mi++)
+                        {
+                            var monthValue = mDate.ToString("yyyy-MM");
+                            var monthLabel = mDate.ToString("MMMM yyyy");
+                            <button class="@("period-chip" + (ViewModel.SelectedSharePeriod == monthValue ? " active" : ""))"
+                                    @onclick="() => ViewModel.SelectedSharePeriod = monthValue">
+                                @monthLabel
+                            </button>
+                            mDate = mDate.AddMonths(-1);
+                        }
+                    </div>
                 }
             </div>
 
@@ -334,6 +373,7 @@
 
 @code {
     private RatingCategory? selectedCategory = null;
+    private string sharePeriodType = "alltime";
     private string? _currentUrl;
 
     private Func<Task<bool>>? _backHandler;
@@ -427,5 +467,16 @@
         selectedCategory = category;
         await ViewModel.FilterTopBooksByCategoryAsync(category);
         StateHasChanged();
+    }
+
+    private void SelectPeriodType(string type)
+    {
+        sharePeriodType = type;
+        ViewModel.SelectedSharePeriod = type switch
+        {
+            "year" => DateTime.Now.Year.ToString(),
+            "month" => DateTime.Now.ToString("yyyy-MM"),
+            _ => "All Time"
+        };
     }
 }
