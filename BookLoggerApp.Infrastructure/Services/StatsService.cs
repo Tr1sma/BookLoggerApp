@@ -132,6 +132,34 @@ public class StatsService : IStatsService
         return await _unitOfWork.Books.GetCountByCompletionYearAsync(year, ct);
     }
 
+    public async Task<int> GetBooksCompletedInRangeAsync(DateTime start, DateTime end, CancellationToken ct = default)
+    {
+        return await _unitOfWork.Context.Set<Book>()
+            .Where(b => b.Status == ReadingStatus.Completed
+                     && b.DateCompleted.HasValue
+                     && b.DateCompleted.Value >= start
+                     && b.DateCompleted.Value <= end)
+            .CountAsync(ct);
+    }
+
+    public async Task<List<Book>> GetTopBooksInRangeAsync(DateTime start, DateTime end, int count = 3, CancellationToken ct = default)
+    {
+        var books = await _unitOfWork.Context.Set<Book>()
+            .AsNoTracking()
+            .Where(b => b.Status == ReadingStatus.Completed
+                     && b.DateCompleted.HasValue
+                     && b.DateCompleted.Value >= start
+                     && b.DateCompleted.Value <= end)
+            .ToListAsync(ct);
+
+        // AverageRating is a computed property — sort in memory after loading.
+        // Books with no ratings are sorted last (null-safe descending).
+        return books
+            .OrderByDescending(b => b.AverageRating ?? -1)
+            .Take(count)
+            .ToList();
+    }
+
     public async Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default)
     {
         // Optimized: Group by genre directly in the database to avoid loading all books and genres into memory.
@@ -251,6 +279,20 @@ public class StatsService : IStatsService
             .Where(b => b.Status == ReadingStatus.Completed)
             .Select(BookRatingSummary.FromBook)
             .OrderByDescending(s => s.AverageRating)
+            .ToList();
+    }
+
+    public async Task<List<(int Year, int Month)>> GetActiveReadingPeriodsAsync(CancellationToken ct = default)
+    {
+        var dates = await _unitOfWork.Context.Set<Book>()
+            .Where(b => b.Status == ReadingStatus.Completed && b.DateCompleted.HasValue)
+            .Select(b => b.DateCompleted!.Value)
+            .ToListAsync(ct);
+
+        return dates
+            .Select(d => (d.Year, d.Month))
+            .Distinct()
+            .OrderByDescending(x => x.Year).ThenByDescending(x => x.Month)
             .ToList();
     }
 

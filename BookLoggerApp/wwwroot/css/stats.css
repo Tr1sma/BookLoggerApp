@@ -1161,3 +1161,115 @@
 /* ===== Color Scheme Consistency ===== */
 /* The design uses the cozy brown theme from app.css throughout */
 /* All colors use CSS variables for consistency */
+
+/* ===== Share Stats Button & Modal ===== */
+.stats-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.stats-section-header h2 {
+    margin: 0;
+}
+
+.share-stats-btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 20px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.share-stats-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 165, 116, 0.4);
+}
+
+.share-modal-card {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 1px solid var(--border-color, #4A3F32);
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    width: 90%;
+    max-width: 420px;
+    max-height: 85vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+}
+
+.share-modal-card h2 {
+    color: var(--primary-color);
+    margin: 0 0 0.25rem;
+    font-size: 1.4rem;
+}
+
+.share-modal-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.share-period-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.period-chip {
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border-color, #4A3F32);
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.period-chip:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.period-chip.active {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: var(--bg-primary);
+    border-color: transparent;
+}
+
+.period-type-tabs {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 0.25rem;
+}
+
+.period-type-tabs .period-chip {
+    flex: 1;
+}
+
+.period-sub-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.share-modal-action {
+    width: 100%;
+}

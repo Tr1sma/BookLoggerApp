@@ -14,6 +14,13 @@ public partial class BookEditViewModel : ViewModelBase
     private readonly IImageService _imageService;
     private readonly IShelfService _shelfService;
     private readonly IWishlistService _wishlistService;
+    private readonly IShareCardService _shareCardService;
+    private readonly IProgressService _progressService;
+
+    /// <summary>
+    /// Raised when a book share card PNG is ready. The component handles file write + sharing.
+    /// </summary>
+    public event Action<byte[]>? BookShareCardReady;
 
     public BookEditViewModel(
         IBookService bookService,
@@ -21,7 +28,9 @@ public partial class BookEditViewModel : ViewModelBase
         ILookupService lookupService,
         IImageService imageService,
         IShelfService shelfService,
-        IWishlistService wishlistService)
+        IWishlistService wishlistService,
+        IShareCardService shareCardService,
+        IProgressService progressService)
     {
         _bookService = bookService;
         _genreService = genreService;
@@ -29,6 +38,8 @@ public partial class BookEditViewModel : ViewModelBase
         _imageService = imageService;
         _shelfService = shelfService;
         _wishlistService = wishlistService;
+        _shareCardService = shareCardService;
+        _progressService = progressService;
     }
 
     [ObservableProperty]
@@ -69,6 +80,16 @@ public partial class BookEditViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _bookDeleted;
+
+    /// <summary>
+    /// True only when an existing book transitions to Completed during SaveAsync.
+    /// False for books added directly as Completed (no session data).
+    /// </summary>
+    [ObservableProperty]
+    private bool _bookCompletedFromSession;
+
+    [ObservableProperty]
+    private bool _isGeneratingBookCard;
 
     // Track original status to detect when book becomes completed
     private ReadingStatus? _originalStatus;
@@ -122,8 +143,9 @@ public partial class BookEditViewModel : ViewModelBase
     {
         if (Book == null) return;
 
-        // Reset celebration flag
+        // Reset celebration flags
         ShowBookCompletionCelebration = false;
+        BookCompletedFromSession = false;
 
         await ExecuteSafelyAsync(async () =>
         {
@@ -180,6 +202,7 @@ public partial class BookEditViewModel : ViewModelBase
                     // Book is being marked as completed - use CompleteBookAsync for XP and side effects
                     await _bookService.CompleteBookAsync(Book.Id);
                     ShowBookCompletionCelebration = true;
+                    BookCompletedFromSession = true;
                 }
 
                 if (isLeavingWishlist)
@@ -419,9 +442,56 @@ public partial class BookEditViewModel : ViewModelBase
         }
     }
 
+    [RelayCommand]
+    public async Task GenerateAndShareBookCardAsync()
+    {
+        if (Book == null) return;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            IsGeneratingBookCard = true;
+
+            int totalMinutes = await _progressService.GetTotalMinutesAsync(Book.Id);
+
+            byte[]? coverBytes = null;
+            if (Book.Id != Guid.Empty)
+            {
+                var resized = await _imageService.GetResizedCoverImageAsync(Book.Id, 320, 480);
+                coverBytes = resized?.Bytes;
+            }
+
+            var data = new BookShareData
+            {
+                Title = Book.Title,
+                Author = Book.Author,
+                PageCount = Book.PageCount,
+                TotalMinutesRead = totalMinutes,
+                AverageRating = Book.AverageRating,
+                CoverImageBytes = coverBytes,
+                CategoryRatings = new Dictionary<RatingCategory, int?>
+                {
+                    [RatingCategory.Characters]   = Book.CharactersRating,
+                    [RatingCategory.Plot]         = Book.PlotRating,
+                    [RatingCategory.WritingStyle] = Book.WritingStyleRating,
+                    [RatingCategory.SpiceLevel]   = Book.SpiceLevelRating,
+                    [RatingCategory.Pacing]       = Book.PacingRating,
+                    [RatingCategory.WorldBuilding] = Book.WorldBuildingRating
+                }
+            };
+
+            byte[] cardBytes = await _shareCardService.GenerateBookCardAsync(data);
+            BookShareCardReady?.Invoke(cardBytes);
+
+            IsGeneratingBookCard = false;
+        }, "Failed to generate book share card");
+
+        IsGeneratingBookCard = false;
+    }
+
     public Task OnBookCompletionCelebrationClose()
     {
         ShowBookCompletionCelebration = false;
+        BookCompletedFromSession = false;
         return Task.CompletedTask;
     }
 
