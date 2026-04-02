@@ -5,6 +5,7 @@
 @inject StatsViewModel ViewModel
 @inject NavigationManager NavigationManager
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@inject BookLoggerApp.Core.Services.Abstractions.IShareService ShareService
 @implements IDisposable
 
 <PageTitle>Level Overview - BookHeart</PageTitle>
@@ -56,7 +57,12 @@
 
         <!-- Stats - Compact Chips -->
         <section class="stats-chips-section">
-            <h2>📊 Your Stats</h2>
+            <div class="stats-section-header">
+                <h2>📊 Your Stats</h2>
+                <button class="share-stats-btn" @onclick="() => ViewModel.ShowShareModal = true">
+                    📤 Share Stats
+                </button>
+            </div>
             <div class="stats-chips">
                 <span class="stat-chip">
                     <span class="stat-chip-icon">⭐</span>
@@ -288,6 +294,44 @@
     }
 </div>
 
+@if (ViewModel.ShowShareModal)
+{
+    <div class="celebration-overlay" @onclick="() => ViewModel.ShowShareModal = false">
+        <div class="share-modal-card" @onclick:stopPropagation="true">
+            <h2>Share Reading Stats</h2>
+            <p class="share-modal-subtitle">Choose a time period for your reading card</p>
+
+            <div class="share-period-picker">
+                @foreach (var period in new[] { "Week", "Month", "Quarter", "Year", "All Time" })
+                {
+                    <button class="@("period-chip" + (ViewModel.SelectedSharePeriod == period ? " active" : ""))"
+                            @onclick="() => ViewModel.SelectedSharePeriod = period">
+                        @period
+                    </button>
+                }
+            </div>
+
+            <button class="btn btn-primary share-modal-action"
+                    @onclick="() => ViewModel.GenerateAndShareStatsCardCommand.ExecuteAsync(null)"
+                    disabled="@ViewModel.IsGeneratingCard">
+                @if (ViewModel.IsGeneratingCard)
+                {
+                    <span>Generating…</span>
+                }
+                else
+                {
+                    <span>📤 Create &amp; Share</span>
+                }
+            </button>
+
+            <button class="btn btn-secondary share-modal-action"
+                    @onclick="() => ViewModel.ShowShareModal = false">
+                Cancel
+            </button>
+        </div>
+    </div>
+}
+
 @code {
     private RatingCategory? selectedCategory = null;
     private string? _currentUrl;
@@ -297,7 +341,8 @@
     protected override async Task OnInitializedAsync()
     {
         NavigationManager.LocationChanged += OnLocationChanged;
-        
+        ViewModel.ShareCardReady += OnShareCardReady;
+
         // Register back handler to valid custom routing
         _backHandler = async () =>
         {
@@ -306,8 +351,26 @@
             return true;
         };
         BackButtonService.Register(_backHandler);
-        
+
         await LoadDataAsync();
+    }
+
+    private void OnShareCardReady(byte[] cardBytes)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                var fileName = $"share_stats_{DateTime.UtcNow:yyyyMMddHHmmss}.png";
+                var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+                await File.WriteAllBytesAsync(filePath, cardBytes);
+                await ShareService.ShareFileAsync("My Reading Stats", filePath, "image/png");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to share stats card: {ex.Message}");
+            }
+        });
     }
 
     protected override async Task OnParametersSetAsync()
@@ -343,6 +406,7 @@
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
+        ViewModel.ShareCardReady -= OnShareCardReady;
         if (_backHandler != null)
         {
             BackButtonService.Unregister(_backHandler);

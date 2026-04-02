@@ -18,6 +18,8 @@ public interface IStatsService
     Task<Dictionary<DateTime, int>> GetReadingTrendAsync(DateTime start, DateTime end, CancellationToken ct = default);
     Task<int> GetPagesReadInRangeAsync(DateTime start, DateTime end, CancellationToken ct = default);
     Task<int> GetBooksCompletedInYearAsync(int year, CancellationToken ct = default);
+    Task<int> GetBooksCompletedInRangeAsync(DateTime start, DateTime end, CancellationToken ct = default);
+    Task<List<Book>> GetTopBooksInRangeAsync(DateTime start, DateTime end, int count = 3, CancellationToken ct = default);
 
     // Genre Statistics
     Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default);

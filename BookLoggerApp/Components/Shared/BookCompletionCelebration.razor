@@ -43,6 +43,22 @@
             <button class="celebration-button" @onclick="HandleClose">
                 Awesome!
             </button>
+
+            @if (ShowShareButton)
+            {
+                <button class="celebration-button celebration-share-button"
+                        @onclick="OnShareBook"
+                        disabled="@IsGeneratingCard">
+                    @if (IsGeneratingCard)
+                    {
+                        <span>Generating…</span>
+                    }
+                    else
+                    {
+                        <span>📤 Share as Recommendation</span>
+                    }
+                </button>
+            }
         </div>
     </div>
 }
@@ -51,6 +67,9 @@
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public Book? Book { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public bool ShowShareButton { get; set; }
+    [Parameter] public bool IsGeneratingCard { get; set; }
+    [Parameter] public EventCallback OnShareBook { get; set; }
 
     private async Task HandleClose()
     {

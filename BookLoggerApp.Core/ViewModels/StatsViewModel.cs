@@ -12,15 +12,26 @@ public partial class StatsViewModel : ViewModelBase
     private readonly IStatsService _statsService;
     private readonly IAppSettingsProvider _settingsProvider;
     private readonly IPlantService _plantService;
+    private readonly IShareCardService _shareCardService;
+    private readonly IProgressService _progressService;
+
+    /// <summary>
+    /// Raised when a stats share card PNG is ready. The component handles file write + sharing.
+    /// </summary>
+    public event Action<byte[]>? ShareCardReady;
 
     public StatsViewModel(
         IStatsService statsService,
         IAppSettingsProvider settingsProvider,
-        IPlantService plantService)
+        IPlantService plantService,
+        IShareCardService shareCardService,
+        IProgressService progressService)
     {
         _statsService = statsService;
         _settingsProvider = settingsProvider;
         _plantService = plantService;
+        _shareCardService = shareCardService;
+        _progressService = progressService;
     }
 
     [ObservableProperty]
@@ -111,6 +122,17 @@ public partial class StatsViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<LevelMilestone> _levelMilestones = new();
+
+    // === Share Card Properties ===
+
+    [ObservableProperty]
+    private string _selectedSharePeriod = "Month";
+
+    [ObservableProperty]
+    private bool _showShareModal;
+
+    [ObservableProperty]
+    private bool _isGeneratingCard;
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -255,6 +277,71 @@ public partial class StatsViewModel : ViewModelBase
     {
         return BookLoggerApp.Core.Helpers.XpCalculator.GetXpForLevel(level);
     }
+
+    [RelayCommand]
+    public async Task GenerateAndShareStatsCardAsync()
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            IsGeneratingCard = true;
+
+            var (start, end) = GetShareDateRange(SelectedSharePeriod);
+            bool isAllTime = SelectedSharePeriod == "All Time";
+
+            int books = isAllTime
+                ? await _statsService.GetTotalBooksReadAsync()
+                : await _statsService.GetBooksCompletedInRangeAsync(start, end);
+
+            int pages = isAllTime
+                ? await _statsService.GetTotalPagesReadAsync()
+                : await _statsService.GetPagesReadInRangeAsync(start, end);
+
+            int minutes;
+            if (isAllTime)
+            {
+                minutes = await _progressService.GetTotalMinutesAllBooksAsync();
+            }
+            else
+            {
+                var trend = await _statsService.GetReadingTrendAsync(start, end);
+                minutes = trend.Values.Sum();
+            }
+
+            string? genre = await _statsService.GetFavoriteGenreAsync();
+
+            var topBooks = isAllTime
+                ? await _statsService.GetTopBooksInRangeAsync(new DateTime(2000, 1, 1), DateTime.UtcNow, 3)
+                : await _statsService.GetTopBooksInRangeAsync(start, end, 3);
+
+            var data = new StatsShareData
+            {
+                PeriodLabel = SelectedSharePeriod,
+                BooksCompleted = books,
+                PagesRead = pages,
+                MinutesRead = minutes,
+                FavoriteGenre = genre,
+                TopBooks = topBooks.Select(b => (b.Title, b.Author)).ToList(),
+                UserLevel = CurrentLevel
+            };
+
+            byte[] cardBytes = await _shareCardService.GenerateStatsCardAsync(data);
+            ShareCardReady?.Invoke(cardBytes);
+
+            ShowShareModal = false;
+            IsGeneratingCard = false;
+        }, "Failed to generate share card");
+
+        IsGeneratingCard = false;
+    }
+
+    private static (DateTime start, DateTime end) GetShareDateRange(string period) => period switch
+    {
+        "Week"    => (DateTime.UtcNow.Date.AddDays(-6), DateTime.UtcNow),
+        "Quarter" => (DateTime.UtcNow.Date.AddDays(-89), DateTime.UtcNow),
+        "Year"    => (new DateTime(DateTime.UtcNow.Year, 1, 1), DateTime.UtcNow),
+        "All Time" => (new DateTime(2000, 1, 1), DateTime.UtcNow),
+        _ => (DateTime.UtcNow.Date.AddDays(-29), DateTime.UtcNow) // "Month"
+    };
 
     private void GenerateLevelMilestones()
     {
