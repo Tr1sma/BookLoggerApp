@@ -7,7 +7,7 @@ using BookLoggerApp.Platforms.Android.Widgets.Services;
 
 namespace BookLoggerApp.Platforms.Android.Widgets;
 
-[BroadcastReceiver(Label = "Aktuelles Buch", Exported = true)]
+[BroadcastReceiver(Label = "Current Book", Exported = true)]
 [IntentFilter(new[] { "android.appwidget.action.APPWIDGET_UPDATE" })]
 [MetaData("android.appwidget.provider", Resource = "@xml/widget_current_book_info")]
 public class CurrentBookWidgetProvider : AppWidgetProvider
@@ -38,7 +38,7 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
                 views.SetTextViewText(Resource.Id.widget_book_author, bookData.Author);
                 views.SetProgressBar(Resource.Id.widget_progress_bar, 100, bookData.ProgressPercentage, false);
                 views.SetTextViewText(Resource.Id.widget_page_info,
-                    $"Seite {bookData.CurrentPage}/{bookData.TotalPages} — {bookData.ProgressPercentage}%");
+                    $"Page {bookData.CurrentPage}/{bookData.TotalPages} — {bookData.ProgressPercentage}%");
 
                 // Load cover image
                 if (bookData.CoverImagePath is not null && File.Exists(bookData.CoverImagePath))
@@ -57,10 +57,10 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
             else
             {
                 // No book currently being read
-                views.SetTextViewText(Resource.Id.widget_book_title, "Kein Buch aktiv");
+                views.SetTextViewText(Resource.Id.widget_book_title, "No active book");
                 views.SetTextViewText(Resource.Id.widget_book_author, "");
                 views.SetProgressBar(Resource.Id.widget_progress_bar, 100, 0, false);
-                views.SetTextViewText(Resource.Id.widget_page_info, "Tippe um BookHeart zu oeffnen");
+                views.SetTextViewText(Resource.Id.widget_page_info, "Tap to open BookHeart");
                 views.SetImageViewResource(Resource.Id.widget_cover_image, Resource.Drawable.widget_placeholder_cover);
             }
         }
@@ -69,7 +69,7 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
             // Fallback on any error
             views.SetTextViewText(Resource.Id.widget_book_title, "BookHeart");
             views.SetTextViewText(Resource.Id.widget_book_author, "");
-            views.SetTextViewText(Resource.Id.widget_page_info, "Tippe um zu oeffnen");
+            views.SetTextViewText(Resource.Id.widget_page_info, "Tap to open");
         }
 
         // Click opens the app

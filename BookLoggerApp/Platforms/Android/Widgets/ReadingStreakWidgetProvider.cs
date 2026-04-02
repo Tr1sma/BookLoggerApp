@@ -6,7 +6,7 @@ using BookLoggerApp.Platforms.Android.Widgets.Services;
 
 namespace BookLoggerApp.Platforms.Android.Widgets;
 
-[BroadcastReceiver(Label = "Lese-Streak", Exported = true)]
+[BroadcastReceiver(Label = "Reading Streak", Exported = true)]
 [IntentFilter(new[] { "android.appwidget.action.APPWIDGET_UPDATE" })]
 [MetaData("android.appwidget.provider", Resource = "@xml/widget_reading_streak_info")]
 public class ReadingStreakWidgetProvider : AppWidgetProvider
@@ -34,16 +34,16 @@ public class ReadingStreakWidgetProvider : AppWidgetProvider
 
             // Singular/plural
             views.SetTextViewText(Resource.Id.widget_streak_label,
-                streakData.CurrentStreak == 1 ? "Tag Streak" : "Tage Streak");
+                streakData.CurrentStreak == 1 ? "Day Streak" : "Day Streak");
 
             // Today status indicator
             if (streakData.ReadToday)
             {
-                views.SetTextViewText(Resource.Id.widget_streak_today, "Heute gelesen \u2713");
+                views.SetTextViewText(Resource.Id.widget_streak_today, "Read today \u2713");
             }
             else if (streakData.CurrentStreak > 0)
             {
-                views.SetTextViewText(Resource.Id.widget_streak_today, "Heute noch nicht gelesen");
+                views.SetTextViewText(Resource.Id.widget_streak_today, "Not read today");
             }
             else
             {
