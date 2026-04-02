@@ -6,6 +6,7 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
 @inject IImageService ImageService
+@inject IBackButtonService BackButtonService
 @implements IDisposable
 
 <PageTitle>Dashboard - BookHeart</PageTitle>
@@ -127,9 +128,17 @@
 
 @code {
     private string? _coverImageDataUrl;
+    private Func<Task<bool>>? _navBackHandler;
 
     protected override async Task OnInitializedAsync()
     {
+        _navBackHandler = async () =>
+        {
+            Navigation.NavigateTo("/");
+            return true;
+        };
+        BackButtonService.Register(_navBackHandler);
+
         // Subscribe to goal changes to refresh data when sessions end
         GoalService.GoalsChanged += OnGoalsChanged;
 
@@ -174,6 +183,11 @@
 
     public void Dispose()
     {
+        if (_navBackHandler != null)
+        {
+            BackButtonService.Unregister(_navBackHandler);
+            _navBackHandler = null;
+        }
         GoalService.GoalsChanged -= OnGoalsChanged;
     }
 
