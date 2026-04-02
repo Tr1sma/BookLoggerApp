@@ -190,7 +190,7 @@ public class BookService : IBookService
         }
     }
 
-    public async Task UpdateProgressAsync(Guid bookId, int currentPage, CancellationToken ct = default)
+    public async Task<ProgressionResult?> UpdateProgressAsync(Guid bookId, int currentPage, CancellationToken ct = default)
     {
         var book = await _unitOfWork.Books.GetByIdAsync(bookId);
         if (book == null)
@@ -213,18 +213,17 @@ public class BookService : IBookService
             await _unitOfWork.SaveChangesAsync(ct);
 
             // Award XP and notify goals if book was auto-completed
+            ProgressionResult? completionResult = null;
             if (wasCompleted)
             {
                 var activePlant = await _plantService.GetActivePlantAsync(ct);
-                await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
-                await _goalService.RecalculateGoalProgressAsync(ct);
-                _goalService.NotifyGoalsChanged();
+                completionResult = await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
             }
-            else
-            {
-                await _goalService.RecalculateGoalProgressAsync(ct);
-                _goalService.NotifyGoalsChanged();
-            }
+
+            await _goalService.RecalculateGoalProgressAsync(ct);
+            _goalService.NotifyGoalsChanged();
+
+            return completionResult;
         }
         catch (DbUpdateConcurrencyException ex)
         {

@@ -5,6 +5,9 @@
 @inject IProgressService ProgressService
 @inject IBookService BookService
 @inject ITimerStateService TimerStateService
+@inject IShareCardService ShareCardService
+@inject IImageService CoverImageService
+@inject IShareService ShareService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IReviewPromptService ReviewPromptService
 
@@ -137,6 +140,18 @@
         OnClose="@HandleLevelUpCelebrationClose" />
 }
 
+@if (ShowBookCompletionCelebration && BookCompletedDuringSession && Book != null)
+{
+    <BookCompletionCelebration
+        IsVisible="true"
+        Book="@Book"
+        TotalXpEarned="@(SessionProgressionResult?.XpEarned ?? 0)"
+        ShowShareButton="true"
+        IsGeneratingCard="@_isGeneratingBookCard"
+        OnClose="@HandleBookCompletionCelebrationClose"
+        OnShareBook="@HandleShareBookFromTimer" />
+}
+
 @if (ShowReviewPrompt)
 {
     <ReviewPromptModal
@@ -167,6 +182,8 @@
     private LevelUpResult? LevelUpResult { get; set; }
     private bool GoalCompletedDuringSession { get; set; }
     private bool BookCompletedDuringSession { get; set; }
+    private bool ShowBookCompletionCelebration { get; set; }
+    private bool _isGeneratingBookCard;
     private bool ShowReviewPrompt { get; set; }
 
     // State restoration tracking
@@ -344,8 +361,16 @@
             // Notify parent to refresh
             await OnSessionSaved.InvokeAsync();
 
-            // Show session celebration
-            ShowSessionCelebration = true;
+            // Show the appropriate celebration
+            if (bookCompletedDuringSession)
+            {
+                // Skip session XP modal — go directly to book completion celebration
+                ShowBookCompletionCelebration = true;
+            }
+            else
+            {
+                ShowSessionCelebration = true;
+            }
 
             // Check if there was a level-up to show afterwards
             if (result.ProgressionResult.LevelUp != null)
@@ -402,6 +427,7 @@
         CurrentSessionId = null;
         GoalCompletedDuringSession = false;
         BookCompletedDuringSession = false;
+        ShowBookCompletionCelebration = false;
     }
 
     private async Task HandleSessionCelebrationClose()
@@ -409,16 +435,19 @@
         var shouldShowReviewPrompt = ShouldShowReviewPrompt();
         ShowSessionCelebration = false;
 
-        // If there was a level-up, show that celebration next
         if (LevelUpResult != null)
         {
             ShowLevelUpCelebration = true;
-            return;
         }
-
-        GoalCompletedDuringSession = false;
-        BookCompletedDuringSession = false;
-        await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+        else if (BookCompletedDuringSession)
+        {
+            ShowBookCompletionCelebration = true;
+        }
+        else
+        {
+            GoalCompletedDuringSession = false;
+            await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+        }
     }
 
     private async Task HandleLevelUpCelebrationClose()
@@ -426,9 +455,80 @@
         var shouldShowReviewPrompt = ShouldShowReviewPrompt();
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
-        GoalCompletedDuringSession = false;
+
+        if (BookCompletedDuringSession)
+        {
+            ShowBookCompletionCelebration = true;
+        }
+        else
+        {
+            GoalCompletedDuringSession = false;
+            await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+        }
+    }
+
+    private async Task HandleBookCompletionCelebrationClose()
+    {
+        var shouldShowReviewPrompt = ShouldShowReviewPrompt();
+        ShowBookCompletionCelebration = false;
         BookCompletedDuringSession = false;
+        GoalCompletedDuringSession = false;
         await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+    }
+
+    private async Task HandleShareBookFromTimer()
+    {
+        if (Book == null) return;
+
+        _isGeneratingBookCard = true;
+        StateHasChanged();
+
+        try
+        {
+            int totalMinutes = await ProgressService.GetTotalMinutesAsync(Book.Id);
+
+            byte[]? coverBytes = null;
+            var coverResult = await CoverImageService.GetResizedCoverImageAsync(Book.Id, 600, 900);
+            if (coverResult.HasValue)
+            {
+                coverBytes = coverResult.Value.Bytes;
+            }
+
+            var data = new BookShareData
+            {
+                Title = Book.Title,
+                Author = Book.Author,
+                PageCount = Book.PageCount,
+                TotalMinutesRead = totalMinutes,
+                AverageRating = Book.AverageRating,
+                CoverImageBytes = coverBytes,
+                CategoryRatings = new Dictionary<RatingCategory, int?>
+                {
+                    { RatingCategory.Characters, Book.CharactersRating },
+                    { RatingCategory.Plot, Book.PlotRating },
+                    { RatingCategory.WritingStyle, Book.WritingStyleRating },
+                    { RatingCategory.SpiceLevel, Book.SpiceLevelRating },
+                    { RatingCategory.Pacing, Book.PacingRating },
+                    { RatingCategory.WorldBuilding, Book.WorldBuildingRating }
+                }
+            };
+
+            byte[] cardBytes = await ShareCardService.GenerateBookCardAsync(data);
+
+            var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+            var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+            await File.WriteAllBytesAsync(filePath, cardBytes);
+            await ShareService.ShareFileAsync("Book Recommendation", filePath, "image/png");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to generate share card: {ex.Message}");
+        }
+        finally
+        {
+            _isGeneratingBookCard = false;
+            StateHasChanged();
+        }
     }
 
     private Task HandleReviewPromptClose()

@@ -33,5 +33,9 @@ public interface IBookService
     // Status Updates
     Task StartReadingAsync(Guid bookId, CancellationToken ct = default);
     Task CompleteBookAsync(Guid bookId, CancellationToken ct = default);
-    Task UpdateProgressAsync(Guid bookId, int currentPage, CancellationToken ct = default);
+    /// <summary>
+    /// Updates the current page. Auto-completes and awards XP if the last page is reached.
+    /// Returns the <see cref="ProgressionResult"/> when auto-completion occurs, <c>null</c> otherwise.
+    /// </summary>
+    Task<ProgressionResult?> UpdateProgressAsync(Guid bookId, int currentPage, CancellationToken ct = default);
 }

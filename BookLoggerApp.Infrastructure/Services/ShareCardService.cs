@@ -27,6 +27,10 @@ public class ShareCardService : IShareCardService
     private static readonly SKColor AccentGold   = SKColor.Parse("#E8C97A");
     private static readonly SKColor AccentOrange = SKColor.Parse("#E07B54");
     private static readonly SKColor AccentRose   = SKColor.Parse("#B5907B");
+    private static readonly SKColor AccentPink   = SKColor.Parse("#E07B8F");
+    private static readonly SKColor AccentPurple = SKColor.Parse("#9C84B5");
+    private static readonly SKColor GoldStar     = SKColor.Parse("#FFD700");
+    private static readonly SKColor GoldStarDim  = SKColor.Parse("#4A3F32");
 
     public Task<byte[]> GenerateStatsCardAsync(StatsShareData data, CancellationToken ct = default)
     {
@@ -44,8 +48,24 @@ public class ShareCardService : IShareCardService
 
     public Task<byte[]> GenerateBookCardAsync(BookShareData data, CancellationToken ct = default)
     {
-        const int Width  = 1080;
-        const int Height = 1680;
+        const int Width = 1080;
+
+        // Dynamic height based on content presence
+        bool hasCover  = data.CoverImageBytes != null && data.CoverImageBytes.Length > 0;
+        bool hasBadge  = data.AverageRating.HasValue && data.AverageRating.Value >= 4.0;
+        bool hasRating = data.AverageRating.HasValue;
+        int ratedCount = data.CategoryRatings.Count(kvp => kvp.Value.HasValue);
+        int catRows    = (ratedCount + 1) / 2;
+
+        int Height = 220
+            + (hasCover ? 530 : 0)
+            + (hasBadge ? 85 : 0)
+            + 160
+            + 90
+            + 130
+            + (hasRating ? 110 : 0)
+            + (ratedCount > 0 ? catRows * 116 + 10 : 0)
+            + 180;
 
         using var bitmap = new SKBitmap(Width, Height);
         using var canvas = new SKCanvas(bitmap);
@@ -160,6 +180,41 @@ public class ShareCardService : IShareCardService
         using var boldTypeface    = SKTypeface.FromFamilyName(null, SKFontStyle.Bold);
         using var regularTypeface = SKTypeface.Default;
 
+        // ── Rich gradient background ────────────────────────────────────────
+        using (var bgPaint = new SKPaint())
+        {
+            bgPaint.Shader = SKShader.CreateLinearGradient(
+                new SKPoint(w / 2f, 0),
+                new SKPoint(w / 2f, h),
+                new SKColor[]
+                {
+                    SKColor.Parse("#231A12"),
+                    SKColor.Parse("#2D2015"),
+                    SKColor.Parse("#1E150E"),
+                    SKColor.Parse("#1A1410"),
+                },
+                new float[] { 0f, 0.35f, 0.7f, 1f },
+                SKShaderTileMode.Clamp);
+            canvas.DrawRect(0, 0, w, h, bgPaint);
+        }
+
+        // Ambient glow orbs for warmth and depth
+        DrawGlowOrb(canvas, 180, 300, 350, AccentAmber, 35);
+        DrawGlowOrb(canvas, 900, 500, 400, AccentGreen, 25);
+        DrawGlowOrb(canvas, 540, 1500, 500, AccentOrange, 20);
+
+        // ── Top gradient accent bar ─────────────────────────────────────────
+        using (var accentPaint = new SKPaint())
+        {
+            accentPaint.Shader = SKShader.CreateLinearGradient(
+                new SKPoint(0, 0),
+                new SKPoint(w, 0),
+                new[] { AccentOrange, Primary, AccentGreen },
+                new float[] { 0f, 0.5f, 1f },
+                SKShaderTileMode.Clamp);
+            canvas.DrawRect(0, 0, w, 6, accentPaint);
+        }
+
         float y = 80;
 
         // ── Header ────────────────────────────────────────────────────────────
@@ -168,26 +223,58 @@ public class ShareCardService : IShareCardService
         DrawHeartAndText(canvas, "BookHeart", w / 2f, y, boldTypeface, 52, Primary);
         y += 80;
 
-        // ── Cover image ───────────────────────────────────────────────────────
-        const float CoverW = 320;
-        const float CoverH = 480;
-        float coverX = (w - CoverW) / 2f;
-        float coverY = y;
-
+        // ── Cover image with glow + shadow (only if available) ──────────────
         if (data.CoverImageBytes != null && data.CoverImageBytes.Length > 0)
         {
+            const float CoverW = 320;
+            const float CoverH = 480;
+            float coverX = (w - CoverW) / 2f;
+            float coverY = y;
+            float coverCx = w / 2f;
+            float coverCy = coverY + CoverH / 2f;
+
             using var coverBitmap = SKBitmap.Decode(data.CoverImageBytes);
             if (coverBitmap != null)
+            {
+                // Warm glow halo behind cover
+                DrawGlowOrb(canvas, coverCx, coverCy, CoverW * 0.9f, Primary, 50);
+
+                // Drop shadow
+                using (var shadowPaint = new SKPaint
+                {
+                    Color = SKColors.Black.WithAlpha(80),
+                    IsAntialias = true,
+                    MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 12)
+                })
+                {
+                    var shadowRect = new SKRect(coverX + 4, coverY + 6, coverX + CoverW - 4, coverY + CoverH + 6);
+                    canvas.DrawRoundRect(shadowRect, 16, 16, shadowPaint);
+                }
+
                 DrawRoundedBitmap(canvas, coverBitmap, coverX, coverY, CoverW, CoverH, 16);
-            else
-                DrawCoverPlaceholder(canvas, data.Title, coverX, coverY, CoverW, CoverH, boldTypeface);
-        }
-        else
-        {
-            DrawCoverPlaceholder(canvas, data.Title, coverX, coverY, CoverW, CoverH, boldTypeface);
+
+                // Thin colored border
+                using (var borderPaint = new SKPaint
+                {
+                    Color = Primary.WithAlpha(100),
+                    IsAntialias = true,
+                    Style = SKPaintStyle.Stroke,
+                    StrokeWidth = 2f
+                })
+                {
+                    canvas.DrawRoundRect(new SKRect(coverX, coverY, coverX + CoverW, coverY + CoverH), 16, 16, borderPaint);
+                }
+
+                y = coverY + CoverH + 50;
+            }
         }
 
-        y = coverY + CoverH + 50;
+        // ── "HIGHLY RECOMMENDED" badge (only for 4.0+) ─────────────────────
+        if (data.AverageRating.HasValue && data.AverageRating.Value >= 4.0)
+        {
+            DrawRecommendedBadge(canvas, w / 2f, y, boldTypeface);
+            y += 85;
+        }
 
         // ── Title & Author ────────────────────────────────────────────────────
         var titleLines = WrapText(data.Title, w - Pad * 2, boldTypeface, 68);
@@ -198,25 +285,31 @@ public class ShareCardService : IShareCardService
         }
 
         DrawText(canvas, $"by {data.Author}", w / 2f, y, regularTypeface, 42, TextSecondary, SKTextAlign.Center);
-        y += 70;
+        y += 50;
 
-        // ── Stats chips ───────────────────────────────────────────────────────
+        // ── Gradient divider ────────────────────────────────────────────────
+        DrawGradientDivider(canvas, Pad + 100, w - Pad - 100, y, AccentAmber, AccentGreen);
+        y += 40;
+
+        // ── Colored stats chips ─────────────────────────────────────────────
         string pagesText = data.PageCount.HasValue ? $"{data.PageCount:N0} pages" : "–";
         string timeText  = data.TotalMinutesRead > 0 ? FormatReadingTime(data.TotalMinutesRead) : "–";
 
-        float chipY = y;
-        DrawInfoChip(canvas, pagesText, Pad, chipY, (w / 2f) - Pad - 20, 70, regularTypeface, 38);
-        DrawInfoChip(canvas, timeText,  w / 2f + 20, chipY, (w / 2f) - Pad - 20, 70, regularTypeface, 38);
-        y += 100;
+        DrawColoredInfoChip(canvas, pagesText, Pad, y, (w / 2f) - Pad - 20, 70, regularTypeface, 38, AccentBlue);
+        DrawColoredInfoChip(canvas, timeText,  w / 2f + 20, y, (w / 2f) - Pad - 20, 70, regularTypeface, 38, AccentOrange);
+        y += 130;
 
-        // ── Star rating ───────────────────────────────────────────────────────
+        // ── Gold star rating ────────────────────────────────────────────────
         if (data.AverageRating.HasValue)
         {
-            DrawStarRating(canvas, data.AverageRating.Value, w / 2f, y, 52);
+            DrawGlowOrb(canvas, w / 2f, y + 15, 120, GoldStar, 25);
+            DrawText(canvas, $"{data.AverageRating.Value:F1}", w / 2f, y, boldTypeface, 52, GoldStar, SKTextAlign.Center);
+            y += 30;
+            DrawStarRatingGold(canvas, data.AverageRating.Value, w / 2f, y, 52);
             y += 80;
         }
 
-        // ── Category ratings grid ─────────────────────────────────────────────
+        // ── Color-coded category ratings ────────────────────────────────────
         var ratedCategories = data.CategoryRatings
             .Where(kvp => kvp.Value.HasValue)
             .ToList();
@@ -224,7 +317,7 @@ public class ShareCardService : IShareCardService
         if (ratedCategories.Count > 0)
         {
             y += 10;
-            DrawCategoryRatings(canvas, ratedCategories, Pad, y, w - Pad * 2, regularTypeface, boldTypeface);
+            DrawColoredCategoryRatings(canvas, ratedCategories, Pad, y, w - Pad * 2, regularTypeface, boldTypeface);
         }
 
         // ── Watermark ─────────────────────────────────────────────────────────
@@ -456,6 +549,233 @@ public class ShareCardService : IShareCardService
         canvas.DrawBitmap(bitmap, destRect);
         canvas.Restore();
     }
+
+    /// <summary>
+    /// Draws a soft radial gradient circle for ambient glow/bokeh effects.
+    /// </summary>
+    private static void DrawGlowOrb(SKCanvas canvas, float cx, float cy, float radius,
+        SKColor color, byte peakAlpha)
+    {
+        using var paint = new SKPaint { IsAntialias = true };
+        paint.Shader = SKShader.CreateRadialGradient(
+            new SKPoint(cx, cy),
+            radius,
+            new[] { color.WithAlpha(peakAlpha), color.WithAlpha(0) },
+            new float[] { 0f, 1f },
+            SKShaderTileMode.Clamp);
+        canvas.DrawRect(cx - radius, cy - radius, radius * 2, radius * 2, paint);
+    }
+
+    /// <summary>
+    /// Draws a horizontal line that fades in from transparent, transitions colors, and fades out.
+    /// </summary>
+    private static void DrawGradientDivider(SKCanvas canvas, float x1, float x2, float y,
+        SKColor leftColor, SKColor rightColor)
+    {
+        using var paint = new SKPaint
+        {
+            IsAntialias = true,
+            StrokeWidth = 2f,
+            Style = SKPaintStyle.Stroke
+        };
+        paint.Shader = SKShader.CreateLinearGradient(
+            new SKPoint(x1, y),
+            new SKPoint(x2, y),
+            new[] { leftColor.WithAlpha(0), leftColor, rightColor, rightColor.WithAlpha(0) },
+            new float[] { 0f, 0.2f, 0.8f, 1f },
+            SKShaderTileMode.Clamp);
+        canvas.DrawLine(x1, y, x2, y, paint);
+    }
+
+    /// <summary>
+    /// Draws an info chip with a colored accent dot and tinted gradient background.
+    /// </summary>
+    private static void DrawColoredInfoChip(SKCanvas canvas, string text, float x, float y,
+        float maxW, float chipH, SKTypeface typeface, float fontSize, SKColor accentColor)
+    {
+        var rect = new SKRect(x, y, x + maxW, y + chipH);
+
+        using (var bgPaint = new SKPaint { IsAntialias = true })
+        {
+            bgPaint.Shader = SKShader.CreateLinearGradient(
+                new SKPoint(x, y),
+                new SKPoint(x + maxW, y),
+                new[] { accentColor.WithAlpha(30), BgSecondary },
+                null,
+                SKShaderTileMode.Clamp);
+            canvas.DrawRoundRect(rect, 14, 14, bgPaint);
+        }
+
+        // Accent dot on the left
+        using var dotPaint = new SKPaint { Color = accentColor, IsAntialias = true };
+        canvas.DrawCircle(x + 28, y + chipH / 2f, 6, dotPaint);
+
+        using var font  = new SKFont(typeface, fontSize);
+        using var paint = new SKPaint { Color = TextPrimary, IsAntialias = true };
+        canvas.DrawText(text, x + maxW / 2f + 10, y + chipH / 2f + fontSize / 3f,
+            SKTextAlign.Center, font, paint);
+    }
+
+    /// <summary>
+    /// Draws gold-filled star rating with per-star glow halos.
+    /// </summary>
+    private static void DrawStarRatingGold(SKCanvas canvas, double rating, float centerX, float y, float fontSize)
+    {
+        int filled = Math.Clamp((int)Math.Round(rating), 0, 5);
+        float starRadius = fontSize * 0.5f;
+
+        const float StarSpacing = 70;
+        float startX = centerX - (5 * StarSpacing) / 2f + StarSpacing / 2f;
+
+        for (int i = 0; i < 5; i++)
+        {
+            float sx = startX + i * StarSpacing;
+            float sy = y + fontSize / 3f;
+
+            if (i < filled)
+            {
+                DrawGlowOrb(canvas, sx, sy, starRadius * 1.8f, GoldStar, 40);
+                DrawStarIcon(canvas, sx, sy, starRadius, GoldStar, filled: true);
+            }
+            else
+            {
+                DrawStarIcon(canvas, sx, sy, starRadius, GoldStarDim, filled: false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Draws a "HIGHLY RECOMMENDED" pill badge with gradient background.
+    /// </summary>
+    private static void DrawRecommendedBadge(SKCanvas canvas, float cx, float y,
+        SKTypeface boldTypeface)
+    {
+        const string BadgeText = "HIGHLY RECOMMENDED";
+        const float FontSize = 26;
+
+        using var font = new SKFont(boldTypeface, FontSize);
+        using var measurePaint = new SKPaint { IsAntialias = true };
+        float textW = font.MeasureText(BadgeText, measurePaint);
+
+        float padH = 20, padV = 12;
+        var rect = new SKRect(
+            cx - textW / 2f - padH, y - FontSize / 2f - padV,
+            cx + textW / 2f + padH, y + FontSize / 2f + padV);
+
+        using (var bgPaint = new SKPaint { IsAntialias = true })
+        {
+            bgPaint.Shader = SKShader.CreateLinearGradient(
+                new SKPoint(rect.Left, y),
+                new SKPoint(rect.Right, y),
+                new[] { AccentGreen.WithAlpha(40), AccentAmber.WithAlpha(40) },
+                null,
+                SKShaderTileMode.Clamp);
+            canvas.DrawRoundRect(rect, 20, 20, bgPaint);
+        }
+
+        using var borderPaint = new SKPaint
+        {
+            Color = AccentGreen.WithAlpha(120),
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 1.5f
+        };
+        canvas.DrawRoundRect(rect, 20, 20, borderPaint);
+
+        using var textPaint = new SKPaint { Color = AccentGreen, IsAntialias = true };
+        canvas.DrawText(BadgeText, cx, y + FontSize / 3f, SKTextAlign.Center, font, textPaint);
+    }
+
+    /// <summary>
+    /// Draws a 2-column category ratings grid with per-category accent colors and progress bars.
+    /// </summary>
+    private static void DrawColoredCategoryRatings(SKCanvas canvas,
+        List<KeyValuePair<RatingCategory, int?>> categories,
+        float x, float y, float totalW, SKTypeface regularTypeface, SKTypeface boldTypeface)
+    {
+        const int   Cols  = 2;
+        const float CellH = 100;
+        const float Gap   = 16;
+        float cellW = (totalW - Gap * (Cols - 1)) / Cols;
+
+        for (int i = 0; i < categories.Count; i++)
+        {
+            int   col   = i % Cols;
+            int   row   = i / Cols;
+            float cellX = x + col * (cellW + Gap);
+            float cellY = y + row * (CellH + Gap);
+
+            var (category, ratingVal) = (categories[i].Key, categories[i].Value);
+            SKColor accent = CategoryAccentColor(category);
+
+            var rect = new SKRect(cellX, cellY, cellX + cellW, cellY + CellH);
+
+            // Cell background
+            using (var bgPaint = new SKPaint { Color = BgSecondary, IsAntialias = true })
+                canvas.DrawRoundRect(rect, 12, 12, bgPaint);
+
+            // Left accent stripe clipped to rounded corners
+            canvas.Save();
+            canvas.ClipRoundRect(new SKRoundRect(rect, 12), SKClipOperation.Intersect, true);
+            using (var stripePaint = new SKPaint { Color = accent, IsAntialias = true })
+                canvas.DrawRect(cellX, cellY, 5, CellH, stripePaint);
+            canvas.Restore();
+
+            // Category label (left-aligned)
+            string label = CategoryLabel(category);
+            using var labelFont  = new SKFont(regularTypeface, 28);
+            using var labelPaint = new SKPaint { Color = TextSecondary, IsAntialias = true };
+            canvas.DrawText(label, cellX + 22, cellY + 32, SKTextAlign.Left, labelFont, labelPaint);
+
+            // Rating value in accent color (right-aligned)
+            string value = ratingVal.HasValue ? $"{ratingVal}/5" : "–";
+            using var valFont  = new SKFont(boldTypeface, 32);
+            using var valPaint = new SKPaint { Color = accent, IsAntialias = true };
+            canvas.DrawText(value, cellX + cellW - 16, cellY + 32, SKTextAlign.Right, valFont, valPaint);
+
+            // Progress bar
+            if (ratingVal.HasValue)
+            {
+                float barX = cellX + 22;
+                float barY = cellY + 56;
+                float barW = cellW - 38;
+                float barH = 22;
+                float fillPct = ratingVal.Value / 5f;
+
+                // Track
+                using var trackPaint = new SKPaint { Color = BgTertiary, IsAntialias = true };
+                canvas.DrawRoundRect(new SKRect(barX, barY, barX + barW, barY + barH), 11, 11, trackPaint);
+
+                // Fill
+                if (fillPct > 0)
+                {
+                    float fillW = Math.Max(barH, barW * fillPct);
+                    using var fillPaint = new SKPaint { IsAntialias = true };
+                    fillPaint.Shader = SKShader.CreateLinearGradient(
+                        new SKPoint(barX, barY),
+                        new SKPoint(barX + fillW, barY),
+                        new[] { accent, accent.WithAlpha(180) },
+                        null,
+                        SKShaderTileMode.Clamp);
+                    canvas.DrawRoundRect(new SKRect(barX, barY, barX + fillW, barY + barH), 11, 11, fillPaint);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Maps each RatingCategory to a unique accent color for visual variety.
+    /// </summary>
+    private static SKColor CategoryAccentColor(RatingCategory category) => category switch
+    {
+        RatingCategory.Characters    => AccentGreen,
+        RatingCategory.Plot          => AccentBlue,
+        RatingCategory.WritingStyle  => AccentAmber,
+        RatingCategory.SpiceLevel    => AccentPink,
+        RatingCategory.Pacing        => AccentOrange,
+        RatingCategory.WorldBuilding => AccentPurple,
+        _ => Primary
+    };
 
     private static void DrawCoverPlaceholder(SKCanvas canvas, string title,
         float x, float y, float w, float h, SKTypeface boldTypeface)

@@ -106,14 +106,41 @@ public class BookServiceTests : IDisposable
         });
 
         // Act
-        await _service.UpdateProgressAsync(book.Id, 100);
+        var result = await _service.UpdateProgressAsync(book.Id, 100);
 
         // Assert
+        result.Should().NotBeNull("auto-completion should return a ProgressionResult");
+        result!.BookCompletionXp.Should().BeGreaterThanOrEqualTo(0);
+
         var updated = await _service.GetByIdAsync(book.Id);
         updated!.Status.Should().Be(ReadingStatus.Completed);
         updated.DateCompleted.Should().NotBeNull();
         updated.CurrentPage.Should().Be(100);
         _goalService.RecalculateGoalProgressCallCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task UpdateProgressAsync_ShouldReturnNull_WhenNotCompleting()
+    {
+        // Arrange
+        var book = await _service.AddAsync(new Book
+        {
+            Title = "Test Book",
+            Author = "Test Author",
+            PageCount = 100,
+            CurrentPage = 50,
+            Status = ReadingStatus.Reading
+        });
+
+        // Act
+        var result = await _service.UpdateProgressAsync(book.Id, 75);
+
+        // Assert
+        result.Should().BeNull("no auto-completion should return null");
+
+        var updated = await _service.GetByIdAsync(book.Id);
+        updated!.Status.Should().Be(ReadingStatus.Reading);
+        updated.CurrentPage.Should().Be(75);
     }
 
     [Fact]
