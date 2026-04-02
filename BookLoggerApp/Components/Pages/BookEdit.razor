@@ -13,6 +13,7 @@
 @inject BookLoggerApp.Services.IScannerService ScannerService
 @inject IReviewPromptService ReviewPromptService
 @inject IShareService ShareService
+@inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
 @implements IDisposable
 
 <PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? "Add Book" : "Edit Book") - BookHeart</PageTitle>
@@ -412,6 +413,8 @@
         await ViewModel.SaveCommand.ExecuteAsync(null);
         if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
         {
+            WidgetUpdateService.NotifyDataChanged();
+
             // If book was completed, show celebration first before navigating
             if (ViewModel.ShowBookCompletionCelebration)
             {

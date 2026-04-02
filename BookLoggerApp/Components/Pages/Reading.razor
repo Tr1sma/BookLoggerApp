@@ -8,6 +8,7 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IReviewPromptService ReviewPromptService
 @inject IShareService ShareService
+@inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
 @implements IDisposable
 
 <PageTitle>Reading - BookHeart</PageTitle>
@@ -199,6 +200,7 @@
     private async Task HandleEndSession()
     {
         await ViewModel.EndSessionCommand.ExecuteAsync(null);
+        WidgetUpdateService.NotifyDataChanged();
         // Don't navigate immediately - let the celebration overlays show
         // Navigation will happen after user closes all celebrations
     }
