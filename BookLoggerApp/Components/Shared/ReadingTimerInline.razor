@@ -6,6 +6,7 @@
 @inject IBookService BookService
 @inject ITimerStateService TimerStateService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject IReviewPromptService ReviewPromptService
 
 @if (Book != null)
 {
@@ -136,6 +137,14 @@
         OnClose="@HandleLevelUpCelebrationClose" />
 }
 
+@if (ShowReviewPrompt)
+{
+    <ReviewPromptModal
+        IsVisible="@ShowReviewPrompt"
+        OnClose="@HandleReviewPromptClose"
+        OnNeverAskAgain="@HandleNeverAskAgainAsync" />
+}
+
 @code {
     [Parameter] public Book? Book { get; set; }
     [Parameter] public EventCallback OnSessionSaved { get; set; }
@@ -156,6 +165,9 @@
     private ProgressionResult? SessionProgressionResult { get; set; }
     private bool ShowLevelUpCelebration { get; set; }
     private LevelUpResult? LevelUpResult { get; set; }
+    private bool GoalCompletedDuringSession { get; set; }
+    private bool BookCompletedDuringSession { get; set; }
+    private bool ShowReviewPrompt { get; set; }
 
     // State restoration tracking
     private bool _stateRestoreAttempted;
@@ -307,6 +319,10 @@
         try
         {
             var pagesRead = CalculatePagesRead();
+            var bookCompletedDuringSession =
+                Book.Status != ReadingStatus.Completed &&
+                Book.PageCount.HasValue &&
+                CurrentPageInput >= Book.PageCount.Value;
 
             // End session using ProgressService which handles XP, streak, plant boost, level-ups
             var result = await ProgressService.EndSessionAsync(CurrentSessionId.Value, pagesRead);
@@ -322,6 +338,8 @@
 
             // Reset timer state
             ResetTimer();
+            GoalCompletedDuringSession = result.GoalCompleted;
+            BookCompletedDuringSession = bookCompletedDuringSession;
 
             // Notify parent to refresh
             await OnSessionSaved.InvokeAsync();
@@ -382,30 +400,64 @@
         IsRunning = false;
         CurrentPageInput = 0; // Reset to 0, will be re-initialized in OnParametersSet
         CurrentSessionId = null;
+        GoalCompletedDuringSession = false;
+        BookCompletedDuringSession = false;
     }
 
-    private void HandleSessionCelebrationClose()
+    private async Task HandleSessionCelebrationClose()
     {
+        var shouldShowReviewPrompt = ShouldShowReviewPrompt();
         ShowSessionCelebration = false;
 
         // If there was a level-up, show that celebration next
         if (LevelUpResult != null)
         {
             ShowLevelUpCelebration = true;
+            return;
         }
-        else
-        {
-            // No level-up, navigate to bookshelf
-            Navigation.NavigateTo("/bookshelf");
-        }
+
+        GoalCompletedDuringSession = false;
+        BookCompletedDuringSession = false;
+        await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
     }
 
-    private void HandleLevelUpCelebrationClose()
+    private async Task HandleLevelUpCelebrationClose()
     {
+        var shouldShowReviewPrompt = ShouldShowReviewPrompt();
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
+        GoalCompletedDuringSession = false;
+        BookCompletedDuringSession = false;
+        await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+    }
 
-        // Navigate to bookshelf after level-up celebration
+    private Task HandleReviewPromptClose()
+    {
+        ShowReviewPrompt = false;
+        Navigation.NavigateTo("/bookshelf");
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleNeverAskAgainAsync()
+    {
+        ShowReviewPrompt = false;
+        await ReviewPromptService.DisablePromptAsync();
+        Navigation.NavigateTo("/bookshelf");
+    }
+
+    private bool ShouldShowReviewPrompt()
+    {
+        return GoalCompletedDuringSession || BookCompletedDuringSession || LevelUpResult != null;
+    }
+
+    private async Task TryShowReviewPromptOrNavigateAsync(bool shouldShowReviewPrompt)
+    {
+        if (shouldShowReviewPrompt && await ReviewPromptService.TryStartPromptAsync())
+        {
+            ShowReviewPrompt = true;
+            return;
+        }
+
         Navigation.NavigateTo("/bookshelf");
     }
 
