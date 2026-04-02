@@ -13,6 +13,9 @@ public class StatsViewModelTests
     private readonly IStatsService _statsService;
     private readonly IAppSettingsProvider _settingsProvider;
     private readonly IPlantService _plantService;
+    private readonly IShareCardService _shareCardService;
+    private readonly IProgressService _progressService;
+    private readonly IBookService _bookService;
     private readonly StatsViewModel _viewModel;
 
     public StatsViewModelTests()
@@ -21,6 +24,9 @@ public class StatsViewModelTests
         _statsService = Substitute.For<IStatsService>();
         _settingsProvider = Substitute.For<IAppSettingsProvider>();
         _plantService = Substitute.For<IPlantService>();
+        _shareCardService = Substitute.For<IShareCardService>();
+        _progressService = Substitute.For<IProgressService>();
+        _bookService = Substitute.For<IBookService>();
 
         _statsService.GetReadingTrendAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>())
             .Returns(new Dictionary<DateTime, int>());
@@ -29,7 +35,7 @@ public class StatsViewModelTests
             .Returns(new Dictionary<RatingCategory, double>());
         _statsService.GetTopRatedBooksAsync(Arg.Any<int>()).Returns(new List<BookRatingSummary>());
 
-        _viewModel = new StatsViewModel(_statsService, _settingsProvider, _plantService);
+        _viewModel = new StatsViewModel(_statsService, _settingsProvider, _plantService, _shareCardService, _progressService, _bookService);
     }
 
     [Fact]
