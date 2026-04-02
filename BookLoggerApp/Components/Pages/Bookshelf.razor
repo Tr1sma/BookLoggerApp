@@ -16,7 +16,7 @@
 
 <PageTitle>Bookshelf - BookHeart</PageTitle>
 
-<div class="bookshelf-container">
+<div class="bookshelf-container" style="--shelf-ledge-color: @ViewModel.ShelfLedgeColor; --shelf-base-color: @ViewModel.ShelfBaseColor">
     <!-- Reading Goal Header -->
     <GoalHeader TbrCount="@ViewModel.TbrCount" GoalTarget="@ViewModel.GoalTarget"
         BooksRead="@ViewModel.BooksReadThisYear" BooksRemaining="@ViewModel.BooksRemainingToGoal" />
