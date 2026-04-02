@@ -14,6 +14,7 @@
 @inject IReviewPromptService ReviewPromptService
 @inject IShareService ShareService
 @inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
+@inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @implements IDisposable
 
 <PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? "Add Book" : "Edit Book") - BookHeart</PageTitle>
@@ -337,9 +338,20 @@
     private bool _showReviewPrompt;
     private bool _isPickingFromGallery;
     private byte[]? _pendingGalleryImageBytes;
+    private Func<Task<bool>>? _navBackHandler;
+    private Func<Task<bool>>? _deleteModalBackHandler;
+    private Func<Task<bool>>? _celebrationBackHandler;
+    private Func<Task<bool>>? _reviewPromptBackHandler;
 
     protected override async Task OnInitializedAsync()
     {
+        _navBackHandler = async () =>
+        {
+            NavigateBack();
+            return true;
+        };
+        BackButtonService.Register(_navBackHandler);
+
         ViewModel.BookShareCardReady += OnBookShareCardReady;
         Guid? bookId = Id != Guid.Empty ? Id : null;
         await ViewModel.LoadCommand.ExecuteAsync(bookId);
@@ -371,6 +383,26 @@
 
     public void Dispose()
     {
+        if (_navBackHandler != null)
+        {
+            BackButtonService.Unregister(_navBackHandler);
+            _navBackHandler = null;
+        }
+        if (_deleteModalBackHandler != null)
+        {
+            BackButtonService.Unregister(_deleteModalBackHandler);
+            _deleteModalBackHandler = null;
+        }
+        if (_celebrationBackHandler != null)
+        {
+            BackButtonService.Unregister(_celebrationBackHandler);
+            _celebrationBackHandler = null;
+        }
+        if (_reviewPromptBackHandler != null)
+        {
+            BackButtonService.Unregister(_reviewPromptBackHandler);
+            _reviewPromptBackHandler = null;
+        }
         ViewModel.BookShareCardReady -= OnBookShareCardReady;
     }
 
@@ -514,7 +546,12 @@
             // If book was completed, show celebration first before navigating
             if (ViewModel.ShowBookCompletionCelebration)
             {
-                // Celebration will be shown, navigation happens in HandleCelebrationClose
+                _celebrationBackHandler = async () =>
+                {
+                    await HandleCelebrationClose();
+                    return true;
+                };
+                BackButtonService.Register(_celebrationBackHandler);
                 StateHasChanged();
             }
             else
@@ -526,12 +563,22 @@
 
     private async Task HandleCelebrationClose()
     {
+        if (_celebrationBackHandler != null)
+        {
+            BackButtonService.Unregister(_celebrationBackHandler);
+            _celebrationBackHandler = null;
+        }
         await ViewModel.OnBookCompletionCelebrationClose();
         await TryShowReviewPromptOrNavigateAsync();
     }
 
     private Task HandleReviewPromptClose()
     {
+        if (_reviewPromptBackHandler != null)
+        {
+            BackButtonService.Unregister(_reviewPromptBackHandler);
+            _reviewPromptBackHandler = null;
+        }
         _showReviewPrompt = false;
         NavigateToCurrentBook();
         return Task.CompletedTask;
@@ -539,6 +586,11 @@
 
     private async Task HandleNeverAskAgainAsync()
     {
+        if (_reviewPromptBackHandler != null)
+        {
+            BackButtonService.Unregister(_reviewPromptBackHandler);
+            _reviewPromptBackHandler = null;
+        }
         _showReviewPrompt = false;
         await ReviewPromptService.DisablePromptAsync();
         NavigateToCurrentBook();
@@ -548,6 +600,13 @@
     {
         if (await ReviewPromptService.TryStartPromptAsync())
         {
+            _reviewPromptBackHandler = async () =>
+            {
+                await HandleReviewPromptClose();
+                return true;
+            };
+            BackButtonService.Register(_reviewPromptBackHandler);
+
             _showReviewPrompt = true;
             return;
         }
@@ -557,11 +616,27 @@
 
     private void ShowDeleteModal()
     {
+        _deleteModalBackHandler = async () =>
+        {
+            await InvokeAsync(() =>
+            {
+                HideDeleteModal();
+                StateHasChanged();
+            });
+            return true;
+        };
+        BackButtonService.Register(_deleteModalBackHandler);
+
         ViewModel.ShowDeleteConfirmation = true;
     }
 
     private void HideDeleteModal()
     {
+        if (_deleteModalBackHandler != null)
+        {
+            BackButtonService.Unregister(_deleteModalBackHandler);
+            _deleteModalBackHandler = null;
+        }
         ViewModel.ShowDeleteConfirmation = false;
     }
 
@@ -569,9 +644,13 @@
     {
         await ViewModel.DeleteBookCommand.ExecuteAsync(null);
 
-        // If deletion was successful, navigate to bookshelf
         if (ViewModel.BookDeleted)
         {
+            if (_deleteModalBackHandler != null)
+            {
+                BackButtonService.Unregister(_deleteModalBackHandler);
+                _deleteModalBackHandler = null;
+            }
             Navigation.NavigateTo("/bookshelf");
         }
     }

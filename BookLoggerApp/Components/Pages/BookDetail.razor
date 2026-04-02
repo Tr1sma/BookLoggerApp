@@ -9,6 +9,7 @@
 @inject IWishlistService WishlistService
 @inject IShareService ShareService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @implements IDisposable
 
 <PageTitle>@(ViewModel.Book?.Title ?? "Book Details") - BookHeart</PageTitle>
@@ -335,9 +336,17 @@
     [Parameter] public Guid Id { get; set; }
     private Guid _lastLoadedId = Guid.Empty;
     private string? _coverImageDataUrl;
+    private Func<Task<bool>>? _navBackHandler;
 
     protected override async Task OnInitializedAsync()
     {
+        _navBackHandler = async () =>
+        {
+            NavigateToBookshelf();
+            return true;
+        };
+        BackButtonService.Register(_navBackHandler);
+
         ViewModel.BookShareCardReady += OnBookShareCardReady;
         await LoadBookDataAsync();
     }
@@ -573,6 +582,11 @@
 
     public void Dispose()
     {
+        if (_navBackHandler != null)
+        {
+            BackButtonService.Unregister(_navBackHandler);
+            _navBackHandler = null;
+        }
         ViewModel.BookShareCardReady -= OnBookShareCardReady;
     }
 }

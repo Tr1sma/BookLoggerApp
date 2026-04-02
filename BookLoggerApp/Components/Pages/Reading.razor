@@ -9,6 +9,7 @@
 @inject IReviewPromptService ReviewPromptService
 @inject IShareService ShareService
 @inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
+@inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @implements IDisposable
 
 <PageTitle>Reading - BookHeart</PageTitle>
@@ -170,9 +171,21 @@
 @code {
     [Parameter] public Guid SessionId { get; set; }
     private bool _showReviewPrompt;
+    private Func<Task<bool>>? _navBackHandler;
+    private Func<Task<bool>>? _sessionCelebrationBackHandler;
+    private Func<Task<bool>>? _levelUpCelebrationBackHandler;
+    private Func<Task<bool>>? _bookCompletionCelebrationBackHandler;
+    private Func<Task<bool>>? _reviewPromptBackHandler;
 
     protected override async Task OnInitializedAsync()
     {
+        _navBackHandler = async () =>
+        {
+            NavigateToBook();
+            return true;
+        };
+        BackButtonService.Register(_navBackHandler);
+
         TimerStateService.AppResumed += OnAppResumed;
         ViewModel.BookShareCardReady += OnBookShareCardReady;
         await ViewModel.LoadCommand.ExecuteAsync(SessionId);
@@ -201,18 +214,68 @@
     {
         await ViewModel.EndSessionCommand.ExecuteAsync(null);
         WidgetUpdateService.NotifyDataChanged();
-        // Don't navigate immediately - let the celebration overlays show
-        // Navigation will happen after user closes all celebrations
+
+        // Register celebration handler for whichever celebration shows first
+        if (ViewModel.ShowSessionCelebration)
+        {
+            _sessionCelebrationBackHandler = async () =>
+            {
+                await HandleSessionCelebrationClose();
+                return true;
+            };
+            BackButtonService.Register(_sessionCelebrationBackHandler);
+        }
+        else if (ViewModel.ShowLevelUpCelebration)
+        {
+            _levelUpCelebrationBackHandler = async () =>
+            {
+                await HandleLevelUpCelebrationClose();
+                return true;
+            };
+            BackButtonService.Register(_levelUpCelebrationBackHandler);
+        }
+        else if (ViewModel.ShowBookCompletionCelebration)
+        {
+            _bookCompletionCelebrationBackHandler = async () =>
+            {
+                await HandleBookCompletionCelebrationClose();
+                return true;
+            };
+            BackButtonService.Register(_bookCompletionCelebrationBackHandler);
+        }
     }
 
     private async Task HandleSessionCelebrationClose()
     {
+        if (_sessionCelebrationBackHandler != null)
+        {
+            BackButtonService.Unregister(_sessionCelebrationBackHandler);
+            _sessionCelebrationBackHandler = null;
+        }
+
         var shouldShowReviewPrompt = ViewModel.HasReviewPromptMoment;
         await ViewModel.OnSessionCelebrationClose();
         StateHasChanged();
 
-        // If no level-up and no book completion, navigate
-        if (!ViewModel.ShowLevelUpCelebration && !ViewModel.ShowBookCompletionCelebration)
+        if (ViewModel.ShowLevelUpCelebration)
+        {
+            _levelUpCelebrationBackHandler = async () =>
+            {
+                await HandleLevelUpCelebrationClose();
+                return true;
+            };
+            BackButtonService.Register(_levelUpCelebrationBackHandler);
+        }
+        else if (ViewModel.ShowBookCompletionCelebration)
+        {
+            _bookCompletionCelebrationBackHandler = async () =>
+            {
+                await HandleBookCompletionCelebrationClose();
+                return true;
+            };
+            BackButtonService.Register(_bookCompletionCelebrationBackHandler);
+        }
+        else
         {
             await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
         }
@@ -220,12 +283,26 @@
 
     private async Task HandleLevelUpCelebrationClose()
     {
+        if (_levelUpCelebrationBackHandler != null)
+        {
+            BackButtonService.Unregister(_levelUpCelebrationBackHandler);
+            _levelUpCelebrationBackHandler = null;
+        }
+
         var shouldShowReviewPrompt = ViewModel.HasReviewPromptMoment;
         await ViewModel.OnLevelUpCelebrationClose();
         StateHasChanged();
 
-        // If no book completion, navigate
-        if (!ViewModel.ShowBookCompletionCelebration)
+        if (ViewModel.ShowBookCompletionCelebration)
+        {
+            _bookCompletionCelebrationBackHandler = async () =>
+            {
+                await HandleBookCompletionCelebrationClose();
+                return true;
+            };
+            BackButtonService.Register(_bookCompletionCelebrationBackHandler);
+        }
+        else
         {
             await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
         }
@@ -233,6 +310,12 @@
 
     private async Task HandleBookCompletionCelebrationClose()
     {
+        if (_bookCompletionCelebrationBackHandler != null)
+        {
+            BackButtonService.Unregister(_bookCompletionCelebrationBackHandler);
+            _bookCompletionCelebrationBackHandler = null;
+        }
+
         var shouldShowReviewPrompt = ViewModel.HasReviewPromptMoment;
         await ViewModel.OnBookCompletionCelebrationClose();
         await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
@@ -254,6 +337,11 @@
 
     private Task HandleReviewPromptClose()
     {
+        if (_reviewPromptBackHandler != null)
+        {
+            BackButtonService.Unregister(_reviewPromptBackHandler);
+            _reviewPromptBackHandler = null;
+        }
         _showReviewPrompt = false;
         Navigation.NavigateTo("/bookshelf");
         return Task.CompletedTask;
@@ -261,6 +349,11 @@
 
     private async Task HandleNeverAskAgainAsync()
     {
+        if (_reviewPromptBackHandler != null)
+        {
+            BackButtonService.Unregister(_reviewPromptBackHandler);
+            _reviewPromptBackHandler = null;
+        }
         _showReviewPrompt = false;
         await ReviewPromptService.DisablePromptAsync();
         Navigation.NavigateTo("/bookshelf");
@@ -270,6 +363,13 @@
     {
         if (shouldShowReviewPrompt && await ReviewPromptService.TryStartPromptAsync())
         {
+            _reviewPromptBackHandler = async () =>
+            {
+                await HandleReviewPromptClose();
+                return true;
+            };
+            BackButtonService.Register(_reviewPromptBackHandler);
+
             _showReviewPrompt = true;
             return;
         }
@@ -305,6 +405,31 @@
 
     public void Dispose()
     {
+        if (_navBackHandler != null)
+        {
+            BackButtonService.Unregister(_navBackHandler);
+            _navBackHandler = null;
+        }
+        if (_sessionCelebrationBackHandler != null)
+        {
+            BackButtonService.Unregister(_sessionCelebrationBackHandler);
+            _sessionCelebrationBackHandler = null;
+        }
+        if (_levelUpCelebrationBackHandler != null)
+        {
+            BackButtonService.Unregister(_levelUpCelebrationBackHandler);
+            _levelUpCelebrationBackHandler = null;
+        }
+        if (_bookCompletionCelebrationBackHandler != null)
+        {
+            BackButtonService.Unregister(_bookCompletionCelebrationBackHandler);
+            _bookCompletionCelebrationBackHandler = null;
+        }
+        if (_reviewPromptBackHandler != null)
+        {
+            BackButtonService.Unregister(_reviewPromptBackHandler);
+            _reviewPromptBackHandler = null;
+        }
         TimerStateService.AppResumed -= OnAppResumed;
         ViewModel.BookShareCardReady -= OnBookShareCardReady;
         ViewModel.Dispose();

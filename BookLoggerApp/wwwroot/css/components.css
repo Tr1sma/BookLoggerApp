@@ -841,9 +841,11 @@
     box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(212, 165, 116, 0.4);
+@media (hover: hover) {
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(212, 165, 116, 0.4);
+    }
 }
 
 .btn-secondary {
@@ -852,9 +854,11 @@
     border: 1px solid var(--border-color);
 }
 
-.btn-secondary:hover {
-    background: var(--card-hover);
-    border-color: var(--primary-color);
+@media (hover: hover) {
+    .btn-secondary:hover {
+        background: var(--card-hover);
+        border-color: var(--primary-color);
+    }
 }
 
 .btn-danger {
