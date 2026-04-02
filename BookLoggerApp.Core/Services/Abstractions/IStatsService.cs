@@ -50,4 +50,10 @@ public interface IStatsService
     /// Gets all books with their rating summaries.
     /// </summary>
     Task<List<BookRatingSummary>> GetBooksWithRatingsAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns distinct (Year, Month) pairs where at least one book was completed,
+    /// ordered descending (newest first).
+    /// </summary>
+    Task<List<(int Year, int Month)>> GetActiveReadingPeriodsAsync(CancellationToken ct = default);
 }
