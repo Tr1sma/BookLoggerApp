@@ -52,9 +52,9 @@ public class ProgressServiceTests : IDisposable
         var result = await _service.AddSessionAsync(session);
 
         // Assert
-        result.XpEarned.Should().BeGreaterThan(0);
+        result.Session.XpEarned.Should().BeGreaterThan(0);
         // Base: 30 minutes * 5 XP = 150, 20 pages * 20 XP = 400, Total = 550 (no bonuses for first session)
-        result.XpEarned.Should().Be(550);
+        result.Session.XpEarned.Should().Be(550);
     }
 
     [Fact]
@@ -75,7 +75,27 @@ public class ProgressServiceTests : IDisposable
 
         // Assert
         // Base: 60 minutes * 5 XP = 300, 30 pages * 20 XP = 600, Bonus: 50 = 950
-        result.XpEarned.Should().Be(950);
+        result.Session.XpEarned.Should().Be(950);
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_ShouldReturnGoalCompletedFlagFromGoalService()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        _goalService.NextRecalculateGoalProgressResult = true;
+
+        // Act
+        var result = await _service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            Minutes = 15
+        });
+
+        // Assert
+        result.GoalCompleted.Should().BeTrue();
+        _goalService.RecalculateGoalProgressCallCount.Should().Be(1);
     }
 
     [Fact]
@@ -173,6 +193,23 @@ public class ProgressServiceTests : IDisposable
         result.Session.Minutes.Should().BeGreaterThanOrEqualTo(0);
         result.Session.PagesRead.Should().Be(10);
         result.Session.XpEarned.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_ShouldReturnGoalCompletedFlagFromGoalService()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var session = await _service.StartSessionAsync(book.Id);
+        _goalService.NextRecalculateGoalProgressResult = true;
+
+        // Act
+        var result = await _service.EndSessionAsync(session.Id, 10);
+
+        // Assert
+        result.GoalCompleted.Should().BeTrue();
+        _goalService.RecalculateGoalProgressCallCount.Should().Be(1);
     }
 
     [Fact]

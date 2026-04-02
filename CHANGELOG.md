@@ -18,7 +18,12 @@ Versionsschema:
 
 ### Hinzugefügt
 
+- **Stats teilen (Reading Wrapped):** Auf der Stats-Seite können Lesestats als PNG im Instagram-Story-Format (1080×1920) geteilt werden. Zeitraum wählbar: Week, Month, Quarter, Year, All Time. Die Karte zeigt abgeschlossene Bücher, gelesene Seiten, Lesezeit, Lieblingsgenre und Top-3-Bücher im BookHeart-Design.
+- **Buchempfehlung teilen:** Nach dem Abschließen eines bereits vorhandenen Buchs (d. h. nach echten Lesesitzungen) erscheint in der Abschluss-Feier ein optionaler Button „Share as Recommendation". Die Karte zeigt Titel, Autor, Cover, Seitenanzahl, Gesamtlesezeit und alle Bewertungskategorien. Bücher, die direkt als abgeschlossen hinzugefügt wurden (ohne Lesesitzung), werden ausgeschlossen.
+
 ### Geändert
+- Der komplexere Review-Flow wurde durch zwei einfache Modals ersetzt: erst App-Feedback, dann optional der Sprung zur Play-Store-Bewertung
+- Der vereinfachte Review-Dialog erscheint erst ab Level 7, hoechstens zweimal pro Monat und kann ueber "Nicht mehr fragen" dauerhaft abgeschaltet werden
 
 ### Behoben
 

@@ -125,7 +125,7 @@ public partial class BookDetailViewModel : ViewModelBase
 
         await ExecuteSafelyAsync(async () =>
         {
-            await _progressService.AddSessionAsync(new ReadingSession
+            var result = await _progressService.AddSessionAsync(new ReadingSession
             {
                 BookId = Book.Id,
                 Minutes = minutes,
