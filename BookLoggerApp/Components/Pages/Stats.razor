@@ -296,7 +296,7 @@
 
 @if (ViewModel.ShowShareModal)
 {
-    <div class="celebration-overlay" @onclick="() => ViewModel.ShowShareModal = false">
+    <div class="celebration-overlay" @onclick="CloseShareModal">
         <div class="share-modal-card" @onclick:stopPropagation="true">
             <h2>Share Reading Stats</h2>
             <p class="share-modal-subtitle">Choose a time period for your reading card</p>
@@ -361,7 +361,7 @@
             </button>
 
             <button class="btn btn-secondary share-modal-action"
-                    @onclick="() => ViewModel.ShowShareModal = false">
+                    @onclick="CloseShareModal">
                 Cancel
             </button>
         </div>
@@ -374,7 +374,8 @@
     private string? _currentUrl;
 
     private Func<Task<bool>>? _backHandler;
-    
+    private Func<Task<bool>>? _shareModalBackHandler;
+
     protected override async Task OnInitializedAsync()
     {
         NavigationManager.LocationChanged += OnLocationChanged;
@@ -449,6 +450,11 @@
             BackButtonService.Unregister(_backHandler);
             _backHandler = null;
         }
+        if (_shareModalBackHandler != null)
+        {
+            BackButtonService.Unregister(_shareModalBackHandler);
+            _shareModalBackHandler = null;
+        }
     }
 
     private string FormatMinutes(int minutes)
@@ -468,11 +474,32 @@
 
     private async Task OpenShareModal()
     {
+        _shareModalBackHandler = async () =>
+        {
+            await InvokeAsync(() =>
+            {
+                CloseShareModal();
+                StateHasChanged();
+            });
+            return true;
+        };
+        BackButtonService.Register(_shareModalBackHandler);
+
         ViewModel.ShowShareModal = true;
         sharePeriodType = "alltime";
         ViewModel.SelectedSharePeriod = "All Time";
         await ViewModel.LoadActivePeriodsAsync();
         StateHasChanged();
+    }
+
+    private void CloseShareModal()
+    {
+        if (_shareModalBackHandler != null)
+        {
+            BackButtonService.Unregister(_shareModalBackHandler);
+            _shareModalBackHandler = null;
+        }
+        ViewModel.ShowShareModal = false;
     }
 
     private void SelectPeriodType(string type)

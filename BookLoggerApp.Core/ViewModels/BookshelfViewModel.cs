@@ -15,14 +15,16 @@ public partial class BookshelfViewModel : ViewModelBase
     private readonly IGoalService _goalService;
 
     private readonly IShelfService _shelfService;
+    private readonly IAppSettingsProvider _settingsProvider;
 
-    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IShelfService shelfService)
+    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IShelfService shelfService, IAppSettingsProvider settingsProvider)
     {
         _bookService = bookService;
         _genreService = genreService;
         _plantService = plantService;
         _goalService = goalService;
         _shelfService = shelfService;
+        _settingsProvider = settingsProvider;
     }
 
     [ObservableProperty]
@@ -67,11 +69,22 @@ public partial class BookshelfViewModel : ViewModelBase
     [ObservableProperty]
     private int _booksRemainingToGoal = 0;
 
+    [ObservableProperty]
+    private string _shelfLedgeColor = "#8B7355";
+
+    [ObservableProperty]
+    private string _shelfBaseColor = "#D4A574";
+
     [RelayCommand]
     public async Task LoadAsync()
     {
         await ExecuteSafelyWithDbAsync(async () =>
         {
+            // Load shelf color from settings
+            var settings = await _settingsProvider.GetSettingsAsync();
+            ShelfLedgeColor = settings.ShelfLedgeColor;
+            ShelfBaseColor = settings.ShelfBaseColor;
+
             // 1. Fetch data
             var shelves = await _shelfService.GetAllShelvesAsync();
             var allBooks = await _bookService.GetAllAsync(); // Still needed for Search/Filter? Or just rely on shelves?

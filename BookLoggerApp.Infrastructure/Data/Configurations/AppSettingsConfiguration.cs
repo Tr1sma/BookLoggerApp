@@ -30,6 +30,14 @@ public class AppSettingsConfiguration : IEntityTypeConfiguration<AppSettings>
         builder.Property(a => a.Coins)
             .IsRequired();
 
+        builder.Property(a => a.ShelfLedgeColor)
+            .IsRequired()
+            .HasMaxLength(7);
+
+        builder.Property(a => a.ShelfBaseColor)
+            .IsRequired()
+            .HasMaxLength(7);
+
         builder.Property(a => a.CreatedAt)
             .IsRequired();
     }

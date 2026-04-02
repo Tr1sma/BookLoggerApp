@@ -29,6 +29,53 @@
             </div>
         </section>
 
+        <!-- Shelf Appearance -->
+        <section class="settings-section">
+            <button class="privacy-toggle" @onclick="ToggleShelfAppearance">
+                <span>Shelf Appearance</span>
+                <span class="toggle-icon">@(_showShelfAppearance ? "▲" : "▼")</span>
+            </button>
+
+            @if (_showShelfAppearance)
+            {
+                <div class="privacy-content">
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <span class="setting-label">Ledge Color</span>
+                            <span class="setting-description">The plank under each book</span>
+                        </div>
+                    </div>
+                    <div class="color-presets">
+                        @foreach (var preset in _shelfLedgeColorPresets)
+                        {
+                            <button class="color-swatch @(ViewModel.ShelfLedgeColor == preset.Hex ? "active" : "")"
+                                    style="background-color: @preset.Hex"
+                                    title="@preset.Name"
+                                    @onclick="() => ViewModel.UpdateShelfLedgeColorCommand.ExecuteAsync(preset.Hex)">
+                            </button>
+                        }
+                    </div>
+
+                    <div class="setting-row" style="margin-top: 0.5rem;">
+                        <div class="setting-info">
+                            <span class="setting-label">Shelf Bar Color</span>
+                            <span class="setting-description">The bottom bar of each shelf</span>
+                        </div>
+                    </div>
+                    <div class="color-presets">
+                        @foreach (var preset in _shelfBaseColorPresets)
+                        {
+                            <button class="color-swatch @(ViewModel.ShelfBaseColor == preset.Hex ? "active" : "")"
+                                    style="background-color: @preset.Hex"
+                                    title="@preset.Name"
+                                    @onclick="() => ViewModel.UpdateShelfBaseColorCommand.ExecuteAsync(preset.Hex)">
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </section>
+
         <!-- Notifications -->
         <section class="settings-section">
             <h2>Notifications</h2>
@@ -162,7 +209,6 @@
 
         <!-- Privacy & Legal -->
         <section class="settings-section privacy-section">
-            <h2>Privacy & Legal</h2>
             <button class="privacy-toggle" @onclick="TogglePrivacyPolicy">
                 <span>Privacy Policy</span>
                 <span class="toggle-icon">@(_showPrivacyPolicy ? "▲" : "▼")</span>
@@ -573,6 +619,35 @@
         justify-content: center;
     }
 
+    /* Color Presets */
+    .color-presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+    }
+
+    .color-swatch {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        padding: 0;
+    }
+
+    .color-swatch:hover {
+        transform: scale(1.1);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .color-swatch.active {
+        border-color: var(--accent-color, #C9A97F);
+        box-shadow: 0 0 0 3px rgba(201, 169, 127, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
     /* Setting Rows */
     .setting-row {
         display: flex;
@@ -779,13 +854,40 @@
     private bool _showSuccessModal = false;
     private bool _showPrivacyPolicy = false;
     private bool _showMigrationLog = false;
+    private bool _showShelfAppearance = false;
     private string _deleteConfirmText = string.Empty;
 
     private bool IsDeleteConfirmed => _deleteConfirmText.Equals("DELETE", StringComparison.Ordinal);
 
+    private static readonly (string Name, string Hex)[] _shelfLedgeColorPresets =
+    [
+        ("Classic Wood", "#8B7355"),
+        ("Dark Oak", "#5A3E2B"),
+        ("Cherry", "#8B4513"),
+        ("Mahogany", "#6B3A3A"),
+        ("Walnut", "#4A3728"),
+        ("Ebony", "#3D3126"),
+        ("White Oak", "#B8A088"),
+        ("Birch", "#C8AA82"),
+    ];
+
+    private static readonly (string Name, string Hex)[] _shelfBaseColorPresets =
+    [
+        ("Warm Gold", "#D4A574"),
+        ("Soft Tan", "#C9A97F"),
+        ("Classic Wood", "#8B7355"),
+        ("Dark Oak", "#5A3E2B"),
+        ("Cherry", "#8B4513"),
+        ("Mahogany", "#6B3A3A"),
+        ("Walnut", "#4A3728"),
+        ("Birch", "#C8AA82"),
+    ];
+
     private void TogglePrivacyPolicy() => _showPrivacyPolicy = !_showPrivacyPolicy;
 
     private void ToggleMigrationLog() => _showMigrationLog = !_showMigrationLog;
+
+    private void ToggleShelfAppearance() => _showShelfAppearance = !_showShelfAppearance;
 
     private Func<Task<bool>>? _navBackHandler;
     private Func<Task<bool>>? _modalBackHandler;
