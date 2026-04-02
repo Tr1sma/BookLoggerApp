@@ -18,6 +18,8 @@ Versionsschema:
 
 ### Hinzugefügt
 
+- Regalfarbe anpassbar: In den Settings können die Farben der Bücherleisten (Planke unter jedem Buch) und der Regalleiste (untere Leiste jedes Regals) getrennt voneinander aus je 8 Holzfarb-Presets gewählt werden
+
 ### Geändert
 
 ### Behoben

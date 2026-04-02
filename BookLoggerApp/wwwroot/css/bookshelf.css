@@ -225,16 +225,14 @@
     left: 0;
     right: 0;
     height: 12px;
-    /* Richer, more prominent wood gradient */
     background: linear-gradient(180deg,
-        #6B5544 0%,
-        #5A4A3A 25%,
-        #4A3F32 60%,
-        #3D3126 90%,
-        #2D2419 100%
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 75%, black) 0%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 60%, black) 25%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 50%, black) 60%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 40%, black) 90%,
+        color-mix(in srgb, var(--shelf-ledge-color, #8B7355) 30%, black) 100%
     );
     border-radius: 0 0 8px 8px;
-    /* Enhanced shadow for more realistic depth */
     box-shadow:
         0 3px 8px rgba(0, 0, 0, 0.6),
         0 1px 3px rgba(0, 0, 0, 0.4),

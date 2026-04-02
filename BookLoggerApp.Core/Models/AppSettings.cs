@@ -16,6 +16,12 @@ public class AppSettings
     [MaxLength(10)]
     public string Language { get; set; } = "en"; // ISO 639-1 code
 
+    [MaxLength(7)]
+    public string ShelfLedgeColor { get; set; } = "#8B7355"; // Hex color for ledge under each book
+
+    [MaxLength(7)]
+    public string ShelfBaseColor { get; set; } = "#D4A574"; // Hex color for bottom bar of each shelf
+
     // Notifications
     public bool NotificationsEnabled { get; set; } = false;
     public bool ReadingRemindersEnabled { get; set; } = false;
