@@ -13,6 +13,8 @@ public class ReadingViewModelTests
     private readonly IBookService _bookService;
     private readonly IProgressionService _progressionService;
     private readonly ITimerStateService _timerStateService;
+    private readonly IShareCardService _shareCardService;
+    private readonly IImageService _imageService;
     private readonly ReadingViewModel _viewModel;
 
     public ReadingViewModelTests()
@@ -22,8 +24,10 @@ public class ReadingViewModelTests
         _bookService = Substitute.For<IBookService>();
         _progressionService = Substitute.For<IProgressionService>();
         _timerStateService = Substitute.For<ITimerStateService>();
+        _shareCardService = Substitute.For<IShareCardService>();
+        _imageService = Substitute.For<IImageService>();
 
-        _viewModel = new ReadingViewModel(_progressService, _bookService, _progressionService, _timerStateService);
+        _viewModel = new ReadingViewModel(_progressService, _bookService, _progressionService, _timerStateService, _shareCardService, _imageService);
     }
 
     [Fact]
@@ -172,5 +176,74 @@ public class ReadingViewModelTests
         _viewModel.HasReviewPromptMoment.Should().BeFalse();
         _viewModel.LevelUpResult.Should().BeNull();
         _viewModel.ShowLevelUpCelebration.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_Should_Detect_BookCompletion_And_Show_Celebration()
+    {
+        // Arrange: book with PageCount, user reads to last page
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 90, PageCount = 100, Status = ReadingStatus.Reading };
+        var completedBook = new Book { Id = bookId, CurrentPage = 100, PageCount = 100, Status = ReadingStatus.Completed };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult { XpEarned = 50 }
+        };
+
+        var completionXp = new ProgressionResult { XpEarned = 100, BookCompletionXp = 100 };
+
+        _bookService.GetByIdAsync(bookId).Returns(book, completedBook);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+        _bookService.UpdateProgressAsync(bookId, 100).Returns(completionXp);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+
+        // Simulate user changing page to last page during session
+        _viewModel.CurrentPage = 100;
+
+        // Act: end the session
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+
+        // Assert: book completion celebration shows directly (skips session XP modal)
+        _viewModel.ShowSessionCelebration.Should().BeFalse();
+        _viewModel.ShowBookCompletionCelebration.Should().BeTrue();
+        _viewModel.HasReviewPromptMoment.Should().BeTrue();
+        _viewModel.XpEarned.Should().Be(150); // 50 session + 100 completion
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_Should_Not_Double_Award_Completion_XP()
+    {
+        // Arrange: book auto-completes during UpdateProgressAsync
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 95, PageCount = 100, Status = ReadingStatus.Reading };
+        var completedBook = new Book { Id = bookId, CurrentPage = 100, PageCount = 100, Status = ReadingStatus.Completed };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult { XpEarned = 30 }
+        };
+
+        var completionXp = new ProgressionResult { XpEarned = 100, BookCompletionXp = 100 };
+
+        _bookService.GetByIdAsync(bookId).Returns(book, completedBook);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+        _bookService.UpdateProgressAsync(bookId, 100).Returns(completionXp);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+        _viewModel.CurrentPage = 100;
+
+        // Act
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+
+        // Assert: AwardBookCompletionXpAsync should NOT be called (BookService already awards it)
+        await _progressionService.DidNotReceive().AwardBookCompletionXpAsync(Arg.Any<Guid?>());
     }
 }

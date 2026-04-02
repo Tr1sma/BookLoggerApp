@@ -13,20 +13,31 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private readonly IBookService _bookService;
     private readonly IProgressionService _progressionService;
     private readonly ITimerStateService _timerStateService;
+    private readonly IShareCardService _shareCardService;
+    private readonly IImageService _imageService;
     private Timer? _timer;
     private bool _bookCompletedDuringSession;
     private bool _goalCompletedDuringSession;
+
+    /// <summary>
+    /// Raised when a book recommendation share card PNG is ready. The component handles file write + sharing.
+    /// </summary>
+    public event Action<byte[]>? BookShareCardReady;
 
     public ReadingViewModel(
         IProgressService progressService,
         IBookService bookService,
         IProgressionService progressionService,
-        ITimerStateService timerStateService)
+        ITimerStateService timerStateService,
+        IShareCardService shareCardService,
+        IImageService imageService)
     {
         _progressService = progressService;
         _bookService = bookService;
         _progressionService = progressionService;
         _timerStateService = timerStateService;
+        _shareCardService = shareCardService;
+        _imageService = imageService;
         _timerStateService.AppResumed += OnAppResumed;
     }
 
@@ -65,6 +76,12 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private LevelUpResult? _levelUpResult;
+
+    [ObservableProperty]
+    private bool _showBookCompletionCelebration;
+
+    [ObservableProperty]
+    private bool _isGeneratingBookCard;
 
     public bool IsRunning => Session != null && !IsPaused;
     public bool HasReviewPromptMoment => _bookCompletedDuringSession || _goalCompletedDuringSession || LevelUpResult != null;
@@ -153,44 +170,51 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             // Calculate pages read during this session
             var pagesRead = Math.Max(0, CurrentPage - StartPage);
 
-            // End the session with the correct pages read count (now returns SessionEndResult)
+            // End the session with the correct pages read count
             var result = await _progressService.EndSessionAsync(Session.Id, pagesRead);
             Session = result.Session;
             SessionProgressionResult = result.ProgressionResult;
             _goalCompletedDuringSession = result.GoalCompleted;
 
-            // Check if book was already completed before update
-            var wasCompleted = Book?.Status == ReadingStatus.Completed;
+            // Capture status before any updates
+            var wasAlreadyCompleted = Book?.Status == ReadingStatus.Completed;
 
-            // Update book progress to the current page
+            // Update book progress (auto-completes + awards XP if last page reached)
+            ProgressionResult? completionResult = null;
             if (Book != null && Book.CurrentPage != CurrentPage)
             {
-                await _bookService.UpdateProgressAsync(Book.Id, CurrentPage);
+                completionResult = await _bookService.UpdateProgressAsync(Book.Id, CurrentPage);
+            }
 
-                // Reload the book to get the updated progress
+            // Always reload the book to get the latest status
+            if (Book != null)
+            {
                 Book = await _bookService.GetByIdAsync(Book.Id);
             }
 
-            // Check if book just completed
-            _bookCompletedDuringSession = !wasCompleted && Book?.Status == ReadingStatus.Completed;
-            if (_bookCompletedDuringSession)
+            // Detect book completion: return value OR status change (fallback)
+            _bookCompletedDuringSession = completionResult != null
+                || (!wasAlreadyCompleted && Book?.Status == ReadingStatus.Completed);
+
+            if (_bookCompletedDuringSession && completionResult != null)
             {
-                // Award Book Completion XP
-                var completionResult = await _progressionService.AwardBookCompletionXpAsync(null);
-                
-                // Merge results
+                // Merge completion XP into the session result for display
                 SessionProgressionResult = MergeProgressionResults(SessionProgressionResult, completionResult);
-                
-                // Update session XP to reflect total
                 Session.XpEarned = SessionProgressionResult.XpEarned;
-                // Note: We don't save the merged XP to session in DB because session XP should reflect just the session.
-                // But for display we show total.
             }
 
             XpEarned = SessionProgressionResult?.XpEarned ?? 0;
 
-            // Show celebration overlay with XP breakdown
-            ShowSessionCelebration = true;
+            // Show the appropriate celebration
+            if (_bookCompletedDuringSession)
+            {
+                // Skip session XP modal — go directly to book completion celebration
+                ShowBookCompletionCelebration = true;
+            }
+            else
+            {
+                ShowSessionCelebration = true;
+            }
 
             // Check if there was a level-up to show afterwards
             if (SessionProgressionResult?.LevelUp != null)
@@ -297,7 +321,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Called when session celebration is closed. Shows level-up celebration if applicable.
+    /// Called when session celebration is closed. Shows level-up or book completion celebration if applicable.
     /// </summary>
     public Task OnSessionCelebrationClose()
     {
@@ -307,9 +331,12 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
         {
             ShowLevelUpCelebration = true;
         }
+        else if (_bookCompletedDuringSession)
+        {
+            ShowBookCompletionCelebration = true;
+        }
         else
         {
-            _bookCompletedDuringSession = false;
             _goalCompletedDuringSession = false;
         }
 
@@ -317,15 +344,83 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Called when level-up celebration is closed.
+    /// Called when level-up celebration is closed. Shows book completion celebration if applicable.
     /// </summary>
     public Task OnLevelUpCelebrationClose()
     {
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
+
+        if (_bookCompletedDuringSession)
+        {
+            ShowBookCompletionCelebration = true;
+        }
+        else
+        {
+            _goalCompletedDuringSession = false;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Called when book completion celebration is closed.
+    /// </summary>
+    public Task OnBookCompletionCelebrationClose()
+    {
+        ShowBookCompletionCelebration = false;
         _bookCompletedDuringSession = false;
         _goalCompletedDuringSession = false;
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Generates a book recommendation share card for the completed book.
+    /// </summary>
+    [RelayCommand]
+    public async Task GenerateAndShareBookCardAsync()
+    {
+        if (Book == null) return;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            IsGeneratingBookCard = true;
+
+            int totalMinutes = await _progressService.GetTotalMinutesAsync(Book.Id);
+
+            byte[]? coverBytes = null;
+            var coverResult = await _imageService.GetResizedCoverImageAsync(Book.Id, 600, 900);
+            if (coverResult.HasValue)
+            {
+                coverBytes = coverResult.Value.Bytes;
+            }
+
+            var data = new BookShareData
+            {
+                Title = Book.Title,
+                Author = Book.Author,
+                PageCount = Book.PageCount,
+                TotalMinutesRead = totalMinutes,
+                AverageRating = Book.AverageRating,
+                CoverImageBytes = coverBytes,
+                CategoryRatings = new Dictionary<RatingCategory, int?>
+                {
+                    { RatingCategory.Characters, Book.CharactersRating },
+                    { RatingCategory.Plot, Book.PlotRating },
+                    { RatingCategory.WritingStyle, Book.WritingStyleRating },
+                    { RatingCategory.SpiceLevel, Book.SpiceLevelRating },
+                    { RatingCategory.Pacing, Book.PacingRating },
+                    { RatingCategory.WorldBuilding, Book.WorldBuildingRating }
+                }
+            };
+
+            byte[] cardBytes = await _shareCardService.GenerateBookCardAsync(data);
+            BookShareCardReady?.Invoke(cardBytes);
+
+            IsGeneratingBookCard = false;
+        }, "Failed to generate book recommendation card");
+
+        IsGeneratingBookCard = false;
     }
 
     private void OnAppResumed()

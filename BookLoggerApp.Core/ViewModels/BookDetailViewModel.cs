@@ -13,19 +13,30 @@ public partial class BookDetailViewModel : ViewModelBase
     private readonly IQuoteService _quoteService;
     private readonly IAnnotationService _annotationService;
     private readonly IGenreService _genreService;
+    private readonly IShareCardService _shareCardService;
+    private readonly IImageService _imageService;
+
+    /// <summary>
+    /// Raised when a book recommendation share card PNG is ready.
+    /// </summary>
+    public event Action<byte[]>? BookShareCardReady;
 
     public BookDetailViewModel(
         IBookService bookService,
         IProgressService progressService,
         IQuoteService quoteService,
         IAnnotationService annotationService,
-        IGenreService genreService)
+        IGenreService genreService,
+        IShareCardService shareCardService,
+        IImageService imageService)
     {
         _bookService = bookService;
         _progressService = progressService;
         _quoteService = quoteService;
         _annotationService = annotationService;
         _genreService = genreService;
+        _shareCardService = shareCardService;
+        _imageService = imageService;
     }
 
     [ObservableProperty]
@@ -48,6 +59,9 @@ public partial class BookDetailViewModel : ViewModelBase
 
     [ObservableProperty]
     private List<Genre> _bookGenres = new();
+
+    [ObservableProperty]
+    private bool _isGeneratingBookCard;
 
     [RelayCommand]
     public async Task LoadAsync(Guid bookId)
@@ -208,5 +222,52 @@ public partial class BookDetailViewModel : ViewModelBase
 
             _ => null
         };
+    }
+
+    /// <summary>
+    /// Generates a book recommendation share card for a completed book.
+    /// </summary>
+    [RelayCommand]
+    public async Task GenerateAndShareBookCardAsync()
+    {
+        if (Book == null) return;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            IsGeneratingBookCard = true;
+
+            byte[]? coverBytes = null;
+            var coverResult = await _imageService.GetResizedCoverImageAsync(Book.Id, 600, 900);
+            if (coverResult.HasValue)
+            {
+                coverBytes = coverResult.Value.Bytes;
+            }
+
+            var data = new BookShareData
+            {
+                Title = Book.Title,
+                Author = Book.Author,
+                PageCount = Book.PageCount,
+                TotalMinutesRead = TotalMinutes,
+                AverageRating = Book.AverageRating,
+                CoverImageBytes = coverBytes,
+                CategoryRatings = new Dictionary<RatingCategory, int?>
+                {
+                    { RatingCategory.Characters, Book.CharactersRating },
+                    { RatingCategory.Plot, Book.PlotRating },
+                    { RatingCategory.WritingStyle, Book.WritingStyleRating },
+                    { RatingCategory.SpiceLevel, Book.SpiceLevelRating },
+                    { RatingCategory.Pacing, Book.PacingRating },
+                    { RatingCategory.WorldBuilding, Book.WorldBuildingRating }
+                }
+            };
+
+            byte[] cardBytes = await _shareCardService.GenerateBookCardAsync(data);
+            BookShareCardReady?.Invoke(cardBytes);
+
+            IsGeneratingBookCard = false;
+        }, "Failed to generate book recommendation card");
+
+        IsGeneratingBookCard = false;
     }
 }
