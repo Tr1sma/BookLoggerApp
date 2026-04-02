@@ -16,7 +16,12 @@ Versionsschema:
 
 ## [Unveröffentlicht]
 
+## [V0.7.5] - 2026-04-02
+
 ### Hinzugefügt
+
+- Stats teilen (Reading Wrapped): Auf der Stats-Seite können Lesestats als PNG im Instagram-Story-Format (1080×1920) geteilt werden. Zeitraum wählbar: Week, Month, Quarter, Year, All Time. Die Karte zeigt abgeschlossene Bücher, gelesene Seiten, Lesezeit, Lieblingsgenre und Top-3-Bücher im BookHeart-Design.
+- Buchempfehlung teilen: Nach dem Abschließen eines bereits vorhandenen Buchs (d. h. nach echten Lesesitzungen) erscheint in der Abschluss-Feier ein optionaler Button „Share as Recommendation". Die Karte zeigt Titel, Autor, Cover, Seitenanzahl, Gesamtlesezeit und alle Bewertungskategorien. Bücher, die direkt als abgeschlossen hinzugefügt wurden (ohne Lesesitzung), werden ausgeschlossen.
 
 ### Geändert
 
