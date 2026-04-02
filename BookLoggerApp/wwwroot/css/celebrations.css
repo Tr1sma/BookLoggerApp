@@ -352,31 +352,11 @@
     font-weight: 900;
     color: #ffc107;
     text-align: center;
-    animation: coinSpin 1s ease;
-}
-
-@keyframes coinSpin {
-    0% {
-        transform: rotateY(0deg) scale(0.5);
-        opacity: 0;
-    }
-
-    50% {
-        transform: rotateY(180deg) scale(1.2);
-    }
-
-    100% {
-        transform: rotateY(360deg) scale(1);
-        opacity: 1;
-    }
-}
-
-.coins-icon {
-    font-size: 1.75rem;
-    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-    filter: drop-shadow(0 4px 8px rgba(255, 193, 7, 0.5));
-    vertical-align: middle;
-    margin-right: 0.25rem;
+    max-width: none;
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+    animation: slideUp 0.6s ease 0.5s both;
 }
 
 /* ===== Confetti Particles ===== */
@@ -599,10 +579,6 @@
         font-size: 1.1rem;
     }
 
-    .coins-icon {
-        font-size: 1.1rem;
-    }
-
     .celebration-button {
         font-size: 0.9rem;
         padding: 0.65rem 1rem;
@@ -685,10 +661,6 @@
         font-size: 1.25rem;
     }
 
-    .coins-icon {
-        font-size: 1.25rem;
-    }
-
     .celebration-button {
         font-size: 1rem;
         padding: 0.75rem 1.25rem;
@@ -735,10 +707,6 @@
 
     .coins-amount {
         font-size: 1.85rem;
-    }
-
-    .coins-icon {
-        font-size: 2rem;
     }
 
     .celebration-button {
