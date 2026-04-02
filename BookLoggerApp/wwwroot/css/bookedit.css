@@ -307,6 +307,16 @@
     border: 1px solid var(--border-light);
 }
 
+/* Gallery Pick Button */
+.gallery-pick-btn {
+    width: 100%;
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
 /* Form Actions */
 .form-actions {
     display: flex;

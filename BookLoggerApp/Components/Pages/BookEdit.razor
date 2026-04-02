@@ -206,6 +206,23 @@
                     <label for="coverImagePath">Cover Image URL/Path</label>
                     <input id="coverImagePath" type="text" @bind="ViewModel.Book.CoverImagePath" maxlength="500" placeholder="/images/covers/book.jpg" />
 
+                    @if (DeviceInfo.Platform == DevicePlatform.Android)
+                    {
+                        <button type="button"
+                                class="btn btn-secondary gallery-pick-btn"
+                                @onclick="PickFromGalleryAsync"
+                                disabled="@_isPickingFromGallery">
+                            @if (_isPickingFromGallery)
+                            {
+                                <span>Loading...</span>
+                            }
+                            else
+                            {
+                                <span>Pick from Gallery</span>
+                            }
+                        </button>
+                    }
+
                     @if (!string.IsNullOrEmpty(_coverPreviewUrl))
                     {
                         <div class="cover-preview">
@@ -318,6 +335,8 @@
 
     private string? _coverPreviewUrl;
     private bool _showReviewPrompt;
+    private bool _isPickingFromGallery;
+    private byte[]? _pendingGalleryImageBytes;
 
     protected override async Task OnInitializedAsync()
     {
@@ -408,11 +427,88 @@
         }
     }
 
+    private async Task PickFromGalleryAsync()
+    {
+        try
+        {
+            _isPickingFromGallery = true;
+            StateHasChanged();
+
+#pragma warning disable CS0618 // PickPhotoAsync is obsolete but PickPhotosAsync is multi-select
+            var result = await MediaPicker.Default.PickPhotoAsync(new MediaPickerOptions
+            {
+                Title = "Select a cover image"
+            });
+#pragma warning restore CS0618
+
+            if (result == null)
+                return;
+
+            // Read the stream immediately — temporary URI access may expire ("only this time" permission)
+            using var stream = await result.OpenReadAsync();
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
+
+            if (imageBytes.Length == 0)
+                return;
+
+            if (ViewModel.Book!.Id != Guid.Empty)
+            {
+                // Existing book: save to local storage right away
+                using var saveStream = new MemoryStream(imageBytes);
+                var localPath = await ImageService.SaveCoverImageAsync(saveStream, ViewModel.Book.Id);
+                ViewModel.Book.CoverImagePath = localPath;
+            }
+            else
+            {
+                // New book: stash bytes until the book gets an ID on save
+                _pendingGalleryImageBytes = imageBytes;
+                ViewModel.Book.CoverImagePath = "gallery-pending";
+            }
+
+            // Generate preview from the bytes we already have in memory
+            var base64 = Convert.ToBase64String(imageBytes);
+            _coverPreviewUrl = $"data:image/jpeg;base64,{base64}";
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Gallery pick failed: {ex.Message}");
+        }
+        finally
+        {
+            _isPickingFromGallery = false;
+            StateHasChanged();
+        }
+    }
+
     private async Task HandleSave()
     {
         await ViewModel.SaveCommand.ExecuteAsync(null);
         if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
         {
+            // Persist pending gallery image now that the book has an ID
+            if (_pendingGalleryImageBytes != null
+                && ViewModel.Book.Id != Guid.Empty
+                && ViewModel.Book.CoverImagePath == "gallery-pending")
+            {
+                try
+                {
+                    using var stream = new MemoryStream(_pendingGalleryImageBytes);
+                    var localPath = await ImageService.SaveCoverImageAsync(stream, ViewModel.Book.Id);
+                    ViewModel.Book.CoverImagePath = localPath;
+                    await BookService.UpdateAsync(ViewModel.Book);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to save gallery image: {ex.Message}");
+                }
+                finally
+                {
+                    _pendingGalleryImageBytes = null;
+                }
+            }
+
             WidgetUpdateService.NotifyDataChanged();
 
             // If book was completed, show celebration first before navigating
