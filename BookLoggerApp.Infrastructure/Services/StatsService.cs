@@ -282,4 +282,18 @@ public class StatsService : IStatsService
             .ToList();
     }
 
+    public async Task<List<(int Year, int Month)>> GetActiveReadingPeriodsAsync(CancellationToken ct = default)
+    {
+        var dates = await _unitOfWork.Context.Set<Book>()
+            .Where(b => b.Status == ReadingStatus.Completed && b.DateCompleted.HasValue)
+            .Select(b => b.DateCompleted!.Value)
+            .ToListAsync(ct);
+
+        return dates
+            .Select(d => (d.Year, d.Month))
+            .Distinct()
+            .OrderByDescending(x => x.Year).ThenByDescending(x => x.Month)
+            .ToList();
+    }
+
 }

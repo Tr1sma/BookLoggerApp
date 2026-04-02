@@ -129,13 +129,16 @@ public partial class StatsViewModel : ViewModelBase
     // === Share Card Properties ===
 
     [ObservableProperty]
-    private string _selectedSharePeriod = DateTime.UtcNow.ToString("yyyy-MM");
+    private string _selectedSharePeriod = "All Time";
 
     [ObservableProperty]
     private bool _showShareModal;
 
     [ObservableProperty]
     private bool _isGeneratingCard;
+
+    public List<int> AvailableShareYears { get; private set; } = new();
+    public List<(int Year, int Month)> AvailableShareMonths { get; private set; } = new();
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -279,6 +282,16 @@ public partial class StatsViewModel : ViewModelBase
     private static int GetXpForLevel(int level)
     {
         return BookLoggerApp.Core.Helpers.XpCalculator.GetXpForLevel(level);
+    }
+
+    public async Task LoadActivePeriodsAsync()
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            var periods = await _statsService.GetActiveReadingPeriodsAsync();
+            AvailableShareYears = periods.Select(p => p.Year).Distinct().OrderByDescending(y => y).ToList();
+            AvailableShareMonths = periods;
+        }, "Failed to load share periods");
     }
 
     [RelayCommand]

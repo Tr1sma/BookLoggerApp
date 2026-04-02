@@ -59,7 +59,7 @@
         <section class="stats-chips-section">
             <div class="stats-section-header">
                 <h2>📊 Your Stats</h2>
-                <button class="share-stats-btn" @onclick="() => ViewModel.ShowShareModal = true">
+                <button class="share-stats-btn" @onclick="OpenShareModal">
                     📤 Share Stats
                 </button>
             </div>
@@ -317,12 +317,12 @@
                     </button>
                 </div>
 
-                @if (sharePeriodType == "year")
+                @if (sharePeriodType == "year" && ViewModel.AvailableShareYears.Any())
                 {
                     <div class="period-sub-options">
-                        @for (int yi = DateTime.Now.Year; yi >= DateTime.Now.Year - 4; yi--)
+                        @foreach (var year in ViewModel.AvailableShareYears)
                         {
-                            var yearValue = yi.ToString();
+                            var yearValue = year.ToString();
                             <button class="@("period-chip" + (ViewModel.SelectedSharePeriod == yearValue ? " active" : ""))"
                                     @onclick="() => ViewModel.SelectedSharePeriod = yearValue">
                                 @yearValue
@@ -330,21 +330,18 @@
                         }
                     </div>
                 }
-                else if (sharePeriodType == "month")
+                else if (sharePeriodType == "month" && ViewModel.AvailableShareMonths.Any())
                 {
                     <div class="period-sub-options">
-                        @{
-                            var mDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                        }
-                        @for (int mi = 0; mi < 12; mi++)
+                        @foreach (var period in ViewModel.AvailableShareMonths)
                         {
+                            var mDate = new DateTime(period.Year, period.Month, 1);
                             var monthValue = mDate.ToString("yyyy-MM");
                             var monthLabel = mDate.ToString("MMMM yyyy");
                             <button class="@("period-chip" + (ViewModel.SelectedSharePeriod == monthValue ? " active" : ""))"
                                     @onclick="() => ViewModel.SelectedSharePeriod = monthValue">
                                 @monthLabel
                             </button>
-                            mDate = mDate.AddMonths(-1);
                         }
                     </div>
                 }
@@ -469,13 +466,24 @@
         StateHasChanged();
     }
 
+    private async Task OpenShareModal()
+    {
+        ViewModel.ShowShareModal = true;
+        sharePeriodType = "alltime";
+        ViewModel.SelectedSharePeriod = "All Time";
+        await ViewModel.LoadActivePeriodsAsync();
+        StateHasChanged();
+    }
+
     private void SelectPeriodType(string type)
     {
         sharePeriodType = type;
         ViewModel.SelectedSharePeriod = type switch
         {
-            "year" => DateTime.Now.Year.ToString(),
-            "month" => DateTime.Now.ToString("yyyy-MM"),
+            "year" when ViewModel.AvailableShareYears.Count > 0
+                => ViewModel.AvailableShareYears[0].ToString(),
+            "month" when ViewModel.AvailableShareMonths.Count > 0
+                => new DateTime(ViewModel.AvailableShareMonths[0].Year, ViewModel.AvailableShareMonths[0].Month, 1).ToString("yyyy-MM"),
             _ => "All Time"
         };
     }
