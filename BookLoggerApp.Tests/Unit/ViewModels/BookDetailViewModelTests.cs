@@ -13,6 +13,8 @@ public class BookDetailViewModelTests
     private readonly IQuoteService _quoteService;
     private readonly IAnnotationService _annotationService;
     private readonly IGenreService _genreService;
+    private readonly IShareCardService _shareCardService;
+    private readonly IImageService _imageService;
     private readonly BookDetailViewModel _viewModel;
 
     public BookDetailViewModelTests()
@@ -24,13 +26,17 @@ public class BookDetailViewModelTests
         _quoteService = Substitute.For<IQuoteService>();
         _annotationService = Substitute.For<IAnnotationService>();
         _genreService = Substitute.For<IGenreService>();
+        _shareCardService = Substitute.For<IShareCardService>();
+        _imageService = Substitute.For<IImageService>();
 
         _viewModel = new BookDetailViewModel(
             _bookService,
             _progressService,
             _quoteService,
             _annotationService,
-            _genreService);
+            _genreService,
+            _shareCardService,
+            _imageService);
     }
 
     [Fact]

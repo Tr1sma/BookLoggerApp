@@ -7,6 +7,7 @@
 @inject ITimerStateService TimerStateService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IReviewPromptService ReviewPromptService
+@inject IShareService ShareService
 @implements IDisposable
 
 <PageTitle>Reading - BookHeart</PageTitle>
@@ -145,6 +146,18 @@
         OnClose="@HandleLevelUpCelebrationClose" />
 }
 
+@if (ViewModel.ShowBookCompletionCelebration && ViewModel.Book != null)
+{
+    <BookCompletionCelebration
+        IsVisible="true"
+        Book="@ViewModel.Book"
+        TotalXpEarned="@(ViewModel.SessionProgressionResult?.XpEarned ?? 0)"
+        ShowShareButton="true"
+        IsGeneratingCard="@ViewModel.IsGeneratingBookCard"
+        OnClose="@HandleBookCompletionCelebrationClose"
+        OnShareBook="@HandleShareBook" />
+}
+
 @if (_showReviewPrompt)
 {
     <ReviewPromptModal
@@ -160,6 +173,7 @@
     protected override async Task OnInitializedAsync()
     {
         TimerStateService.AppResumed += OnAppResumed;
+        ViewModel.BookShareCardReady += OnBookShareCardReady;
         await ViewModel.LoadCommand.ExecuteAsync(SessionId);
     }
 
@@ -193,9 +207,10 @@
     {
         var shouldShowReviewPrompt = ViewModel.HasReviewPromptMoment;
         await ViewModel.OnSessionCelebrationClose();
+        StateHasChanged();
 
-        // If no level-up, navigate to bookshelf after session celebration
-        if (ViewModel.LevelUpResult == null)
+        // If no level-up and no book completion, navigate
+        if (!ViewModel.ShowLevelUpCelebration && !ViewModel.ShowBookCompletionCelebration)
         {
             await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
         }
@@ -205,7 +220,34 @@
     {
         var shouldShowReviewPrompt = ViewModel.HasReviewPromptMoment;
         await ViewModel.OnLevelUpCelebrationClose();
+        StateHasChanged();
+
+        // If no book completion, navigate
+        if (!ViewModel.ShowBookCompletionCelebration)
+        {
+            await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+        }
+    }
+
+    private async Task HandleBookCompletionCelebrationClose()
+    {
+        var shouldShowReviewPrompt = ViewModel.HasReviewPromptMoment;
+        await ViewModel.OnBookCompletionCelebrationClose();
         await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+    }
+
+    private async Task HandleShareBook()
+    {
+        await ViewModel.GenerateAndShareBookCardCommand.ExecuteAsync(null);
+    }
+
+    private async void OnBookShareCardReady(byte[] cardBytes)
+    {
+        var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+        await File.WriteAllBytesAsync(filePath, cardBytes);
+        await ShareService.ShareFileAsync("Book Recommendation", filePath, "image/png");
+        await InvokeAsync(StateHasChanged);
     }
 
     private Task HandleReviewPromptClose()
@@ -262,6 +304,7 @@
     public void Dispose()
     {
         TimerStateService.AppResumed -= OnAppResumed;
+        ViewModel.BookShareCardReady -= OnBookShareCardReady;
         ViewModel.Dispose();
     }
 }

@@ -97,8 +97,8 @@ public class MockBookService : IBookService
         return Task.CompletedTask;
     }
 
-    public Task UpdateProgressAsync(Guid bookId, int currentPage, CancellationToken ct = default)
+    public Task<ProgressionResult?> UpdateProgressAsync(Guid bookId, int currentPage, CancellationToken ct = default)
     {
-        return Task.CompletedTask;
+        return Task.FromResult<ProgressionResult?>(null);
     }
 }

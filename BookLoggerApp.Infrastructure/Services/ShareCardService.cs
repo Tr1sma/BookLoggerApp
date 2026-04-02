@@ -168,26 +168,21 @@ public class ShareCardService : IShareCardService
         DrawHeartAndText(canvas, "BookHeart", w / 2f, y, boldTypeface, 52, Primary);
         y += 80;
 
-        // ── Cover image ───────────────────────────────────────────────────────
-        const float CoverW = 320;
-        const float CoverH = 480;
-        float coverX = (w - CoverW) / 2f;
-        float coverY = y;
-
+        // ── Cover image (only if available) ─────────────────────────────────
         if (data.CoverImageBytes != null && data.CoverImageBytes.Length > 0)
         {
+            const float CoverW = 320;
+            const float CoverH = 480;
+            float coverX = (w - CoverW) / 2f;
+            float coverY = y;
+
             using var coverBitmap = SKBitmap.Decode(data.CoverImageBytes);
             if (coverBitmap != null)
+            {
                 DrawRoundedBitmap(canvas, coverBitmap, coverX, coverY, CoverW, CoverH, 16);
-            else
-                DrawCoverPlaceholder(canvas, data.Title, coverX, coverY, CoverW, CoverH, boldTypeface);
+                y = coverY + CoverH + 50;
+            }
         }
-        else
-        {
-            DrawCoverPlaceholder(canvas, data.Title, coverX, coverY, CoverW, CoverH, boldTypeface);
-        }
-
-        y = coverY + CoverH + 50;
 
         // ── Title & Author ────────────────────────────────────────────────────
         var titleLines = WrapText(data.Title, w - Pad * 2, boldTypeface, 68);

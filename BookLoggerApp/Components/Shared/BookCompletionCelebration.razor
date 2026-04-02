@@ -23,20 +23,8 @@
 
             <!-- XP Reward -->
             <div class="xp-reward">
-                <p style="color: #e0e0e0; margin-bottom: 0.5rem; font-size: 1.1rem;">
-                    You earned
-                </p>
-                <div class="xp-amount">
-                    <span class="xp-icon">✨</span>
-                    <span>100 XP!</span>
-                </div>
-            </div>
-
-            <!-- Motivational Message -->
-            <div style="text-align: center; margin: 1rem 0;">
-                <p style="color: #999; font-size: 0.9rem;">
-                    Keep reading to level up!
-                </p>
+                <span class="xp-reward-label">You earned</span>
+                <span class="xp-reward-value">✨ @TotalXpEarned XP</span>
             </div>
 
             <!-- Continue Button -->
@@ -66,6 +54,7 @@
 @code {
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public Book? Book { get; set; }
+    [Parameter] public int TotalXpEarned { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public bool ShowShareButton { get; set; }
     [Parameter] public bool IsGeneratingCard { get; set; }

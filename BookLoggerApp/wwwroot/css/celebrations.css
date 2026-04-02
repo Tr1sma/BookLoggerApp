@@ -166,12 +166,12 @@
 /* ===== Book Completion Celebration ===== */
 .book-complete-header {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
     animation: slideDown 0.6s ease 0.2s both;
 }
 
 .book-complete-header h1 {
-    font-size: 2.25rem;
+    font-size: 1.75rem;
     font-weight: 800;
     color: #4CAF50;
     margin: 0;
@@ -180,15 +180,15 @@
 
 .completed-book-info {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
     animation: slideUp 0.6s ease 0.3s both;
 }
 
 .completed-book-info h2 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #fff;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.25rem 0;
 }
 
 .completed-book-info .book-author {
@@ -199,28 +199,27 @@
 }
 
 .xp-reward {
-    text-align: center;
-    background: rgba(76, 175, 80, 0.15);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin: 1.5rem 0;
-    animation: slideUp 0.6s ease 0.5s both;
-}
-
-.xp-amount {
-    font-size: 2.5rem;
-    font-weight: 900;
-    color: #4CAF50;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    animation: xpPop 0.5s ease 0.7s both;
+    background: rgba(76, 175, 80, 0.15);
+    border-radius: 10px;
+    padding: 0.6rem 1.2rem;
+    margin: 0.75rem 0;
+    animation: slideUp 0.6s ease 0.5s both;
 }
 
-.xp-icon {
-    font-size: 2.5rem;
-    filter: drop-shadow(0 4px 8px rgba(76, 175, 80, 0.5));
+.xp-reward-label {
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.xp-reward-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #4CAF50;
+    animation: xpPop 0.5s ease 0.7s both;
 }
 
 @keyframes xpPop {
