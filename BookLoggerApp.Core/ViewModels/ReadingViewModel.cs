@@ -13,22 +13,20 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private readonly IBookService _bookService;
     private readonly IProgressionService _progressionService;
     private readonly ITimerStateService _timerStateService;
-    private readonly IReviewService _reviewService;
     private Timer? _timer;
     private bool _bookCompletedDuringSession;
+    private bool _goalCompletedDuringSession;
 
     public ReadingViewModel(
         IProgressService progressService,
         IBookService bookService,
         IProgressionService progressionService,
-        ITimerStateService timerStateService,
-        IReviewService reviewService)
+        ITimerStateService timerStateService)
     {
         _progressService = progressService;
         _bookService = bookService;
         _progressionService = progressionService;
         _timerStateService = timerStateService;
-        _reviewService = reviewService;
         _timerStateService.AppResumed += OnAppResumed;
     }
 
@@ -69,6 +67,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private LevelUpResult? _levelUpResult;
 
     public bool IsRunning => Session != null && !IsPaused;
+    public bool HasReviewPromptMoment => _bookCompletedDuringSession || _goalCompletedDuringSession || LevelUpResult != null;
 
     [RelayCommand]
     public async Task LoadAsync(Guid sessionId)
@@ -116,6 +115,9 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             StartPage = Book?.CurrentPage ?? 0;
             CurrentPage = StartPage;
             XpEarned = 0;
+            _bookCompletedDuringSession = false;
+            _goalCompletedDuringSession = false;
+            LevelUpResult = null;
 
             // Set StartPage in the session
             Session.StartPage = StartPage;
@@ -155,6 +157,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             var result = await _progressService.EndSessionAsync(Session.Id, pagesRead);
             Session = result.Session;
             SessionProgressionResult = result.ProgressionResult;
+            _goalCompletedDuringSession = result.GoalCompleted;
 
             // Check if book was already completed before update
             var wasCompleted = Book?.Status == ReadingStatus.Completed;
@@ -294,10 +297,9 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Called when session celebration is closed. Shows level-up celebration if applicable,
-    /// or triggers review prompt if book was completed without level-up.
+    /// Called when session celebration is closed. Shows level-up celebration if applicable.
     /// </summary>
-    public async Task OnSessionCelebrationClose()
+    public Task OnSessionCelebrationClose()
     {
         ShowSessionCelebration = false;
 
@@ -305,20 +307,25 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
         {
             ShowLevelUpCelebration = true;
         }
-        else if (_bookCompletedDuringSession)
+        else
         {
-            await _reviewService.TryRequestReviewAsync();
+            _bookCompletedDuringSession = false;
+            _goalCompletedDuringSession = false;
         }
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
-    /// Called when level-up celebration is closed. Triggers review prompt.
+    /// Called when level-up celebration is closed.
     /// </summary>
-    public async Task OnLevelUpCelebrationClose()
+    public Task OnLevelUpCelebrationClose()
     {
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
-        await _reviewService.TryRequestReviewAsync();
+        _bookCompletedDuringSession = false;
+        _goalCompletedDuringSession = false;
+        return Task.CompletedTask;
     }
 
     private void OnAppResumed()

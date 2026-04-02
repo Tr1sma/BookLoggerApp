@@ -15,7 +15,8 @@ public class BookEditViewModelTests
     private readonly IImageService _imageService;
     private readonly IShelfService _shelfService;
     private readonly IWishlistService _wishlistService;
-    private readonly IReviewService _reviewService;
+    private readonly IShareCardService _shareCardService;
+    private readonly IProgressService _progressService;
     private readonly BookEditViewModel _viewModel;
 
     public BookEditViewModelTests()
@@ -27,7 +28,8 @@ public class BookEditViewModelTests
         _imageService = Substitute.For<IImageService>();
         _shelfService = Substitute.For<IShelfService>();
         _wishlistService = Substitute.For<IWishlistService>();
-        _reviewService = Substitute.For<IReviewService>();
+        _shareCardService = Substitute.For<IShareCardService>();
+        _progressService = Substitute.For<IProgressService>();
 
         _genreService.GetAllAsync().Returns(new List<Genre>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
@@ -39,7 +41,8 @@ public class BookEditViewModelTests
             _imageService,
             _shelfService,
             _wishlistService,
-            _reviewService
+            _shareCardService,
+            _progressService
         );
     }
 
@@ -65,7 +68,7 @@ public class BookEditViewModelTests
         // Arrange
         var bookId = Guid.NewGuid();
         var book = new Book { Id = bookId, Title = "Existing Book" };
-        
+
         _genreService.GetAllAsync().Returns(new List<Genre>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
         _bookService.GetWithDetailsAsync(bookId).Returns(book);
@@ -100,7 +103,7 @@ public class BookEditViewModelTests
         await _viewModel.LoadCommand.ExecuteAsync(null);
         _viewModel.Book!.Title = "New Book";
         _viewModel.Book.Author = "Author";
-        
+
         var savedBook = new Book { Id = Guid.NewGuid(), Title = "New Book" };
         _bookService.AddAsync(Arg.Any<Book>()).Returns(savedBook);
 
@@ -118,11 +121,11 @@ public class BookEditViewModelTests
         // Arrange
         var bookId = Guid.NewGuid();
         var book = new Book { Id = bookId, Title = "Existing Book", Author = "Author" };
-        
+
         _genreService.GetAllAsync().Returns(new List<Genre>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
         _bookService.GetWithDetailsAsync(bookId).Returns(book);
-        _bookService.GetByIdAsync(bookId).Returns(book); // Check for existing
+        _bookService.GetByIdAsync(bookId).Returns(book);
 
         await _viewModel.LoadCommand.ExecuteAsync(bookId);
         _viewModel.Book!.Title = "Updated Title";
@@ -140,10 +143,10 @@ public class BookEditViewModelTests
         // Arrange
         await _viewModel.LoadCommand.ExecuteAsync(null);
         _viewModel.Book!.ISBN = "1234567890";
-        
-        var metadata = new BookMetadata 
-        { 
-            Title = "Lookup Title", 
+
+        var metadata = new BookMetadata
+        {
+            Title = "Lookup Title",
             Author = "Lookup Author",
             Description = "Lookup Desc"
         };
@@ -165,7 +168,7 @@ public class BookEditViewModelTests
         // Arrange
         var bookId = Guid.NewGuid();
         var book = new Book { Id = bookId, Title = "Delete Me" };
-        
+
         _genreService.GetAllAsync().Returns(new List<Genre>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
         _bookService.GetWithDetailsAsync(bookId).Returns(book);
@@ -178,5 +181,18 @@ public class BookEditViewModelTests
         // Assert
         await _bookService.Received(1).DeleteAsync(bookId);
         _viewModel.BookDeleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task OnBookCompletionCelebrationClose_Should_Hide_Celebration()
+    {
+        // Arrange
+        _viewModel.ShowBookCompletionCelebration = true;
+
+        // Act
+        await _viewModel.OnBookCompletionCelebrationClose();
+
+        // Assert
+        _viewModel.ShowBookCompletionCelebration.Should().BeFalse();
     }
 }

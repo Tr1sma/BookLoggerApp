@@ -11,6 +11,9 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IBookService BookService
 @inject BookLoggerApp.Core.Services.Abstractions.IStatsService StatsService
 @inject BookLoggerApp.Services.IScannerService ScannerService
+@inject IReviewPromptService ReviewPromptService
+@inject IShareService ShareService
+@implements IDisposable
 
 <PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? "Add Book" : "Edit Book") - BookHeart</PageTitle>
 
@@ -287,7 +290,18 @@
 <BookCompletionCelebration
     IsVisible="@ViewModel.ShowBookCompletionCelebration"
     Book="@ViewModel.Book"
-    OnClose="HandleCelebrationClose" />
+    OnClose="HandleCelebrationClose"
+    ShowShareButton="@ViewModel.BookCompletedFromSession"
+    IsGeneratingCard="@ViewModel.IsGeneratingBookCard"
+    OnShareBook="HandleShareBook" />
+
+@if (_showReviewPrompt)
+{
+    <ReviewPromptModal
+        IsVisible="@_showReviewPrompt"
+        OnClose="HandleReviewPromptClose"
+        OnNeverAskAgain="HandleNeverAskAgainAsync" />
+}
 
 <!-- Delete Confirmation Modal -->
 <DeleteConfirmationModal
@@ -301,12 +315,42 @@
     [Parameter] public Guid Id { get; set; }
 
     private string? _coverPreviewUrl;
+    private bool _showReviewPrompt;
 
     protected override async Task OnInitializedAsync()
     {
+        ViewModel.BookShareCardReady += OnBookShareCardReady;
         Guid? bookId = Id != Guid.Empty ? Id : null;
         await ViewModel.LoadCommand.ExecuteAsync(bookId);
         await LoadCoverPreviewAsync();
+    }
+
+    private async Task HandleShareBook()
+    {
+        await ViewModel.GenerateAndShareBookCardCommand.ExecuteAsync(null);
+    }
+
+    private void OnBookShareCardReady(byte[] cardBytes)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                var fileName = $"share_book_{DateTime.UtcNow:yyyyMMddHHmmss}.png";
+                var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+                await File.WriteAllBytesAsync(filePath, cardBytes);
+                await ShareService.ShareFileAsync("My Book Recommendation", filePath, "image/png");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to share book card: {ex.Message}");
+            }
+        });
+    }
+
+    public void Dispose()
+    {
+        ViewModel.BookShareCardReady -= OnBookShareCardReady;
     }
 
     private async Task LoadCoverPreviewAsync()
@@ -375,7 +419,7 @@
             }
             else
             {
-                Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+                NavigateToCurrentBook();
             }
         }
     }
@@ -383,10 +427,32 @@
     private async Task HandleCelebrationClose()
     {
         await ViewModel.OnBookCompletionCelebrationClose();
-        if (ViewModel.Book != null)
+        await TryShowReviewPromptOrNavigateAsync();
+    }
+
+    private Task HandleReviewPromptClose()
+    {
+        _showReviewPrompt = false;
+        NavigateToCurrentBook();
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleNeverAskAgainAsync()
+    {
+        _showReviewPrompt = false;
+        await ReviewPromptService.DisablePromptAsync();
+        NavigateToCurrentBook();
+    }
+
+    private async Task TryShowReviewPromptOrNavigateAsync()
+    {
+        if (await ReviewPromptService.TryStartPromptAsync())
         {
-            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+            _showReviewPrompt = true;
+            return;
         }
+
+        NavigateToCurrentBook();
     }
 
     private void ShowDeleteModal()
@@ -436,6 +502,18 @@
         else if (!isSelected && ViewModel.SelectedShelfIds.Contains(shelfId))
         {
             ViewModel.SelectedShelfIds.Remove(shelfId);
+        }
+    }
+
+    private void NavigateToCurrentBook()
+    {
+        if (ViewModel.Book != null)
+        {
+            Navigation.NavigateTo($"/books/{ViewModel.Book.Id}");
+        }
+        else
+        {
+            Navigation.NavigateTo("/bookshelf");
         }
     }
 

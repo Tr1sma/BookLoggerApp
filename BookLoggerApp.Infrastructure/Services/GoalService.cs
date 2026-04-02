@@ -43,6 +43,7 @@ public class GoalService : IGoalService
     {
         var result = await _unitOfWork.ReadingGoals.AddAsync(goal);
         await _unitOfWork.SaveChangesAsync(ct);
+        await RecalculateGoalProgressAsync(ct);
         return result;
     }
 
@@ -50,6 +51,7 @@ public class GoalService : IGoalService
     {
         await _unitOfWork.ReadingGoals.UpdateAsync(goal, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        await RecalculateGoalProgressAsync(ct);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -68,7 +70,7 @@ public class GoalService : IGoalService
         var goalsList = goals.ToList();
 
         // Calculate current progress for each goal dynamically
-        await CalculateGoalProgressAsync(goalsList, ct);
+        await CalculateGoalProgressAsync(goalsList, persistNewlyCompleted: false, ct);
 
         return goalsList;
     }
@@ -79,14 +81,20 @@ public class GoalService : IGoalService
         var goalsList = goals.ToList();
 
         // Also calculate progress for completed goals to show final values
-        await CalculateGoalProgressAsync(goalsList, ct);
+        await CalculateGoalProgressAsync(goalsList, persistNewlyCompleted: false, ct);
 
         return goalsList;
     }
 
-    private async Task CalculateGoalProgressAsync(List<ReadingGoal> goals, CancellationToken ct)
+    public async Task<bool> RecalculateGoalProgressAsync(CancellationToken ct = default)
     {
-        if (!goals.Any()) return;
+        var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
+        return await CalculateGoalProgressAsync(goals.ToList(), persistNewlyCompleted: true, ct);
+    }
+
+    private async Task<bool> CalculateGoalProgressAsync(List<ReadingGoal> goals, bool persistNewlyCompleted, CancellationToken ct)
+    {
+        if (!goals.Any()) return false;
 
         // Get all books and sessions for calculation
         var books = await _unitOfWork.Books.GetAllAsync(ct);
@@ -164,19 +172,25 @@ public class GoalService : IGoalService
             // Auto-mark as completed if target is reached
             if (goal.Current >= goal.Target && !goal.IsCompleted)
             {
-                goal.IsCompleted = true;
-                goal.CompletedAt = DateTime.UtcNow;
-                await _unitOfWork.ReadingGoals.UpdateAsync(goal);
                 anyGoalNewlyCompleted = true;
+
+                if (persistNewlyCompleted)
+                {
+                    goal.IsCompleted = true;
+                    goal.CompletedAt = DateTime.UtcNow;
+                    await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+                }
             }
         }
 
         // Only persist changes when a goal was actually newly completed,
         // not on every read. Current is computed dynamically each time.
-        if (anyGoalNewlyCompleted)
+        if (persistNewlyCompleted && anyGoalNewlyCompleted)
         {
             await _unitOfWork.SaveChangesAsync(ct);
         }
+
+        return anyGoalNewlyCompleted;
     }
 
     private int CalculateBooksProgress(IEnumerable<Book> books, ReadingGoal goal, HashSet<Guid> excludedBookIds, HashSet<Guid>? genreMatchingBookIds)
@@ -282,6 +296,7 @@ public class GoalService : IGoalService
                 BookId = bookId
             });
             await _unitOfWork.SaveChangesAsync(ct);
+            await RecalculateGoalProgressAsync(ct);
         }
     }
 
@@ -294,6 +309,7 @@ public class GoalService : IGoalService
         {
             _unitOfWork.Context.Set<GoalExcludedBook>().Remove(exclusion);
             await _unitOfWork.SaveChangesAsync(ct);
+            await RecalculateGoalProgressAsync(ct);
         }
     }
 
@@ -316,6 +332,7 @@ public class GoalService : IGoalService
                 GenreId = genreId
             });
             await _unitOfWork.SaveChangesAsync(ct);
+            await RecalculateGoalProgressAsync(ct);
         }
     }
 
@@ -328,6 +345,7 @@ public class GoalService : IGoalService
         {
             _unitOfWork.Context.Set<GoalGenre>().Remove(goalGenre);
             await _unitOfWork.SaveChangesAsync(ct);
+            await RecalculateGoalProgressAsync(ct);
         }
     }
 }

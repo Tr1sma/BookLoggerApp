@@ -122,8 +122,10 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IGoalService, BookLoggerApp.Infrastructure.Services.GoalService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IPlantService, BookLoggerApp.Infrastructure.Services.PlantService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IShareCardService, BookLoggerApp.Infrastructure.Services.ShareCardService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider, BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IReviewPromptService, BookLoggerApp.Infrastructure.Services.ReviewPromptService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IProgressionService, BookLoggerApp.Infrastructure.Services.ProgressionService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
         builder.Services.AddHttpClient<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>(client =>
@@ -143,7 +145,6 @@ public static class MauiProgram
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IShareService, BookLoggerApp.Services.ShareService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFilePickerService, BookLoggerApp.Services.FilePickerService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IMigrationService, BookLoggerApp.Services.MigrationService>();
-        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IReviewService, BookLoggerApp.Services.ReviewService>();
     }
 
     private static void RegisterViewModels(MauiAppBuilder builder)

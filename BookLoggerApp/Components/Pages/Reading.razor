@@ -6,6 +6,7 @@
 @inject ReadingViewModel ViewModel
 @inject ITimerStateService TimerStateService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject IReviewPromptService ReviewPromptService
 @implements IDisposable
 
 <PageTitle>Reading - BookHeart</PageTitle>
@@ -144,8 +145,17 @@
         OnClose="@HandleLevelUpCelebrationClose" />
 }
 
+@if (_showReviewPrompt)
+{
+    <ReviewPromptModal
+        IsVisible="@_showReviewPrompt"
+        OnClose="@HandleReviewPromptClose"
+        OnNeverAskAgain="@HandleNeverAskAgainAsync" />
+}
+
 @code {
     [Parameter] public Guid SessionId { get; set; }
+    private bool _showReviewPrompt;
 
     protected override async Task OnInitializedAsync()
     {
@@ -181,20 +191,45 @@
 
     private async Task HandleSessionCelebrationClose()
     {
+        var shouldShowReviewPrompt = ViewModel.HasReviewPromptMoment;
         await ViewModel.OnSessionCelebrationClose();
 
         // If no level-up, navigate to bookshelf after session celebration
         if (ViewModel.LevelUpResult == null)
         {
-            Navigation.NavigateTo("/bookshelf");
+            await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
         }
     }
 
     private async Task HandleLevelUpCelebrationClose()
     {
+        var shouldShowReviewPrompt = ViewModel.HasReviewPromptMoment;
         await ViewModel.OnLevelUpCelebrationClose();
+        await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+    }
 
-        // Navigate to bookshelf after level-up celebration
+    private Task HandleReviewPromptClose()
+    {
+        _showReviewPrompt = false;
+        Navigation.NavigateTo("/bookshelf");
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleNeverAskAgainAsync()
+    {
+        _showReviewPrompt = false;
+        await ReviewPromptService.DisablePromptAsync();
+        Navigation.NavigateTo("/bookshelf");
+    }
+
+    private async Task TryShowReviewPromptOrNavigateAsync(bool shouldShowReviewPrompt)
+    {
+        if (shouldShowReviewPrompt && await ReviewPromptService.TryStartPromptAsync())
+        {
+            _showReviewPrompt = true;
+            return;
+        }
+
         Navigation.NavigateTo("/bookshelf");
     }
 

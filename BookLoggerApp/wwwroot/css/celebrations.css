@@ -479,6 +479,23 @@
     transform: translateY(0);
 }
 
+.celebration-share-button {
+    margin-top: 0.75rem;
+    background: linear-gradient(135deg, #D4A574 0%, #C9A97F 100%);
+    box-shadow: 0 4px 12px rgba(212, 165, 116, 0.4);
+}
+
+.celebration-share-button:hover {
+    background: linear-gradient(135deg, #E8C4A0 0%, #D4A574 100%);
+    box-shadow: 0 6px 20px rgba(212, 165, 116, 0.6);
+}
+
+.celebration-share-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* ===== Fireworks (for Level-Up) ===== */
 .firework {
     position: absolute;
