@@ -181,6 +181,27 @@ public class PlantServiceTests : IDisposable
             .WithMessage("Cannot water a dead plant");
     }
 
+    [Fact]
+    public async Task WaterPlantAsync_WhenPlantHasBecomeDeadSinceLastStatusUpdate_ShouldThrowException()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Stale Dead Plant");
+        plant.LastWatered = DateTime.UtcNow.AddDays(-10);
+        plant.Status = PlantStatus.Healthy;
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
+
+        // Act
+        Func<Task> act = async () => await _plantService.WaterPlantAsync(plant.Id);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Cannot water a dead plant");
+
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.Status.Should().Be(PlantStatus.Dead);
+    }
+
     #endregion
 
     #region Experience & Leveling Tests
@@ -264,6 +285,90 @@ public class PlantServiceTests : IDisposable
         canLevel.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task CanLevelUpAsync_WhenPlantHasBecomeDeadSinceLastStatusUpdate_ShouldReturnFalse()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Dead Level Plant");
+        plant.Experience = 999;
+        plant.LastWatered = DateTime.UtcNow.AddDays(-10);
+        plant.Status = PlantStatus.Healthy;
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
+
+        // Act
+        var canLevel = await _plantService.CanLevelUpAsync(plant.Id);
+
+        // Assert
+        canLevel.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task LevelUpAsync_WhenPlantHasBecomeDeadSinceLastStatusUpdate_ShouldThrowException()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Dead Manual Level Plant");
+        plant.Experience = 999;
+        plant.LastWatered = DateTime.UtcNow.AddDays(-10);
+        plant.Status = PlantStatus.Healthy;
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
+
+        // Act
+        Func<Task> act = async () => await _plantService.LevelUpAsync(plant.Id);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Cannot level up a dead plant");
+    }
+
+    #endregion
+
+    #region XP Boost Tests
+
+    [Fact]
+    public async Task CalculateTotalXpBoostAsync_HigherLevelPlant_ShouldReturnHigherBoost()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies(maxLevel: 10);
+        var plant = await SeedUserPlant(species.Id, "Boost Plant");
+
+        // Act
+        var levelOneBoost = await _plantService.CalculateTotalXpBoostAsync();
+
+        plant.CurrentLevel = 5;
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
+
+        var levelFiveBoost = await _plantService.CalculateTotalXpBoostAsync();
+
+        // Assert
+        levelOneBoost.Should().Be(0.055m);
+        levelFiveBoost.Should().Be(0.075m);
+        levelFiveBoost.Should().BeGreaterThan(levelOneBoost);
+    }
+
+    [Fact]
+    public async Task CalculateTotalXpBoostAsync_DeadPlants_ShouldNotContributeToBoost()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies(maxLevel: 10);
+        var healthyPlant = await SeedUserPlant(species.Id, "Healthy Boost Plant");
+        healthyPlant.CurrentLevel = 5;
+        await _unitOfWork.UserPlants.UpdateAsync(healthyPlant);
+
+        var deadPlant = await SeedUserPlant(species.Id, "Dead Boost Plant");
+        deadPlant.CurrentLevel = 10;
+        deadPlant.LastWatered = DateTime.UtcNow.AddDays(-10);
+        deadPlant.Status = PlantStatus.Dead;
+        await _unitOfWork.UserPlants.UpdateAsync(deadPlant);
+
+        // Act
+        var totalBoost = await _plantService.CalculateTotalXpBoostAsync();
+
+        // Assert
+        totalBoost.Should().Be(0.075m);
+    }
+
     #endregion
 
     #region Purchase Tests
@@ -323,6 +428,24 @@ public class PlantServiceTests : IDisposable
 
         var thirstyUpdated = await _plantService.GetByIdAsync(thirstyPlant.Id);
         thirstyUpdated!.Status.Should().Be(PlantStatus.Thirsty);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldRefreshStaleStatusBeforeReturningPlant()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Stale Plant");
+        plant.LastWatered = DateTime.UtcNow.AddDays(-5);
+        plant.Status = PlantStatus.Healthy;
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
+
+        // Act
+        var refreshedPlant = await _plantService.GetByIdAsync(plant.Id);
+
+        // Assert
+        refreshedPlant.Should().NotBeNull();
+        refreshedPlant!.Status.Should().Be(PlantStatus.Wilting);
     }
 
     [Fact]
@@ -502,6 +625,26 @@ public class PlantServiceTests : IDisposable
         // Assert - Dead plants don't earn reading days
         var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
         updatedPlant!.ReadingDaysCount.Should().Be(0);
+        updatedPlant.LastReadingDayRecorded.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RecordReadingDayAsync_WhenPlantHasBecomeDeadSinceLastStatusUpdate_ShouldNotRecord()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Stale Dead Plant");
+        plant.LastWatered = DateTime.UtcNow.AddDays(-10);
+        plant.Status = PlantStatus.Healthy;
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
+
+        // Act
+        await _plantService.RecordReadingDayAsync(plant.Id, DateTime.UtcNow, 30);
+
+        // Assert
+        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
+        updatedPlant!.Status.Should().Be(PlantStatus.Dead);
+        updatedPlant.ReadingDaysCount.Should().Be(0);
         updatedPlant.LastReadingDayRecorded.Should().BeNull();
     }
 

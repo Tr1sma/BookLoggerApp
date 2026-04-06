@@ -56,6 +56,8 @@ public partial class DashboardViewModel : ViewModelBase
     {
         await ExecuteSafelyWithDbAsync(async () =>
         {
+            await _plantService.UpdatePlantStatusesAsync();
+
             // Currently Reading Book
             var readingBooks = await _bookService.GetByStatusAsync(ReadingStatus.Reading);
             CurrentlyReading = readingBooks.FirstOrDefault();
