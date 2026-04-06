@@ -14,6 +14,19 @@ Versionsschema:
 
 ---
 
+## [Unveröffentlicht]
+
+### Hinzugefügt
+
+### Geändert
+
+- Pflanzen im Bücherregal öffnen jetzt ein Detail-Modal mit Namen, Level, nächstem Gießzeitpunkt und Gießbutton
+
+### Behoben
+
+- Plant-Shop-Karten zeigen bei nicht bezahlbaren Pflanzen nur noch den Preis und nicht mehr den Zusatz "Need X more"
+- Pflanzenstatus und Gießlogik werden beim Laden und Interagieren zuverlässiger aus den aktuellen Backend-Daten aktualisiert
+
 ## [0.7.6] - 2026-04-02
 
 ### Hinzugefügt
