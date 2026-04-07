@@ -141,6 +141,14 @@
         OnClose="@HandleSessionCelebrationClose" />
 }
 
+@if (ViewModel.ShowStreakCelebration && ViewModel.SessionProgressionResult != null)
+{
+    <StreakCelebration
+        StreakDays="@ViewModel.SessionProgressionResult.StreakDays"
+        BonusXp="@ViewModel.SessionProgressionResult.StreakBonusXp"
+        OnClose="@HandleStreakCelebrationClose" />
+}
+
 @if (ViewModel.ShowLevelUpCelebration && ViewModel.LevelUpResult != null)
 {
     <LevelUpCelebration
@@ -173,6 +181,7 @@
     private bool _showReviewPrompt;
     private Func<Task<bool>>? _navBackHandler;
     private Func<Task<bool>>? _sessionCelebrationBackHandler;
+    private Func<Task<bool>>? _streakCelebrationBackHandler;
     private Func<Task<bool>>? _levelUpCelebrationBackHandler;
     private Func<Task<bool>>? _bookCompletionCelebrationBackHandler;
     private Func<Task<bool>>? _reviewPromptBackHandler;
@@ -257,6 +266,51 @@
         await ViewModel.OnSessionCelebrationClose();
         StateHasChanged();
 
+        if (ViewModel.ShowStreakCelebration)
+        {
+            _streakCelebrationBackHandler = async () =>
+            {
+                await HandleStreakCelebrationClose();
+                return true;
+            };
+            BackButtonService.Register(_streakCelebrationBackHandler);
+        }
+        else if (ViewModel.ShowLevelUpCelebration)
+        {
+            _levelUpCelebrationBackHandler = async () =>
+            {
+                await HandleLevelUpCelebrationClose();
+                return true;
+            };
+            BackButtonService.Register(_levelUpCelebrationBackHandler);
+        }
+        else if (ViewModel.ShowBookCompletionCelebration)
+        {
+            _bookCompletionCelebrationBackHandler = async () =>
+            {
+                await HandleBookCompletionCelebrationClose();
+                return true;
+            };
+            BackButtonService.Register(_bookCompletionCelebrationBackHandler);
+        }
+        else
+        {
+            await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+        }
+    }
+
+    private async Task HandleStreakCelebrationClose()
+    {
+        if (_streakCelebrationBackHandler != null)
+        {
+            BackButtonService.Unregister(_streakCelebrationBackHandler);
+            _streakCelebrationBackHandler = null;
+        }
+
+        var shouldShowReviewPrompt = ViewModel.HasReviewPromptMoment;
+        await ViewModel.OnStreakCelebrationClose();
+        StateHasChanged();
+
         if (ViewModel.ShowLevelUpCelebration)
         {
             _levelUpCelebrationBackHandler = async () =>
@@ -318,7 +372,21 @@
 
         var shouldShowReviewPrompt = ViewModel.HasReviewPromptMoment;
         await ViewModel.OnBookCompletionCelebrationClose();
-        await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+        StateHasChanged();
+
+        if (ViewModel.ShowStreakCelebration)
+        {
+            _streakCelebrationBackHandler = async () =>
+            {
+                await HandleStreakCelebrationClose();
+                return true;
+            };
+            BackButtonService.Register(_streakCelebrationBackHandler);
+        }
+        else
+        {
+            await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+        }
     }
 
     private async Task HandleShareBook()
@@ -414,6 +482,11 @@
         {
             BackButtonService.Unregister(_sessionCelebrationBackHandler);
             _sessionCelebrationBackHandler = null;
+        }
+        if (_streakCelebrationBackHandler != null)
+        {
+            BackButtonService.Unregister(_streakCelebrationBackHandler);
+            _streakCelebrationBackHandler = null;
         }
         if (_levelUpCelebrationBackHandler != null)
         {

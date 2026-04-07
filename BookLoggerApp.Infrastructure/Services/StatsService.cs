@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Infrastructure.Repositories;
 
 namespace BookLoggerApp.Infrastructure.Services;
@@ -46,66 +47,13 @@ public class StatsService : IStatsService
         var recentSessions = await _unitOfWork.ReadingSessions
             .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow);
 
-        var sessionsByDate = recentSessions
-            .GroupBy(s => s.StartedAt.Date)
-            .OrderByDescending(g => g.Key)
-            .ToList();
-
-        if (!sessionsByDate.Any())
-            return 0;
-
-        var mostRecentDate = sessionsByDate.First().Key;
-        if ((today - mostRecentDate).Days > 1)
-            return 0;
-
-        int streak = 0;
-        var currentDate = today;
-
-        foreach (var group in sessionsByDate)
-        {
-            if ((currentDate - group.Key).Days <= 1)
-            {
-                streak++;
-                currentDate = group.Key;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return streak;
+        return ReadingStreakHelper.CalculateCurrentStreak(recentSessions, today);
     }
 
     public async Task<int> GetLongestStreakAsync(CancellationToken ct = default)
     {
         var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
-        var sessionDates = allSessions
-            .Select(s => s.StartedAt.Date)
-            .Distinct()
-            .OrderBy(d => d)
-            .ToList();
-
-        if (!sessionDates.Any())
-            return 0;
-
-        int longestStreak = 1;
-        int currentStreak = 1;
-
-        for (int i = 1; i < sessionDates.Count; i++)
-        {
-            if ((sessionDates[i] - sessionDates[i - 1]).Days == 1)
-            {
-                currentStreak++;
-                longestStreak = Math.Max(longestStreak, currentStreak);
-            }
-            else if ((sessionDates[i] - sessionDates[i - 1]).Days > 1)
-            {
-                currentStreak = 1;
-            }
-        }
-
-        return longestStreak;
+        return ReadingStreakHelper.CalculateLongestStreak(allSessions);
     }
 
     public async Task<Dictionary<DateTime, int>> GetReadingTrendAsync(DateTime start, DateTime end, CancellationToken ct = default)
