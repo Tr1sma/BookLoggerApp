@@ -26,6 +26,7 @@ Versionsschema:
 
 - Plant-Shop-Karten zeigen bei nicht bezahlbaren Pflanzen nur noch den Preis und nicht mehr den Zusatz "Need X more"
 - Pflanzenstatus und Gießlogik werden beim Laden und Interagieren zuverlässiger aus den aktuellen Backend-Daten aktualisiert
+- Der Drag-and-Drop-Einfügebalken im Bücherregal richtet sich jetzt an der Höhe des tatsächlichen Ziel-Buchs aus statt über die gesamte Regalhöhe zu laufen
 
 ## [0.7.6] - 2026-04-02
 
