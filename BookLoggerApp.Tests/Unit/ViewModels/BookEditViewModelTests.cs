@@ -138,6 +138,61 @@ public class BookEditViewModelTests
     }
 
     [Fact]
+    public async Task SaveAsync_Should_Complete_Book_Only_Once_When_Saved_Twice_Without_Status_Change()
+    {
+        // Arrange
+        var bookId = Guid.NewGuid();
+        var dbBookPlanned = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Planned };
+        var dbBookCompleted = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Completed };
+
+        _bookService.GetWithDetailsAsync(bookId).Returns(new Book
+        {
+            Id = bookId,
+            Title = "Existing Book",
+            Author = "Author",
+            Status = ReadingStatus.Planned
+        });
+        _bookService.GetByIdAsync(bookId).Returns(dbBookPlanned, dbBookCompleted);
+
+        await _viewModel.LoadCommand.ExecuteAsync(bookId);
+        _viewModel.Book!.Status = ReadingStatus.Completed;
+
+        // Act
+        await _viewModel.SaveCommand.ExecuteAsync(null);
+        await _viewModel.SaveCommand.ExecuteAsync(null);
+
+        // Assert
+        await _bookService.Received(2).UpdateAsync(Arg.Any<Book>());
+        await _bookService.Received(1).CompleteBookAsync(bookId);
+    }
+
+    [Fact]
+    public async Task SaveAsync_Should_Not_Complete_Book_When_Db_Status_Already_Completed()
+    {
+        // Arrange
+        var bookId = Guid.NewGuid();
+        var loadedBook = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Planned };
+        var dbBookCompleted = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Completed };
+
+        _bookService.GetWithDetailsAsync(bookId).Returns(loadedBook);
+        _bookService.GetByIdAsync(bookId).Returns(dbBookCompleted);
+
+        await _viewModel.LoadCommand.ExecuteAsync(bookId);
+        _viewModel.Book!.Status = ReadingStatus.Completed;
+
+        // Act
+        await _viewModel.SaveCommand.ExecuteAsync(null);
+
+        // Assert
+        await _bookService.Received(1).UpdateAsync(Arg.Any<Book>());
+        await _bookService.DidNotReceive().CompleteBookAsync(bookId);
+        _viewModel.Book.Status.Should().Be(ReadingStatus.Wishlist);
+        _viewModel.Book.WishlistInfo.Should().BeSameAs(wishlistInfo);
+        _viewModel.SelectedStatusForDisplay.Should().Be(ReadingStatus.Planned);
+        await _wishlistService.DidNotReceive().ClearWishlistInfoAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task LookupByIsbnAsync_Should_Populate_Book_Data()
     {
         // Arrange

@@ -264,6 +264,27 @@ public class ProgressServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task EndSessionAsync_WithHighStartPageAndTooLargeDelta_ShouldThrowArgumentOutOfRangeException()
+    {
+        // Arrange
+        var book = await _bookService.AddAsync(new Book
+        {
+            Title = "Test",
+            Author = "Author",
+            PageCount = 100
+        });
+        var session = await _service.StartSessionAsync(book.Id);
+        session.StartPage = 95;
+        await _service.UpdateSessionAsync(session);
+
+        // Act & Assert
+        await FluentActions.Awaiting(() => _service.EndSessionAsync(session.Id, 10))
+            .Should().ThrowAsync<ArgumentOutOfRangeException>()
+            .WithParameterName("pagesRead")
+            .WithMessage("*Session end page*exceeds book page count*");
+    }
+
+    [Fact]
     public async Task EndSessionAsync_WithBookWithoutPageCount_ShouldAllowAnyPositivePages()
     {
         // Arrange
