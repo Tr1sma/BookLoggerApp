@@ -1,69 +1,73 @@
-# 📚 Book Logger App
+# 📚 BookHeart
 
 ![CI](https://github.com/TristanAtze/BookLoggerApp/actions/workflows/ci.yml/badge.svg)
 
-Eine moderne Android-App zum Verwalten und Protokollieren deiner Bücher mit starken Gamification-Elementen.  
+`BookHeart` ist eine moderne Android-App zum Verwalten, Tracken und Teilen deiner Bücher mit starken Gamification-Elementen.  
 Gebaut mit **.NET 10 MAUI Blazor Hybrid** und **SQLite**.
 
 ---
 
 ## Features
 
-### Bibliotheks-Management
+### Bibliothek, Regale & Organisation
 
-- **Umfassende Buch-Verwaltung**: Bücher hinzufügen, bearbeiten und löschen.
-- **Detaillierter Lesestatus**: Geplant, Am Lesen, Abgeschlossen, Abgebrochen.
-- **Spine-Ansicht**: Personalisiere den Buchrücken für das virtuelle Regal (Farbe oder Bild).
-- **Drag & Drop**: Sortiere deine Bücher im Regal per Drag & Drop. (BETA)
+- **Umfassende Buch-Verwaltung**: Bücher hinzufügen, bearbeiten, löschen und Lesestatus pflegen (Geplant, Am Lesen, Abgeschlossen, Abgebrochen).
+- **Virtuelles Bücherregal**: Spine-Ansicht mit anpassbarer Rückenfarbe sowie Bodenfläche unter Büchern und Pflanzen.
+- **Drag & Drop mit Long-Press**: Bücher per Long-Press-Geste inkl. Auto-Scroll zwischen Regalen neu anordnen.
+- **Regal-Management & Auto-Sort**: Eigene Regale erstellen, Status-Regale automatisch sortieren; beim Löschen eines Regals werden Bücher ins Hauptregal verschoben.
+- **Genres, Tropes & Suche**: Debounced-Suche sowie Genre-, Subgenre- und Trope-Unterstützung für schnelleres Finden.
+- **Regal-Design anpassbar**: Separate Farbwahl für Bücherleisten und Regalleisten über mehrere Holzfarb-Presets.
 
-### Erweitertes Bewertungssystem
+### Buchdetails, Cover & Bewertung
 
-Statt einer einfachen 5-Sterne-Wertung bietet die App ein **Multi-Kategorie-Rating** (1-5 Sterne):
+- **Mehrkategorien-Bewertung (1-5 Sterne)**: Charaktere, Plot, Schreibstil, Spice Level, Pacing, World Building.
+- **Rating-Insights**: Durchschnittswerte je Kategorie für besseres Verständnis der eigenen Bewertungsmuster.
+- **Cover-Workflow**: Buchcover aus Galerie wählen (Android), automatische Bildskalierung bei großen Covern und performantes Lazy-Loading in Übersichten.
+- **ISBN-Scanner & Autofill**: Natives Barcode-Scanning (ZXing) und Google-Books-Lookup mit robustem Fallback bei Quota-Limits.
+- **Buchempfehlung teilen**: Für abgeschlossene Bücher Share-Karte als PNG mit Cover, Bewertungen, Lesedauer und Empfehlung-Badge direkt aus Abschluss-Flow oder Detailansicht.
 
-- 🎭 Charaktere
-- 📜 Plot
-- ✍️ Schreibstil
-- 🌶️ Spice Level
-- ⏱️ Pacing
-- 🌍 World Building
+### Lesen, Ziele & Fortschritt
 
-### Lesesessions & Tracking
+- **Aktiver Lesetimer**: Sessions starten, pausieren, fortsetzen; konsistenter Timer-Status über alle Timer-Komponenten.
+- **Session-Tracking in Echtzeit**: Lesezeit, gelesene Seiten und XP inklusive Session-Zusammenfassung.
+- **Lese-Streaks**: Tägliche Lesekette mit klarer Heute-Status-Anzeige.
+- **Flexible Leseziele**: Ziele setzen und verfolgen, Bücher von Zielen ausschließen sowie Ziele auf Genres/Tropes begrenzen.
+- **Push-Benachrichtigungen & Ziel-Events**: Erinnerungen sowie Hinweise zu Zielabschlüssen und Pflanzenereignissen direkt aufs Gerät.
+- **Review-Flow**: Vereinfachter In-App-Review-Ablauf mit fairer Frequenzbegrenzung.
 
-- **Aktiver Lese-Timer**: Starte Sessions, pausiere und setze sie fort.
-- **Echtzeit-Tracking**: Erfassung von Lesezeit, gelesenen Seiten und XP.
-- **Session-Zusammenfassung**: Detaillierte Übersicht nach jeder Session.
-- **Streaks**: Verfolge deine täglichen Lesegewohnheiten.
+### Gamification, Pflanzen & Shop
 
-### Gamification & Belohnungen
+- **XP-, Level- und Coin-System**: Fortschritt durch Lesen mit Level-Ups und Belohnungslogik.
+- **Pflanzen-Gamification**: Pflanzen freischalten, kaufen, platzieren, leveln und über Lesetage pflegen.
+- **Pflanzendetails im Regal**: Detail-Modal mit Pflanzenname, Level, nächstem Gießzeitpunkt und direkter Gießaktion.
+- **Plant Shop**: Verbessertes Shop-Erlebnis mit klarerer Preisdarstellung und überarbeiteter Kauflogik.
+- **Belohnungs-Events**: Feierliche Flows bei Buchabschluss und Fortschrittsereignissen.
 
-- **Level-System**: Sammle XP durch Lesen und steige im Level auf.
-- **Virtueller Garten**:
-  - Schalte neue Pflanzen-Spezies frei.
-  - Pflanze und züchte virtuelle Pflanzen, die mit deiner Lesezeit wachsen.
-- **Shop**: Kaufe neue Pflanzenarten und Deko (in-game Währung).
-- **Achievements**: Schalte Meilensteine und Erfolge frei.
-- **Leseziele**: Setze dir Ziele (z.B. "30 Minuten täglich") und verfolge den Fortschritt.
+### Statistiken, Sharing & Widgets
 
-### Statistiken & Analytics
+- **Umfangreiche Lesestatistiken**: Dashboards, Trends, Genre-Auswertung sowie Fortschritts- und Progressionskennzahlen.
+- **Reading Wrapped teilen**: Stats als Instagram-Story-optimierte PNG-Karte (1080x1920) für verschiedene Zeiträume.
+- **Android Home Screen Widgets**:
+  - Aktuelles Buch (Cover, Titel, Fortschritt)
+  - Lese-Streak (Tage + Heute-Status)
+  - Leseziel (Fortschritt zum aktiven Ziel)
+- **Live-Aktualisierung**: Widgets werden periodisch und nach relevanten App-Aktionen automatisch aktualisiert.
 
-- **Dashboards**: Visuelle Aufbereitung deiner Lesegewohnheiten.
-- **Trends**: Verlauf der Leseaktivität über die Zeit.
-- **Genre-Analyse**: Welches Genre liest du am meisten?
-- **Rating-Insights**: Durchschnittsbewertungen pro Kategorie (z.B. "Wie bewerte ich Plot vs. Charaktere?").
+### Daten, Backup & Sicherheit
 
-### Daten & Sicherheit
+- **Offline-First**: Lokale Datenspeicherung via SQLite auf dem Gerät.
+- **Import/Export**: JSON- und CSV-Unterstützung für Datenaustausch und Sicherung.
+- **Cloud-Backup & Restore**: Vollständige Backups lokal oder in der Cloud erstellen und wiederherstellen.
+- **Daten zurücksetzen**: Komplette App-Daten können bei Bedarf gezielt gelöscht werden.
+- **Sicherheits-Härtung**: Schutzmaßnahmen gegen Zip-Slip/Zip-Bomb und abgesicherte Bild-/URL-Verarbeitung.
+- **Stabile Datenbasis**: Laufende Verbesserungen bei Migrationen, Fehlerbehandlung und Zuverlässigkeit.
 
-- **Offline-First**: Alle Daten liegen lokal auf deinem Gerät (SQLite).
-- **Import/Export**:
-  - Export als JSON (Vollständiges Backup) oder CSV (Tabellenkalkulation).
-  - Import von Daten aus JSON/CSV.
-- **Backup**: Erstelle und wiederherstelle vollständige Datenbank-Backups.
+### Technik & UX
 
-### Technik & Design
-
-- **Modernes UI**: Responsives Blazor Hybrid Interface.
-- **Dark Mode**: Augenfreundliches, warmes "Cozy"-Theme.
-- **Cross-Platform Architektur**: Vorbereitet für Android, potenziell iOS/Windows.
+- **.NET 10 MAUI Blazor Hybrid**: Moderne, performante Android-App-Architektur mit nativen Android-Integrationen.
+- **Cozy Dark Theme**: Warmes, augenfreundliches Design im BookHeart-Stil.
+- **Mobile UX-Optimierungen**: Android-Zurück-Button, verbesserte Berechtigungsabläufe und sauberes Navigationserlebnis.
+- **Clean Architecture**: Getrennte Core-, Infrastructure- und Presentation-Layer mit MVVM, DI, Repository und Unit of Work.
 
 ---
 
@@ -131,11 +135,14 @@ BookLoggerApp.Tests/              # Unit Tests (xUnit + FluentAssertions)
 # Abhängigkeiten wiederherstellen
 dotnet restore
 
+# Lösung bauen
+dotnet build BookLoggerApp.sln
+
 # App bauen und starten (Android)
-dotnet build -f net10.0-android -t:Run
+dotnet build BookLoggerApp/BookLoggerApp.csproj -f net10.0-android -t:Run
 
 # Tests ausführen
-dotnet test
+dotnet test BookLoggerApp.Tests/BookLoggerApp.Tests.csproj
 ```
 
 ### Datenbank Migrationen
