@@ -23,6 +23,8 @@ Versionsschema:
 
 ### Behoben
 
+- Scanner-Abschlusslogik robuster gemacht: Beim Schließen der Scanner-Seite ohne Cancel-Button wird der Scan jetzt sauber mit `null` beendet, inklusive optionalem Timeout/CancellationToken im Scanner-Service.
+
 ## [0.8.0] - 2026-04-07
 
 ### Hinzugefügt
