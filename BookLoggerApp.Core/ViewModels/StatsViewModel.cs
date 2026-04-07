@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Helpers;
+using BookLoggerApp.Core.Enums;
 using System.Collections.ObjectModel;
 
 namespace BookLoggerApp.Core.ViewModels;
@@ -227,7 +228,7 @@ public partial class StatsViewModel : ViewModelBase
 
         foreach (var plant in plants)
         {
-            if (plant.Species == null)
+            if (plant.Species == null || plant.Status == PlantStatus.Dead)
                 continue;
 
             var baseBoost = plant.Species.XpBoostPercentage;
@@ -235,6 +236,9 @@ public partial class StatsViewModel : ViewModelBase
                 ? plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel)
                 : 0m;
             var totalBoost = baseBoost + levelBonus;
+
+            if (totalBoost <= 0m)
+                continue;
 
             plantBoostList.Add(new PlantBoostInfo
             {
