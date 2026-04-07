@@ -18,6 +18,10 @@ public static class MauiProgram
 
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>()
+               .ConfigureEssentials(essentials =>
+               {
+                   essentials.UseVersionTracking();
+               })
                .UseBarcodeReader()
                .UseLocalNotification();
         builder.Services.AddMauiBlazorWebView();
@@ -126,6 +130,9 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider, BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IReviewPromptService, BookLoggerApp.Infrastructure.Services.ReviewPromptService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppVersionService, BookLoggerApp.Services.AppVersionService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IChangelogService, BookLoggerApp.Services.ChangelogService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppUpdateService, BookLoggerApp.Services.AppUpdateService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IProgressionService, BookLoggerApp.Infrastructure.Services.ProgressionService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImportExportService, BookLoggerApp.Infrastructure.Services.ImportExportService>();
         builder.Services.AddHttpClient<BookLoggerApp.Core.Services.Abstractions.ILookupService, BookLoggerApp.Infrastructure.Services.LookupService>(client =>
@@ -164,6 +171,7 @@ public static class MauiProgram
         builder.Services.AddTransient<PlantShopViewModel>();
         builder.Services.AddTransient<UserProgressViewModel>();
         builder.Services.AddTransient<WishlistViewModel>();
+        builder.Services.AddSingleton<AppStartupViewModel>();
     }
 
     private static void RegisterValidators(MauiAppBuilder builder)

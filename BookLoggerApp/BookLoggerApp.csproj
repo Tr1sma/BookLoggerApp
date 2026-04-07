@@ -71,6 +71,7 @@
 
         <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
         <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+        <MauiAsset Include="..\CHANGELOG.md" LogicalName="CHANGELOG.md" />
 
         <!-- Blazor WebView static files -->
         <MauiAsset Include="wwwroot\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
@@ -86,6 +87,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
         <PackageReference Include="Plugin.LocalNotification" Version="13.0.0" />
+        <PackageReference Include="Xamarin.Google.Android.Play.App.Update" Version="2.1.0.10" Condition="$(TargetFramework.Contains('-android'))" />
         <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.7.2" />
 
 

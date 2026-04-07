@@ -18,6 +18,7 @@ Versionsschema:
 ### Hinzugefügt
 
 - Pflanzen im Bücherregal können jetzt direkt im Detail-Modal über ein Stift-Icon umbenannt werden
+- BookHeart prüft jetzt auf Android auf verfügbare Play-Store-Updates und zeigt nach einem App-Update beim ersten Start die passenden Changelog-Einträge an
 
 ### Geändert
 

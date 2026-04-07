@@ -1,0 +1,206 @@
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Core.ViewModels
+@implements IDisposable
+@inject AppStartupViewModel ViewModel
+@inject ITimerStateService TimerStateService
+@inject IBackButtonService BackButtonService
+
+@if (ViewModel.HasVisibleOverlay)
+{
+    <div class="startup-overlay">
+        @if (ViewModel.IsChangelogVisible)
+        {
+            <div class="startup-modal" role="dialog" aria-modal="true" aria-labelledby="startupChangelogTitle">
+                <div class="startup-modal-header">
+                    <div>
+                        <h2 id="startupChangelogTitle">What's new?</h2>
+                        @if (ViewModel.CurrentRelease != null)
+                        {
+                            <p class="startup-subtitle">
+                                Version @ViewModel.CurrentRelease.DisplayVersion
+                                @if (!string.IsNullOrWhiteSpace(ViewModel.CurrentRelease.ReleaseDate))
+                                {
+                                    <span>- @ViewModel.CurrentRelease.ReleaseDate</span>
+                                }
+                            </p>
+                        }
+                    </div>
+                    @if (ViewModel.ReleaseHistory.Count > 1)
+                    {
+                        <button type="button" class="history-toggle" @onclick="ViewModel.ToggleHistoryAsync">
+                            <span aria-hidden="true">@(ViewModel.ShowFullHistory ? "▲" : "▼")</span>
+                            <span>@(ViewModel.ShowFullHistory ? "Hide history" : "Show history")</span>
+                        </button>
+                    }
+                </div>
+
+                <div class="startup-modal-body">
+                    @foreach (var release in GetVisibleReleases())
+                    {
+                        <section class="release-card">
+                            <div class="release-card-header">
+                                <h3>Version @release.DisplayVersion</h3>
+                                @if (!string.IsNullOrWhiteSpace(release.ReleaseDate))
+                                {
+                                    <span>@release.ReleaseDate</span>
+                                }
+                            </div>
+
+                            @foreach (var releaseSection in release.Sections)
+                            {
+                                <div class="release-section">
+                                    <h4>@releaseSection.Title</h4>
+                                    <ul>
+                                        @foreach (var entry in releaseSection.Entries)
+                                        {
+                                            <li>@entry</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </section>
+                    }
+                </div>
+
+                <div class="startup-modal-actions">
+                    <button type="button" class="btn btn-primary" @onclick="ViewModel.CloseChangelogAsync">
+                        Continue
+                    </button>
+                </div>
+            </div>
+        }
+
+        @if (ViewModel.IsUpdateAvailableVisible)
+        {
+            <div class="startup-modal startup-modal-compact" role="dialog" aria-modal="true" aria-labelledby="startupUpdateTitle">
+                <div class="startup-modal-header">
+                    <div>
+                        <h2 id="startupUpdateTitle">Update available</h2>
+                        <p class="startup-subtitle">A newer version of BookHeart is available on the Play Store.</p>
+                    </div>
+                </div>
+
+                <div class="startup-modal-body">
+                    <p>
+                        You can start the update directly in the app. The download continues in the background, and you can finish the installation afterwards.
+                    </p>
+                </div>
+
+                <div class="startup-modal-actions">
+                    <button type="button" class="btn btn-secondary" @onclick="ViewModel.DismissUpdateAvailableAsync" disabled="@ViewModel.IsStartingUpdate">
+                        Later
+                    </button>
+                    <button type="button" class="btn btn-primary" @onclick="async () => await ViewModel.StartFlexibleUpdateAsync()" disabled="@ViewModel.IsStartingUpdate">
+                        @(ViewModel.IsStartingUpdate ? "Starting..." : "Update now")
+                    </button>
+                </div>
+            </div>
+        }
+
+        @if (ViewModel.IsUpdateReadyVisible)
+        {
+            <div class="startup-modal startup-modal-compact" role="dialog" aria-modal="true" aria-labelledby="startupInstallTitle">
+                <div class="startup-modal-header">
+                    <div>
+                        <h2 id="startupInstallTitle">Update ready</h2>
+                        <p class="startup-subtitle">The download is complete.</p>
+                    </div>
+                </div>
+
+                <div class="startup-modal-body">
+                    <p>
+                        Install the update now to switch to the new version.
+                    </p>
+                </div>
+
+                <div class="startup-modal-actions">
+                    <button type="button" class="btn btn-secondary" @onclick="ViewModel.DismissUpdateReadyAsync">
+                        Later
+                    </button>
+                    <button type="button" class="btn btn-primary" @onclick="async () => await ViewModel.CompleteUpdateAsync()">
+                        Install now
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private Func<Task<bool>>? _backHandler;
+
+    protected override void OnInitialized()
+    {
+        ViewModel.PropertyChanged += HandleViewModelPropertyChanged;
+        TimerStateService.AppResumed += HandleAppResumed;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await ViewModel.InitializeAsync();
+        SyncBackHandler();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
+        TimerStateService.AppResumed -= HandleAppResumed;
+
+        if (_backHandler != null)
+        {
+            BackButtonService.Unregister(_backHandler);
+            _backHandler = null;
+        }
+    }
+
+    private IReadOnlyList<ChangelogRelease> GetVisibleReleases()
+    {
+        if (ViewModel.ShowFullHistory)
+        {
+            return ViewModel.ReleaseHistory;
+        }
+
+        return ViewModel.CurrentRelease != null
+            ? new[] { ViewModel.CurrentRelease }
+            : Array.Empty<ChangelogRelease>();
+    }
+
+    private async void HandleAppResumed()
+    {
+        await ViewModel.HandleAppResumedAsync();
+        SyncBackHandler();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        _ = InvokeAsync(() =>
+        {
+            SyncBackHandler();
+            StateHasChanged();
+        });
+    }
+
+    private void SyncBackHandler()
+    {
+        if (ViewModel.HasVisibleOverlay && _backHandler == null)
+        {
+            _backHandler = async () => await ViewModel.HandleBackAsync();
+            BackButtonService.Register(_backHandler);
+            return;
+        }
+
+        if (!ViewModel.HasVisibleOverlay && _backHandler != null)
+        {
+            BackButtonService.Unregister(_backHandler);
+            _backHandler = null;
+        }
+    }
+}
