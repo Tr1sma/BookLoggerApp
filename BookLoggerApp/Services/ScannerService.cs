@@ -1,3 +1,5 @@
+using BookLoggerApp.Core.Helpers;
+
 namespace BookLoggerApp.Services;
 
 public class ScannerService : IScannerService
@@ -11,8 +13,10 @@ public class ScannerService : IScannerService
         _permissionService = permissionService;
     }
 
-    public async Task<string?> ScanBarcodeAsync()
+    public async Task<string?> ScanBarcodeAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Check camera permission each time (user may have granted "only this time")
         bool hasPermission = await _permissionService.RequestCameraPermissionAsync();
         if (!hasPermission)
@@ -20,7 +24,15 @@ public class ScannerService : IScannerService
             return null;
         }
 
-        var tcs = new TaskCompletionSource<string?>();
+        var tcs = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var timeoutCancellationTokenSource = timeout.HasValue
+            ? new CancellationTokenSource(timeout.Value)
+            : null;
+        using var linkedCancellationTokenSource = timeoutCancellationTokenSource != null
+            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellationTokenSource.Token)
+            : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var cancellationRegistration = linkedCancellationTokenSource.Token.Register(() =>
+            ScannerTaskCompletionHelper.TrySetCancelledResult(tcs));
 
         try
         {

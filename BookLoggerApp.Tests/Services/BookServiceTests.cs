@@ -69,6 +69,30 @@ public class BookServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task StartReadingAsync_CalledTwice_ShouldNotChangeDateStarted()
+    {
+        // Arrange
+        var book = await _service.AddAsync(new Book
+        {
+            Title = "Test Book",
+            Author = "Test Author",
+            Status = ReadingStatus.Planned
+        });
+
+        await _service.StartReadingAsync(book.Id);
+        var firstStart = (await _service.GetByIdAsync(book.Id))!.DateStarted;
+
+        // Act
+        await Task.Delay(25);
+        await _service.StartReadingAsync(book.Id);
+
+        // Assert
+        var updated = await _service.GetByIdAsync(book.Id);
+        updated!.Status.Should().Be(ReadingStatus.Reading);
+        updated.DateStarted.Should().Be(firstStart);
+    }
+
+    [Fact]
     public async Task CompleteBookAsync_ShouldUpdateStatusAndDate()
     {
         // Arrange
