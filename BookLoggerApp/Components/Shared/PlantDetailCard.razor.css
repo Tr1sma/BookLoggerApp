@@ -47,8 +47,9 @@
 .plant-detail-name {
     margin: 0;
     color: #fff;
-    font-size: 1.25rem;
+    font-size: 1.45rem;
     font-weight: 700;
+    line-height: 1.2;
 }
 
 .plant-detail-species {
