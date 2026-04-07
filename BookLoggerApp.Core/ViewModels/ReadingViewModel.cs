@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
+using System.Threading;
 using System.Timers;
 using Timer = System.Timers.Timer;
 
@@ -18,6 +19,8 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private Timer? _timer;
     private bool _bookCompletedDuringSession;
     private bool _goalCompletedDuringSession;
+    private readonly object _timerLock = new();
+    private readonly SynchronizationContext? _uiSynchronizationContext;
 
     /// <summary>
     /// Raised when a book recommendation share card PNG is ready. The component handles file write + sharing.
@@ -38,6 +41,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
         _timerStateService = timerStateService;
         _shareCardService = shareCardService;
         _imageService = imageService;
+        _uiSynchronizationContext = SynchronizationContext.Current;
         _timerStateService.AppResumed += OnAppResumed;
     }
 
@@ -299,25 +303,56 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
 
     private void StartTimer()
     {
-        _timer?.Stop();
-        _timer = new Timer(1000); // Update every second
-        _timer.Elapsed += OnTimerElapsed;
-        _timer.Start();
+        lock (_timerLock)
+        {
+            _timer?.Stop();
+            _timer?.Dispose();
+
+            _timer = new Timer(1000); // Update every second
+            _timer.Elapsed += OnTimerElapsed;
+            _timer.AutoReset = true;
+            _timer.Start();
+        }
     }
 
     private void StopTimer()
     {
-        _timer?.Stop();
-        _timer?.Dispose();
-        _timer = null;
+        lock (_timerLock)
+        {
+            _timer?.Stop();
+            _timer?.Dispose();
+            _timer = null;
+        }
     }
 
     private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+    {
+        DispatchToUiThread(UpdateElapsedTime);
+    }
+
+    private void UpdateElapsedTime()
     {
         if (!IsPaused && Session != null)
         {
             ElapsedTime = DateTime.UtcNow - SessionStartTime;
         }
+    }
+
+    private void DispatchToUiThread(Action action)
+    {
+        if (_uiSynchronizationContext == null || SynchronizationContext.Current == _uiSynchronizationContext)
+        {
+            action();
+            return;
+        }
+
+        _uiSynchronizationContext.Post(static state =>
+        {
+            if (state is Action callback)
+            {
+                callback();
+            }
+        }, action);
     }
 
     /// <summary>
@@ -425,12 +460,15 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
 
     private void OnAppResumed()
     {
-        if (!IsPaused && Session != null)
+        DispatchToUiThread(() =>
         {
-            // Recalculate elapsed from the original session start time
-            ElapsedTime = DateTime.UtcNow - SessionStartTime;
-            StartTimer();
-        }
+            if (!IsPaused && Session != null)
+            {
+                // Recalculate elapsed from the original session start time
+                ElapsedTime = DateTime.UtcNow - SessionStartTime;
+                StartTimer();
+            }
+        });
     }
 
     public void Dispose()

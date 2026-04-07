@@ -172,8 +172,8 @@
                                          data-item-type="Plant"
                                          data-shelf-id="@shelfVM.Shelf.Id">
                                         <PlantCard Plant="@item.Plant" IsInBookshelf="true"
-                                            OnClick="() => HandlePlantClick(item.Plant)"
-                                            OnRemove="() => HandleRemovePlant(item.Plant.Id, shelfVM.Shelf.Id)" />
+                                            ShowActions="false"
+                                            OnClick="() => HandlePlantClick(item.Plant, shelfVM.Shelf.Id)" />
                                     </div>
                                 }
                             }
@@ -329,11 +329,21 @@
             </div>
 
             <PlantDetailCard Plant="@selectedPlant"
+                             OnRename="HandleRenamePlantFromModal"
                              OnWater="HandleWaterPlantFromModal"
-                             IsWatering="@isWateringPlant" />
+                             IsWatering="@isWateringPlant"
+                             IsRenaming="@isRenamingPlant" />
 
             <div class="modal-actions">
                 <button class="btn btn-secondary" @onclick="ClosePlantDetail">Close</button>
+                @if (selectedPlantShelfId.HasValue)
+                {
+                    <button class="btn btn-danger"
+                            @onclick="HandleRemoveSelectedPlantFromShelf"
+                            disabled="@isRemovingPlant">
+                        @(isRemovingPlant ? "Removing..." : "Remove from Shelf")
+                    </button>
+                }
             </div>
         </div>
     </div>
@@ -465,7 +475,10 @@
     // Plant state
     private bool showPlantDetail;
     private UserPlant? selectedPlant;
+    private Guid? selectedPlantShelfId;
+    private bool isRenamingPlant;
     private bool isWateringPlant;
+    private bool isRemovingPlant;
 
     // JS Drag & Drop interop
     private DotNetObjectReference<Bookshelf>? _dotNetHelper;
@@ -700,9 +713,10 @@
     }
 
     // Plant stubs
-    private async Task HandlePlantClick(UserPlant plant)
+    private async Task HandlePlantClick(UserPlant plant, Guid shelfId)
     {
         selectedPlant = plant;
+        selectedPlantShelfId = shelfId;
 
         // Register back handler
         _activeBackHandler = async () =>
@@ -728,8 +742,64 @@
             _activeBackHandler = null;
         }
         showPlantDetail = false;
+        isRenamingPlant = false;
         isWateringPlant = false;
+        isRemovingPlant = false;
         selectedPlant = null;
+        selectedPlantShelfId = null;
+    }
+    private async Task HandleRenamePlantFromModal(string newName)
+    {
+        if (selectedPlant == null)
+        {
+            return;
+        }
+
+        var plantId = selectedPlant.Id;
+        var plantToRename = selectedPlant;
+        var trimmedName = newName.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedName))
+        {
+            throw new InvalidOperationException("Plant name cannot be empty");
+        }
+
+        if (trimmedName.Length > 100)
+        {
+            throw new InvalidOperationException("Plant name cannot exceed 100 characters");
+        }
+
+        if (string.Equals(trimmedName, selectedPlant.Name, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        isRenamingPlant = true;
+
+        try
+        {
+            await ViewModel.RenamePlantCommand.ExecuteAsync((plantId, trimmedName));
+            if (!string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+            {
+                throw new InvalidOperationException(ViewModel.ErrorMessage);
+            }
+
+            plantToRename.Name = trimmedName;
+
+            var refreshedPlant = await ViewModel.GetPlantByIdAsync(plantId);
+            if (!string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+            {
+                throw new InvalidOperationException(ViewModel.ErrorMessage);
+            }
+
+            if (selectedPlant?.Id == plantId)
+            {
+                selectedPlant = refreshedPlant ?? plantToRename;
+            }
+        }
+        finally
+        {
+            isRenamingPlant = false;
+        }
     }
     private async Task HandleWaterPlantFromModal()
     {
@@ -748,8 +818,25 @@
             }
         }
     }
-    private async Task HandleRemovePlant(Guid plantId, Guid shelfId) => await
-    ViewModel.RemovePlantFromShelfCommand.ExecuteAsync((plantId, shelfId));
+    private async Task HandleRemoveSelectedPlantFromShelf()
+    {
+        if (selectedPlant == null || !selectedPlantShelfId.HasValue)
+        {
+            return;
+        }
+
+        isRemovingPlant = true;
+
+        try
+        {
+            await ViewModel.RemovePlantFromShelfCommand.ExecuteAsync((selectedPlant.Id, selectedPlantShelfId.Value));
+            ClosePlantDetail();
+        }
+        finally
+        {
+            isRemovingPlant = false;
+        }
+    }
     private bool showPlantSelector;
     private Guid? targetShelfForPlant;
 
