@@ -107,6 +107,8 @@ public class AppSettingsProvider : IAppSettingsProvider
 
     public async Task SpendCoinsAsync(int amount, CancellationToken ct = default)
     {
+        ValidateAmount(amount);
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
         var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
@@ -129,6 +131,8 @@ public class AppSettingsProvider : IAppSettingsProvider
 
     public async Task AddCoinsAsync(int amount, CancellationToken ct = default)
     {
+        ValidateAmount(amount);
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
         var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
@@ -144,6 +148,14 @@ public class AppSettingsProvider : IAppSettingsProvider
         _lastLoad = DateTime.UtcNow;
 
         OnProgressionChanged();
+    }
+
+    private static void ValidateAmount(int amount)
+    {
+        if (amount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount must be greater than zero.");
+        }
     }
 
     public async Task IncrementPlantsPurchasedAsync(CancellationToken ct = default)
