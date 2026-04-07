@@ -23,6 +23,8 @@ Versionsschema:
 
 ### Behoben
 
+- AppSettingsProvider weist jetzt ungültige Münz-Beträge (`<= 0`) in `SpendCoinsAsync` und `AddCoinsAsync` mit `ArgumentOutOfRangeException` ab
+
 ## [0.8.0] - 2026-04-07
 
 ### Hinzugefügt
