@@ -25,6 +25,7 @@ Versionsschema:
 
 ### Behoben
 
+- Start eines Buches ist jetzt idempotent: `DateStarted` bleibt beim erneuten Start erhalten und der Status wird nicht von `Reading`/`Completed` überschrieben
 - Reading-Timer im ReadingViewModel aktualisiert die `ElapsedTime` jetzt threadsicher über den UI-Dispatcher, sodass PropertyChanged zuverlässig auf dem UI-Thread ausgelöst wird
 - Scanner-Abschlusslogik robuster gemacht: Beim Schließen der Scanner-Seite ohne Cancel-Button wird der Scan jetzt sauber mit `null` beendet, inklusive optionalem Timeout/CancellationToken im Scanner-Service.
 - Seitenvalidierung beim Beenden von Lesesessions berücksichtigt jetzt die Startseite der Session, sodass ein zu großes Seiten-Delta über das Buchende hinaus korrekt mit einer klaren Fehlermeldung abgewiesen wird
