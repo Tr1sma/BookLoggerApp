@@ -14,6 +14,7 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IFilePickerService _filePickerService;
     private readonly IMigrationService _migrationService;
     private readonly INotificationService _notificationService;
+    private readonly IAppVersionService _appVersionService;
 
 
     public SettingsViewModel(
@@ -23,7 +24,8 @@ public partial class SettingsViewModel : ViewModelBase
         IShareService shareService,
         IFilePickerService filePickerService,
         IMigrationService migrationService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IAppVersionService appVersionService)
     {
         _importExportService = importExportService;
         _settingsProvider = settingsProvider;
@@ -32,8 +34,10 @@ public partial class SettingsViewModel : ViewModelBase
         _filePickerService = filePickerService;
         _migrationService = migrationService;
         _notificationService = notificationService;
+        _appVersionService = appVersionService;
 
         MigrationLog = _migrationService.GetMigrationLog();
+        AppVersion = _appVersionService.CurrentVersion;
     }
 
     [ObservableProperty]
@@ -170,6 +174,7 @@ public partial class SettingsViewModel : ViewModelBase
         {
             Settings = await _settingsProvider.GetSettingsAsync();
             MigrationLog = _migrationService.GetMigrationLog();
+            AppVersion = _appVersionService.CurrentVersion;
 
             ShelfLedgeColor = Settings.ShelfLedgeColor;
             ShelfBaseColor = Settings.ShelfBaseColor;
