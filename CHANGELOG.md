@@ -21,6 +21,7 @@ Versionsschema:
 ### Geändert
 
 - Pflanzen im Bücherregal öffnen jetzt ein Detail-Modal mit Namen, Level, nächstem Gießzeitpunkt und Gießbutton
+- Pflanzennamen werden im Shop-Kaufdialog und im Pflanzen-Modal des Bücherregals etwas größer dargestellt
 
 ### Behoben
 
