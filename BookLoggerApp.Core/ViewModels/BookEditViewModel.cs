@@ -166,18 +166,21 @@ public partial class BookEditViewModel : ViewModelBase
                 return;
             }
 
-            var isNewBook = Book.Id == Guid.Empty || await _bookService.GetByIdAsync(Book.Id) == null;
+            var persistedBook = Book.Id == Guid.Empty
+                ? null
+                : await _bookService.GetByIdAsync(Book.Id);
+            var isNewBook = Book.Id == Guid.Empty || persistedBook == null;
             var coverImageUrl = Book.CoverImagePath;
 
-            // Check if book is being marked as completed for the first time
+            // Check if book is being marked as completed for the first time based on persisted DB state
+            var persistedStatus = persistedBook?.Status;
             var isBeingCompleted = Book.Status == ReadingStatus.Completed &&
-                                   _originalStatus.HasValue &&
-                                   _originalStatus.Value != ReadingStatus.Completed;
+                                   persistedStatus.HasValue &&
+                                   persistedStatus.Value != ReadingStatus.Completed;
 
-            // Check if book is leaving wishlist status
-            var isLeavingWishlist = _originalStatus == ReadingStatus.Wishlist &&
-                                   _hasExplicitStatusChange &&
-                                   Book.Status != ReadingStatus.Wishlist;
+            // Check if book is leaving wishlist status based on persisted DB state
+            var isLeavingWishlist = persistedStatus == ReadingStatus.Wishlist &&
+                                    Book.Status != ReadingStatus.Wishlist;
 
             if (isNewBook)
             {
@@ -308,6 +311,8 @@ public partial class BookEditViewModel : ViewModelBase
                     await _genreService.AddTropeToBookAsync(Book.Id, tropeId);
                 }
             }
+
+            _originalStatus = Book.Status;
         }, "Failed to save book");
     }
 
