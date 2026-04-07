@@ -20,10 +20,19 @@ Versionsschema:
 ### Geändert
 
 - README-Featureübersicht vollständig an die seit V0.1.0 hinzugefügten Funktionen angepasst (u.a. Widgets, Sharing, Scanner/Lookup, erweiterte Ziel- und Regalfeatures)
+- Pflanzen im Bücherregal können jetzt direkt im Detail-Modal über ein Stift-Icon umbenannt werden
+- Das Pflanzen-Detail-Modal im Bücherregal wurde insgesamt kompakter gestaltet
 
 ### Behoben
 
 - Start eines Buches ist jetzt idempotent: `DateStarted` bleibt beim erneuten Start erhalten und der Status wird nicht von `Reading`/`Completed` überschrieben
+- Reading-Timer im ReadingViewModel aktualisiert die `ElapsedTime` jetzt threadsicher über den UI-Dispatcher, sodass PropertyChanged zuverlässig auf dem UI-Thread ausgelöst wird
+- Scanner-Abschlusslogik robuster gemacht: Beim Schließen der Scanner-Seite ohne Cancel-Button wird der Scan jetzt sauber mit `null` beendet, inklusive optionalem Timeout/CancellationToken im Scanner-Service.
+- Seitenvalidierung beim Beenden von Lesesessions berücksichtigt jetzt die Startseite der Session, sodass ein zu großes Seiten-Delta über das Buchende hinaus korrekt mit einer klaren Fehlermeldung abgewiesen wird
+- Buchabschluss beim Speichern bewertet den tatsächlichen Datenbankstatus und verhindert dadurch doppelte XP-Vergabe bei wiederholtem Speichern ohne erneute Statusänderung
+- Beim Verlassen der Wishlist beim Speichern wird die Bereinigung jetzt ebenfalls anhand des tatsächlich persistierten Status entschieden
+- Beim Bearbeiten von Wishlist-Büchern bleibt `WishlistInfo` jetzt erhalten, solange der Status nicht explizit im Formular geändert wird
+- Tippen auf Pflanzen im Bücherregal öffnet jetzt zuverlässig das Pflanzen-Modal; das Entfernen aus dem Regal wurde aus der überlagerten Pflanzenkarte in das Detail-Modal verlegt
 
 ## [0.8.0] - 2026-04-07
 
