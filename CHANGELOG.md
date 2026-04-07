@@ -25,6 +25,7 @@ Versionsschema:
 
 ### Behoben
 
+- Seitenvalidierung beim Beenden von Lesesessions berücksichtigt jetzt die Startseite der Session, sodass ein zu großes Seiten-Delta über das Buchende hinaus korrekt mit einer klaren Fehlermeldung abgewiesen wird
 - Buchabschluss beim Speichern bewertet den tatsächlichen Datenbankstatus und verhindert dadurch doppelte XP-Vergabe bei wiederholtem Speichern ohne erneute Statusänderung
 - Beim Verlassen der Wishlist beim Speichern wird die Bereinigung jetzt ebenfalls anhand des tatsächlich persistierten Status entschieden
 - Beim Bearbeiten von Wishlist-Büchern bleibt `WishlistInfo` jetzt erhalten, solange der Status nicht explizit im Formular geändert wird
