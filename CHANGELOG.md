@@ -20,8 +20,12 @@ Versionsschema:
 ### Geändert
 
 - README-Featureübersicht vollständig an die seit V0.1.0 hinzugefügten Funktionen angepasst (u.a. Widgets, Sharing, Scanner/Lookup, erweiterte Ziel- und Regalfeatures)
+- Pflanzen im Bücherregal können jetzt direkt im Detail-Modal über ein Stift-Icon umbenannt werden
+- Das Pflanzen-Detail-Modal im Bücherregal wurde insgesamt kompakter gestaltet
 
 ### Behoben
+
+- Tippen auf Pflanzen im Bücherregal öffnet jetzt zuverlässig das Pflanzen-Modal; das Entfernen aus dem Regal wurde aus der überlagerten Pflanzenkarte in das Detail-Modal verlegt
 
 ## [0.8.0] - 2026-04-07
 
