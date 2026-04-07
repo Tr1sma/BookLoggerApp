@@ -321,17 +321,18 @@
 <!-- Plant Detail Modal -->
 @if (showPlantDetail && selectedPlant != null)
 {
-    <div class="purchase-modal-overlay" @onclick="ClosePlantDetail">
-        <div class="purchase-modal plant-detail-modal" @onclick:stopPropagation="true">
-            <div class="modal-header">
-                <h2>🌱 @selectedPlant.Name</h2>
-                <button class="btn-close" @onclick="ClosePlantDetail">×</button>
+    <div class="modal-overlay" @onclick="ClosePlantDetail">
+        <div class="modal-content plant-detail-modal" @onclick:stopPropagation="true">
+            <div class="plant-detail-modal-header">
+                <h3>Plant Details</h3>
+                <button class="plant-detail-close" @onclick="ClosePlantDetail">×</button>
             </div>
-            <div class="modal-body">
-                <PlantWidget Plant="@selectedPlant" OnWater="HandleWaterPlantFromModal"
-                    OnDelete="HandleDeletePlantFromModal" IsWatering="@isWateringPlant" />
-            </div>
-            <div class="modal-footer">
+
+            <PlantDetailCard Plant="@selectedPlant"
+                             OnWater="HandleWaterPlantFromModal"
+                             IsWatering="@isWateringPlant" />
+
+            <div class="modal-actions">
                 <button class="btn btn-secondary" @onclick="ClosePlantDetail">Close</button>
             </div>
         </div>
@@ -699,7 +700,7 @@
     }
 
     // Plant stubs
-    private void HandlePlantClick(UserPlant plant)
+    private async Task HandlePlantClick(UserPlant plant)
     {
         selectedPlant = plant;
 
@@ -716,6 +717,8 @@
         BackButtonService.Register(_activeBackHandler);
 
         showPlantDetail = true;
+
+        selectedPlant = await ViewModel.GetPlantByIdAsync(plant.Id) ?? selectedPlant;
     }
     private void ClosePlantDetail()
     {
@@ -725,19 +728,24 @@
             _activeBackHandler = null;
         }
         showPlantDetail = false;
+        isWateringPlant = false;
         selectedPlant = null;
     }
     private async Task HandleWaterPlantFromModal()
     {
-        if (selectedPlant != null) await
-        ViewModel.WaterPlantCommand.ExecuteAsync(selectedPlant.Id);
-    }
-    private async Task HandleDeletePlantFromModal()
-    {
         if (selectedPlant != null)
         {
-            await
-            ViewModel.DeletePlantCommand.ExecuteAsync(selectedPlant.Id); ClosePlantDetail();
+            isWateringPlant = true;
+
+            try
+            {
+                await ViewModel.WaterPlantCommand.ExecuteAsync(selectedPlant.Id);
+                selectedPlant = await ViewModel.GetPlantByIdAsync(selectedPlant.Id);
+            }
+            finally
+            {
+                isWateringPlant = false;
+            }
         }
     }
     private async Task HandleRemovePlant(Guid plantId, Guid shelfId) => await
@@ -783,13 +791,6 @@
         }
         ClosePlantSelector();
     }
-
-    private string GetPlantStatusIcon(PlantStatus status) => status switch
-    {
-        PlantStatus.Healthy => "😊",
-        PlantStatus.Thirsty => "😰",
-        _ => "🌱"
-    };
 
     private void NavigateToEditBook(Guid bookId) => Navigation.NavigateTo($"/books/{bookId}/edit");
 

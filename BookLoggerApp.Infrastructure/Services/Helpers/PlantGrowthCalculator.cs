@@ -138,6 +138,14 @@ public static class PlantGrowthCalculator
     }
 
     /// <summary>
+    /// Calculate the exact UTC timestamp when the plant needs water again.
+    /// </summary>
+    public static DateTime GetNextWaterDueAt(DateTime lastWatered, int waterIntervalDays)
+    {
+        return lastWatered.AddDays(waterIntervalDays);
+    }
+
+    /// <summary>
     /// Check if plant can level up based on current XP.
     /// </summary>
     public static bool CanLevelUp(int currentLevel, int currentXp, double growthRate, int maxLevel)
