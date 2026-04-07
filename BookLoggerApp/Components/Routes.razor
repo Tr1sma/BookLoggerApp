@@ -1,12 +1,7 @@
-﻿@code {
-    protected override void OnInitialized()
-    {
-        System.Diagnostics.Debug.WriteLine("=== Routes.razor OnInitialized ===");
-        base.OnInitialized();
-    }
-}
+﻿@inject NavigationManager NavigationManager
+@implements IDisposable
 
-<ErrorBoundary>
+<ErrorBoundary @ref="_errorBoundary">
     <ChildContent>
         <Router AppAssembly="@typeof(MauiProgram).Assembly">
             <Found Context="routeData">
@@ -30,3 +25,24 @@
         </LayoutView>
     </ErrorContent>
 </ErrorBoundary>
+
+@code {
+    private ErrorBoundary? _errorBoundary;
+
+    protected override void OnInitialized()
+    {
+        System.Diagnostics.Debug.WriteLine("=== Routes.razor OnInitialized ===");
+        NavigationManager.LocationChanged += OnLocationChanged;
+        base.OnInitialized();
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        _ = InvokeAsync(() => _errorBoundary?.Recover());
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

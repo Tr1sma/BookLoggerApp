@@ -1,6 +1,7 @@
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.ViewModels;
+using BookLoggerApp.Core.Enums;
 using FluentAssertions;
 using NSubstitute;
 using System.Collections.ObjectModel;
@@ -144,5 +145,34 @@ public class StatsViewModelTests
         // Assert
         _viewModel.TopRatedBooks.Should().HaveCount(1);
         _viewModel.TopRatedBooks.First().Book.Title.Should().Be("Book 1");
+    }
+
+    [Fact]
+    public async Task LoadAsync_Should_Exclude_DeadPlants_FromPlantBoosts()
+    {
+        // Arrange
+        _settingsProvider.GetSettingsAsync().Returns(new AppSettings());
+        _plantService.CalculateTotalXpBoostAsync().Returns(0m);
+        _plantService.GetAllAsync().Returns(new List<UserPlant>
+        {
+            new()
+            {
+                Name = "Dead Plant",
+                Status = PlantStatus.Dead,
+                CurrentLevel = 3,
+                Species = new PlantSpecies
+                {
+                    Name = "Withered",
+                    MaxLevel = 10,
+                    XpBoostPercentage = 0.05m
+                }
+            }
+        });
+
+        // Act
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+
+        // Assert
+        _viewModel.PlantBoosts.Should().BeEmpty();
     }
 }

@@ -13,6 +13,22 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
+## [0.8.2] - 2026-04-07
+
+### Hinzugefügt
+
+- Beim Beenden einer Lesesession erscheint bei aktiver Lese-Streak jetzt eine eigene Streak-Feier mit zusätzlichem, nach Streak-Tagen skaliertem XP-Bonus
+
+### Geändert
+
+### Behoben
+
+- Die Feier-Reihenfolge nach einer Lesesession zeigt Level-Ups jetzt auch dann zuverlässig an, wenn gleichzeitig Buchabschluss und Streak-Bonus ausgelost wurden
+- Abgebrochene oder nur gestartete Lesesessions ohne echten Fortschritt verlängern keine Streak mehr und lösen dadurch keinen Streak-XP-Bonus mehr aus
+- Der Streak-XP-Bonus wird pro Tag nur noch einmal vergeben, nämlich bei der ersten qualifizierenden Lesesession des Tages
+- Die Stats-Seite stürzt nicht mehr ab, wenn vorhandene, aber tote Pflanzen keinen aktiven XP-Boost mehr beitragen
+- Die globale Fehleransicht wird nach einem Seitenwechsel wieder korrekt zurückgesetzt, statt weitere Seiten fälschlich ebenfalls als abgestürzt anzuzeigen
+
 ## [0.8.1] - 2026-04-07
 
 ### Hinzugefügt
