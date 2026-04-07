@@ -1,0 +1,112 @@
+.plant-detail-card {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.plant-detail-visual {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    border-radius: 16px;
+    background:
+        radial-gradient(circle at top, rgba(120, 166, 106, 0.22), transparent 58%),
+        linear-gradient(145deg, rgba(45, 37, 26, 0.95), rgba(28, 23, 17, 0.98));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.plant-detail-image {
+    width: min(180px, 70%);
+    max-height: 160px;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
+}
+
+.plant-detail-status {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    width: 2.4rem;
+    height: 2.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    font-size: 1.15rem;
+}
+
+.plant-detail-content {
+    display: grid;
+    gap: 1rem;
+}
+
+.plant-detail-name {
+    margin: 0;
+    color: #fff;
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.plant-detail-species {
+    margin: -0.5rem 0 0;
+    color: #c7c1b8;
+    font-size: 0.95rem;
+}
+
+.plant-detail-stats {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.plant-detail-stat {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.plant-detail-label {
+    color: #b7aea1;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.plant-detail-value {
+    color: #fff;
+    font-weight: 600;
+    text-align: right;
+}
+
+.plant-detail-note {
+    margin: 0;
+    color: #d7a6a6;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.btn-water-now {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 0.95rem 1rem;
+    background: linear-gradient(135deg, #7db9d3, #5a91b7);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: 0 10px 24px rgba(90, 145, 183, 0.28);
+}
+
+.btn-water-now:disabled {
+    background: rgba(255, 255, 255, 0.09);
+    color: #a79f93;
+    box-shadow: none;
+}

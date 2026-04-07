@@ -326,6 +326,10 @@
     font-weight: 700;
 }
 
+.purchase-plant-name {
+    font-size: 1.15em;
+}
+
 .btn-close {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
