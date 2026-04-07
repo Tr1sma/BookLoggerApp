@@ -170,6 +170,8 @@ public class PlantServiceTests : IDisposable
         // Arrange
         var species = await SeedPlantSpecies();
         var plant = await SeedUserPlant(species.Id, "Dead Plant");
+        // Plant death is derived from the watering timestamp, not a manually assigned status.
+        plant.LastWatered = DateTime.UtcNow.AddDays(-10);
         plant.Status = PlantStatus.Dead;
         await _unitOfWork.UserPlants.UpdateAsync(plant);
 
@@ -616,6 +618,8 @@ public class PlantServiceTests : IDisposable
         // Arrange
         var species = await SeedPlantSpecies();
         var plant = await SeedUserPlant(species.Id, "Dead Plant");
+        // Plant death is derived from the watering timestamp, not a manually assigned status.
+        plant.LastWatered = DateTime.UtcNow.AddDays(-10);
         plant.Status = PlantStatus.Dead;
         await _unitOfWork.UserPlants.UpdateAsync(plant);
 

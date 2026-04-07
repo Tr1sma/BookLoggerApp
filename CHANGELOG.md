@@ -9,7 +9,7 @@ Versionsschema:
 
 - `V0.x.y` – Pre-Release (vor Play-Store-Veröffentlichung)
 - `V1.0.0` – Erster öffentlicher Play-Store-Release
-- MAJOR wird auf 1 gesetzt wenn der erste Play-Store-Upload erfolgt
+- MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
