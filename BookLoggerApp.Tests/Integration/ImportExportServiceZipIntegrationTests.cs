@@ -137,4 +137,57 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         var content = await File.ReadAllTextAsync(restoredImagePath);
         content.Should().Be("imagedata");
     }
+
+    [Fact]
+    public async Task RestoreFromBackupAsync_ShouldHandleCaseInsensitiveBackupEntries()
+    {
+        var sourceDir = Path.Combine(_tempRoot, "CaseInsensitiveSource");
+        Directory.CreateDirectory(sourceDir);
+        var sourceDbPath = Path.Combine(sourceDir, "booklogger.db");
+        var sourceFactory = new SqliteDbContextFactory(sourceDbPath);
+        using (var sourceContext = sourceFactory.CreateDbContext())
+        {
+            await sourceContext.Database.MigrateAsync();
+            sourceContext.Books.Add(new Book { Title = "Case Test Book" });
+            await sourceContext.SaveChangesAsync();
+        }
+
+        var backupPath = Path.Combine(sourceDir, "case-insensitive.zip");
+        using (var archive = ZipFile.Open(backupPath, ZipArchiveMode.Create))
+        {
+            var dbEntry = archive.CreateEntry("BOOKLOGGER.DB");
+            await using (var dbStream = dbEntry.Open())
+            await using (var sourceDbStream = File.OpenRead(sourceDbPath))
+            {
+                await sourceDbStream.CopyToAsync(dbStream);
+            }
+
+            var coverEntry = archive.CreateEntry("COVERS/TEST.JPG");
+            await using (var coverStream = coverEntry.Open())
+            await using (var writer = new StreamWriter(coverStream))
+            {
+                await writer.WriteAsync("imagedata");
+            }
+        }
+
+        var targetDir = Path.Combine(_tempRoot, "CaseInsensitiveTarget");
+        Directory.CreateDirectory(targetDir);
+        var targetDbPath = Path.Combine(targetDir, "booklogger.db");
+
+        var targetFactory = new SqliteDbContextFactory(targetDbPath);
+        using (var context = targetFactory.CreateDbContext())
+        {
+            await context.Database.MigrateAsync();
+        }
+
+        var service = new ImportExportService(targetFactory, new FileSystemAdapter(), new TestAppSettingsProvider(), null, targetDir);
+        await service.RestoreFromBackupAsync(backupPath);
+
+        using (var context = targetFactory.CreateDbContext())
+        {
+            (await context.Books.CountAsync()).Should().Be(1);
+        }
+
+        File.Exists(Path.Combine(targetDir, "covers", "TEST.JPG")).Should().BeTrue();
+    }
 }

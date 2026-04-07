@@ -23,6 +23,8 @@ Versionsschema:
 
 ### Behoben
 
+- Backup-Restore findet `booklogger.db` und den `covers`-Ordner jetzt robust auch bei abweichender Groß-/Kleinschreibung in ZIP-Inhalten
+
 ## [0.8.0] - 2026-04-07
 
 ### Hinzugefügt
