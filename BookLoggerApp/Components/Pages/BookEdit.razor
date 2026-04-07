@@ -127,7 +127,7 @@
 
                 <div class="form-group">
                     <label for="status">Reading Status</label>
-                    <select id="status" @bind="ViewModel.Book.Status">
+                    <select id="status" @bind="ViewModel.SelectedStatusForDisplay">
                         <option value="@ReadingStatus.Planned">Planned</option>
                         <option value="@ReadingStatus.Reading">Reading</option>
                         <option value="@ReadingStatus.Completed">Completed</option>
@@ -771,4 +771,3 @@
         }
     }
 }
-
