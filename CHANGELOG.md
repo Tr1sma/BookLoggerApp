@@ -23,6 +23,9 @@ Versionsschema:
 
 ### Behoben
 
+- Buchabschluss beim Speichern bewertet den tatsächlichen Datenbankstatus und verhindert dadurch doppelte XP-Vergabe bei wiederholtem Speichern ohne erneute Statusänderung
+- Beim Verlassen der Wishlist beim Speichern wird die Bereinigung jetzt ebenfalls anhand des tatsächlich persistierten Status entschieden
+
 ## [0.8.0] - 2026-04-07
 
 ### Hinzugefügt
