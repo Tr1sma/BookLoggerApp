@@ -390,7 +390,7 @@
 
 /* Plant Detail Modal - Brown Theme */
 .plant-detail-modal {
-    max-width: 600px !important;
+    max-width: 390px !important;
     background: linear-gradient(135deg,
         rgba(90, 74, 58, 0.98) 0%,
         rgba(74, 63, 50, 0.98) 50%,

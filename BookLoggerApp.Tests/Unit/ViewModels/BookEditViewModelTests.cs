@@ -186,6 +186,10 @@ public class BookEditViewModelTests
         // Assert
         await _bookService.Received(1).UpdateAsync(Arg.Any<Book>());
         await _bookService.DidNotReceive().CompleteBookAsync(bookId);
+        _viewModel.Book.Status.Should().Be(ReadingStatus.Wishlist);
+        _viewModel.Book.WishlistInfo.Should().BeSameAs(wishlistInfo);
+        _viewModel.SelectedStatusForDisplay.Should().Be(ReadingStatus.Planned);
+        await _wishlistService.DidNotReceive().ClearWishlistInfoAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

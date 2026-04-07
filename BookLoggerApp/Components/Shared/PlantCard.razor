@@ -15,7 +15,7 @@
     <div class="plant-card-name">
         <span class="plant-name-small">@Plant.Name</span>
     </div>
-    @if (ShowActions)
+    @if (ShowActions && OnRemove.HasDelegate)
     {
         <div class="plant-card-actions">
             <button class="btn-icon" @onclick:stopPropagation="true" @onclick="HandleRemove" title="Remove from Bookshelf">
