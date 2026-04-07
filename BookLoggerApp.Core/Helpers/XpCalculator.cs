@@ -9,22 +9,38 @@ public static class XpCalculator
     private const int XP_PER_PAGE = 20;
     private const int XP_BOOK_COMPLETION = 100; // Bonus for completing a book
     private const int BONUS_XP_LONG_SESSION = 50; // 60+ minutes
-    private const int BONUS_XP_STREAK = 20; // Daily streak
 
-    public static int CalculateXpForSession(int minutes, int? pagesRead, bool hasStreak = false)
+    public static int CalculateXpForSession(int minutes, int? pagesRead, int streakDays = 0)
     {
-        var (minutesXp, pagesXp, longSessionXp, streakXp) = CalculateSessionXpBreakdown(minutes, pagesRead, hasStreak);
+        var (minutesXp, pagesXp, longSessionXp, streakXp) = CalculateSessionXpBreakdown(minutes, pagesRead, streakDays);
         return minutesXp + pagesXp + longSessionXp + streakXp;
     }
 
-    public static (int MinutesXp, int PagesXp, int LongSessionXp, int StreakXp) CalculateSessionXpBreakdown(int minutes, int? pagesRead, bool hasStreak = false)
+    public static (int MinutesXp, int PagesXp, int LongSessionXp, int StreakXp) CalculateSessionXpBreakdown(int minutes, int? pagesRead, int streakDays = 0)
     {
         int minutesXp = minutes * XP_PER_MINUTE;
         int pagesXp = (pagesRead ?? 0) * XP_PER_PAGE;
         int longSessionXp = (minutes >= 60) ? BONUS_XP_LONG_SESSION : 0;
-        int streakXp = hasStreak ? BONUS_XP_STREAK : 0;
+        int streakXp = CalculateStreakBonusXp(streakDays);
 
         return (minutesXp, pagesXp, longSessionXp, streakXp);
+    }
+
+    public static int CalculateStreakBonusXp(int streakDays)
+    {
+        if (streakDays < 2)
+        {
+            return 0;
+        }
+
+        int xp = streakDays * 100;
+
+        if (streakDays >= 3) xp += 100;
+        if (streakDays >= 7) xp += 250;
+        if (streakDays >= 14) xp += 500;
+        if (streakDays >= 30) xp += 1000;
+
+        return xp;
     }
 
     public static int GetXpForLevel(int level)

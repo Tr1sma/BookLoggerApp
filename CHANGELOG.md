@@ -13,6 +13,20 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
+## [Unveröffentlicht]
+
+### Hinzugefügt
+
+- Beim Beenden einer Lesesession erscheint bei aktiver Lese-Streak jetzt eine eigene Streak-Feier mit zusätzlichem, nach Streak-Tagen skaliertem XP-Bonus
+
+### Geändert
+
+### Behoben
+
+- Die Feier-Reihenfolge nach einer Lesesession zeigt Level-Ups jetzt auch dann zuverlässig an, wenn gleichzeitig Buchabschluss und Streak-Bonus ausgelost wurden
+- Abgebrochene oder nur gestartete Lesesessions ohne echten Fortschritt verlängern keine Streak mehr und lösen dadurch keinen Streak-XP-Bonus mehr aus
+- Der Streak-XP-Bonus wird pro Tag nur noch einmal vergeben, nämlich bei der ersten qualifizierenden Lesesession des Tages
+
 ## [0.8.1] - 2026-04-07
 
 ### Hinzugefügt

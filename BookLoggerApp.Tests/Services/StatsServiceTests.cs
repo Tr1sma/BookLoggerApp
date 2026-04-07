@@ -26,6 +26,80 @@ public class StatsServiceTests : IDisposable
         _context.Dispose();
     }
 
+    [Fact]
+    public async Task GetCurrentStreakAsync_ShouldIgnoreOpenPlaceholderSessions()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test Book", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today,
+            Minutes = 15
+        });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-1),
+            Minutes = 0,
+            PagesRead = 0,
+            EndedAt = null
+        });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var streak = await _service.GetCurrentStreakAsync();
+
+        // Assert
+        streak.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetLongestStreakAsync_ShouldIgnoreOpenPlaceholderSessions()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test Book", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-5),
+            Minutes = 15
+        });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-4),
+            Minutes = 15
+        });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-3),
+            Minutes = 0,
+            PagesRead = 0,
+            EndedAt = null
+        });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-2),
+            Minutes = 15
+        });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var longestStreak = await _service.GetLongestStreakAsync();
+
+        // Assert
+        longestStreak.Should().Be(2);
+    }
+
     #region Multi-Category Rating Tests
 
     [Fact]

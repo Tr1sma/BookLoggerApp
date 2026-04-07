@@ -19,6 +19,8 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private Timer? _timer;
     private bool _bookCompletedDuringSession;
     private bool _goalCompletedDuringSession;
+    private bool _reviewPromptMomentPending;
+    private bool _streakCelebrationPending;
     private readonly object _timerLock = new();
     private readonly SynchronizationContext? _uiSynchronizationContext;
 
@@ -79,6 +81,9 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private bool _showLevelUpCelebration;
 
     [ObservableProperty]
+    private bool _showStreakCelebration;
+
+    [ObservableProperty]
     private LevelUpResult? _levelUpResult;
 
     [ObservableProperty]
@@ -88,7 +93,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private bool _isGeneratingBookCard;
 
     public bool IsRunning => Session != null && !IsPaused;
-    public bool HasReviewPromptMoment => _bookCompletedDuringSession || _goalCompletedDuringSession || LevelUpResult != null;
+    public bool HasReviewPromptMoment => _reviewPromptMomentPending || _bookCompletedDuringSession || _goalCompletedDuringSession || LevelUpResult != null;
 
     [RelayCommand]
     public async Task LoadAsync(Guid sessionId)
@@ -138,7 +143,10 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             XpEarned = 0;
             _bookCompletedDuringSession = false;
             _goalCompletedDuringSession = false;
+            _reviewPromptMomentPending = false;
+            _streakCelebrationPending = false;
             LevelUpResult = null;
+            ShowStreakCelebration = false;
 
             // Set StartPage in the session
             Session.StartPage = StartPage;
@@ -208,6 +216,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             }
 
             XpEarned = SessionProgressionResult?.XpEarned ?? 0;
+            _streakCelebrationPending = ShouldShowStreakCelebration(SessionProgressionResult);
 
             // Show the appropriate celebration
             if (_bookCompletedDuringSession)
@@ -240,6 +249,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             PagesXp = r1.PagesXp + r2.PagesXp,
             LongSessionBonusXp = r1.LongSessionBonusXp + r2.LongSessionBonusXp,
             StreakBonusXp = r1.StreakBonusXp + r2.StreakBonusXp,
+            StreakDays = Math.Max(r1.StreakDays, r2.StreakDays),
             BookCompletionXp = r1.BookCompletionXp + r2.BookCompletionXp,
             PlantBoostPercentage = r1.PlantBoostPercentage, // Assuming same boost
             BoostedXp = r1.BoostedXp + r2.BoostedXp,
@@ -290,7 +300,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             baseXp += 50;
         }
 
-        // Note: Streak bonus (+20) and plant boost are not included in preview
+        // Note: Streak bonus and plant boost are not included in preview
         // They will be applied in the final calculation at session end
         XpEarned = baseXp;
 
@@ -356,13 +366,18 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Called when session celebration is closed. Shows level-up or book completion celebration if applicable.
+    /// Called when session celebration is closed. Shows streak or follow-up celebrations if applicable.
     /// </summary>
     public Task OnSessionCelebrationClose()
     {
         ShowSessionCelebration = false;
 
-        if (LevelUpResult != null)
+        if (_streakCelebrationPending)
+        {
+            _streakCelebrationPending = false;
+            ShowStreakCelebration = true;
+        }
+        else if (LevelUpResult != null)
         {
             ShowLevelUpCelebration = true;
         }
@@ -379,12 +394,34 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
+    /// Called when streak celebration is closed. Shows level-up celebration if applicable.
+    /// </summary>
+    public Task OnStreakCelebrationClose()
+    {
+        ShowStreakCelebration = false;
+        _reviewPromptMomentPending = false;
+
+        if (!_bookCompletedDuringSession && LevelUpResult != null)
+        {
+            ShowLevelUpCelebration = true;
+        }
+        else
+        {
+            _bookCompletedDuringSession = false;
+            _goalCompletedDuringSession = false;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
     /// Called when level-up celebration is closed. Shows book completion celebration if applicable.
     /// </summary>
     public Task OnLevelUpCelebrationClose()
     {
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
+        _reviewPromptMomentPending = false;
 
         if (_bookCompletedDuringSession)
         {
@@ -404,9 +441,25 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     public Task OnBookCompletionCelebrationClose()
     {
         ShowBookCompletionCelebration = false;
+
+        if (_streakCelebrationPending)
+        {
+            _reviewPromptMomentPending = HasReviewPromptMoment;
+            _bookCompletedDuringSession = false;
+            _streakCelebrationPending = false;
+            ShowStreakCelebration = true;
+            return Task.CompletedTask;
+        }
+
         _bookCompletedDuringSession = false;
         _goalCompletedDuringSession = false;
+        _reviewPromptMomentPending = false;
         return Task.CompletedTask;
+    }
+
+    private static bool ShouldShowStreakCelebration(ProgressionResult? result)
+    {
+        return result?.StreakDays >= 2 && result.StreakBonusXp > 0;
     }
 
     /// <summary>
