@@ -13,6 +13,7 @@ namespace BookLoggerApp.Services;
 public sealed class AppUpdateService : IAppUpdateService, IDisposable
 {
 #if ANDROID
+    private const int FlexibleUpdateRequestCode = 9001;
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(4);
     private readonly SemaphoreSlim _gate = new(1, 1);
     private IAppUpdateManager? _appUpdateManager;
@@ -87,8 +88,11 @@ public sealed class AppUpdateService : IAppUpdateService, IDisposable
             }
 
             var options = AppUpdateOptions.NewBuilder(AppUpdateType.Flexible).Build();
-            var startTask = _appUpdateManager!.StartUpdateFlow(info, activity, options);
-            var started = startTask != null;
+            var started = _appUpdateManager!.StartUpdateFlowForResult(
+                info,
+                activity,
+                options,
+                FlexibleUpdateRequestCode);
 
             if (started)
             {

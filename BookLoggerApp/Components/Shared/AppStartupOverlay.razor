@@ -172,11 +172,14 @@
             : Array.Empty<ChangelogRelease>();
     }
 
-    private async void HandleAppResumed()
+    private void HandleAppResumed()
     {
-        await ViewModel.HandleAppResumedAsync();
-        SyncBackHandler();
-        await InvokeAsync(StateHasChanged);
+        _ = InvokeAsync(async () =>
+        {
+            await ViewModel.HandleAppResumedAsync();
+            SyncBackHandler();
+            StateHasChanged();
+        });
     }
 
     private void HandleViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

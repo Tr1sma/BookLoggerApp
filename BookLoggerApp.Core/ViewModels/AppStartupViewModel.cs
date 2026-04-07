@@ -86,7 +86,9 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        await RefreshUpdateStateAsync(ct);
+        await ExecuteSafelyAsync(
+            async () => await RefreshUpdateStateAsync(ct),
+            "Failed to refresh app update state");
     }
 
     public Task ToggleHistoryAsync()
@@ -238,6 +240,16 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
 
         IsUpdateReadyVisible = false;
         _pendingDownloadedUpdatePrompt = false;
+
+        if (state.IsUpdateInProgress)
+        {
+            IsUpdateAvailableVisible = false;
+            IsUpdateReadyVisible = false;
+            _pendingUpdateAvailablePrompt = false;
+            _pendingDownloadedUpdatePrompt = false;
+            OnPropertyChanged(nameof(HasVisibleOverlay));
+            return;
+        }
 
         if (state.IsUpdateAvailable && !_dismissedUpdateAvailableThisSession)
         {
