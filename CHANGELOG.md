@@ -23,6 +23,8 @@ Versionsschema:
 
 ### Behoben
 
+- Zip-Slip-Sicherheitstest stabilisiert: Test-Mocks für Dateisystem und AppSettings sind jetzt vollständig deterministisch implementiert, damit der Test nur noch auf die eigentliche Pfadvalidierung fehlschlägt.
+
 ## [0.8.0] - 2026-04-07
 
 ### Hinzugefügt
