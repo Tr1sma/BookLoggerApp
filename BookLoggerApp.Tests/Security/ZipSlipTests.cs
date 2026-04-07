@@ -15,41 +15,114 @@ namespace BookLoggerApp.Tests.Security;
 /// </summary>
 public class MockFileSystem : IFileSystem
 {
-    // Minimal implementation for the test
-    public bool FileExists(string path) => true;
-    public bool DirectoryExists(string path) => true;
-    public void CreateDirectory(string path) { }
-    public void CopyFile(string source, string dest, bool overwrite) { }
+    private readonly Dictionary<string, byte[]> _files = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _directories = new(StringComparer.OrdinalIgnoreCase);
+
+    public bool FileExists(string path) => _files.ContainsKey(path);
+    public bool DirectoryExists(string path) => _directories.Contains(path);
+    public void CreateDirectory(string path) => _directories.Add(path);
+
+    public void CopyFile(string source, string dest, bool overwrite)
+    {
+        if (!_files.TryGetValue(source, out var content))
+        {
+            throw new FileNotFoundException("Source file not found", source);
+        }
+
+        if (!overwrite && _files.ContainsKey(dest))
+        {
+            throw new IOException($"Destination file already exists: {dest}");
+        }
+
+        _files[dest] = content.ToArray();
+    }
+
     public string CombinePath(params string[] paths) => Path.Combine(paths);
 
     public Task<string> ReadAllTextAsync(string path, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        if (!_files.TryGetValue(path, out var content))
+        {
+            throw new FileNotFoundException("File not found", path);
+        }
+
+        return Task.FromResult(System.Text.Encoding.UTF8.GetString(content));
     }
 
     public Task WriteAllTextAsync(string path, string content, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        _files[path] = System.Text.Encoding.UTF8.GetBytes(content);
+        return Task.CompletedTask;
     }
 
     public Task<byte[]> ReadAllBytesAsync(string path, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        if (!_files.TryGetValue(path, out var content))
+        {
+            throw new FileNotFoundException("File not found", path);
+        }
+
+        return Task.FromResult(content.ToArray());
     }
 
     public Task WriteAllBytesAsync(string path, byte[] content, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        _files[path] = content.ToArray();
+        return Task.CompletedTask;
     }
 
     public void DeleteFile(string path)
     {
-        throw new NotImplementedException();
+        _files.Remove(path);
     }
 
     public Stream OpenWrite(string path)
     {
-        throw new NotImplementedException();
+        var stream = new MemoryStream();
+        return new DelegatingWriteStream(stream, bytes => _files[path] = bytes.ToArray());
+    }
+
+    private sealed class DelegatingWriteStream : Stream
+    {
+        private readonly Stream _inner;
+        private readonly Action<byte[]> _onDispose;
+
+        public DelegatingWriteStream(Stream inner, Action<byte[]> onDispose)
+        {
+            _inner = inner;
+            _onDispose = onDispose;
+        }
+
+        public override bool CanRead => _inner.CanRead;
+        public override bool CanSeek => _inner.CanSeek;
+        public override bool CanWrite => _inner.CanWrite;
+        public override long Length => _inner.Length;
+        public override long Position
+        {
+            get => _inner.Position;
+            set => _inner.Position = value;
+        }
+
+        public override void Flush() => _inner.Flush();
+        public override int Read(byte[] buffer, int offset, int count) => _inner.Read(buffer, offset, count);
+        public override long Seek(long offset, SeekOrigin origin) => _inner.Seek(offset, origin);
+        public override void SetLength(long value) => _inner.SetLength(value);
+        public override void Write(byte[] buffer, int offset, int count) => _inner.Write(buffer, offset, count);
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _inner.Flush();
+                _inner.Position = 0;
+                using var copy = new MemoryStream();
+                _inner.CopyTo(copy);
+                _onDispose(copy.ToArray());
+            }
+
+            _inner.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }
 
@@ -59,45 +132,54 @@ public class MockFileSystem : IFileSystem
 public class MockAppSettingsProvider : IAppSettingsProvider
 {
     public event EventHandler? ProgressionChanged;
+    private AppSettings _settings = new();
+    private int _coins;
+    private int _level = 1;
+    private int _plantsPurchased;
 
-    public AppSettings GetSettings() => new AppSettings();
-    public Task<AppSettings> GetSettingsAsync(CancellationToken ct = default) => Task.FromResult(new AppSettings());
-    public Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default) => Task.CompletedTask;
-    public void InvalidateCache() { }
+    public Task<AppSettings> GetSettingsAsync(CancellationToken ct = default) => Task.FromResult(_settings);
 
-    Task<AppSettings> IAppSettingsProvider.GetSettingsAsync(CancellationToken ct)
+    public Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        _settings = settings;
+        return Task.CompletedTask;
     }
+
+    public void InvalidateCache() { }
 
     public Task<int> GetUserCoinsAsync(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(_coins);
     }
 
     public Task<int> GetUserLevelAsync(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(_level);
     }
 
     public Task SpendCoinsAsync(int amount, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        _coins = Math.Max(0, _coins - Math.Max(0, amount));
+        ProgressionChanged?.Invoke(this, EventArgs.Empty);
+        return Task.CompletedTask;
     }
 
     public Task AddCoinsAsync(int amount, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        _coins += Math.Max(0, amount);
+        ProgressionChanged?.Invoke(this, EventArgs.Empty);
+        return Task.CompletedTask;
     }
 
     public Task IncrementPlantsPurchasedAsync(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        _plantsPurchased++;
+        return Task.CompletedTask;
     }
 
     public Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(_plantsPurchased);
     }
 }
 
