@@ -144,8 +144,12 @@ public class BookService : IBookService
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
-        book.Status = ReadingStatus.Reading;
-        book.DateStarted = DateTime.UtcNow;
+        if (book.Status != ReadingStatus.Reading && book.Status != ReadingStatus.Completed)
+        {
+            book.Status = ReadingStatus.Reading;
+        }
+
+        book.DateStarted ??= DateTime.UtcNow;
 
         try
         {
