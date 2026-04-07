@@ -1,4 +1,5 @@
 using ZXing.Net.Maui;
+using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp;
 
@@ -35,6 +36,7 @@ public partial class ScannerPage : ContentPage
     {
         base.OnDisappearing();
         cameraBarcodeReaderView.IsDetecting = false;
+        ScannerTaskCompletionHelper.TrySetCancelledResult(_tcs);
     }
 
     private void CameraBarcodeReaderView_BarcodesDetected(object sender, BarcodeDetectionEventArgs e)
@@ -62,7 +64,7 @@ public partial class ScannerPage : ContentPage
     private async void CancelButton_Clicked(object sender, EventArgs e)
     {
         await Navigation.PopModalAsync();
-        _tcs?.TrySetResult(null);
+        ScannerTaskCompletionHelper.TrySetCancelledResult(_tcs);
     }
 
     private void FlashlightButton_Clicked(object sender, EventArgs e)
