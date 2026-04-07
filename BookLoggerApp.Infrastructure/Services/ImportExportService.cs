@@ -506,13 +506,19 @@ public class ImportExportService : IImportExportService
 
                 // 2. Validate Backup Content
                 // Case-insensitive search for database file
-                var extractedDbPath = Directory.GetFiles(tempExtractDir, "booklogger.db", SearchOption.TopDirectoryOnly)
-                    .FirstOrDefault();
+                var extractedDbPath = Directory
+                    .EnumerateFiles(tempExtractDir, "*", SearchOption.TopDirectoryOnly)
+                    .FirstOrDefault(path => string.Equals(
+                        Path.GetFileName(path),
+                        "booklogger.db",
+                        StringComparison.OrdinalIgnoreCase));
 
                 // If not found, try any .db file (fallback)
                 if (string.IsNullOrEmpty(extractedDbPath))
                 {
-                    extractedDbPath = Directory.GetFiles(tempExtractDir, "*.db", SearchOption.TopDirectoryOnly).FirstOrDefault();
+                    extractedDbPath = Directory
+                        .EnumerateFiles(tempExtractDir, "*.db", SearchOption.TopDirectoryOnly)
+                        .FirstOrDefault();
                 }
 
                 if (string.IsNullOrEmpty(extractedDbPath) || !File.Exists(extractedDbPath))
@@ -557,8 +563,12 @@ public class ImportExportService : IImportExportService
 
                 // 4. Restore Covers
                 // Case-insensitive search for covers directory
-                var extractedCoversDir = Directory.GetDirectories(tempExtractDir, "covers", SearchOption.TopDirectoryOnly)
-                    .FirstOrDefault();
+                var extractedCoversDir = Directory
+                    .EnumerateDirectories(tempExtractDir, "*", SearchOption.TopDirectoryOnly)
+                    .FirstOrDefault(path => string.Equals(
+                        Path.GetFileName(path),
+                        "covers",
+                        StringComparison.OrdinalIgnoreCase));
 
                 if (!string.IsNullOrEmpty(extractedCoversDir) && Directory.Exists(extractedCoversDir))
                 {
