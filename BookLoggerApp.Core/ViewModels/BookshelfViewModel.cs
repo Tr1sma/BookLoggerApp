@@ -80,6 +80,8 @@ public partial class BookshelfViewModel : ViewModelBase
     {
         await ExecuteSafelyWithDbAsync(async () =>
         {
+            await _plantService.UpdatePlantStatusesAsync();
+
             // Load shelf color from settings
             var settings = await _settingsProvider.GetSettingsAsync();
             ShelfLedgeColor = settings.ShelfLedgeColor;
@@ -200,6 +202,24 @@ public partial class BookshelfViewModel : ViewModelBase
 
             await CalculateGoalStatsAsync();
         }, "Failed to load books");
+    }
+
+    public Task<UserPlant?> GetPlantByIdAsync(Guid plantId)
+    {
+        return GetPlantByIdInternalAsync(plantId);
+    }
+
+    private async Task<UserPlant?> GetPlantByIdInternalAsync(Guid plantId)
+    {
+        try
+        {
+            return await _plantService.GetByIdAsync(plantId);
+        }
+        catch (Exception ex)
+        {
+            SetError($"Failed to load plant details: {ex.Message}");
+            return null;
+        }
     }
 
     // New Commands for Shelf Management

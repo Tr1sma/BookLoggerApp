@@ -36,12 +36,19 @@ public class PlantService : IPlantService
     public async Task<IReadOnlyList<UserPlant>> GetAllAsync(CancellationToken ct = default)
     {
         var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        await RefreshPlantStatusesAsync(plants, ct);
         return plants.ToList();
     }
 
     public async Task<UserPlant?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(id);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(id);
+        if (plant != null)
+        {
+            await RefreshPlantStatusAsync(plant, ct);
+        }
+
+        return plant;
     }
 
     public async Task<UserPlant> AddAsync(UserPlant plant, CancellationToken ct = default)
@@ -83,7 +90,13 @@ public class PlantService : IPlantService
 
     public async Task<UserPlant?> GetActivePlantAsync(CancellationToken ct = default)
     {
-        return await _unitOfWork.UserPlants.GetActivePlantAsync();
+        var plant = await _unitOfWork.UserPlants.GetActivePlantAsync();
+        if (plant != null)
+        {
+            await RefreshPlantStatusAsync(plant, ct);
+        }
+
+        return plant;
     }
 
     public async Task SetActivePlantAsync(Guid plantId, CancellationToken ct = default)
@@ -132,6 +145,8 @@ public class PlantService : IPlantService
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
 
+        await RefreshPlantStatusAsync(plant, ct);
+
         if (plant.Status == PlantStatus.Dead)
             throw new InvalidOperationException("Cannot water a dead plant");
 
@@ -157,6 +172,8 @@ public class PlantService : IPlantService
         var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
+
+        await RefreshPlantStatusAsync(plant, ct);
 
         // Dead plants don't earn experience (consistent with RecordReadingDayAsync)
         if (plant.Status == PlantStatus.Dead)
@@ -213,6 +230,8 @@ public class PlantService : IPlantService
         if (plant == null)
             return;
 
+        await RefreshPlantStatusAsync(plant, ct);
+
         // Dead plants don't earn reading days
         if (plant.Status == PlantStatus.Dead)
             return;
@@ -265,6 +284,11 @@ public class PlantService : IPlantService
         if (plant == null)
             return false;
 
+        await RefreshPlantStatusAsync(plant, ct);
+
+        if (plant.Status == PlantStatus.Dead)
+            return false;
+
         return PlantGrowthCalculator.CanLevelUp(
             plant.CurrentLevel,
             plant.Experience,
@@ -278,6 +302,11 @@ public class PlantService : IPlantService
         var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
+
+        await RefreshPlantStatusAsync(plant, ct);
+
+        if (plant.Status == PlantStatus.Dead)
+            throw new InvalidOperationException("Cannot level up a dead plant");
 
         if (!await CanLevelUpAsync(plantId, ct))
             throw new InvalidOperationException("Plant cannot level up yet");
@@ -301,6 +330,8 @@ public class PlantService : IPlantService
         var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
+
+        await RefreshPlantStatusAsync(plant, ct);
 
         if (plant.Status == PlantStatus.Dead)
             throw new InvalidOperationException("Cannot level up a dead plant");
@@ -362,23 +393,7 @@ public class PlantService : IPlantService
     public async Task UpdatePlantStatusesAsync(CancellationToken ct = default)
     {
         var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
-
-        foreach (var plant in plants)
-        {
-            var newStatus = PlantGrowthCalculator.CalculatePlantStatus(
-                plant.LastWatered,
-                plant.Species.WaterIntervalDays
-            );
-
-            if (plant.Status != newStatus)
-            {
-                plant.Status = newStatus;
-                await _unitOfWork.UserPlants.UpdateAsync(plant);
-            }
-        }
-
-        // Single SaveChanges for all updates - batch optimization
-        await _unitOfWork.SaveChangesAsync(ct);
+        await RefreshPlantStatusesAsync(plants, ct);
     }
 
     /// <summary>
@@ -387,6 +402,7 @@ public class PlantService : IPlantService
     public async Task<IReadOnlyList<UserPlant>> GetPlantsNeedingWaterAsync(CancellationToken ct = default)
     {
         var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        await RefreshPlantStatusesAsync(plants, ct);
 
         return plants
             .Where(p => p.Status != PlantStatus.Dead)
@@ -412,6 +428,7 @@ public class PlantService : IPlantService
     public async Task<decimal> CalculateTotalXpBoostAsync(CancellationToken ct = default)
     {
         var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        await RefreshPlantStatusesAsync(allPlants, ct);
         var plants = allPlants.Where(p => p.Status != PlantStatus.Dead).ToList();
 
         if (!plants.Any())
@@ -456,5 +473,50 @@ public class PlantService : IPlantService
         int dynamicCost = species.BaseCost + (plantsPurchased * 200);
 
         return dynamicCost;
+    }
+
+    private async Task RefreshPlantStatusesAsync(IEnumerable<UserPlant> plants, CancellationToken ct)
+    {
+        bool hasChanges = false;
+
+        foreach (var plant in plants)
+        {
+            if (!TryApplyCurrentPlantStatus(plant))
+                continue;
+
+            hasChanges = true;
+            await _unitOfWork.UserPlants.UpdateAsync(plant);
+        }
+
+        if (hasChanges)
+        {
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+    }
+
+    private async Task RefreshPlantStatusAsync(UserPlant plant, CancellationToken ct)
+    {
+        if (!TryApplyCurrentPlantStatus(plant))
+            return;
+
+        await _unitOfWork.UserPlants.UpdateAsync(plant);
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    private static bool TryApplyCurrentPlantStatus(UserPlant plant)
+    {
+        if (plant.Species == null)
+            return false;
+
+        var currentStatus = PlantGrowthCalculator.CalculatePlantStatus(
+            plant.LastWatered,
+            plant.Species.WaterIntervalDays
+        );
+
+        if (plant.Status == currentStatus)
+            return false;
+
+        plant.Status = currentStatus;
+        return true;
     }
 }

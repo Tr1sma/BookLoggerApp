@@ -1,0 +1,104 @@
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Infrastructure.Services.Helpers
+
+<div class="plant-detail-card">
+    <div class="plant-detail-visual">
+        <img src="@(Plant.Species?.ImagePath ?? "/images/unknown_plant.png")"
+             alt="@Plant.Name"
+             class="plant-detail-image" />
+        <div class="plant-detail-status status-@Plant.Status.ToString().ToLowerInvariant()">
+            @GetStatusIcon()
+        </div>
+    </div>
+
+    <div class="plant-detail-content">
+        <h3 class="plant-detail-name">@Plant.Name</h3>
+        <p class="plant-detail-species">@(Plant.Species?.Name ?? "Unknown Plant")</p>
+
+        <div class="plant-detail-stats">
+            <div class="plant-detail-stat">
+                <span class="plant-detail-label">Level</span>
+                <span class="plant-detail-value">@(Plant.CurrentLevel) / @GetMaxLevel()</span>
+            </div>
+            <div class="plant-detail-stat">
+                <span class="plant-detail-label">Next Water</span>
+                <span class="plant-detail-value">@GetNextWaterText()</span>
+            </div>
+        </div>
+
+        @if (Plant.Status == PlantStatus.Dead)
+        {
+            <p class="plant-detail-note">This plant has dried out and can no longer be watered.</p>
+        }
+
+        <button class="btn btn-water-now"
+                @onclick="() => OnWater.InvokeAsync()"
+                disabled="@IsWaterButtonDisabled">
+            @if (IsWatering)
+            {
+                <span>💧 Watering...</span>
+            }
+            else if (Plant.Status == PlantStatus.Healthy)
+            {
+                <span>💧 Already Watered</span>
+            }
+            else if (Plant.Status == PlantStatus.Dead)
+            {
+                <span>💧 Cannot Water</span>
+            }
+            else
+            {
+                <span>💧 Water Plant</span>
+            }
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public UserPlant Plant { get; set; } = null!;
+    [Parameter] public EventCallback OnWater { get; set; }
+    [Parameter] public bool IsWatering { get; set; }
+
+    private bool IsWaterButtonDisabled => IsWatering || Plant.Status is PlantStatus.Healthy or PlantStatus.Dead;
+
+    private int GetMaxLevel() => Plant.Species?.MaxLevel ?? 1;
+
+    private string GetStatusIcon() => Plant.Status switch
+    {
+        PlantStatus.Healthy => "😊",
+        PlantStatus.Thirsty => "😰",
+        PlantStatus.Wilting => "😵",
+        PlantStatus.Dead => "💀",
+        _ => "🌱"
+    };
+
+    private string GetNextWaterText()
+    {
+        var waterIntervalDays = Plant.Species?.WaterIntervalDays ?? 0;
+        if (waterIntervalDays <= 0)
+        {
+            return "Unknown";
+        }
+
+        if (Plant.Status == PlantStatus.Dead)
+        {
+            return "Missed watering window";
+        }
+
+        var nextWaterDue = PlantGrowthCalculator.GetNextWaterDueAt(Plant.LastWatered, waterIntervalDays);
+        var timeRemaining = nextWaterDue - DateTime.UtcNow;
+
+        if (timeRemaining <= TimeSpan.Zero)
+        {
+            return "Now";
+        }
+
+        if (timeRemaining.TotalHours < 24)
+        {
+            return $"In {Math.Max(1, (int)Math.Ceiling(timeRemaining.TotalHours))} hour(s)";
+        }
+
+        return $"In {Math.Max(1, (int)Math.Ceiling(timeRemaining.TotalDays))} day(s)";
+    }
+}

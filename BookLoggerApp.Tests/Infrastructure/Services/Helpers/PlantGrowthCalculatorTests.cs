@@ -277,6 +277,19 @@ public class PlantGrowthCalculatorTests
         daysUntil.Should().Be(0);
     }
 
+    [Fact]
+    public void GetNextWaterDueAt_ShouldReturnLastWateredPlusInterval()
+    {
+        // Arrange
+        var lastWatered = new DateTime(2026, 4, 1, 8, 30, 0, DateTimeKind.Utc);
+
+        // Act
+        var nextWaterDue = PlantGrowthCalculator.GetNextWaterDueAt(lastWatered, 4);
+
+        // Assert
+        nextWaterDue.Should().Be(new DateTime(2026, 4, 5, 8, 30, 0, DateTimeKind.Utc));
+    }
+
     #endregion
 
     #region Reading Days Based Leveling Tests

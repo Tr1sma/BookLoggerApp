@@ -9,10 +9,25 @@ Versionsschema:
 
 - `V0.x.y` – Pre-Release (vor Play-Store-Veröffentlichung)
 - `V1.0.0` – Erster öffentlicher Play-Store-Release
-- MAJOR wird auf 1 gesetzt wenn der erste Play-Store-Upload erfolgt
+- MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
+
+## [Unveröffentlicht]
+
+### Hinzugefügt
+
+### Geändert
+
+- Pflanzen im Bücherregal öffnen jetzt ein Detail-Modal mit Namen, Level, nächstem Gießzeitpunkt und Gießbutton
+- Pflanzennamen werden im Shop-Kaufdialog und im Pflanzen-Modal des Bücherregals etwas größer dargestellt
+
+### Behoben
+
+- Plant-Shop-Karten zeigen bei nicht bezahlbaren Pflanzen nur noch den Preis und nicht mehr den Zusatz "Need X more"
+- Pflanzenstatus und Gießlogik werden beim Laden und Interagieren zuverlässiger aus den aktuellen Backend-Daten aktualisiert
+- Der Drag-and-Drop-Einfügebalken im Bücherregal richtet sich jetzt an der Höhe des tatsächlichen Ziel-Buchs aus statt über die gesamte Regalhöhe zu laufen
 
 ## [0.7.6] - 2026-04-02
 
