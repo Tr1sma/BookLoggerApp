@@ -19,6 +19,8 @@ Versionsschema:
 
 ### Geändert
 
+- README-Featureübersicht vollständig an die seit V0.1.0 hinzugefügten Funktionen angepasst (u.a. Widgets, Sharing, Scanner/Lookup, erweiterte Ziel- und Regalfeatures)
+
 ### Behoben
 
 ## [0.8.0] - 2026-04-07
