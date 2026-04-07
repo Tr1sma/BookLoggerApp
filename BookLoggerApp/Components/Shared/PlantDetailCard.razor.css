@@ -1,6 +1,6 @@
 .plant-detail-card {
     display: grid;
-    gap: 1.25rem;
+    gap: 0.95rem;
 }
 
 .plant-detail-visual {
@@ -8,8 +8,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 180px;
-    border-radius: 16px;
+    min-height: 142px;
+    border-radius: 14px;
     background:
         radial-gradient(circle at top, rgba(120, 166, 106, 0.22), transparent 58%),
         linear-gradient(145deg, rgba(45, 37, 26, 0.95), rgba(28, 23, 17, 0.98));
@@ -18,91 +18,153 @@
 }
 
 .plant-detail-image {
-    width: min(180px, 70%);
-    max-height: 160px;
+    width: min(145px, 62%);
+    max-height: 126px;
     object-fit: contain;
-    filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.32));
 }
 
 .plant-detail-status {
     position: absolute;
-    top: 0.85rem;
-    right: 0.85rem;
-    width: 2.4rem;
-    height: 2.4rem;
+    top: 0.7rem;
+    right: 0.7rem;
+    width: 2rem;
+    height: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 999px;
     background: rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(6px);
-    font-size: 1.15rem;
+    font-size: 1rem;
 }
 
 .plant-detail-content {
     display: grid;
-    gap: 1rem;
+    gap: 0.75rem;
+}
+
+.plant-detail-name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
 }
 
 .plant-detail-name {
     margin: 0;
+    flex: 1;
+    min-width: 0;
     color: #fff;
-    font-size: 1.45rem;
+    font-size: 1.25rem;
     font-weight: 700;
     line-height: 1.2;
 }
 
-.plant-detail-species {
-    margin: -0.5rem 0 0;
-    color: #c7c1b8;
+.plant-detail-name-input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
     font-size: 0.95rem;
+    font-weight: 600;
+    outline: none;
+}
+
+.plant-detail-name-input:focus {
+    border-color: rgba(125, 185, 211, 0.8);
+    box-shadow: 0 0 0 3px rgba(125, 185, 211, 0.18);
+}
+
+.plant-detail-name-input:disabled {
+    opacity: 0.7;
+}
+
+.plant-detail-edit-btn {
+    flex-shrink: 0;
+    width: 2.1rem;
+    height: 2.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.plant-detail-edit-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
+    transform: translateY(-1px);
+}
+
+.plant-detail-edit-btn:disabled {
+    opacity: 0.5;
+    transform: none;
+}
+
+.plant-detail-name-error {
+    margin: -0.4rem 0 0;
+    color: #f0aaaa;
+    font-size: 0.8rem;
+}
+
+.plant-detail-species {
+    margin: -0.3rem 0 0;
+    color: #c7c1b8;
+    font-size: 0.9rem;
 }
 
 .plant-detail-stats {
     display: grid;
-    gap: 0.75rem;
+    gap: 0.55rem;
 }
 
 .plant-detail-stat {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
-    padding: 0.9rem 1rem;
-    border-radius: 14px;
+    gap: 0.75rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .plant-detail-label {
     color: #b7aea1;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
 }
 
 .plant-detail-value {
     color: #fff;
     font-weight: 600;
     text-align: right;
+    font-size: 0.92rem;
 }
 
 .plant-detail-note {
     margin: 0;
     color: #d7a6a6;
-    font-size: 0.92rem;
-    line-height: 1.5;
+    font-size: 0.86rem;
+    line-height: 1.45;
 }
 
 .btn-water-now {
     width: 100%;
     border: none;
-    border-radius: 14px;
-    padding: 0.95rem 1rem;
+    border-radius: 12px;
+    padding: 0.8rem 0.9rem;
     background: linear-gradient(135deg, #7db9d3, #5a91b7);
     color: #fff;
     font-weight: 700;
-    font-size: 1rem;
-    box-shadow: 0 10px 24px rgba(90, 145, 183, 0.28);
+    font-size: 0.95rem;
+    box-shadow: 0 8px 18px rgba(90, 145, 183, 0.24);
 }
 
 .btn-water-now:disabled {

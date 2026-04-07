@@ -13,7 +13,39 @@
     </div>
 
     <div class="plant-detail-content">
-        <h3 class="plant-detail-name">@Plant.Name</h3>
+        <div class="plant-detail-name-row">
+            @if (_isEditingName)
+            {
+                <input @ref="_nameInput"
+                       type="text"
+                       class="plant-detail-name-input"
+                       value="@_editedName"
+                       @oninput="HandleNameInput"
+                       @onkeydown="HandleNameInputKeyDown"
+                       @onblur="HandleNameBlur"
+                       maxlength="100"
+                       disabled="@IsRenaming"
+                       aria-label="Plant name" />
+            }
+            else
+            {
+                <h3 class="plant-detail-name">@Plant.Name</h3>
+                <button type="button"
+                        class="plant-detail-edit-btn"
+                        @onclick="BeginRename"
+                        disabled="@IsRenaming"
+                        aria-label="Rename plant"
+                        title="Rename plant">
+                    ✏️
+                </button>
+            }
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_renameError))
+        {
+            <p class="plant-detail-name-error">@_renameError</p>
+        }
+
         <p class="plant-detail-species">@(Plant.Species?.Name ?? "Unknown Plant")</p>
 
         <div class="plant-detail-stats">
@@ -59,10 +91,35 @@
     [Parameter] public UserPlant Plant { get; set; } = null!;
     [Parameter] public EventCallback OnWater { get; set; }
     [Parameter] public bool IsWatering { get; set; }
+    [Parameter] public EventCallback<string> OnRename { get; set; }
+    [Parameter] public bool IsRenaming { get; set; }
+
+    private ElementReference _nameInput;
+    private bool _focusNameInput;
+    private bool _isEditingName;
+    private string _editedName = string.Empty;
+    private string? _renameError;
 
     private bool IsWaterButtonDisabled => IsWatering || Plant.Status is PlantStatus.Healthy or PlantStatus.Dead;
 
     private int GetMaxLevel() => Plant.Species?.MaxLevel ?? 1;
+
+    protected override void OnParametersSet()
+    {
+        if (!_isEditingName)
+        {
+            _editedName = Plant.Name;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusNameInput)
+        {
+            _focusNameInput = false;
+            await _nameInput.FocusAsync();
+        }
+    }
 
     private string GetStatusIcon() => Plant.Status switch
     {
@@ -100,5 +157,94 @@
         }
 
         return $"In {Math.Max(1, (int)Math.Ceiling(timeRemaining.TotalDays))} day(s)";
+    }
+
+    private void BeginRename()
+    {
+        _editedName = Plant.Name;
+        _renameError = null;
+        _isEditingName = true;
+        _focusNameInput = true;
+    }
+
+    private void HandleNameInput(ChangeEventArgs args)
+    {
+        _editedName = args.Value?.ToString() ?? string.Empty;
+        _renameError = null;
+    }
+
+    private async Task HandleNameBlur(FocusEventArgs _)
+    {
+        if (!_isEditingName || IsRenaming)
+        {
+            return;
+        }
+
+        await CommitRenameAsync();
+    }
+
+    private async Task HandleNameInputKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await CommitRenameAsync();
+        }
+        else if (args.Key == "Escape")
+        {
+            CancelRename();
+        }
+    }
+
+    private async Task CommitRenameAsync()
+    {
+        if (!_isEditingName || IsRenaming)
+        {
+            return;
+        }
+
+        var trimmedName = _editedName.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedName))
+        {
+            _renameError = "Plant name cannot be empty";
+            _focusNameInput = true;
+            return;
+        }
+
+        if (trimmedName.Length > 100)
+        {
+            _renameError = "Plant name cannot exceed 100 characters";
+            _focusNameInput = true;
+            return;
+        }
+
+        if (string.Equals(trimmedName, Plant.Name, StringComparison.Ordinal))
+        {
+            _renameError = null;
+            _editedName = Plant.Name;
+            _isEditingName = false;
+            return;
+        }
+
+        try
+        {
+            _renameError = null;
+            await OnRename.InvokeAsync(trimmedName);
+            _editedName = trimmedName;
+            _isEditingName = false;
+        }
+        catch (Exception ex)
+        {
+            _renameError = string.IsNullOrWhiteSpace(ex.Message)
+                ? "Failed to rename plant"
+                : ex.Message;
+            _focusNameInput = true;
+        }
+    }
+
+    private void CancelRename()
+    {
+        _renameError = null;
+        _editedName = Plant.Name;
+        _isEditingName = false;
     }
 }
