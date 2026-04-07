@@ -17,10 +17,11 @@ Versionsschema:
 
 ### Hinzugefügt
 
+- Pflanzen im Bücherregal können jetzt direkt im Detail-Modal über ein Stift-Icon umbenannt werden
+
 ### Geändert
 
 - README-Featureübersicht vollständig an die seit V0.1.0 hinzugefügten Funktionen angepasst (u.a. Widgets, Sharing, Scanner/Lookup, erweiterte Ziel- und Regalfeatures)
-- Pflanzen im Bücherregal können jetzt direkt im Detail-Modal über ein Stift-Icon umbenannt werden
 - Das Pflanzen-Detail-Modal im Bücherregal wurde insgesamt kompakter gestaltet
 
 ### Behoben
