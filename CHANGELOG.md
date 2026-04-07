@@ -13,7 +13,7 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
-## [Unveröffentlicht]
+## [0.8.1] - 2026-04-07
 
 ### Hinzugefügt
 
@@ -27,6 +27,7 @@ Versionsschema:
 
 ### Behoben
 
+- Play-Store-Update-Hinweise und die Prüfung nach dem Wiederöffnen der App reagieren jetzt robuster auf laufende oder fehlgeschlagene In-App-Updates
 - Zip-Slip-Sicherheitstest stabilisiert: Test-Mocks für Dateisystem und AppSettings sind jetzt vollständig deterministisch implementiert, damit der Test nur noch auf die eigentliche Pfadvalidierung fehlschlägt.
 - Backup-Restore findet `booklogger.db` und den `covers`-Ordner jetzt robust auch bei abweichender Groß-/Kleinschreibung in ZIP-Inhalten
 - AppSettingsProvider weist jetzt ungültige Münz-Beträge (`<= 0`) in `SpendCoinsAsync` und `AddCoinsAsync` mit `ArgumentOutOfRangeException` ab

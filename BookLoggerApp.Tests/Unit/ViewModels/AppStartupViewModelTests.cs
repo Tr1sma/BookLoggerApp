@@ -129,6 +129,56 @@ public class AppStartupViewModelTests
     }
 
     [Fact]
+    public async Task HandleAppResumedAsync_ShouldNotShowAvailablePrompt_WhenUpdateIsAlreadyInProgress()
+    {
+        // Arrange
+        _appVersionService.IsFirstLaunchForCurrentVersion.Returns(false);
+        _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(
+            new AppUpdateState
+            {
+                IsSupported = true,
+                IsUpdateAvailable = true,
+                CanStartFlexibleUpdate = true
+            },
+            new AppUpdateState
+            {
+                IsSupported = true,
+                IsUpdateAvailable = true,
+                IsUpdateInProgress = true
+            });
+
+        await _viewModel.InitializeAsync();
+
+        // Act
+        await _viewModel.HandleAppResumedAsync();
+
+        // Assert
+        _viewModel.IsUpdateAvailableVisible.Should().BeFalse();
+        _viewModel.IsUpdateReadyVisible.Should().BeFalse();
+        _viewModel.UpdateState.IsUpdateInProgress.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HandleAppResumedAsync_ShouldCaptureError_WhenUpdateRefreshFails()
+    {
+        // Arrange
+        _appVersionService.IsFirstLaunchForCurrentVersion.Returns(false);
+        _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(AppUpdateState.Unsupported);
+
+        await _viewModel.InitializeAsync();
+
+        _appUpdateService
+            .GetStateAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromException<AppUpdateState>(new InvalidOperationException("Play Store offline")));
+
+        // Act
+        await _viewModel.HandleAppResumedAsync();
+
+        // Assert
+        _viewModel.ErrorMessage.Should().Be("Failed to refresh app update state: Play Store offline");
+    }
+
+    [Fact]
     public async Task StartFlexibleUpdateAsync_ShouldHidePrompt_WhenFlowStarts()
     {
         // Arrange
@@ -148,6 +198,29 @@ public class AppStartupViewModelTests
 
         // Assert
         _viewModel.IsUpdateAvailableVisible.Should().BeFalse();
+        await _appUpdateService.Received(1).StartFlexibleUpdateAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task StartFlexibleUpdateAsync_ShouldKeepPromptVisible_WhenUpdateFlowDidNotStart()
+    {
+        // Arrange
+        _appVersionService.IsFirstLaunchForCurrentVersion.Returns(false);
+        _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(new AppUpdateState
+        {
+            IsSupported = true,
+            IsUpdateAvailable = true,
+            CanStartFlexibleUpdate = true
+        });
+        _appUpdateService.StartFlexibleUpdateAsync(Arg.Any<CancellationToken>()).Returns(false);
+
+        await _viewModel.InitializeAsync();
+
+        // Act
+        await _viewModel.StartFlexibleUpdateAsync();
+
+        // Assert
+        _viewModel.IsUpdateAvailableVisible.Should().BeTrue();
         await _appUpdateService.Received(1).StartFlexibleUpdateAsync(Arg.Any<CancellationToken>());
     }
 }
