@@ -91,8 +91,13 @@ public partial class BookEditViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isGeneratingBookCard;
 
+    [ObservableProperty]
+    private ReadingStatus _selectedStatusForDisplay = ReadingStatus.Planned;
+
     // Track original status to detect when book becomes completed
     private ReadingStatus? _originalStatus;
+    private bool _hasExplicitStatusChange;
+    private bool _isInitializingStatusSelection;
 
     [RelayCommand]
     public async Task LoadAsync(Guid? bookId)
@@ -115,13 +120,15 @@ public partial class BookEditViewModel : ViewModelBase
                     SelectedTropeIds = Book.BookTropes.Select(bt => bt.TropeId).ToList();
                     await UpdateAvailableTropesAsync();
                     _originalStatus = Book.Status;
+                    _hasExplicitStatusChange = false;
 
-                    // Wishlist isn't a selectable status in the dropdown —
-                    // auto-switch to Planned so the value matches a visible option
-                    if (Book.Status == ReadingStatus.Wishlist)
-                    {
-                        Book.Status = ReadingStatus.Planned;
-                    }
+                    // Wishlist isn't a selectable status in the dropdown.
+                    // Keep persisted status unchanged and map only the UI value.
+                    _isInitializingStatusSelection = true;
+                    SelectedStatusForDisplay = Book.Status == ReadingStatus.Wishlist
+                        ? ReadingStatus.Planned
+                        : Book.Status;
+                    _isInitializingStatusSelection = false;
                 }
             }
             else
@@ -134,6 +141,10 @@ public partial class BookEditViewModel : ViewModelBase
                     DateAdded = DateTime.UtcNow
                 };
                 _originalStatus = null;
+                _hasExplicitStatusChange = false;
+                _isInitializingStatusSelection = true;
+                SelectedStatusForDisplay = ReadingStatus.Planned;
+                _isInitializingStatusSelection = false;
             }
         }, "Failed to load book");
     }
@@ -165,6 +176,7 @@ public partial class BookEditViewModel : ViewModelBase
 
             // Check if book is leaving wishlist status
             var isLeavingWishlist = _originalStatus == ReadingStatus.Wishlist &&
+                                   _hasExplicitStatusChange &&
                                    Book.Status != ReadingStatus.Wishlist;
 
             if (isNewBook)
@@ -512,6 +524,17 @@ public partial class BookEditViewModel : ViewModelBase
         IsDeleting = false;
     }
 
+    partial void OnSelectedStatusForDisplayChanged(ReadingStatus value)
+    {
+        if (_isInitializingStatusSelection || Book == null)
+        {
+            return;
+        }
+
+        _hasExplicitStatusChange = true;
+        Book.Status = value;
+    }
+
 
     partial void OnSelectedGenreIdsChanged(List<Guid> value)
     {
@@ -554,4 +577,3 @@ public partial class BookEditViewModel : ViewModelBase
         AvailableTropes = allTropes.DistinctBy(t => t.Id).OrderBy(t => t.Name).ToList();
     }
 }
-

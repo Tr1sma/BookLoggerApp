@@ -23,6 +23,8 @@ Versionsschema:
 
 ### Behoben
 
+- Beim Bearbeiten von Wishlist-Büchern bleibt `WishlistInfo` jetzt erhalten, solange der Status nicht explizit im Formular geändert wird
+
 ## [0.8.0] - 2026-04-07
 
 ### Hinzugefügt
