@@ -23,6 +23,8 @@ Versionsschema:
 
 ### Behoben
 
+- Seitenvalidierung beim Beenden von Lesesessions berücksichtigt jetzt die Startseite der Session, sodass ein zu großes Seiten-Delta über das Buchende hinaus korrekt mit einer klaren Fehlermeldung abgewiesen wird
+
 ## [0.8.0] - 2026-04-07
 
 ### Hinzugefügt
