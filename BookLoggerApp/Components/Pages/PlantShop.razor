@@ -74,7 +74,7 @@
         <div class="purchase-modal-overlay" @onclick="ClearSelection">
             <div class="purchase-modal" @onclick:stopPropagation="true">
                 <div class="modal-header">
-                    <h2>Purchase @ViewModel.SelectedSpecies.Name</h2>
+                    <h2>Purchase <span class="purchase-plant-name">@ViewModel.SelectedSpecies.Name</span></h2>
                     <button class="btn-close" @onclick="ClearSelection">×</button>
                 </div>
 
