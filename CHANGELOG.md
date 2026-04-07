@@ -23,6 +23,8 @@ Versionsschema:
 
 ### Behoben
 
+- Start eines Buches ist jetzt idempotent: `DateStarted` bleibt beim erneuten Start erhalten und der Status wird nicht von `Reading`/`Completed` überschrieben
+
 ## [0.8.0] - 2026-04-07
 
 ### Hinzugefügt
