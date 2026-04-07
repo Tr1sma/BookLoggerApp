@@ -458,6 +458,42 @@ public partial class BookshelfViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public async Task RenamePlantAsync((Guid plantId, string newName) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            var trimmedName = args.newName.Trim();
+            if (string.IsNullOrWhiteSpace(trimmedName))
+            {
+                SetError("Plant name cannot be empty");
+                return;
+            }
+
+            if (trimmedName.Length > 100)
+            {
+                SetError("Plant name cannot exceed 100 characters");
+                return;
+            }
+
+            var plant = await _plantService.GetByIdAsync(args.plantId);
+            if (plant == null)
+            {
+                SetError("Plant not found");
+                return;
+            }
+
+            if (string.Equals(plant.Name, trimmedName, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            plant.Name = trimmedName;
+            await _plantService.UpdateAsync(plant);
+            await LoadAsync();
+        }, "Failed to rename plant");
+    }
+
+    [RelayCommand]
     public async Task WaterPlantAsync(Guid plantId)
     {
         await ExecuteSafelyAsync(async () =>
