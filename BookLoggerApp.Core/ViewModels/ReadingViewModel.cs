@@ -21,6 +21,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     private bool _goalCompletedDuringSession;
     private bool _reviewPromptMomentPending;
     private bool _streakCelebrationPending;
+
     private readonly object _timerLock = new();
     private readonly SynchronizationContext? _uiSynchronizationContext;
 
