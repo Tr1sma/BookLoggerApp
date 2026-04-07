@@ -13,8 +13,15 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
-
 ## [Unveröffentlicht]
+
+### Hinzugefügt
+
+### Geändert
+
+### Behoben
+
+## [0.8.0] - 2026-04-07
 
 ### Hinzugefügt
 
