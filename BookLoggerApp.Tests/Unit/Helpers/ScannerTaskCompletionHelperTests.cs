@@ -1,6 +1,8 @@
 using BookLoggerApp.Core.Helpers;
 using FluentAssertions;
 
+using Xunit;
+
 namespace BookLoggerApp.Tests.Unit.Helpers;
 
 public class ScannerTaskCompletionHelperTests
