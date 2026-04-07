@@ -138,6 +138,43 @@ public class BookEditViewModelTests
     }
 
     [Fact]
+    public async Task SaveAsync_Should_Keep_WishlistInfo_When_Wishlist_Book_Is_Saved_Without_Explicit_Status_Change()
+    {
+        // Arrange
+        var bookId = Guid.NewGuid();
+        var wishlistInfo = new WishlistInfo
+        {
+            DateAddedToWishlist = DateTime.UtcNow.AddDays(-3),
+            Notes = "Birthday gift idea"
+        };
+        var book = new Book
+        {
+            Id = bookId,
+            Title = "Wishlist Book",
+            Author = "Author",
+            Status = ReadingStatus.Wishlist,
+            WishlistInfo = wishlistInfo
+        };
+
+        _genreService.GetAllAsync().Returns(new List<Genre>());
+        _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
+        _bookService.GetWithDetailsAsync(bookId).Returns(book);
+        _bookService.GetByIdAsync(bookId).Returns(book);
+
+        await _viewModel.LoadCommand.ExecuteAsync(bookId);
+        _viewModel.Book!.Title = "Wishlist Book Updated";
+
+        // Act
+        await _viewModel.SaveCommand.ExecuteAsync(null);
+
+        // Assert
+        _viewModel.Book.Status.Should().Be(ReadingStatus.Wishlist);
+        _viewModel.Book.WishlistInfo.Should().BeSameAs(wishlistInfo);
+        _viewModel.SelectedStatusForDisplay.Should().Be(ReadingStatus.Planned);
+        await _wishlistService.DidNotReceive().ClearWishlistInfoAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task LookupByIsbnAsync_Should_Populate_Book_Data()
     {
         // Arrange
