@@ -23,6 +23,8 @@ Versionsschema:
 
 ### Behoben
 
+- Reading-Timer im ReadingViewModel aktualisiert die `ElapsedTime` jetzt threadsicher über den UI-Dispatcher, sodass PropertyChanged zuverlässig auf dem UI-Thread ausgelöst wird
+
 ## [0.8.0] - 2026-04-07
 
 ### Hinzugefügt
