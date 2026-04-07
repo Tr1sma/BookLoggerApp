@@ -25,6 +25,7 @@ Versionsschema:
 
 ### Behoben
 
+- Zip-Slip-Sicherheitstest stabilisiert: Test-Mocks für Dateisystem und AppSettings sind jetzt vollständig deterministisch implementiert, damit der Test nur noch auf die eigentliche Pfadvalidierung fehlschlägt.
 - Backup-Restore findet `booklogger.db` und den `covers`-Ordner jetzt robust auch bei abweichender Groß-/Kleinschreibung in ZIP-Inhalten
 - AppSettingsProvider weist jetzt ungültige Münz-Beträge (`<= 0`) in `SpendCoinsAsync` und `AddCoinsAsync` mit `ArgumentOutOfRangeException` ab
 - Start eines Buches ist jetzt idempotent: `DateStarted` bleibt beim erneuten Start erhalten und der Status wird nicht von `Reading`/`Completed` überschrieben
