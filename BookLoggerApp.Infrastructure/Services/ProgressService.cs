@@ -108,11 +108,14 @@ public class ProgressService : IProgressService
         if (session == null)
             throw new EntityNotFoundException(typeof(ReadingSession), sessionId);
 
+        var startPage = session.StartPage ?? 0;
+        var absoluteEndPage = startPage + pagesRead;
+
         // Validate pages read against book page count
         var book = await _bookService.GetByIdAsync(session.BookId, ct);
-        if (book?.PageCount.HasValue == true && pagesRead > book.PageCount.Value)
+        if (book?.PageCount.HasValue == true && absoluteEndPage > book.PageCount.Value)
             throw new ArgumentOutOfRangeException(nameof(pagesRead),
-                $"Pages read ({pagesRead}) exceeds book page count ({book.PageCount.Value})");
+                $"Session end page ({absoluteEndPage}) exceeds book page count ({book.PageCount.Value}). Start page: {startPage}, pages read: {pagesRead}.");
 
         session.EndedAt = DateTime.UtcNow;
         session.PagesRead = pagesRead;
