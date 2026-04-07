@@ -362,6 +362,8 @@ window.bookshelfDragDrop = {
         } else {
             this._dropIndicator.style.left = (slotRect.right - parentRect.left - 1) + 'px';
         }
+        this._dropIndicator.style.top = (slotRect.top - parentRect.top) + 'px';
+        this._dropIndicator.style.height = slotRect.height + 'px';
 
         // Only re-append if moved to a different parent
         if (this._dropIndicator.parentNode !== parent) {
