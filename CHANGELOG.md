@@ -13,6 +13,17 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
+## [Unveröffentlicht]
+
+### Hinzugefügt
+
+### Geändert
+
+### Behoben
+
+- Projektweiter Razor-/Restore-Fehler auf Windows behoben, indem die Paketversion für alle Target Frameworks konsistent aus der App-Version abgeleitet wird
+- Das Android-App-Icon verwendet für Launcher-Themes jetzt keine monochrome Icon-Variante mehr, damit Icon Themes BookHeart nicht mehr einfarbig überlagern
+
 ## [0.8.2] - 2026-04-07
 
 ### Hinzugefügt
