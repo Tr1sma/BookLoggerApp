@@ -5,6 +5,7 @@
 @inject SettingsViewModel ViewModel
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
+@inject BookLoggerApp.Core.Services.Abstractions.IAppRestartService AppRestartService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Settings - BookHeart</PageTitle>
@@ -28,35 +29,6 @@
             <div class="about-info">
                 <p class="app-name">BookHeart</p>
                 <p class="app-version">Version @ViewModel.AppVersion</p>
-            </div>
-        </section>
-
-        <section class="settings-section">
-            <h2>Getting Started</h2>
-            <div class="backup-actions">
-                <p class="description">
-                    Reopen the intro or jump into the guided checklist for books, plants, sharing, stats, backup, and more.
-                </p>
-                <div class="button-group">
-                    <button class="btn btn-primary" @onclick="OpenGettingStarted">
-                        Open Getting Started
-                    </button>
-                    <button class="btn btn-secondary" @onclick="ReplayIntroFromSettingsAsync">
-                        Replay Intro
-                    </button>
-                </div>
-                <div class="setting-row" style="margin-top: 1rem;">
-                    <div class="setting-info">
-                        <span class="setting-label">Hide Getting Started on Bookshelf</span>
-                        <span class="setting-description">Hide the Bookshelf prompt when checklist steps are still open</span>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox"
-                               checked="@ViewModel.Settings.HideGettingStartedCta"
-                               @onchange="@(e => ViewModel.ToggleGettingStartedCtaCommand.ExecuteAsync((bool)e.Value!))" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
             </div>
         </section>
 
@@ -203,6 +175,35 @@
                             @onclick="OpenBuyMeACoffee">
                         Buy me a coffee
                     </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h2>Getting Started</h2>
+            <div class="backup-actions">
+                <p class="description">
+                    Reopen the intro or jump into the guided checklist for books, plants, sharing, stats, backup, and more.
+                </p>
+                <div class="button-group">
+                    <button class="btn btn-primary" @onclick="OpenGettingStarted">
+                        Open Getting Started
+                    </button>
+                    <button class="btn btn-secondary" @onclick="ReplayIntroFromSettingsAsync">
+                        Replay Intro
+                    </button>
+                </div>
+                <div class="setting-row" style="margin-top: 1rem;">
+                    <div class="setting-info">
+                        <span class="setting-label">Hide Getting Started on Bookshelf</span>
+                        <span class="setting-description">Hide the Bookshelf prompt when checklist steps are still open</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox"
+                               checked="@ViewModel.Settings.HideGettingStartedCta"
+                               @onchange="@(e => ViewModel.ToggleGettingStartedCtaCommand.ExecuteAsync((bool)e.Value!))" />
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
             </div>
         </section>
@@ -370,6 +371,20 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" @onclick="CloseSuccessAndNavigate">OK</button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Restart Notice (after successful backup restore) -->
+@if (_showRestartNotice)
+{
+    <div class="modal-overlay">
+        <div class="modal-content success-modal" @onclick:stopPropagation="true">
+            <div class="modal-body">
+                <div class="success-icon">&#10003;</div>
+                <h3>Backup restored</h3>
+                <p>BookHeart is restarting to finish loading your data...</p>
             </div>
         </div>
     </div>
@@ -883,6 +898,7 @@
 @code {
     private bool _showDeleteConfirmation = false;
     private bool _showSuccessModal = false;
+    private bool _showRestartNotice = false;
     private bool _showPrivacyPolicy = false;
     private bool _showMigrationLog = false;
     private bool _showShelfAppearance = false;
@@ -973,6 +989,20 @@
     private async Task HandleRestoreFromBackupAsync()
     {
         await ViewModel.RestoreFromBackupCommand.ExecuteAsync(null);
+
+        // SQLite keeps stale file handles on the old database even after
+        // ClearAllPools + WAL/SHM cleanup, so the only reliable way to guarantee
+        // the restored data is usable is a full process restart. We check
+        // BackupRestoreSucceeded instead of ErrorMessage so that a post-restore
+        // read failure (from a pre-restore DbContext still in memory) can't
+        // mask a successful restore.
+        if (ViewModel.BackupRestoreSucceeded)
+        {
+            _showRestartNotice = true;
+            StateHasChanged();
+            await Task.Delay(1500);
+            AppRestartService.RestartApp();
+        }
     }
 
     private void ShowDeleteConfirmation()

@@ -35,6 +35,10 @@ Versionsschema:
 - Voraussetzungs-Hinweis im "Getting Started"-Hub zeigte bei bestimmten Missionen fälschlicherweise "Complete 'Add your first book' first" an, obwohl die tatsächliche Voraussetzung bereits erfüllt war — Logik korrigiert
 - Dashboard/Bücherregal laden nach den neuen AppSettings-Änderungen wieder zuverlässig: fehlende EF-Migration für `HideGettingStartedCta` ergänzt, wodurch `PendingModelChanges`-Abbrüche beim Start vermieden werden
 - "Getting Started"-CTA auf dem Bücherregal bleibt nicht mehr dauerhaft unsichtbar, wenn die Initialisierung beim ersten Laden kurz fehlschlägt; Sichtbarkeit wird jetzt robust aus Settings (`HideGettingStartedCta`) und Onboarding-Status neu aufgebaut
+- Harter Blazor-Fehler auf dem Dashboard nach einer Cloud-Backup-Wiederherstellung behoben: Wenn die Pflanzenspezie-Verknüpfung nach einem Backup nicht aufgelöst werden konnte (fehlende PlantSpecies-Zeile), griff der PlantWidget-Template direkt auf `Plant.Species.Name` zu und stürzte ab — alle Species-Zugriffe sind jetzt Null-gesichert
+- Harter Blazor-Fehler auf der Stats-Seite behoben: Division durch null bei der Pflanzenverstärkungs-Balkenanzeige wenn `TotalPlantBoost = 0` aber Pflanzendaten vorhanden waren
+- Korrupte Cloud-Backups werden jetzt vor der Wiederherstellung per SQLite `PRAGMA integrity_check` geprüft und abgelehnt, anstatt die aktive Datenbank silent zu überschreiben
+- Cloud-Backup-Wiederherstellung wirft nicht mehr den Fehler "database disk image is malformed" beim direkten Weiterverwenden der App: nach erfolgreichem Restore zeigt die Settings-Seite kurz einen "Backup restored"-Hinweis und startet BookHeart automatisch neu, damit alle SQLite-Verbindungspools, nativen File-Handles und Blazor-Komponenten frisch gegen die restaurierte Datenbank aufgebaut werden. Ein manueller Neustart ist dafür nicht mehr nötig.
 
 ## [0.8.1] - 2026-04-07
 

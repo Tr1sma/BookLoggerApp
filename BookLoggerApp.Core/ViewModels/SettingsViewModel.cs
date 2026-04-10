@@ -61,6 +61,9 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string _shelfBaseColor = "#D4A574";
 
+    [ObservableProperty]
+    private bool _backupRestoreSucceeded;
+
     [RelayCommand]
     public async Task ToggleNotificationsAsync(bool enabled)
     {
@@ -252,29 +255,34 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     public async Task RestoreFromBackupAsync()
     {
+        BackupRestoreSucceeded = false;
+
         await ExecuteSafelyAsync(async () =>
         {
             // 1. Pick File
             AppendLog("Opening file picker...");
             var filePath = await _filePickerService.PickFileAsync("Select Backup File", ".zip");
             AppendLog($"Picker returned path: {filePath ?? "NULL"}");
-            
+
             if (string.IsNullOrEmpty(filePath))
             {
                 AppendLog("Restore cancelled or path is empty.");
                 // User might have thought they selected a file but the picker failed.
                 SetError("File selection failed or was cancelled. If you selected a file from Google Drive, try saving it to your device storage first.");
-                return; 
+                return;
             }
 
             // 2. Restore
             AppendLog($"Calling RestoreFromBackupAsync with {filePath}");
             await _importExportService.RestoreFromBackupAsync(filePath);
+            BackupRestoreSucceeded = true;
 
-            // 3. Reload settings/data
-             await LoadAsync();
-             AppendLog("Settings reloaded.");
-            
+            // Intentionally NO LoadAsync() here — the app will be restarted by
+            // the caller to drop stale SQLite connection pools. Re-reading
+            // settings through the pre-restore DbContext could throw a
+            // "database image malformed" error and mask the successful restore.
+            AppendLog("Restore complete; awaiting app restart.");
+
         }, "Failed to restore backup");
     }
     private void AppendLog(string message)
