@@ -31,6 +31,7 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
     private class TestAppSettingsProvider : IAppSettingsProvider
     {
         public event EventHandler? ProgressionChanged;
+        public event EventHandler? SettingsChanged;
         public Task<AppSettings> GetSettingsAsync(CancellationToken ct = default) => Task.FromResult(new AppSettings());
         public Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default) => Task.CompletedTask;
         public Task<int> GetUserCoinsAsync(CancellationToken ct = default) => Task.FromResult(0);

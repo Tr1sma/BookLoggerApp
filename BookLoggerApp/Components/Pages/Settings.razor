@@ -45,6 +45,18 @@
                         Replay Intro
                     </button>
                 </div>
+                <div class="setting-row" style="margin-top: 1rem;">
+                    <div class="setting-info">
+                        <span class="setting-label">Hide Getting Started on Bookshelf</span>
+                        <span class="setting-description">Don't show the Getting Started prompt on the Bookshelf page</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox"
+                               checked="@ViewModel.Settings.HideGettingStartedCta"
+                               @onchange="@(e => ViewModel.ToggleGettingStartedCtaCommand.ExecuteAsync((bool)e.Value!))" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
             </div>
         </section>
 

@@ -18,6 +18,7 @@ public class AppSettingsProvider : IAppSettingsProvider
     private readonly TimeSpan _cacheLifetime = TimeSpan.FromMinutes(5);
 
     public event EventHandler? ProgressionChanged;
+    public event EventHandler? SettingsChanged;
 
     public AppSettingsProvider(IDbContextFactory<AppDbContext> contextFactory)
     {
@@ -30,6 +31,14 @@ public class AppSettingsProvider : IAppSettingsProvider
     private void OnProgressionChanged()
     {
         ProgressionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Raises the SettingsChanged event to notify subscribers of settings changes.
+    /// </summary>
+    private void OnSettingsChanged()
+    {
+        SettingsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public async Task<AppSettings> GetSettingsAsync(CancellationToken ct = default)
@@ -93,6 +102,9 @@ public class AppSettingsProvider : IAppSettingsProvider
         {
             OnProgressionChanged();
         }
+
+        // Notify subscribers that settings changed
+        OnSettingsChanged();
     }
 
     public async Task<int> GetUserCoinsAsync(CancellationToken ct = default)

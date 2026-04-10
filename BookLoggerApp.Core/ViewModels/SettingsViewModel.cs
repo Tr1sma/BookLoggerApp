@@ -140,6 +140,16 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public async Task ToggleGettingStartedCtaAsync(bool hide)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            Settings.HideGettingStartedCta = hide;
+            await SaveSettingsInternalAsync();
+        }, "Failed to update Getting Started visibility");
+    }
+
+    [RelayCommand]
     public async Task UpdateShelfLedgeColorAsync(string color)
     {
         await ExecuteSafelyAsync(async () =>

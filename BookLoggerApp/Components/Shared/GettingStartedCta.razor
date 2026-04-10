@@ -3,9 +3,10 @@
 @using BookLoggerApp.Core.Services.Abstractions
 @implements IDisposable
 @inject IOnboardingService OnboardingService
+@inject IAppSettingsProvider AppSettingsProvider
 @inject NavigationManager NavigationManager
 
-@if (_snapshot?.ShowHubCta == true)
+@if (_showCta && _snapshot?.ShowHubCta == true)
 {
     <section class="getting-started-cta-card">
         <div class="getting-started-cta-copy">
@@ -25,14 +26,17 @@
 
 @code {
     private OnboardingSnapshot? _snapshot;
+    private bool _showCta = true;
 
     protected override async Task OnInitializedAsync()
     {
         OnboardingService.StateChanged += HandleOnboardingStateChanged;
+        AppSettingsProvider.SettingsChanged += HandleSettingsChanged;
         try
         {
             await DatabaseInitializationHelper.EnsureInitializedAsync();
             _snapshot = await OnboardingService.GetSnapshotAsync();
+            await CheckSettingsAsync();
         }
         catch
         {
@@ -41,9 +45,25 @@
         }
     }
 
+    private async Task CheckSettingsAsync()
+    {
+        var settings = await AppSettingsProvider.GetSettingsAsync();
+        _showCta = !settings.HideGettingStartedCta;
+    }
+
     public void Dispose()
     {
         OnboardingService.StateChanged -= HandleOnboardingStateChanged;
+        AppSettingsProvider.SettingsChanged -= HandleSettingsChanged;
+    }
+
+    private void HandleSettingsChanged(object? sender, EventArgs e)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await CheckSettingsAsync();
+            StateHasChanged();
+        });
     }
 
     private void OpenHub()

@@ -12,6 +12,11 @@ public interface IAppSettingsProvider
     /// </summary>
     event EventHandler? ProgressionChanged;
 
+    /// <summary>
+    /// Event raised when settings are updated.
+    /// </summary>
+    event EventHandler? SettingsChanged;
+
     Task<AppSettings> GetSettingsAsync(CancellationToken ct = default);
     Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default);
     Task<int> GetUserCoinsAsync(CancellationToken ct = default);
