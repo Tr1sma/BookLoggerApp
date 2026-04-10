@@ -65,5 +65,9 @@ public class AppSettingsConfiguration : IEntityTypeConfiguration<AppSettings>
         builder.Property(a => a.OnboardingTutorialPlantNeedsWateringAssist)
             .IsRequired()
             .HasDefaultValue(false);
+
+        builder.Property(a => a.HideGettingStartedCta)
+            .IsRequired()
+            .HasDefaultValue(false);
     }
 }
