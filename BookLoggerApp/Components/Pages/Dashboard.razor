@@ -54,26 +54,29 @@
         </section>
 
         <!-- This Week Stats - Compact Chips -->
-        <section class="stats-chips">
-            <span class="stat-chip">
-                <span class="stat-chip-icon">📚</span>
-                <span class="stat-chip-value">@ViewModel.BooksReadThisWeek</span>
-                <span class="stat-chip-label">books</span>
-            </span>
-            <span class="stat-chip">
-                <span class="stat-chip-icon">⏱️</span>
-                <span class="stat-chip-value">@FormatMinutes(ViewModel.MinutesReadThisWeek)</span>
-            </span>
-            <span class="stat-chip">
-                <span class="stat-chip-icon">📄</span>
-                <span class="stat-chip-value">@ViewModel.PagesReadThisWeek</span>
-                <span class="stat-chip-label">pages</span>
-            </span>
-            <span class="stat-chip">
-                <span class="stat-chip-icon">⭐</span>
-                <span class="stat-chip-value">@ViewModel.XpEarnedThisWeek</span>
-                <span class="stat-chip-label">XP</span>
-            </span>
+        <section class="weekly-stats-section">
+            <h2>Weekly Stats</h2>
+            <div class="stats-chips">
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">📚</span>
+                    <span class="stat-chip-value">@ViewModel.BooksReadThisWeek</span>
+                    <span class="stat-chip-label">books</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">⏱️</span>
+                    <span class="stat-chip-value">@FormatMinutes(ViewModel.MinutesReadThisWeek)</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">📄</span>
+                    <span class="stat-chip-value">@ViewModel.PagesReadThisWeek</span>
+                    <span class="stat-chip-label">pages</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">⭐</span>
+                    <span class="stat-chip-value">@ViewModel.XpEarnedThisWeek</span>
+                    <span class="stat-chip-label">XP</span>
+                </span>
+            </div>
         </section>
 
         <!-- Active Goals -->
