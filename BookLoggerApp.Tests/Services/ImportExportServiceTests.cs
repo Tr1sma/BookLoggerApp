@@ -15,6 +15,7 @@ public class ImportExportServiceTests
     private class MockAppSettingsProvider : IAppSettingsProvider
     {
         public event EventHandler? ProgressionChanged;
+        public event EventHandler? SettingsChanged;
 
         public Task<AppSettings> GetSettingsAsync(CancellationToken ct = default)
             => Task.FromResult(new AppSettings());

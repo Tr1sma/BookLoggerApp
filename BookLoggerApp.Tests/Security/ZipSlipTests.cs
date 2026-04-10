@@ -132,6 +132,8 @@ public class MockFileSystem : IFileSystem
 public class MockAppSettingsProvider : IAppSettingsProvider
 {
     public event EventHandler? ProgressionChanged;
+    public event EventHandler? SettingsChanged;
+
     private AppSettings _settings = new();
     private int _coins;
     private int _level = 1;

@@ -55,6 +55,9 @@ public class AppSettings
     public Guid? OnboardingTutorialPlantId { get; set; }
     public bool OnboardingTutorialPlantNeedsWateringAssist { get; set; } = false;
 
+    // UI Preferences
+    public bool HideGettingStartedCta { get; set; } = false;
+
     // Misc
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

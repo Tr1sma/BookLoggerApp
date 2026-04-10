@@ -32,6 +32,7 @@ Versionsschema:
 - Changelog-Overlay erscheint jetzt nicht mehr über dem Buch-Hinzufügen-Formular wenn der Nutzer "Add Book" im Onboarding-Intro tippt — Changelog wird für neue Nutzer während des Onboardings generell unterdrückt
 - Harter Blazor-Fehler beim ersten App-Start auf einer Neuinstallation behoben: GettingStartedCta auf dem Bücherregal wurde ohne DB-Initialisierungsschutz gerendert und löste eine "no such table"-Exception aus — Komponente wartet jetzt auf die DB-Initialisierung und schluckt verbleibende Fehler still
 - Voraussetzungs-Hinweis im "Getting Started"-Hub zeigte bei bestimmten Missionen fälschlicherweise "Complete 'Add your first book' first" an, obwohl die tatsächliche Voraussetzung bereits erfüllt war — Logik korrigiert
+- Dashboard/Bücherregal laden nach den neuen AppSettings-Änderungen wieder zuverlässig: fehlende EF-Migration für `HideGettingStartedCta` ergänzt, wodurch `PendingModelChanges`-Abbrüche beim Start vermieden werden
 
 ## [0.8.1] - 2026-04-07
 
