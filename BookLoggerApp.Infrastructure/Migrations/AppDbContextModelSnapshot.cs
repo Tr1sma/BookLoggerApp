@@ -980,6 +980,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<int>("UnlockLevel")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("SlotWidth")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("IsAvailable");
@@ -1002,6 +1005,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Reading Candle",
+                            SlotWidth = 1,
                             UnlockLevel = 1
                         },
                         new
@@ -1013,6 +1017,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Cosy Book Mug",
+                            SlotWidth = 1,
                             UnlockLevel = 1
                         },
                         new
@@ -1024,6 +1029,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Wooden Bookend",
+                            SlotWidth = 1,
                             UnlockLevel = 1
                         },
                         new
@@ -1035,6 +1041,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Brass Hourglass",
+                            SlotWidth = 1,
                             UnlockLevel = 5
                         },
                         new
@@ -1046,6 +1053,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Scholar's Spectacles",
+                            SlotWidth = 1,
                             UnlockLevel = 5
                         },
                         new
@@ -1057,6 +1065,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Inkwell & Quill",
+                            SlotWidth = 1,
                             UnlockLevel = 10
                         },
                         new
@@ -1068,6 +1077,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Owl Figurine",
+                            SlotWidth = 1,
                             UnlockLevel = 10
                         },
                         new
@@ -1079,6 +1089,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Library Globe",
+                            SlotWidth = 2,
                             UnlockLevel = 15
                         },
                         new
@@ -1090,6 +1101,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Marble Bookend",
+                            SlotWidth = 2,
                             UnlockLevel = 15
                         },
                         new
@@ -1101,6 +1113,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Brass Telescope",
+                            SlotWidth = 2,
                             UnlockLevel = 20
                         },
                         new
@@ -1112,6 +1125,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Magic Reading Lamp",
+                            SlotWidth = 1,
                             UnlockLevel = 20
                         },
                         new
@@ -1123,6 +1137,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Dragon Figurine",
+                            SlotWidth = 1,
                             UnlockLevel = 25
                         },
                         new
@@ -1134,6 +1149,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Alchemy Flask",
+                            SlotWidth = 1,
                             UnlockLevel = 25
                         },
                         new
@@ -1145,6 +1161,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             IsAvailable = true,
                             ItemType = 2,
                             Name = "Ancient Scroll",
+                            SlotWidth = 2,
                             UnlockLevel = 25
                         });
                 });
