@@ -6,7 +6,7 @@
 @inject IAppSettingsProvider AppSettingsProvider
 @inject NavigationManager NavigationManager
 
-@if (_showCta && _snapshot?.ShowHubCta == true)
+@if (ShouldShowCta)
 {
     <section class="getting-started-cta-card">
         <div class="getting-started-cta-copy">
@@ -28,27 +28,53 @@
     private OnboardingSnapshot? _snapshot;
     private bool _showCta = true;
 
+    private bool ShouldShowCta => _showCta && _snapshot?.ShowHubCta == true;
+
     protected override async Task OnInitializedAsync()
     {
         OnboardingService.StateChanged += HandleOnboardingStateChanged;
         AppSettingsProvider.SettingsChanged += HandleSettingsChanged;
+        await RefreshVisibilityStateAsync();
+    }
+
+    private async Task RefreshVisibilityStateAsync()
+    {
         try
         {
             await DatabaseInitializationHelper.EnsureInitializedAsync();
-            _snapshot = await OnboardingService.GetSnapshotAsync();
-            await CheckSettingsAsync();
         }
         catch
         {
-            // DB not ready yet on fresh install — stays hidden until StateChanged fires
+            // Continue and try both sources individually to avoid getting stuck hidden.
+        }
+
+        await RefreshSnapshotAsync();
+        await CheckSettingsAsync();
+    }
+
+    private async Task RefreshSnapshotAsync()
+    {
+        try
+        {
+            _snapshot = await OnboardingService.GetSnapshotAsync();
+        }
+        catch
+        {
             _snapshot = null;
         }
     }
 
     private async Task CheckSettingsAsync()
     {
-        var settings = await AppSettingsProvider.GetSettingsAsync();
-        _showCta = !settings.HideGettingStartedCta;
+        try
+        {
+            var settings = await AppSettingsProvider.GetSettingsAsync();
+            _showCta = !settings.HideGettingStartedCta;
+        }
+        catch
+        {
+            _showCta = true;
+        }
     }
 
     public void Dispose()
@@ -75,7 +101,15 @@
     {
         _ = InvokeAsync(async () =>
         {
-            _snapshot = await OnboardingService.RefreshSnapshotAsync();
+            try
+            {
+                _snapshot = await OnboardingService.RefreshSnapshotAsync();
+            }
+            catch
+            {
+                await RefreshSnapshotAsync();
+            }
+
             StateHasChanged();
         });
     }

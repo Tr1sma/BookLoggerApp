@@ -165,7 +165,8 @@ public partial class BookshelfViewModel : ViewModelBase
                 {
                     if (plantShelf.Plant != null)
                     {
-                        items.Add(new ShelfItemViewModel(plantShelf.Plant, plantShelf.Position));
+                        int plantSlotWidth = 1;
+                        items.Add(new ShelfItemViewModel(plantShelf.Plant, plantShelf.Position, plantSlotWidth));
                         plantsOnShelvesIds.Add(plantShelf.Plant.Id);
                     }
                 }
@@ -175,7 +176,8 @@ public partial class BookshelfViewModel : ViewModelBase
                 {
                     if (decorationShelf.Decoration != null)
                     {
-                        items.Add(new ShelfItemViewModel(decorationShelf.Decoration, decorationShelf.Position));
+                        int decoSlotWidth = decorationShelf.Decoration.ShopItem?.SlotWidth ?? 1;
+                        items.Add(new ShelfItemViewModel(decorationShelf.Decoration, decorationShelf.Position, decoSlotWidth));
                         decorationsOnShelvesIds.Add(decorationShelf.Decoration.Id);
                     }
                 }

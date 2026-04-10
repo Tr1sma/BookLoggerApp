@@ -131,7 +131,8 @@ public static class DecorationSeedData
             Cost = 260,
             ImagePath = "images/decorations/globe.svg",
             IsAvailable = true,
-            UnlockLevel = 15
+            UnlockLevel = 15,
+            SlotWidth = 2
         };
 
         yield return new ShopItem
@@ -143,7 +144,8 @@ public static class DecorationSeedData
             Cost = 280,
             ImagePath = "images/decorations/bookend_marble.svg",
             IsAvailable = true,
-            UnlockLevel = 15
+            UnlockLevel = 15,
+            SlotWidth = 2
         };
 
         yield return new ShopItem
@@ -155,7 +157,8 @@ public static class DecorationSeedData
             Cost = 320,
             ImagePath = "images/decorations/telescope.svg",
             IsAvailable = true,
-            UnlockLevel = 20
+            UnlockLevel = 20,
+            SlotWidth = 2
         };
 
         yield return new ShopItem
@@ -203,7 +206,8 @@ public static class DecorationSeedData
             Cost = 400,
             ImagePath = "images/decorations/ancient_scroll.svg",
             IsAvailable = true,
-            UnlockLevel = 25
+            UnlockLevel = 25,
+            SlotWidth = 2
         };
     }
 }

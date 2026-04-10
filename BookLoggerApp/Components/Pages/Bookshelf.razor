@@ -158,10 +158,11 @@
                                 @if (item.Type == ShelfItemType.Book && item.Book != null)
                                 {
                                     <div @key="item.Book.Id"
-                                         class="shelf-slot"
+                                         class="shelf-slot @(item.SlotWidth > 1 ? "slot-wide-" + item.SlotWidth : "")"
                                          data-item-id="@item.Book.Id"
                                          data-item-type="Book"
-                                         data-shelf-id="@shelfVM.Shelf.Id">
+                                         data-shelf-id="@shelfVM.Shelf.Id"
+                                         data-slot-width="@item.SlotWidth">
                                         <BookCard Book="@item.Book" IsInBookshelf="true"
                                             OnClick="() => HandleBookClick(item.Book)"
                                             OnDelete="() => HandleRemoveBookFromShelf(item.Book.Id, shelfVM.Shelf.Id)" />
@@ -170,10 +171,11 @@
                                 else if (item.Type == ShelfItemType.Plant && item.Plant != null)
                                 {
                                     <div @key="item.Plant.Id"
-                                         class="shelf-slot"
+                                         class="shelf-slot @(item.SlotWidth > 1 ? "slot-wide-" + item.SlotWidth : "")"
                                          data-item-id="@item.Plant.Id"
                                          data-item-type="Plant"
-                                         data-shelf-id="@shelfVM.Shelf.Id">
+                                         data-shelf-id="@shelfVM.Shelf.Id"
+                                         data-slot-width="@item.SlotWidth">
                                         <PlantCard Plant="@item.Plant" IsInBookshelf="true"
                                             ShowActions="false"
                                             OnClick="() => HandlePlantClick(item.Plant, shelfVM.Shelf.Id)" />
@@ -182,10 +184,11 @@
                                 else if (item.Type == ShelfItemType.Decoration && item.Decoration != null)
                                 {
                                     <div @key="item.Decoration.Id"
-                                         class="shelf-slot"
+                                         class="shelf-slot @(item.SlotWidth > 1 ? "slot-wide-" + item.SlotWidth : "")"
                                          data-item-id="@item.Decoration.Id"
                                          data-item-type="Decoration"
-                                         data-shelf-id="@shelfVM.Shelf.Id">
+                                         data-shelf-id="@shelfVM.Shelf.Id"
+                                         data-slot-width="@item.SlotWidth">
                                         <DecorationCard Decoration="@item.Decoration" IsInBookshelf="true"
                                             ShowActions="false"
                                             OnClick="() => HandleDecorationClick(item.Decoration, shelfVM.Shelf.Id)" />

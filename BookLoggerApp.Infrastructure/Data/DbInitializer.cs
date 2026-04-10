@@ -226,7 +226,8 @@ public static class DbInitializer
                     existing.Cost != def.Cost ||
                     existing.ImagePath != def.ImagePath ||
                     existing.UnlockLevel != def.UnlockLevel ||
-                    existing.IsAvailable != def.IsAvailable)
+                    existing.IsAvailable != def.IsAvailable ||
+                    existing.SlotWidth != def.SlotWidth)
                 {
                     logger?.LogInformation("Updating decoration '{Name}'...", def.Name);
 
@@ -236,6 +237,7 @@ public static class DbInitializer
                     existing.ImagePath = def.ImagePath;
                     existing.UnlockLevel = def.UnlockLevel;
                     existing.IsAvailable = def.IsAvailable;
+                    existing.SlotWidth = def.SlotWidth;
 
                     hasChanges = true;
                 }

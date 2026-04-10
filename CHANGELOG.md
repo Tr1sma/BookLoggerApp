@@ -17,6 +17,7 @@ Versionsschema:
 
 ### Hinzugefügt
 
+- Breite Regalgegenstände: Dekorationen mit `SlotWidth > 1` nehmen jetzt mehrere Slots auf dem Bücherregal ein (z.B. Globus, Marmorbuchstütze, Teleskop, alte Schriftrolle = 2 Slots)
 - Neue Regaldekorationen (Kerzen, Stundenglas, Eulen-Figur, Globus u.v.m.) im Shop kaufbar und auf Regalen platzierbar — rein kosmetisch, günstig, per Level freigeschaltet
 - Shop-Seite hat jetzt Tabs für Pflanzen und Dekorationen
 - Versioniertes Onboarding mit Intro-Overlay und neuem "Getting Started"-Hub für geführte Missionen rund um erstes Buch, erste Lesesession, Ziele, Pflanzen, Wunschliste, Scanner, Sharing und Backup
@@ -33,6 +34,7 @@ Versionsschema:
 - Harter Blazor-Fehler beim ersten App-Start auf einer Neuinstallation behoben: GettingStartedCta auf dem Bücherregal wurde ohne DB-Initialisierungsschutz gerendert und löste eine "no such table"-Exception aus — Komponente wartet jetzt auf die DB-Initialisierung und schluckt verbleibende Fehler still
 - Voraussetzungs-Hinweis im "Getting Started"-Hub zeigte bei bestimmten Missionen fälschlicherweise "Complete 'Add your first book' first" an, obwohl die tatsächliche Voraussetzung bereits erfüllt war — Logik korrigiert
 - Dashboard/Bücherregal laden nach den neuen AppSettings-Änderungen wieder zuverlässig: fehlende EF-Migration für `HideGettingStartedCta` ergänzt, wodurch `PendingModelChanges`-Abbrüche beim Start vermieden werden
+- "Getting Started"-CTA auf dem Bücherregal bleibt nicht mehr dauerhaft unsichtbar, wenn die Initialisierung beim ersten Laden kurz fehlschlägt; Sichtbarkeit wird jetzt robust aus Settings (`HideGettingStartedCta`) und Onboarding-Status neu aufgebaut
 
 ## [0.8.1] - 2026-04-07
 

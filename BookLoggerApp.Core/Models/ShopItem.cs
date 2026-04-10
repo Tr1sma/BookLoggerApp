@@ -30,6 +30,9 @@ public class ShopItem
     [Range(1, 100)]
     public int UnlockLevel { get; set; } = 1;
 
+    [Range(1, 4)]
+    public int SlotWidth { get; set; } = 1;
+
     // For Plants: Reference to PlantSpecies
     public Guid? PlantSpeciesId { get; set; }
     public PlantSpecies? PlantSpecies { get; set; }
