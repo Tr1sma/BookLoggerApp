@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="candleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5E6D3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D4A574;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="holderGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#C4984A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#FF6B00;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#FFB800;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFE680;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glowGrad" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#FFD700;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Warm glow -->
+  <circle cx="100" cy="55" r="45" fill="url(#glowGrad)"/>
+
+  <!-- Candle holder base -->
+  <ellipse cx="100" cy="170" rx="35" ry="8" fill="url(#holderGrad)" stroke="#6B5638" stroke-width="2"/>
+  <rect x="65" y="160" width="70" height="12" rx="2" fill="url(#holderGrad)" stroke="#6B5638" stroke-width="2"/>
+  <ellipse cx="100" cy="160" rx="35" ry="8" fill="#C4984A" stroke="#6B5638" stroke-width="2"/>
+
+  <!-- Holder stem -->
+  <rect x="92" y="145" width="16" height="16" rx="2" fill="url(#holderGrad)" stroke="#6B5638" stroke-width="2"/>
+
+  <!-- Holder dish -->
+  <ellipse cx="100" cy="145" rx="24" ry="6" fill="#C4984A" stroke="#6B5638" stroke-width="2"/>
+
+  <!-- Candle body -->
+  <rect x="85" y="75" width="30" height="72" rx="3" fill="url(#candleGrad)" stroke="#B8956A" stroke-width="2"/>
+  <ellipse cx="100" cy="75" rx="15" ry="5" fill="#F5E6D3" stroke="#B8956A" stroke-width="2"/>
+
+  <!-- Wax drips -->
+  <path d="M 87 90 Q 84 100 87 105" fill="none" stroke="#E8D5BE" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 113 95 Q 116 105 113 112" fill="none" stroke="#E8D5BE" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Wick -->
+  <line x1="100" y1="75" x2="100" y2="60" stroke="#4A3728" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Flame -->
+  <path d="M 100 58 Q 92 45 100 28 Q 108 45 100 58 Z" fill="url(#flameGrad)" opacity="0.9"/>
+  <path d="M 100 55 Q 96 47 100 36 Q 104 47 100 55 Z" fill="#FFE680" opacity="0.7"/>
+
+  <!-- Sparkles -->
+  <circle cx="82" cy="50" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="118" cy="45" r="1.5" fill="#FFD700" opacity="0.7"/>
+  <circle cx="110" cy="30" r="1.5" fill="#FFD700" opacity="0.6"/>
+</svg>

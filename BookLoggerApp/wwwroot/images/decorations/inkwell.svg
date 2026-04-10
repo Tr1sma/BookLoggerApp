@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="inkwellGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A4A5A;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3A3A48;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2A2A35;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="inkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A1A2E;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#0D0D1A;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="quillGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#F5F0E8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E0D5C5;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glassShine" cx="30%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.25" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Quill feather -->
+  <path d="M 135 25 Q 115 55 100 85 Q 90 105 85 130" fill="none" stroke="#8B7355" stroke-width="2" stroke-linecap="round"/>
+  <!-- Feather body -->
+  <path d="M 135 25 Q 150 20 155 30 Q 148 28 140 32 Q 148 32 152 40 Q 145 36 138 40 Q 145 42 148 50 Q 140 45 134 48 Q 140 52 142 58 Q 135 52 128 55 Q 132 58 134 65 Q 128 60 122 63 Q 125 66 126 72 Q 120 68 115 72" fill="url(#quillGrad)" stroke="#B8956A" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Quill shaft highlight -->
+  <path d="M 132 30 Q 118 55 105 80" fill="none" stroke="#FFFFFF" stroke-width="0.8" opacity="0.4" stroke-linecap="round"/>
+
+  <!-- Nib -->
+  <path d="M 85 130 L 80 145 L 82 142 L 85 130 Z" fill="#8B6F47" stroke="#6B5638" stroke-width="1"/>
+  <!-- Ink drip from nib -->
+  <circle cx="80" cy="148" r="2.5" fill="#1A1A2E" opacity="0.7"/>
+
+  <!-- Inkwell body -->
+  <path d="M 55 120 L 50 165 Q 50 180 70 180 L 110 180 Q 130 180 130 165 L 125 120 Z" fill="url(#inkwellGrad)" stroke="#2A2A35" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Glass shine -->
+  <path d="M 60 125 L 58 155 Q 60 160 65 160" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.2" stroke-linecap="round"/>
+
+  <!-- Inkwell rim -->
+  <ellipse cx="90" cy="120" rx="38" ry="10" fill="#5A5A6A" stroke="#3A3A48" stroke-width="2"/>
+
+  <!-- Ink surface -->
+  <ellipse cx="90" cy="122" rx="32" ry="7" fill="url(#inkGrad)"/>
+
+  <!-- Ink sheen -->
+  <ellipse cx="82" cy="120" rx="10" ry="3" fill="#2A2A5A" opacity="0.4"/>
+
+  <!-- Sparkles -->
+  <circle cx="148" cy="25" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="70" cy="110" r="2" fill="#FFD700" opacity="0.7"/>
+  <circle cx="120" cy="170" r="1.5" fill="#FFD700" opacity="0.5"/>
+</svg>

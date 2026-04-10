@@ -33,6 +33,7 @@ public class Shelf
     // Navigation
     public ICollection<BookShelf> BookShelves { get; set; } = new List<BookShelf>();
     public ICollection<PlantShelf> PlantShelves { get; set; } = new List<PlantShelf>();
+    public ICollection<DecorationShelf> DecorationShelves { get; set; } = new List<DecorationShelf>();
 }
 
 public enum ShelfAutoSortRule

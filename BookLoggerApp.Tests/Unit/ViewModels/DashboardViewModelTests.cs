@@ -1,4 +1,5 @@
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.ViewModels;
 using FluentAssertions;
@@ -94,5 +95,25 @@ public class DashboardViewModelTests
 
         // Assert
         await _plantService.Received(1).WaterPlantAsync(plant.Id);
+    }
+
+    [Fact]
+    public async Task DeletePlantAsync_ShouldDeleteDeadActivePlantAndClearWidgetState()
+    {
+        // Arrange
+        var plant = new UserPlant
+        {
+            Id = Guid.NewGuid(),
+            Status = PlantStatus.Dead
+        };
+        _plantService.GetActivePlantAsync().Returns(plant, (UserPlant?)null);
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+
+        // Act
+        await _viewModel.DeletePlantCommand.ExecuteAsync(null);
+
+        // Assert
+        await _plantService.Received(1).DeleteAsync(plant.Id);
+        _viewModel.ActivePlant.Should().BeNull();
     }
 }

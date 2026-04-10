@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="marbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8E0D4;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#F5F0EA;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#D8D0C4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C8C0B4;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="marbleSide" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#C8C0B4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B8B0A4;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C4984A;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base plate -->
+  <path d="M 35 168 L 35 158 L 165 158 L 165 168 Z" fill="url(#marbleGrad)" stroke="#A0988C" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 35 158 L 50 148 L 180 148 L 165 158 Z" fill="#E8E0D4" stroke="#A0988C" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 165 158 L 180 148 L 180 160 L 165 168 Z" fill="url(#marbleSide)" stroke="#A0988C" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Gold trim on base -->
+  <line x1="38" y1="163" x2="162" y2="163" stroke="url(#goldTrim)" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Vertical plate -->
+  <rect x="35" y="40" width="22" height="118" rx="1" fill="url(#marbleGrad)" stroke="#A0988C" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 57 40 L 72 30 L 72 148 L 57 158 Z" fill="#E8E0D4" stroke="#A0988C" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Marble vein lines -->
+  <path d="M 40 50 Q 48 70 42 95 Q 38 110 45 130 Q 50 145 43 155" fill="none" stroke="#C8C0B4" stroke-width="1.2" opacity="0.6" stroke-linecap="round"/>
+  <path d="M 50 45 Q 54 65 48 85 Q 44 105 52 125" fill="none" stroke="#B8B0A4" stroke-width="0.8" opacity="0.4" stroke-linecap="round"/>
+  <path d="M 62 35 Q 66 60 63 85 Q 60 110 65 135 Q 68 145 64 148" fill="none" stroke="#C8C0B4" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+
+  <!-- Gold decorative inlay on vertical face -->
+  <rect x="41" y="70" width="10" height="50" rx="1" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+  <line x1="46" y1="75" x2="46" y2="115" stroke="url(#goldTrim)" stroke-width="1" opacity="0.5"/>
+
+  <!-- Top gold cap -->
+  <rect x="34" y="38" width="24" height="5" rx="1" fill="url(#goldTrim)" stroke="#8B6914" stroke-width="1"/>
+  <path d="M 58 38 L 73 28 L 73 33 L 58 43 Z" fill="#C4984A" stroke="#8B6914" stroke-width="1"/>
+
+  <!-- Small decorative books leaning -->
+  <rect x="65" y="62" width="16" height="96" rx="2" fill="#8B4513" stroke="#5D3A1A" stroke-width="1.5" transform="rotate(4 73 110)"/>
+  <rect x="84" y="55" width="16" height="103" rx="2" fill="#6B3A3A" stroke="#4A2828" stroke-width="1.5" transform="rotate(7 92 106)"/>
+  <rect x="105" y="52" width="14" height="106" rx="2" fill="#4A6670" stroke="#3A525A" stroke-width="1.5" transform="rotate(10 112 105)"/>
+
+  <!-- Sparkles -->
+  <circle cx="46" cy="50" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="155" cy="152" r="2" fill="#FFD700" opacity="0.7"/>
+  <circle cx="70" cy="35" r="1.5" fill="#FFD700" opacity="0.6"/>
+  <circle cx="120" cy="48" r="1.5" fill="#FFD700" opacity="0.5"/>
+</svg>

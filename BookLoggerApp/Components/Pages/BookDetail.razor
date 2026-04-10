@@ -8,6 +8,7 @@
 @inject IImageService ImageService
 @inject IWishlistService WishlistService
 @inject IShareService ShareService
+@inject IOnboardingService OnboardingService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @implements IDisposable
@@ -573,10 +574,23 @@
 
     private async void OnBookShareCardReady(byte[] cardBytes)
     {
-        var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
-        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-        await File.WriteAllBytesAsync(filePath, cardBytes);
-        await ShareService.ShareFileAsync("Book Recommendation", filePath, "image/png");
+        try
+        {
+            var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+            var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+            await File.WriteAllBytesAsync(filePath, cardBytes);
+            await ShareService.ShareFileAsync("Book Recommendation", filePath, "image/png");
+
+            if (ViewModel.Book?.Status == ReadingStatus.Completed)
+            {
+                await OnboardingService.TrackEventAsync(OnboardingEvent.BookShared, ViewModel.Book.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to share book card: {ex.Message}");
+        }
+
         await InvokeAsync(StateHasChanged);
     }
 

@@ -83,6 +83,15 @@ public class PlantService : IPlantService
         var plant = await _unitOfWork.UserPlants.GetByIdAsync(id);
         if (plant != null)
         {
+            var plantShelves = await _unitOfWork.Context.PlantShelves
+                .Where(ps => ps.PlantId == id)
+                .ToListAsync(ct);
+
+            if (plantShelves.Count > 0)
+            {
+                _unitOfWork.Context.PlantShelves.RemoveRange(plantShelves);
+            }
+
             await _unitOfWork.UserPlants.DeleteAsync(plant);
             await _unitOfWork.SaveChangesAsync(ct);
         }

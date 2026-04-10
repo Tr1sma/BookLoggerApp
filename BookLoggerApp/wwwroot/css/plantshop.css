@@ -697,3 +697,34 @@
         font-size: 0.7rem;
     }
 }
+
+/* ===== Shop Tabs ===== */
+.shop-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.shop-tab-btn {
+    flex: 1;
+    padding: 0.85rem 1rem;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    font-family: inherit;
+}
+
+.shop-tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.shop-tab-btn:not(.active):hover {
+    color: var(--text-primary);
+}

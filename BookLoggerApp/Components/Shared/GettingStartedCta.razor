@@ -1,0 +1,112 @@
+@using BookLoggerApp.Core.Infrastructure
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Services.Abstractions
+@implements IDisposable
+@inject IOnboardingService OnboardingService
+@inject NavigationManager NavigationManager
+
+@if (_snapshot?.ShowHubCta == true)
+{
+    <section class="getting-started-cta-card">
+        <div class="getting-started-cta-copy">
+            <span class="getting-started-cta-kicker">Getting Started</span>
+            <h2>@_snapshot.CompletedCoreCount / @_snapshot.TotalCoreCount core steps completed</h2>
+            @if (_snapshot.NextRecommendedMission != null)
+            {
+                <p>Next up: @_snapshot.NextRecommendedMission.Title</p>
+            }
+        </div>
+
+        <button type="button" class="btn btn-primary getting-started-cta-button" @onclick="OpenHub">
+            Open checklist
+        </button>
+    </section>
+}
+
+@code {
+    private OnboardingSnapshot? _snapshot;
+
+    protected override async Task OnInitializedAsync()
+    {
+        OnboardingService.StateChanged += HandleOnboardingStateChanged;
+        try
+        {
+            await DatabaseInitializationHelper.EnsureInitializedAsync();
+            _snapshot = await OnboardingService.GetSnapshotAsync();
+        }
+        catch
+        {
+            // DB not ready yet on fresh install — stays hidden until StateChanged fires
+            _snapshot = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        OnboardingService.StateChanged -= HandleOnboardingStateChanged;
+    }
+
+    private void OpenHub()
+    {
+        NavigationManager.NavigateTo("/getting-started");
+    }
+
+    private void HandleOnboardingStateChanged(object? sender, EventArgs e)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            _snapshot = await OnboardingService.RefreshSnapshotAsync();
+            StateHasChanged();
+        });
+    }
+}
+
+<style>
+    .getting-started-cta-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.1rem;
+        margin-bottom: 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(64, 110, 80, 0.18);
+        background: linear-gradient(135deg, rgba(237, 245, 237, 0.96), rgba(248, 242, 229, 0.96));
+        box-shadow: 0 14px 32px rgba(64, 110, 80, 0.08);
+    }
+
+    .getting-started-cta-copy h2 {
+        margin: 0.2rem 0;
+        font-size: 1.05rem;
+        color: #234031;
+    }
+
+    .getting-started-cta-copy p {
+        margin: 0;
+        color: #415447;
+    }
+
+    .getting-started-cta-kicker {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #56715c;
+    }
+
+    .getting-started-cta-button {
+        white-space: nowrap;
+    }
+
+    @@media (max-width: 640px) {
+        .getting-started-cta-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .getting-started-cta-button {
+            width: 100%;
+        }
+    }
+</style>

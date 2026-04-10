@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="frameGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B8860B;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="lensGrad" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#E8E0D4;stop-opacity:0.1" />
+    </radialGradient>
+  </defs>
+
+  <!-- Left lens -->
+  <circle cx="72" cy="100" r="35" fill="url(#lensGrad)" stroke="url(#frameGrad)" stroke-width="4" stroke-linecap="round"/>
+  <!-- Left lens glare -->
+  <path d="M 55 85 Q 60 78 70 80" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+
+  <!-- Right lens -->
+  <circle cx="132" cy="100" r="35" fill="url(#lensGrad)" stroke="url(#frameGrad)" stroke-width="4" stroke-linecap="round"/>
+  <!-- Right lens glare -->
+  <path d="M 115 85 Q 120 78 130 80" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+
+  <!-- Bridge -->
+  <path d="M 97 95 Q 102 88 107 95" fill="none" stroke="url(#frameGrad)" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Left temple arm -->
+  <path d="M 38 92 Q 20 88 12 95 Q 8 100 12 105" fill="none" stroke="url(#frameGrad)" stroke-width="3" stroke-linecap="round"/>
+  <!-- Temple tip -->
+  <circle cx="12" cy="105" r="3" fill="#B8860B"/>
+
+  <!-- Right temple arm -->
+  <path d="M 166 92 Q 184 88 192 95 Q 196 100 192 105" fill="none" stroke="url(#frameGrad)" stroke-width="3" stroke-linecap="round"/>
+  <!-- Temple tip -->
+  <circle cx="192" cy="105" r="3" fill="#B8860B"/>
+
+  <!-- Nose pads -->
+  <ellipse cx="95" cy="105" rx="3" ry="4" fill="#C4984A" opacity="0.7"/>
+  <ellipse cx="109" cy="105" rx="3" ry="4" fill="#C4984A" opacity="0.7"/>
+
+  <!-- Sparkles -->
+  <circle cx="60" cy="78" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="145" cy="80" r="2" fill="#FFD700" opacity="0.7"/>
+  <circle cx="102" cy="82" r="1.5" fill="#FFD700" opacity="0.6"/>
+  <circle cx="42" cy="100" r="1.5" fill="#FFD700" opacity="0.5"/>
+  <circle cx="162" cy="100" r="1.5" fill="#FFD700" opacity="0.5"/>
+</svg>

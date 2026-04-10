@@ -13,6 +13,26 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
+## [Unveröffentlicht]
+
+### Hinzugefügt
+
+- Neue Regaldekorationen (Kerzen, Stundenglas, Eulen-Figur, Globus u.v.m.) im Shop kaufbar und auf Regalen platzierbar — rein kosmetisch, günstig, per Level freigeschaltet
+- Shop-Seite hat jetzt Tabs für Pflanzen und Dekorationen
+- Versioniertes Onboarding mit Intro-Overlay und neuem "Getting Started"-Hub für geführte Missionen rund um erstes Buch, erste Lesesession, Ziele, Pflanzen, Wunschliste, Scanner, Sharing und Backup
+- "Getting Started"-CTA auf Bücherregal und Dashboard sowie neuer Einstieg in den Settings zum erneuten Öffnen oder Wiederholen des Intros
+
+### Behoben
+
+- Tote Pflanzen werden beim Löschen jetzt vollständig entfernt, inklusive Regal-Verknüpfungen, und tauchen danach nicht mehr als "Add Plant"-Option im Bücherregal auf.
+- Onboarding wird nach einem Update nicht mehr ungefragt Bestandsnutzern angezeigt, sondern nur noch neuen Installationen automatisch eingeblendet
+- Intro-Schritte werden jetzt exakt fortgesetzt, der Zurück-/Skip-Flow ist korrekt navigierbar und die Rating-Erklärung verwendet die echten sechs Kategorien inklusive "Spice Level"
+- "Delete All Data" setzt jetzt auch den gespeicherten Onboarding- und Missionsfortschritt sauber zurück
+- Harter Blazor-Fehler beim ersten Antippen von "Add Book" im Onboarding-Intro behoben — Fehler beim Abschließen des Intros (z.B. kurzer DB-Lock beim Erststart) führen nicht mehr zum App-Absturz, sondern werden still abgefangen und das Overlay sauber ausgeblendet
+- Changelog-Overlay erscheint jetzt nicht mehr über dem Buch-Hinzufügen-Formular wenn der Nutzer "Add Book" im Onboarding-Intro tippt — Changelog wird für neue Nutzer während des Onboardings generell unterdrückt
+- Harter Blazor-Fehler beim ersten App-Start auf einer Neuinstallation behoben: GettingStartedCta auf dem Bücherregal wurde ohne DB-Initialisierungsschutz gerendert und löste eine "no such table"-Exception aus — Komponente wartet jetzt auf die DB-Initialisierung und schluckt verbleibende Fehler still
+- Voraussetzungs-Hinweis im "Getting Started"-Hub zeigte bei bestimmten Missionen fälschlicherweise "Complete 'Add your first book' first" an, obwohl die tatsächliche Voraussetzung bereits erfüllt war — Logik korrigiert
+
 ## [0.8.1] - 2026-04-07
 
 ### Hinzugefügt

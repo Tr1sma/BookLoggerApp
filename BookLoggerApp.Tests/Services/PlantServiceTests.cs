@@ -101,6 +101,56 @@ public class PlantServiceTests : IDisposable
         result.Select(p => p.Name).Should().Contain(new[] { "Plant 1", "Plant 2" });
     }
 
+    [Fact]
+    public async Task DeleteAsync_ShouldRemovePlantAndShelfLinks()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Shelf Plant");
+        var shelf = new Shelf
+        {
+            Id = Guid.NewGuid(),
+            Name = "Main Shelf",
+            SortOrder = 0
+        };
+
+        await _dbHelper.Context.Shelves.AddAsync(shelf);
+        await _dbHelper.Context.PlantShelves.AddAsync(new PlantShelf
+        {
+            PlantId = plant.Id,
+            ShelfId = shelf.Id,
+            Position = 0
+        });
+        await _dbHelper.Context.SaveChangesAsync();
+        _dbHelper.Context.ChangeTracker.Clear();
+
+        // Act
+        await _plantService.DeleteAsync(plant.Id);
+        _dbHelper.Context.ChangeTracker.Clear();
+
+        // Assert
+        var deletedPlant = await _dbHelper.Context.UserPlants.FindAsync(plant.Id);
+        var shelfLinks = _dbHelper.Context.PlantShelves.Where(ps => ps.PlantId == plant.Id).ToList();
+
+        deletedPlant.Should().BeNull();
+        shelfLinks.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenDeletingActivePlant_ShouldClearActivePlant()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies();
+        var plant = await SeedUserPlant(species.Id, "Active Plant", isActive: true);
+
+        // Act
+        await _plantService.DeleteAsync(plant.Id);
+
+        // Assert
+        var activePlant = await _plantService.GetActivePlantAsync();
+        activePlant.Should().BeNull();
+    }
+
     #endregion
 
     #region Active Plant Tests

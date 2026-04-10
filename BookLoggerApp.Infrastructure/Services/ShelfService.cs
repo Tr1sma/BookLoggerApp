@@ -32,6 +32,9 @@ public class ShelfService : IShelfService
             .Include(s => s.PlantShelves)
             .ThenInclude(ps => ps.Plant)
             .ThenInclude(p => p.Species)
+            .Include(s => s.DecorationShelves)
+            .ThenInclude(ds => ds.Decoration)
+            .ThenInclude(d => d.ShopItem)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
@@ -76,11 +79,13 @@ public class ShelfService : IShelfService
             }
 
             // Get current max position on the Main shelf
-            var maxPos = Math.Max(
-                await context.BookShelves.Where(bs => bs.ShelfId == mainShelf.Id)
-                    .MaxAsync(bs => (int?)bs.Position) ?? -1,
-                await context.PlantShelves.Where(ps => ps.ShelfId == mainShelf.Id)
-                    .MaxAsync(ps => (int?)ps.Position) ?? -1);
+            var maxBookPos = await context.BookShelves.Where(bs => bs.ShelfId == mainShelf.Id)
+                .MaxAsync(bs => (int?)bs.Position) ?? -1;
+            var maxPlantPos = await context.PlantShelves.Where(ps => ps.ShelfId == mainShelf.Id)
+                .MaxAsync(ps => (int?)ps.Position) ?? -1;
+            var maxDecoPos = await context.DecorationShelves.Where(ds => ds.ShelfId == mainShelf.Id)
+                .MaxAsync(ds => (int?)ds.Position) ?? -1;
+            var maxPos = Math.Max(maxBookPos, Math.Max(maxPlantPos, maxDecoPos));
 
             // Move books to Main shelf (skip duplicates already on Main shelf)
             var booksToMove = await context.BookShelves
@@ -127,6 +132,31 @@ public class ShelfService : IShelfService
                     {
                         ShelfId = mainShelf.Id,
                         PlantId = ps.PlantId,
+                        Position = maxPos
+                    });
+                }
+            }
+
+            // Move decorations to Main shelf (skip duplicates already on Main shelf)
+            var decorationsToMove = await context.DecorationShelves
+                .Where(ds => ds.ShelfId == id)
+                .ToListAsync();
+
+            var existingDecorationIds = await context.DecorationShelves
+                .Where(ds => ds.ShelfId == mainShelf.Id)
+                .Select(ds => ds.DecorationId)
+                .ToHashSetAsync();
+
+            foreach (var ds in decorationsToMove)
+            {
+                context.DecorationShelves.Remove(ds);
+                if (!existingDecorationIds.Contains(ds.DecorationId))
+                {
+                    maxPos++;
+                    context.DecorationShelves.Add(new DecorationShelf
+                    {
+                        ShelfId = mainShelf.Id,
+                        DecorationId = ds.DecorationId,
                         Position = maxPos
                     });
                 }
@@ -268,15 +298,7 @@ public class ShelfService : IShelfService
 
         if (!exists)
         {
-            var maxBookPos = await context.BookShelves
-                .Where(bs => bs.ShelfId == shelfId)
-                .MaxAsync(bs => (int?)bs.Position) ?? -1;
-
-            var maxPlantPos = await context.PlantShelves
-                .Where(ps => ps.ShelfId == shelfId)
-                .MaxAsync(ps => (int?)ps.Position) ?? -1;
-
-            var maxPos = Math.Max(maxBookPos, maxPlantPos);
+            var maxPos = await GetMaxPositionOnShelfAsync(context, shelfId);
 
             context.PlantShelves.Add(new PlantShelf
             {
@@ -313,7 +335,7 @@ public class ShelfService : IShelfService
             .ToListAsync();
     }
 
-    public async Task UpdateShelfPositionsAsync(Guid shelfId, Dictionary<Guid, int> bookPositions, Dictionary<Guid, int> plantPositions)
+    public async Task UpdateShelfPositionsAsync(Guid shelfId, Dictionary<Guid, int> bookPositions, Dictionary<Guid, int> plantPositions, Dictionary<Guid, int> decorationPositions)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
         await using var transaction = await context.Database.BeginTransactionAsync();
@@ -351,6 +373,22 @@ public class ShelfService : IShelfService
                 }
             }
 
+            if (decorationPositions.Any())
+            {
+                var decorationIds = decorationPositions.Keys.ToList();
+                var decorationShelves = await context.DecorationShelves
+                    .Where(ds => ds.ShelfId == shelfId && decorationIds.Contains(ds.DecorationId))
+                    .ToListAsync();
+
+                foreach (var ds in decorationShelves)
+                {
+                    if (decorationPositions.TryGetValue(ds.DecorationId, out var newPos))
+                    {
+                        ds.Position = newPos;
+                    }
+                }
+            }
+
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
         }
@@ -368,13 +406,11 @@ public class ShelfService : IShelfService
         await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
-            // 1. Remove from source shelf
             var sourceEntry = await context.BookShelves
                 .FirstOrDefaultAsync(bs => bs.ShelfId == sourceShelfId && bs.BookId == bookId);
             if (sourceEntry != null)
                 context.BookShelves.Remove(sourceEntry);
 
-            // 2. Check if already on target shelf
             var existsOnTarget = await context.BookShelves
                 .AnyAsync(bs => bs.ShelfId == targetShelfId && bs.BookId == bookId);
 
@@ -383,26 +419,11 @@ public class ShelfService : IShelfService
                 int insertPos = targetPosition;
                 if (insertPos < 0)
                 {
-                    // Append: find max position across books and plants
-                    var maxPos = Math.Max(
-                        await context.BookShelves.Where(bs => bs.ShelfId == targetShelfId)
-                            .MaxAsync(bs => (int?)bs.Position) ?? -1,
-                        await context.PlantShelves.Where(ps => ps.ShelfId == targetShelfId)
-                            .MaxAsync(ps => (int?)ps.Position) ?? -1);
-                    insertPos = maxPos + 1;
+                    insertPos = await GetMaxPositionOnShelfAsync(context, targetShelfId) + 1;
                 }
                 else
                 {
-                    // Shift items at targetPosition and beyond
-                    var booksToShift = await context.BookShelves
-                        .Where(bs => bs.ShelfId == targetShelfId && bs.Position >= insertPos)
-                        .ToListAsync();
-                    foreach (var b in booksToShift) b.Position++;
-
-                    var plantsToShift = await context.PlantShelves
-                        .Where(ps => ps.ShelfId == targetShelfId && ps.Position >= insertPos)
-                        .ToListAsync();
-                    foreach (var p in plantsToShift) p.Position++;
+                    await ShiftItemsOnShelfAsync(context, targetShelfId, insertPos);
                 }
 
                 context.BookShelves.Add(new BookShelf
@@ -430,13 +451,11 @@ public class ShelfService : IShelfService
         await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
-            // 1. Remove from source shelf
             var sourceEntry = await context.PlantShelves
                 .FirstOrDefaultAsync(ps => ps.ShelfId == sourceShelfId && ps.PlantId == plantId);
             if (sourceEntry != null)
                 context.PlantShelves.Remove(sourceEntry);
 
-            // 2. Check if already on target shelf
             var existsOnTarget = await context.PlantShelves
                 .AnyAsync(ps => ps.ShelfId == targetShelfId && ps.PlantId == plantId);
 
@@ -445,24 +464,11 @@ public class ShelfService : IShelfService
                 int insertPos = targetPosition;
                 if (insertPos < 0)
                 {
-                    var maxPos = Math.Max(
-                        await context.BookShelves.Where(bs => bs.ShelfId == targetShelfId)
-                            .MaxAsync(bs => (int?)bs.Position) ?? -1,
-                        await context.PlantShelves.Where(ps => ps.ShelfId == targetShelfId)
-                            .MaxAsync(ps => (int?)ps.Position) ?? -1);
-                    insertPos = maxPos + 1;
+                    insertPos = await GetMaxPositionOnShelfAsync(context, targetShelfId) + 1;
                 }
                 else
                 {
-                    var booksToShift = await context.BookShelves
-                        .Where(bs => bs.ShelfId == targetShelfId && bs.Position >= insertPos)
-                        .ToListAsync();
-                    foreach (var b in booksToShift) b.Position++;
-
-                    var plantsToShift = await context.PlantShelves
-                        .Where(ps => ps.ShelfId == targetShelfId && ps.Position >= insertPos)
-                        .ToListAsync();
-                    foreach (var p in plantsToShift) p.Position++;
+                    await ShiftItemsOnShelfAsync(context, targetShelfId, insertPos);
                 }
 
                 context.PlantShelves.Add(new PlantShelf
@@ -481,5 +487,123 @@ public class ShelfService : IShelfService
             await transaction.RollbackAsync();
             throw;
         }
+    }
+
+    public async Task AddDecorationToShelfAsync(Guid shelfId, Guid decorationId)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var exists = await context.DecorationShelves
+            .AnyAsync(ds => ds.ShelfId == shelfId && ds.DecorationId == decorationId);
+
+        if (!exists)
+        {
+            var maxPos = await GetMaxPositionOnShelfAsync(context, shelfId);
+
+            context.DecorationShelves.Add(new DecorationShelf
+            {
+                ShelfId = shelfId,
+                DecorationId = decorationId,
+                Position = maxPos + 1
+            });
+            await context.SaveChangesAsync();
+        }
+    }
+
+    public async Task RemoveDecorationFromShelfAsync(Guid shelfId, Guid decorationId)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var entry = await context.DecorationShelves
+            .FirstOrDefaultAsync(ds => ds.ShelfId == shelfId && ds.DecorationId == decorationId);
+
+        if (entry != null)
+        {
+            context.DecorationShelves.Remove(entry);
+            await context.SaveChangesAsync();
+        }
+    }
+
+    public async Task MoveDecorationBetweenShelvesAsync(
+        Guid sourceShelfId, Guid targetShelfId, Guid decorationId, int targetPosition)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            var sourceEntry = await context.DecorationShelves
+                .FirstOrDefaultAsync(ds => ds.ShelfId == sourceShelfId && ds.DecorationId == decorationId);
+            if (sourceEntry != null)
+                context.DecorationShelves.Remove(sourceEntry);
+
+            var existsOnTarget = await context.DecorationShelves
+                .AnyAsync(ds => ds.ShelfId == targetShelfId && ds.DecorationId == decorationId);
+
+            if (!existsOnTarget)
+            {
+                int insertPos = targetPosition;
+                if (insertPos < 0)
+                {
+                    insertPos = await GetMaxPositionOnShelfAsync(context, targetShelfId) + 1;
+                }
+                else
+                {
+                    await ShiftItemsOnShelfAsync(context, targetShelfId, insertPos);
+                }
+
+                context.DecorationShelves.Add(new DecorationShelf
+                {
+                    ShelfId = targetShelfId,
+                    DecorationId = decorationId,
+                    Position = insertPos
+                });
+            }
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Returns the maximum Position across books, plants, and decorations on a shelf.
+    /// Returns -1 if the shelf is empty.
+    /// </summary>
+    private static async Task<int> GetMaxPositionOnShelfAsync(AppDbContext context, Guid shelfId)
+    {
+        var maxBookPos = await context.BookShelves
+            .Where(bs => bs.ShelfId == shelfId)
+            .MaxAsync(bs => (int?)bs.Position) ?? -1;
+        var maxPlantPos = await context.PlantShelves
+            .Where(ps => ps.ShelfId == shelfId)
+            .MaxAsync(ps => (int?)ps.Position) ?? -1;
+        var maxDecoPos = await context.DecorationShelves
+            .Where(ds => ds.ShelfId == shelfId)
+            .MaxAsync(ds => (int?)ds.Position) ?? -1;
+        return Math.Max(maxBookPos, Math.Max(maxPlantPos, maxDecoPos));
+    }
+
+    /// <summary>
+    /// Shifts all items at or beyond a given position on a shelf by +1.
+    /// </summary>
+    private static async Task ShiftItemsOnShelfAsync(AppDbContext context, Guid shelfId, int fromPosition)
+    {
+        var booksToShift = await context.BookShelves
+            .Where(bs => bs.ShelfId == shelfId && bs.Position >= fromPosition)
+            .ToListAsync();
+        foreach (var b in booksToShift) b.Position++;
+
+        var plantsToShift = await context.PlantShelves
+            .Where(ps => ps.ShelfId == shelfId && ps.Position >= fromPosition)
+            .ToListAsync();
+        foreach (var p in plantsToShift) p.Position++;
+
+        var decorationsToShift = await context.DecorationShelves
+            .Where(ds => ds.ShelfId == shelfId && ds.Position >= fromPosition)
+            .ToListAsync();
+        foreach (var d in decorationsToShift) d.Position++;
     }
 }

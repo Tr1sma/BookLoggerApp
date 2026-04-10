@@ -15,6 +15,7 @@
 @inject IShareService ShareService
 @inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@inject IOnboardingService OnboardingService
 @implements IDisposable
 
 <PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? "Add Book" : "Edit Book") - BookHeart</PageTitle>
@@ -373,6 +374,11 @@
                 var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
                 await File.WriteAllBytesAsync(filePath, cardBytes);
                 await ShareService.ShareFileAsync("My Book Recommendation", filePath, "image/png");
+
+                if (ViewModel.Book?.Status == ReadingStatus.Completed)
+                {
+                    await OnboardingService.TrackEventAsync(OnboardingEvent.BookShared, ViewModel.Book.Id);
+                }
             }
             catch (Exception ex)
             {
@@ -516,6 +522,7 @@
 
     private async Task HandleSave()
     {
+        var wasNewBook = ViewModel.Book?.Id == Guid.Empty;
         await ViewModel.SaveCommand.ExecuteAsync(null);
         if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.Book != null)
         {
@@ -542,6 +549,16 @@
             }
 
             WidgetUpdateService.NotifyDataChanged();
+
+            if (wasNewBook)
+            {
+                await OnboardingService.TrackEventAsync(OnboardingEvent.BookCreated, ViewModel.Book.Id);
+            }
+
+            if (IsFullyRatedCompletedBook(ViewModel.Book))
+            {
+                await OnboardingService.TrackEventAsync(OnboardingEvent.BookRated, ViewModel.Book.Id);
+            }
 
             // If book was completed, show celebration first before navigating
             if (ViewModel.ShowBookCompletionCelebration)
@@ -723,8 +740,18 @@
         {
             ViewModel.Book.ISBN = isbn;
             await HandleIsbnLookup();
+            await OnboardingService.TrackEventAsync(OnboardingEvent.IsbnScanned);
         }
     }
+
+    private static bool IsFullyRatedCompletedBook(Book? book) =>
+        book?.Status == ReadingStatus.Completed &&
+        book.CharactersRating.HasValue &&
+        book.PlotRating.HasValue &&
+        book.WritingStyleRating.HasValue &&
+        book.SpiceLevelRating.HasValue &&
+        book.PacingRating.HasValue &&
+        book.WorldBuildingRating.HasValue;
 
 
     private IReadOnlyDictionary<string, (string dark, string light)> GetSpineColors()

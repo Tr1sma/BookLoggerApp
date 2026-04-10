@@ -6,6 +6,7 @@
 @inject NavigationManager NavigationManager
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject BookLoggerApp.Core.Services.Abstractions.IShareService ShareService
+@inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
 @implements IDisposable
 
 <PageTitle>Level Overview - BookHeart</PageTitle>
@@ -403,6 +404,7 @@
                 var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
                 await File.WriteAllBytesAsync(filePath, cardBytes);
                 await ShareService.ShareFileAsync("My Reading Stats", filePath, "image/png");
+                await OnboardingService.TrackEventAsync(OnboardingEvent.StatsShared);
             }
             catch (Exception ex)
             {

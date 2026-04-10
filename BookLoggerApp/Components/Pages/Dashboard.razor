@@ -2,11 +2,13 @@
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Components.Shared
 @inject DashboardViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
 @inject IImageService ImageService
 @inject IBackButtonService BackButtonService
+@inject IOnboardingService OnboardingService
 @implements IDisposable
 
 <PageTitle>Dashboard - BookHeart</PageTitle>
@@ -26,6 +28,8 @@
     }
     else
     {
+        <GettingStartedCta />
+
         <!-- Currently Reading Section -->
         <section class="currently-reading">
             <h2>Currently Reading</h2>
@@ -101,7 +105,9 @@
         @if (ViewModel.ActivePlant != null)
         {
             <section class="plant-widget-section">
-                <PlantWidget Plant="@ViewModel.ActivePlant" OnWater="HandleWaterPlant" />
+                <PlantWidget Plant="@ViewModel.ActivePlant"
+                             OnWater="HandleWaterPlant"
+                             OnDelete="HandleDeletePlant" />
             </section>
         }
 
@@ -263,7 +269,18 @@
 
     private async Task HandleWaterPlant()
     {
+        var plantId = ViewModel.ActivePlant?.Id;
         await ViewModel.WaterPlantCommand.ExecuteAsync(null);
+
+        if (plantId.HasValue && string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+        {
+            await OnboardingService.TrackEventAsync(OnboardingEvent.PlantWatered, plantId.Value);
+        }
+    }
+
+    private async Task HandleDeletePlant()
+    {
+        await ViewModel.DeletePlantCommand.ExecuteAsync(null);
     }
 }
 
