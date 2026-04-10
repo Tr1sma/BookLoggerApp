@@ -83,7 +83,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<bool>("HideGettingStartedCta")
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Language")
                         .IsRequired()
