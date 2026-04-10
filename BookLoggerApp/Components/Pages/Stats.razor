@@ -127,7 +127,7 @@
                             </div>
                             <div class="plant-boost-value">@plant.BoostDisplay</div>
                             <div class="plant-boost-bar">
-                                <div class="plant-boost-fill" style="width: @((plant.BoostPercentage / ViewModel.TotalPlantBoost) * 100)%"></div>
+                                <div class="plant-boost-fill" style="width: @(ViewModel.TotalPlantBoost > 0 ? (plant.BoostPercentage / ViewModel.TotalPlantBoost) * 100 : 0)%"></div>
                             </div>
                         </div>
                     }
@@ -391,7 +391,15 @@
         };
         BackButtonService.Register(_backHandler);
 
-        await LoadDataAsync();
+        try
+        {
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Exception in Stats OnInitializedAsync: {ex}");
+            // Don't rethrow — let the UI render with the ViewModel's ErrorMessage
+        }
     }
 
     private void OnShareCardReady(byte[] cardBytes)

@@ -526,6 +526,22 @@ public class ImportExportService : IImportExportService
                     throw new InvalidOperationException("Invalid backup: Missing database file (booklogger.db)");
                 }
 
+                // Validate the extracted database before overwriting the live database.
+                // Opens it read-only so no WAL file is created in the temp directory.
+                var backupConnectionString = $"Data Source={extractedDbPath};Mode=ReadOnly";
+                await using (var integrityConn = new Microsoft.Data.Sqlite.SqliteConnection(backupConnectionString))
+                {
+                    await integrityConn.OpenAsync(ct);
+                    await using var integrityCmd = integrityConn.CreateCommand();
+                    integrityCmd.CommandText = "PRAGMA integrity_check;";
+                    var integrityResult = await integrityCmd.ExecuteScalarAsync(ct) as string;
+                    if (!string.Equals(integrityResult, "ok", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new InvalidOperationException(
+                            $"The backup database failed its integrity check: {integrityResult}");
+                    }
+                }
+
                 await using var context = await _contextFactory.CreateDbContextAsync(ct);
                 
                 // Get current DB path safeley
@@ -537,18 +553,18 @@ public class ImportExportService : IImportExportService
 
                 // 3. Close Connections & Restore DB
                 await context.Database.CloseConnectionAsync();
-                
+
                 // Dispose the context BEFORE copying to release all handles
                 await context.DisposeAsync();
-                
+
                 // Clear SQLite connection pool to ensure no stale connections
                 Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-                
+
                 // Wait a bit to ensure locks are released (SQLite can be sticky)
                 await Task.Delay(200, ct);
 
                 File.Copy(extractedDbPath, currentDbPath, true);
-                
+
                 // Also delete any WAL/SHM files that might cause issues
                 var walPath = currentDbPath + "-wal";
                 var shmPath = currentDbPath + "-shm";
