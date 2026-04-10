@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using BookLoggerApp.Core.Helpers;
+using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 
@@ -10,21 +11,26 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     private readonly IAppVersionService _appVersionService;
     private readonly IChangelogService _changelogService;
     private readonly IAppUpdateService _appUpdateService;
+    private readonly IOnboardingService _onboardingService;
     private bool _initialized;
     private bool _dismissedUpdateAvailableThisSession;
     private bool _dismissedDownloadedUpdateThisSession;
     private bool _pendingUpdateAvailablePrompt;
     private bool _pendingDownloadedUpdatePrompt;
+    private bool _showChangelogAfterOnboarding;
 
     public AppStartupViewModel(
         IAppVersionService appVersionService,
         IChangelogService changelogService,
-        IAppUpdateService appUpdateService)
+        IAppUpdateService appUpdateService,
+        IOnboardingService onboardingService)
     {
         _appVersionService = appVersionService;
         _changelogService = changelogService;
         _appUpdateService = appUpdateService;
+        _onboardingService = onboardingService;
         _appUpdateService.StateChanged += OnAppUpdateStateChanged;
+        _onboardingService.StateChanged += OnOnboardingStateChanged;
     }
 
     [ObservableProperty]
@@ -35,6 +41,12 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private bool _isUpdateReadyVisible;
+
+    [ObservableProperty]
+    private bool _isOnboardingVisible;
+
+    [ObservableProperty]
+    private bool _isOnboardingSkipConfirmationVisible;
 
     [ObservableProperty]
     private bool _showFullHistory;
@@ -54,7 +66,13 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private AppUpdateState _updateState = AppUpdateState.Unsupported;
 
-    public bool HasVisibleOverlay => IsChangelogVisible || IsUpdateAvailableVisible || IsUpdateReadyVisible;
+    [ObservableProperty]
+    private int _onboardingCurrentStep;
+
+    [ObservableProperty]
+    private int _onboardingStepCount = OnboardingMissionCatalog.IntroStepCount;
+
+    public bool HasVisibleOverlay => IsOnboardingVisible || IsChangelogVisible || IsUpdateAvailableVisible || IsUpdateReadyVisible;
 
     public async Task InitializeAsync(CancellationToken ct = default)
     {
@@ -65,10 +83,23 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
 
         await ExecuteSafelyAsync(async () =>
         {
+            await DatabaseInitializationHelper.EnsureInitializedAsync();
             _appVersionService.TrackCurrentVersion();
             CurrentVersion = _appVersionService.CurrentVersion;
 
-            if (_appVersionService.IsFirstLaunchForCurrentVersion)
+            var onboardingSnapshot = await _onboardingService.GetSnapshotAsync(ct);
+            var isFirstLaunchForVersion = _appVersionService.IsFirstLaunchForCurrentVersion;
+
+            ApplyOnboardingSnapshot(onboardingSnapshot);
+
+            if (onboardingSnapshot.ShouldShowIntro)
+            {
+                // Never show the changelog on top of the onboarding intro.
+                // New users don't need version history, and existing users who
+                // replay the intro have already seen the changelog.
+                _showChangelogAfterOnboarding = false;
+            }
+            else if (isFirstLaunchForVersion)
             {
                 await LoadChangelogAsync(ct);
             }
@@ -120,6 +151,58 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         await Task.CompletedTask;
     }
 
+    public async Task SkipOnboardingAsync(CancellationToken ct = default)
+    {
+        IsOnboardingSkipConfirmationVisible = false;
+        await ExecuteSafelyAsync(async () =>
+        {
+            ApplyOnboardingSnapshot(await _onboardingService.CompleteIntroAsync(skipped: true, ct));
+            await HandleOnboardingDismissedAsync(ct);
+        }, "Failed to skip onboarding intro");
+        IsOnboardingVisible = false;
+    }
+
+    public async Task CompleteOnboardingAsync(CancellationToken ct = default)
+    {
+        IsOnboardingSkipConfirmationVisible = false;
+        await ExecuteSafelyAsync(async () =>
+        {
+            ApplyOnboardingSnapshot(await _onboardingService.CompleteIntroAsync(skipped: false, ct));
+            await HandleOnboardingDismissedAsync(ct);
+        }, "Failed to complete onboarding intro");
+        IsOnboardingVisible = false;
+    }
+
+    public void DismissOnboarding()
+    {
+        IsOnboardingVisible = false;
+        IsOnboardingSkipConfirmationVisible = false;
+    }
+
+    public async Task AdvanceOnboardingAsync(CancellationToken ct = default)
+    {
+        IsOnboardingSkipConfirmationVisible = false;
+        ApplyOnboardingSnapshot(await _onboardingService.AdvanceIntroAsync(ct));
+    }
+
+    public async Task RetreatOnboardingAsync(CancellationToken ct = default)
+    {
+        IsOnboardingSkipConfirmationVisible = false;
+        ApplyOnboardingSnapshot(await _onboardingService.RetreatIntroAsync(ct));
+    }
+
+    public Task RequestSkipOnboardingAsync()
+    {
+        IsOnboardingSkipConfirmationVisible = true;
+        return Task.CompletedTask;
+    }
+
+    public Task CancelSkipOnboardingAsync()
+    {
+        IsOnboardingSkipConfirmationVisible = false;
+        return Task.CompletedTask;
+    }
+
     public async Task StartFlexibleUpdateAsync(CancellationToken ct = default)
     {
         if (IsStartingUpdate)
@@ -158,6 +241,24 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
 
     public async Task<bool> HandleBackAsync()
     {
+        if (IsOnboardingVisible)
+        {
+            if (IsOnboardingSkipConfirmationVisible)
+            {
+                IsOnboardingSkipConfirmationVisible = false;
+                return true;
+            }
+
+            if (OnboardingCurrentStep > 0)
+            {
+                await RetreatOnboardingAsync();
+                return true;
+            }
+
+            IsOnboardingSkipConfirmationVisible = true;
+            return true;
+        }
+
         if (IsUpdateReadyVisible)
         {
             await DismissUpdateReadyAsync();
@@ -182,12 +283,29 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     public void Dispose()
     {
         _appUpdateService.StateChanged -= OnAppUpdateStateChanged;
+        _onboardingService.StateChanged -= OnOnboardingStateChanged;
     }
 
     private void OnAppUpdateStateChanged(object? sender, AppUpdateState state)
     {
         UpdateState = state;
         ApplyUpdatePromptState(state);
+    }
+
+    private void OnOnboardingStateChanged(object? sender, EventArgs e)
+    {
+        _ = ExecuteSafelyAsync(async () =>
+        {
+            var snapshot = await _onboardingService.RefreshSnapshotAsync();
+            var wasVisible = IsOnboardingVisible;
+
+            ApplyOnboardingSnapshot(snapshot);
+
+            if (wasVisible && !snapshot.ShouldShowIntro)
+            {
+                await HandleOnboardingDismissedAsync();
+            }
+        }, "Failed to refresh onboarding state");
     }
 
     private async Task LoadChangelogAsync(CancellationToken ct)
@@ -224,7 +342,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             _pendingDownloadedUpdatePrompt = !_dismissedDownloadedUpdateThisSession;
             _pendingUpdateAvailablePrompt = false;
 
-            if (IsChangelogVisible)
+            if (IsOnboardingVisible || IsChangelogVisible)
             {
                 IsUpdateAvailableVisible = false;
                 IsUpdateReadyVisible = false;
@@ -255,7 +373,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         {
             _pendingUpdateAvailablePrompt = true;
 
-            if (IsChangelogVisible)
+            if (IsOnboardingVisible || IsChangelogVisible)
             {
                 IsUpdateAvailableVisible = false;
                 OnPropertyChanged(nameof(HasVisibleOverlay));
@@ -274,6 +392,14 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
 
     private void ShowNextQueuedUpdatePrompt()
     {
+        if (IsOnboardingVisible || IsChangelogVisible)
+        {
+            IsUpdateAvailableVisible = false;
+            IsUpdateReadyVisible = false;
+            OnPropertyChanged(nameof(HasVisibleOverlay));
+            return;
+        }
+
         if (_pendingDownloadedUpdatePrompt && !_dismissedDownloadedUpdateThisSession)
         {
             IsUpdateReadyVisible = true;
@@ -301,5 +427,33 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     partial void OnIsUpdateReadyVisibleChanged(bool value)
     {
         OnPropertyChanged(nameof(HasVisibleOverlay));
+    }
+
+    partial void OnIsOnboardingVisibleChanged(bool value)
+    {
+        OnPropertyChanged(nameof(HasVisibleOverlay));
+    }
+
+    private void ApplyOnboardingSnapshot(OnboardingSnapshot snapshot)
+    {
+        OnboardingCurrentStep = snapshot.CurrentIntroStep;
+        OnboardingStepCount = snapshot.IntroStepCount;
+        IsOnboardingVisible = snapshot.ShouldShowIntro;
+
+        if (!snapshot.ShouldShowIntro)
+        {
+            IsOnboardingSkipConfirmationVisible = false;
+        }
+    }
+
+    private async Task HandleOnboardingDismissedAsync(CancellationToken ct = default)
+    {
+        if (_showChangelogAfterOnboarding)
+        {
+            _showChangelogAfterOnboarding = false;
+            await LoadChangelogAsync(ct);
+        }
+
+        ShowNextQueuedUpdatePrompt();
     }
 }

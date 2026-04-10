@@ -3,202 +3,331 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Components.Shared
 @inject PlantShopViewModel ViewModel
+@inject DecorationShopViewModel DecorationVM
 @inject NavigationManager Navigation
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
 @implements IDisposable
 
-<PageTitle>Plant Shop - BookHeart</PageTitle>
+<PageTitle>Shop - BookHeart</PageTitle>
 
 <div class="plant-shop-container">
     <!-- Header -->
     <div class="shop-header">
-        <h1>🌱 Plant Shop</h1>
+        <h1>🛍️ Shop</h1>
         <div class="user-stats">
             <div class="stat-coin">
                 <span class="coin-icon">🪙</span>
-                <span class="coin-count">@ViewModel.UserCoins Coins</span>
+                <span class="coin-count">@(activeTab == "plants" ? ViewModel.UserCoins : DecorationVM.UserCoins) Coins</span>
             </div>
             <div class="stat-level">
-                <span>Level @ViewModel.UserLevel</span>
+                <span>Level @(activeTab == "plants" ? ViewModel.UserLevel : DecorationVM.UserLevel)</span>
             </div>
         </div>
     </div>
 
-    <!-- Description -->
-    <div class="shop-description">
-        <p>🌿 Welcome to the Plant Shop! Buy plants to grow as you read. Each plant has unique growth rates and care requirements.</p>
+    <!-- Tab Bar -->
+    <div class="shop-tabs">
+        <button class="shop-tab-btn @(activeTab == "plants" ? "active" : "")"
+                @onclick='() => SwitchTab("plants")'>
+            🌱 Pflanzen
+        </button>
+        <button class="shop-tab-btn @(activeTab == "decorations" ? "active" : "")"
+                @onclick='() => SwitchTab("decorations")'>
+            🕯️ Dekorationen
+        </button>
     </div>
 
-    <!-- Leveling Info Box -->
-
-
-    @if (ViewModel.IsBusy)
+    @* ===== PLANTS TAB ===== *@
+    @if (activeTab == "plants")
     {
-        <div class="loading">Loading shop...</div>
-    }
-    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
-    {
-        <div class="alert alert-danger">
-            @ViewModel.ErrorMessage
-            <button class="btn-close-alert" @onclick="() => ViewModel.ErrorMessage = null">×</button>
-        </div>
-    }
-    else
-    {
-        <!-- Shop Grid -->
-        <div class="shop-grid">
-            @foreach (var species in ViewModel.AvailableSpecies)
-            {
-                <PlantShopCard
-                    Species="@species"
-                    UserCoins="@ViewModel.UserCoins"
-                    UserLevel="@ViewModel.UserLevel"
-                    CurrentPrice="@ViewModel.GetDynamicPrice(species.Id)"
-                    IsSelected="@(ViewModel.SelectedSpecies?.Id == species.Id)"
-                    OnSelect="() => SelectSpecies(species)" />
-            }
+        <!-- Description -->
+        <div class="shop-description">
+            <p>🌿 Welcome to the Plant Shop! Buy plants to grow as you read. Each plant has unique growth rates and care requirements.</p>
         </div>
 
-        @if (!ViewModel.AvailableSpecies.Any())
+        @if (ViewModel.IsBusy)
         {
-            <div class="empty-state">
-                <h3>No plants available</h3>
-                <p>Level up to unlock more plants!</p>
+            <div class="loading">Loading shop...</div>
+        }
+        else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                @ViewModel.ErrorMessage
+                <button class="btn-close-alert" @onclick="() => ViewModel.ErrorMessage = null">×</button>
+            </div>
+        }
+        else
+        {
+            <!-- Shop Grid -->
+            <div class="shop-grid">
+                @foreach (var species in ViewModel.AvailableSpecies)
+                {
+                    <PlantShopCard
+                        Species="@species"
+                        UserCoins="@ViewModel.UserCoins"
+                        UserLevel="@ViewModel.UserLevel"
+                        CurrentPrice="@ViewModel.GetDynamicPrice(species.Id)"
+                        IsSelected="@(ViewModel.SelectedSpecies?.Id == species.Id)"
+                        OnSelect="() => SelectSpecies(species)" />
+                }
+            </div>
+
+            @if (!ViewModel.AvailableSpecies.Any())
+            {
+                <div class="empty-state">
+                    <h3>No plants available</h3>
+                    <p>Level up to unlock more plants!</p>
+                </div>
+            }
+        }
+
+        <!-- Plant Purchase Modal -->
+        @if (ViewModel.SelectedSpecies != null)
+        {
+            <div class="purchase-modal-overlay" @onclick="ClearSelection">
+                <div class="purchase-modal" @onclick:stopPropagation="true">
+                    <div class="modal-header">
+                        <h2>Purchase <span class="purchase-plant-name">@ViewModel.SelectedSpecies.Name</span></h2>
+                        <button class="btn-close" @onclick="ClearSelection">×</button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="plant-preview">
+                            <img src="@ViewModel.SelectedSpecies.ImagePath" alt="@ViewModel.SelectedSpecies.Name" />
+                        </div>
+
+                        <div class="plant-details">
+                            <p class="plant-description">@ViewModel.SelectedSpecies.Description</p>
+
+                            <div class="plant-stats-grid">
+                                <div class="stat-item">
+                                    <label>Max Level</label>
+                                    <span>@ViewModel.SelectedSpecies.MaxLevel</span>
+                                </div>
+                                <div class="stat-item">
+                                    <label>Water Interval</label>
+                                    <span>Every @ViewModel.SelectedSpecies.WaterIntervalDays days</span>
+                                </div>
+                                <div class="stat-item">
+                                    <label>Growth Rate</label>
+                                    <span>@ViewModel.SelectedSpecies.GrowthRate.ToString("0.0")x</span>
+                                </div>
+                                <div class="stat-item">
+                                    <label>Cost</label>
+                                    <span>🪙 @ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id)</span>
+                                </div>
+                            </div>
+
+                            <div class="name-input-group">
+                                <label>Name your plant (optional):</label>
+                                <input type="text"
+                                       class="plant-name-input"
+                                       placeholder="@($"Default: {ViewModel.SelectedSpecies.Name}")"
+                                       @bind="ViewModel.NewPlantName"
+                                       @bind:event="oninput"
+                                       maxlength="100" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="ClearSelection">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary"
+                                @onclick="HandlePlantPurchaseAsync"
+                                disabled="@(ViewModel.UserCoins < ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))">
+                            @if (ViewModel.UserCoins >= ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))
+                            {
+                                <span>Purchase for 🪙 @ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id)</span>
+                            }
+                            else
+                            {
+                                <span>Not Enough Coins</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="info-box">
+            <h4>📚 How do Plants Grow?</h4>
+            <ul>
+                <li>📖 One <strong>reading day</strong> = a day with at least 15 minutes of reading</li>
+                <li>🌱 <strong>3 reading days</strong> = 1 level (at Growth Rate 1.0)</li>
+                <li>⚡ <strong>Growth Rate 1.2</strong> = 20% faster (~2.5 days/level)</li>
+                <li>🐢 <strong>Growth Rate 0.8</strong> = 20% slower (~3.75 days/level)</li>
+                <li>✨ Higher level = higher XP boost while reading</li>
+            </ul>
+        </div>
+    }
+
+    @* ===== DECORATIONS TAB ===== *@
+    @if (activeTab == "decorations")
+    {
+        <!-- Description -->
+        <div class="shop-description">
+            <p>🕯️ Decorate your shelves! Cosmetic items to make your bookshelf cosy and unique.</p>
+        </div>
+
+        @if (DecorationVM.IsBusy)
+        {
+            <div class="loading">Loading decorations...</div>
+        }
+        else if (!string.IsNullOrEmpty(DecorationVM.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                @DecorationVM.ErrorMessage
+                <button class="btn-close-alert" @onclick="() => DecorationVM.ErrorMessage = null">×</button>
+            </div>
+        }
+        else
+        {
+            <!-- Decoration Grid -->
+            <div class="shop-grid">
+                @foreach (var item in DecorationVM.AllDecorations)
+                {
+                    <DecorationShopCard
+                        Item="@item"
+                        UserCoins="@DecorationVM.UserCoins"
+                        UserLevel="@DecorationVM.UserLevel"
+                        IsSelected="@(DecorationVM.SelectedDecoration?.Id == item.Id)"
+                        OnSelect="() => SelectDecoration(item)" />
+                }
+            </div>
+
+            @if (!DecorationVM.AllDecorations.Any())
+            {
+                <div class="empty-state">
+                    <h3>No decorations available</h3>
+                    <p>Check back later!</p>
+                </div>
+            }
+        }
+
+        <!-- Decoration Purchase Modal -->
+        @if (DecorationVM.SelectedDecoration != null)
+        {
+            <div class="purchase-modal-overlay" @onclick="ClearDecorationSelection">
+                <div class="purchase-modal" @onclick:stopPropagation="true">
+                    <div class="modal-header">
+                        <h2>Purchase <span class="purchase-plant-name">@DecorationVM.SelectedDecoration.Name</span></h2>
+                        <button class="btn-close" @onclick="ClearDecorationSelection">×</button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="plant-preview">
+                            <img src="@DecorationVM.SelectedDecoration.ImagePath" alt="@DecorationVM.SelectedDecoration.Name" />
+                        </div>
+
+                        <div class="plant-details">
+                            <p class="plant-description">@DecorationVM.SelectedDecoration.Description</p>
+
+                            <div class="plant-stats-grid">
+                                <div class="stat-item">
+                                    <label>Cost</label>
+                                    <span>🪙 @DecorationVM.SelectedDecoration.Cost</span>
+                                </div>
+                                <div class="stat-item">
+                                    <label>Unlock Level</label>
+                                    <span>Lv. @DecorationVM.SelectedDecoration.UnlockLevel</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="ClearDecorationSelection">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary"
+                                @onclick="HandleDecorationPurchaseAsync"
+                                disabled="@(DecorationVM.UserCoins < DecorationVM.SelectedDecoration.Cost || DecorationVM.UserLevel < DecorationVM.SelectedDecoration.UnlockLevel)">
+                            @if (DecorationVM.UserLevel < DecorationVM.SelectedDecoration.UnlockLevel)
+                            {
+                                <span>Requires Level @DecorationVM.SelectedDecoration.UnlockLevel</span>
+                            }
+                            else if (DecorationVM.UserCoins >= DecorationVM.SelectedDecoration.Cost)
+                            {
+                                <span>Purchase for 🪙 @DecorationVM.SelectedDecoration.Cost</span>
+                            }
+                            else
+                            {
+                                <span>Not Enough Coins</span>
+                            }
+                        </button>
+                    </div>
+                </div>
             </div>
         }
     }
-
-    <!-- Purchase Modal -->
-    @if (ViewModel.SelectedSpecies != null)
-    {
-        <div class="purchase-modal-overlay" @onclick="ClearSelection">
-            <div class="purchase-modal" @onclick:stopPropagation="true">
-                <div class="modal-header">
-                    <h2>Purchase <span class="purchase-plant-name">@ViewModel.SelectedSpecies.Name</span></h2>
-                    <button class="btn-close" @onclick="ClearSelection">×</button>
-                </div>
-
-                <div class="modal-body">
-                    <div class="plant-preview">
-                        <img src="@ViewModel.SelectedSpecies.ImagePath" alt="@ViewModel.SelectedSpecies.Name" />
-                    </div>
-
-                    <div class="plant-details">
-                        <p class="plant-description">@ViewModel.SelectedSpecies.Description</p>
-
-                        <div class="plant-stats-grid">
-                            <div class="stat-item">
-                                <label>Max Level</label>
-                                <span>@ViewModel.SelectedSpecies.MaxLevel</span>
-                            </div>
-                            <div class="stat-item">
-                                <label>Water Interval</label>
-                                <span>Every @ViewModel.SelectedSpecies.WaterIntervalDays days</span>
-                            </div>
-                            <div class="stat-item">
-                                <label>Growth Rate</label>
-                                <span>@ViewModel.SelectedSpecies.GrowthRate.ToString("0.0")x</span>
-                            </div>
-                            <div class="stat-item">
-                                <label>Cost</label>
-                                <span>🪙 @ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id)</span>
-                            </div>
-                        </div>
-
-                        <div class="name-input-group">
-                            <label>Name your plant (optional):</label>
-                            <input type="text"
-                                   class="plant-name-input"
-                                   placeholder="@($"Default: {ViewModel.SelectedSpecies.Name}")"
-                                   @bind="ViewModel.NewPlantName"
-                                   @bind:event="oninput"
-                                   maxlength="100" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="ClearSelection">
-                        Cancel
-                    </button>
-                    <button class="btn btn-primary"
-                            @onclick="HandlePurchaseAsync"
-                            disabled="@(ViewModel.UserCoins < ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))">
-                        @if (ViewModel.UserCoins >= ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))
-                        {
-                            <span>Purchase for 🪙 @ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id)</span>
-                        }
-                        else
-                        {
-                            <span>Not Enough Coins</span>
-                        }
-                    </button>
-                </div>
-            </div>
-        </div>
-    }
-    <div class="info-box">
-        <h4>📚 How do Plants Grow?</h4>
-        <ul>
-            <li>📖 One <strong>reading day</strong> = a day with at least 15 minutes of reading</li>
-            <li>🌱 <strong>3 reading days</strong> = 1 level (at Growth Rate 1.0)</li>
-            <li>⚡ <strong>Growth Rate 1.2</strong> = 20% faster (~2.5 days/level)</li>
-            <li>🐢 <strong>Growth Rate 0.8</strong> = 20% slower (~3.75 days/level)</li>
-            <li>✨ Higher level = higher XP boost while reading</li>
-        </ul>
-    </div>
 </div>
 
 @code {
+    private string activeTab = "plants";
     private Func<Task<bool>>? _navBackHandler;
     private Func<Task<bool>>? _modalBackHandler;
 
     protected override async Task OnInitializedAsync()
     {
-         // Register navigation back handler (Shop -> Bookshelf)
-        _navBackHandler = async () => 
+        _navBackHandler = async () =>
         {
             Navigation.NavigateTo("/");
             return true;
         };
         BackButtonService.Register(_navBackHandler);
-        
+
         await ViewModel.LoadCommand.ExecuteAsync(null);
+        await DecorationVM.LoadCommand.ExecuteAsync(null);
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        // Refresh when navigating back to the page
         if (ViewModel.AvailableSpecies.Any())
         {
             await ViewModel.LoadCommand.ExecuteAsync(null);
         }
+        if (DecorationVM.AllDecorations.Any())
+        {
+            await DecorationVM.LoadCommand.ExecuteAsync(null);
+        }
     }
 
-    private async Task HandlePurchaseAsync()
+    private async Task SwitchTab(string tab)
+    {
+        activeTab = tab;
+        if (tab == "decorations")
+            await DecorationVM.LoadCommand.ExecuteAsync(null);
+        else
+            await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    // ===== Plant handlers =====
+
+    private async Task HandlePlantPurchaseAsync()
     {
         if (ViewModel.SelectedSpecies != null)
         {
             await ViewModel.PurchasePlantCommand.ExecuteAsync(ViewModel.SelectedSpecies.Id);
 
-            // Navigate to Bookshelf after successful purchase
             if (string.IsNullOrEmpty(ViewModel.ErrorMessage))
             {
+                await OnboardingService.TrackEventAsync(OnboardingEvent.PlantPurchased);
                 Navigation.NavigateTo("/bookshelf");
             }
             else
             {
-                StateHasChanged(); // Force UI update if there was an error
+                StateHasChanged();
             }
         }
-
     }
-    
-    private void SelectSpecies(BookLoggerApp.Core.Models.PlantSpecies species)
+
+    private void SelectSpecies(PlantSpecies species)
     {
         ViewModel.SelectSpeciesCommand.Execute(species);
-        
-        // Register modal back handler
+
         _modalBackHandler = async () =>
         {
             ClearSelection();
@@ -206,17 +335,61 @@
         };
         BackButtonService.Register(_modalBackHandler);
     }
-    
+
     private void ClearSelection()
     {
         ViewModel.ClearSelectionCommand.Execute(null);
+        UnregisterModalBack();
+    }
+
+    // ===== Decoration handlers =====
+
+    private async Task HandleDecorationPurchaseAsync()
+    {
+        if (DecorationVM.SelectedDecoration != null)
+        {
+            await DecorationVM.PurchaseDecorationCommand.ExecuteAsync(DecorationVM.SelectedDecoration.Id);
+
+            if (string.IsNullOrEmpty(DecorationVM.ErrorMessage))
+            {
+                Navigation.NavigateTo("/bookshelf");
+            }
+            else
+            {
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void SelectDecoration(ShopItem item)
+    {
+        DecorationVM.SelectDecorationCommand.Execute(item);
+
+        _modalBackHandler = async () =>
+        {
+            ClearDecorationSelection();
+            return true;
+        };
+        BackButtonService.Register(_modalBackHandler);
+    }
+
+    private void ClearDecorationSelection()
+    {
+        DecorationVM.ClearSelectionCommand.Execute(null);
+        UnregisterModalBack();
+    }
+
+    // ===== Common =====
+
+    private void UnregisterModalBack()
+    {
         if (_modalBackHandler != null)
         {
             BackButtonService.Unregister(_modalBackHandler);
             _modalBackHandler = null;
         }
     }
-    
+
     public void Dispose()
     {
         if (_navBackHandler != null)
@@ -224,10 +397,6 @@
             BackButtonService.Unregister(_navBackHandler);
             _navBackHandler = null;
         }
-         if (_modalBackHandler != null)
-        {
-            BackButtonService.Unregister(_modalBackHandler);
-            _modalBackHandler = null;
-        }
+        UnregisterModalBack();
     }
 }

@@ -1,0 +1,393 @@
+@page "/getting-started"
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Services.Abstractions
+@implements IDisposable
+@inject IOnboardingService OnboardingService
+@inject NavigationManager NavigationManager
+@inject IBackButtonService BackButtonService
+
+<PageTitle>Getting Started - BookHeart</PageTitle>
+
+<div class="getting-started-page">
+    @if (_isLoading)
+    {
+        <div class="loading">Loading getting started...</div>
+    }
+    else if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <div class="alert alert-danger">@_errorMessage</div>
+    }
+    else if (_snapshot != null)
+    {
+        <section class="getting-started-hero">
+            <div>
+                <span class="getting-started-kicker">BookHeart onboarding</span>
+                <h1>Getting Started</h1>
+                <p>Track the real first-run flows, replay the intro, and use the hub to cover the rest of the app.</p>
+            </div>
+
+            <div class="getting-started-summary">
+                <span class="summary-label">Core setup</span>
+                <strong>@_snapshot.CompletedCoreCount / @_snapshot.TotalCoreCount</strong>
+            </div>
+        </section>
+
+        <section class="getting-started-actions">
+            <button type="button" class="btn btn-primary" @onclick="ReplayIntroAsync">
+                Replay intro
+            </button>
+            <button type="button" class="btn btn-secondary" @onclick="ResetGuidedProgressAsync">
+                Reset guided progress
+            </button>
+        </section>
+
+        <section class="getting-started-section">
+            <div class="section-header">
+                <h2>Guided missions</h2>
+                <p>These missions complete only from real app actions.</p>
+            </div>
+
+            <div class="mission-grid">
+                @foreach (var mission in _snapshot.Missions)
+                {
+                    <article class="mission-card @(mission.IsCompleted ? "is-complete" : mission.IsLocked ? "is-locked" : "is-active")">
+                        <div class="mission-header">
+                            <span class="mission-icon">@mission.Icon</span>
+                            <span class="mission-status @GetStatusClass(mission.Status)">@GetStatusLabel(mission.Status)</span>
+                        </div>
+
+                        <h3>@mission.Title</h3>
+                        <p>@mission.Description</p>
+
+                        @if (!string.IsNullOrWhiteSpace(mission.Note))
+                        {
+                            <p class="mission-note">@mission.Note</p>
+                        }
+
+                        @if (mission.IsCompleted && mission.CompletedAt.HasValue)
+                        {
+                            <p class="mission-meta">Completed @mission.CompletedAt.Value.ToLocalTime().ToString("g")</p>
+                        }
+
+                        <button type="button"
+                                class="btn @(mission.IsCompleted ? "btn-secondary" : "btn-primary")"
+                                disabled="@mission.IsLocked"
+                                @onclick="() => OpenMissionAsync(mission)">
+                            @(mission.IsCompleted ? "Open again" : mission.CtaLabel)
+                        </button>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <section class="getting-started-section">
+            <div class="section-header">
+                <h2>Feature atlas</h2>
+                <p>Covered here without forcing risky or platform-dependent actions.</p>
+            </div>
+
+            <div class="atlas-grid">
+                @foreach (var entry in _snapshot.FeatureAtlas)
+                {
+                    <article class="atlas-card">
+                        <div class="atlas-header">
+                            <span class="atlas-icon">@entry.Icon</span>
+                            @if (!string.IsNullOrWhiteSpace(entry.Badge))
+                            {
+                                <span class="atlas-badge">@entry.Badge</span>
+                            }
+                        </div>
+
+                        <h3>@entry.Title</h3>
+                        <p>@entry.Description</p>
+
+                        @if (!string.IsNullOrWhiteSpace(entry.Route))
+                        {
+                            <button type="button" class="btn btn-secondary" @onclick="() => NavigationManager.NavigateTo(entry.Route!)">
+                                @(entry.CtaLabel ?? "Open")
+                            </button>
+                        }
+                    </article>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private OnboardingSnapshot? _snapshot;
+    private string? _errorMessage;
+    private bool _isLoading = true;
+    private Func<Task<bool>>? _backHandler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        OnboardingService.StateChanged += HandleOnboardingStateChanged;
+        _backHandler = async () =>
+        {
+            NavigationManager.NavigateTo("/");
+            return true;
+        };
+        BackButtonService.Register(_backHandler);
+
+        await RefreshAsync();
+    }
+
+    public void Dispose()
+    {
+        OnboardingService.StateChanged -= HandleOnboardingStateChanged;
+
+        if (_backHandler != null)
+        {
+            BackButtonService.Unregister(_backHandler);
+            _backHandler = null;
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = null;
+            _snapshot = await OnboardingService.RefreshSnapshotAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to load getting started: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ReplayIntroAsync()
+    {
+        await OnboardingService.ResetIntroAsync();
+        NavigationManager.NavigateTo("/");
+    }
+
+    private async Task ResetGuidedProgressAsync()
+    {
+        _snapshot = await OnboardingService.ResetAllAsync();
+        StateHasChanged();
+    }
+
+    private Task OpenMissionAsync(OnboardingMissionProgress mission)
+    {
+        NavigationManager.NavigateTo(mission.Route);
+        return Task.CompletedTask;
+    }
+
+    private void HandleOnboardingStateChanged(object? sender, EventArgs e)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            _snapshot = await OnboardingService.RefreshSnapshotAsync();
+            StateHasChanged();
+        });
+    }
+
+    private static string GetStatusClass(OnboardingMissionStatus status) =>
+        status switch
+        {
+            OnboardingMissionStatus.Completed => "status-completed",
+            OnboardingMissionStatus.Available => "status-available",
+            _ => "status-locked"
+        };
+
+    private static string GetStatusLabel(OnboardingMissionStatus status) =>
+        status switch
+        {
+            OnboardingMissionStatus.Completed => "Completed",
+            OnboardingMissionStatus.Available => "Ready",
+            _ => "Locked"
+        };
+}
+
+<style>
+    .getting-started-page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 1rem 1rem 5rem;
+    }
+
+    .getting-started-hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.4rem;
+        border-radius: 24px;
+        background: linear-gradient(135deg, rgba(33, 80, 50, 0.34), rgba(26, 62, 40, 0.34));
+        border: 1px solid rgba(45, 102, 64, 0.48);
+        box-shadow: 0 18px 42px rgba(22, 47, 32, 0.2);
+    }
+
+    .getting-started-kicker {
+        display: inline-block;
+        margin-bottom: 0.4rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: rgba(225, 243, 232, 0.9);
+    }
+
+    .getting-started-hero h1 {
+        margin: 0;
+        font-size: 2rem;
+        color: #e7f5ec;
+    }
+
+    .getting-started-hero p {
+        margin: 0.6rem 0 0;
+        max-width: 42rem;
+        color: rgba(226, 241, 231, 0.9);
+    }
+
+    .getting-started-summary {
+        min-width: 180px;
+        padding: 1rem;
+        border-radius: 18px;
+        background: rgba(21, 54, 34, 0.46);
+        border: 1px solid rgba(45, 102, 64, 0.48);
+        text-align: center;
+        color: #dff0e6;
+    }
+
+    .getting-started-summary strong {
+        display: block;
+        font-size: 2rem;
+        line-height: 1.1;
+    }
+
+    .summary-label {
+        display: block;
+        margin-bottom: 0.35rem;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .getting-started-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin: 1rem 0 1.25rem;
+    }
+
+    .getting-started-section {
+        margin-top: 1.5rem;
+    }
+
+    .section-header h2 {
+        margin-bottom: 0.3rem;
+    }
+
+    .section-header p {
+        margin: 0 0 1rem;
+        color: var(--text-secondary);
+    }
+
+    .mission-grid,
+    .atlas-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .mission-card,
+    .atlas-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-radius: 18px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.04);
+    }
+
+    .mission-card.is-complete {
+        border-color: rgba(45, 102, 64, 0.48);
+        background: rgba(33, 80, 50, 0.24);
+    }
+
+    .mission-card.is-locked {
+        opacity: 0.78;
+    }
+
+    .mission-header,
+    .atlas-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .mission-icon,
+    .atlas-icon {
+        font-size: 1.35rem;
+    }
+
+    .mission-status,
+    .atlas-badge {
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .status-completed {
+        background: rgba(37, 88, 55, 0.24);
+        color: #1f4a2f;
+    }
+
+    .status-available {
+        background: rgba(180, 133, 40, 0.14);
+        color: #8b6220;
+    }
+
+    .status-locked {
+        background: rgba(96, 106, 118, 0.12);
+        color: #55606b;
+    }
+
+    .atlas-badge {
+        background: rgba(58, 83, 95, 0.1);
+        color: #485764;
+    }
+
+    .mission-card h3,
+    .atlas-card h3 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .mission-card p,
+    .atlas-card p {
+        margin: 0;
+        color: var(--text-secondary);
+    }
+
+    .mission-note {
+        font-size: 0.92rem;
+        color: #5b624d;
+    }
+
+    .mission-meta {
+        font-size: 0.82rem;
+        color: #6a7067;
+    }
+
+    @@media (max-width: 720px) {
+        .getting-started-hero,
+        .getting-started-actions {
+            flex-direction: column;
+        }
+
+        .getting-started-actions .btn {
+            width: 100%;
+        }
+    }
+</style>

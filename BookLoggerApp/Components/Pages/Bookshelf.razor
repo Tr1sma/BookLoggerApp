@@ -11,12 +11,15 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject WishlistViewModel WishlistVM
 @inject BookLoggerApp.Services.IScannerService ScannerService
+@inject IOnboardingService OnboardingService
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
 <PageTitle>Bookshelf - BookHeart</PageTitle>
 
 <div class="bookshelf-container" style="--shelf-ledge-color: @ViewModel.ShelfLedgeColor; --shelf-base-color: @ViewModel.ShelfBaseColor">
+    <GettingStartedCta />
+
     <!-- Reading Goal Header -->
     <GoalHeader TbrCount="@ViewModel.TbrCount" GoalTarget="@ViewModel.GoalTarget"
         BooksRead="@ViewModel.BooksReadThisYear" BooksRemaining="@ViewModel.BooksRemainingToGoal" />
@@ -176,6 +179,18 @@
                                             OnClick="() => HandlePlantClick(item.Plant, shelfVM.Shelf.Id)" />
                                     </div>
                                 }
+                                else if (item.Type == ShelfItemType.Decoration && item.Decoration != null)
+                                {
+                                    <div @key="item.Decoration.Id"
+                                         class="shelf-slot"
+                                         data-item-id="@item.Decoration.Id"
+                                         data-item-type="Decoration"
+                                         data-shelf-id="@shelfVM.Shelf.Id">
+                                        <DecorationCard Decoration="@item.Decoration" IsInBookshelf="true"
+                                            ShowActions="false"
+                                            OnClick="() => HandleDecorationClick(item.Decoration, shelfVM.Shelf.Id)" />
+                                    </div>
+                                }
                             }
 
                             <!-- Add Plant Button -->
@@ -184,6 +199,15 @@
                                 <div class="empty-slot" @onclick="() => HandleAddPlant(shelfVM.Shelf.Id)">
                                     <div class="empty-slot-icon">🌱</div>
                                     <div class="empty-slot-text">Add Plant</div>
+                                </div>
+                            }
+
+                            <!-- Add Decoration Button -->
+                            @if (ViewModel.AvailableDecorations.Any())
+                            {
+                                <div class="empty-slot" @onclick="() => HandleAddDecoration(shelfVM.Shelf.Id)">
+                                    <div class="empty-slot-icon">🕯️</div>
+                                    <div class="empty-slot-text">Add Deco</div>
                                 </div>
                             }
                         </div>
@@ -339,9 +363,9 @@
                 @if (selectedPlantShelfId.HasValue)
                 {
                     <button class="btn btn-danger"
-                            @onclick="HandleRemoveSelectedPlantFromShelf"
+                            @onclick="HandleSelectedPlantAction"
                             disabled="@isRemovingPlant">
-                        @(isRemovingPlant ? "Removing..." : "Remove from Shelf")
+                        @GetSelectedPlantActionLabel()
                     </button>
                 }
             </div>
@@ -379,6 +403,64 @@
         </div>
     </div>
 }
+<!-- Decoration Selector Modal -->
+@if (showDecorationSelector)
+{
+    <div class="modal-overlay" @onclick="CloseDecorationSelector">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <h3>Select a Decoration</h3>
+            <div class="plant-selector-grid" style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 0;">
+                @if (ViewModel.AvailableDecorations.Any())
+                {
+                    @foreach (var deco in ViewModel.AvailableDecorations)
+                    {
+                        <div class="plant-select-item" @onclick="() => SelectDecorationForBookshelf(deco)"
+                            style="cursor: pointer; transform: scale(0.9);">
+                            <DecorationCard Decoration="@deco" IsInBookshelf="false" ShowActions="false" />
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p style="color: #ccc; width: 100%; text-align: center;">No decorations available. Visit the shop?</p>
+                    <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/shop"))" style="width: 100%;">Go to Shop</button>
+                }
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="CloseDecorationSelector">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Decoration Detail Modal -->
+@if (showDecorationDetail && selectedDecoration != null)
+{
+    <div class="modal-overlay" @onclick="CloseDecorationDetail">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <h3>@selectedDecoration.Name</h3>
+            <div style="text-align: center; padding: 1rem 0;">
+                <img src="@(selectedDecoration.ShopItem?.ImagePath ?? "images/decorations/placeholder.svg")"
+                     alt="@selectedDecoration.Name"
+                     style="max-width: 120px; max-height: 120px;" />
+            </div>
+            @if (selectedDecoration.ShopItem?.Description != null)
+            {
+                <p style="color: var(--text-secondary); text-align: center; margin-bottom: 1rem;">@selectedDecoration.ShopItem.Description</p>
+            }
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="CloseDecorationDetail">Close</button>
+                @if (selectedDecorationShelfId.HasValue)
+                {
+                    <button class="btn btn-danger" @onclick="HandleRemoveDecorationFromShelf">
+                        Remove from Shelf
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+}
+
 <!-- Delete Shelf Confirmation Modal -->
 @if (showDeleteShelfModal)
 {
@@ -479,6 +561,7 @@
     private bool isRenamingPlant;
     private bool isWateringPlant;
     private bool isRemovingPlant;
+    private bool IsSelectedPlantDead => selectedPlant?.Status == PlantStatus.Dead;
 
     // JS Drag & Drop interop
     private DotNetObjectReference<Bookshelf>? _dotNetHelper;
@@ -685,7 +768,12 @@
         var sourceGuid = Guid.Parse(sourceShelfId);
         var targetGuid = Guid.Parse(targetShelfId);
         var itemGuid = Guid.Parse(itemId);
-        var type = itemType == "Plant" ? ShelfItemType.Plant : ShelfItemType.Book;
+        var type = itemType switch
+        {
+            "Plant" => ShelfItemType.Plant,
+            "Decoration" => ShelfItemType.Decoration,
+            _ => ShelfItemType.Book
+        };
 
         // Optimistic in-memory move for instant visual feedback
         ViewModel.MoveItemBetweenShelvesInMemory(sourceGuid, targetGuid, itemGuid, type, position);
@@ -805,12 +893,18 @@
     {
         if (selectedPlant != null)
         {
+            var plantId = selectedPlant.Id;
             isWateringPlant = true;
 
             try
             {
-                await ViewModel.WaterPlantCommand.ExecuteAsync(selectedPlant.Id);
-                selectedPlant = await ViewModel.GetPlantByIdAsync(selectedPlant.Id);
+                await ViewModel.WaterPlantCommand.ExecuteAsync(plantId);
+                selectedPlant = await ViewModel.GetPlantByIdAsync(plantId);
+
+                if (string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+                {
+                    await OnboardingService.TrackEventAsync(OnboardingEvent.PlantWatered, plantId);
+                }
             }
             finally
             {
@@ -830,13 +924,61 @@
         try
         {
             await ViewModel.RemovePlantFromShelfCommand.ExecuteAsync((selectedPlant.Id, selectedPlantShelfId.Value));
-            ClosePlantDetail();
+            if (string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+            {
+                ClosePlantDetail();
+            }
         }
         finally
         {
             isRemovingPlant = false;
         }
     }
+
+    private async Task HandleSelectedPlantAction()
+    {
+        if (IsSelectedPlantDead)
+        {
+            await HandleDeleteSelectedPlant();
+            return;
+        }
+
+        await HandleRemoveSelectedPlantFromShelf();
+    }
+
+    private async Task HandleDeleteSelectedPlant()
+    {
+        if (selectedPlant == null)
+        {
+            return;
+        }
+
+        isRemovingPlant = true;
+
+        try
+        {
+            await ViewModel.DeletePlantCommand.ExecuteAsync(selectedPlant.Id);
+            if (string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+            {
+                ClosePlantDetail();
+            }
+        }
+        finally
+        {
+            isRemovingPlant = false;
+        }
+    }
+
+    private string GetSelectedPlantActionLabel()
+    {
+        if (isRemovingPlant)
+        {
+            return IsSelectedPlantDead ? "Deleting..." : "Removing...";
+        }
+
+        return IsSelectedPlantDead ? "Delete Plant" : "Remove from Shelf";
+    }
+
     private bool showPlantSelector;
     private Guid? targetShelfForPlant;
 
@@ -875,11 +1017,103 @@
         if (targetShelfForPlant.HasValue)
         {
             await ViewModel.AddPlantToShelfCommand.ExecuteAsync((plant.Id, targetShelfForPlant.Value));
+
+            if (string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+            {
+                await OnboardingService.TrackEventAsync(OnboardingEvent.PlantPlacedOnShelf, plant.Id);
+            }
         }
         ClosePlantSelector();
     }
 
     private void NavigateToEditBook(Guid bookId) => Navigation.NavigateTo($"/books/{bookId}/edit");
+
+    // ===== Decoration State & Methods =====
+
+    private bool showDecorationSelector;
+    private Guid? targetShelfForDecoration;
+    private bool showDecorationDetail;
+    private UserDecoration? selectedDecoration;
+    private Guid? selectedDecorationShelfId;
+
+    private void HandleAddDecoration(Guid shelfId)
+    {
+        targetShelfForDecoration = shelfId;
+
+        _activeBackHandler = async () =>
+        {
+            await InvokeAsync(() =>
+            {
+                CloseDecorationSelector();
+                StateHasChanged();
+            });
+            return true;
+        };
+        BackButtonService.Register(_activeBackHandler);
+
+        showDecorationSelector = true;
+    }
+
+    private void CloseDecorationSelector()
+    {
+        if (_activeBackHandler != null)
+        {
+            BackButtonService.Unregister(_activeBackHandler);
+            _activeBackHandler = null;
+        }
+        showDecorationSelector = false;
+        targetShelfForDecoration = null;
+    }
+
+    private async Task SelectDecorationForBookshelf(UserDecoration decoration)
+    {
+        if (targetShelfForDecoration.HasValue)
+        {
+            await ViewModel.AddDecorationToShelfCommand.ExecuteAsync((decoration.Id, targetShelfForDecoration.Value));
+        }
+        CloseDecorationSelector();
+    }
+
+    private void HandleDecorationClick(UserDecoration decoration, Guid shelfId)
+    {
+        selectedDecoration = decoration;
+        selectedDecorationShelfId = shelfId;
+
+        _activeBackHandler = async () =>
+        {
+            await InvokeAsync(() =>
+            {
+                CloseDecorationDetail();
+                StateHasChanged();
+            });
+            return true;
+        };
+        BackButtonService.Register(_activeBackHandler);
+
+        showDecorationDetail = true;
+    }
+
+    private void CloseDecorationDetail()
+    {
+        if (_activeBackHandler != null)
+        {
+            BackButtonService.Unregister(_activeBackHandler);
+            _activeBackHandler = null;
+        }
+        showDecorationDetail = false;
+        selectedDecoration = null;
+        selectedDecorationShelfId = null;
+    }
+
+    private async Task HandleRemoveDecorationFromShelf()
+    {
+        if (selectedDecoration != null && selectedDecorationShelfId.HasValue)
+        {
+            await ViewModel.RemoveDecorationFromShelfCommand.ExecuteAsync(
+                (selectedDecoration.Id, selectedDecorationShelfId.Value));
+            CloseDecorationDetail();
+        }
+    }
 
     // ===== Wishlist Tab Methods =====
 
@@ -972,6 +1206,7 @@
         {
             WishlistVM.NewIsbn = isbn;
             await WishlistVM.LookupByIsbnCommand.ExecuteAsync(null);
+            await OnboardingService.TrackEventAsync(OnboardingEvent.IsbnScanned);
             StateHasChanged();
         }
     }
@@ -985,6 +1220,12 @@
     private async Task HandleAddToWishlist()
     {
         await WishlistVM.AddToWishlistCommand.ExecuteAsync(null);
+
+        if (string.IsNullOrWhiteSpace(WishlistVM.ErrorMessage))
+        {
+            await OnboardingService.TrackEventAsync(OnboardingEvent.WishlistAdded);
+        }
+
         CloseAddToWishlistModal();
         StateHasChanged();
     }

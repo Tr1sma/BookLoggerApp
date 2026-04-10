@@ -1,0 +1,199 @@
+@using BookLoggerApp.Core.Models
+
+<div class="onboarding-header">
+    <div>
+        <h2 id="startupOnboardingTitle">@GetTitle()</h2>
+        <p class="startup-subtitle">@GetSubtitle()</p>
+    </div>
+    <span class="onboarding-step-chip">Step @(CurrentStep + 1) / @TotalSteps</span>
+</div>
+
+<div class="startup-modal-body onboarding-body">
+    @if (ShowSkipConfirmation)
+    {
+        <section class="onboarding-card">
+            <h3>Skip the intro?</h3>
+            <p>You can come back any time from Settings or the Getting Started hub.</p>
+            <p>Your guided missions will still stay available afterwards.</p>
+        </section>
+    }
+    else if (CurrentStep == 0)
+    {
+        <section class="onboarding-card">
+            <h3>Welcome to BookHeart</h3>
+            <p>Track your books, build reading habits, and watch your progress grow over time.</p>
+            <p>This short tutorial shows the essentials so you can start quickly.</p>
+        </section>
+    }
+    else if (CurrentStep == 1)
+    {
+        <section class="onboarding-card">
+            <h3>Add your first book</h3>
+            <p>Start by creating your first entry with title, author, and optional cover image.</p>
+            <p>After adding a book, you can start sessions, track pages, and log progress.</p>
+            <button type="button" class="btn btn-primary" @onclick="OnAddFirstBookClicked">
+                Add first book now
+            </button>
+        </section>
+    }
+    else if (CurrentStep == 2)
+    {
+        <section class="onboarding-card">
+            <h3>XP and plant growth</h3>
+            <p>You earn XP by reading, finishing books, and completing goals.</p>
+            <p>As you level up, your plants grow and you unlock more rewards in the shop.</p>
+        </section>
+    }
+    else if (CurrentStep == 3)
+    {
+        <section class="onboarding-card">
+            <h3>Rating system (6 categories)</h3>
+            <p>Rate completed books with 1-5 stars across six categories:</p>
+            <ul class="onboarding-list">
+                <li>Characters</li>
+                <li>Plot</li>
+                <li>Writing Style</li>
+                <li>Spice Level</li>
+                <li>Pacing</li>
+                <li>World Building</li>
+            </ul>
+        </section>
+    }
+    else
+    {
+        <section class="onboarding-card">
+            <h3>Main areas</h3>
+            <ul class="onboarding-list">
+                <li>Bookshelf: organize books and plants</li>
+                <li>Dashboard: quick overview and activity</li>
+                <li>Goals: create and track reading goals</li>
+                <li>Stats: view progress and insights</li>
+                <li>Shop: buy and manage plants</li>
+                <li>Settings: customize your app preferences</li>
+            </ul>
+        </section>
+    }
+</div>
+
+<div class="startup-modal-actions">
+    @if (ShowSkipConfirmation)
+    {
+        <button type="button" class="btn btn-secondary" @onclick="OnSkipCancelledClicked">
+            Continue tutorial
+        </button>
+
+        <button type="button" class="btn btn-primary" @onclick="OnSkipConfirmedClicked">
+            Skip intro
+        </button>
+    }
+    else
+    {
+        <button type="button" class="btn btn-secondary" @onclick="OnSkipRequestedClicked">
+            Skip
+        </button>
+
+        <button type="button" class="btn btn-secondary" @onclick="OnBackClicked">
+            Back
+        </button>
+
+        @if (CurrentStep < TotalSteps - 1)
+        {
+            <button type="button" class="btn btn-primary" @onclick="OnNextClicked">
+                Next
+            </button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-primary" @onclick="OnCompleteClicked">
+                Finish
+            </button>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int CurrentStep { get; set; }
+
+    [Parameter]
+    public int TotalSteps { get; set; } = OnboardingMissionCatalog.IntroStepCount;
+
+    [Parameter]
+    public bool ShowSkipConfirmation { get; set; }
+
+    [Parameter]
+    public EventCallback OnSkipRequested { get; set; }
+
+    [Parameter]
+    public EventCallback OnSkipConfirmed { get; set; }
+
+    [Parameter]
+    public EventCallback OnSkipCancelled { get; set; }
+
+    [Parameter]
+    public EventCallback OnBack { get; set; }
+
+    [Parameter]
+    public EventCallback OnNext { get; set; }
+
+    [Parameter]
+    public EventCallback OnComplete { get; set; }
+
+    [Parameter]
+    public EventCallback OnAddFirstBook { get; set; }
+
+    private string GetTitle() => CurrentStep switch
+    {
+        _ when ShowSkipConfirmation => "Skip the intro?",
+        0 => "Welcome to BookHeart",
+        1 => "Your first book",
+        2 => "Level and grow plants",
+        3 => "How ratings work",
+        _ => "Know your navigation"
+    };
+
+    private string GetSubtitle() => CurrentStep switch
+    {
+        _ when ShowSkipConfirmation => "You can reopen it any time.",
+        0 => "Your reading journey starts here.",
+        1 => "Let's create your first entry.",
+        2 => "Earn XP while you read.",
+        3 => "Capture what made a book great.",
+        _ => "Where to find everything quickly."
+    };
+
+    private async Task OnNextClicked()
+    {
+        await OnNext.InvokeAsync();
+    }
+
+    private async Task OnBackClicked()
+    {
+        await OnBack.InvokeAsync();
+    }
+
+    private async Task OnSkipRequestedClicked()
+    {
+        await OnSkipRequested.InvokeAsync();
+    }
+
+    private async Task OnSkipConfirmedClicked()
+    {
+        await OnSkipConfirmed.InvokeAsync();
+    }
+
+    private async Task OnSkipCancelledClicked()
+    {
+        await OnSkipCancelled.InvokeAsync();
+    }
+
+    private async Task OnCompleteClicked()
+    {
+        await OnComplete.InvokeAsync();
+    }
+
+    private async Task OnAddFirstBookClicked()
+    {
+        await OnAddFirstBook.InvokeAsync();
+    }
+}

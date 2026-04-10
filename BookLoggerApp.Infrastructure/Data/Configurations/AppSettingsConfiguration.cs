@@ -40,5 +40,30 @@ public class AppSettingsConfiguration : IEntityTypeConfiguration<AppSettings>
 
         builder.Property(a => a.CreatedAt)
             .IsRequired();
+
+        builder.Property(a => a.HasCompletedOnboarding)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(a => a.OnboardingFlowVersion)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(a => a.OnboardingIntroStatus)
+            .IsRequired()
+            .HasConversion<int>()
+            .HasDefaultValue(OnboardingIntroStatus.NotStarted);
+
+        builder.Property(a => a.OnboardingCurrentStep)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(a => a.OnboardingAutoCompletedForExistingUser)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(a => a.OnboardingTutorialPlantNeedsWateringAssist)
+            .IsRequired()
+            .HasDefaultValue(false);
     }
 }

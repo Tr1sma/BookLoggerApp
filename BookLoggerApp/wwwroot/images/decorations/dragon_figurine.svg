@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="dragonBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#5D7A4A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3E5A30;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dragonBelly" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#C4984A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A67C52;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="perchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A67C52;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Perch / rock base -->
+  <path d="M 50 165 Q 40 155 55 145 Q 70 138 100 135 Q 130 138 145 145 Q 160 155 150 165 Z" fill="url(#perchGrad)" stroke="#6B5638" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 50 165 Q 60 175 100 178 Q 140 175 150 165 Q 140 170 100 172 Q 60 170 50 165 Z" fill="#8B6F47" stroke="#6B5638" stroke-width="1.5"/>
+
+  <!-- Tail (curling from back) -->
+  <path d="M 55 130 Q 35 125 28 110 Q 22 95 32 85 Q 38 80 42 85" fill="none" stroke="url(#dragonBody)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 42 85 L 38 78 L 46 82" fill="#5D7A4A" stroke="#3E5A30" stroke-width="1.5" stroke-linejoin="round"/>
+
+  <!-- Body -->
+  <ellipse cx="100" cy="120" rx="40" ry="25" fill="url(#dragonBody)" stroke="#3E5A30" stroke-width="2"/>
+
+  <!-- Belly -->
+  <ellipse cx="100" cy="128" rx="25" ry="12" fill="url(#dragonBelly)" stroke="#8B7355" stroke-width="1"/>
+  <!-- Belly scales -->
+  <path d="M 82 122 Q 100 120 118 122" fill="none" stroke="#B8956A" stroke-width="0.8" opacity="0.6" stroke-linecap="round"/>
+  <path d="M 80 128 Q 100 126 120 128" fill="none" stroke="#B8956A" stroke-width="0.8" opacity="0.6" stroke-linecap="round"/>
+  <path d="M 82 134 Q 100 132 118 134" fill="none" stroke="#B8956A" stroke-width="0.8" opacity="0.6" stroke-linecap="round"/>
+
+  <!-- Hind legs -->
+  <path d="M 72 135 Q 65 145 68 150 L 60 150 L 65 148 L 70 150 L 75 148" fill="none" stroke="#3E5A30" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 128 135 Q 135 145 132 150 L 140 150 L 135 148 L 130 150 L 125 148" fill="none" stroke="#3E5A30" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Front legs -->
+  <path d="M 80 130 L 75 140 L 68 142 L 72 140 L 76 142 L 80 140" fill="none" stroke="#3E5A30" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 120 130 L 125 140 L 132 142 L 128 140 L 124 142 L 120 140" fill="none" stroke="#3E5A30" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Neck -->
+  <path d="M 108 100 Q 120 85 125 70" fill="none" stroke="url(#dragonBody)" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Head -->
+  <ellipse cx="130" cy="62" rx="18" ry="14" fill="url(#dragonBody)" stroke="#3E5A30" stroke-width="2" transform="rotate(15 130 62)"/>
+
+  <!-- Snout -->
+  <path d="M 142 55 Q 152 52 155 56 Q 152 60 142 62" fill="#5D7A4A" stroke="#3E5A30" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Nostrils -->
+  <circle cx="152" cy="54" r="1.5" fill="#3E5A30"/>
+  <circle cx="152" cy="58" r="1.5" fill="#3E5A30"/>
+
+  <!-- Eyes -->
+  <circle cx="135" cy="55" r="4" fill="#FFE680" stroke="#B8860B" stroke-width="1.5"/>
+  <circle cx="135" cy="55" r="2" fill="#B8860B"/>
+  <circle cx="134" cy="53" r="1" fill="#FFFFFF" opacity="0.7"/>
+
+  <!-- Horns -->
+  <path d="M 125 48 L 118 35 L 122 42" fill="#8B7355" stroke="#6B5638" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 132 46 L 130 32 L 133 40" fill="#8B7355" stroke="#6B5638" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Wings (folded) -->
+  <path d="M 90 100 Q 75 75 80 55 Q 85 65 90 80 Q 88 70 92 60 Q 95 72 95 95" fill="#4A6B3A" stroke="#3E5A30" stroke-width="1.5" opacity="0.8" stroke-linecap="round"/>
+  <path d="M 105 100 Q 110 78 115 62 Q 112 72 108 85 Q 112 75 118 68 Q 115 80 110 98" fill="#4A6B3A" stroke="#3E5A30" stroke-width="1.5" opacity="0.8" stroke-linecap="round"/>
+
+  <!-- Spine ridges -->
+  <circle cx="108" cy="97" r="2.5" fill="#4A6B3A" stroke="#3E5A30" stroke-width="1"/>
+  <circle cx="115" cy="88" r="2" fill="#4A6B3A" stroke="#3E5A30" stroke-width="1"/>
+  <circle cx="120" cy="78" r="2" fill="#4A6B3A" stroke="#3E5A30" stroke-width="1"/>
+
+  <!-- Sparkles -->
+  <circle cx="115" cy="30" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="155" cy="48" r="1.5" fill="#FFD700" opacity="0.7"/>
+  <circle cx="35" cy="80" r="1.5" fill="#FFD700" opacity="0.6"/>
+</svg>

@@ -1,8 +1,10 @@
 @page "/settings"
+@using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.ViewModels
 @implements IDisposable
 @inject SettingsViewModel ViewModel
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Settings - BookHeart</PageTitle>
@@ -26,6 +28,23 @@
             <div class="about-info">
                 <p class="app-name">BookHeart</p>
                 <p class="app-version">Version @ViewModel.AppVersion</p>
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h2>Getting Started</h2>
+            <div class="backup-actions">
+                <p class="description">
+                    Reopen the intro or jump into the guided checklist for books, plants, sharing, stats, backup, and more.
+                </p>
+                <div class="button-group">
+                    <button class="btn btn-primary" @onclick="OpenGettingStarted">
+                        Open Getting Started
+                    </button>
+                    <button class="btn btn-secondary" @onclick="ReplayIntroFromSettingsAsync">
+                        Replay Intro
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -149,10 +168,10 @@
                     Save your data (including book covers) to the cloud or another device.
                 </p>
                 <div class="button-group">
-                    <button class="btn btn-primary" @onclick="() => ViewModel.BackupToCloudCommand.ExecuteAsync(null)">
+                    <button class="btn btn-primary" @onclick="HandleBackupToCloudAsync">
                         Backup to Cloud
                     </button>
-                    <button class="btn btn-secondary" @onclick="() => ViewModel.RestoreFromBackupCommand.ExecuteAsync(null)">
+                    <button class="btn btn-secondary" @onclick="HandleRestoreFromBackupAsync">
                         Restore from Backup
                     </button>
                 </div>
@@ -916,6 +935,32 @@
             "settingsSupport.loadBuyMeACoffeeButton",
             "buy-me-a-coffee-widget",
             "buy-me-a-coffee-fallback");
+    }
+
+    private void OpenGettingStarted()
+    {
+        Navigation.NavigateTo("/getting-started");
+    }
+
+    private async Task ReplayIntroFromSettingsAsync()
+    {
+        await OnboardingService.ResetIntroAsync();
+        Navigation.NavigateTo("/");
+    }
+
+    private async Task HandleBackupToCloudAsync()
+    {
+        await ViewModel.BackupToCloudCommand.ExecuteAsync(null);
+
+        if (string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+        {
+            await OnboardingService.TrackEventAsync(OnboardingEvent.BackupCreated);
+        }
+    }
+
+    private async Task HandleRestoreFromBackupAsync()
+    {
+        await ViewModel.RestoreFromBackupCommand.ExecuteAsync(null);
     }
 
     private void ShowDeleteConfirmation()

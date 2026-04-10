@@ -77,6 +77,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("HasCompletedOnboarding")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Language")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -90,6 +95,37 @@ namespace BookLoggerApp.Infrastructure.Migrations
 
                     b.Property<bool>("NotificationsEnabled")
                         .HasColumnType("INTEGER");
+
+                    b.Property<bool>("OnboardingAutoCompletedForExistingUser")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("OnboardingCompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OnboardingCurrentStep")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("OnboardingFlowVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("OnboardingIntroStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<Guid?>("OnboardingTutorialPlantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("OnboardingTutorialPlantNeedsWateringAssist")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.Property<int>("PlantsPurchased")
                         .HasColumnType("INTEGER");
@@ -149,8 +185,14 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             AutoBackupEnabled = false,
                             Coins = 100,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            HasCompletedOnboarding = false,
                             Language = "en",
                             NotificationsEnabled = false,
+                            OnboardingAutoCompletedForExistingUser = false,
+                            OnboardingCurrentStep = 0,
+                            OnboardingFlowVersion = 1,
+                            OnboardingIntroStatus = 0,
+                            OnboardingTutorialPlantNeedsWateringAssist = false,
                             PlantsPurchased = 0,
                             ReadingRemindersEnabled = false,
                             ReviewPromptDisabled = false,
@@ -344,6 +386,24 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.ToTable("BookTropes");
                 });
 
+            modelBuilder.Entity("BookLoggerApp.Core.Models.DecorationShelf", b =>
+                {
+                    b.Property<Guid>("DecorationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ShelfId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DecorationId", "ShelfId");
+
+                    b.HasIndex("ShelfId");
+
+                    b.ToTable("DecorationShelves");
+                });
+
             modelBuilder.Entity("BookLoggerApp.Core.Models.Genre", b =>
                 {
                     b.Property<Guid>("Id")
@@ -494,6 +554,31 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.HasIndex("GenreId");
 
                     b.ToTable("GoalGenres");
+                });
+
+            modelBuilder.Entity("BookLoggerApp.Core.Models.OnboardingMissionState", b =>
+                {
+                    b.Property<string>("MissionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("MissionId");
+
+                    b.ToTable("OnboardingMissionStates");
                 });
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.PlantShelf", b =>
@@ -902,6 +987,162 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.HasIndex("UnlockLevel");
 
                     b.ToTable("ShopItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000001"),
+                            Cost = 100,
+                            Description = "A warm flickering candle — the perfect reading companion.",
+                            ImagePath = "images/decorations/candle.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Reading Candle",
+                            UnlockLevel = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000002"),
+                            Cost = 120,
+                            Description = "A ceramic mug with a book-spine pattern. Always full.",
+                            ImagePath = "images/decorations/mug.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Cosy Book Mug",
+                            UnlockLevel = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000003"),
+                            Cost = 150,
+                            Description = "A hand-carved oak bookend. Your books deserve a proper brace.",
+                            ImagePath = "images/decorations/bookend_wood.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Wooden Bookend",
+                            UnlockLevel = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000004"),
+                            Cost = 175,
+                            Description = "Measure your reading sessions in style.",
+                            ImagePath = "images/decorations/hourglass.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Brass Hourglass",
+                            UnlockLevel = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000005"),
+                            Cost = 180,
+                            Description = "Round brass-rimmed glasses. Any shelf gains +10 distinguished.",
+                            ImagePath = "images/decorations/spectacles.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Scholar's Spectacles",
+                            UnlockLevel = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000006"),
+                            Cost = 200,
+                            Description = "A glass inkwell with a raven feather quill. Timeless.",
+                            ImagePath = "images/decorations/inkwell.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Inkwell & Quill",
+                            UnlockLevel = 10
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000007"),
+                            Cost = 220,
+                            Description = "A ceramic owl. Wise observer of your reading habits.",
+                            ImagePath = "images/decorations/owl_figurine.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Owl Figurine",
+                            UnlockLevel = 10
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000008"),
+                            Cost = 260,
+                            Description = "A vintage brass globe. Explore worlds between the shelves.",
+                            ImagePath = "images/decorations/globe.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Library Globe",
+                            UnlockLevel = 15
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000009"),
+                            Cost = 280,
+                            Description = "Carved marble bookends — heavy, elegant, permanent.",
+                            ImagePath = "images/decorations/bookend_marble.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Marble Bookend",
+                            UnlockLevel = 15
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000010"),
+                            Cost = 320,
+                            Description = "A miniature brass telescope. For reading between the stars.",
+                            ImagePath = "images/decorations/telescope.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Brass Telescope",
+                            UnlockLevel = 20
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000011"),
+                            Cost = 340,
+                            Description = "An enchanted desk lamp that never runs out of oil.",
+                            ImagePath = "images/decorations/magic_lamp.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Magic Reading Lamp",
+                            UnlockLevel = 20
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000012"),
+                            Cost = 360,
+                            Description = "A tiny dragon perched on your shelf. He's read everything.",
+                            ImagePath = "images/decorations/dragon_figurine.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Dragon Figurine",
+                            UnlockLevel = 25
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000013"),
+                            Cost = 380,
+                            Description = "A glowing green flask of unknown purpose. Do not drink.",
+                            ImagePath = "images/decorations/alchemy_flask.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Alchemy Flask",
+                            UnlockLevel = 25
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000014"),
+                            Cost = 400,
+                            Description = "A sealed scroll of immense wisdom. Or a grocery list. Who knows.",
+                            ImagePath = "images/decorations/ancient_scroll.svg",
+                            IsAvailable = true,
+                            ItemType = 2,
+                            Name = "Ancient Scroll",
+                            UnlockLevel = 25
+                        });
                 });
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Trope", b =>
@@ -1191,6 +1432,35 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BookLoggerApp.Core.Models.UserDecoration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PurchasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<Guid>("ShopItemId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShopItemId");
+
+                    b.ToTable("UserDecorations");
+                });
+
             modelBuilder.Entity("BookLoggerApp.Core.Models.UserPlant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1357,6 +1627,25 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Navigation("Trope");
                 });
 
+            modelBuilder.Entity("BookLoggerApp.Core.Models.DecorationShelf", b =>
+                {
+                    b.HasOne("BookLoggerApp.Core.Models.UserDecoration", "Decoration")
+                        .WithMany()
+                        .HasForeignKey("DecorationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookLoggerApp.Core.Models.Shelf", "Shelf")
+                        .WithMany("DecorationShelves")
+                        .HasForeignKey("ShelfId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Decoration");
+
+                    b.Navigation("Shelf");
+                });
+
             modelBuilder.Entity("BookLoggerApp.Core.Models.GoalExcludedBook", b =>
                 {
                     b.HasOne("BookLoggerApp.Core.Models.Book", "Book")
@@ -1457,6 +1746,17 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Navigation("Genre");
                 });
 
+            modelBuilder.Entity("BookLoggerApp.Core.Models.UserDecoration", b =>
+                {
+                    b.HasOne("BookLoggerApp.Core.Models.ShopItem", "ShopItem")
+                        .WithMany()
+                        .HasForeignKey("ShopItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ShopItem");
+                });
+
             modelBuilder.Entity("BookLoggerApp.Core.Models.UserPlant", b =>
                 {
                     b.HasOne("BookLoggerApp.Core.Models.PlantSpecies", "Species")
@@ -1518,6 +1818,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
             modelBuilder.Entity("BookLoggerApp.Core.Models.Shelf", b =>
                 {
                     b.Navigation("BookShelves");
+
+                    b.Navigation("DecorationShelves");
 
                     b.Navigation("PlantShelves");
                 });

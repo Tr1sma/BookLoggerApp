@@ -22,10 +22,15 @@ public interface IShelfService
     Task RemovePlantFromShelfAsync(Guid shelfId, Guid plantId);
     Task<List<UserPlant>> GetPlantsForShelfAsync(Guid shelfId);
 
+    // Decoration Management
+    Task AddDecorationToShelfAsync(Guid shelfId, Guid decorationId);
+    Task RemoveDecorationFromShelfAsync(Guid shelfId, Guid decorationId);
+
     // Positioning
-    Task UpdateShelfPositionsAsync(Guid shelfId, Dictionary<Guid, int> bookPositions, Dictionary<Guid, int> plantPositions);
+    Task UpdateShelfPositionsAsync(Guid shelfId, Dictionary<Guid, int> bookPositions, Dictionary<Guid, int> plantPositions, Dictionary<Guid, int> decorationPositions);
 
     // Cross-shelf movement
     Task MoveBookBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid bookId, int targetPosition);
     Task MovePlantBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid plantId, int targetPosition);
+    Task MoveDecorationBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid decorationId, int targetPosition);
 }

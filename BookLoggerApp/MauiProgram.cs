@@ -128,7 +128,9 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IShareCardService, BookLoggerApp.Infrastructure.Services.ShareCardService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
-        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider, BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
+        builder.Services.AddSingleton<BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider>(sp => sp.GetRequiredService<BookLoggerApp.Infrastructure.Services.AppSettingsProvider>());
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IOnboardingService, BookLoggerApp.Infrastructure.Services.OnboardingService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IReviewPromptService, BookLoggerApp.Infrastructure.Services.ReviewPromptService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppVersionService, BookLoggerApp.Services.AppVersionService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IChangelogService, BookLoggerApp.Services.ChangelogService>();
@@ -141,6 +143,7 @@ public static class MauiProgram
         });
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.INotificationService, BookLoggerApp.Services.NotificationService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IShelfService, BookLoggerApp.Infrastructure.Services.ShelfService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IDecorationService, BookLoggerApp.Infrastructure.Services.DecorationService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IWishlistService, BookLoggerApp.Infrastructure.Services.WishlistService>();
 
         // Register timer state service as Singleton (must survive across component lifetimes)
@@ -169,6 +172,7 @@ public static class MauiProgram
         builder.Services.AddTransient<StatsViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
         builder.Services.AddTransient<PlantShopViewModel>();
+        builder.Services.AddTransient<DecorationShopViewModel>();
         builder.Services.AddTransient<UserProgressViewModel>();
         builder.Services.AddTransient<WishlistViewModel>();
         builder.Services.AddSingleton<AppStartupViewModel>();

@@ -53,7 +53,9 @@ public class AppSettingsProvider : IAppSettingsProvider
                 Language = "en",
                 UserLevel = 1,
                 TotalXp = 0,
-                Coins = 100 // Start with 100 coins
+                Coins = 100, // Start with 100 coins
+                OnboardingFlowVersion = OnboardingMissionCatalog.CurrentFlowVersion,
+                OnboardingIntroStatus = OnboardingIntroStatus.NotStarted
             };
 
             context.AppSettings.Add(settings);
@@ -183,9 +185,23 @@ public class AppSettingsProvider : IAppSettingsProvider
 
     public void InvalidateCache()
     {
+        InvalidateCache(true);
+    }
+
+    public void InvalidateCache(bool notifyProgressionChanged)
+    {
         _cachedSettings = null;
         _lastLoad = DateTime.MinValue;
-        OnProgressionChanged();
+        if (notifyProgressionChanged)
+        {
+            OnProgressionChanged();
+        }
+    }
+
+    public void SetCachedSettings(AppSettings settings)
+    {
+        _cachedSettings = settings;
+        _lastLoad = DateTime.UtcNow;
     }
 
     /// <summary>

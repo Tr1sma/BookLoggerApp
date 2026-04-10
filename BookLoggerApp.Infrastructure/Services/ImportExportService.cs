@@ -631,6 +631,7 @@ public class ImportExportService : IImportExportService
             context.WishlistInfos.RemoveRange(context.WishlistInfos);
             context.GoalExcludedBooks.RemoveRange(context.GoalExcludedBooks);
             context.GoalGenres.RemoveRange(context.GoalGenres);
+            context.OnboardingMissionStates.RemoveRange(context.OnboardingMissionStates);
 
             // 2. Delete main entities
             context.Books.RemoveRange(context.Books);
@@ -648,6 +649,14 @@ public class ImportExportService : IImportExportService
                 settings.Coins = 100; // Starting coins
                 settings.PlantsPurchased = 0;
                 settings.LastBackupDate = null;
+                settings.HasCompletedOnboarding = false;
+                settings.OnboardingFlowVersion = OnboardingMissionCatalog.CurrentFlowVersion;
+                settings.OnboardingIntroStatus = OnboardingIntroStatus.NotStarted;
+                settings.OnboardingCurrentStep = 0;
+                settings.OnboardingCompletedAt = null;
+                settings.OnboardingAutoCompletedForExistingUser = false;
+                settings.OnboardingTutorialPlantId = null;
+                settings.OnboardingTutorialPlantNeedsWateringAssist = false;
                 settings.UpdatedAt = DateTime.UtcNow;
             }
 

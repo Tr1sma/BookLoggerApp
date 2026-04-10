@@ -12,6 +12,7 @@ public partial class ShelfItemViewModel : ObservableObject
     // Union-ish properties
     public Book? Book { get; set; }
     public UserPlant? Plant { get; set; }
+    public UserDecoration? Decoration { get; set; }
 
     public ShelfItemViewModel(Book book, int position)
     {
@@ -28,10 +29,19 @@ public partial class ShelfItemViewModel : ObservableObject
         Plant = plant;
         Position = position;
     }
+
+    public ShelfItemViewModel(UserDecoration decoration, int position)
+    {
+        Id = decoration.Id;
+        Type = ShelfItemType.Decoration;
+        Decoration = decoration;
+        Position = position;
+    }
 }
 
 public enum ShelfItemType
 {
     Book,
-    Plant
+    Plant,
+    Decoration
 }

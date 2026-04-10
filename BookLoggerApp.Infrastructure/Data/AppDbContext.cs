@@ -25,10 +25,13 @@ public class AppDbContext : DbContext
     public DbSet<UserPlant> UserPlants => Set<UserPlant>();
     public DbSet<ShopItem> ShopItems => Set<ShopItem>();
     public DbSet<AppSettings> AppSettings => Set<AppSettings>();
+    public DbSet<OnboardingMissionState> OnboardingMissionStates => Set<OnboardingMissionState>();
     public DbSet<BookRatingSummary> BookRatingSummaries => Set<BookRatingSummary>(); // View
     public DbSet<Shelf> Shelves => Set<Shelf>();
     public DbSet<BookShelf> BookShelves => Set<BookShelf>();
     public DbSet<PlantShelf> PlantShelves => Set<PlantShelf>();
+    public DbSet<UserDecoration> UserDecorations => Set<UserDecoration>();
+    public DbSet<DecorationShelf> DecorationShelves => Set<DecorationShelf>();
     public DbSet<Trope> Tropes => Set<Trope>();
     public DbSet<BookTrope> BookTropes => Set<BookTrope>();
     public DbSet<WishlistInfo> WishlistInfos => Set<WishlistInfo>();
@@ -46,6 +49,10 @@ public class AppDbContext : DbContext
         // Configure Many-to-Many for Plant <-> Shelf
         modelBuilder.Entity<PlantShelf>()
             .HasKey(ps => new { ps.PlantId, ps.ShelfId });
+
+        // Configure Many-to-Many for Decoration <-> Shelf
+        modelBuilder.Entity<DecorationShelf>()
+            .HasKey(ds => new { ds.DecorationId, ds.ShelfId });
 
         // Configure Many-to-Many for ReadingGoal <-> Book (excluded books)
         modelBuilder.Entity<GoalExcludedBook>()
@@ -140,6 +147,9 @@ public class AppDbContext : DbContext
         // Seed PlantSpecies
         modelBuilder.Entity<PlantSpecies>().HasData(PlantSeedData.GetPlants());
 
+        // Seed Decoration ShopItems
+        modelBuilder.Entity<ShopItem>().HasData(DecorationSeedData.GetDecorations());
+
         // Seed AppSettings (default)
         modelBuilder.Entity<AppSettings>().HasData(
             new AppSettings
@@ -155,6 +165,12 @@ public class AppDbContext : DbContext
                 TotalXp = 0,
                 Coins = 100, // Starting coins
                 PlantsPurchased = 0, // Counter for dynamic plant pricing
+                HasCompletedOnboarding = false,
+                OnboardingFlowVersion = OnboardingMissionCatalog.CurrentFlowVersion,
+                OnboardingIntroStatus = OnboardingIntroStatus.NotStarted,
+                OnboardingCurrentStep = 0,
+                OnboardingAutoCompletedForExistingUser = false,
+                OnboardingTutorialPlantNeedsWateringAssist = false,
                 ShelfLedgeColor = "#8B7355",
                 ShelfBaseColor = "#D4A574",
                 CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
