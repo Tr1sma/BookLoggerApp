@@ -443,6 +443,15 @@ public class ImportExportService : IImportExportService
             _logger?.LogInformation("Restoring from backup: {Path}", backupPath);
             progress?.Report($"Starting restore from {Path.GetFileName(backupPath)}");
 
+            // Gate on DbInitializer completion so we never swap the DB file out
+            // from under an in-flight scoped DbContext in the startup initializer.
+            // Defense in depth: the ViewModel is expected to have awaited this
+            // already, but any direct caller (tests, future Android intents) gets
+            // the same guarantee. The second await is a no-op once the TCS is set.
+            progress?.Report("Waiting for database initialization to complete");
+            await BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.EnsureInitializedAsync();
+            progress?.Report("Database initialization confirmed");
+
             if (!File.Exists(backupPath))
             {
                 throw new FileNotFoundException("Backup file not found", backupPath);

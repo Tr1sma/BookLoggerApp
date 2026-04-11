@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 
@@ -262,6 +263,25 @@ public partial class SettingsViewModel : ViewModelBase
         try
         {
             AppendLog("=== Restore from Backup started ===");
+
+            // Wait for the fire-and-forget DbInitializer to fully release its
+            // scoped DbContext before we touch the DB file. On a fresh install
+            // the user can race to Settings → Restore while DbInitializer is
+            // still running its seed sync; File.Copy then corrupts the open
+            // connection and every page blows up with "database disk image
+            // malformed" until a manual restart.
+            AppendLog("Waiting for database initialization to complete...");
+            try
+            {
+                await DatabaseInitializationHelper.EnsureInitializedAsync();
+                AppendLog("Database initialization confirmed complete.");
+            }
+            catch (Exception initEx)
+            {
+                AppendLog($"DB initialization failed earlier: {initEx.GetType().Name}: {initEx.Message}");
+                SetError($"Cannot restore: database initialization failed earlier. Please restart BookHeart and try again. ({initEx.GetType().Name}: {initEx.Message})");
+                return;
+            }
 
             var filePath = await _filePickerService.PickFileAsync("Select Backup File", ".zip");
             AppendLog($"Picker returned: {filePath ?? "NULL"}");

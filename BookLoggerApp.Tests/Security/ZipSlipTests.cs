@@ -189,6 +189,14 @@ public class MockAppSettingsProvider : IAppSettingsProvider
 
 public class ZipSlipTests
 {
+    static ZipSlipTests()
+    {
+        // RestoreFromBackupAsync gates on DatabaseInitializationHelper.EnsureInitializedAsync
+        // to avoid racing the fire-and-forget DbInitializer on fresh installs. Tests bypass
+        // the initializer entirely, so satisfy the gate eagerly and idempotently here.
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
+    }
+
     [Fact]
     public async Task RestoreFromBackupAsync_ShouldThrowIOException_OnZipSlip()
     {
