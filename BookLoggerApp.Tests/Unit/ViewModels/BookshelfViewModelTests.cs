@@ -1,4 +1,5 @@
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.ViewModels;
 using FluentAssertions;
@@ -13,6 +14,7 @@ public class BookshelfViewModelTests
     private readonly IGenreService _genreService;
     private readonly IPlantService _plantService;
     private readonly IGoalService _goalService;
+    private readonly IDecorationService _decorationService;
     private readonly IShelfService _shelfService;
     private readonly IAppSettingsProvider _settingsProvider;
     private readonly BookshelfViewModel _viewModel;
@@ -26,6 +28,7 @@ public class BookshelfViewModelTests
         _genreService = Substitute.For<IGenreService>();
         _plantService = Substitute.For<IPlantService>();
         _goalService = Substitute.For<IGoalService>();
+        _decorationService = Substitute.For<IDecorationService>();
         _shelfService = Substitute.For<IShelfService>();
         _settingsProvider = Substitute.For<IAppSettingsProvider>();
 
@@ -34,6 +37,7 @@ public class BookshelfViewModelTests
             _genreService,
             _plantService,
             _goalService,
+            _decorationService,
             _shelfService,
             _settingsProvider
         );
@@ -108,11 +112,66 @@ public class BookshelfViewModelTests
         await _shelfService.DidNotReceive().GetAllShelvesAsync();
     }
 
+    [Fact]
+    public async Task LoadAsync_ShouldExcludeDeadPlantsFromAvailablePlants()
+    {
+        // Arrange
+        var shelfPlant = new UserPlant
+        {
+            Id = Guid.NewGuid(),
+            Name = "Shelf Plant",
+            SpeciesId = Guid.NewGuid(),
+            Status = PlantStatus.Healthy
+        };
+        var availablePlant = new UserPlant
+        {
+            Id = Guid.NewGuid(),
+            Name = "Available Plant",
+            SpeciesId = Guid.NewGuid(),
+            Status = PlantStatus.Healthy
+        };
+        var deadPlant = new UserPlant
+        {
+            Id = Guid.NewGuid(),
+            Name = "Dead Plant",
+            SpeciesId = Guid.NewGuid(),
+            Status = PlantStatus.Dead
+        };
+
+        _plantService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(new[] { shelfPlant, availablePlant, deadPlant });
+        _shelfService.GetShelfByIdAsync(_mainShelf.Id).Returns(new Shelf
+        {
+            Id = _mainShelf.Id,
+            Name = _mainShelf.Name,
+            SortOrder = _mainShelf.SortOrder,
+            BookShelves = new List<BookShelf>(),
+            PlantShelves = new List<PlantShelf>
+            {
+                new()
+                {
+                    PlantId = shelfPlant.Id,
+                    ShelfId = _mainShelf.Id,
+                    Plant = shelfPlant,
+                    Position = 0
+                }
+            }
+        });
+
+        // Act
+        await _viewModel.LoadAsync();
+
+        // Assert
+        _viewModel.AvailablePlants.Should().ContainSingle();
+        _viewModel.AvailablePlants[0].Id.Should().Be(availablePlant.Id);
+    }
+
     private void ConfigureLoadDependencies()
     {
         _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(new AppSettings());
         _bookService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(Array.Empty<Book>());
         _plantService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(Array.Empty<UserPlant>());
+        _decorationService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(Array.Empty<UserDecoration>() as IReadOnlyList<UserDecoration>);
         _goalService.GetActiveGoalsAsync(Arg.Any<CancellationToken>()).Returns(Array.Empty<ReadingGoal>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf> { _mainShelf });
         _shelfService.GetShelfByIdAsync(_mainShelf.Id).Returns(new Shelf
@@ -121,7 +180,8 @@ public class BookshelfViewModelTests
             Name = _mainShelf.Name,
             SortOrder = _mainShelf.SortOrder,
             BookShelves = new List<BookShelf>(),
-            PlantShelves = new List<PlantShelf>()
+            PlantShelves = new List<PlantShelf>(),
+            DecorationShelves = new List<DecorationShelf>()
         });
     }
 }

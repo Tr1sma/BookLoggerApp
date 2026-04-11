@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 
@@ -44,7 +45,7 @@ public partial class SettingsViewModel : ViewModelBase
     private AppSettings _settings = new();
 
     [ObservableProperty]
-    private string _appVersion = "0.8.3";
+    private string _appVersion = "0.9.0";
 
     [ObservableProperty]
     private string _migrationLog;
@@ -60,6 +61,9 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _shelfBaseColor = "#D4A574";
+
+    [ObservableProperty]
+    private bool _backupRestoreSucceeded;
 
     [RelayCommand]
     public async Task ToggleNotificationsAsync(bool enabled)
@@ -137,6 +141,16 @@ public partial class SettingsViewModel : ViewModelBase
             }
             await SaveSettingsInternalAsync();
         }, "Failed to update reminder time");
+    }
+
+    [RelayCommand]
+    public async Task ToggleGettingStartedCtaAsync(bool hide)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            Settings.HideGettingStartedCta = hide;
+            await SaveSettingsInternalAsync();
+        }, "Failed to update Getting Started visibility");
     }
 
     [RelayCommand]
@@ -242,30 +256,71 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     public async Task RestoreFromBackupAsync()
     {
-        await ExecuteSafelyAsync(async () =>
+        BackupRestoreSucceeded = false;
+        IsBusy = true;
+        ClearError();
+
+        try
         {
-            // 1. Pick File
-            AppendLog("Opening file picker...");
-            var filePath = await _filePickerService.PickFileAsync("Select Backup File", ".zip");
-            AppendLog($"Picker returned path: {filePath ?? "NULL"}");
-            
-            if (string.IsNullOrEmpty(filePath))
+            AppendLog("=== Restore from Backup started ===");
+
+            // Wait for the fire-and-forget DbInitializer to fully release its
+            // scoped DbContext before we touch the DB file. On a fresh install
+            // the user can race to Settings → Restore while DbInitializer is
+            // still running its seed sync; File.Copy then corrupts the open
+            // connection and every page blows up with "database disk image
+            // malformed" until a manual restart.
+            AppendLog("Waiting for database initialization to complete...");
+            try
             {
-                AppendLog("Restore cancelled or path is empty.");
-                // User might have thought they selected a file but the picker failed.
-                SetError("File selection failed or was cancelled. If you selected a file from Google Drive, try saving it to your device storage first.");
-                return; 
+                await DatabaseInitializationHelper.EnsureInitializedAsync();
+                AppendLog("Database initialization confirmed complete.");
+            }
+            catch (Exception initEx)
+            {
+                AppendLog($"DB initialization failed earlier: {initEx.GetType().Name}: {initEx.Message}");
+                SetError($"Cannot restore: database initialization failed earlier. Please restart BookHeart and try again. ({initEx.GetType().Name}: {initEx.Message})");
+                return;
             }
 
-            // 2. Restore
-            AppendLog($"Calling RestoreFromBackupAsync with {filePath}");
-            await _importExportService.RestoreFromBackupAsync(filePath);
+            var filePath = await _filePickerService.PickFileAsync("Select Backup File", ".zip");
+            AppendLog($"Picker returned: {filePath ?? "NULL"}");
 
-            // 3. Reload settings/data
-             await LoadAsync();
-             AppendLog("Settings reloaded.");
-            
-        }, "Failed to restore backup");
+            if (string.IsNullOrEmpty(filePath))
+            {
+                AppendLog("Restore cancelled (no file selected).");
+                SetError("File selection failed or was cancelled. If you selected a file from Google Drive, try saving it to your device storage first.");
+                return;
+            }
+
+            AppendLog($"Calling ImportExportService.RestoreFromBackupAsync({filePath})");
+            var progress = new Progress<string>(msg => AppendLog($"  [ImportExport] {msg}"));
+            await _importExportService.RestoreFromBackupAsync(filePath, progress);
+            AppendLog("ImportExportService returned successfully.");
+
+            BackupRestoreSucceeded = true;
+            AppendLog("Restore complete; awaiting app restart.");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"EXCEPTION: {ex.GetType().FullName}");
+            AppendLog($"  Message: {ex.Message}");
+            if (ex.InnerException is not null)
+            {
+                AppendLog($"  Inner: {ex.InnerException.GetType().FullName}: {ex.InnerException.Message}");
+            }
+            AppendLog($"  Stack: {ex.StackTrace}");
+
+            var detail = ex.InnerException is not null
+                ? $" ({ex.InnerException.Message})"
+                : string.Empty;
+            SetError($"Failed to restore backup: {ex.GetType().Name}: {ex.Message}{detail}");
+            System.Diagnostics.Debug.WriteLine($"ERROR: {ex}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
     private void AppendLog(string message)
     {

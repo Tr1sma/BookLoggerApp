@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="parchmentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5E6D3;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#E8D5BE;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D4A574;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="rollGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#D4A574;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#F5E6D3;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#E8D5BE;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C4984A;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="sealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#CC3333;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B1A1A;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="rodGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B6F47;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6B5638;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Scroll body (rolled up main part) -->
+  <rect x="45" y="55" width="110" height="100" rx="5" fill="url(#parchmentGrad)" stroke="#B8956A" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Top roll -->
+  <ellipse cx="100" cy="55" rx="58" ry="14" fill="url(#rollGrad)" stroke="#B8956A" stroke-width="2"/>
+  <!-- Top roll shadow -->
+  <ellipse cx="100" cy="58" rx="55" ry="8" fill="#D4A574" opacity="0.3"/>
+
+  <!-- Bottom roll -->
+  <ellipse cx="100" cy="155" rx="58" ry="14" fill="url(#rollGrad)" stroke="#B8956A" stroke-width="2"/>
+
+  <!-- Wooden rod ends (top) -->
+  <rect x="33" y="48" width="12" height="14" rx="3" fill="url(#rodGrad)" stroke="#5D4230" stroke-width="1.5"/>
+  <rect x="155" y="48" width="12" height="14" rx="3" fill="url(#rodGrad)" stroke="#5D4230" stroke-width="1.5"/>
+  <!-- Rod knobs -->
+  <circle cx="39" cy="48" r="4" fill="#8B6F47" stroke="#5D4230" stroke-width="1.5"/>
+  <circle cx="161" cy="48" r="4" fill="#8B6F47" stroke="#5D4230" stroke-width="1.5"/>
+
+  <!-- Wooden rod ends (bottom) -->
+  <rect x="33" y="148" width="12" height="14" rx="3" fill="url(#rodGrad)" stroke="#5D4230" stroke-width="1.5"/>
+  <rect x="155" y="148" width="12" height="14" rx="3" fill="url(#rodGrad)" stroke="#5D4230" stroke-width="1.5"/>
+  <!-- Rod knobs -->
+  <circle cx="39" cy="162" r="4" fill="#8B6F47" stroke="#5D4230" stroke-width="1.5"/>
+  <circle cx="161" cy="162" r="4" fill="#8B6F47" stroke="#5D4230" stroke-width="1.5"/>
+
+  <!-- Text lines on scroll -->
+  <line x1="60" y1="78" x2="140" y2="78" stroke="#B8956A" stroke-width="1.5" opacity="0.4" stroke-linecap="round"/>
+  <line x1="60" y1="90" x2="135" y2="90" stroke="#B8956A" stroke-width="1.5" opacity="0.4" stroke-linecap="round"/>
+  <line x1="60" y1="102" x2="138" y2="102" stroke="#B8956A" stroke-width="1.5" opacity="0.4" stroke-linecap="round"/>
+  <line x1="60" y1="114" x2="130" y2="114" stroke="#B8956A" stroke-width="1.5" opacity="0.4" stroke-linecap="round"/>
+  <line x1="60" y1="126" x2="125" y2="126" stroke="#B8956A" stroke-width="1.5" opacity="0.35" stroke-linecap="round"/>
+  <line x1="60" y1="138" x2="110" y2="138" stroke="#B8956A" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+
+  <!-- Wax seal -->
+  <circle cx="130" cy="140" r="12" fill="url(#sealGrad)" stroke="#6B1010" stroke-width="1.5"/>
+  <!-- Seal impression -->
+  <circle cx="130" cy="140" r="8" fill="none" stroke="#A02020" stroke-width="1" opacity="0.6"/>
+  <!-- Seal emblem (star) -->
+  <path d="M 130 133 L 132 137 L 136 138 L 133 141 L 134 145 L 130 143 L 126 145 L 127 141 L 124 138 L 128 137 Z" fill="#CC4444" opacity="0.8"/>
+  <!-- Seal ribbon -->
+  <path d="M 122 148 Q 118 158 115 165" stroke="#CC3333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M 138 148 Q 142 158 145 165" stroke="#CC3333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Parchment aging spots -->
+  <circle cx="70" cy="85" r="3" fill="#C4984A" opacity="0.15"/>
+  <circle cx="110" cy="110" r="4" fill="#C4984A" opacity="0.1"/>
+  <circle cx="80" cy="130" r="2.5" fill="#C4984A" opacity="0.12"/>
+
+  <!-- Sparkles -->
+  <circle cx="55" cy="45" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="150" cy="42" r="2" fill="#FFD700" opacity="0.7"/>
+  <circle cx="100" cy="35" r="1.5" fill="#FFD700" opacity="0.6"/>
+  <circle cx="135" cy="130" r="1.5" fill="#FFD700" opacity="0.5"/>
+</svg>

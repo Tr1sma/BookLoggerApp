@@ -1,5 +1,6 @@
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.ViewModels;
 using FluentAssertions;
 using NSubstitute;
@@ -12,13 +13,17 @@ public class AppStartupViewModelTests
     private readonly IAppVersionService _appVersionService;
     private readonly IChangelogService _changelogService;
     private readonly IAppUpdateService _appUpdateService;
+    private readonly IOnboardingService _onboardingService;
     private readonly AppStartupViewModel _viewModel;
 
     public AppStartupViewModelTests()
     {
+        DatabaseInitializationHelper.MarkAsInitialized();
+
         _appVersionService = Substitute.For<IAppVersionService>();
         _changelogService = Substitute.For<IChangelogService>();
         _appUpdateService = Substitute.For<IAppUpdateService>();
+        _onboardingService = Substitute.For<IOnboardingService>();
 
         _appVersionService.CurrentVersion.Returns("0.8.0");
         _changelogService.GetReleaseHistoryAsync(Arg.Any<CancellationToken>()).Returns(new[]
@@ -39,11 +44,14 @@ public class AppStartupViewModelTests
             }
         });
         _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(AppUpdateState.Unsupported);
+        _onboardingService.GetSnapshotAsync(Arg.Any<CancellationToken>()).Returns(CreateSnapshot());
+        _onboardingService.RefreshSnapshotAsync(Arg.Any<CancellationToken>()).Returns(CreateSnapshot());
 
         _viewModel = new AppStartupViewModel(
             _appVersionService,
             _changelogService,
-            _appUpdateService);
+            _appUpdateService,
+            _onboardingService);
     }
 
     [Fact]
@@ -222,5 +230,91 @@ public class AppStartupViewModelTests
         // Assert
         _viewModel.IsUpdateAvailableVisible.Should().BeTrue();
         await _appUpdateService.Received(1).StartFlexibleUpdateAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task InitializeAsync_ShouldShowOnboarding_WhenOnboardingIsNotCompleted()
+    {
+        // Arrange
+        _onboardingService.GetSnapshotAsync(Arg.Any<CancellationToken>())
+            .Returns(CreateSnapshot(shouldShowIntro: true, introStatus: OnboardingIntroStatus.NotStarted));
+
+        // Act
+        await _viewModel.InitializeAsync();
+
+        // Assert
+        _viewModel.IsOnboardingVisible.Should().BeTrue();
+        _viewModel.IsChangelogVisible.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SkipOnboardingAsync_ShouldCompleteIntroAndHideOverlay()
+    {
+        // Arrange
+        _onboardingService.GetSnapshotAsync(Arg.Any<CancellationToken>())
+            .Returns(CreateSnapshot(shouldShowIntro: true, introStatus: OnboardingIntroStatus.NotStarted));
+        _onboardingService.CompleteIntroAsync(true, Arg.Any<CancellationToken>())
+            .Returns(CreateSnapshot());
+
+        await _viewModel.InitializeAsync();
+
+        // Act
+        await _viewModel.SkipOnboardingAsync();
+
+        // Assert
+        await _onboardingService.Received(1).CompleteIntroAsync(true, Arg.Any<CancellationToken>());
+        _viewModel.IsOnboardingVisible.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task HandleBackAsync_ShouldShowSkipConfirmation_WhenOnboardingIsOnFirstStep()
+    {
+        // Arrange
+        _onboardingService.GetSnapshotAsync(Arg.Any<CancellationToken>())
+            .Returns(CreateSnapshot(shouldShowIntro: true, introStatus: OnboardingIntroStatus.NotStarted));
+
+        await _viewModel.InitializeAsync();
+
+        // Act
+        var handled = await _viewModel.HandleBackAsync();
+
+        // Assert
+        handled.Should().BeTrue();
+        _viewModel.IsOnboardingSkipConfirmationVisible.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HandleBackAsync_ShouldRetreatIntro_WhenCurrentStepIsGreaterThanZero()
+    {
+        // Arrange
+        _onboardingService.GetSnapshotAsync(Arg.Any<CancellationToken>())
+            .Returns(CreateSnapshot(shouldShowIntro: true, currentStep: 2, introStatus: OnboardingIntroStatus.InProgress));
+        _onboardingService.RetreatIntroAsync(Arg.Any<CancellationToken>())
+            .Returns(CreateSnapshot(shouldShowIntro: true, currentStep: 1, introStatus: OnboardingIntroStatus.InProgress));
+
+        await _viewModel.InitializeAsync();
+
+        // Act
+        var handled = await _viewModel.HandleBackAsync();
+
+        // Assert
+        handled.Should().BeTrue();
+        _viewModel.OnboardingCurrentStep.Should().Be(1);
+        await _onboardingService.Received(1).RetreatIntroAsync(Arg.Any<CancellationToken>());
+    }
+
+    private static OnboardingSnapshot CreateSnapshot(
+        bool shouldShowIntro = false,
+        int currentStep = 0,
+        OnboardingIntroStatus introStatus = OnboardingIntroStatus.Completed)
+    {
+        return new OnboardingSnapshot
+        {
+            FlowVersion = OnboardingMissionCatalog.CurrentFlowVersion,
+            IntroStepCount = OnboardingMissionCatalog.IntroStepCount,
+            CurrentIntroStep = currentStep,
+            IntroStatus = introStatus,
+            ShouldShowIntro = shouldShowIntro
+        };
     }
 }

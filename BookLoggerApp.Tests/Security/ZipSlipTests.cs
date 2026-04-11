@@ -132,6 +132,8 @@ public class MockFileSystem : IFileSystem
 public class MockAppSettingsProvider : IAppSettingsProvider
 {
     public event EventHandler? ProgressionChanged;
+    public event EventHandler? SettingsChanged;
+
     private AppSettings _settings = new();
     private int _coins;
     private int _level = 1;
@@ -146,6 +148,8 @@ public class MockAppSettingsProvider : IAppSettingsProvider
     }
 
     public void InvalidateCache() { }
+
+    public void InvalidateCache(bool notifyProgressionChanged) { }
 
     public Task<int> GetUserCoinsAsync(CancellationToken ct = default)
     {
@@ -185,6 +189,14 @@ public class MockAppSettingsProvider : IAppSettingsProvider
 
 public class ZipSlipTests
 {
+    static ZipSlipTests()
+    {
+        // RestoreFromBackupAsync gates on DatabaseInitializationHelper.EnsureInitializedAsync
+        // to avoid racing the fire-and-forget DbInitializer on fresh installs. Tests bypass
+        // the initializer entirely, so satisfy the gate eagerly and idempotently here.
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
+    }
+
     [Fact]
     public async Task RestoreFromBackupAsync_ShouldThrowIOException_OnZipSlip()
     {

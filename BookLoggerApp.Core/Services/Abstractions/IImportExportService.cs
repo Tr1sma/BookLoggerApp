@@ -48,8 +48,9 @@ public interface IImportExportService
     /// Restores the database from a backup file.
     /// </summary>
     /// <param name="backupPath">Full path to the backup file.</param>
+    /// <param name="progress">Optional progress reporter for step-by-step diagnostics.</param>
     /// <param name="ct">Cancellation token.</param>
-    Task RestoreFromBackupAsync(string backupPath, CancellationToken ct = default);
+    Task RestoreFromBackupAsync(string backupPath, IProgress<string>? progress = null, CancellationToken ct = default);
 
     /// <summary>
     /// Deletes all user data (books, sessions, goals, plants) and resets settings.

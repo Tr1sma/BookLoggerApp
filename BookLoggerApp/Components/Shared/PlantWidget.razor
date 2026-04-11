@@ -12,11 +12,11 @@
     <!-- Plant Info -->
     <div class="plant-info">
         <h3 class="plant-name">@Plant.Name</h3>
-        <p class="plant-species">@Plant.Species.Name</p>
+        <p class="plant-species">@(Plant.Species?.Name ?? "Unknown")</p>
 
         <!-- Level Badge -->
         <div class="plant-level">
-            <span class="level-badge">Level @Plant.CurrentLevel / @Plant.Species.MaxLevel</span>
+            <span class="level-badge">Level @Plant.CurrentLevel / @(Plant.Species?.MaxLevel ?? 0)</span>
         </div>
 
         <!-- Reading Days Progress -->
@@ -25,7 +25,7 @@
                 <div class="progress-fill" style="width: @GetProgressPercentage()%"></div>
             </div>
             <p class="progress-text">
-                @if (Plant.CurrentLevel >= Plant.Species.MaxLevel)
+                @if (Plant.Species == null || Plant.CurrentLevel >= Plant.Species.MaxLevel)
                 {
                     <span>📖 @Plant.ReadingDaysCount Lesetage (Max Level erreicht!)</span>
                 }
@@ -85,7 +85,7 @@
     private string GetPlantImage()
     {
         // In the future, could be level-dependent (different sprites for different levels)
-        return Plant.Species.ImagePath;
+        return Plant.Species?.ImagePath ?? "images/plants/placeholder.svg";
     }
 
     private string GetStatusClass()
@@ -120,6 +120,7 @@
 
     private int GetProgressPercentage()
     {
+        if (Plant.Species == null) return 0;
         if (Plant.CurrentLevel >= Plant.Species.MaxLevel)
             return 100; // Max level reached
 
@@ -133,6 +134,7 @@
 
     private int GetDaysToNextLevel()
     {
+        if (Plant.Species == null) return 0;
         return PlantGrowthCalculator.GetReadingDaysToNextLevel(
             Plant.CurrentLevel,
             Plant.ReadingDaysCount,
@@ -143,6 +145,7 @@
 
     private string GetDaysUntilWater()
     {
+        if (Plant.Species == null) return "?";
         var daysUntil = PlantGrowthCalculator.GetDaysUntilWaterNeeded(
             Plant.LastWatered,
             Plant.Species.WaterIntervalDays

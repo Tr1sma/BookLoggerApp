@@ -1,0 +1,36 @@
+@using BookLoggerApp.Core.Models
+
+<div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")"
+     @onclick="HandleClick">
+    <div class="plant-pot-wrapper">
+        <img src="@(Decoration.ShopItem?.ImagePath ?? "images/decorations/placeholder.svg")"
+             alt="@(Decoration.ShopItem?.Name ?? Decoration.Name)"
+             class="plant-card-image"
+             draggable="false" />
+    </div>
+    <div class="plant-card-name">
+        <span class="plant-name-small">@Decoration.Name</span>
+    </div>
+    @if (ShowActions && OnRemove.HasDelegate)
+    {
+        <div class="plant-card-actions">
+            <button class="btn-icon"
+                    @onclick:stopPropagation="true"
+                    @onclick="HandleRemove"
+                    title="Remove from Shelf">
+                🗑️
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public UserDecoration Decoration { get; set; } = null!;
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public EventCallback OnRemove { get; set; }
+    [Parameter] public bool IsInBookshelf { get; set; }
+    [Parameter] public bool ShowActions { get; set; } = true;
+
+    private async Task HandleClick() => await OnClick.InvokeAsync();
+    private async Task HandleRemove() => await OnRemove.InvokeAsync();
+}

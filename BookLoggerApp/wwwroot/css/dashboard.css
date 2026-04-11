@@ -116,7 +116,7 @@
 .recent-activity {
     background: var(--card-bg);
     border-radius: var(--border-radius-lg);
-    padding: 1.5rem;
+    padding: 1rem;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow);
 }
@@ -130,29 +130,28 @@
 .activity-list li {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
-    background: var(--bg-tertiary);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border-light);
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border-light);
     transition: var(--transition);
 }
 
+.activity-list li:last-child {
+    border-bottom: none;
+}
+
 .activity-list li:hover {
-    background: var(--card-hover);
-    border-color: var(--primary-color);
+    opacity: 0.8;
 }
 
 .activity-icon {
-    font-size: 1.25rem;
+    font-size: 1rem;
     opacity: 0.9;
 }
 
 .activity-text {
     flex: 1;
     color: var(--text-primary);
-    font-weight: 500;
 }
 
 .activity-time {
@@ -185,13 +184,6 @@
     .book-card-large h3 {
         font-size: 1.25rem;
     }
-
-    .activity-list li {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.4rem;
-        padding: 0.6rem;
-    }
 }
 
 /* Mobile */
@@ -216,9 +208,12 @@
 
     .currently-reading,
     .goals-section,
-    .plant-widget-section,
-    .recent-activity {
+    .plant-widget-section {
         padding: 0.75rem;
+    }
+
+    .recent-activity {
+        padding: 0.5rem;
     }
 
     .book-card-large .book-cover {
@@ -239,20 +234,20 @@
     }
 
     .activity-list li {
-        padding: 0.5rem;
-        gap: 0.5rem;
+        padding: 0.3rem 0;
+        gap: 0.4rem;
     }
 
     .activity-icon {
-        font-size: 1rem;
-    }
-
-    .activity-text {
         font-size: 0.85rem;
     }
 
+    .activity-text {
+        font-size: 0.8rem;
+    }
+
     .activity-time {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
     }
 }
 

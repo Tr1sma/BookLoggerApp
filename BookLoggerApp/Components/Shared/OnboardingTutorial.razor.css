@@ -1,0 +1,67 @@
+.onboarding-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.onboarding-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.onboarding-step-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(229, 207, 176, 0.18);
+    background: rgba(0, 0, 0, 0.22);
+    color: rgba(248, 239, 228, 0.9);
+    font-size: 0.78rem;
+}
+
+.onboarding-body {
+    min-height: 180px;
+}
+
+.onboarding-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.85rem 0.95rem;
+    border-radius: 18px;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(229, 207, 176, 0.10);
+}
+
+.onboarding-card h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.onboarding-card p {
+    margin: 0;
+}
+
+.onboarding-list {
+    margin: 0;
+    padding-left: 1.15rem;
+}
+
+.onboarding-list li {
+    line-height: 1.5;
+    color: rgba(248, 239, 228, 0.9);
+}
+
+.onboarding-list li + li {
+    margin-top: 0.3rem;
+}
+
+@media (max-width: 640px) {
+    .onboarding-header {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+}

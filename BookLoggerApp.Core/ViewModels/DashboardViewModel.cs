@@ -102,5 +102,19 @@ public partial class DashboardViewModel : ViewModelBase
             ActivePlant = await _plantService.GetActivePlantAsync();
         }, "Failed to water plant");
     }
+
+    [RelayCommand]
+    public async Task DeletePlantAsync()
+    {
+        if (ActivePlant == null) return;
+
+        var plantId = ActivePlant.Id;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _plantService.DeleteAsync(plantId);
+            ActivePlant = await _plantService.GetActivePlantAsync();
+        }, "Failed to delete plant");
+    }
 }
 

@@ -212,6 +212,9 @@ window.bookshelfDragDrop = {
             this._container.setPointerCapture(pointerId);
         } catch (_) { /* ignore if already released */ }
 
+        // Store the slot width for the dragged item (for wide items)
+        this._draggedSlotWidth = parseInt(slot.dataset.slotWidth || '1', 10);
+
         // Create ghost
         this._createGhost(slot, x, y);
 
@@ -263,13 +266,15 @@ window.bookshelfDragDrop = {
             if (slot === this._draggedSlot) continue;
             if (this._isInAutoSortShelf(slot)) continue;
             var rect = slot.getBoundingClientRect();
+            var slotWidth = parseInt(slot.dataset.slotWidth || '1', 10);
             cache.slots.push({
                 element: slot,
                 left: rect.left,
                 right: rect.right,
                 top: rect.top,
                 bottom: rect.bottom,
-                centerX: rect.left + rect.width / 2
+                centerX: rect.left + rect.width / 2,
+                slotWidth: slotWidth
             });
         }
 
@@ -594,5 +599,6 @@ window.bookshelfDragDrop = {
         this._dragActive = false;
         this._dropTarget = null;
         this._longPressTriggered = false;
+        this._draggedSlotWidth = 1;
     }
 };

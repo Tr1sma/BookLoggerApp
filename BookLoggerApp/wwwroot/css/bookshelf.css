@@ -217,6 +217,47 @@
     contain: layout style;
 }
 
+.shelf-slot.slot-wide-2 {
+    width: calc(2 * (clamp(35px, 7vw, 100px) + 10px) - 10px);
+}
+
+.shelf-slot.slot-wide-3 {
+    width: calc(3 * (clamp(35px, 7vw, 100px) + 10px) - 20px);
+}
+
+.shelf-slot.slot-wide-4 {
+    width: calc(4 * (clamp(35px, 7vw, 100px) + 10px) - 30px);
+}
+
+.shelf-slot.slot-wide-2 .book-card,
+.shelf-slot.slot-wide-2 .plant-card {
+    width: 100%;
+}
+
+.shelf-slot.slot-wide-3 .book-card,
+.shelf-slot.slot-wide-3 .plant-card {
+    width: 100%;
+}
+
+.shelf-slot.slot-wide-4 .book-card,
+.shelf-slot.slot-wide-4 .plant-card {
+    width: 100%;
+}
+
+.shelf-slot.slot-wide-2 .plant-pot-wrapper {
+    min-height: clamp(110px, 16vh, 280px);
+}
+
+.shelf-slot.slot-wide-2 .plant-card.in-bookshelf {
+    transform: scale(1) translateY(0);
+}
+
+@media (max-width: 640px) {
+    .shelf-slot.slot-wide-2 {
+        width: calc(2 * (clamp(35px, 10vw, 140px) + 10px) - 10px);
+    }
+}
+
 /* Wooden shelf edge (bottom border) - Enhanced prominent edge */
 .shelf-row::after {
     content: '';

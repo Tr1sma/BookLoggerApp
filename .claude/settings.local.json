@@ -23,10 +23,21 @@
       "Bash(Select-String -Pattern \"error|Build succeeded|failed\")",
       "Bash(git -C /c/Users/ben.sowieja/source/repos/Tr1sma/BookLoggerApp branch -a)",
       "Bash(FINDSTR:*)",
-      "Read(//c/Users/ben.sowieja/.nuget/packages/xamarin.google.android.play.review/2.0.2.7/**)"
+      "Read(//c/Users/ben.sowieja/.nuget/packages/xamarin.google.android.play.review/2.0.2.7/**)",
+      "Bash(dotnet tool:*)",
+      "Bash(~/.dotnet/tools/dotnet-ef migrations:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet new:*)",
+      "Bash(ls .config)",
+      "Bash(ls dotnet-tools.json)",
+      "Bash(ls .config/dotnet-tools.json)",
+      "Bash(ls:*)",
+      "Read(//c/Users/Tristan/.claude/plans/**)",
+      "Read(//c/Users/Tristan/.claude/**)"
     ],
     "deny": [],
     "ask": []
   },
-  "outputStyle": "Explanatory"
+  "outputStyle": "default",
+  "spinnerTipsEnabled": false
 }

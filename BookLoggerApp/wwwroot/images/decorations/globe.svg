@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="globeStand" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B8860B;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5B7B8A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4A6670;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="landGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6B8B5E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#557A4A;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="globeShine" cx="35%" cy="35%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Base -->
+  <ellipse cx="100" cy="185" rx="35" ry="8" fill="url(#globeStand)" stroke="#8B6914" stroke-width="2"/>
+  <rect x="85" y="178" width="30" height="8" rx="2" fill="url(#globeStand)" stroke="#8B6914" stroke-width="1.5"/>
+
+  <!-- Stand stem -->
+  <rect x="96" y="145" width="8" height="35" rx="2" fill="url(#globeStand)" stroke="#8B6914" stroke-width="1.5"/>
+
+  <!-- Stand arc (meridian ring) -->
+  <path d="M 62 95 Q 62 35 100 25 Q 138 35 138 95 Q 138 145 100 155 Q 62 145 62 95" fill="none" stroke="url(#globeStand)" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Globe sphere -->
+  <circle cx="100" cy="90" r="55" fill="url(#oceanGrad)" stroke="#4A6670" stroke-width="2"/>
+
+  <!-- Continents (simplified shapes) -->
+  <!-- North America -->
+  <path d="M 65 55 Q 70 50 78 52 Q 82 55 80 62 Q 85 68 78 72 Q 72 70 68 65 Q 62 60 65 55 Z" fill="url(#landGrad)" opacity="0.8"/>
+  <!-- Europe/Africa -->
+  <path d="M 102 50 Q 108 48 112 52 Q 115 58 114 68 Q 116 78 112 90 Q 108 100 105 110 Q 100 115 98 108 Q 96 95 98 82 Q 96 70 98 60 Q 100 52 102 50 Z" fill="url(#landGrad)" opacity="0.8"/>
+  <!-- South America -->
+  <path d="M 78 95 Q 82 90 86 92 Q 90 98 88 108 Q 85 118 80 122 Q 76 118 75 108 Q 74 100 78 95 Z" fill="url(#landGrad)" opacity="0.8"/>
+  <!-- Asia hint -->
+  <path d="M 118 55 Q 128 52 134 58 Q 138 65 135 72 Q 130 68 124 65 Q 118 62 118 55 Z" fill="url(#landGrad)" opacity="0.8"/>
+
+  <!-- Grid lines (latitude) -->
+  <ellipse cx="100" cy="65" rx="50" ry="12" fill="none" stroke="#6B8B8A" stroke-width="0.8" opacity="0.3"/>
+  <ellipse cx="100" cy="90" rx="55" ry="12" fill="none" stroke="#6B8B8A" stroke-width="0.8" opacity="0.3"/>
+  <ellipse cx="100" cy="115" rx="50" ry="12" fill="none" stroke="#6B8B8A" stroke-width="0.8" opacity="0.3"/>
+
+  <!-- Grid line (longitude) -->
+  <ellipse cx="100" cy="90" rx="18" ry="55" fill="none" stroke="#6B8B8A" stroke-width="0.8" opacity="0.3"/>
+
+  <!-- Globe shine -->
+  <circle cx="100" cy="90" r="55" fill="url(#globeShine)"/>
+  <path d="M 75 60 Q 80 50 90 55" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.2" stroke-linecap="round"/>
+
+  <!-- Sparkles -->
+  <circle cx="65" cy="45" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="138" cy="50" r="1.5" fill="#FFD700" opacity="0.7"/>
+  <circle cx="100" cy="22" r="1.5" fill="#FFD700" opacity="0.6"/>
+</svg>
