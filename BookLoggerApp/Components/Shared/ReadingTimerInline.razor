@@ -133,6 +133,14 @@
         OnClose="@HandleSessionCelebrationClose" />
 }
 
+@if (ShowStreakCelebration && SessionProgressionResult != null)
+{
+    <StreakCelebration
+        StreakDays="@SessionProgressionResult.StreakDays"
+        BonusXp="@SessionProgressionResult.StreakBonusXp"
+        OnClose="@HandleStreakCelebrationClose" />
+}
+
 @if (ShowLevelUpCelebration && LevelUpResult != null)
 {
     <LevelUpCelebration
@@ -178,6 +186,8 @@
     // Celebration state
     private bool ShowSessionCelebration { get; set; }
     private ProgressionResult? SessionProgressionResult { get; set; }
+    private bool ShowStreakCelebration { get; set; }
+    private bool StreakCelebrationPending { get; set; }
     private bool ShowLevelUpCelebration { get; set; }
     private LevelUpResult? LevelUpResult { get; set; }
     private bool GoalCompletedDuringSession { get; set; }
@@ -185,6 +195,7 @@
     private bool ShowBookCompletionCelebration { get; set; }
     private bool _isGeneratingBookCard;
     private bool ShowReviewPrompt { get; set; }
+    private bool ReviewPromptPending { get; set; }
 
     // State restoration tracking
     private bool _stateRestoreAttempted;
@@ -352,11 +363,14 @@
 
             // Store progression result for celebration
             SessionProgressionResult = result.ProgressionResult;
+            var streakCelebrationPending = ShouldShowStreakCelebration(SessionProgressionResult);
 
             // Reset timer state
             ResetTimer();
             GoalCompletedDuringSession = result.GoalCompleted;
             BookCompletedDuringSession = bookCompletedDuringSession;
+            StreakCelebrationPending = streakCelebrationPending;
+            ReviewPromptPending = false;
 
             // Notify parent to refresh
             await OnSessionSaved.InvokeAsync();
@@ -384,11 +398,26 @@
         }
     }
 
-    private void HandleCancel()
+    private async Task HandleCancel()
     {
         StopTimer();
         TimerStateService.ClearState();
+        var sessionId = CurrentSessionId;
         ResetTimer();
+
+        if (!sessionId.HasValue)
+        {
+            return;
+        }
+
+        try
+        {
+            await ProgressService.DeleteSessionAsync(sessionId.Value);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to delete canceled session: {ex.Message}");
+        }
     }
 
     private void IncrementCurrentPage()
@@ -427,24 +456,54 @@
         CurrentSessionId = null;
         GoalCompletedDuringSession = false;
         BookCompletedDuringSession = false;
+        StreakCelebrationPending = false;
+        ShowStreakCelebration = false;
         ShowBookCompletionCelebration = false;
+        ReviewPromptPending = false;
     }
 
     private async Task HandleSessionCelebrationClose()
     {
-        var shouldShowReviewPrompt = ShouldShowReviewPrompt();
+        var shouldShowReviewPrompt = ReviewPromptPending || ShouldShowReviewPrompt();
         ShowSessionCelebration = false;
 
-        if (LevelUpResult != null)
+        if (StreakCelebrationPending)
+        {
+            StreakCelebrationPending = false;
+            ShowStreakCelebration = true;
+            ReviewPromptPending = shouldShowReviewPrompt;
+        }
+        else if (LevelUpResult != null)
         {
             ShowLevelUpCelebration = true;
+            ReviewPromptPending = shouldShowReviewPrompt;
         }
         else if (BookCompletedDuringSession)
         {
             ShowBookCompletionCelebration = true;
+            ReviewPromptPending = shouldShowReviewPrompt;
         }
         else
         {
+            ReviewPromptPending = false;
+            GoalCompletedDuringSession = false;
+            await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+        }
+    }
+
+    private async Task HandleStreakCelebrationClose()
+    {
+        var shouldShowReviewPrompt = ReviewPromptPending || ShouldShowReviewPrompt();
+        ShowStreakCelebration = false;
+        ReviewPromptPending = false;
+
+        if (!BookCompletedDuringSession && LevelUpResult != null)
+        {
+            ShowLevelUpCelebration = true;
+        }
+        else
+        {
+            BookCompletedDuringSession = false;
             GoalCompletedDuringSession = false;
             await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
         }
@@ -452,9 +511,10 @@
 
     private async Task HandleLevelUpCelebrationClose()
     {
-        var shouldShowReviewPrompt = ShouldShowReviewPrompt();
+        var shouldShowReviewPrompt = ReviewPromptPending || ShouldShowReviewPrompt();
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
+        ReviewPromptPending = false;
 
         if (BookCompletedDuringSession)
         {
@@ -469,11 +529,23 @@
 
     private async Task HandleBookCompletionCelebrationClose()
     {
-        var shouldShowReviewPrompt = ShouldShowReviewPrompt();
+        var shouldShowReviewPrompt = ReviewPromptPending || ShouldShowReviewPrompt();
         ShowBookCompletionCelebration = false;
-        BookCompletedDuringSession = false;
-        GoalCompletedDuringSession = false;
-        await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+
+        if (StreakCelebrationPending)
+        {
+            BookCompletedDuringSession = false;
+            StreakCelebrationPending = false;
+            ShowStreakCelebration = true;
+            ReviewPromptPending = shouldShowReviewPrompt;
+        }
+        else
+        {
+            BookCompletedDuringSession = false;
+            GoalCompletedDuringSession = false;
+            ReviewPromptPending = false;
+            await TryShowReviewPromptOrNavigateAsync(shouldShowReviewPrompt);
+        }
     }
 
     private async Task HandleShareBookFromTimer()
@@ -534,6 +606,7 @@
     private Task HandleReviewPromptClose()
     {
         ShowReviewPrompt = false;
+        ReviewPromptPending = false;
         Navigation.NavigateTo("/bookshelf");
         return Task.CompletedTask;
     }
@@ -541,6 +614,7 @@
     private async Task HandleNeverAskAgainAsync()
     {
         ShowReviewPrompt = false;
+        ReviewPromptPending = false;
         await ReviewPromptService.DisablePromptAsync();
         Navigation.NavigateTo("/bookshelf");
     }
@@ -548,6 +622,11 @@
     private bool ShouldShowReviewPrompt()
     {
         return GoalCompletedDuringSession || BookCompletedDuringSession || LevelUpResult != null;
+    }
+
+    private static bool ShouldShowStreakCelebration(ProgressionResult? result)
+    {
+        return result?.StreakDays >= 2 && result.StreakBonusXp > 0;
     }
 
     private async Task TryShowReviewPromptOrNavigateAsync(bool shouldShowReviewPrompt)

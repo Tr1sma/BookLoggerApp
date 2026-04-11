@@ -99,6 +99,113 @@ public class ProgressServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task AddSessionAsync_ShouldApplyScaledStreakBonus_ForSessionDate()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-1),
+            Minutes = 15
+        });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-2),
+            Minutes = 15
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await _service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today,
+            Minutes = 10,
+            PagesRead = 1
+        });
+
+        // Assert
+        result.ProgressionResult.StreakDays.Should().Be(3);
+        result.ProgressionResult.StreakBonusXp.Should().Be(400);
+        result.Session.XpEarned.Should().Be(470);
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_ShouldAwardStreakBonus_OnlyForFirstQualifyingSessionOfDay()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-1),
+            Minutes = 15
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        await _service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today,
+            Minutes = 10
+        });
+
+        // Act
+        var result = await _service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddHours(2),
+            Minutes = 12,
+            PagesRead = 3
+        });
+
+        // Assert
+        result.ProgressionResult.StreakDays.Should().Be(0);
+        result.ProgressionResult.StreakBonusXp.Should().Be(0);
+        result.Session.XpEarned.Should().Be(120);
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_ShouldIgnoreOpenPlaceholderSessions_WhenCalculatingStreak()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-1),
+            Minutes = 0,
+            PagesRead = 0,
+            EndedAt = null
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await _service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today,
+            Minutes = 10
+        });
+
+        // Assert
+        result.ProgressionResult.StreakDays.Should().Be(1);
+        result.ProgressionResult.StreakBonusXp.Should().Be(0);
+        result.Session.XpEarned.Should().Be(50);
+    }
+
+    [Fact]
     public async Task GetTotalMinutesAsync_ShouldSumMinutesForBook()
     {
         // Arrange
@@ -175,6 +282,37 @@ public class ProgressServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task GetCurrentStreakAsync_ShouldIgnoreOpenPlaceholderSessions()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today,
+            Minutes = 15
+        });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-1),
+            Minutes = 0,
+            PagesRead = 0,
+            EndedAt = null
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        var streak = await _service.GetCurrentStreakAsync();
+
+        // Assert
+        streak.Should().Be(1);
+    }
+
+    [Fact]
     public async Task EndSessionAsync_ShouldCalculateDurationAndXp()
     {
         // Arrange
@@ -210,6 +348,116 @@ public class ProgressServiceTests : IDisposable
         // Assert
         result.GoalCompleted.Should().BeTrue();
         _goalService.RecalculateGoalProgressCallCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_ShouldApplyScaledStreakBonus_ForActiveSessionDate()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-1),
+            Minutes = 15
+        });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-2),
+            Minutes = 15
+        });
+
+        var session = await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow.AddMinutes(-10),
+            Minutes = 0
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await _service.EndSessionAsync(session.Id, 1);
+
+        // Assert
+        result.ProgressionResult.StreakDays.Should().Be(3);
+        result.ProgressionResult.StreakBonusXp.Should().Be(400);
+        result.Session.XpEarned.Should().Be(470);
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_ShouldAwardStreakBonus_OnlyForFirstQualifyingSessionOfDay()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-1),
+            Minutes = 15
+        });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today,
+            Minutes = 20,
+            PagesRead = 5,
+            EndedAt = today.AddMinutes(20)
+        });
+
+        var session = await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow.AddMinutes(-10),
+            Minutes = 0
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await _service.EndSessionAsync(session.Id, 1);
+
+        // Assert
+        result.ProgressionResult.StreakDays.Should().Be(0);
+        result.ProgressionResult.StreakBonusXp.Should().Be(0);
+        result.Session.XpEarned.Should().Be(70);
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_ShouldNotAwardStreakBonus_ForZeroProgressSession()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = today.AddDays(-1),
+            Minutes = 15
+        });
+
+        var session = await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow,
+            Minutes = 0
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act
+        var result = await _service.EndSessionAsync(session.Id, 0);
+
+        // Assert
+        result.ProgressionResult.StreakDays.Should().Be(0);
+        result.ProgressionResult.StreakBonusXp.Should().Be(0);
+        result.Session.XpEarned.Should().Be(0);
     }
 
     [Fact]

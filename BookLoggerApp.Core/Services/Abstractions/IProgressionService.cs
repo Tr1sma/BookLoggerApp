@@ -13,9 +13,9 @@ public interface IProgressionService
     /// <param name="minutes">Minutes spent reading</param>
     /// <param name="pagesRead">Optional number of pages read</param>
     /// <param name="activePlantId">Optional ID of active plant (for boost calculation)</param>
-    /// <param name="hasStreak">Whether the user has an active reading streak (2+ days)</param>
+    /// <param name="streakDays">The reading streak length in days for the session date</param>
     /// <returns>Progression result with XP breakdown and optional level-up</returns>
-    Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, bool hasStreak = false);
+    Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0);
 
     /// <summary>
     /// Awards bonus XP for completing a book.

@@ -1,0 +1,37 @@
+@if (StreakDays >= 2 && BonusXp > 0)
+{
+    <div class="celebration-overlay" @onclick="HandleClose">
+        <div class="celebration-card" @onclick:stopPropagation="true">
+            @for (int i = 0; i < 10; i++)
+            {
+                <div class="confetti"></div>
+            }
+
+            <div class="streak-header">
+                <div class="streak-flame">🔥</div>
+                <h1>@($"{StreakDays} Day Streak")</h1>
+                <p class="streak-caption">You kept your reading streak alive.</p>
+            </div>
+
+            <div class="streak-reward">
+                <span class="streak-reward-label">Extra streak XP</span>
+                <span class="streak-reward-value">+@BonusXp XP</span>
+            </div>
+
+            <button class="celebration-button" @onclick="HandleClose">
+                Keep it going
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int StreakDays { get; set; }
+    [Parameter] public int BonusXp { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

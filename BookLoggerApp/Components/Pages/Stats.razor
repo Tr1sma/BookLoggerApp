@@ -8,6 +8,7 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IShareService ShareService
 @inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
 @implements IDisposable
+@using System.Globalization
 
 <PageTitle>Level Overview - BookHeart</PageTitle>
 
@@ -108,7 +109,7 @@
         </section>
 
         <!-- Plant Boost Section -->
-        @if (ViewModel.PlantBoosts.Any())
+        @if (ViewModel.PlantBoosts.Any() && ViewModel.TotalPlantBoost > 0m)
         {
             <section class="plant-boost-section">
                 <div class="section-header">
@@ -518,5 +519,16 @@
                 => new DateTime(ViewModel.AvailableShareMonths[0].Year, ViewModel.AvailableShareMonths[0].Month, 1).ToString("yyyy-MM"),
             _ => "All Time"
         };
+    }
+
+    private string GetPlantBoostWidth(PlantBoostInfo plant)
+    {
+        if (ViewModel.TotalPlantBoost <= 0m)
+        {
+            return "0%";
+        }
+
+        var width = (plant.BoostPercentage / ViewModel.TotalPlantBoost) * 100m;
+        return $"{width.ToString("F1", CultureInfo.InvariantCulture)}%";
     }
 }

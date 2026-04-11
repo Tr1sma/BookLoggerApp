@@ -69,6 +69,36 @@ Versionsschema:
 
 ### Geändert
 
+### Behoben
+
+- Projektweiter Razor-/Restore-Fehler auf Windows behoben, indem die Paketversion für alle Target Frameworks konsistent aus der App-Version abgeleitet wird
+- Das Android-App-Icon verwendet für Launcher-Themes jetzt keine monochrome Icon-Variante mehr, damit Icon Themes BookHeart nicht mehr einfarbig überlagern
+
+## [0.8.2] - 2026-04-07
+
+### Hinzugefügt
+
+- Beim Beenden einer Lesesession erscheint bei aktiver Lese-Streak jetzt eine eigene Streak-Feier mit zusätzlichem, nach Streak-Tagen skaliertem XP-Bonus
+
+### Geändert
+
+### Behoben
+
+- Die Feier-Reihenfolge nach einer Lesesession zeigt Level-Ups jetzt auch dann zuverlässig an, wenn gleichzeitig Buchabschluss und Streak-Bonus ausgelost wurden
+- Abgebrochene oder nur gestartete Lesesessions ohne echten Fortschritt verlängern keine Streak mehr und lösen dadurch keinen Streak-XP-Bonus mehr aus
+- Der Streak-XP-Bonus wird pro Tag nur noch einmal vergeben, nämlich bei der ersten qualifizierenden Lesesession des Tages
+- Die Stats-Seite stürzt nicht mehr ab, wenn vorhandene, aber tote Pflanzen keinen aktiven XP-Boost mehr beitragen
+- Die globale Fehleransicht wird nach einem Seitenwechsel wieder korrekt zurückgesetzt, statt weitere Seiten fälschlich ebenfalls als abgestürzt anzuzeigen
+
+## [0.8.1] - 2026-04-07
+
+### Hinzugefügt
+
+- Pflanzen im Bücherregal können jetzt direkt im Detail-Modal über ein Stift-Icon umbenannt werden
+- BookHeart prüft jetzt auf Android auf verfügbare Play-Store-Updates und zeigt nach einem App-Update beim ersten Start die passenden Changelog-Einträge an
+
+### Geändert
+
 - README-Featureübersicht vollständig an die seit V0.1.0 hinzugefügten Funktionen angepasst (u.a. Widgets, Sharing, Scanner/Lookup, erweiterte Ziel- und Regalfeatures)
 - Das Pflanzen-Detail-Modal im Bücherregal wurde insgesamt kompakter gestaltet
 
