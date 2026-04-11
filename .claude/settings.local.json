@@ -31,7 +31,9 @@
       "Bash(ls .config)",
       "Bash(ls dotnet-tools.json)",
       "Bash(ls .config/dotnet-tools.json)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Read(//c/Users/Tristan/.claude/plans/**)",
+      "Read(//c/Users/Tristan/.claude/**)"
     ],
     "deny": [],
     "ask": []

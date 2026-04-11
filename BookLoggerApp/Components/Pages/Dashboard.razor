@@ -121,7 +121,7 @@
                     {
                         <li>
                             <span class="activity-icon">📖</span>
-                            <span class="activity-text">Read for @session.Minutes minutes</span>
+                            <span class="activity-text">@FormatMinutes(session.Minutes) reading</span>
                             <span class="activity-time">@FormatRelativeTime(session.StartedAt)</span>
                         </li>
                     }
