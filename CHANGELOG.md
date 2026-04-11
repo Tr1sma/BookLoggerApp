@@ -13,6 +13,15 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
+## [Unveröffentlicht]
+
+### Geändert
+
+- "Getting Started"-Seite auf sehr kleinen mobilen Displays kompakter gestaltet: engeres Hero-Layout, kleinere Kartenabstände und reduzierter vertikaler Leerraum ohne Funktionsänderung
+- Shop-Seite (Pflanzen & Dekorationen) deutlich kompakter gestaltet: dichteres Kartenraster (mehr Karten pro Reihe, auch auf sehr kleinen Handys zwei Spalten statt einer), kleinere Karten-Bilder und Paddings, schlankerer Header, kompakteres Kaufen-Modal mit viewport-basierter Maximalhöhe — auf einem typischen Android-Handy sind jetzt deutlich mehr Items auf einen Blick sichtbar
+- Stats-Seite: „Top Rated Books"-Abschnitt kompakter gestaltet (Inline-Rang statt Kreis-Badge, horizontal scrollbare Kategorie-Filter, engere Abstände und 3 statt 5 Einträge als Standard)
+- Settings-Seite: kompakteres Layout mit reduzierten Abständen, Paddings und Heading-Größen für bessere Übersicht auf mobilen Displays — mehr Sektionen auf einen Blick sichtbar, ohne Funktions- oder Bedienungsänderung
+
 ## [0.9.0]
 
 ### Hinzugefügt
