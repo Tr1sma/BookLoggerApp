@@ -436,11 +436,12 @@ public class ImportExportService : IImportExportService
         }
     }
 
-    public async Task RestoreFromBackupAsync(string backupPath, CancellationToken ct = default)
+    public async Task RestoreFromBackupAsync(string backupPath, IProgress<string>? progress = null, CancellationToken ct = default)
     {
         try
         {
             _logger?.LogInformation("Restoring from backup: {Path}", backupPath);
+            progress?.Report($"Starting restore from {Path.GetFileName(backupPath)}");
 
             if (!File.Exists(backupPath))
             {
@@ -453,6 +454,7 @@ public class ImportExportService : IImportExportService
 
             try
             {
+                progress?.Report("Extracting ZIP archive");
                 // 1. Extract ZIP securely
                 // Sentinel: Manual extraction with path validation to prevent Zip Slip and Zip Bomb vulnerabilities
                 using (var archive = ZipFile.OpenRead(backupPath))
@@ -526,6 +528,7 @@ public class ImportExportService : IImportExportService
                     throw new InvalidOperationException("Invalid backup: Missing database file (booklogger.db)");
                 }
 
+                progress?.Report("Validating extracted database integrity");
                 // Validate the extracted database before overwriting the live database.
                 // Opens it read-only so no WAL file is created in the temp directory.
                 var backupConnectionString = $"Data Source={extractedDbPath};Mode=ReadOnly";
@@ -551,6 +554,7 @@ public class ImportExportService : IImportExportService
                 
                 if (string.IsNullOrWhiteSpace(currentDbPath)) throw new InvalidOperationException("Current database path not found");
 
+                progress?.Report("Closing live DB connections");
                 // 3. Close Connections & Restore DB
                 await context.Database.CloseConnectionAsync();
 
@@ -563,6 +567,7 @@ public class ImportExportService : IImportExportService
                 // Wait a bit to ensure locks are released (SQLite can be sticky)
                 await Task.Delay(200, ct);
 
+                progress?.Report("Swapping DB file");
                 File.Copy(extractedDbPath, currentDbPath, true);
 
                 // Also delete any WAL/SHM files that might cause issues
@@ -571,12 +576,14 @@ public class ImportExportService : IImportExportService
                 if (File.Exists(walPath)) File.Delete(walPath);
                 if (File.Exists(shmPath)) File.Delete(shmPath);
 
+                progress?.Report("Applying migrations to restored DB");
                 // Start Modification: Run migrations on a FRESH context after file copy
                 _logger?.LogInformation("Applying migrations to restored database...");
                 await using var freshContext = await _contextFactory.CreateDbContextAsync(ct);
                 await freshContext.Database.MigrateAsync(ct);
                 // End Modification
 
+                progress?.Report("Restoring cover images");
                 // 4. Restore Covers
                 // Case-insensitive search for covers directory
                 var extractedCoversDir = Directory
@@ -608,9 +615,17 @@ public class ImportExportService : IImportExportService
                 }
 
                 _logger?.LogInformation("Backup restored successfully");
+                progress?.Report("Invalidating settings cache");
 
-                // Invalidate AppSettings cache to load restored values
-                _appSettingsProvider.InvalidateCache();
+                // Invalidate AppSettings cache without firing ProgressionChanged:
+                // the app is about to restart, and notifying live subscribers while
+                // the DB file was just swapped under their feet caused them to blow
+                // up mid-restore (the whole restore was being rolled back into a
+                // generic "Failed to restore backup" error, hiding the successful
+                // file ops and preventing the auto-restart).
+                _appSettingsProvider.InvalidateCache(notifyProgressionChanged: false);
+
+                progress?.Report("Restore complete");
             }
             finally
             {

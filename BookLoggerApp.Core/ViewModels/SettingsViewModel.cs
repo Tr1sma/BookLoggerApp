@@ -256,34 +256,51 @@ public partial class SettingsViewModel : ViewModelBase
     public async Task RestoreFromBackupAsync()
     {
         BackupRestoreSucceeded = false;
+        IsBusy = true;
+        ClearError();
 
-        await ExecuteSafelyAsync(async () =>
+        try
         {
-            // 1. Pick File
-            AppendLog("Opening file picker...");
+            AppendLog("=== Restore from Backup started ===");
+
             var filePath = await _filePickerService.PickFileAsync("Select Backup File", ".zip");
-            AppendLog($"Picker returned path: {filePath ?? "NULL"}");
+            AppendLog($"Picker returned: {filePath ?? "NULL"}");
 
             if (string.IsNullOrEmpty(filePath))
             {
-                AppendLog("Restore cancelled or path is empty.");
-                // User might have thought they selected a file but the picker failed.
+                AppendLog("Restore cancelled (no file selected).");
                 SetError("File selection failed or was cancelled. If you selected a file from Google Drive, try saving it to your device storage first.");
                 return;
             }
 
-            // 2. Restore
-            AppendLog($"Calling RestoreFromBackupAsync with {filePath}");
-            await _importExportService.RestoreFromBackupAsync(filePath);
+            AppendLog($"Calling ImportExportService.RestoreFromBackupAsync({filePath})");
+            var progress = new Progress<string>(msg => AppendLog($"  [ImportExport] {msg}"));
+            await _importExportService.RestoreFromBackupAsync(filePath, progress);
+            AppendLog("ImportExportService returned successfully.");
+
             BackupRestoreSucceeded = true;
-
-            // Intentionally NO LoadAsync() here — the app will be restarted by
-            // the caller to drop stale SQLite connection pools. Re-reading
-            // settings through the pre-restore DbContext could throw a
-            // "database image malformed" error and mask the successful restore.
             AppendLog("Restore complete; awaiting app restart.");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"EXCEPTION: {ex.GetType().FullName}");
+            AppendLog($"  Message: {ex.Message}");
+            if (ex.InnerException is not null)
+            {
+                AppendLog($"  Inner: {ex.InnerException.GetType().FullName}: {ex.InnerException.Message}");
+            }
+            AppendLog($"  Stack: {ex.StackTrace}");
 
-        }, "Failed to restore backup");
+            var detail = ex.InnerException is not null
+                ? $" ({ex.InnerException.Message})"
+                : string.Empty;
+            SetError($"Failed to restore backup: {ex.GetType().Name}: {ex.Message}{detail}");
+            System.Diagnostics.Debug.WriteLine($"ERROR: {ex}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
     private void AppendLog(string message)
     {

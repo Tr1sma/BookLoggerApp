@@ -13,6 +13,12 @@ public sealed class AppRestartService : IAppRestartService
     public void RestartApp()
     {
 #if ANDROID
+        if (!Microsoft.Maui.ApplicationModel.MainThread.IsMainThread)
+        {
+            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(RestartApp);
+            return;
+        }
+
         // Hybrid restart strategy for Android 7–15. Previously we relied only
         // on an AlarmManager + PendingIntent deferred launch, but Android 12+
         // Background Activity Launch (BAL) restrictions block such launches
