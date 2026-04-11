@@ -13,7 +13,7 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
-## [Unveröffentlicht]
+## [0.9.0]
 
 ### Hinzugefügt
 
@@ -46,6 +46,7 @@ Versionsschema:
 - Scholar's Spectacles (Brille) ist jetzt korrekt als 2 Slots breit markiert — ihr Inhalts-Aspect-Ratio von ~3.8:1 passte visuell nie in einen einzelnen Regal-Slot
 - Dekorationen im Bücherregal werden nicht mehr mit dem grünen Pflanzen-Tint gerendert und der Inhalt wird nicht mehr am unteren Rand gecroppt (`object-fit: contain` + zentrierte Position statt `cover` + `bottom` — die Regeln wurden bisher unbeabsichtigt von den Pflanzen-Cards geerbt)
 - Automatischer Neustart nach Cloud-Backup-Wiederherstellung funktioniert jetzt zuverlässig auf Android 12+: bisher wurde nur ein `AlarmManager`-PendingIntent geplant und der Prozess sofort beendet, was von Android seit API 31 durch die Background-Activity-Launch-Restriktionen stillschweigend blockiert wurde — die App schloss sich zwar, startete aber nie neu. Der Restart nutzt jetzt eine Hybrid-Strategie (direktes `StartActivity` aus dem Vordergrund + `AlarmManager`-Fallback + kurze Verzögerung vor dem Prozess-Kill), damit BookHeart auf allen unterstützten Android-Versionen verlässlich neu startet
+- `PendingModelChangesWarning`-Absturz beim App-Start nach dem Brille-SlotWidth-Fix behoben: die Seed-Änderung der `Scholar's Spectacles` auf `SlotWidth = 2` war ohne passende EF-Migration im Code gelandet, sodass das gebaute Modell vom `AppDbContextModelSnapshot` abwich und `Database.MigrateAsync()` beim Start schon vor dem Runtime-Sync abbrach. Nachgeliefert als Migration `FixSpectaclesSlotWidth`
 
 ## [0.8.1] - 2026-04-07
 
