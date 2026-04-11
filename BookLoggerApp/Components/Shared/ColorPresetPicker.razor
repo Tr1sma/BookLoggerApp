@@ -1,0 +1,32 @@
+@using System.Collections.Generic
+
+<div class="color-preset-picker">
+    <div class="color-preset-info">
+        <span class="setting-label">@Label</span>
+        @if (!string.IsNullOrEmpty(Description))
+        {
+            <span class="setting-description">@Description</span>
+        }
+    </div>
+    <div class="color-presets">
+        @foreach (var preset in Presets)
+        {
+            <button class="color-swatch @(SelectedColor == preset.Hex ? "active" : "")"
+                    style="background-color: @preset.Hex"
+                    title="@preset.Name"
+                    type="button"
+                    @onclick="() => OnColorChanged.InvokeAsync(preset.Hex)">
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter] public string? Description { get; set; }
+    [Parameter, EditorRequired] public string SelectedColor { get; set; } = "";
+    [Parameter, EditorRequired]
+    public IReadOnlyList<(string Name, string Hex)> Presets { get; set; }
+        = Array.Empty<(string, string)>();
+    [Parameter] public EventCallback<string> OnColorChanged { get; set; }
+}

@@ -21,6 +21,8 @@ Versionsschema:
 - Shop-Seite (Pflanzen & Dekorationen) deutlich kompakter gestaltet: dichteres Kartenraster (mehr Karten pro Reihe, auch auf sehr kleinen Handys zwei Spalten statt einer), kleinere Karten-Bilder und Paddings, schlankerer Header, kompakteres Kaufen-Modal mit viewport-basierter Maximalhöhe — auf einem typischen Android-Handy sind jetzt deutlich mehr Items auf einen Blick sichtbar
 - Stats-Seite: „Top Rated Books"-Abschnitt kompakter gestaltet (Inline-Rang statt Kreis-Badge, horizontal scrollbare Kategorie-Filter, engere Abstände und 3 statt 5 Einträge als Standard)
 - Settings-Seite: kompakteres Layout mit reduzierten Abständen, Paddings und Heading-Größen für bessere Übersicht auf mobilen Displays — mehr Sektionen auf einen Blick sichtbar, ohne Funktions- oder Bedienungsänderung
+- Settings-Seite weiter aufgeräumt: neue Hero-Karte mit Version oben, thematisch zusammengelegte Abschnitte („Data & Backup" inkl. Danger-Zone, „Help & Community" inkl. Getting Started + Buy-me-a-coffee), „More Info"-Sammelabschnitt für Diagnostics + Privacy Policy — deutlich weniger Scrollen, gleiche Funktionen
+- Stats-Seite: „Level Milestones"-Liste deutlich kompakter — aus der Vollzeilen-Liste wird ein Mini-Karten-Grid (3 Spalten auf kleinen Handys, bis zu 7 auf Desktop), kleinere Icons und Schriften, auf einem typischen Android-Handy sind dadurch viel mehr Milestones gleichzeitig sichtbar
 
 ## [0.9.0]
 
