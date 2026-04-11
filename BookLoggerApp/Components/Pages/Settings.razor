@@ -10,9 +10,9 @@
 
 <PageTitle>Settings - BookHeart</PageTitle>
 
-<div class="settings-container">
-    <h1 class="settings-title">Settings</h1>
+<link rel="stylesheet" href="css/settings.css" />
 
+<div class="settings-container">
     @if (ViewModel.IsBusy)
     {
         <div class="loading">Loading settings...</div>
@@ -23,65 +23,25 @@
     }
     else
     {
-        <!-- About -->
-        <section class="settings-section">
-            <h2>About</h2>
-            <div class="about-info">
-                <p class="app-name">BookHeart</p>
-                <p class="app-version">Version @ViewModel.AppVersion</p>
+        <!-- Hero -->
+        <section class="settings-hero">
+            <div class="settings-hero-copy">
+                <span class="settings-kicker">BookHeart</span>
+                <h1>Einstellungen</h1>
+                <p class="settings-hero-subtitle">Offline-first book tracker</p>
+            </div>
+            <div class="settings-hero-version">
+                <span class="version-label">Version</span>
+                <strong>@ViewModel.AppVersion</strong>
             </div>
         </section>
 
-        <!-- Shelf Appearance -->
-        <section class="settings-section">
-            <button class="privacy-toggle" @onclick="ToggleShelfAppearance">
-                <span>Shelf Appearance</span>
-                <span class="toggle-icon">@(_showShelfAppearance ? "▲" : "▼")</span>
-            </button>
-
-            @if (_showShelfAppearance)
-            {
-                <div class="privacy-content">
-                    <div class="setting-row">
-                        <div class="setting-info">
-                            <span class="setting-label">Ledge Color</span>
-                            <span class="setting-description">The plank under each book</span>
-                        </div>
-                    </div>
-                    <div class="color-presets">
-                        @foreach (var preset in _shelfLedgeColorPresets)
-                        {
-                            <button class="color-swatch @(ViewModel.ShelfLedgeColor == preset.Hex ? "active" : "")"
-                                    style="background-color: @preset.Hex"
-                                    title="@preset.Name"
-                                    @onclick="() => ViewModel.UpdateShelfLedgeColorCommand.ExecuteAsync(preset.Hex)">
-                            </button>
-                        }
-                    </div>
-
-                    <div class="setting-row" style="margin-top: 0.5rem;">
-                        <div class="setting-info">
-                            <span class="setting-label">Shelf Bar Color</span>
-                            <span class="setting-description">The bottom bar of each shelf</span>
-                        </div>
-                    </div>
-                    <div class="color-presets">
-                        @foreach (var preset in _shelfBaseColorPresets)
-                        {
-                            <button class="color-swatch @(ViewModel.ShelfBaseColor == preset.Hex ? "active" : "")"
-                                    style="background-color: @preset.Hex"
-                                    title="@preset.Name"
-                                    @onclick="() => ViewModel.UpdateShelfBaseColorCommand.ExecuteAsync(preset.Hex)">
-                            </button>
-                        }
-                    </div>
-                </div>
-            }
-        </section>
-
         <!-- Notifications -->
-        <section class="settings-section">
-            <h2>Notifications</h2>
+        <section class="settings-card">
+            <div class="section-header">
+                <h2>🔔 Notifications</h2>
+                <p>Reading nudges and reminders</p>
+            </div>
 
             <div class="setting-row">
                 <div class="setting-info">
@@ -144,174 +104,191 @@
             }
         </section>
 
-        <!-- Backup & Restore -->
-        <section class="settings-section">
-            <h2>Backup & Restore</h2>
-            <div class="backup-actions">
-                <p class="description">
-                    Save your data (including book covers) to the cloud or another device.
-                </p>
-                <div class="button-group">
-                    <button class="btn btn-primary" @onclick="HandleBackupToCloudAsync">
-                        Backup to Cloud
-                    </button>
-                    <button class="btn btn-secondary" @onclick="HandleRestoreFromBackupAsync">
-                        Restore from Backup
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <section class="settings-section"> 
-            <h2>Support me</h2>
-            <div class="backup-actions">
-                <p class="description support-description">
-                    If BookHeart helps you stay on top of your reading, you can support development here.
-                </p>
-                <div class="buy-me-a-coffee-actions">
-                    <button id="buy-me-a-coffee-fallback"
-                            class="btn buy-me-a-coffee-fallback"
-                            type="button"
-                            @onclick="OpenBuyMeACoffee">
-                        Buy me a coffee
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <section class="settings-section">
-            <h2>Getting Started</h2>
-            <div class="backup-actions">
-                <p class="description">
-                    Reopen the intro or jump into the guided checklist for books, plants, sharing, stats, backup, and more.
-                </p>
-                <div class="button-group">
-                    <button class="btn btn-primary" @onclick="OpenGettingStarted">
-                        Open Getting Started
-                    </button>
-                    <button class="btn btn-secondary" @onclick="ReplayIntroFromSettingsAsync">
-                        Replay Intro
-                    </button>
-                </div>
-                <div class="setting-row" style="margin-top: 0.5rem;">
-                    <div class="setting-info">
-                        <span class="setting-label">Hide Getting Started on Bookshelf</span>
-                        <span class="setting-description">Hide the Bookshelf prompt when checklist steps are still open</span>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox"
-                               checked="@ViewModel.Settings.HideGettingStartedCta"
-                               @onchange="@(e => ViewModel.ToggleGettingStartedCtaCommand.ExecuteAsync((bool)e.Value!))" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </div>
-        </section>
-
-        <!-- Danger Zone -->
-        <section class="settings-section danger-zone">
-            <h2>Danger Zone</h2>
-            <p class="danger-description">
-                Delete all your books, reading sessions, goals, plants, and reset your progress.
-                This action cannot be undone.
-            </p>
-            <button class="btn btn-danger" @onclick="ShowDeleteConfirmation">
-                Delete All Data
+        <!-- Shelf Appearance (collapsible) -->
+        <section class="settings-card">
+            <button class="settings-collapse-toggle" @onclick="ToggleShelfAppearance">
+                <span>🎨 Shelf Appearance</span>
+                <span class="toggle-icon">@(_showShelfAppearance ? "▲" : "▼")</span>
             </button>
-        </section>
 
-        <!-- Migration Diagnostics -->
-        <section class="settings-section">
-            <button class="privacy-toggle" @onclick="ToggleMigrationLog">
-                <span>Data Recovery Diagnostics</span>
-                <span class="toggle-icon">@(_showMigrationLog ? "▲" : "▼")</span>
-            </button>
-            @if (_showMigrationLog)
+            @if (_showShelfAppearance)
             {
-                <div class="privacy-content">
-                    <div class="migration-log-container">
-                        <textarea class="migration-log" readonly>@ViewModel.MigrationLog</textarea>
-                    </div>
-                    <p class="description" style="margin-top: 0.5rem; font-size: 0.8rem;">
-                        If data is missing, screenshot this log and send it to support.
-                    </p>
+                <div class="settings-collapse-content">
+                    <ColorPresetPicker Label="Ledge Color"
+                                       Description="The plank under each book"
+                                       SelectedColor="@ViewModel.ShelfLedgeColor"
+                                       Presets="_shelfLedgeColorPresets"
+                                       OnColorChanged="@(hex => ViewModel.UpdateShelfLedgeColorCommand.ExecuteAsync(hex))" />
+
+                    <ColorPresetPicker Label="Shelf Bar Color"
+                                       Description="The bottom bar of each shelf"
+                                       SelectedColor="@ViewModel.ShelfBaseColor"
+                                       Presets="_shelfBaseColorPresets"
+                                       OnColorChanged="@(hex => ViewModel.UpdateShelfBaseColorCommand.ExecuteAsync(hex))" />
                 </div>
             }
         </section>
 
-        <!-- Privacy & Legal -->
-        <section class="settings-section privacy-section">
-            <button class="privacy-toggle" @onclick="TogglePrivacyPolicy">
-                <span>Privacy Policy</span>
-                <span class="toggle-icon">@(_showPrivacyPolicy ? "▲" : "▼")</span>
+        <!-- Data & Backup (merged with Danger Zone) -->
+        <section class="settings-card">
+            <div class="section-header">
+                <h2>💾 Data & Backup</h2>
+                <p>Save, restore, or erase your library</p>
+            </div>
+            <div class="settings-action-grid data-backup-grid">
+                <button class="btn btn-primary" @onclick="HandleBackupToCloudAsync">
+                    Backup to Cloud
+                </button>
+                <button class="btn btn-secondary" @onclick="HandleRestoreFromBackupAsync">
+                    Restore from Backup
+                </button>
+            </div>
+
+            <hr class="danger-divider" />
+
+            <div class="danger-subblock">
+                <h3>⚠️ Danger zone</h3>
+                <p class="danger-description">
+                    Delete all your books, reading sessions, goals, plants, and reset your progress.
+                    This action cannot be undone.
+                </p>
+                <button class="btn btn-danger" @onclick="ShowDeleteConfirmation">
+                    Delete All Data
+                </button>
+            </div>
+        </section>
+
+        <!-- Help & Community (merged Support me + Getting Started) -->
+        <section class="settings-card">
+            <div class="section-header">
+                <h2>💛 Help & Community</h2>
+                <p>Learn the app, replay the intro, or support development</p>
+            </div>
+            <div class="settings-action-grid help-action-grid">
+                <button class="btn btn-primary" @onclick="OpenGettingStarted">
+                    Open Getting Started
+                </button>
+                <button class="btn btn-secondary" @onclick="ReplayIntroFromSettingsAsync">
+                    Replay Intro
+                </button>
+                <button id="buy-me-a-coffee-fallback"
+                        class="btn buy-me-a-coffee-fallback"
+                        type="button"
+                        @onclick="OpenBuyMeACoffee">
+                    Buy me a coffee
+                </button>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-label">Hide Getting Started on Bookshelf</span>
+                    <span class="setting-description">Hide the Bookshelf prompt when checklist steps are still open</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox"
+                           checked="@ViewModel.Settings.HideGettingStartedCta"
+                           @onchange="@(e => ViewModel.ToggleGettingStartedCtaCommand.ExecuteAsync((bool)e.Value!))" />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </section>
+
+        <!-- More Info (Diagnostics + Privacy Policy) -->
+        <section class="settings-card">
+            <button class="settings-collapse-toggle" @onclick="ToggleMoreInfo">
+                <span>ⓘ More Info</span>
+                <span class="toggle-icon">@(_showMoreInfo ? "▲" : "▼")</span>
             </button>
 
-            @if (_showPrivacyPolicy)
+            @if (_showMoreInfo)
             {
-                <div class="privacy-content">
-                    <p class="privacy-updated">Last updated: April 2026</p>
+                <div class="settings-collapse-content more-info-content">
+                    <button class="settings-collapse-toggle nested" @onclick="ToggleMigrationLog">
+                        <span>Data Recovery Diagnostics</span>
+                        <span class="toggle-icon">@(_showMigrationLog ? "▲" : "▼")</span>
+                    </button>
+                    @if (_showMigrationLog)
+                    {
+                        <div class="migration-log-container">
+                            <textarea class="migration-log" readonly>@ViewModel.MigrationLog</textarea>
+                            <p class="migration-hint">
+                                If data is missing, screenshot this log and send it to support.
+                            </p>
+                        </div>
+                    }
 
-                    <h3>Overview</h3>
-                    <p>
-                        BookHeart is an offline-first book tracking app. Your data is stored
-                        locally on your device and is never transmitted to our servers. We do not
-                        collect, store, or share any personal information.
-                    </p>
+                    <button class="settings-collapse-toggle nested" @onclick="TogglePrivacyPolicy">
+                        <span>Privacy Policy</span>
+                        <span class="toggle-icon">@(_showPrivacyPolicy ? "▲" : "▼")</span>
+                    </button>
+                    @if (_showPrivacyPolicy)
+                    {
+                        <div class="privacy-content">
+                            <p class="privacy-updated">Last updated: April 2026</p>
 
-                    <h3>Data Storage</h3>
-                    <p>
-                        All your books, reading sessions, goals, plants, and settings are stored
-                        in a local database (SQLite) on your device. This data never leaves your
-                        device unless you explicitly use the Backup & Restore feature.
-                    </p>
+                            <h3>Overview</h3>
+                            <p>
+                                BookHeart is an offline-first book tracking app. Your data is stored
+                                locally on your device and is never transmitted to our servers. We do not
+                                collect, store, or share any personal information.
+                            </p>
 
-                    <h3>Camera Permission</h3>
-                    <p>
-                        BookHeart requests camera access solely for scanning book barcodes (ISBN).
-                        No photos or videos are captured, stored, or transmitted. Camera access
-                        is optional and can be denied without affecting other app features.
-                    </p>
+                            <h3>Data Storage</h3>
+                            <p>
+                                All your books, reading sessions, goals, plants, and settings are stored
+                                in a local database (SQLite) on your device. This data never leaves your
+                                device unless you explicitly use the Backup & Restore feature.
+                            </p>
 
-                    <h3>Network Usage</h3>
-                    <p>
-                        When you look up a book by ISBN, BookHeart sends the ISBN number to the
-                        Google Books API to retrieve book metadata (title, author, cover image).
-                        No personal data or device identifiers are included in these requests.
-                        The app functions fully offline without this feature.
-                    </p>
+                            <h3>Camera Permission</h3>
+                            <p>
+                                BookHeart requests camera access solely for scanning book barcodes (ISBN).
+                                No photos or videos are captured, stored, or transmitted. Camera access
+                                is optional and can be denied without affecting other app features.
+                            </p>
 
-                    <h3>Third-Party Services</h3>
-                    <p>
-                        BookHeart does not include any advertising, analytics, or tracking SDKs.
-                        The only external service used is the Google Books API for optional book
-                        metadata lookup.
-                    </p>
+                            <h3>Network Usage</h3>
+                            <p>
+                                When you look up a book by ISBN, BookHeart sends the ISBN number to the
+                                Google Books API to retrieve book metadata (title, author, cover image).
+                                No personal data or device identifiers are included in these requests.
+                                The app functions fully offline without this feature.
+                            </p>
 
-                    <h3>Data Deletion</h3>
-                    <p>
-                        You can delete all your data at any time using the "Delete All Data"
-                        option in Settings. Uninstalling the app also removes all stored data
-                        from your device.
-                    </p>
+                            <h3>Third-Party Services</h3>
+                            <p>
+                                BookHeart does not include any advertising, analytics, or tracking SDKs.
+                                The only external service used is the Google Books API for optional book
+                                metadata lookup.
+                            </p>
 
-                    <h3>Children's Privacy</h3>
-                    <p>
-                        BookHeart does not knowingly collect any information from children.
-                        The app does not require account creation or any personal information
-                        to function.
-                    </p>
+                            <h3>Data Deletion</h3>
+                            <p>
+                                You can delete all your data at any time using the "Delete All Data"
+                                option in Settings. Uninstalling the app also removes all stored data
+                                from your device.
+                            </p>
 
-                    <h3>Changes to This Policy</h3>
-                    <p>
-                        Any changes to this privacy policy will be reflected in app updates.
-                        The "Last updated" date at the top indicates the most recent revision.
-                    </p>
+                            <h3>Children's Privacy</h3>
+                            <p>
+                                BookHeart does not knowingly collect any information from children.
+                                The app does not require account creation or any personal information
+                                to function.
+                            </p>
 
-                    <h3>Contact</h3>
-                    <p>
-                        If you have questions about this privacy policy, please open an issue
-                        on our GitHub repository or contact us via the Play Store listing.
-                    </p>
+                            <h3>Changes to This Policy</h3>
+                            <p>
+                                Any changes to this privacy policy will be reflected in app updates.
+                                The "Last updated" date at the top indicates the most recent revision.
+                            </p>
+
+                            <h3>Contact</h3>
+                            <p>
+                                If you have questions about this privacy policy, please open an issue
+                                on our GitHub repository or contact us via the Play Store listing.
+                            </p>
+                        </div>
+                    }
                 </div>
             }
         </section>
@@ -390,507 +367,6 @@
     </div>
 }
 
-<style>
-    .settings-container {
-        padding: 0.75rem;
-        max-width: 600px;
-        margin: 0 auto;
-        padding-bottom: 80px;
-    }
-
-    .settings-title {
-        font-size: 1.25rem;
-        color: var(--text-primary);
-        margin-bottom: 1rem;
-        font-weight: 600;
-    }
-
-    .settings-section {
-        background: var(--card-bg);
-        border-radius: 12px;
-        padding: 0.9rem 1rem;
-        margin-bottom: 0.75rem;
-        border: 1px solid var(--border-color);
-    }
-
-    .settings-section h2 {
-        font-size: 1.05rem;
-        color: var(--text-primary);
-        margin: 0 0 0.6rem 0;
-        font-weight: 600;
-    }
-
-    .about-info {
-        text-align: center;
-    }
-
-    .app-name {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0;
-    }
-
-    .app-version {
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        margin: 0.25rem 0 0 0;
-    }
-
-    .description {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        margin-bottom: 0.75rem;
-        line-height: 1.5;
-    }
-
-    .button-group {
-        display: flex;
-        gap: 0.6rem;
-        flex-wrap: wrap;
-    }
-
-    .support-callout {
-        margin-top: 1.25rem;
-        padding-top: 1.25rem;
-        border-top: 1px solid var(--border-light);
-    }
-
-    .support-description {
-        margin-bottom: 0.75rem;
-    }
-
-    .buy-me-a-coffee-actions {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
-    }
-
-    .buy-me-a-coffee-widget {
-        min-height: 60px;
-        display: flex;
-        align-items: center;
-    }
-
-    .buy-me-a-coffee-fallback {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #803900;
-        color: #ffffff;
-        border: 1px solid #ffffff;
-        min-height: 44px;
-    }
-
-    .buy-me-a-coffee-fallback:hover {
-        background: #95522a;
-    }
-
-    .danger-zone {
-        border-color: rgba(220, 53, 69, 0.3);
-        background: rgba(220, 53, 69, 0.05);
-    }
-
-    .danger-zone h2 {
-        color: #dc3545;
-    }
-
-    .danger-description {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        margin-bottom: 0.75rem;
-        line-height: 1.5;
-    }
-
-    .btn {
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        border: none;
-        font-weight: 500;
-        cursor: pointer;
-        font-size: 0.95rem;
-        transition: all 0.2s ease;
-    }
-
-    .btn-danger {
-        background: #dc3545;
-        color: white;
-    }
-
-    .btn-danger:hover:not(:disabled) {
-        background: #c82333;
-    }
-
-    .btn-danger:disabled {
-        background: #6c757d;
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-
-    .btn-secondary {
-        background: var(--card-bg);
-        color: var(--text-primary);
-        border: 1px solid var(--border-color);
-    }
-
-    .btn-secondary:hover {
-        background: var(--hover-bg);
-    }
-
-    .btn-primary {
-        background: var(--accent-color);
-        color: white;
-    }
-
-    .btn-primary:hover {
-        filter: brightness(1.1);
-    }
-
-    /* Modal Styles */
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.85);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        padding: 1rem;
-    }
-
-    .modal-content {
-        background: var(--card-bg);
-        border-radius: 16px;
-        width: 100%;
-        max-width: 400px;
-        overflow: hidden;
-        border: 1px solid var(--border-color);
-    }
-
-    .delete-modal .modal-header {
-        background: rgba(220, 53, 69, 0.1);
-        padding: 1rem 1.25rem;
-        border-bottom: 1px solid rgba(220, 53, 69, 0.2);
-    }
-
-    .delete-modal .modal-header h3 {
-        color: #dc3545;
-        margin: 0;
-        font-size: 1.1rem;
-    }
-
-    .modal-body {
-        padding: 1.25rem;
-    }
-
-    .warning-text {
-        color: var(--text-primary);
-        margin: 0 0 0.75rem 0;
-        font-weight: 500;
-    }
-
-    .delete-list {
-        margin: 0 0 1rem 0;
-        padding-left: 1.5rem;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        line-height: 1.6;
-    }
-
-    .confirm-text {
-        color: var(--text-primary);
-        margin: 0 0 0.5rem 0;
-        font-size: 0.9rem;
-    }
-
-    .confirm-input {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        background: var(--bg-primary);
-        color: var(--text-primary);
-        font-size: 1rem;
-        text-align: center;
-        letter-spacing: 2px;
-    }
-
-    .confirm-input:focus {
-        outline: none;
-        border-color: #dc3545;
-    }
-
-    .modal-footer {
-        padding: 1rem 1.25rem;
-        display: flex;
-        gap: 0.75rem;
-        justify-content: flex-end;
-        border-top: 1px solid var(--border-color);
-    }
-
-    /* Success Modal */
-    .success-modal .modal-body {
-        text-align: center;
-        padding: 2rem 1.25rem;
-    }
-
-    .success-icon {
-        width: 60px;
-        height: 60px;
-        background: var(--accent-color);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1rem;
-        font-size: 1.5rem;
-        color: white;
-    }
-
-    .success-modal h3 {
-        color: var(--text-primary);
-        margin: 0 0 0.5rem 0;
-    }
-
-    .success-modal p {
-        color: var(--text-secondary);
-        margin: 0;
-    }
-
-    .success-modal .modal-footer {
-        justify-content: center;
-    }
-
-    /* Color Presets */
-    .color-presets {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        padding: 0.35rem 0;
-    }
-
-    .color-swatch {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border: 2px solid transparent;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        padding: 0;
-    }
-
-    .color-swatch:hover {
-        transform: scale(1.1);
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-    }
-
-    .color-swatch.active {
-        border-color: var(--accent-color, #C9A97F);
-        box-shadow: 0 0 0 3px rgba(201, 169, 127, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Setting Rows */
-    .setting-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.55rem 0;
-        border-bottom: 1px solid var(--border-light);
-    }
-
-    .setting-row:last-child {
-        border-bottom: none;
-    }
-
-    .setting-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-        flex: 1;
-        min-width: 0;
-    }
-
-    .setting-label {
-        color: var(--text-primary);
-        font-size: 0.95rem;
-        font-weight: 500;
-    }
-
-    .setting-description {
-        color: var(--text-secondary);
-        font-size: 0.8rem;
-    }
-
-    /* Toggle Switch */
-    .toggle-switch {
-        position: relative;
-        display: inline-block;
-        width: 48px;
-        height: 26px;
-        flex-shrink: 0;
-        margin-left: 1rem;
-    }
-
-    .toggle-switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .toggle-slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
-        border-radius: 26px;
-        transition: all 0.3s ease;
-    }
-
-    .toggle-slider::before {
-        position: absolute;
-        content: "";
-        height: 20px;
-        width: 20px;
-        left: 2px;
-        bottom: 2px;
-        background-color: var(--text-secondary);
-        border-radius: 50%;
-        transition: all 0.3s ease;
-    }
-
-    .toggle-switch input:checked + .toggle-slider {
-        background-color: var(--accent-color);
-        border-color: var(--accent-color);
-    }
-
-    .toggle-switch input:checked + .toggle-slider::before {
-        transform: translateX(22px);
-        background-color: var(--bg-primary);
-    }
-
-    /* Time Picker */
-    .time-picker-row {
-        flex-wrap: wrap;
-    }
-
-    .time-picker {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        flex-shrink: 0;
-        margin-left: 1rem;
-    }
-
-    .time-select {
-        background: var(--bg-primary);
-        color: var(--text-primary);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 0.5rem 0.6rem;
-        font-size: 0.95rem;
-        text-align: center;
-        appearance: none;
-        -webkit-appearance: none;
-        cursor: pointer;
-        min-width: 52px;
-    }
-
-    .time-select:focus {
-        outline: none;
-        border-color: var(--accent-color);
-    }
-
-    .time-separator {
-        color: var(--text-primary);
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-
-    .loading {
-        text-align: center;
-        color: var(--text-secondary);
-        padding: 2rem;
-    }
-
-    .alert-danger {
-        background: rgba(220, 53, 69, 0.1);
-        color: #dc3545;
-        padding: 1rem;
-        border-radius: 8px;
-        border: 1px solid rgba(220, 53, 69, 0.3);
-    }
-
-    .migration-log-container {
-        width: 100%;
-    }
-
-    .migration-log {
-        width: 100%;
-        height: 150px;
-        background: var(--bg-primary);
-        color: var(--text-secondary);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 0.5rem;
-        font-family: monospace;
-        font-size: 0.8rem;
-        resize: vertical;
-    }
-
-    /* Privacy & Legal */
-    .privacy-toggle {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        padding: 0.4rem 0;
-        background: none;
-        border: none;
-        color: var(--text-primary);
-        font-size: 0.95rem;
-        cursor: pointer;
-    }
-
-    .toggle-icon {
-        color: var(--text-secondary);
-        font-size: 0.8rem;
-    }
-
-    .privacy-content {
-        padding: 0.4rem 0 0.2rem;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .privacy-content h3 {
-        font-size: 0.95rem;
-        color: var(--text-primary);
-        margin: 0.75rem 0 0.3rem 0;
-        font-weight: 600;
-    }
-
-    .privacy-content p {
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-        line-height: 1.5;
-        margin: 0 0 0.4rem 0;
-    }
-
-    .privacy-updated {
-        font-style: italic;
-        color: var(--text-secondary);
-        font-size: 0.8rem !important;
-    }
-</style>
-
 @code {
     private bool _showDeleteConfirmation = false;
     private bool _showSuccessModal = false;
@@ -898,6 +374,7 @@
     private bool _showPrivacyPolicy = false;
     private bool _showMigrationLog = false;
     private bool _showShelfAppearance = false;
+    private bool _showMoreInfo = false;
     private string _deleteConfirmText = string.Empty;
 
     private bool IsDeleteConfirmed => _deleteConfirmText.Equals("DELETE", StringComparison.Ordinal);
@@ -932,13 +409,15 @@
 
     private void ToggleShelfAppearance() => _showShelfAppearance = !_showShelfAppearance;
 
+    private void ToggleMoreInfo() => _showMoreInfo = !_showMoreInfo;
+
     private Func<Task<bool>>? _navBackHandler;
     private Func<Task<bool>>? _modalBackHandler;
 
     protected override async Task OnInitializedAsync()
     {
         // Register navigation back handler (Settings -> Bookshelf)
-        _navBackHandler = async () => 
+        _navBackHandler = async () =>
         {
             Navigation.NavigateTo("/");
             return true;
@@ -1004,7 +483,7 @@
     private void ShowDeleteConfirmation()
     {
         _deleteConfirmText = string.Empty;
-        
+
          // Register modal back handler
         _modalBackHandler = async () =>
         {
@@ -1012,7 +491,7 @@
             return true;
         };
         BackButtonService.Register(_modalBackHandler);
-        
+
         _showDeleteConfirmation = true;
     }
 
@@ -1074,7 +553,7 @@
 
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
-    
+
     public void Dispose()
     {
         if (_navBackHandler != null)
