@@ -45,6 +45,7 @@ Versionsschema:
 - Cloud-Backup-Wiederherstellung wirft nicht mehr den Fehler "database disk image is malformed" beim direkten Weiterverwenden der App: nach erfolgreichem Restore zeigt die Settings-Seite kurz einen "Backup restored"-Hinweis und startet BookHeart automatisch neu, damit alle SQLite-Verbindungspools, nativen File-Handles und Blazor-Komponenten frisch gegen die restaurierte Datenbank aufgebaut werden. Ein manueller Neustart ist dafür nicht mehr nötig.
 - Scholar's Spectacles (Brille) ist jetzt korrekt als 2 Slots breit markiert — ihr Inhalts-Aspect-Ratio von ~3.8:1 passte visuell nie in einen einzelnen Regal-Slot
 - Dekorationen im Bücherregal werden nicht mehr mit dem grünen Pflanzen-Tint gerendert und der Inhalt wird nicht mehr am unteren Rand gecroppt (`object-fit: contain` + zentrierte Position statt `cover` + `bottom` — die Regeln wurden bisher unbeabsichtigt von den Pflanzen-Cards geerbt)
+- Automatischer Neustart nach Cloud-Backup-Wiederherstellung funktioniert jetzt zuverlässig auf Android 12+: bisher wurde nur ein `AlarmManager`-PendingIntent geplant und der Prozess sofort beendet, was von Android seit API 31 durch die Background-Activity-Launch-Restriktionen stillschweigend blockiert wurde — die App schloss sich zwar, startete aber nie neu. Der Restart nutzt jetzt eine Hybrid-Strategie (direktes `StartActivity` aus dem Vordergrund + `AlarmManager`-Fallback + kurze Verzögerung vor dem Prozess-Kill), damit BookHeart auf allen unterstützten Android-Versionen verlässlich neu startet
 
 ## [0.8.1] - 2026-04-07
 
