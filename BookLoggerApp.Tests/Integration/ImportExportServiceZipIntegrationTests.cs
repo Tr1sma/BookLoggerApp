@@ -13,6 +13,14 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
 {
     private readonly string _tempRoot;
 
+    static ImportExportServiceZipIntegrationTests()
+    {
+        // RestoreFromBackupAsync gates on DatabaseInitializationHelper.EnsureInitializedAsync
+        // to avoid racing the fire-and-forget DbInitializer on fresh installs. Tests bypass
+        // the initializer entirely, so satisfy the gate eagerly and idempotently here.
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
+    }
+
     public ImportExportServiceZipIntegrationTests()
     {
         // specific temp folder for this test run
