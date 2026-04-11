@@ -13,52 +13,95 @@ public sealed class AppRestartService : IAppRestartService
     public void RestartApp()
     {
 #if ANDROID
-        // Use AlarmManager + PendingIntent to relaunch the app. On Android 12+
-        // a direct context.StartActivity(...) from a dying process is unreliable
-        // because background activity starts are restricted. The system
-        // AlarmManager, being a trusted service, can launch the activity even
-        // after the current process is killed via JavaSystem.Exit.
+        // Hybrid restart strategy for Android 7–15. Previously we relied only
+        // on an AlarmManager + PendingIntent deferred launch, but Android 12+
+        // Background Activity Launch (BAL) restrictions block such launches
+        // when the source process is already dead. The fix is to also call
+        // StartActivity directly while we're still alive and visible — the
+        // foreground context makes BAL allow the launch unconditionally.
         var context = Android.App.Application.Context;
         var packageManager = context.PackageManager;
         var launchIntent = packageManager?.GetLaunchIntentForPackage(context.PackageName!);
         if (launchIntent is null)
         {
+            System.Diagnostics.Debug.WriteLine("AppRestart: no launch intent — aborting");
             return;
         }
 
-        launchIntent.AddFlags(ActivityFlags.NewTask | ActivityFlags.ClearTask);
+        launchIntent.AddFlags(
+            ActivityFlags.NewTask |
+            ActivityFlags.ClearTask |
+            ActivityFlags.ClearTop);
 
-        var pendingIntentFlags = PendingIntentFlags.OneShot;
-        if (Build.VERSION.SdkInt >= BuildVersionCodes.M)
+        // --- Strategy 1: direct foreground StartActivity ---
+        // The user just tapped "Restore from Cloud" and Settings is still
+        // visible, so the app is in the foreground. Android will either start
+        // the Activity immediately in the current process (which we're about
+        // to kill) or re-fork a fresh process to host it after we die.
+        try
         {
-            pendingIntentFlags |= PendingIntentFlags.Immutable;
+            context.StartActivity(launchIntent);
+            System.Diagnostics.Debug.WriteLine("AppRestart: direct StartActivity dispatched");
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"AppRestart: StartActivity threw: {ex}");
         }
 
-        var pendingIntent = PendingIntent.GetActivity(
-            context,
-            0,
-            launchIntent,
-            pendingIntentFlags);
-
-        var alarmManager = (AlarmManager?)context.GetSystemService(Context.AlarmService);
-        if (alarmManager is null || pendingIntent is null)
+        // --- Strategy 2: AlarmManager fallback ---
+        // Only relevant if Strategy 1 is silently dropped (e.g. on an OEM
+        // shell with unusual restrictions). SetAndAllowWhileIdle doesn't
+        // require SCHEDULE_EXACT_ALARM.
+        try
         {
-            return;
+            var pendingIntentFlags = PendingIntentFlags.OneShot;
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.M)
+            {
+                pendingIntentFlags |= PendingIntentFlags.Immutable;
+            }
+
+            var pendingIntent = PendingIntent.GetActivity(
+                context,
+                0,
+                launchIntent,
+                pendingIntentFlags);
+
+            var alarmManager = (AlarmManager?)context.GetSystemService(Context.AlarmService);
+            if (alarmManager is not null && pendingIntent is not null)
+            {
+                var triggerAt = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 500;
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.M)
+                {
+                    alarmManager.SetAndAllowWhileIdle(AlarmType.Rtc, triggerAt, pendingIntent);
+                }
+                else
+                {
+                    alarmManager.Set(AlarmType.Rtc, triggerAt, pendingIntent);
+                }
+                System.Diagnostics.Debug.WriteLine("AppRestart: alarm fallback scheduled");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"AppRestart: alarm fallback threw: {ex}");
         }
 
-        var triggerAt = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 100;
-
-        // SetAndAllowWhileIdle works without SCHEDULE_EXACT_ALARM on Android 12+
-        // and still fires within a few hundred ms for our near-zero delay.
-        if (Build.VERSION.SdkInt >= BuildVersionCodes.M)
+        // --- Strategy 3: delayed process kill ---
+        // Give Android ~300 ms to commit the StartActivity IPC and finalize
+        // the alarm schedule before we kill ourselves. Without this pause the
+        // race between "ipc dispatched" and "process dead" can swallow both
+        // previous strategies on fast devices.
+        try
         {
-            alarmManager.SetAndAllowWhileIdle(AlarmType.Rtc, triggerAt, pendingIntent);
+            System.Threading.Thread.Sleep(300);
         }
-        else
+        catch
         {
-            alarmManager.Set(AlarmType.Rtc, triggerAt, pendingIntent);
+            // Interrupted — don't care, still kill the process below.
         }
 
+        // Kill at both the Linux process level and the JVM level for safety.
+        Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
         Java.Lang.JavaSystem.Exit(0);
 #endif
     }
