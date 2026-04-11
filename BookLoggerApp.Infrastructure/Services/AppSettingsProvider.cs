@@ -27,10 +27,25 @@ public class AppSettingsProvider : IAppSettingsProvider
 
     /// <summary>
     /// Raises the ProgressionChanged event to notify subscribers of progression data changes.
+    /// Subscriber exceptions are caught and logged so that a single buggy handler cannot
+    /// take down the caller (e.g. mid-restore, where a stale DbContext in one subscriber
+    /// used to blow up the whole backup-restore flow).
     /// </summary>
     private void OnProgressionChanged()
     {
-        ProgressionChanged?.Invoke(this, EventArgs.Empty);
+        var handlers = ProgressionChanged;
+        if (handlers is null) return;
+        foreach (var handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((EventHandler)handler).Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ProgressionChanged handler threw: {ex}");
+            }
+        }
     }
 
     /// <summary>
@@ -38,7 +53,19 @@ public class AppSettingsProvider : IAppSettingsProvider
     /// </summary>
     private void OnSettingsChanged()
     {
-        SettingsChanged?.Invoke(this, EventArgs.Empty);
+        var handlers = SettingsChanged;
+        if (handlers is null) return;
+        foreach (var handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((EventHandler)handler).Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SettingsChanged handler threw: {ex}");
+            }
+        }
     }
 
     public async Task<AppSettings> GetSettingsAsync(CancellationToken ct = default)

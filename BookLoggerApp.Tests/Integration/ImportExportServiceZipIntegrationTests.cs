@@ -41,6 +41,7 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         public Task IncrementPlantsPurchasedAsync(CancellationToken ct = default) => Task.CompletedTask;
         public Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default) => Task.FromResult(0);
         public void InvalidateCache() { }
+        public void InvalidateCache(bool notifyProgressionChanged) { }
     }
 
     // Simple IDbContextFactory implementation for real SQLite file

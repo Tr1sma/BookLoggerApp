@@ -30,4 +30,11 @@ public interface IAppSettingsProvider
     /// Invalidates the cached settings, forcing a fresh load from the database on next access.
     /// </summary>
     void InvalidateCache();
+
+    /// <summary>
+    /// Invalidates the cached settings. When <paramref name="notifyProgressionChanged"/> is false,
+    /// subscribers of <see cref="ProgressionChanged"/> are NOT notified — use this during restore
+    /// flows where firing the event would trigger subscribers to access stale DbContexts.
+    /// </summary>
+    void InvalidateCache(bool notifyProgressionChanged);
 }

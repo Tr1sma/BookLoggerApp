@@ -45,6 +45,14 @@ public class ImportExportServiceTests
         {
             ProgressionChanged?.Invoke(this, EventArgs.Empty);
         }
+
+        public void InvalidateCache(bool notifyProgressionChanged)
+        {
+            if (notifyProgressionChanged)
+            {
+                ProgressionChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
     }
 
     [Fact]

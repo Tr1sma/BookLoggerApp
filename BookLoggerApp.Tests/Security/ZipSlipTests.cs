@@ -149,6 +149,8 @@ public class MockAppSettingsProvider : IAppSettingsProvider
 
     public void InvalidateCache() { }
 
+    public void InvalidateCache(bool notifyProgressionChanged) { }
+
     public Task<int> GetUserCoinsAsync(CancellationToken ct = default)
     {
         return Task.FromResult(_coins);
