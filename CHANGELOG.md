@@ -15,7 +15,59 @@ Versionsschema:
 ---
 ## [Unveröffentlicht]
 
+### Geändert
+
+- "Getting Started"-Seite auf sehr kleinen mobilen Displays kompakter gestaltet: engeres Hero-Layout, kleinere Kartenabstände und reduzierter vertikaler Leerraum ohne Funktionsänderung
+- Shop-Seite (Pflanzen & Dekorationen) deutlich kompakter gestaltet: dichteres Kartenraster (mehr Karten pro Reihe, auch auf sehr kleinen Handys zwei Spalten statt einer), kleinere Karten-Bilder und Paddings, schlankerer Header, kompakteres Kaufen-Modal mit viewport-basierter Maximalhöhe — auf einem typischen Android-Handy sind jetzt deutlich mehr Items auf einen Blick sichtbar
+- Stats-Seite: „Top Rated Books"-Abschnitt kompakter gestaltet (Inline-Rang statt Kreis-Badge, horizontal scrollbare Kategorie-Filter, engere Abstände und 3 statt 5 Einträge als Standard)
+- Settings-Seite: kompakteres Layout mit reduzierten Abständen, Paddings und Heading-Größen für bessere Übersicht auf mobilen Displays — mehr Sektionen auf einen Blick sichtbar, ohne Funktions- oder Bedienungsänderung
+- Settings-Seite weiter aufgeräumt: neue Hero-Karte mit Version oben, thematisch zusammengelegte Abschnitte („Data & Backup" inkl. Danger-Zone, „Help & Community" inkl. Getting Started + Buy-me-a-coffee), „More Info"-Sammelabschnitt für Diagnostics + Privacy Policy — deutlich weniger Scrollen, gleiche Funktionen
+- Stats-Seite: „Level Milestones"-Liste deutlich kompakter — aus der Vollzeilen-Liste wird ein Mini-Karten-Grid (3 Spalten auf kleinen Handys, bis zu 7 auf Desktop), kleinere Icons und Schriften, auf einem typischen Android-Handy sind dadurch viel mehr Milestones gleichzeitig sichtbar
+
+## [0.9.0]
+
 ### Hinzugefügt
+
+- Breite Regalgegenstände: Dekorationen mit `SlotWidth > 1` nehmen jetzt mehrere Slots auf dem Bücherregal ein (z.B. Globus, Marmorbuchstütze, Teleskop, alte Schriftrolle = 2 Slots)
+- Neue Regaldekorationen (Kerzen, Stundenglas, Eulen-Figur, Globus u.v.m.) im Shop kaufbar und auf Regalen platzierbar — rein kosmetisch, günstig, per Level freigeschaltet
+- Shop-Seite hat jetzt Tabs für Pflanzen und Dekorationen
+- Versioniertes Onboarding mit Intro-Overlay und neuem "Getting Started"-Hub für geführte Missionen rund um erstes Buch, erste Lesesession, Ziele, Pflanzen, Wunschliste, Scanner, Sharing und Backup
+- "Getting Started"-CTA auf Bücherregal und Dashboard sowie neuer Einstieg in den Settings zum erneuten Öffnen oder Wiederholen des Intros
+
+### Geändert
+
+- Stundenglas, Tintenfass & Feder, Eulen-Figur, Magische Leselampe, Drachen-Figur und Alchemie-Kolben sind jetzt 2 Slots breit für bessere Erkennbarkeit im Regal (11 von 14 Dekorationen nun 2-slot-breit)
+- Onboarding-Overlay insgesamt kompakter (kleinere max. Breite/Höhe, engere Abstände, kleinere Überschriften) und farblich einheitlich dunkler an das BookHeart-Theme angepasst
+
+### Behoben
+
+- Tote Pflanzen werden beim Löschen jetzt vollständig entfernt, inklusive Regal-Verknüpfungen, und tauchen danach nicht mehr als "Add Plant"-Option im Bücherregal auf.
+- Onboarding wird nach einem Update nicht mehr ungefragt Bestandsnutzern angezeigt, sondern nur noch neuen Installationen automatisch eingeblendet
+- Intro-Schritte werden jetzt exakt fortgesetzt, der Zurück-/Skip-Flow ist korrekt navigierbar und die Rating-Erklärung verwendet die echten sechs Kategorien inklusive "Spice Level"
+- "Delete All Data" setzt jetzt auch den gespeicherten Onboarding- und Missionsfortschritt sauber zurück
+- Harter Blazor-Fehler beim ersten Antippen von "Add Book" im Onboarding-Intro behoben — Fehler beim Abschließen des Intros (z.B. kurzer DB-Lock beim Erststart) führen nicht mehr zum App-Absturz, sondern werden still abgefangen und das Overlay sauber ausgeblendet
+- Changelog-Overlay erscheint jetzt nicht mehr über dem Buch-Hinzufügen-Formular wenn der Nutzer "Add Book" im Onboarding-Intro tippt — Changelog wird für neue Nutzer während des Onboardings generell unterdrückt
+- Harter Blazor-Fehler beim ersten App-Start auf einer Neuinstallation behoben: GettingStartedCta auf dem Bücherregal wurde ohne DB-Initialisierungsschutz gerendert und löste eine "no such table"-Exception aus — Komponente wartet jetzt auf die DB-Initialisierung und schluckt verbleibende Fehler still
+- Voraussetzungs-Hinweis im "Getting Started"-Hub zeigte bei bestimmten Missionen fälschlicherweise "Complete 'Add your first book' first" an, obwohl die tatsächliche Voraussetzung bereits erfüllt war — Logik korrigiert
+- Dashboard/Bücherregal laden nach den neuen AppSettings-Änderungen wieder zuverlässig: fehlende EF-Migration für `HideGettingStartedCta` ergänzt, wodurch `PendingModelChanges`-Abbrüche beim Start vermieden werden
+- "Getting Started"-CTA auf dem Bücherregal bleibt nicht mehr dauerhaft unsichtbar, wenn die Initialisierung beim ersten Laden kurz fehlschlägt; Sichtbarkeit wird jetzt robust aus Settings (`HideGettingStartedCta`) und Onboarding-Status neu aufgebaut
+- Harter Blazor-Fehler auf dem Dashboard nach einer Cloud-Backup-Wiederherstellung behoben: Wenn die Pflanzenspezie-Verknüpfung nach einem Backup nicht aufgelöst werden konnte (fehlende PlantSpecies-Zeile), griff der PlantWidget-Template direkt auf `Plant.Species.Name` zu und stürzte ab — alle Species-Zugriffe sind jetzt Null-gesichert
+- Harter Blazor-Fehler auf der Stats-Seite behoben: Division durch null bei der Pflanzenverstärkungs-Balkenanzeige wenn `TotalPlantBoost = 0` aber Pflanzendaten vorhanden waren
+- Korrupte Cloud-Backups werden jetzt vor der Wiederherstellung per SQLite `PRAGMA integrity_check` geprüft und abgelehnt, anstatt die aktive Datenbank silent zu überschreiben
+- Cloud-Backup-Wiederherstellung wirft nicht mehr den Fehler "database disk image is malformed" beim direkten Weiterverwenden der App: nach erfolgreichem Restore zeigt die Settings-Seite kurz einen "Backup restored"-Hinweis und startet BookHeart automatisch neu, damit alle SQLite-Verbindungspools, nativen File-Handles und Blazor-Komponenten frisch gegen die restaurierte Datenbank aufgebaut werden. Ein manueller Neustart ist dafür nicht mehr nötig.
+- Scholar's Spectacles (Brille) ist jetzt korrekt als 2 Slots breit markiert — ihr Inhalts-Aspect-Ratio von ~3.8:1 passte visuell nie in einen einzelnen Regal-Slot
+- Dekorationen im Bücherregal werden nicht mehr mit dem grünen Pflanzen-Tint gerendert und der Inhalt wird nicht mehr am unteren Rand gecroppt (`object-fit: contain` + zentrierte Position statt `cover` + `bottom` — die Regeln wurden bisher unbeabsichtigt von den Pflanzen-Cards geerbt)
+- Automatischer Neustart nach Cloud-Backup-Wiederherstellung funktioniert jetzt zuverlässig auf Android 12+: bisher wurde nur ein `AlarmManager`-PendingIntent geplant und der Prozess sofort beendet, was von Android seit API 31 durch die Background-Activity-Launch-Restriktionen stillschweigend blockiert wurde — die App schloss sich zwar, startete aber nie neu. Der Restart nutzt jetzt eine Hybrid-Strategie (direktes `StartActivity` aus dem Vordergrund + `AlarmManager`-Fallback + kurze Verzögerung vor dem Prozess-Kill), damit BookHeart auf allen unterstützten Android-Versionen verlässlich neu startet
+- `PendingModelChangesWarning`-Absturz beim App-Start nach dem Brille-SlotWidth-Fix behoben: die Seed-Änderung der `Scholar's Spectacles` auf `SlotWidth = 2` war ohne passende EF-Migration im Code gelandet, sodass das gebaute Modell vom `AppDbContextModelSnapshot` abwich und `Database.MigrateAsync()` beim Start schon vor dem Runtime-Sync abbrach. Nachgeliefert als Migration `FixSpectaclesSlotWidth`
+- Cloud-Backup-Restore brach mit roter `Failed to restore backup`-Meldung ab und triggerte direkt danach Folgefehler auf allen Pages, sodass nur ein manueller App-Neustart die importierten Daten sichtbar machte. Ursache: nach dem DB-Swap feuerte `ImportExportService` über `AppSettingsProvider.InvalidateCache()` das `ProgressionChanged`-Event, dessen Subscriber auf noch nicht aufgeräumte DbContexts zugriffen und die gesamte `RestoreFromBackupAsync`-Methode mit einer Exception beendeten — der automatische Restart wurde dadurch gar nicht erst getriggert. Fix: der Restore-Pfad ruft `InvalidateCache(notifyProgressionChanged: false)` und umgeht das Event, `OnProgressionChanged`/`OnSettingsChanged` fangen zusätzlich Subscriber-Exceptions pro Handler ab, der Restore-Fehlerpfad zeigt jetzt Exception-Typ plus Inner-Exception im roten Alert, und der komplette Schritt-für-Schritt-Verlauf landet im bestehenden "Data Recovery Diagnostics"-Log. `AppRestartService.RestartApp` marshalt zusätzlich explizit auf den Android-Main-Thread, falls der Blazor-Dispatcher abweicht
+- Erstinstallations-Race behoben, bei dem der erste Cloud-Backup-Restore auf einer frischen Installation mit `database disk image malformed` abbrach und anschließende Folgefehler auf allen Seiten verursachte. Ursache: `DbInitializer.InitializeAsync` läuft am App-Start fire-and-forget in einem Scope, dessen `AppDbContext` für die gesamte Init-Dauer (Migration, Plant/Decoration-Sync, Seed-Validation) eine aktive SQLite-Verbindung hält. Klickte der User schnell genug auf Restore, überschrieb `File.Copy` die DB-Datei unter dieser laufenden Verbindung und korrumpierte sie — `SqliteConnection.ClearAllPools()` räumt nur gepoolte, nicht aktiv verwendete Verbindungen. Fix: `SettingsViewModel.RestoreFromBackupAsync` und `ImportExportService.RestoreFromBackupAsync` warten jetzt beide explizit über `DatabaseInitializationHelper.EnsureInitializedAsync()` auf den vollständigen Abschluss des Startup-Initializers, bevor der DB-Swap beginnt. Beim zweiten Aufruf ist der `TaskCompletionSource` bereits gesetzt und der Await kostet nichts
+
+## [0.8.1] - 2026-04-07
+
+### Hinzugefügt
+
+- Pflanzen im Bücherregal können jetzt direkt im Detail-Modal über ein Stift-Icon umbenannt werden
+- BookHeart prüft jetzt auf Android auf verfügbare Play-Store-Updates und zeigt nach einem App-Update beim ersten Start die passenden Changelog-Einträge an
 
 ### Geändert
 

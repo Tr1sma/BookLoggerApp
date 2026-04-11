@@ -1,0 +1,49 @@
+@using BookLoggerApp.Core.Models
+
+<div class="plant-shop-card @(IsSelected ? "selected" : "") @(IsLockedByLevel ? "locked" : "")"
+     @onclick="OnSelect"
+     style="display: flex; flex-direction: column;">
+    <!-- Decoration Image -->
+    <div class="plant-card-image">
+        <img src="@Item.ImagePath" alt="@Item.Name" />
+    </div>
+
+    <!-- Decoration Info -->
+    <div class="plant-card-body">
+        <h3 class="plant-card-title">@Item.Name</h3>
+        <p class="plant-card-description">@Item.Description</p>
+
+        <!-- Price -->
+        <div class="plant-card-footer">
+            <span class="plant-cost @(UserCoins >= Item.Cost ? "affordable" : "expensive")">
+                🪙 @Item.Cost
+            </span>
+            @if (IsLockedByLevel)
+            {
+                <span class="buy-label locked">Unlocks at Lv. @Item.UnlockLevel</span>
+            }
+            
+        </div>
+    </div>
+
+    <!-- Locked Overlay -->
+    @if (IsLockedByLevel)
+    {
+        <div class="locked-overlay-full">
+            <div class="lock-content">
+                <span class="lock-icon-large">🔒</span>
+                <span class="lock-text">Requires Level @Item.UnlockLevel</span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ShopItem Item { get; set; } = null!;
+    [Parameter] public int UserCoins { get; set; }
+    [Parameter] public int UserLevel { get; set; }
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public EventCallback OnSelect { get; set; }
+
+    private bool IsLockedByLevel => UserLevel < Item.UnlockLevel;
+}

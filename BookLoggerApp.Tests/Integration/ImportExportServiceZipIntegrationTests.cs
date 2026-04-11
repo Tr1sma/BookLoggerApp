@@ -13,6 +13,14 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
 {
     private readonly string _tempRoot;
 
+    static ImportExportServiceZipIntegrationTests()
+    {
+        // RestoreFromBackupAsync gates on DatabaseInitializationHelper.EnsureInitializedAsync
+        // to avoid racing the fire-and-forget DbInitializer on fresh installs. Tests bypass
+        // the initializer entirely, so satisfy the gate eagerly and idempotently here.
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
+    }
+
     public ImportExportServiceZipIntegrationTests()
     {
         // specific temp folder for this test run
@@ -31,6 +39,7 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
     private class TestAppSettingsProvider : IAppSettingsProvider
     {
         public event EventHandler? ProgressionChanged;
+        public event EventHandler? SettingsChanged;
         public Task<AppSettings> GetSettingsAsync(CancellationToken ct = default) => Task.FromResult(new AppSettings());
         public Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default) => Task.CompletedTask;
         public Task<int> GetUserCoinsAsync(CancellationToken ct = default) => Task.FromResult(0);
@@ -40,6 +49,7 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         public Task IncrementPlantsPurchasedAsync(CancellationToken ct = default) => Task.CompletedTask;
         public Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default) => Task.FromResult(0);
         public void InvalidateCache() { }
+        public void InvalidateCache(bool notifyProgressionChanged) { }
     }
 
     // Simple IDbContextFactory implementation for real SQLite file

@@ -54,6 +54,9 @@ public static class DbInitializer
             // Robust Sync: Ensure all plant definitions exactly match code (Prod Fix)
             await EnsurePlantDataSyncedAsync(dbContext, logger);
 
+            // Sync decoration shop items
+            await EnsureDecorationDataSyncedAsync(dbContext, logger);
+
             // Validate seed data
             await ValidateSeedDataAsync(dbContext, logger);
 
@@ -202,6 +205,61 @@ public static class DbInitializer
         }
     }
 
+
+    private static async Task EnsureDecorationDataSyncedAsync(AppDbContext context, ILogger? logger)
+    {
+        logger?.LogInformation("=== SYNCING DECORATION DATA ===");
+
+        var definedDecorations = DecorationSeedData.GetDecorations().ToList();
+        var existingDecorations = await context.ShopItems
+            .Where(si => si.ItemType == BookLoggerApp.Core.Enums.ShopItemType.Decoration)
+            .ToDictionaryAsync(si => si.Id);
+
+        bool hasChanges = false;
+
+        foreach (var def in definedDecorations)
+        {
+            if (existingDecorations.TryGetValue(def.Id, out var existing))
+            {
+                if (existing.Name != def.Name ||
+                    existing.Description != def.Description ||
+                    existing.Cost != def.Cost ||
+                    existing.ImagePath != def.ImagePath ||
+                    existing.UnlockLevel != def.UnlockLevel ||
+                    existing.IsAvailable != def.IsAvailable ||
+                    existing.SlotWidth != def.SlotWidth)
+                {
+                    logger?.LogInformation("Updating decoration '{Name}'...", def.Name);
+
+                    existing.Name = def.Name;
+                    existing.Description = def.Description;
+                    existing.Cost = def.Cost;
+                    existing.ImagePath = def.ImagePath;
+                    existing.UnlockLevel = def.UnlockLevel;
+                    existing.IsAvailable = def.IsAvailable;
+                    existing.SlotWidth = def.SlotWidth;
+
+                    hasChanges = true;
+                }
+            }
+            else
+            {
+                logger?.LogInformation("Adding missing decoration '{Name}'...", def.Name);
+                context.ShopItems.Add(def);
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges)
+        {
+            await context.SaveChangesAsync();
+            logger?.LogInformation("Decoration data synced successfully.");
+        }
+        else
+        {
+            logger?.LogInformation("Decoration data is already up to date.");
+        }
+    }
 
     private static async Task EnsurePlantDataSyncedAsync(AppDbContext context, ILogger? logger)
     {

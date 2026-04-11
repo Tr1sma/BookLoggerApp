@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="mugGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A67C52;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mugInner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#5D4E37;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3E3226;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="steamGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#D4A574;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#D4A574;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Steam lines -->
+  <path d="M 75 68 Q 70 50 75 35 Q 80 20 75 8" fill="none" stroke="#D4A574" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+  <path d="M 92 65 Q 87 45 92 30 Q 97 15 92 3" fill="none" stroke="#D4A574" stroke-width="2.5" stroke-linecap="round" opacity="0.3"/>
+  <path d="M 109 68 Q 104 48 109 33 Q 114 18 109 6" fill="none" stroke="#D4A574" stroke-width="2.5" stroke-linecap="round" opacity="0.25"/>
+
+  <!-- Mug body -->
+  <path d="M 55 80 L 55 155 Q 55 175 75 175 L 115 175 Q 135 175 135 155 L 135 80 Z" fill="url(#mugGrad)" stroke="#6B5638" stroke-width="2"/>
+
+  <!-- Mug rim -->
+  <ellipse cx="95" cy="80" rx="42" ry="10" fill="#B8956A" stroke="#6B5638" stroke-width="2"/>
+
+  <!-- Liquid surface -->
+  <ellipse cx="95" cy="82" rx="36" ry="7" fill="url(#mugInner)"/>
+
+  <!-- Handle -->
+  <path d="M 135 100 Q 165 100 165 130 Q 165 155 135 155" fill="none" stroke="#6B5638" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 135 100 Q 160 100 160 130 Q 160 152 135 155" fill="none" stroke="#A67C52" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Heart decoration on mug -->
+  <path d="M 95 120 Q 95 112 88 112 Q 80 112 80 122 Q 80 132 95 140 Q 110 132 110 122 Q 110 112 102 112 Q 95 112 95 120 Z" fill="#C4604A" opacity="0.7" stroke="#A04030" stroke-width="1.5"/>
+
+  <!-- Sparkles -->
+  <circle cx="70" cy="42" r="2" fill="#FFD700" opacity="0.7"/>
+  <circle cx="105" cy="25" r="1.5" fill="#FFD700" opacity="0.6"/>
+  <circle cx="80" cy="15" r="1.5" fill="#FFD700" opacity="0.5"/>
+</svg>

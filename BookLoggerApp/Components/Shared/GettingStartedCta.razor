@@ -1,0 +1,166 @@
+@using BookLoggerApp.Core.Infrastructure
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Services.Abstractions
+@implements IDisposable
+@inject IOnboardingService OnboardingService
+@inject IAppSettingsProvider AppSettingsProvider
+@inject NavigationManager NavigationManager
+
+@if (ShouldShowCta)
+{
+    <section class="getting-started-cta-card">
+        <div class="getting-started-cta-copy">
+            <span class="getting-started-cta-kicker">Getting Started</span>
+            <h2>@_snapshot.CompletedCoreCount / @_snapshot.TotalCoreCount core steps completed</h2>
+            @if (_snapshot.NextRecommendedMission != null)
+            {
+                <p>Next up: @_snapshot.NextRecommendedMission.Title</p>
+            }
+        </div>
+
+        <button type="button" class="btn btn-primary getting-started-cta-button" @onclick="OpenHub">
+            Open checklist
+        </button>
+    </section>
+}
+
+@code {
+    private OnboardingSnapshot? _snapshot;
+    private bool _showCta = true;
+
+    private bool ShouldShowCta => _showCta && _snapshot?.ShowHubCta == true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        OnboardingService.StateChanged += HandleOnboardingStateChanged;
+        AppSettingsProvider.SettingsChanged += HandleSettingsChanged;
+        await RefreshVisibilityStateAsync();
+    }
+
+    private async Task RefreshVisibilityStateAsync()
+    {
+        try
+        {
+            await DatabaseInitializationHelper.EnsureInitializedAsync();
+        }
+        catch
+        {
+            // Continue and try both sources individually to avoid getting stuck hidden.
+        }
+
+        await RefreshSnapshotAsync();
+        await CheckSettingsAsync();
+    }
+
+    private async Task RefreshSnapshotAsync()
+    {
+        try
+        {
+            _snapshot = await OnboardingService.GetSnapshotAsync();
+        }
+        catch
+        {
+            _snapshot = null;
+        }
+    }
+
+    private async Task CheckSettingsAsync()
+    {
+        try
+        {
+            var settings = await AppSettingsProvider.GetSettingsAsync();
+            _showCta = !settings.HideGettingStartedCta;
+        }
+        catch
+        {
+            _showCta = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        OnboardingService.StateChanged -= HandleOnboardingStateChanged;
+        AppSettingsProvider.SettingsChanged -= HandleSettingsChanged;
+    }
+
+    private void HandleSettingsChanged(object? sender, EventArgs e)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await CheckSettingsAsync();
+            StateHasChanged();
+        });
+    }
+
+    private void OpenHub()
+    {
+        NavigationManager.NavigateTo("/getting-started");
+    }
+
+    private void HandleOnboardingStateChanged(object? sender, EventArgs e)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                _snapshot = await OnboardingService.RefreshSnapshotAsync();
+            }
+            catch
+            {
+                await RefreshSnapshotAsync();
+            }
+
+            StateHasChanged();
+        });
+    }
+}
+
+<style>
+    .getting-started-cta-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.1rem;
+        margin-bottom: 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(45, 102, 64, 0.48);
+        background: linear-gradient(135deg, rgba(33, 80, 50, 0.34), rgba(26, 62, 40, 0.34));
+        box-shadow: 0 18px 42px rgba(22, 47, 32, 0.2);
+    }
+
+    .getting-started-cta-copy h2 {
+        margin: 0.2rem 0;
+        font-size: 1.05rem;
+        color: #e7f5ec;
+    }
+
+    .getting-started-cta-copy p {
+        margin: 0;
+        color: rgba(226, 241, 231, 0.9);
+    }
+
+    .getting-started-cta-kicker {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(225, 243, 232, 0.9);
+    }
+
+    .getting-started-cta-button {
+        white-space: nowrap;
+    }
+
+    @@media (max-width: 640px) {
+        .getting-started-cta-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .getting-started-cta-button {
+            width: 100%;
+        }
+    }
+</style>

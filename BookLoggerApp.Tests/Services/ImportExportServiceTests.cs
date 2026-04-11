@@ -15,6 +15,7 @@ public class ImportExportServiceTests
     private class MockAppSettingsProvider : IAppSettingsProvider
     {
         public event EventHandler? ProgressionChanged;
+        public event EventHandler? SettingsChanged;
 
         public Task<AppSettings> GetSettingsAsync(CancellationToken ct = default)
             => Task.FromResult(new AppSettings());
@@ -43,6 +44,14 @@ public class ImportExportServiceTests
         public void InvalidateCache()
         {
             ProgressionChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void InvalidateCache(bool notifyProgressionChanged)
+        {
+            if (notifyProgressionChanged)
+            {
+                ProgressionChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
     }
 

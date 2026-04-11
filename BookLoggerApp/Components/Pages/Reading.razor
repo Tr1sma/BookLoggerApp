@@ -10,6 +10,7 @@
 @inject IShareService ShareService
 @inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@inject IOnboardingService OnboardingService
 @implements IDisposable
 
 <PageTitle>Reading - BookHeart</PageTitle>
@@ -221,8 +222,14 @@
 
     private async Task HandleEndSession()
     {
+        var bookId = ViewModel.Book?.Id;
         await ViewModel.EndSessionCommand.ExecuteAsync(null);
         WidgetUpdateService.NotifyDataChanged();
+
+        if (string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+        {
+            await OnboardingService.TrackEventAsync(OnboardingEvent.ReadingSessionLogged, bookId);
+        }
 
         // Register celebration handler for whichever celebration shows first
         if (ViewModel.ShowSessionCelebration)
@@ -396,10 +403,23 @@
 
     private async void OnBookShareCardReady(byte[] cardBytes)
     {
-        var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
-        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-        await File.WriteAllBytesAsync(filePath, cardBytes);
-        await ShareService.ShareFileAsync("Book Recommendation", filePath, "image/png");
+        try
+        {
+            var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+            var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+            await File.WriteAllBytesAsync(filePath, cardBytes);
+            await ShareService.ShareFileAsync("Book Recommendation", filePath, "image/png");
+
+            if (ViewModel.Book?.Status == ReadingStatus.Completed)
+            {
+                await OnboardingService.TrackEventAsync(OnboardingEvent.BookShared, ViewModel.Book.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to share book card: {ex.Message}");
+        }
+
         await InvokeAsync(StateHasChanged);
     }
 

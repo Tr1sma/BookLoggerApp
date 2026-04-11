@@ -6,6 +6,7 @@
 @inject NavigationManager NavigationManager
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject BookLoggerApp.Core.Services.Abstractions.IShareService ShareService
+@inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
 @implements IDisposable
 @using System.Globalization
 
@@ -127,7 +128,7 @@
                             </div>
                             <div class="plant-boost-value">@plant.BoostDisplay</div>
                             <div class="plant-boost-bar">
-                                <div class="plant-boost-fill" style="width: @GetPlantBoostWidth(plant)"></div>
+                                <div class="plant-boost-fill" style="width: @(ViewModel.TotalPlantBoost > 0 ? (plant.BoostPercentage / ViewModel.TotalPlantBoost) * 100 : 0)%"></div>
                             </div>
                         </div>
                     }
@@ -196,11 +197,11 @@
         <!-- Top Rated Books -->
         @if (ViewModel.TopRatedBooks?.Any() == true)
         {
-            <section class="top-rated-books-section">
+            <section class="top-rated-books-section compact">
                 <h2>🏆 Top Rated Books</h2>
 
-                <!-- Category Filter Buttons -->
-                <div class="category-filter-buttons">
+                <!-- Category Filter Chips (horizontally scrollable) -->
+                <div class="category-filter-buttons" role="tablist" aria-label="Rating category filter">
                     <button class="btn category-filter-btn @(selectedCategory == null ? "active" : "")"
                             @onclick="() => FilterByCategory(null)">
                         All
@@ -218,13 +219,12 @@
                     @{
                         int rank = 1;
                     }
-                    @foreach (var bookRating in ViewModel.TopRatedBooks.Take(10))
+                    @foreach (var bookRating in ViewModel.TopRatedBooks.Take(showAllTopBooks ? 6 : 3))
                     {
                         <div class="top-book-item" @key="bookRating.Book.Id">
-                            <div class="book-rank">@rank</div>
                             <div class="book-info">
-                                <div class="book-title">@bookRating.Book.Title</div>
-                                <div class="book-author">by @bookRating.Book.Author</div>
+                                <div class="book-title"><span class="book-rank-inline">@rank.</span> @bookRating.Book.Title</div>
+                                <div class="book-author">@bookRating.Book.Author</div>
                             </div>
                             <div class="book-rating-summary">
                                 @if (selectedCategory.HasValue)
@@ -238,22 +238,17 @@
                                 {
                                     <div class="average-rating">@bookRating.AverageRating.ToString("F1") ⭐</div>
                                 }
-                                <div class="rating-breakdown">
-                                    @foreach (var rating in bookRating.Ratings.Where(r => r.Value.HasValue))
-                                    {
-                                        var categoryInfo = RatingCategoryInfo.GetAllCategories()
-                                            .FirstOrDefault(c => c.Category == rating.Key);
-                                        @if (categoryInfo != null)
-                                        {
-                                            <span class="mini-rating @(selectedCategory == rating.Key ? "selected" : "")">@categoryInfo.Emoji @rating.Value</span>
-                                        }
-                                    }
-                                </div>
                             </div>
                         </div>
                         rank++;
                     }
                 </div>
+                @if (ViewModel.TopRatedBooks.Count > 3)
+                {
+                    <button class="btn show-more-books-btn" @onclick="() => showAllTopBooks = !showAllTopBooks">
+                        @(showAllTopBooks ? "Weniger anzeigen" : "Mehr anzeigen")
+                    </button>
+                }
             </section>
         }
 
@@ -371,6 +366,7 @@
 
 @code {
     private RatingCategory? selectedCategory = null;
+    private bool showAllTopBooks = false;
     private string sharePeriodType = "alltime";
     private string? _currentUrl;
 
@@ -391,7 +387,15 @@
         };
         BackButtonService.Register(_backHandler);
 
-        await LoadDataAsync();
+        try
+        {
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Exception in Stats OnInitializedAsync: {ex}");
+            // Don't rethrow — let the UI render with the ViewModel's ErrorMessage
+        }
     }
 
     private void OnShareCardReady(byte[] cardBytes)
@@ -404,6 +408,7 @@
                 var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
                 await File.WriteAllBytesAsync(filePath, cardBytes);
                 await ShareService.ShareFileAsync("My Reading Stats", filePath, "image/png");
+                await OnboardingService.TrackEventAsync(OnboardingEvent.StatsShared);
             }
             catch (Exception ex)
             {

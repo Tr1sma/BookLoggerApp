@@ -18,6 +18,7 @@ public class AppSettingsProvider : IAppSettingsProvider
     private readonly TimeSpan _cacheLifetime = TimeSpan.FromMinutes(5);
 
     public event EventHandler? ProgressionChanged;
+    public event EventHandler? SettingsChanged;
 
     public AppSettingsProvider(IDbContextFactory<AppDbContext> contextFactory)
     {
@@ -26,10 +27,45 @@ public class AppSettingsProvider : IAppSettingsProvider
 
     /// <summary>
     /// Raises the ProgressionChanged event to notify subscribers of progression data changes.
+    /// Subscriber exceptions are caught and logged so that a single buggy handler cannot
+    /// take down the caller (e.g. mid-restore, where a stale DbContext in one subscriber
+    /// used to blow up the whole backup-restore flow).
     /// </summary>
     private void OnProgressionChanged()
     {
-        ProgressionChanged?.Invoke(this, EventArgs.Empty);
+        var handlers = ProgressionChanged;
+        if (handlers is null) return;
+        foreach (var handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((EventHandler)handler).Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ProgressionChanged handler threw: {ex}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Raises the SettingsChanged event to notify subscribers of settings changes.
+    /// </summary>
+    private void OnSettingsChanged()
+    {
+        var handlers = SettingsChanged;
+        if (handlers is null) return;
+        foreach (var handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((EventHandler)handler).Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SettingsChanged handler threw: {ex}");
+            }
+        }
     }
 
     public async Task<AppSettings> GetSettingsAsync(CancellationToken ct = default)
@@ -53,7 +89,9 @@ public class AppSettingsProvider : IAppSettingsProvider
                 Language = "en",
                 UserLevel = 1,
                 TotalXp = 0,
-                Coins = 100 // Start with 100 coins
+                Coins = 100, // Start with 100 coins
+                OnboardingFlowVersion = OnboardingMissionCatalog.CurrentFlowVersion,
+                OnboardingIntroStatus = OnboardingIntroStatus.NotStarted
             };
 
             context.AppSettings.Add(settings);
@@ -91,6 +129,9 @@ public class AppSettingsProvider : IAppSettingsProvider
         {
             OnProgressionChanged();
         }
+
+        // Notify subscribers that settings changed
+        OnSettingsChanged();
     }
 
     public async Task<int> GetUserCoinsAsync(CancellationToken ct = default)
@@ -183,9 +224,23 @@ public class AppSettingsProvider : IAppSettingsProvider
 
     public void InvalidateCache()
     {
+        InvalidateCache(true);
+    }
+
+    public void InvalidateCache(bool notifyProgressionChanged)
+    {
         _cachedSettings = null;
         _lastLoad = DateTime.MinValue;
-        OnProgressionChanged();
+        if (notifyProgressionChanged)
+        {
+            OnProgressionChanged();
+        }
+    }
+
+    public void SetCachedSettings(AppSettings settings)
+    {
+        _cachedSettings = settings;
+        _lastLoad = DateTime.UtcNow;
     }
 
     /// <summary>

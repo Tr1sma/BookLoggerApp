@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="lampBase" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#C4984A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6F47;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="lampShade" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#D4A574;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F5E6D3;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="lampGlow" cx="50%" cy="60%" r="50%">
+      <stop offset="0%" style="stop-color:#FFE680;stop-opacity:0.6" />
+      <stop offset="50%" style="stop-color:#FFD700;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#FFD700;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="bulbGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFBE6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFE680;stop-opacity:0.8" />
+    </radialGradient>
+  </defs>
+
+  <!-- Outer glow -->
+  <ellipse cx="100" cy="75" rx="55" ry="50" fill="url(#lampGlow)"/>
+
+  <!-- Base plate -->
+  <ellipse cx="100" cy="180" rx="32" ry="8" fill="url(#lampBase)" stroke="#6B5638" stroke-width="2"/>
+  <rect x="72" y="170" width="56" height="12" rx="3" fill="url(#lampBase)" stroke="#6B5638" stroke-width="2"/>
+  <ellipse cx="100" cy="170" rx="28" ry="6" fill="#C4984A" stroke="#6B5638" stroke-width="1.5"/>
+
+  <!-- Stem -->
+  <rect x="95" y="120" width="10" height="52" rx="3" fill="url(#lampBase)" stroke="#6B5638" stroke-width="1.5"/>
+  <!-- Stem detail -->
+  <ellipse cx="100" cy="140" rx="7" ry="3" fill="#D4A574" stroke="#6B5638" stroke-width="1"/>
+
+  <!-- Lamp shade -->
+  <path d="M 60 115 L 70 55 Q 72 48 80 48 L 120 48 Q 128 48 130 55 L 140 115 Z" fill="url(#lampShade)" stroke="#B8956A" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Shade decorative lines -->
+  <line x1="75" y1="110" x2="82" y2="55" stroke="#C4984A" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+  <line x1="100" y1="112" x2="100" y2="50" stroke="#C4984A" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+  <line x1="125" y1="110" x2="118" y2="55" stroke="#C4984A" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+
+  <!-- Shade rim -->
+  <ellipse cx="100" cy="115" rx="42" ry="8" fill="#D4A574" stroke="#B8956A" stroke-width="1.5"/>
+
+  <!-- Gold trim on shade top -->
+  <path d="M 80 48 L 120 48" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <!-- Gold trim on shade bottom -->
+  <ellipse cx="100" cy="115" rx="42" ry="8" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.5"/>
+
+  <!-- Bulb glow visible through shade -->
+  <ellipse cx="100" cy="85" rx="20" ry="22" fill="url(#bulbGlow)" opacity="0.4"/>
+
+  <!-- Finial on top -->
+  <circle cx="100" cy="42" r="5" fill="url(#lampBase)" stroke="#6B5638" stroke-width="1.5"/>
+
+  <!-- Magic sparkles (enchanted) -->
+  <circle cx="68" cy="70" r="2" fill="#FFD700" opacity="0.9"/>
+  <circle cx="132" cy="65" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="80" cy="40" r="1.5" fill="#FFD700" opacity="0.7"/>
+  <circle cx="120" cy="38" r="1.5" fill="#FFD700" opacity="0.7"/>
+  <circle cx="55" cy="95" r="1.5" fill="#FFD700" opacity="0.5"/>
+  <circle cx="145" cy="90" r="1.5" fill="#FFD700" opacity="0.5"/>
+
+  <!-- Floating magic particles -->
+  <circle cx="50" cy="55" r="1" fill="#FFE680" opacity="0.6"/>
+  <circle cx="150" cy="50" r="1" fill="#FFE680" opacity="0.5"/>
+  <circle cx="100" cy="25" r="1" fill="#FFE680" opacity="0.4"/>
+</svg>

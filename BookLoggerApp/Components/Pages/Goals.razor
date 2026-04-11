@@ -8,6 +8,7 @@
 @inject IGoalService GoalService
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
+@inject IOnboardingService OnboardingService
 @implements IDisposable
 
 <PageTitle>Goals - BookHeart</PageTitle>
@@ -587,8 +588,13 @@
 
     private async Task SaveGoal()
     {
+        var wasEditing = ViewModel.IsEditing;
         await ViewModel.SaveGoalCommand.ExecuteAsync(null);
         WidgetUpdateService.NotifyDataChanged();
+        if (!wasEditing && string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+        {
+            await OnboardingService.TrackEventAsync(OnboardingEvent.GoalCreated);
+        }
         if (_modalBackHandler != null)
         {
              BackButtonService.Unregister(_modalBackHandler);
@@ -599,8 +605,13 @@
 
     private async Task SaveGoalFromModal()
     {
+        var wasEditing = ViewModel.IsEditing;
         await ViewModel.SaveGoalCommand.ExecuteAsync(null);
         WidgetUpdateService.NotifyDataChanged();
+        if (!wasEditing && string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+        {
+            await OnboardingService.TrackEventAsync(OnboardingEvent.GoalCreated);
+        }
         await CloseExcludeModal();
     }
 

@@ -5,10 +5,28 @@
 @inject AppStartupViewModel ViewModel
 @inject ITimerStateService TimerStateService
 @inject IBackButtonService BackButtonService
+@inject NavigationManager NavigationManager
 
 @if (ViewModel.HasVisibleOverlay)
 {
     <div class="startup-overlay">
+        @if (ViewModel.IsOnboardingVisible)
+        {
+            <div class="startup-modal" role="dialog" aria-modal="true" aria-labelledby="startupOnboardingTitle">
+                <OnboardingTutorial
+                    CurrentStep="@ViewModel.OnboardingCurrentStep"
+                    TotalSteps="@ViewModel.OnboardingStepCount"
+                    ShowSkipConfirmation="@ViewModel.IsOnboardingSkipConfirmationVisible"
+                    OnSkipRequested="HandleRequestSkipOnboardingAsync"
+                    OnSkipConfirmed="HandleSkipOnboardingAsync"
+                    OnSkipCancelled="HandleCancelSkipOnboardingAsync"
+                    OnBack="HandleOnboardingBackAsync"
+                    OnNext="HandleOnboardingNextAsync"
+                    OnComplete="HandleCompleteOnboardingAsync"
+                    OnAddFirstBook="HandleAddFirstBookAsync" />
+            </div>
+        }
+
         @if (ViewModel.IsChangelogVisible)
         {
             <div class="startup-modal" role="dialog" aria-modal="true" aria-labelledby="startupChangelogTitle">
@@ -205,5 +223,70 @@
             BackButtonService.Unregister(_backHandler);
             _backHandler = null;
         }
+    }
+
+    private async Task HandleSkipOnboardingAsync()
+    {
+        try
+        {
+            await ViewModel.SkipOnboardingAsync();
+        }
+        catch
+        {
+            ViewModel.DismissOnboarding();
+        }
+        NavigationManager.NavigateTo("/getting-started");
+    }
+
+    private async Task HandleCompleteOnboardingAsync()
+    {
+        try
+        {
+            await ViewModel.CompleteOnboardingAsync();
+        }
+        catch
+        {
+            ViewModel.DismissOnboarding();
+        }
+        NavigationManager.NavigateTo("/getting-started");
+    }
+
+    private async Task HandleAddFirstBookAsync()
+    {
+        try
+        {
+            await ViewModel.CompleteOnboardingAsync();
+        }
+        catch
+        {
+            ViewModel.DismissOnboarding();
+        }
+        NavigationManager.NavigateTo("/books/new");
+    }
+
+    private async Task HandleOnboardingNextAsync()
+    {
+        await ViewModel.AdvanceOnboardingAsync();
+    }
+
+    private async Task HandleOnboardingBackAsync()
+    {
+        if (ViewModel.OnboardingCurrentStep > 0)
+        {
+            await ViewModel.RetreatOnboardingAsync();
+            return;
+        }
+
+        await ViewModel.RequestSkipOnboardingAsync();
+    }
+
+    private async Task HandleRequestSkipOnboardingAsync()
+    {
+        await ViewModel.RequestSkipOnboardingAsync();
+    }
+
+    private async Task HandleCancelSkipOnboardingAsync()
+    {
+        await ViewModel.CancelSkipOnboardingAsync();
     }
 }

@@ -45,6 +45,19 @@ public class AppSettings
     public DateTime? LastReviewPromptDate { get; set; }
     public int ReviewPromptMonthCount { get; set; } = 0;
 
+    // Onboarding
+    public bool HasCompletedOnboarding { get; set; } = false;
+    public int OnboardingFlowVersion { get; set; } = 0;
+    public OnboardingIntroStatus OnboardingIntroStatus { get; set; } = OnboardingIntroStatus.NotStarted;
+    public int OnboardingCurrentStep { get; set; } = 0;
+    public DateTime? OnboardingCompletedAt { get; set; }
+    public bool OnboardingAutoCompletedForExistingUser { get; set; } = false;
+    public Guid? OnboardingTutorialPlantId { get; set; }
+    public bool OnboardingTutorialPlantNeedsWateringAssist { get; set; } = false;
+
+    // UI Preferences
+    public bool HideGettingStartedCta { get; set; } = false;
+
     // Misc
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

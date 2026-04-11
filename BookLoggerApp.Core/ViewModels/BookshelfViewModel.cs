@@ -13,16 +13,18 @@ public partial class BookshelfViewModel : ViewModelBase
     private readonly IGenreService _genreService;
     private readonly IPlantService _plantService;
     private readonly IGoalService _goalService;
+    private readonly IDecorationService _decorationService;
 
     private readonly IShelfService _shelfService;
     private readonly IAppSettingsProvider _settingsProvider;
 
-    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IShelfService shelfService, IAppSettingsProvider settingsProvider)
+    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IDecorationService decorationService, IShelfService shelfService, IAppSettingsProvider settingsProvider)
     {
         _bookService = bookService;
         _genreService = genreService;
         _plantService = plantService;
         _goalService = goalService;
+        _decorationService = decorationService;
         _shelfService = shelfService;
         _settingsProvider = settingsProvider;
     }
@@ -40,6 +42,9 @@ public partial class BookshelfViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<UserPlant> _availablePlants = new();
+
+    [ObservableProperty]
+    private ObservableCollection<UserDecoration> _availableDecorations = new();
 
     [ObservableProperty]
     private List<Genre> _genres = new();
@@ -106,10 +111,13 @@ public partial class BookshelfViewModel : ViewModelBase
 
             var shelfViewModels = new List<ShelfViewModel>();
             var plantsOnShelvesIds = new HashSet<Guid>();
+            var decorationsOnShelvesIds = new HashSet<Guid>();
 
             // 2. Migration Check: Fetch legacy plants
             var allPlants = await _plantService.GetAllAsync();
-            var legacyPlants = allPlants.Where(p => p.IsInBookshelf).ToList();
+            var legacyPlants = allPlants
+                .Where(p => p.IsInBookshelf && p.Status != PlantStatus.Dead)
+                .ToList();
 
             // If we have legacy plants but they aren't linked to shelves via PlantShelf, migrate safely.
             // We can check if they are in the fetched shelves' properties?
@@ -157,8 +165,20 @@ public partial class BookshelfViewModel : ViewModelBase
                 {
                     if (plantShelf.Plant != null)
                     {
-                        items.Add(new ShelfItemViewModel(plantShelf.Plant, plantShelf.Position));
+                        int plantSlotWidth = 1;
+                        items.Add(new ShelfItemViewModel(plantShelf.Plant, plantShelf.Position, plantSlotWidth));
                         plantsOnShelvesIds.Add(plantShelf.Plant.Id);
+                    }
+                }
+
+                // Decorations
+                foreach (var decorationShelf in fullShelf.DecorationShelves)
+                {
+                    if (decorationShelf.Decoration != null)
+                    {
+                        int decoSlotWidth = decorationShelf.Decoration.ShopItem?.SlotWidth ?? 1;
+                        items.Add(new ShelfItemViewModel(decorationShelf.Decoration, decorationShelf.Position, decoSlotWidth));
+                        decorationsOnShelvesIds.Add(decorationShelf.Decoration.Id);
                     }
                 }
 
@@ -197,7 +217,13 @@ public partial class BookshelfViewModel : ViewModelBase
             // 4. Available Plants
             // Filter out plants that are already on ANY shelf
             AvailablePlants = new ObservableCollection<UserPlant>(
-                allPlants.Where(p => !plantsOnShelvesIds.Contains(p.Id))
+                allPlants.Where(p => p.Status != PlantStatus.Dead && !plantsOnShelvesIds.Contains(p.Id))
+            );
+
+            // 5. Available Decorations (not on any shelf)
+            var allDecorations = await _decorationService.GetAllAsync();
+            AvailableDecorations = new ObservableCollection<UserDecoration>(
+                allDecorations.Where(d => !decorationsOnShelvesIds.Contains(d.Id))
             );
 
             await CalculateGoalStatsAsync();
@@ -562,6 +588,7 @@ public partial class BookshelfViewModel : ViewModelBase
             // Recalculate positions
             var bookPositions = new Dictionary<Guid, int>();
             var plantPositions = new Dictionary<Guid, int>();
+            var decorationPositions = new Dictionary<Guid, int>();
 
             for (int i = 0; i < shelfVM.Items.Count; i++)
             {
@@ -572,10 +599,12 @@ public partial class BookshelfViewModel : ViewModelBase
                     bookPositions[item.Id] = i;
                 else if (item.Type == ShelfItemType.Plant)
                     plantPositions[item.Id] = i;
+                else if (item.Type == ShelfItemType.Decoration)
+                    decorationPositions[item.Id] = i;
             }
 
             // Persist
-            await _shelfService.UpdateShelfPositionsAsync(args.shelfId, bookPositions, plantPositions);
+            await _shelfService.UpdateShelfPositionsAsync(args.shelfId, bookPositions, plantPositions, decorationPositions);
 
         }, "Failed to reorder items");
     }
@@ -589,8 +618,11 @@ public partial class BookshelfViewModel : ViewModelBase
             if (args.type == ShelfItemType.Book)
                 await _shelfService.MoveBookBetweenShelvesAsync(
                     args.sourceShelfId, args.targetShelfId, args.itemId, args.position);
-            else
+            else if (args.type == ShelfItemType.Plant)
                 await _shelfService.MovePlantBetweenShelvesAsync(
+                    args.sourceShelfId, args.targetShelfId, args.itemId, args.position);
+            else if (args.type == ShelfItemType.Decoration)
+                await _shelfService.MoveDecorationBetweenShelvesAsync(
                     args.sourceShelfId, args.targetShelfId, args.itemId, args.position);
 
             await LoadAsync();
@@ -641,10 +673,43 @@ public partial class BookshelfViewModel : ViewModelBase
             if (type == ShelfItemType.Book)
                 await _shelfService.MoveBookBetweenShelvesAsync(
                     sourceShelfId, targetShelfId, itemId, position);
-            else
+            else if (type == ShelfItemType.Plant)
                 await _shelfService.MovePlantBetweenShelvesAsync(
                     sourceShelfId, targetShelfId, itemId, position);
+            else if (type == ShelfItemType.Decoration)
+                await _shelfService.MoveDecorationBetweenShelvesAsync(
+                    sourceShelfId, targetShelfId, itemId, position);
         }, "Failed to persist shelf move");
+    }
+
+    [RelayCommand]
+    public async Task AddDecorationToShelfAsync((Guid decorationId, Guid shelfId) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _shelfService.AddDecorationToShelfAsync(args.shelfId, args.decorationId);
+            await LoadAsync();
+        }, "Failed to place decoration");
+    }
+
+    [RelayCommand]
+    public async Task RemoveDecorationFromShelfAsync((Guid decorationId, Guid shelfId) args)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _shelfService.RemoveDecorationFromShelfAsync(args.shelfId, args.decorationId);
+            await LoadAsync();
+        }, "Failed to remove decoration");
+    }
+
+    [RelayCommand]
+    public async Task DeleteDecorationAsync(Guid decorationId)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _decorationService.DeleteAsync(decorationId);
+            await LoadAsync();
+        }, "Failed to delete decoration");
     }
 
     /// <summary>

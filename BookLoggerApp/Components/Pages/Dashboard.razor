@@ -2,11 +2,13 @@
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Components.Shared
 @inject DashboardViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
 @inject IImageService ImageService
 @inject IBackButtonService BackButtonService
+@inject IOnboardingService OnboardingService
 @implements IDisposable
 
 <PageTitle>Dashboard - BookHeart</PageTitle>
@@ -26,6 +28,8 @@
     }
     else
     {
+        <GettingStartedCta />
+
         <!-- Currently Reading Section -->
         <section class="currently-reading">
             <h2>Currently Reading</h2>
@@ -54,26 +58,29 @@
         </section>
 
         <!-- This Week Stats - Compact Chips -->
-        <section class="stats-chips">
-            <span class="stat-chip">
-                <span class="stat-chip-icon">📚</span>
-                <span class="stat-chip-value">@ViewModel.BooksReadThisWeek</span>
-                <span class="stat-chip-label">books</span>
-            </span>
-            <span class="stat-chip">
-                <span class="stat-chip-icon">⏱️</span>
-                <span class="stat-chip-value">@FormatMinutes(ViewModel.MinutesReadThisWeek)</span>
-            </span>
-            <span class="stat-chip">
-                <span class="stat-chip-icon">📄</span>
-                <span class="stat-chip-value">@ViewModel.PagesReadThisWeek</span>
-                <span class="stat-chip-label">pages</span>
-            </span>
-            <span class="stat-chip">
-                <span class="stat-chip-icon">⭐</span>
-                <span class="stat-chip-value">@ViewModel.XpEarnedThisWeek</span>
-                <span class="stat-chip-label">XP</span>
-            </span>
+        <section class="weekly-stats-section">
+            <h2>Weekly Stats</h2>
+            <div class="stats-chips">
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">📚</span>
+                    <span class="stat-chip-value">@ViewModel.BooksReadThisWeek</span>
+                    <span class="stat-chip-label">books</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">⏱️</span>
+                    <span class="stat-chip-value">@FormatMinutes(ViewModel.MinutesReadThisWeek)</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">📄</span>
+                    <span class="stat-chip-value">@ViewModel.PagesReadThisWeek</span>
+                    <span class="stat-chip-label">pages</span>
+                </span>
+                <span class="stat-chip">
+                    <span class="stat-chip-icon">⭐</span>
+                    <span class="stat-chip-value">@ViewModel.XpEarnedThisWeek</span>
+                    <span class="stat-chip-label">XP</span>
+                </span>
+            </div>
         </section>
 
         <!-- Active Goals -->
@@ -98,7 +105,9 @@
         @if (ViewModel.ActivePlant != null)
         {
             <section class="plant-widget-section">
-                <PlantWidget Plant="@ViewModel.ActivePlant" OnWater="HandleWaterPlant" />
+                <PlantWidget Plant="@ViewModel.ActivePlant"
+                             OnWater="HandleWaterPlant"
+                             OnDelete="HandleDeletePlant" />
             </section>
         }
 
@@ -112,7 +121,7 @@
                     {
                         <li>
                             <span class="activity-icon">📖</span>
-                            <span class="activity-text">Read for @session.Minutes minutes</span>
+                            <span class="activity-text">@FormatMinutes(session.Minutes) reading</span>
                             <span class="activity-time">@FormatRelativeTime(session.StartedAt)</span>
                         </li>
                     }
@@ -260,7 +269,18 @@
 
     private async Task HandleWaterPlant()
     {
+        var plantId = ViewModel.ActivePlant?.Id;
         await ViewModel.WaterPlantCommand.ExecuteAsync(null);
+
+        if (plantId.HasValue && string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+        {
+            await OnboardingService.TrackEventAsync(OnboardingEvent.PlantWatered, plantId.Value);
+        }
+    }
+
+    private async Task HandleDeletePlant()
+    {
+        await ViewModel.DeletePlantCommand.ExecuteAsync(null);
     }
 }
 
