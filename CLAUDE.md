@@ -4,7 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BookLoggerApp (branded as **BookHeart**) is a .NET 10 MAUI Blazor Hybrid Android app for managing and tracking books. It uses Entity Framework Core with SQLite for local data storage and follows a layered architecture with Repository and Unit of Work patterns. It includes gamification features (XP/levels, plant growing, shop) — see `XP_CALCULATION_GUIDE.md` for the full progression system.
+BookLoggerApp (branded as **BookHeart**) is a .NET 10 MAUI Blazor Hybrid Android app for managing and tracking books. It uses Entity Framework Core with SQLite for local data storage and follows a layered architecture with Repository and Unit of Work patterns. It includes gamification features (XP/levels, plant growing, decoration shop, shelf decorations) — see `XP_CALCULATION_GUIDE.md` for the full progression system.
+
+**Companion docs** (read when relevant):
+- `AGENTS.md` — repo guidelines with DI, testing, commit/PR conventions (overlaps this file but shorter)
+- `XP_CALCULATION_GUIDE.md` — XP, levels, and progression math
+- `SECURITY.md` — security posture (read before touching import/export, image handling, URL parsing)
+- `CHANGELOG.md` — user-facing change log (German, see section below)
 
 ## Build and Test Commands
 
@@ -82,7 +88,8 @@ The solution follows a layered architecture with four main projects:
    - Uses xUnit, FluentAssertions, NSubstitute (mocking), EF Core InMemory provider
    - Test helpers in `TestHelpers/`: `TestDbContext`, `TestDbContextFactory` (same file), `DbContextTestHelper`
    - Mock services: `MockBookService`, `MockGoalService`, `MockPlantService`, `MockProgressionService`
-   - Organized by category: `Unit/` (ViewModels, Validators, Helpers), `Integration/`, `Services/`, `Repositories/`, `Security/` (zip-slip, image security), `Models/`
+   - Organized by category: `Unit/` (ViewModels, Validators, Helpers), `Integration/`, `Services/`, `Repositories/`, `Security/` (zip-slip, image security), `Models/`, `Infrastructure/`
+   - **Cannot reference the MAUI project** — Tests target `net10.0` while MAUI targets `net10.0-android`. Mock MAUI-layer services via NSubstitute against their interfaces.
 
 ### Core Architecture Patterns
 
@@ -113,8 +120,21 @@ The solution follows a layered architecture with four main projects:
 **Service Layer:**
 - Service interfaces in `BookLoggerApp.Core/Services/Abstractions/`
 - Implementations in `BookLoggerApp.Infrastructure/Services/`
-- Key services: `IBookService`, `IProgressService`, `IProgressionService`, `IGoalService`, `IPlantService`, `IStatsService`, `IGenreService`, `IQuoteService`, `IAnnotationService`, `IImageService`, `IImportExportService`, `IValidationService`, `INotificationService`, `ILookupService`, `IShelfService`, `IWishlistService`, `IAppSettingsProvider`
+- Core domain services: `IBookService`, `IProgressService`, `IProgressionService`, `IGoalService`, `IPlantService`, `IStatsService`, `IGenreService`, `IQuoteService`, `IAnnotationService`, `IImageService`, `IImportExportService`, `IValidationService`, `INotificationService`, `ILookupService`, `IShelfService`, `IWishlistService`, `IAppSettingsProvider`
+- Gamification/content: `IDecorationService` (shelf decorations, separate from plants), `IOnboardingService` (missions, tutorial, feature atlas)
+- App lifecycle/meta: `IAppVersionService`, `IAppUpdateService`, `IAppRestartService`, `IChangelogService`, `IReviewPromptService`, `IShareCardService` (PNG generation for book/stats sharing), `IWidgetUpdateService` (Android home-screen widgets)
 - MAUI-specific (implementations in `BookLoggerApp/Services/`): `IPermissionService`, `IScannerService`, `IShareService`, `IFilePickerService`, `IMigrationService`, `ITimerStateService`
+
+**Onboarding System:**
+- Mission-based first-run experience driven by `IOnboardingService` and catalog models in `Core/Models/` (`OnboardingMissionCatalog`, `OnboardingMissionDefinition`, `OnboardingMissionState`, `OnboardingMissionProgress`, `OnboardingSnapshot`, `OnboardingFeatureAtlasEntry`, `OnboardingIntroStatus`, `OnboardingEvent`)
+- UI: `OnboardingTutorial.razor`, `AppStartupOverlay.razor`, `GettingStarted.razor` page, `GettingStartedCta.razor` card
+- `AppStartupViewModel` coordinates first-launch flow
+
+**Decoration System:**
+- Shelf decorations are distinct from plants — users buy/place non-plant items (frames, lamps, etc.) via `IDecorationService`
+- Models: `UserDecoration`, `DecorationShelf`
+- ViewModel: `DecorationShopViewModel`
+- UI: `DecorationCard.razor`, `DecorationShopCard.razor`
 
 **Google Books API Integration:**
 - `LookupService` queries `googleapis.com/books/v1/volumes` for ISBN lookup and book search
@@ -135,24 +155,32 @@ The solution follows a layered architecture with four main projects:
 
 **ViewModels:**
 - Located in `BookLoggerApp.Core/ViewModels/`, all inherit `ViewModelBase`
-- `BookListViewModel`, `BookDetailViewModel`, `BookEditViewModel`, `BookshelfViewModel`, `ReadingViewModel`, `DashboardViewModel`, `GoalsViewModel`, `StatsViewModel`, `SettingsViewModel`, `PlantShopViewModel`, `UserProgressViewModel`, `ShelfItemViewModel`, `WishlistViewModel`
+- Content: `BookListViewModel`, `BookDetailViewModel`, `BookEditViewModel`, `BookshelfViewModel`, `WishlistViewModel`, `ShelfItemViewModel`
+- Activity: `ReadingViewModel`, `DashboardViewModel`, `GoalsViewModel`, `StatsViewModel`
+- Gamification: `PlantShopViewModel`, `DecorationShopViewModel`, `UserProgressViewModel`
+- App shell: `AppStartupViewModel`, `SettingsViewModel`
 
 **Domain Models:**
-- Core entities: `Book`, `ReadingSession`, `ReadingGoal`, `UserPlant`, `PlantSpecies`, `Genre`, `BookGenre`, `Quote`, `Annotation`, `ShopItem`, `AppSettings`, `Shelf`, `BookShelf`, `PlantShelf`, `Trope`, `BookTrope`, `WishlistInfo`, `GoalExcludedBook`, `GoalGenre`
-- Result objects: `ProgressionResult`, `LevelUpResult`, `SessionEndResult`, `BookRatingSummary`
+- Core entities: `Book`, `ReadingSession`, `ReadingGoal`, `UserPlant`, `PlantSpecies`, `Genre`, `BookGenre`, `Quote`, `Annotation`, `ShopItem`, `AppSettings`, `Shelf`, `BookShelf`, `PlantShelf`, `Trope`, `BookTrope`, `WishlistInfo`, `GoalExcludedBook`, `GoalGenre`, `UserDecoration`, `DecorationShelf`
+- Result objects: `ProgressionResult`, `LevelUpResult`, `SessionEndResult`, `SessionSaveResult`, `BookRatingSummary`
+- Share payloads: `BookShareData`, `StatsShareData` (consumed by `IShareCardService`)
+- App meta: `AppUpdateState`, `ChangelogRelease`
+- Onboarding: `OnboardingSnapshot`, `OnboardingMissionCatalog`, `OnboardingMissionDefinition`, `OnboardingMissionState`, `OnboardingMissionProgress`, `OnboardingMissionStatus`, `OnboardingMissionId`, `OnboardingEvent`, `OnboardingIntroStatus`, `OnboardingFeatureAtlasEntry`
 - Supporting types: `RatingCategory`, `RatingCategoryInfo`, `LevelMilestone`, `PlantBoostInfo`
 
 ### Blazor UI Structure
 
 - Components in `BookLoggerApp/Components/`
-- Pages: `Books.razor`, `BookDetail.razor`, `BookEdit.razor`, `Bookshelf.razor` (includes Wishlist), `Dashboard.razor`, `Reading.razor`, `Goals.razor`, `Stats.razor`, `Settings.razor`, `PlantShop.razor`
+- Pages: `Books.razor`, `BookDetail.razor`, `BookEdit.razor`, `Bookshelf.razor` (includes Wishlist), `Dashboard.razor`, `Reading.razor`, `Goals.razor`, `Stats.razor`, `Settings.razor`, `PlantShop.razor`, `GettingStarted.razor`
 - Layout: `MainLayout.razor`, `NavMenu.razor`, `BottomNavBar.razor`
 - Shared components in `Components/Shared/` — reusable across pages:
   - Timer: `ReadingTimerInline.razor`, `QuickReadingTimer.razor` (share state via singleton `ITimerStateService`)
   - Celebrations: `BookCompletionCelebration.razor`, `LevelUpCelebration.razor`, `SessionCompleteCelebration.razor`
-  - Cards: `BookCard.razor`, `StatCard.razor`, `GoalCard.razor`, `PlantCard.razor`, `PlantShopCard.razor`
+  - Cards: `BookCard.razor`, `StatCard.razor`, `GoalCard.razor`, `PlantCard.razor`, `PlantShopCard.razor`, `PlantDetailCard.razor`, `DecorationCard.razor`, `DecorationShopCard.razor`
   - Widgets: `PlantWidget.razor`, `UserProgressWidget.razor`
-  - Other: `RatingInput.razor`, `DeleteConfirmationModal.razor`, `GoalHeader.razor`
+  - Onboarding: `AppStartupOverlay.razor`, `OnboardingTutorial.razor`, `GettingStartedCta.razor`
+  - Modals: `DeleteConfirmationModal.razor`, `ReviewPromptModal.razor`
+  - Other: `RatingInput.razor`, `GoalHeader.razor`
 
 ### JavaScript Interop
 
@@ -160,6 +188,7 @@ JS files in `BookLoggerApp/wwwroot/js/`:
 - `bookshelfDragDrop.js` — drag-and-drop for bookshelf with long-press gesture, auto-scroll, and .NET interop
 - `lazyLoading.js` — IntersectionObserver-based lazy image loading with .NET callbacks
 - `animation-control.js` — pauses CSS animations when page is not visible (Page Visibility API)
+- `settingsSupport.js` — helpers for the Settings page (e.g. platform links, reload)
 
 ### CSS Structure
 
@@ -178,11 +207,14 @@ CSS files are in `BookLoggerApp/wwwroot/css/`:
 ## CI/CD
 
 GitHub Actions workflow (`.github/workflows/ci.yml`) runs on pushes to `main` and PRs (skips markdown/image-only changes via `paths-ignore`):
+- Uses .NET 10.0.x SDK via `actions/setup-dotnet@v4`
+- Copies `ApiKeys.cs.template` → `ApiKeys.cs` before restore (real keys are gitignored)
 - Builds Core and Tests projects only (not Infrastructure or MAUI app — avoids platform-specific complexity)
 - Runs xUnit tests with trx output
 - Publishes test results using dorny/test-reporter and uploads TRX as build artifacts
 - Supports `workflow_dispatch` for manual triggers
-- **Note:** CI currently uses .NET 9.0.x SDK — update to .NET 10 when ready
+
+**Android release** (`.github/workflows/android-release.yml`) is triggered by pushing a `V*` tag to `main`.
 
 ## Versioning & Changelog
 
