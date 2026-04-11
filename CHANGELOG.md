@@ -23,6 +23,10 @@ Versionsschema:
 - Versioniertes Onboarding mit Intro-Overlay und neuem "Getting Started"-Hub für geführte Missionen rund um erstes Buch, erste Lesesession, Ziele, Pflanzen, Wunschliste, Scanner, Sharing und Backup
 - "Getting Started"-CTA auf Bücherregal und Dashboard sowie neuer Einstieg in den Settings zum erneuten Öffnen oder Wiederholen des Intros
 
+### Geändert
+
+- Onboarding-Overlay insgesamt kompakter (kleinere max. Breite/Höhe, engere Abstände, kleinere Überschriften) und farblich einheitlich dunkler an das BookHeart-Theme angepasst
+
 ### Behoben
 
 - Tote Pflanzen werden beim Löschen jetzt vollständig entfernt, inklusive Regal-Verknüpfungen, und tauchen danach nicht mehr als "Add Plant"-Option im Bücherregal auf.
@@ -39,6 +43,8 @@ Versionsschema:
 - Harter Blazor-Fehler auf der Stats-Seite behoben: Division durch null bei der Pflanzenverstärkungs-Balkenanzeige wenn `TotalPlantBoost = 0` aber Pflanzendaten vorhanden waren
 - Korrupte Cloud-Backups werden jetzt vor der Wiederherstellung per SQLite `PRAGMA integrity_check` geprüft und abgelehnt, anstatt die aktive Datenbank silent zu überschreiben
 - Cloud-Backup-Wiederherstellung wirft nicht mehr den Fehler "database disk image is malformed" beim direkten Weiterverwenden der App: nach erfolgreichem Restore zeigt die Settings-Seite kurz einen "Backup restored"-Hinweis und startet BookHeart automatisch neu, damit alle SQLite-Verbindungspools, nativen File-Handles und Blazor-Komponenten frisch gegen die restaurierte Datenbank aufgebaut werden. Ein manueller Neustart ist dafür nicht mehr nötig.
+- Scholar's Spectacles (Brille) ist jetzt korrekt als 2 Slots breit markiert — ihr Inhalts-Aspect-Ratio von ~3.8:1 passte visuell nie in einen einzelnen Regal-Slot
+- Dekorationen im Bücherregal werden nicht mehr mit dem grünen Pflanzen-Tint gerendert und der Inhalt wird nicht mehr am unteren Rand gecroppt (`object-fit: contain` + zentrierte Position statt `cover` + `bottom` — die Regeln wurden bisher unbeabsichtigt von den Pflanzen-Cards geerbt)
 
 ## [0.8.1] - 2026-04-07
 

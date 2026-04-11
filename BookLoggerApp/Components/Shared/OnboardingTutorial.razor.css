@@ -7,38 +7,38 @@
 
 .onboarding-header h2 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.2rem;
     font-weight: 700;
 }
 
 .onboarding-step-chip {
     display: inline-flex;
     align-items: center;
-    padding: 0.32rem 0.65rem;
+    padding: 0.3rem 0.6rem;
     border-radius: 999px;
-    border: 1px solid rgba(229, 207, 176, 0.22);
-    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(229, 207, 176, 0.18);
+    background: rgba(0, 0, 0, 0.22);
     color: rgba(248, 239, 228, 0.9);
-    font-size: 0.82rem;
+    font-size: 0.78rem;
 }
 
 .onboarding-body {
-    min-height: 240px;
+    min-height: 180px;
 }
 
 .onboarding-card {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
-    padding: 0.95rem 1rem;
+    gap: 0.65rem;
+    padding: 0.85rem 0.95rem;
     border-radius: 18px;
-    background: rgba(255, 248, 238, 0.06);
-    border: 1px solid rgba(229, 207, 176, 0.14);
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(229, 207, 176, 0.10);
 }
 
 .onboarding-card h3 {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1rem;
 }
 
 .onboarding-card p {

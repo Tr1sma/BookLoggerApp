@@ -95,7 +95,8 @@ public static class DecorationSeedData
             Cost = 180,
             ImagePath = "images/decorations/spectacles.svg",
             IsAvailable = true,
-            UnlockLevel = 5
+            UnlockLevel = 5,
+            SlotWidth = 2
         };
 
         yield return new ShopItem
