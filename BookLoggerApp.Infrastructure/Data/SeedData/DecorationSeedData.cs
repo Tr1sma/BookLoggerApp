@@ -83,7 +83,8 @@ public static class DecorationSeedData
             Cost = 175,
             ImagePath = "images/decorations/hourglass.svg",
             IsAvailable = true,
-            UnlockLevel = 5
+            UnlockLevel = 5,
+            SlotWidth = 2
         };
 
         yield return new ShopItem
@@ -108,7 +109,8 @@ public static class DecorationSeedData
             Cost = 200,
             ImagePath = "images/decorations/inkwell.svg",
             IsAvailable = true,
-            UnlockLevel = 10
+            UnlockLevel = 10,
+            SlotWidth = 2
         };
 
         yield return new ShopItem
@@ -120,7 +122,8 @@ public static class DecorationSeedData
             Cost = 220,
             ImagePath = "images/decorations/owl_figurine.svg",
             IsAvailable = true,
-            UnlockLevel = 10
+            UnlockLevel = 10,
+            SlotWidth = 2
         };
 
         yield return new ShopItem
@@ -171,7 +174,8 @@ public static class DecorationSeedData
             Cost = 340,
             ImagePath = "images/decorations/magic_lamp.svg",
             IsAvailable = true,
-            UnlockLevel = 20
+            UnlockLevel = 20,
+            SlotWidth = 2
         };
 
         yield return new ShopItem
@@ -183,7 +187,8 @@ public static class DecorationSeedData
             Cost = 360,
             ImagePath = "images/decorations/dragon_figurine.svg",
             IsAvailable = true,
-            UnlockLevel = 25
+            UnlockLevel = 25,
+            SlotWidth = 2
         };
 
         yield return new ShopItem
@@ -195,7 +200,8 @@ public static class DecorationSeedData
             Cost = 380,
             ImagePath = "images/decorations/alchemy_flask.svg",
             IsAvailable = true,
-            UnlockLevel = 25
+            UnlockLevel = 25,
+            SlotWidth = 2
         };
 
         yield return new ShopItem

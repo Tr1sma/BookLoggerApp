@@ -25,6 +25,7 @@ Versionsschema:
 
 ### Geändert
 
+- Stundenglas, Tintenfass & Feder, Eulen-Figur, Magische Leselampe, Drachen-Figur und Alchemie-Kolben sind jetzt 2 Slots breit für bessere Erkennbarkeit im Regal (11 von 14 Dekorationen nun 2-slot-breit)
 - Onboarding-Overlay insgesamt kompakter (kleinere max. Breite/Höhe, engere Abstände, kleinere Überschriften) und farblich einheitlich dunkler an das BookHeart-Theme angepasst
 
 ### Behoben
