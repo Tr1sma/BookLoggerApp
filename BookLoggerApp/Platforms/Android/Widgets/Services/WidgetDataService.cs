@@ -1,4 +1,5 @@
 using BookLoggerApp.Core.Enums;
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure;
 using BookLoggerApp.Infrastructure.Data;
@@ -82,7 +83,7 @@ public static class WidgetDataService
     }
 
     /// <summary>
-    /// Calculates the current reading streak (consecutive days with sessions).
+    /// Calculates the current reading streak (consecutive days with qualifying sessions).
     /// Mirrors the logic in ProgressService.GetCurrentStreakAsync().
     /// </summary>
     public static async Task<StreakWidgetData> GetStreakDataAsync()
@@ -94,39 +95,18 @@ public static class WidgetDataService
             var today = DateTime.UtcNow.Date;
             var cutoff = today.AddDays(-365);
 
-            var sessionDates = await context.ReadingSessions
+            var recentSessions = await context.ReadingSessions
                 .AsNoTracking()
                 .Where(s => s.StartedAt >= cutoff)
-                .Select(s => s.StartedAt.Date)
-                .Distinct()
-                .OrderByDescending(d => d)
                 .ToListAsync();
 
-            if (sessionDates.Count == 0)
+            var streak = ReadingStreakHelper.CalculateCurrentStreak(recentSessions, today);
+            var readToday = recentSessions
+                .Where(ReadingStreakHelper.CountsTowardStreak)
+                .Any(session => session.StartedAt.Date == today);
+
+            if (streak == 0 && !readToday)
                 return new StreakWidgetData(0, false);
-
-            bool readToday = sessionDates[0] == today;
-            var mostRecentDate = sessionDates[0];
-
-            // Streak is broken if last session was more than 1 day ago
-            if ((today - mostRecentDate).Days > 1)
-                return new StreakWidgetData(0, false);
-
-            int streak = 0;
-            var currentDate = today;
-
-            foreach (var date in sessionDates)
-            {
-                if ((currentDate - date).Days <= 1)
-                {
-                    streak++;
-                    currentDate = date;
-                }
-                else
-                {
-                    break;
-                }
-            }
 
             return new StreakWidgetData(streak, readToday);
         }

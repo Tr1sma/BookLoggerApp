@@ -62,4 +62,34 @@ public class XpCalculatorTests
         // Assert
         result.Should().Be(expectedLevel);
     }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 0)]
+    [InlineData(2, 200)]
+    [InlineData(3, 400)]
+    [InlineData(7, 1050)]
+    [InlineData(14, 2250)]
+    [InlineData(30, 4850)]
+    public void CalculateStreakBonusXp_ReturnsScaledBonus(int streakDays, int expectedXp)
+    {
+        // Act
+        var result = XpCalculator.CalculateStreakBonusXp(streakDays);
+
+        // Assert
+        result.Should().Be(expectedXp);
+    }
+
+    [Fact]
+    public void CalculateSessionXpBreakdown_IncludesScaledStreakBonus()
+    {
+        // Act
+        var result = XpCalculator.CalculateSessionXpBreakdown(10, 2, 3);
+
+        // Assert
+        result.MinutesXp.Should().Be(50);
+        result.PagesXp.Should().Be(40);
+        result.LongSessionXp.Should().Be(0);
+        result.StreakXp.Should().Be(400);
+    }
 }

@@ -26,4 +26,4 @@ Die Nutzung erfolgt auf eigenes Risiko.
 
 ## Kontakt
 Falls du diesen Code über die private Nutzung hinaus verwenden möchtest,
-kontaktiere bitte den Autor: **Ben Sowieja**.
+kontaktiere bitte den Autor: **Ben Sowieja**  (tristan.atze@gmail.com).

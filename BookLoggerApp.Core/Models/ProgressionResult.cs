@@ -36,6 +36,11 @@ public class ProgressionResult
     public int StreakBonusXp { get; set; }
 
     /// <summary>
+    /// The reading streak length in days that was applied to this reward.
+    /// </summary>
+    public int StreakDays { get; set; }
+
+    /// <summary>
     /// XP earned from book completion.
     /// </summary>
     public int BookCompletionXp { get; set; }
