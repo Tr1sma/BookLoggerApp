@@ -1,109 +1,65 @@
-# Configuration: Which file extensions should be included?
+# Which file types should be counted
 $extensions = @(
-    "*.js", "*.ts", "*.py", "*.java", "*.cs", "*.cpp", "*.h",
-    "*.html", "*.css", "*.php", "*.json", "*.cshtml", "*.vbhtml",
-    "*.aspx", "*.razor", "*.csx"
+    "*.cs", "*.razor", "*.js", "*.ts", "*.json", "*.xaml",
+    "*.xml", "*.css", "*.html", "*.cshtml", "*.sql"
 )
 
-# Configuration: Which folders should be ignored?
-$ignoreFolders = @("node_modules", ".git", ".vs", "dist", "build", "bin", "obj", "vendor")
+# Which folders should be ignored
+$ignoreFolders = @(
+    "bin", "obj", ".git", ".vs", "node_modules", "packages", "dist", "build"
+)
 
-# Current directory
-$path = Get-Location
+# Start path (current folder)
+$rootPath = Get-Location
 
-Write-Host "Analyzing codebase in $path..." -ForegroundColor Cyan
+Write-Host "Scanning all folders and subfolders in: $rootPath" -ForegroundColor Cyan
 
-function Test-IsIgnoredPath {
-    param(
-        [string]$FilePath,
-        [string[]]$IgnoredFolders
-    )
+# Get all matching files recursively
+$files = Get-ChildItem -Path $rootPath -Recurse -File -Include $extensions | Where-Object {
+    $fullPath = $_.FullName
 
-    foreach ($ignore in $IgnoredFolders) {
-        if ($FilePath -match "[\\/]" + [regex]::Escape($ignore) + "[\\/]") {
-            return $true
+    foreach ($folder in $ignoreFolders) {
+        if ($fullPath -match "[\\/]" + [regex]::Escape($folder) + "([\\/]|$)") {
+            return $false
         }
     }
 
-    return $false
+    return $true
 }
 
-# Get files recursively
-$files = Get-ChildItem -Path $path -Recurse -Include $extensions -File | Where-Object {
-    -not (Test-IsIgnoredPath -FilePath $_.FullName -IgnoredFolders $ignoreFolders)
-}
-
-# Totals
+$totalFiles = 0
 $totalLines = 0
 $totalWords = 0
-$totalChars = 0
-$fileCount = 0
-
-# Optional: per-file details
-$fileStats = @()
+$totalCharacters = 0
 
 foreach ($file in $files) {
     try {
-        $content = Get-Content -LiteralPath $file.FullName -Raw -ErrorAction Stop
+        $content = Get-Content -Path $file.FullName -Raw -ErrorAction Stop
 
-        # Count lines
-        if ($content.Length -eq 0) {
-            $lineCount = 0
-        }
-        else {
-            $lineCount = ([regex]::Matches($content, "\r\n|\n|\r")).Count + 1
-        }
-
-        # Count words
-        # This counts identifiers/words/numbers roughly, which is fine for estimation
-        $wordCount = ([regex]::Matches($content, '\b[\p{L}\p{N}_]+\b')).Count
-
-        # Count characters
+        $lineCount = ([regex]::Matches($content, "`r`n|`n|`r")).Count + 1
+        $wordCount = ([regex]::Matches($content, '\S+')).Count
         $charCount = $content.Length
 
-        # Add totals
+        $totalFiles++
         $totalLines += $lineCount
         $totalWords += $wordCount
-        $totalChars += $charCount
-        $fileCount++
-
-        # Store per-file stats if you want to inspect later
-        $fileStats += [PSCustomObject]@{
-            File       = $file.FullName
-            Lines      = $lineCount
-            Words      = $wordCount
-            Characters = $charCount
-        }
+        $totalCharacters += $charCount
     }
     catch {
-        Write-Warning "Could not read file: $($file.FullName)"
+        Write-Host "Skipped: $($file.FullName)" -ForegroundColor Yellow
     }
 }
 
 # Rough token estimates
-# Rule of thumb:
-# - English text: ~1 token ~= 4 chars
-# - English text: ~1 token ~= 0.75 words
-# For code, char-based estimation is usually more realistic than word-based estimation.
-$approxTokensByChars = [math]::Ceiling($totalChars / 4.0)
-$approxTokensByWords = [math]::Ceiling($totalWords / 0.75)
+$approxTokensByChars = [math]::Round($totalCharacters / 4)
+$approxTokensByWords = [math]::Round($totalWords * 1.33)
 
 Write-Host ""
-Write-Host "-----------------------------------"
-Write-Host "Total files:          $fileCount" -ForegroundColor Yellow
-Write-Host "Total lines:          $totalLines" -ForegroundColor Green
-Write-Host "Total words:          $totalWords" -ForegroundColor Green
-Write-Host "Total characters:     $totalChars" -ForegroundColor Green
-Write-Host "Approx. tokens(chars): $approxTokensByChars" -ForegroundColor Magenta
-Write-Host "Approx. tokens(words): $approxTokensByWords" -ForegroundColor Magenta
-Write-Host "-----------------------------------"
-Write-Host ""
-Write-Host "Note: For codebases, the char-based token estimate is usually the better rough value." -ForegroundColor DarkGray
+Write-Host "Total files:            $totalFiles" -ForegroundColor Green
+Write-Host "Total lines:            $totalLines" -ForegroundColor Green
+Write-Host "Total words:            $totalWords" -ForegroundColor Green
+Write-Host "Total characters:       $totalCharacters" -ForegroundColor Green
+Write-Host "Approx. tokens (chars): $approxTokensByChars" -ForegroundColor Magenta
+Write-Host "Approx. tokens (words): $approxTokensByWords" -ForegroundColor Magenta
 
-# Optional: Show top 20 largest files by line count
-$fileStats |
-    Sort-Object Lines -Descending |
-    Select-Object -First 20 |
-    Format-Table File, Lines, Words, Characters -AutoSize
-
-Read-Host -Prompt "Press Enter to close"
+Read-Host -Prompt "Drücken Sie Enter, um das Fenster zu schließen"

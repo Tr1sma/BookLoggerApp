@@ -156,6 +156,39 @@ public class ReadingViewModelTests
     }
 
     [Fact]
+    public async Task OnSessionCelebrationClose_Should_Show_StreakCelebration_When_StreakBonusExists()
+    {
+        // Arrange
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 10 };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult
+            {
+                XpEarned = 250,
+                StreakDays = 2,
+                StreakBonusXp = 200
+            }
+        };
+
+        _bookService.GetByIdAsync(bookId).Returns(book);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+
+        // Act
+        await _viewModel.OnSessionCelebrationClose();
+
+        // Assert
+        _viewModel.ShowSessionCelebration.Should().BeFalse();
+        _viewModel.ShowStreakCelebration.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task OnLevelUpCelebrationClose_Should_Clear_LevelUp()
     {
         // Arrange
@@ -176,6 +209,27 @@ public class ReadingViewModelTests
         _viewModel.HasReviewPromptMoment.Should().BeFalse();
         _viewModel.LevelUpResult.Should().BeNull();
         _viewModel.ShowLevelUpCelebration.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task OnStreakCelebrationClose_Should_Show_LevelUp_When_Pending()
+    {
+        // Arrange
+        _viewModel.ShowStreakCelebration = true;
+        _viewModel.LevelUpResult = new LevelUpResult
+        {
+            OldLevel = 2,
+            NewLevel = 3,
+            CoinsAwarded = 150,
+            NewTotalCoins = 250
+        };
+
+        // Act
+        await _viewModel.OnStreakCelebrationClose();
+
+        // Assert
+        _viewModel.ShowStreakCelebration.Should().BeFalse();
+        _viewModel.ShowLevelUpCelebration.Should().BeTrue();
     }
 
     [Fact]
@@ -245,5 +299,170 @@ public class ReadingViewModelTests
 
         // Assert: AwardBookCompletionXpAsync should NOT be called (BookService already awards it)
         await _progressionService.DidNotReceive().AwardBookCompletionXpAsync(Arg.Any<Guid?>());
+    }
+
+    [Fact]
+    public async Task OnBookCompletionCelebrationClose_Should_Show_StreakCelebration_When_StreakBonusExists()
+    {
+        // Arrange
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 90, PageCount = 100, Status = ReadingStatus.Reading };
+        var completedBook = new Book { Id = bookId, CurrentPage = 100, PageCount = 100, Status = ReadingStatus.Completed };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult
+            {
+                XpEarned = 250,
+                StreakDays = 2,
+                StreakBonusXp = 200
+            }
+        };
+
+        var completionXp = new ProgressionResult { XpEarned = 100, BookCompletionXp = 100 };
+
+        _bookService.GetByIdAsync(bookId).Returns(book, completedBook);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+        _bookService.UpdateProgressAsync(bookId, 100).Returns(completionXp);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+        _viewModel.CurrentPage = 100;
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+
+        // Act
+        await _viewModel.OnBookCompletionCelebrationClose();
+
+        // Assert
+        _viewModel.ShowBookCompletionCelebration.Should().BeFalse();
+        _viewModel.ShowStreakCelebration.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task OnBookCompletionCelebrationClose_Should_Preserve_ReviewPromptMoment_For_StreakFollowUp()
+    {
+        // Arrange
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 90, PageCount = 100, Status = ReadingStatus.Reading };
+        var completedBook = new Book { Id = bookId, CurrentPage = 100, PageCount = 100, Status = ReadingStatus.Completed };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult
+            {
+                XpEarned = 250,
+                StreakDays = 2,
+                StreakBonusXp = 200
+            }
+        };
+
+        var completionXp = new ProgressionResult { XpEarned = 100, BookCompletionXp = 100 };
+
+        _bookService.GetByIdAsync(bookId).Returns(book, completedBook);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+        _bookService.UpdateProgressAsync(bookId, 100).Returns(completionXp);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+        _viewModel.CurrentPage = 100;
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+
+        // Act
+        await _viewModel.OnBookCompletionCelebrationClose();
+
+        // Assert
+        _viewModel.ShowStreakCelebration.Should().BeTrue();
+        _viewModel.HasReviewPromptMoment.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task OnStreakCelebrationClose_Should_Show_LevelUp_After_BookCompletion_Sequence()
+    {
+        // Arrange
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 90, PageCount = 100, Status = ReadingStatus.Reading };
+        var completedBook = new Book { Id = bookId, CurrentPage = 100, PageCount = 100, Status = ReadingStatus.Completed };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult
+            {
+                XpEarned = 250,
+                StreakDays = 2,
+                StreakBonusXp = 200,
+                LevelUp = new LevelUpResult
+                {
+                    OldLevel = 2,
+                    NewLevel = 3,
+                    CoinsAwarded = 150,
+                    NewTotalCoins = 250
+                }
+            }
+        };
+
+        var completionXp = new ProgressionResult { XpEarned = 100, BookCompletionXp = 100 };
+
+        _bookService.GetByIdAsync(bookId).Returns(book, completedBook);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+        _bookService.UpdateProgressAsync(bookId, 100).Returns(completionXp);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+        _viewModel.CurrentPage = 100;
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+        await _viewModel.OnBookCompletionCelebrationClose();
+
+        // Act
+        await _viewModel.OnStreakCelebrationClose();
+
+        // Assert
+        _viewModel.ShowStreakCelebration.Should().BeFalse();
+        _viewModel.ShowLevelUpCelebration.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task OnStreakCelebrationClose_Should_Clear_Preserved_ReviewPromptMoment_When_NoFurtherCelebration()
+    {
+        // Arrange
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 90, PageCount = 100, Status = ReadingStatus.Reading };
+        var completedBook = new Book { Id = bookId, CurrentPage = 100, PageCount = 100, Status = ReadingStatus.Completed };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult
+            {
+                XpEarned = 250,
+                StreakDays = 2,
+                StreakBonusXp = 200
+            }
+        };
+
+        var completionXp = new ProgressionResult { XpEarned = 100, BookCompletionXp = 100 };
+
+        _bookService.GetByIdAsync(bookId).Returns(book, completedBook);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+        _bookService.UpdateProgressAsync(bookId, 100).Returns(completionXp);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+        _viewModel.CurrentPage = 100;
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+        await _viewModel.OnBookCompletionCelebrationClose();
+
+        // Act
+        await _viewModel.OnStreakCelebrationClose();
+
+        // Assert
+        _viewModel.ShowStreakCelebration.Should().BeFalse();
+        _viewModel.HasReviewPromptMoment.Should().BeFalse();
     }
 }
