@@ -37,15 +37,16 @@ public class ProgressService : IProgressService
         // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 
-        // Check for reading streak
-        var hasStreak = await HasReadingStreakAsync(ct);
+        // Award the streak bonus only on the first qualifying session of the day
+        // so all save paths use the same reward logic.
+        var streakDays = await GetAwardedStreakDaysAsync(session, ct);
 
         // Award XP using the progression system (with plant boost and streak bonus)
         var progressionResult = await _progressionService.AwardSessionXpAsync(
             session.Minutes,
             session.PagesRead,
             activePlant?.Id,
-            hasStreak
+            streakDays
         );
 
         session.XpEarned = progressionResult.XpEarned;
@@ -124,15 +125,16 @@ public class ProgressService : IProgressService
         // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 
-        // Check for reading streak
-        var hasStreak = await HasReadingStreakAsync(ct);
+        // Award the streak bonus only on the first qualifying session of the day
+        // so active timer sessions and direct session saves use the same logic.
+        var streakDays = await GetAwardedStreakDaysAsync(session, ct);
 
         // Award XP using the new progression system (with streak bonus)
         var progressionResult = await _progressionService.AwardSessionXpAsync(
             session.Minutes,
             pagesRead,
             activePlant?.Id,
-            hasStreak
+            streakDays
         );
 
         // Store the XP earned in the session
@@ -243,41 +245,33 @@ public class ProgressService : IProgressService
         var recentSessions = await _unitOfWork.ReadingSessions
             .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow);
 
-        var sessionsByDate = recentSessions
-            .GroupBy(s => s.StartedAt.Date)
-            .OrderByDescending(g => g.Key)
-            .ToList();
-
-        if (!sessionsByDate.Any())
-            return 0;
-
-        // Check if user read today or yesterday
-        var mostRecentDate = sessionsByDate.First().Key;
-        if ((today - mostRecentDate).Days > 1)
-            return 0; // Streak broken
-
-        int streak = 0;
-        var currentDate = today;
-
-        foreach (var group in sessionsByDate)
-        {
-            if ((currentDate - group.Key).Days <= 1)
-            {
-                streak++;
-                currentDate = group.Key;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return streak;
+        return ReadingStreakHelper.CalculateCurrentStreak(recentSessions, today);
     }
 
-    private async Task<bool> HasReadingStreakAsync(CancellationToken ct = default)
+    private async Task<int> GetAwardedStreakDaysAsync(ReadingSession session, CancellationToken ct = default)
     {
-        var streak = await GetCurrentStreakAsync(ct);
-        return streak >= 2; // At least 2 days in a row
+        if (!ReadingStreakHelper.CountsTowardStreak(session))
+        {
+            return 0;
+        }
+
+        var sessionDate = session.StartedAt.Date;
+        var rangeEnd = sessionDate.AddDays(1).AddTicks(-1);
+
+        var recentSessions = await _unitOfWork.ReadingSessions
+            .GetSessionsInRangeAsync(sessionDate.AddDays(-365), rangeEnd);
+
+        var alreadyAwardedToday = recentSessions.Any(existingSession =>
+            existingSession.Id != session.Id
+            && existingSession.StartedAt.Date == sessionDate
+            && ReadingStreakHelper.CountsTowardStreak(existingSession));
+
+        if (alreadyAwardedToday)
+        {
+            return 0;
+        }
+
+        var priorSessions = recentSessions.Where(existingSession => existingSession.Id != session.Id);
+        return ReadingStreakHelper.CalculateInclusiveStreak(priorSessions, sessionDate);
     }
 }

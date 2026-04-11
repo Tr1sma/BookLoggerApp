@@ -49,6 +49,29 @@ public class ProgressionServiceTests
         totalBoost.Should().Be(0.075m);
     }
 
+    [Fact]
+    public async Task AwardSessionXpAsync_WithStreakDays_ShouldApplyScaledStreakBonus()
+    {
+        // Arrange
+        var settingsProvider = CreateSettingsProvider();
+        var plantService = Substitute.For<IPlantService>();
+        plantService.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<UserPlant>>(Array.Empty<UserPlant>()));
+
+        var service = new ProgressionService(settingsProvider, plantService);
+
+        // Act
+        var result = await service.AwardSessionXpAsync(10, 5, Guid.NewGuid(), 7);
+
+        // Assert
+        result.MinutesXp.Should().Be(50);
+        result.PagesXp.Should().Be(100);
+        result.StreakDays.Should().Be(7);
+        result.StreakBonusXp.Should().Be(1050);
+        result.BaseXp.Should().Be(1200);
+        result.XpEarned.Should().Be(1200);
+    }
+
     private static async Task<ProgressionResult> AwardSessionXpAsyncForPlantLevel(int plantLevel)
     {
         var settingsProvider = CreateSettingsProvider();
