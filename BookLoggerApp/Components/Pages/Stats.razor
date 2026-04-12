@@ -14,6 +14,14 @@
 
 <link rel="stylesheet" href="css/stats.css" />
 
+<div class="stats-tab-bar">
+    <button class="@TabClass(0)" @onclick="() => SetTab(0)">Übersicht</button>
+    <button class="@TabClass(1)" @onclick="() => SetTab(1)">Trends</button>
+    <button class="@TabClass(2)" @onclick="() => SetTab(2)">Analysen</button>
+</div>
+
+@if (activeTab == 0)
+{
 <div class="level-overview-container">
     @if (ViewModel.IsBusy)
     {
@@ -289,6 +297,15 @@
         }
     }
 </div>
+}
+else if (activeTab == 1)
+{
+    <StatsTrends />
+}
+else if (activeTab == 2)
+{
+    <StatsAnalyses />
+}
 
 @if (ViewModel.ShowShareModal)
 {
@@ -365,6 +382,16 @@
 }
 
 @code {
+    private int activeTab = 0;
+
+    private string TabClass(int tab) => tab == activeTab ? "stats-tab-btn active" : "stats-tab-btn";
+
+    private void SetTab(int tab)
+    {
+        activeTab = tab;
+        StateHasChanged();
+    }
+
     private RatingCategory? selectedCategory = null;
     private bool showAllTopBooks = false;
     private string sharePeriodType = "alltime";
