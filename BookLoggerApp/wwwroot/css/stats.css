@@ -349,6 +349,8 @@
     padding: 0.2rem 0.4rem;
     border-radius: 6px;
     font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .plant-boost-value {
