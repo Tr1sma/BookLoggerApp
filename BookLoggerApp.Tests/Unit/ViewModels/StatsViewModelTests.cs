@@ -175,4 +175,27 @@ public class StatsViewModelTests
         // Assert
         _viewModel.PlantBoosts.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task LoadAsync_Should_Generate_PerLevel_XpValues_Not_Cumulative()
+    {
+        // Arrange
+        var settings = new AppSettings { UserLevel = 3, TotalXp = 600, Coins = 0 };
+        _settingsProvider.GetSettingsAsync().Returns(settings);
+        _plantService.GetAllAsync().Returns(new List<UserPlant>());
+        _plantService.CalculateTotalXpBoostAsync().Returns(0m);
+
+        // Act
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+
+        // Assert — XpRequired should be 100 × Level² (per-level), not cumulative
+        _viewModel.LevelMilestones.Should().NotBeEmpty();
+
+        foreach (var milestone in _viewModel.LevelMilestones)
+        {
+            int expectedXp = 100 * milestone.Level * milestone.Level;
+            milestone.XpRequired.Should().Be(expectedXp,
+                because: $"Level {milestone.Level} requires 100 × {milestone.Level}² = {expectedXp} XP");
+        }
+    }
 }
