@@ -701,13 +701,13 @@
     line-height: 1.2;
 }
 
-/* Filter chips — horizontal scroll, edge-to-edge within card */
+/* Filter chips — horizontal scroll */
 .category-filter-buttons {
     display: flex;
     flex-wrap: nowrap;
     gap: 0.5rem;
-    margin: 0 -0.75rem 0.6rem;
-    padding: 0 0.75rem;
+    margin-bottom: 0.6rem;
+    padding: 4px 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
