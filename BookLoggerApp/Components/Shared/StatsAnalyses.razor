@@ -1,0 +1,360 @@
+@using ApexCharts
+@using System.Globalization
+@inject BookLoggerApp.Core.ViewModels.StatsAnalysesViewModel ViewModel
+
+<div class="stats-tab-content">
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading">Loading statistics...</div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">@ViewModel.ErrorMessage</div>
+    }
+    else
+    {
+        <!-- 1. Jahresvergleich -->
+        <section class="advanced-stats-section">
+            <div class="advanced-stats-card">
+                <h3>Jahresvergleich</h3>
+
+                @if (ViewModel.AvailableYears.Count > 0)
+                {
+                    <div class="year-selector">
+                        @foreach (int year in ViewModel.AvailableYears)
+                        {
+                            string chipClass = "year-chip";
+                            if (year == ViewModel.SelectedYear1)
+                                chipClass += " active-year1";
+                            else if (year == ViewModel.SelectedYear2)
+                                chipClass += " active-year2";
+
+                            <button class="@chipClass" @onclick="() => SelectYear(year)">@year</button>
+                        }
+                    </div>
+                }
+
+                <div class="year-comparison-rows">
+                    @{ var comparisons = GetComparisonRows(); }
+                    @foreach (var row in comparisons)
+                    {
+                        <div class="comparison-row">
+                            <span class="comparison-label">@row.Label</span>
+                            <div class="comparison-bars">
+                                <div class="comparison-bar year1" style="width: @(row.MaxValue > 0 ? row.Value1 * 100.0 / row.MaxValue : 0)%;">
+                                    <span>@row.Formatted1</span>
+                                </div>
+                                <div class="comparison-bar year2" style="width: @(row.MaxValue > 0 ? row.Value2 * 100.0 / row.MaxValue : 0)%;">
+                                    <span>@row.Formatted2</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Genre-Radar -->
+        @if (ViewModel.GenreRadarData.Count > 0)
+        {
+            <section class="advanced-stats-section">
+                <div class="advanced-stats-card">
+                    <h3>Genre-Radar</h3>
+                    <ApexChart TItem="ChartDataPoint"
+                               Options="_radarChartOptions"
+                               Height="300">
+                        <ApexPointSeries TItem="ChartDataPoint"
+                                         Items="_radarChartData"
+                                         Name="Bücher"
+                                         SeriesType="SeriesType.Radar"
+                                         XValue="e => e.Label"
+                                         YValue="e => e.Value" />
+                    </ApexChart>
+                </div>
+            </section>
+        }
+
+        <!-- 3. Abschlussquote -->
+        @if (ViewModel.CompletedCount + ViewModel.AbandonedCount > 0)
+        {
+            <section class="advanced-stats-section">
+                <div class="advanced-stats-card">
+                    <h3>Abschlussquote</h3>
+                    <div class="completion-rate-container">
+                        <ApexChart TItem="ChartDataPoint"
+                                   Options="_donutChartOptions"
+                                   Height="260">
+                            <ApexPointSeries TItem="ChartDataPoint"
+                                             Items="_donutChartData"
+                                             Name="Bücher"
+                                             SeriesType="SeriesType.Donut"
+                                             XValue="e => e.Label"
+                                             YValue="e => e.Value" />
+                        </ApexChart>
+                    </div>
+                </div>
+            </section>
+        }
+
+        <!-- 4. Buchlängen-Vorliebe -->
+        @if (ViewModel.PageCountData.Values.Any(v => v > 0))
+        {
+            <section class="advanced-stats-section">
+                <div class="advanced-stats-card">
+                    <h3>Buchlängen-Vorliebe</h3>
+                    <div class="page-count-bars">
+                        @{ int maxPageCount = ViewModel.PageCountData.Values.DefaultIfEmpty(0).Max(); }
+                        @foreach (var bucket in _pageCountBuckets)
+                        {
+                            int count = ViewModel.PageCountData.GetValueOrDefault(bucket.Key, 0);
+                            double fillPercent = maxPageCount > 0 ? (double)count / maxPageCount * 100 : 0;
+                            <div class="page-count-row">
+                                <div class="page-count-row-header">
+                                    <span class="page-count-label">@bucket.DisplayLabel</span>
+                                    <span class="page-count-count">@count Bücher</span>
+                                </div>
+                                <div class="page-count-bar-bg">
+                                    <div class="page-count-bar-fill" style="width: @fillPercent.ToString("F1", CultureInfo.InvariantCulture)%;"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+        }
+
+        <!-- 5. Meistgelesene Autoren -->
+        @if (ViewModel.TopAuthors.Count > 0)
+        {
+            <section class="advanced-stats-section">
+                <div class="advanced-stats-card">
+                    <h3>Meistgelesene Autoren</h3>
+                    <div class="top-authors-list">
+                        @for (int i = 0; i < ViewModel.TopAuthors.Count; i++)
+                        {
+                            var author = ViewModel.TopAuthors[i];
+                            int rank = i + 1;
+                            <div class="top-author-item">
+                                <span class="author-rank @(rank == 1 ? "rank-first" : "")">@rank</span>
+                                <div class="author-info">
+                                    <span class="author-name">@author.Author</span>
+                                    <span class="author-detail">@author.BookCount Bücher · @author.TotalPages.ToString("N0", CultureInfo.GetCultureInfo("de-DE")) Seiten</span>
+                                </div>
+                                <span class="author-count">@author.BookCount</span>
+                            </div>
+                            @if (rank < ViewModel.TopAuthors.Count)
+                            {
+                                <div class="author-divider"></div>
+                            }
+                        }
+                    </div>
+                </div>
+            </section>
+        }
+    }
+</div>
+
+@code {
+    private class ChartDataPoint
+    {
+        public string Label { get; set; } = "";
+        public decimal Value { get; set; }
+    }
+
+    private record ComparisonRow(string Label, double Value1, double Value2, double MaxValue, string Formatted1, string Formatted2);
+
+    private record PageCountBucket(string Key, string DisplayLabel);
+
+    private static readonly PageCountBucket[] _pageCountBuckets =
+    {
+        new("<200", "Kurz (<200 S.)"),
+        new("200-400", "Mittel (200-400 S.)"),
+        new("400-600", "Lang (400-600 S.)"),
+        new(">600", "Episch (>600 S.)")
+    };
+
+    private List<ChartDataPoint> _radarChartData = new();
+    private List<ChartDataPoint> _donutChartData = new();
+
+    private ApexChartOptions<ChartDataPoint> _radarChartOptions = new();
+    private ApexChartOptions<ChartDataPoint> _donutChartOptions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        InitializeChartOptions();
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+        BuildChartData();
+    }
+
+    private void InitializeChartOptions()
+    {
+        _radarChartOptions = CreateRadarChartOptions();
+        _donutChartOptions = CreateDonutChartOptions();
+    }
+
+    private static ApexChartOptions<ChartDataPoint> CreateRadarChartOptions()
+    {
+        return new ApexChartOptions<ChartDataPoint>
+        {
+            Chart = new Chart
+            {
+                Background = "transparent",
+                ForeColor = "#C9B5A0",
+                Toolbar = new Toolbar { Show = false },
+                Animations = new Animations
+                {
+                    Enabled = true,
+                    Speed = 400
+                }
+            },
+            Colors = new List<string> { "#D4A574" },
+            Stroke = new Stroke
+            {
+                Width = 2,
+                Colors = new List<string> { "#D4A574" }
+            },
+            Fill = new Fill
+            {
+                Opacity = new Opacity(0.15)
+            },
+            DataLabels = new DataLabels { Enabled = false },
+            Xaxis = new XAxis
+            {
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = "#C9B5A0", FontSize = "11px" }
+                }
+            },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Show = false
+                }
+            },
+            Tooltip = new Tooltip
+            {
+                Theme = Mode.Dark
+            }
+        };
+    }
+
+    private ApexChartOptions<ChartDataPoint> CreateDonutChartOptions()
+    {
+        return new ApexChartOptions<ChartDataPoint>
+        {
+            Chart = new Chart
+            {
+                Background = "transparent",
+                ForeColor = "#C9B5A0",
+                Toolbar = new Toolbar { Show = false },
+                Animations = new Animations
+                {
+                    Enabled = true,
+                    Speed = 400
+                }
+            },
+            Colors = new List<string> { "#D4A574", "#A67874" },
+            DataLabels = new DataLabels { Enabled = false },
+            PlotOptions = new PlotOptions
+            {
+                Pie = new PlotOptionsPie
+                {
+                    Donut = new PlotOptionsDonut
+                    {
+                        Labels = new DonutLabels
+                        {
+                            Show = true,
+                            Name = new DonutLabelName { Show = true, Color = "#C9B5A0" },
+                            Value = new DonutLabelValue { Show = true, Color = "#C9B5A0" },
+                            Total = new DonutLabelTotal
+                            {
+                                Show = true,
+                                Label = $"{ViewModel.CompletionPercentage.ToString("F0", CultureInfo.InvariantCulture)}%",
+                                Color = "#C9B5A0"
+                            }
+                        }
+                    }
+                }
+            },
+            Legend = new Legend
+            {
+                Show = true,
+                Position = LegendPosition.Bottom,
+                Labels = new LegendLabels { Colors = "#C9B5A0" }
+            },
+            Tooltip = new Tooltip
+            {
+                Theme = Mode.Dark
+            }
+        };
+    }
+
+    private void BuildChartData()
+    {
+        // Radar chart data
+        _radarChartData = ViewModel.GenreRadarData
+            .Select(kvp => new ChartDataPoint { Label = kvp.Key, Value = kvp.Value })
+            .ToList();
+
+        // Donut chart data
+        _donutChartData = new List<ChartDataPoint>
+        {
+            new() { Label = $"Abgeschlossen ({ViewModel.CompletedCount})", Value = ViewModel.CompletedCount },
+            new() { Label = $"Abgebrochen ({ViewModel.AbandonedCount})", Value = ViewModel.AbandonedCount }
+        };
+    }
+
+    private List<ComparisonRow> GetComparisonRows()
+    {
+        var y1 = ViewModel.Year1Stats;
+        var y2 = ViewModel.Year2Stats;
+
+        return new List<ComparisonRow>
+        {
+            new("Bücher",
+                y1.BooksCompleted, y2.BooksCompleted,
+                Math.Max(y1.BooksCompleted, y2.BooksCompleted),
+                y1.BooksCompleted.ToString(), y2.BooksCompleted.ToString()),
+            new("Seiten",
+                y1.PagesRead, y2.PagesRead,
+                Math.Max(y1.PagesRead, y2.PagesRead),
+                FormatLargeNumber(y1.PagesRead), FormatLargeNumber(y2.PagesRead)),
+            new("Stunden",
+                y1.MinutesRead / 60.0, y2.MinutesRead / 60.0,
+                Math.Max(y1.MinutesRead / 60.0, y2.MinutesRead / 60.0),
+                $"{(y1.MinutesRead / 60):F0}h", $"{(y2.MinutesRead / 60):F0}h"),
+            new("Bewertung",
+                y1.AverageRating, y2.AverageRating,
+                Math.Max(y1.AverageRating, y2.AverageRating),
+                y1.AverageRating.ToString("F1", CultureInfo.InvariantCulture),
+                y2.AverageRating.ToString("F1", CultureInfo.InvariantCulture))
+        };
+    }
+
+    private static string FormatLargeNumber(int value)
+    {
+        if (value >= 1000)
+            return $"{(value / 1000.0).ToString("F1", CultureInfo.InvariantCulture)}k";
+        return value.ToString();
+    }
+
+    private async Task SelectYear(int year)
+    {
+        if (year == ViewModel.SelectedYear1 || year == ViewModel.SelectedYear2)
+            return;
+
+        int y1 = ViewModel.SelectedYear1;
+        int y2 = ViewModel.SelectedYear2;
+
+        if (Math.Abs(year - y1) <= Math.Abs(year - y2))
+            y1 = year;
+        else
+            y2 = year;
+
+        if (y1 > y2)
+            (y1, y2) = (y2, y1);
+
+        await ViewModel.ChangeComparisonYearsCommand.ExecuteAsync((y1, y2));
+    }
+}
