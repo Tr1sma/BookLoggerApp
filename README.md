@@ -1,4 +1,5 @@
 # 📚 BookHeart
+Ein Mapping aller Klassen und abhängigkeiten in form einer Obsidian Graph-View kann [hier](https://github.com/Tr1sma/codebase-map) gefunden werden
 
 ![CI](https://github.com/TristanAtze/BookLoggerApp/actions/workflows/ci.yml/badge.svg)
 
