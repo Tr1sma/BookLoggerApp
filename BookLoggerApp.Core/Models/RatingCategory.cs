@@ -11,5 +11,9 @@ public enum RatingCategory
     SpiceLevel = 3,
     Pacing = 4,
     WorldBuilding = 5,
-
+    Spannung = 6,
+    Humor = 7,
+    Informationsgehalt = 8,
+    EmotionaleTiefe = 9,
+    Atmosphaere = 10,
 }

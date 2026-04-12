@@ -121,6 +121,11 @@ public class BookRepository : Repository<Book>, IBookRepository
             RatingCategory.SpiceLevel => query.Select(b => b.SpiceLevelRating),
             RatingCategory.Pacing => query.Select(b => b.PacingRating),
             RatingCategory.WorldBuilding => query.Select(b => b.WorldBuildingRating),
+            RatingCategory.Spannung => query.Select(b => b.SpannungRating),
+            RatingCategory.Humor => query.Select(b => b.HumorRating),
+            RatingCategory.Informationsgehalt => query.Select(b => b.InformationsgehaltRating),
+            RatingCategory.EmotionaleTiefe => query.Select(b => b.EmotionaleTiefeRating),
+            RatingCategory.Atmosphaere => query.Select(b => b.AtmosphaereRating),
             _ => null
         };
 

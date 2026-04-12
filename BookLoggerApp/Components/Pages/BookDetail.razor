@@ -1,6 +1,7 @@
 @page "/books/{Id:guid}"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Helpers
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Components.Shared
 @inject BookDetailViewModel ViewModel
@@ -214,38 +215,45 @@
                 <h3>📊 Book Ratings</h3>
 
                 <div class="ratings-grid">
-                    <RatingInput Emoji="👥"
-                                Label="Characters"
-                                Rating="@ViewModel.Book.CharactersRating"
-                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.Characters, r)" />
-
-                    <RatingInput Emoji="📖"
-                                Label="Plot"
-                                Rating="@ViewModel.Book.PlotRating"
-                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.Plot, r)" />
-
-                    <RatingInput Emoji="✍️"
-                                Label="Writing Style"
-                                Rating="@ViewModel.Book.WritingStyleRating"
-                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.WritingStyle, r)" />
-
-                    <RatingInput Emoji="🌶️"
-                                Label="Spice Level"
-                                Rating="@ViewModel.Book.SpiceLevelRating"
-                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.SpiceLevel, r)" />
-
-                    <RatingInput Emoji="⚡"
-                                Label="Pacing"
-                                Rating="@ViewModel.Book.PacingRating"
-                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.Pacing, r)" />
-
-                    <RatingInput Emoji="🌍"
-                                Label="World Building"
-                                Rating="@ViewModel.Book.WorldBuildingRating"
-                                RatingChanged="async (r) => await UpdateRating(BookLoggerApp.Core.Models.RatingCategory.WorldBuilding, r)" />
-
-
+                    @foreach (var cat in GetPrimaryCategoryInfos())
+                    {
+                        <RatingInput Emoji="@cat.Emoji"
+                                    Label="@cat.DisplayName"
+                                    Rating="@ViewModel.GetRating(cat.Category)"
+                                    RatingChanged="async (r) => await UpdateRating(cat.Category, r)" />
+                    }
                 </div>
+
+                @{ var additionalCategories = GetAdditionalCategoryInfos(); }
+                @if (additionalCategories.Count > 0)
+                {
+                    <div class="more-categories-section">
+                        <button class="more-categories-toggle"
+                                @onclick="() => _showAdditionalCategories = !_showAdditionalCategories">
+                            @if (_showAdditionalCategories)
+                            {
+                                <span>▾ Weitere Kategorien ausblenden</span>
+                            }
+                            else
+                            {
+                                <span>▸ Weitere Kategorien (@additionalCategories.Count)</span>
+                            }
+                        </button>
+
+                        @if (_showAdditionalCategories)
+                        {
+                            <div class="ratings-grid additional-ratings">
+                                @foreach (var cat in additionalCategories)
+                                {
+                                    <RatingInput Emoji="@cat.Emoji"
+                                                Label="@cat.DisplayName"
+                                                Rating="@ViewModel.GetRating(cat.Category)"
+                                                RatingChanged="async (r) => await UpdateRating(cat.Category, r)" />
+                                }
+                            </div>
+                        }
+                    </div>
+                }
 
                 @if (ViewModel.Book.AverageRating.HasValue)
                 {
@@ -338,6 +346,7 @@
     private Guid _lastLoadedId = Guid.Empty;
     private string? _coverImageDataUrl;
     private Func<Task<bool>>? _navBackHandler;
+    private bool _showAdditionalCategories;
 
     protected override async Task OnInitializedAsync()
     {
@@ -523,6 +532,24 @@
             path = "/" + path;
 
         return path;
+    }
+
+    private List<RatingCategoryInfo> GetPrimaryCategoryInfos()
+    {
+        var genreIds = ViewModel.BookGenres.Select(g => g.Id);
+        var relevant = GenreRatingMapping.GetRelevantCategories(genreIds);
+        return RatingCategoryInfo.GetAllCategories()
+            .Where(c => relevant.Contains(c.Category))
+            .ToList();
+    }
+
+    private List<RatingCategoryInfo> GetAdditionalCategoryInfos()
+    {
+        var genreIds = ViewModel.BookGenres.Select(g => g.Id);
+        var additional = GenreRatingMapping.GetAdditionalCategories(genreIds);
+        return RatingCategoryInfo.GetAllCategories()
+            .Where(c => additional.Contains(c.Category))
+            .ToList();
     }
 
     private async Task UpdateRating(BookLoggerApp.Core.Models.RatingCategory category, int? rating)
