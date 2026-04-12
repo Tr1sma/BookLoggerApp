@@ -179,7 +179,21 @@ public partial class BookDetailViewModel : ViewModelBase
                 case RatingCategory.WorldBuilding:
                     Book.WorldBuildingRating = rating;
                     break;
-
+                case RatingCategory.Spannung:
+                    Book.SpannungRating = rating;
+                    break;
+                case RatingCategory.Humor:
+                    Book.HumorRating = rating;
+                    break;
+                case RatingCategory.Informationsgehalt:
+                    Book.InformationsgehaltRating = rating;
+                    break;
+                case RatingCategory.EmotionaleTiefe:
+                    Book.EmotionaleTiefeRating = rating;
+                    break;
+                case RatingCategory.Atmosphaere:
+                    Book.AtmosphaereRating = rating;
+                    break;
             }
 
             // Save the book
@@ -219,7 +233,11 @@ public partial class BookDetailViewModel : ViewModelBase
             RatingCategory.SpiceLevel => Book.SpiceLevelRating,
             RatingCategory.Pacing => Book.PacingRating,
             RatingCategory.WorldBuilding => Book.WorldBuildingRating,
-
+            RatingCategory.Spannung => Book.SpannungRating,
+            RatingCategory.Humor => Book.HumorRating,
+            RatingCategory.Informationsgehalt => Book.InformationsgehaltRating,
+            RatingCategory.EmotionaleTiefe => Book.EmotionaleTiefeRating,
+            RatingCategory.Atmosphaere => Book.AtmosphaereRating,
             _ => null
         };
     }
@@ -258,7 +276,12 @@ public partial class BookDetailViewModel : ViewModelBase
                     { RatingCategory.WritingStyle, Book.WritingStyleRating },
                     { RatingCategory.SpiceLevel, Book.SpiceLevelRating },
                     { RatingCategory.Pacing, Book.PacingRating },
-                    { RatingCategory.WorldBuilding, Book.WorldBuildingRating }
+                    { RatingCategory.WorldBuilding, Book.WorldBuildingRating },
+                    { RatingCategory.Spannung, Book.SpannungRating },
+                    { RatingCategory.Humor, Book.HumorRating },
+                    { RatingCategory.Informationsgehalt, Book.InformationsgehaltRating },
+                    { RatingCategory.EmotionaleTiefe, Book.EmotionaleTiefeRating },
+                    { RatingCategory.Atmosphaere, Book.AtmosphaereRating }
                 }
             };
 

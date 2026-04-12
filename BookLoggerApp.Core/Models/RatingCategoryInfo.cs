@@ -59,6 +59,41 @@ public class RatingCategoryInfo
                 DisplayName = "World Building",
                 Description = "World building quality"
             },
+            new()
+            {
+                Category = RatingCategory.Spannung,
+                Emoji = "😰",
+                DisplayName = "Spannung",
+                Description = "Spannung und Nervenkitzel"
+            },
+            new()
+            {
+                Category = RatingCategory.Humor,
+                Emoji = "😂",
+                DisplayName = "Humor",
+                Description = "Humor und Unterhaltung"
+            },
+            new()
+            {
+                Category = RatingCategory.Informationsgehalt,
+                Emoji = "💡",
+                DisplayName = "Informationsgehalt",
+                Description = "Informationsgehalt und Tiefe"
+            },
+            new()
+            {
+                Category = RatingCategory.EmotionaleTiefe,
+                Emoji = "💖",
+                DisplayName = "Emotionale Tiefe",
+                Description = "Emotionale Tiefe und Berührung"
+            },
+            new()
+            {
+                Category = RatingCategory.Atmosphaere,
+                Emoji = "🌙",
+                DisplayName = "Atmosphäre",
+                Description = "Atmosphäre und Stimmung"
+            },
         };
     }
 

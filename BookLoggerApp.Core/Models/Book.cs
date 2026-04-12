@@ -62,6 +62,11 @@ public class Book
     public int? SpiceLevelRating { get; set; }
     public int? PacingRating { get; set; }
     public int? WorldBuildingRating { get; set; }
+    public int? SpannungRating { get; set; }
+    public int? HumorRating { get; set; }
+    public int? InformationsgehaltRating { get; set; }
+    public int? EmotionaleTiefeRating { get; set; }
+    public int? AtmosphaereRating { get; set; }
 
 
     [MaxLength(5000)]
@@ -107,7 +112,12 @@ public class Book
                 WritingStyleRating,
                 SpiceLevelRating,
                 PacingRating,
-                WorldBuildingRating
+                WorldBuildingRating,
+                SpannungRating,
+                HumorRating,
+                InformationsgehaltRating,
+                EmotionaleTiefeRating,
+                AtmosphaereRating
             };
 
             var validRatings = ratings.Where(r => r.HasValue).Select(r => r!.Value).ToList();

@@ -266,13 +266,18 @@ public class StatsServiceTests : IDisposable
         var averages = await _service.GetAllAverageRatingsAsync();
 
         // Assert
-        averages.Should().HaveCount(6);
+        averages.Should().HaveCount(11);
         averages[RatingCategory.Characters].Should().Be(5.0);
         averages[RatingCategory.Plot].Should().Be(4.0);
         averages[RatingCategory.WritingStyle].Should().Be(5.0);
         averages[RatingCategory.SpiceLevel].Should().Be(3.0);
         averages[RatingCategory.Pacing].Should().Be(4.0);
         averages[RatingCategory.WorldBuilding].Should().Be(5.0);
+        averages[RatingCategory.Spannung].Should().Be(0.0);
+        averages[RatingCategory.Humor].Should().Be(0.0);
+        averages[RatingCategory.Informationsgehalt].Should().Be(0.0);
+        averages[RatingCategory.EmotionaleTiefe].Should().Be(0.0);
+        averages[RatingCategory.Atmosphaere].Should().Be(0.0);
     }
 
     [Fact]

@@ -116,6 +116,35 @@
     margin-bottom: 1.5rem;
 }
 
+/* ===== Expandable Additional Categories ===== */
+.more-categories-section {
+    margin-top: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.more-categories-toggle {
+    display: inline-block;
+    color: #b0a090;
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+    transition: color 0.2s ease;
+}
+
+.more-categories-toggle:hover {
+    color: #d4c4b4;
+}
+
+.additional-ratings {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .average-rating-display {
     padding: 1.25rem;
     background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);

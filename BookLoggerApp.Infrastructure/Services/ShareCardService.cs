@@ -774,6 +774,11 @@ public class ShareCardService : IShareCardService
         RatingCategory.SpiceLevel    => AccentPink,
         RatingCategory.Pacing        => AccentOrange,
         RatingCategory.WorldBuilding => AccentPurple,
+        RatingCategory.Spannung => new SKColor(0xC0, 0x39, 0x2B),
+        RatingCategory.Humor => new SKColor(0xF1, 0xC4, 0x0F),
+        RatingCategory.Informationsgehalt => new SKColor(0x1A, 0xBC, 0x9C),
+        RatingCategory.EmotionaleTiefe => new SKColor(0xE9, 0x1E, 0x63),
+        RatingCategory.Atmosphaere => new SKColor(0x34, 0x49, 0x5E),
         _ => Primary
     };
 
@@ -931,6 +936,11 @@ public class ShareCardService : IShareCardService
         RatingCategory.SpiceLevel    => "Spice",
         RatingCategory.Pacing        => "Pacing",
         RatingCategory.WorldBuilding => "World",
+        RatingCategory.Spannung => "Spannung",
+        RatingCategory.Humor => "Humor",
+        RatingCategory.Informationsgehalt => "Info",
+        RatingCategory.EmotionaleTiefe => "Emotion",
+        RatingCategory.Atmosphaere => "Atmo",
         _ => category.ToString()
     };
 }

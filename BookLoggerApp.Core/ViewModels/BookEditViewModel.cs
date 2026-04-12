@@ -487,12 +487,17 @@ public partial class BookEditViewModel : ViewModelBase
                 CoverImageBytes = coverBytes,
                 CategoryRatings = new Dictionary<RatingCategory, int?>
                 {
-                    [RatingCategory.Characters]   = Book.CharactersRating,
-                    [RatingCategory.Plot]         = Book.PlotRating,
-                    [RatingCategory.WritingStyle] = Book.WritingStyleRating,
-                    [RatingCategory.SpiceLevel]   = Book.SpiceLevelRating,
-                    [RatingCategory.Pacing]       = Book.PacingRating,
-                    [RatingCategory.WorldBuilding] = Book.WorldBuildingRating
+                    [RatingCategory.Characters]       = Book.CharactersRating,
+                    [RatingCategory.Plot]             = Book.PlotRating,
+                    [RatingCategory.WritingStyle]     = Book.WritingStyleRating,
+                    [RatingCategory.SpiceLevel]       = Book.SpiceLevelRating,
+                    [RatingCategory.Pacing]           = Book.PacingRating,
+                    [RatingCategory.WorldBuilding]    = Book.WorldBuildingRating,
+                    [RatingCategory.Spannung]         = Book.SpannungRating,
+                    [RatingCategory.Humor]            = Book.HumorRating,
+                    [RatingCategory.Informationsgehalt] = Book.InformationsgehaltRating,
+                    [RatingCategory.EmotionaleTiefe]  = Book.EmotionaleTiefeRating,
+                    [RatingCategory.Atmosphaere]      = Book.AtmosphaereRating
                 }
             };
 
