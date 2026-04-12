@@ -22,6 +22,10 @@ Versionsschema:
   - Analysen-Tab: Jahresvergleich, Genre-Radar (Spinnennetz-Diagramm), Abschlussquote (Donut-Chart), Buchlängen-Vorliebe, Meistgelesene Autoren
 - Genre-spezifische Bewertungskategorien: 5 neue Kategorien (Spannung, Humor, Informationsgehalt, Emotionale Tiefe, Atmosphäre) ergänzen die bestehenden 6 Kategorien. Beim Bewerten eines Buches werden nur die zum Genre passenden Kategorien angezeigt — weitere Kategorien lassen sich per Dropdown aufklappen.
 
+### Behoben
+
+- Changelog wird nach einem Update wieder zuverlässig in der App angezeigt, auch wenn die aktuelle Version noch keinen eigenen Changelog-Eintrag hat
+
 ### Geändert
 
 - "Getting Started"-Seite auf sehr kleinen mobilen Displays kompakter gestaltet: engeres Hero-Layout, kleinere Kartenabstände und reduzierter vertikaler Leerraum ohne Funktionsänderung

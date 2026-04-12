@@ -314,6 +314,20 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         CurrentRelease = ReleaseHistory.FirstOrDefault(release =>
             string.Equals(release.Version, ChangelogParser.NormalizeVersion(CurrentVersion), StringComparison.OrdinalIgnoreCase));
 
+        if (CurrentRelease == null)
+        {
+            var unreleased = await _changelogService.GetUnreleasedChangesAsync(ct);
+            if (unreleased?.Sections.Count > 0)
+            {
+                CurrentRelease = new ChangelogRelease
+                {
+                    Version = ChangelogParser.NormalizeVersion(CurrentVersion),
+                    DisplayVersion = CurrentVersion,
+                    Sections = unreleased.Sections
+                };
+            }
+        }
+
         if (CurrentRelease != null)
         {
             IsChangelogVisible = true;
