@@ -203,26 +203,26 @@
         }
 
         <!-- Top Rated Books -->
-        @if (ViewModel.TopRatedBooks?.Any() == true)
-        {
-            <section class="top-rated-books-section compact">
-                <h2>🏆 Top Rated Books</h2>
+        <section class="top-rated-books-section compact">
+            <h2>🏆 Top Rated Books</h2>
 
-                <!-- Category Filter Chips (horizontally scrollable) -->
-                <div class="category-filter-buttons" role="tablist" aria-label="Rating category filter">
-                    <button class="btn category-filter-btn @(selectedCategory == null ? "active" : "")"
-                            @onclick="() => FilterByCategory(null)">
-                        All
+            <!-- Category Filter Chips (horizontally scrollable) -->
+            <div class="category-filter-buttons" role="tablist" aria-label="Rating category filter">
+                <button class="btn category-filter-btn @(selectedCategory == null ? "active" : "")"
+                        @onclick="() => FilterByCategory(null)">
+                    All
+                </button>
+                @foreach (var category in RatingCategoryInfo.GetAllCategories())
+                {
+                    <button class="btn category-filter-btn @(selectedCategory == category.Category ? "active" : "")"
+                            @onclick="() => FilterByCategory(category.Category)">
+                        @category.Emoji @category.DisplayName
                     </button>
-                    @foreach (var category in RatingCategoryInfo.GetAllCategories())
-                    {
-                        <button class="btn category-filter-btn @(selectedCategory == category.Category ? "active" : "")"
-                                @onclick="() => FilterByCategory(category.Category)">
-                            @category.Emoji @category.DisplayName
-                        </button>
-                    }
-                </div>
+                }
+            </div>
 
+            @if (ViewModel.TopRatedBooks?.Any() == true)
+            {
                 <div class="top-books-list">
                     @{
                         int rank = 1;
@@ -254,11 +254,17 @@
                 @if (ViewModel.TopRatedBooks.Count > 3)
                 {
                     <button class="btn show-more-books-btn" @onclick="() => showAllTopBooks = !showAllTopBooks">
-                        @(showAllTopBooks ? "Weniger anzeigen" : "Mehr anzeigen")
+                        @(showAllTopBooks ? "Show less" : "Show more")
                     </button>
                 }
-            </section>
-        }
+            }
+            else if (selectedCategory.HasValue)
+            {
+                <p class="advanced-stats-subtitle" style="text-align:center; padding:1rem 0;">
+                    No books rated in this category
+                </p>
+            }
+        </section>
 
         <!-- Level Milestones (moved to bottom) -->
         @if (ViewModel.LevelMilestones.Any())
