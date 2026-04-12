@@ -7,34 +7,14 @@ namespace BookLoggerApp.Services;
 public sealed class ChangelogService : IChangelogService
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private IReadOnlyList<ChangelogRelease>? _cachedReleases;
+    private IReadOnlyList<ChangelogRelease>? _allReleases;
 
     public async Task<IReadOnlyList<ChangelogRelease>> GetReleaseHistoryAsync(CancellationToken ct = default)
     {
-        if (_cachedReleases != null)
-        {
-            return _cachedReleases;
-        }
-
-        await _gate.WaitAsync(ct);
-
-        try
-        {
-            if (_cachedReleases != null)
-            {
-                return _cachedReleases;
-            }
-
-            await using var stream = await FileSystem.OpenAppPackageFileAsync("CHANGELOG.md");
-            using var reader = new StreamReader(stream);
-            var markdown = await reader.ReadToEndAsync(ct);
-            _cachedReleases = ChangelogParser.Parse(markdown);
-            return _cachedReleases;
-        }
-        finally
-        {
-            _gate.Release();
-        }
+        await EnsureParsedAsync(ct);
+        return _allReleases!
+            .Where(r => !string.Equals(r.Version, ChangelogParser.UnreleasedVersion, StringComparison.OrdinalIgnoreCase))
+            .ToList();
     }
 
     public async Task<ChangelogRelease?> GetReleaseAsync(string version, CancellationToken ct = default)
@@ -44,5 +24,39 @@ public sealed class ChangelogService : IChangelogService
 
         return releases.FirstOrDefault(release =>
             string.Equals(release.Version, normalizedVersion, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public async Task<ChangelogRelease?> GetUnreleasedChangesAsync(CancellationToken ct = default)
+    {
+        await EnsureParsedAsync(ct);
+        return _allReleases!.FirstOrDefault(r =>
+            string.Equals(r.Version, ChangelogParser.UnreleasedVersion, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task EnsureParsedAsync(CancellationToken ct)
+    {
+        if (_allReleases != null)
+        {
+            return;
+        }
+
+        await _gate.WaitAsync(ct);
+
+        try
+        {
+            if (_allReleases != null)
+            {
+                return;
+            }
+
+            await using var stream = await FileSystem.OpenAppPackageFileAsync("CHANGELOG.md");
+            using var reader = new StreamReader(stream);
+            var markdown = await reader.ReadToEndAsync(ct);
+            _allReleases = ChangelogParser.Parse(markdown);
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 }

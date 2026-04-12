@@ -5,6 +5,8 @@ namespace BookLoggerApp.Core.Helpers;
 
 public static class ChangelogParser
 {
+    public const string UnreleasedVersion = "unreleased";
+
     private static readonly Regex ReleaseHeaderRegex = new(
         @"^## \[(?<version>[^\]]+)\](?: - (?<date>.+))?$",
         RegexOptions.Compiled);
@@ -35,7 +37,7 @@ public static class ChangelogParser
 
                 if (string.Equals(displayVersion, "Unveröffentlicht", StringComparison.OrdinalIgnoreCase))
                 {
-                    currentRelease = null;
+                    currentRelease = new ChangelogReleaseBuilder(UnreleasedVersion, displayVersion, releaseDate);
                     continue;
                 }
 

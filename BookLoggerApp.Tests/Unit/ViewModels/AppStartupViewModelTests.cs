@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.Infrastructure;
@@ -43,6 +44,8 @@ public class AppStartupViewModelTests
                 }
             }
         });
+        _changelogService.GetUnreleasedChangesAsync(Arg.Any<CancellationToken>())
+            .Returns((ChangelogRelease?)null);
         _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(AppUpdateState.Unsupported);
         _onboardingService.GetSnapshotAsync(Arg.Any<CancellationToken>()).Returns(CreateSnapshot());
         _onboardingService.RefreshSnapshotAsync(Arg.Any<CancellationToken>()).Returns(CreateSnapshot());
@@ -301,6 +304,68 @@ public class AppStartupViewModelTests
         handled.Should().BeTrue();
         _viewModel.OnboardingCurrentStep.Should().Be(1);
         await _onboardingService.Received(1).RetreatIntroAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task InitializeAsync_ShouldFallbackToUnreleased_WhenNoExactVersionMatch()
+    {
+        // Arrange
+        _appVersionService.CurrentVersion.Returns("0.9.2");
+        _appVersionService.IsFirstLaunchForCurrentVersion.Returns(true);
+        _changelogService.GetReleaseHistoryAsync(Arg.Any<CancellationToken>()).Returns(new[]
+        {
+            new ChangelogRelease
+            {
+                Version = "0.9.0",
+                DisplayVersion = "0.9.0",
+                Sections = new[] { new ChangelogSection { Title = "Hinzugefügt", Entries = new[] { "Altes Feature" } } }
+            }
+        });
+        _changelogService.GetUnreleasedChangesAsync(Arg.Any<CancellationToken>()).Returns(new ChangelogRelease
+        {
+            Version = ChangelogParser.UnreleasedVersion,
+            DisplayVersion = "Unveröffentlicht",
+            Sections = new[] { new ChangelogSection { Title = "Hinzugefügt", Entries = new[] { "Neues Feature" } } }
+        });
+
+        // Act
+        await _viewModel.InitializeAsync();
+
+        // Assert
+        _viewModel.IsChangelogVisible.Should().BeTrue();
+        _viewModel.CurrentRelease.Should().NotBeNull();
+        _viewModel.CurrentRelease!.Version.Should().Be("0.9.2");
+        _viewModel.CurrentRelease.DisplayVersion.Should().Be("0.9.2");
+        _viewModel.CurrentRelease.Sections[0].Entries.Should().Contain("Neues Feature");
+    }
+
+    [Fact]
+    public async Task InitializeAsync_ShouldNotShowChangelog_WhenNoMatchAndUnreleasedIsEmpty()
+    {
+        // Arrange
+        _appVersionService.CurrentVersion.Returns("0.9.2");
+        _appVersionService.IsFirstLaunchForCurrentVersion.Returns(true);
+        _changelogService.GetReleaseHistoryAsync(Arg.Any<CancellationToken>()).Returns(new[]
+        {
+            new ChangelogRelease
+            {
+                Version = "0.9.0",
+                DisplayVersion = "0.9.0",
+                Sections = new[] { new ChangelogSection { Title = "Hinzugefügt", Entries = new[] { "Altes Feature" } } }
+            }
+        });
+        _changelogService.GetUnreleasedChangesAsync(Arg.Any<CancellationToken>()).Returns(new ChangelogRelease
+        {
+            Version = ChangelogParser.UnreleasedVersion,
+            DisplayVersion = "Unveröffentlicht",
+            Sections = Array.Empty<ChangelogSection>()
+        });
+
+        // Act
+        await _viewModel.InitializeAsync();
+
+        // Assert
+        _viewModel.IsChangelogVisible.Should().BeFalse();
     }
 
     private static OnboardingSnapshot CreateSnapshot(
