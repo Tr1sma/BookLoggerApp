@@ -2,7 +2,7 @@
    Advanced Statistics — Tab System & Charts
    ============================================ */
 
-/* Tab Bar */
+/* ===== Tab Bar ===== */
 .stats-tab-bar {
     display: flex;
     background: var(--bg-secondary);
@@ -33,7 +33,755 @@
     border-bottom-color: var(--primary-color);
 }
 
-/* Tab Content */
+/* ===== Tab Content ===== */
 .stats-tab-content {
-    animation: fadeIn 0.3s ease;
+    padding: 16px;
+    animation: fadeInTab 0.3s ease;
+}
+
+@keyframes fadeInTab {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ===== General Advanced Stats ===== */
+.advanced-stats-section {
+    margin-bottom: 16px;
+    animation: slideUpAdvanced 0.5s ease both;
+}
+
+.advanced-stats-section:nth-child(1) { animation-delay: 0s; }
+.advanced-stats-section:nth-child(2) { animation-delay: 0.05s; }
+.advanced-stats-section:nth-child(3) { animation-delay: 0.1s; }
+.advanced-stats-section:nth-child(4) { animation-delay: 0.15s; }
+.advanced-stats-section:nth-child(5) { animation-delay: 0.2s; }
+.advanced-stats-section:nth-child(6) { animation-delay: 0.25s; }
+.advanced-stats-section:nth-child(7) { animation-delay: 0.3s; }
+
+@keyframes slideUpAdvanced {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.advanced-stats-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.advanced-stats-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 12px 0;
+}
+
+.advanced-stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.advanced-stats-header h3 {
+    margin-bottom: 0;
+}
+
+.advanced-stats-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0 0 12px 0;
+}
+
+/* ===== Heatmap (Lese-Kalender) ===== */
+.heatmap-year-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.heatmap-year-nav span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 40px;
+    text-align: center;
+}
+
+.year-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.year-nav-btn:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: var(--bg-primary);
+}
+
+.year-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.heatmap-container {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.heatmap-day-labels {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    gap: 2px;
+    flex-shrink: 0;
+    padding-right: 4px;
+}
+
+.heatmap-day-labels span {
+    font-size: 9px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    height: 11px;
+}
+
+.heatmap-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    grid-auto-flow: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.heatmap-cell {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    transition: opacity 0.15s ease;
+}
+
+.heatmap-cell:not(.empty):hover {
+    opacity: 0.8;
+    outline: 1px solid var(--text-muted);
+}
+
+.heatmap-cell.empty {
+    visibility: hidden;
+}
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    margin-top: 8px;
+}
+
+.heatmap-legend-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin: 0 4px;
+}
+
+.heatmap-legend-cell {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+/* ===== Time of Day ===== */
+.time-of-day-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.time-of-day-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 6px;
+    border-radius: var(--border-radius);
+    background: var(--bg-tertiary);
+    border: 1px solid transparent;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.time-of-day-card.dominant {
+    border-color: var(--primary-color);
+    background: rgba(212, 165, 116, 0.08);
+    box-shadow: 0 0 12px rgba(212, 165, 116, 0.1);
+}
+
+.time-of-day-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.time-of-day-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.time-of-day-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.time-of-day-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(212, 165, 116, 0.12);
+    border: 1px solid rgba(212, 165, 116, 0.25);
+    color: var(--primary-color);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ===== Compact Stats (Speed + Finish Time) ===== */
+.compact-stats-row {
+    display: flex;
+    gap: 12px;
+}
+
+.compact-stat-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 10px;
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.compact-stat-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.compact-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.compact-stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.compact-stat-trend {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.compact-stat-trend.positive {
+    color: var(--status-completed);
+    background: rgba(136, 166, 126, 0.12);
+}
+
+.compact-stat-trend.negative {
+    color: var(--status-abandoned);
+    background: rgba(166, 120, 116, 0.12);
+}
+
+/* ===== Year Comparison (Analysen tab) ===== */
+.year-selector {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.year-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.year-chip:hover {
+    border-color: var(--text-muted);
+}
+
+.year-chip.active-year1 {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--bg-primary);
+}
+
+.year-chip.active-year2 {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: var(--text-primary);
+}
+
+.year-comparison-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.comparison-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.comparison-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.comparison-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.comparison-bar {
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 36px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.comparison-bar span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.comparison-bar.year1 {
+    background: var(--primary-color);
+    color: var(--bg-primary);
+}
+
+.comparison-bar.year2 {
+    background: var(--secondary-color);
+    color: var(--text-primary);
+}
+
+/* ===== Page Count Distribution ===== */
+.page-count-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.page-count-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page-count-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-count-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.page-count-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.page-count-bar-bg {
+    height: 10px;
+    background: var(--bg-primary);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.page-count-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 5px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 0;
+}
+
+/* ===== Top Authors ===== */
+.top-authors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.top-author-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.author-rank {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.author-rank.rank-first {
+    background: var(--gradient-warm);
+    border-color: var(--primary-color);
+    color: var(--bg-primary);
+}
+
+.author-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.author-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.author-detail {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.author-count {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.author-divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: 0;
+}
+
+/* ===== Completion Rate Container ===== */
+.completion-rate-container {
+    display: flex;
+    justify-content: center;
+}
+
+/* ===== ApexCharts Overrides ===== */
+.advanced-stats-card .apexcharts-canvas {
+    width: 100% !important;
+}
+
+.advanced-stats-card .apexcharts-svg {
+    background: transparent !important;
+}
+
+.advanced-stats-card .apexcharts-tooltip {
+    background: var(--bg-tertiary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    box-shadow: var(--shadow) !important;
+}
+
+.advanced-stats-card .apexcharts-tooltip-title {
+    background: var(--bg-secondary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
+
+.advanced-stats-card .apexcharts-tooltip-text {
+    color: var(--text-secondary) !important;
+}
+
+.advanced-stats-card .apexcharts-legend-text {
+    color: var(--text-secondary) !important;
+}
+
+.advanced-stats-card .apexcharts-gridline {
+    stroke: var(--border-light) !important;
+}
+
+.advanced-stats-card .apexcharts-radar-series polygon {
+    stroke: var(--border-light) !important;
+}
+
+.advanced-stats-card .apexcharts-radar-series line {
+    stroke: var(--border-light) !important;
+}
+
+/* ===== Loading & Error States ===== */
+.stats-tab-content .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 48px 16px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.stats-tab-content .alert-danger {
+    padding: 12px 16px;
+    border-radius: var(--border-radius);
+    background: rgba(166, 120, 116, 0.12);
+    border: 1px solid rgba(166, 120, 116, 0.3);
+    color: var(--status-abandoned);
+    font-size: 0.85rem;
+}
+
+/* ============================================
+   Responsive Breakpoints
+   ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+    .stats-tab-content {
+        padding: 14px;
+    }
+
+    .advanced-stats-card {
+        padding: 14px;
+    }
+
+    .heatmap-cell {
+        width: 10px;
+        height: 10px;
+    }
+
+    .heatmap-day-labels span {
+        height: 10px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    .stats-tab-content {
+        padding: 12px;
+    }
+
+    .stats-tab-btn {
+        font-size: 12px;
+        padding: 10px 4px;
+    }
+
+    .advanced-stats-card {
+        padding: 12px;
+        border-radius: var(--border-radius);
+    }
+
+    .advanced-stats-card h3 {
+        font-size: 0.9rem;
+    }
+
+    .time-of-day-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .time-of-day-card {
+        padding: 10px 6px;
+    }
+
+    .time-of-day-icon {
+        font-size: 1.2rem;
+    }
+
+    .time-of-day-value {
+        font-size: 0.9rem;
+    }
+
+    .compact-stat-value {
+        font-size: 1rem;
+    }
+
+    .compact-stat-label {
+        font-size: 0.7rem;
+    }
+
+    .comparison-bar {
+        height: 24px;
+        font-size: 0.7rem;
+    }
+
+    .author-count {
+        font-size: 1.1rem;
+    }
+
+    .heatmap-cell {
+        width: 9px;
+        height: 9px;
+    }
+
+    .heatmap-day-labels span {
+        font-size: 8px;
+        height: 9px;
+    }
+
+    .heatmap-legend-cell {
+        width: 9px;
+        height: 9px;
+    }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+    .stats-tab-content {
+        padding: 10px;
+    }
+
+    .stats-tab-btn {
+        font-size: 11px;
+        padding: 8px 2px;
+    }
+
+    .advanced-stats-card {
+        padding: 10px;
+    }
+
+    .advanced-stats-card h3 {
+        font-size: 0.85rem;
+    }
+
+    .advanced-stats-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .compact-stats-row {
+        flex-direction: column;
+    }
+
+    .compact-stat-value {
+        font-size: 0.95rem;
+    }
+
+    .time-of-day-icon {
+        font-size: 1rem;
+    }
+
+    .time-of-day-label {
+        font-size: 0.65rem;
+    }
+
+    .time-of-day-value {
+        font-size: 0.85rem;
+    }
+
+    .year-chip {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+
+    .comparison-bar {
+        height: 22px;
+        font-size: 0.65rem;
+        padding: 0 6px;
+    }
+
+    .page-count-label {
+        font-size: 0.75rem;
+    }
+
+    .page-count-count {
+        font-size: 0.7rem;
+    }
+
+    .author-rank {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+
+    .author-name {
+        font-size: 0.8rem;
+    }
+
+    .author-detail {
+        font-size: 0.65rem;
+    }
+
+    .author-count {
+        font-size: 1rem;
+    }
+
+    .heatmap-cell {
+        width: 8px;
+        height: 8px;
+    }
+
+    .heatmap-day-labels span {
+        font-size: 7px;
+        height: 8px;
+    }
+
+    .heatmap-legend-cell {
+        width: 8px;
+        height: 8px;
+    }
+
+    .heatmap-legend-label {
+        font-size: 8px;
+    }
 }
