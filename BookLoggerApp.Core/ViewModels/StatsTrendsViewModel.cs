@@ -106,7 +106,7 @@ public partial class StatsTrendsViewModel : ViewModelBase
             var (currentFinish, previousFinish) = finishTask.Result;
             CurrentFinishDays = currentFinish;
             FinishDaysDifference = Math.Round(currentFinish - previousFinish, 1);
-        }, "Fehler beim Laden der Trend-Statistiken");
+        }, "Failed to load trend statistics");
     }
 
     [RelayCommand]
@@ -131,10 +131,10 @@ public partial class StatsTrendsViewModel : ViewModelBase
         string dominant = data.MaxBy(kv => kv.Value).Key;
         return dominant switch
         {
-            "Morning" => "Frühleser 🌅",
-            "Afternoon" => "Tagträumer ☀️",
-            "Evening" => "Abendleser 🌙",
-            "Night" => "Nachteule 🦉",
+            "Morning" => "Early Bird 🌅",
+            "Afternoon" => "Daydreamer ☀️",
+            "Evening" => "Evening Reader 🌙",
+            "Night" => "Night Owl 🦉",
             _ => ""
         };
     }

@@ -57,7 +57,7 @@ public class StatsTrendsViewModelTests
 
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        _viewModel.TimeOfDayLabel.Should().Be("Abendleser 🌙");
+        _viewModel.TimeOfDayLabel.Should().Be("Evening Reader 🌙");
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class StatsTrendsViewModelTests
 
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        _viewModel.TimeOfDayLabel.Should().Be("Nachteule 🦉");
+        _viewModel.TimeOfDayLabel.Should().Be("Night Owl 🦉");
     }
 
     [Fact]
