@@ -274,6 +274,10 @@ Es existiert ein Obsidian Vault unter `C:\Users\Tristan\Documents\Obsidian\codeb
 - **Klasse gelöscht →** Lösche auch die Vault-Datei.
 - **Bidirektionale Links pflegen:** Wenn A von B abhängt, steht B in A's "Depends on" UND A in B's "Used by".
 - **Index.md aktualisieren:** Bei neuen oder gelöschten Dateien den Eintrag in `Index.md` ergänzen bzw. entfernen.
+- **Nach jeder Vault-Änderung pushen:**
+  ```bash
+  cd C:\Users\Tristan\Documents\Obsidian\codebase-map && git add . && git commit -m "Update graph" && git push
+  ```
 
 ### Format pro Datei
 
