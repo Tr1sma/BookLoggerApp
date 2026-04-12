@@ -393,7 +393,7 @@ Nach jeder Änderung (Feature, Bugfix, Sicherheitspatch) einen Eintrag in `CHANG
 
 ## Important Notes
 
-- **NIEMALS `git push` ausführen** — weder auf dieses Repo noch auf andere Repos. Nur lokale Commits. Push nur wenn der User es explizit verlangt.
+- **Keine Git-Operationen (commit, push, etc.) ohne explizite Aufforderung durch den User.** Weder lokal committen noch pushen — nur wenn der User es ausdrücklich verlangt.
 - Main branch for PRs: `main`
 - Development uses versioned feature branches (`V1`, `V2`, ... `V6`)
 - App name displayed on device: "BookHeart" (configured in `BookLoggerApp.csproj` as `ApplicationTitle`)
