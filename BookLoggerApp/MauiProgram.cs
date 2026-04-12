@@ -126,6 +126,7 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IGoalService, BookLoggerApp.Infrastructure.Services.GoalService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IPlantService, BookLoggerApp.Infrastructure.Services.PlantService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IStatsService, BookLoggerApp.Infrastructure.Services.StatsService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IAdvancedStatsService, BookLoggerApp.Infrastructure.Services.AdvancedStatsService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IShareCardService, BookLoggerApp.Infrastructure.Services.ShareCardService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
         builder.Services.AddSingleton<BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
@@ -171,6 +172,8 @@ public static class MauiProgram
         builder.Services.AddTransient<ReadingViewModel>();
         builder.Services.AddTransient<GoalsViewModel>();
         builder.Services.AddTransient<StatsViewModel>();
+        builder.Services.AddTransient<StatsTrendsViewModel>();
+        builder.Services.AddTransient<StatsAnalysesViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
         builder.Services.AddTransient<PlantShopViewModel>();
         builder.Services.AddTransient<DecorationShopViewModel>();
