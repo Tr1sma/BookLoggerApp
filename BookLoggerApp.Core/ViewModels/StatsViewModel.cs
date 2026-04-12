@@ -431,22 +431,12 @@ public partial class StatsViewModel : ViewModelBase
         // Show up to +5 future levels
         int endLevel = CurrentLevel + 5;
 
-        // Calculate cumulative XP
-        int cumulativeXp = 0;
-        for (int level = 1; level < startLevel; level++)
-        {
-            cumulativeXp += GetXpForLevel(level);
-        }
-
         for (int level = startLevel; level <= endLevel; level++)
         {
-            int xpForThisLevel = GetXpForLevel(level);
-            cumulativeXp += xpForThisLevel;
-
             milestones.Add(new LevelMilestone
             {
                 Level = level,
-                XpRequired = cumulativeXp,
+                XpRequired = GetXpForLevel(level),
                 CoinsReward = level * 50,
                 IsCompleted = level < CurrentLevel,
                 IsCurrent = level == CurrentLevel
