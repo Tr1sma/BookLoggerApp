@@ -1,0 +1,426 @@
+@using ApexCharts
+@using System.Globalization
+@inject BookLoggerApp.Core.ViewModels.StatsTrendsViewModel ViewModel
+
+<div class="stats-tab-content">
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading">Loading statistics...</div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">@ViewModel.ErrorMessage</div>
+    }
+    else
+    {
+        <!-- 1. Lese-Kalender (Heatmap) -->
+        <section class="advanced-stats-section">
+            <div class="advanced-stats-card">
+                <div class="advanced-stats-header">
+                    <h3>Lese-Kalender</h3>
+                    <div class="heatmap-year-nav">
+                        <button class="year-nav-btn" @onclick="() => ChangeYear(ViewModel.HeatmapYear - 1)">&lt;</button>
+                        <span>@ViewModel.HeatmapYear</span>
+                        <button class="year-nav-btn" @onclick="() => ChangeYear(ViewModel.HeatmapYear + 1)"
+                                disabled="@(ViewModel.HeatmapYear >= DateTime.UtcNow.Year)">&gt;</button>
+                    </div>
+                </div>
+
+                <div class="heatmap-container">
+                    <div class="heatmap-day-labels">
+                        <span>Mo</span>
+                        <span>Di</span>
+                        <span>Mi</span>
+                        <span>Do</span>
+                        <span>Fr</span>
+                        <span>Sa</span>
+                        <span>So</span>
+                    </div>
+                    <div class="heatmap-grid" style="grid-template-columns: repeat(@GetWeekCount(), 1fr);">
+                        @foreach (var cell in GetHeatmapCells())
+                        {
+                            <div class="heatmap-cell @(cell.IsEmpty ? "empty" : "")"
+                                 style="grid-row: @cell.Row; grid-column: @cell.Column; background-color: @cell.Color;"
+                                 title="@cell.Tooltip">
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="heatmap-legend">
+                    <span class="heatmap-legend-label">Weniger</span>
+                    <span class="heatmap-legend-cell" style="background-color: #251E15;"></span>
+                    <span class="heatmap-legend-cell" style="background-color: #3D3126;"></span>
+                    <span class="heatmap-legend-cell" style="background-color: #8B7355;"></span>
+                    <span class="heatmap-legend-cell" style="background-color: #C9A97F;"></span>
+                    <span class="heatmap-legend-cell" style="background-color: #D4A574;"></span>
+                    <span class="heatmap-legend-label">Mehr</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Wochentag-Verteilung -->
+        <section class="advanced-stats-section">
+            <div class="advanced-stats-card">
+                <h3>Wochentag-Verteilung</h3>
+                @if (_weekdayChartData.Any())
+                {
+                    <ApexChart TItem="ChartDataPoint"
+                               Options="_weekdayChartOptions"
+                               Height="220">
+                        <ApexPointSeries TItem="ChartDataPoint"
+                                         Items="_weekdayChartData"
+                                         Name="Minuten"
+                                         SeriesType="SeriesType.Bar"
+                                         XValue="e => e.Label"
+                                         YValue="e => e.Value" />
+                    </ApexChart>
+                }
+                else
+                {
+                    <p class="advanced-stats-subtitle">Noch keine Daten vorhanden</p>
+                }
+            </div>
+        </section>
+
+        <!-- 3. Tageszeit-Analyse -->
+        <section class="advanced-stats-section">
+            <div class="advanced-stats-card">
+                <div class="advanced-stats-header">
+                    <h3>Tageszeit-Analyse</h3>
+                    @if (!string.IsNullOrEmpty(ViewModel.TimeOfDayLabel))
+                    {
+                        <span class="time-of-day-badge">@ViewModel.TimeOfDayLabel</span>
+                    }
+                </div>
+
+                @{ int totalTimeOfDay = ViewModel.TimeOfDayData.Values.Sum(); }
+                @if (totalTimeOfDay > 0)
+                {
+                    var dominant = ViewModel.TimeOfDayData.MaxBy(kv => kv.Value).Key;
+                    <div class="time-of-day-grid">
+                        <div class="time-of-day-card @(dominant == "Morning" ? "dominant" : "")">
+                            <span class="time-of-day-icon">🌅</span>
+                            <span class="time-of-day-label">Morgens</span>
+                            <span class="time-of-day-value">@GetPercentage("Morning", totalTimeOfDay)%</span>
+                        </div>
+                        <div class="time-of-day-card @(dominant == "Afternoon" ? "dominant" : "")">
+                            <span class="time-of-day-icon">☀️</span>
+                            <span class="time-of-day-label">Mittags</span>
+                            <span class="time-of-day-value">@GetPercentage("Afternoon", totalTimeOfDay)%</span>
+                        </div>
+                        <div class="time-of-day-card @(dominant == "Evening" ? "dominant" : "")">
+                            <span class="time-of-day-icon">🌙</span>
+                            <span class="time-of-day-label">Abends</span>
+                            <span class="time-of-day-value">@GetPercentage("Evening", totalTimeOfDay)%</span>
+                        </div>
+                        <div class="time-of-day-card @(dominant == "Night" ? "dominant" : "")">
+                            <span class="time-of-day-icon">🦉</span>
+                            <span class="time-of-day-label">Nachts</span>
+                            <span class="time-of-day-value">@GetPercentage("Night", totalTimeOfDay)%</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="advanced-stats-subtitle">Noch keine Daten vorhanden</p>
+                }
+            </div>
+        </section>
+
+        <!-- 4. Session-Längen -->
+        <section class="advanced-stats-section">
+            <div class="advanced-stats-card">
+                <h3>Session-Längen</h3>
+                <p class="advanced-stats-subtitle">Durchschnitt: @ViewModel.AverageSessionMinutes.ToString("F0") min</p>
+                @if (_sessionLengthChartData.Any())
+                {
+                    <ApexChart TItem="ChartDataPoint"
+                               Options="_sessionLengthChartOptions"
+                               Height="220">
+                        <ApexPointSeries TItem="ChartDataPoint"
+                                         Items="_sessionLengthChartData"
+                                         Name="Sessions"
+                                         SeriesType="SeriesType.Bar"
+                                         XValue="e => e.Label"
+                                         YValue="e => e.Value" />
+                    </ApexChart>
+                }
+                else
+                {
+                    <p class="advanced-stats-subtitle">Noch keine Daten vorhanden</p>
+                }
+            </div>
+        </section>
+
+        <!-- 5. Monatlicher Verlauf -->
+        <section class="advanced-stats-section">
+            <div class="advanced-stats-card">
+                <h3>Monatlicher Verlauf</h3>
+                @if (_monthlyChartData.Any())
+                {
+                    <ApexChart TItem="ChartDataPoint"
+                               Options="_monthlyChartOptions"
+                               Height="220">
+                        <ApexPointSeries TItem="ChartDataPoint"
+                                         Items="_monthlyChartData"
+                                         Name="Bücher"
+                                         SeriesType="SeriesType.Bar"
+                                         XValue="e => e.Label"
+                                         YValue="e => e.Value" />
+                    </ApexChart>
+                }
+                else
+                {
+                    <p class="advanced-stats-subtitle">Noch keine Daten vorhanden</p>
+                }
+            </div>
+        </section>
+
+        <!-- 6 + 7. Geschwindigkeit & Lesedauer -->
+        <section class="advanced-stats-section">
+            <div class="compact-stats-row">
+                <!-- 6. Geschwindigkeit -->
+                <div class="compact-stat-card">
+                    <span class="compact-stat-icon">⚡</span>
+                    <span class="compact-stat-label">Geschwindigkeit</span>
+                    <span class="compact-stat-value">@ViewModel.CurrentSpeed.ToString("F0") S/h</span>
+                    @if (ViewModel.SpeedDifference != 0)
+                    {
+                        <span class="compact-stat-trend @(ViewModel.SpeedDifference > 0 ? "positive" : "negative")">
+                            @(ViewModel.SpeedDifference > 0 ? "+" : "")@ViewModel.SpeedDifference.ToString("F0") vs. letzter Monat
+                        </span>
+                    }
+                </div>
+
+                <!-- 7. Lesedauer -->
+                <div class="compact-stat-card">
+                    <span class="compact-stat-icon">📖</span>
+                    <span class="compact-stat-label">Lesedauer</span>
+                    <span class="compact-stat-value">@ViewModel.CurrentFinishDays.ToString("F0") Tage/Buch</span>
+                    @if (ViewModel.FinishDaysDifference != 0)
+                    {
+                        <span class="compact-stat-trend @(ViewModel.FinishDaysDifference < 0 ? "positive" : "negative")">
+                            @(ViewModel.FinishDaysDifference > 0 ? "+" : "")@ViewModel.FinishDaysDifference.ToString("F1") vs. letzter Monat
+                        </span>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    // Chart data model
+    private class ChartDataPoint
+    {
+        public string Label { get; set; } = "";
+        public decimal Value { get; set; }
+    }
+
+    // Heatmap cell model
+    private class HeatmapCell
+    {
+        public int Row { get; set; }
+        public int Column { get; set; }
+        public string Color { get; set; } = "#251E15";
+        public string Tooltip { get; set; } = "";
+        public bool IsEmpty { get; set; }
+    }
+
+    // Chart data lists
+    private List<ChartDataPoint> _weekdayChartData = new();
+    private List<ChartDataPoint> _sessionLengthChartData = new();
+    private List<ChartDataPoint> _monthlyChartData = new();
+
+    // Chart options
+    private ApexChartOptions<ChartDataPoint> _weekdayChartOptions = new();
+    private ApexChartOptions<ChartDataPoint> _sessionLengthChartOptions = new();
+    private ApexChartOptions<ChartDataPoint> _monthlyChartOptions = new();
+
+    // German weekday abbreviations (Monday-first)
+    private static readonly string[] WeekdayLabels = { "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So" };
+
+    // Month abbreviations
+    private static readonly string[] MonthLabels = { "Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        InitializeChartOptions();
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+        BuildChartData();
+    }
+
+    private void InitializeChartOptions()
+    {
+        _weekdayChartOptions = CreateBaseChartOptions();
+        _sessionLengthChartOptions = CreateBaseChartOptions();
+        _monthlyChartOptions = CreateBaseChartOptions();
+    }
+
+    private static ApexChartOptions<ChartDataPoint> CreateBaseChartOptions()
+    {
+        return new ApexChartOptions<ChartDataPoint>
+        {
+            Chart = new Chart
+            {
+                Background = "transparent",
+                ForeColor = "#C9B5A0",
+                Toolbar = new Toolbar { Show = false },
+                Animations = new Animations
+                {
+                    Enabled = true,
+                    Speed = 400
+                }
+            },
+            Colors = new List<string> { "#D4A574" },
+            PlotOptions = new PlotOptions
+            {
+                Bar = new PlotOptionsBar
+                {
+                    BorderRadius = 4,
+                    ColumnWidth = "60%"
+                }
+            },
+            DataLabels = new DataLabels { Enabled = false },
+            Grid = new Grid
+            {
+                BorderColor = "#3D3126",
+                StrokeDashArray = 4
+            },
+            Xaxis = new XAxis
+            {
+                Type = XAxisType.Category,
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = "#C9B5A0", FontSize = "11px" }
+                },
+                AxisTicks = new AxisTicks { Color = "#3D3126" }
+            },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Labels = new YAxisLabels
+                    {
+                        Style = new AxisLabelStyle { Colors = "#C9B5A0", FontSize = "11px" }
+                    }
+                }
+            },
+            Tooltip = new Tooltip
+            {
+                Theme = Mode.Dark
+            }
+        };
+    }
+
+    private void BuildChartData()
+    {
+        // Weekday data (Monday first)
+        DayOfWeek[] orderedDays = { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday,
+                                    DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday };
+
+        _weekdayChartData = orderedDays.Select((day, i) => new ChartDataPoint
+        {
+            Label = WeekdayLabels[i],
+            Value = ViewModel.WeekdayData.GetValueOrDefault(day, 0)
+        }).ToList();
+
+        // Session length data
+        string[] sessionBuckets = { "<15", "15-30", "30-60", "1-2h", ">2h" };
+        string[] sessionLabels = { "<15m", "15-30m", "30-60m", "1-2h", ">2h" };
+
+        _sessionLengthChartData = sessionBuckets.Select((bucket, i) => new ChartDataPoint
+        {
+            Label = sessionLabels[i],
+            Value = ViewModel.SessionLengthData.GetValueOrDefault(bucket, 0)
+        }).ToList();
+
+        // Monthly volume data
+        _monthlyChartData = Enumerable.Range(1, 12).Select(month => new ChartDataPoint
+        {
+            Label = MonthLabels[month - 1],
+            Value = ViewModel.MonthlyVolumeData.GetValueOrDefault(month, 0)
+        }).ToList();
+    }
+
+    private async Task ChangeYear(int year)
+    {
+        await ViewModel.ChangeHeatmapYearCommand.ExecuteAsync(year);
+        StateHasChanged();
+    }
+
+    private int GetWeekCount()
+    {
+        var jan1 = new DateTime(ViewModel.HeatmapYear, 1, 1);
+        var dec31 = new DateTime(ViewModel.HeatmapYear, 12, 31);
+        int isoWeekFirst = ISOWeekOfYear(jan1);
+        int isoWeekLast = ISOWeekOfYear(dec31);
+
+        // Handle week 1 being at the end of the year
+        if (isoWeekLast == 1)
+        {
+            isoWeekLast = ISOWeekOfYear(dec31.AddDays(-7)) + 1;
+        }
+
+        // Some years have 53 weeks
+        return Math.Max(isoWeekLast, 52);
+    }
+
+    private List<HeatmapCell> GetHeatmapCells()
+    {
+        var cells = new List<HeatmapCell>();
+        var jan1 = new DateTime(ViewModel.HeatmapYear, 1, 1);
+        var dec31 = new DateTime(ViewModel.HeatmapYear, 12, 31);
+        int totalWeeks = GetWeekCount();
+
+        for (var date = jan1; date <= dec31; date = date.AddDays(1))
+        {
+            // Row: day of week (Monday=1, Sunday=7)
+            int dayOfWeekMondayBased = ((int)date.DayOfWeek + 6) % 7; // Mon=0 ... Sun=6
+            int row = dayOfWeekMondayBased + 1;
+
+            // Column: week of year (1-based)
+            int dayOfYear = date.DayOfYear;
+            int jan1DayOfWeek = ((int)jan1.DayOfWeek + 6) % 7; // Monday-based
+            int column = (dayOfYear - 1 + jan1DayOfWeek) / 7 + 1;
+
+            int minutes = ViewModel.HeatmapData.GetValueOrDefault(date.Date, 0);
+
+            cells.Add(new HeatmapCell
+            {
+                Row = row,
+                Column = column,
+                Color = GetHeatmapColor(minutes),
+                Tooltip = $"{date:dd.MM.yyyy}: {minutes} min"
+            });
+        }
+
+        return cells;
+    }
+
+    private static string GetHeatmapColor(int minutes)
+    {
+        return minutes switch
+        {
+            0 => "#251E15",
+            <= 15 => "#3D3126",
+            <= 30 => "#8B7355",
+            <= 60 => "#C9A97F",
+            _ => "#D4A574"
+        };
+    }
+
+    private string GetPercentage(string key, int total)
+    {
+        if (total == 0) return "0";
+        int value = ViewModel.TimeOfDayData.GetValueOrDefault(key, 0);
+        return ((double)value / total * 100).ToString("F0", CultureInfo.InvariantCulture);
+    }
+
+    private static int ISOWeekOfYear(DateTime date)
+    {
+        return CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(
+            date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+    }
+}
