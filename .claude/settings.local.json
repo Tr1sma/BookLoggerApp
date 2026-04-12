@@ -33,7 +33,11 @@
       "Bash(ls .config/dotnet-tools.json)",
       "Bash(ls:*)",
       "Read(//c/Users/Tristan/.claude/plans/**)",
-      "Read(//c/Users/Tristan/.claude/**)"
+      "Read(//c/Users/Tristan/.claude/**)",
+      "mcp__obsidian__list-available-vaults",
+      "mcp__obsidian__create-note",
+      "Bash(wc -l /c/Users/Tristan/source/repos/Tr1sma/BookLoggerApp/BookLoggerApp.Core/ViewModels/*.cs)",
+      "mcp__obsidian__delete-note"
     ],
     "deny": [],
     "ask": []
