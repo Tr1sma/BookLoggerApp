@@ -701,27 +701,20 @@
     line-height: 1.2;
 }
 
-/* Filter chips — horizontal scroll */
+/* Filter chips — horizontal scroll, edge-to-edge within card */
 .category-filter-buttons {
     display: flex;
     flex-wrap: nowrap;
     gap: 0.5rem;
-    margin-bottom: 0.6rem;
+    margin: 0 -0.75rem 0.6rem;
+    padding: 0 0.75rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 0 2px;
 }
 
 .category-filter-buttons::-webkit-scrollbar {
     display: none;
-}
-
-.category-filter-buttons::before,
-.category-filter-buttons::after {
-    content: "";
-    flex-shrink: 0;
-    width: 0px;
 }
 
 .category-filter-btn {
