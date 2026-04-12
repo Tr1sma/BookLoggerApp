@@ -35,7 +35,11 @@ public class BookRatingSummary
                 { RatingCategory.SpiceLevel, book.SpiceLevelRating },
                 { RatingCategory.Pacing, book.PacingRating },
                 { RatingCategory.WorldBuilding, book.WorldBuildingRating },
-
+                { RatingCategory.Spannung, book.SpannungRating },
+                { RatingCategory.Humor, book.HumorRating },
+                { RatingCategory.Informationsgehalt, book.InformationsgehaltRating },
+                { RatingCategory.EmotionaleTiefe, book.EmotionaleTiefeRating },
+                { RatingCategory.Atmosphaere, book.AtmosphaereRating },
             }
         };
 

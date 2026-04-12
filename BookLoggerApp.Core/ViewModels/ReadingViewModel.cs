@@ -498,7 +498,12 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
                     { RatingCategory.WritingStyle, Book.WritingStyleRating },
                     { RatingCategory.SpiceLevel, Book.SpiceLevelRating },
                     { RatingCategory.Pacing, Book.PacingRating },
-                    { RatingCategory.WorldBuilding, Book.WorldBuildingRating }
+                    { RatingCategory.WorldBuilding, Book.WorldBuildingRating },
+                    { RatingCategory.Spannung, Book.SpannungRating },
+                    { RatingCategory.Humor, Book.HumorRating },
+                    { RatingCategory.Informationsgehalt, Book.InformationsgehaltRating },
+                    { RatingCategory.EmotionaleTiefe, Book.EmotionaleTiefeRating },
+                    { RatingCategory.Atmosphaere, Book.AtmosphaereRating }
                 }
             };
 

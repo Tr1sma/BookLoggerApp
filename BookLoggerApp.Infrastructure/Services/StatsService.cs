@@ -202,6 +202,11 @@ public class StatsService : IStatsService
                 RatingCategory.SpiceLevel => books.Where(b => b.SpiceLevelRating.HasValue).OrderByDescending(b => b.SpiceLevelRating),
                 RatingCategory.Pacing => books.Where(b => b.PacingRating.HasValue).OrderByDescending(b => b.PacingRating),
                 RatingCategory.WorldBuilding => books.Where(b => b.WorldBuildingRating.HasValue).OrderByDescending(b => b.WorldBuildingRating),
+                RatingCategory.Spannung => books.Where(b => b.SpannungRating.HasValue).OrderByDescending(b => b.SpannungRating),
+                RatingCategory.Humor => books.Where(b => b.HumorRating.HasValue).OrderByDescending(b => b.HumorRating),
+                RatingCategory.Informationsgehalt => books.Where(b => b.InformationsgehaltRating.HasValue).OrderByDescending(b => b.InformationsgehaltRating),
+                RatingCategory.EmotionaleTiefe => books.Where(b => b.EmotionaleTiefeRating.HasValue).OrderByDescending(b => b.EmotionaleTiefeRating),
+                RatingCategory.Atmosphaere => books.Where(b => b.AtmosphaereRating.HasValue).OrderByDescending(b => b.AtmosphaereRating),
                 _ => Enumerable.Empty<Book>()
             };
         }

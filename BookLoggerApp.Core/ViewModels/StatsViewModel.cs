@@ -90,7 +90,20 @@ public partial class StatsViewModel : ViewModelBase
     [ObservableProperty]
     private double _averageWorldBuildingRating;
 
+    [ObservableProperty]
+    private double _averageSpannungRating;
 
+    [ObservableProperty]
+    private double _averageHumorRating;
+
+    [ObservableProperty]
+    private double _averageInformationsgehaltRating;
+
+    [ObservableProperty]
+    private double _averageEmotionaleTiefeRating;
+
+    [ObservableProperty]
+    private double _averageAtmosphaereRating;
 
     [ObservableProperty]
     private Dictionary<RatingCategory, double> _categoryAverages = new();
@@ -179,6 +192,11 @@ public partial class StatsViewModel : ViewModelBase
         AverageSpiceLevelRating = CategoryAverages.GetValueOrDefault(RatingCategory.SpiceLevel, 0);
         AveragePacingRating = CategoryAverages.GetValueOrDefault(RatingCategory.Pacing, 0);
         AverageWorldBuildingRating = CategoryAverages.GetValueOrDefault(RatingCategory.WorldBuilding, 0);
+        AverageSpannungRating = CategoryAverages.GetValueOrDefault(RatingCategory.Spannung, 0);
+        AverageHumorRating = CategoryAverages.GetValueOrDefault(RatingCategory.Humor, 0);
+        AverageInformationsgehaltRating = CategoryAverages.GetValueOrDefault(RatingCategory.Informationsgehalt, 0);
+        AverageEmotionaleTiefeRating = CategoryAverages.GetValueOrDefault(RatingCategory.EmotionaleTiefe, 0);
+        AverageAtmosphaereRating = CategoryAverages.GetValueOrDefault(RatingCategory.Atmosphaere, 0);
 
         // Load top rated books
         var topBooks = await _statsService.GetTopRatedBooksAsync(10);

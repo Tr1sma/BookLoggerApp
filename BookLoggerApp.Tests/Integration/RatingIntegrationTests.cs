@@ -350,7 +350,11 @@ public class RatingIntegrationTests : IDisposable
             SpiceLevelRating = 3,
             PacingRating = 4,
             WorldBuildingRating = 5,
-
+            SpannungRating = 4,
+            HumorRating = 3,
+            InformationsgehaltRating = 5,
+            EmotionaleTiefeRating = 4,
+            AtmosphaereRating = 5,
         };
         await _bookService.AddAsync(book);
 
@@ -361,13 +365,18 @@ public class RatingIntegrationTests : IDisposable
         booksWithRatings.Should().ContainSingle();
         var summary = booksWithRatings[0];
 
-        summary.AverageRating.Should().BeApproximately(4.33, 0.01);
-        summary.Ratings.Should().HaveCount(6);
+        summary.AverageRating.Should().BeApproximately(4.27, 0.01);
+        summary.Ratings.Should().HaveCount(11);
         summary.Ratings[RatingCategory.Characters].Should().Be(5);
         summary.Ratings[RatingCategory.Plot].Should().Be(4);
         summary.Ratings[RatingCategory.WritingStyle].Should().Be(5);
         summary.Ratings[RatingCategory.SpiceLevel].Should().Be(3);
         summary.Ratings[RatingCategory.Pacing].Should().Be(4);
         summary.Ratings[RatingCategory.WorldBuilding].Should().Be(5);
+        summary.Ratings[RatingCategory.Spannung].Should().Be(4);
+        summary.Ratings[RatingCategory.Humor].Should().Be(3);
+        summary.Ratings[RatingCategory.Informationsgehalt].Should().Be(5);
+        summary.Ratings[RatingCategory.EmotionaleTiefe].Should().Be(4);
+        summary.Ratings[RatingCategory.Atmosphaere].Should().Be(5);
     }
 }
