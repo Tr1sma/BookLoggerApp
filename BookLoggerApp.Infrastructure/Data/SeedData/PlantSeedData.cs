@@ -43,7 +43,7 @@ public static class PlantSeedData
             MaxLevel = 11,
             WaterIntervalDays = 4,
             GrowthRate = 1.1,
-            XpBoostPercentage = 0.06m,
+            XpBoostPercentage = 0.08m,
             BaseCost = 600,
             UnlockLevel = 3,
             IsAvailable = true
@@ -58,7 +58,7 @@ public static class PlantSeedData
             MaxLevel = 12,
             WaterIntervalDays = 4,
             GrowthRate = 1.0,
-            XpBoostPercentage = 0.08m,
+            XpBoostPercentage = 0.12m,
             BaseCost = 750,
             UnlockLevel = 8,
             IsAvailable = true
@@ -73,7 +73,7 @@ public static class PlantSeedData
             MaxLevel = 14,
             WaterIntervalDays = 5,
             GrowthRate = 0.9,
-            XpBoostPercentage = 0.09m,
+            XpBoostPercentage = 0.18m,
             BaseCost = 850,
             UnlockLevel = 14,
             IsAvailable = true
@@ -88,7 +88,7 @@ public static class PlantSeedData
             MaxLevel = 15,
             WaterIntervalDays = 7,
             GrowthRate = 0.8,
-            XpBoostPercentage = 0.10m,
+            XpBoostPercentage = 0.25m,
             BaseCost = 1000,
             UnlockLevel = 21,
             IsAvailable = true
@@ -103,7 +103,7 @@ public static class PlantSeedData
             MaxLevel = 18,
             WaterIntervalDays = 8,
             GrowthRate = 0.7,
-            XpBoostPercentage = 0.12m,
+            XpBoostPercentage = 0.35m,
             BaseCost = 1500,
             UnlockLevel = 28,
             IsAvailable = true
@@ -118,7 +118,7 @@ public static class PlantSeedData
             MaxLevel = 20,
             WaterIntervalDays = 10,
             GrowthRate = 0.6,
-            XpBoostPercentage = 0.15m,
+            XpBoostPercentage = 0.50m,
             BaseCost = 2500,
             UnlockLevel = 31,
             IsAvailable = true
@@ -133,7 +133,7 @@ public static class PlantSeedData
             MaxLevel = 25,
             WaterIntervalDays = 14,
             GrowthRate = 0.5,
-            XpBoostPercentage = 0.20m,
+            XpBoostPercentage = 0.75m,
             BaseCost = 5000,
             UnlockLevel = 33,
             IsAvailable = true
