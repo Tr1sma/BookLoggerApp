@@ -237,3 +237,64 @@ Nach jeder Änderung (Feature, Bugfix, Sicherheitspatch) einen Eintrag in `CHANG
 - Project uses latest C# language version (`<LangVersion>latest</LangVersion>`) and .NET 10
 - Key NuGet packages: `ZXing.Net.Maui.Controls` (barcode scanning), `CsvHelper` (CSV import/export)
 - `ApiKeys.cs` is gitignored — copy `ApiKeys.cs.template` from `BookLoggerApp.Infrastructure/Services/` and add your Google Books API key (optional, anonymous access works with rate limits)
+
+## Codebase Knowledge Graph (Obsidian)
+
+Es existiert ein Obsidian Vault unter `C:\Users\Tristan\Documents\Obsidian\codebase-map\`. Dieser Vault enthält eine Markdown-Datei pro Klasse, Service, Component und Page mit `[[wiki-links]]` zu Abhängigkeiten. `Index.md` im Root ist der Einstiegspunkt.
+
+### Vault als primäre Quelle für Abhängigkeiten nutzen
+
+**WICHTIG:** Bevor du Abhängigkeiten, Consumer oder Auswirkungen einer Änderung ermittelst, lies zuerst die zugehörige Vault-Datei (per `Read`-Tool, nicht über den Obsidian-MCP-Server). Die Vault-Dateien enthalten "Depends on"- und "Used by"-Sektionen mit allen Verknüpfungen. Erst wenn die Vault-Datei veraltet oder unvollständig erscheint, greife auf Grep/Glob im Quellcode zurück.
+
+### Ordnerstruktur
+
+| Ordner | Inhalt |
+|---|---|
+| `Models/` | Domain-Entities, DTOs, Result-Objekte, Onboarding-Models |
+| `Enums/` | ReadingStatus, GoalType, PlantStatus, etc. |
+| `Helpers/` | XpCalculator, SpineColorHelper, etc. |
+| `Exceptions/` | BookLoggerException-Hierarchie |
+| `Validators/` | FluentValidation-Validators |
+| `Services/Interfaces/` | Alle `I*Service`-Abstractions |
+| `Services/Implementations/` | Infrastructure-Service-Implementierungen |
+| `Services/MAUI/` | Plattform-spezifische Services (MAUI-Projekt) |
+| `Repositories/` | Generic + spezifische Repositories |
+| `ViewModels/` | Alle ViewModels |
+| `Components/Pages/` | Blazor-Seiten (*.razor.md) |
+| `Components/Layout/` | MainLayout, NavMenu, BottomNavBar |
+| `Components/Shared/` | Wiederverwendbare UI-Komponenten |
+| `Infrastructure/Data/` | AppDbContext, Factory, DbInitializer |
+| `Infrastructure/Configurations/` | EF Core Entity-Konfigurationen |
+| `Infrastructure/SeedData/` | Plant-, Trope-, Decoration-Seeds |
+
+### Regeln — Graph aktuell halten
+
+- **Neue Klasse/Service/Component/Page erstellt →** Erstelle eine passende `.md`-Datei im richtigen Vault-Ordner.
+- **Bestehende Klasse geändert** (neue Dependency, neue Methode, Umbenennung) **→** Aktualisiere die zugehörige Vault-Datei.
+- **Klasse gelöscht →** Lösche auch die Vault-Datei.
+- **Bidirektionale Links pflegen:** Wenn A von B abhängt, steht B in A's "Depends on" UND A in B's "Used by".
+- **Index.md aktualisieren:** Bei neuen oder gelöschten Dateien den Eintrag in `Index.md` ergänzen bzw. entfernen.
+
+### Format pro Datei
+
+```
+# ClassName
+Namespace: `Full.Namespace`
+Zweck: Kurze Beschreibung
+
+## Properties
+- `PropertyName` (Type) — Beschreibung
+
+## Methods
+- `MethodName()` → Kurze Beschreibung
+
+## Depends on
+- [[Dependency1]]
+- [[Dependency2]]
+
+## Used by
+- [[Consumer1]]
+```
+
+Für Blazor-Components zusätzlich: `## Parameters`, `## Injected Services`, `## Child Components`.
+Für Service-Implementierungen zusätzlich: `Implements: [[IInterfaceName]]`, `Lifecycle: Singleton/Transient`.
