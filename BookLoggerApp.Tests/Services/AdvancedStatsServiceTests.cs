@@ -724,55 +724,395 @@ public class AdvancedStatsServiceTests : IDisposable
         currentAvg.Should().Be(7.0);
     }
 
-    // ===== Analysen stubs =====
+    // ===== GetYearComparisonAsync =====
 
     [Fact]
-    public async Task GetYearComparisonAsync_ShouldThrowNotImplemented()
+    public async Task GetYearComparisonAsync_ReturnsStatsForBothYears()
     {
+        // Arrange
+        var book2025 = await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "2025 Book", Author = "Author",
+            Status = ReadingStatus.Completed,
+            DateCompleted = new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc),
+            PageCount = 300,
+            CharactersRating = 5,
+            PlotRating = 4
+        });
+
+        var book2026 = await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "2026 Book", Author = "Author",
+            Status = ReadingStatus.Completed,
+            DateCompleted = new DateTime(2026, 3, 20, 0, 0, 0, DateTimeKind.Utc),
+            PageCount = 400,
+            WritingStyleRating = 5
+        });
+        await _context.SaveChangesAsync();
+
+        // Add sessions for 2025
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book2025.Id,
+            StartedAt = new DateTime(2025, 6, 1, 10, 0, 0, DateTimeKind.Utc),
+            Minutes = 120,
+            PagesRead = 50
+        });
+
+        // Add sessions for 2026
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book2026.Id,
+            StartedAt = new DateTime(2026, 3, 1, 10, 0, 0, DateTimeKind.Utc),
+            Minutes = 180,
+            PagesRead = 75
+        });
+        await _context.SaveChangesAsync();
+
         // Act
-        var act = () => _service.GetYearComparisonAsync(2024, 2025);
+        var (stats2025, stats2026) = await _service.GetYearComparisonAsync(2025, 2026);
 
         // Assert
-        await act.Should().ThrowAsync<NotImplementedException>();
+        stats2025.Year.Should().Be(2025);
+        stats2025.BooksCompleted.Should().Be(1);
+        stats2025.PagesRead.Should().Be(300);
+        stats2025.MinutesRead.Should().Be(120);
+        stats2025.AverageRating.Should().Be(4.5); // (5 + 4) / 2
+
+        stats2026.Year.Should().Be(2026);
+        stats2026.BooksCompleted.Should().Be(1);
+        stats2026.PagesRead.Should().Be(400);
+        stats2026.MinutesRead.Should().Be(180);
+        stats2026.AverageRating.Should().Be(5.0); // Only WritingStyleRating = 5
+    }
+
+    // ===== GetGenreRadarDataAsync =====
+
+    [Fact]
+    public async Task GetGenreRadarDataAsync_ReturnsTopGenres()
+    {
+        // Arrange
+        var fantasyGenre = await _unitOfWork.Genres.AddAsync(new Genre { Name = "Fantasy", Icon = "🧙" });
+        var mysteryGenre = await _unitOfWork.Genres.AddAsync(new Genre { Name = "Mystery", Icon = "🔍" });
+        var scifiGenre = await _unitOfWork.Genres.AddAsync(new Genre { Name = "Sci-Fi", Icon = "🚀" });
+        await _context.SaveChangesAsync();
+
+        var book1 = await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Book 1", Author = "Author",
+            Status = ReadingStatus.Completed
+        });
+        var book2 = await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Book 2", Author = "Author",
+            Status = ReadingStatus.Completed
+        });
+        var book3 = await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Book 3", Author = "Author",
+            Status = ReadingStatus.Completed
+        });
+        var uncompletedBook = await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Planned Book", Author = "Author",
+            Status = ReadingStatus.Planned
+        });
+        await _context.SaveChangesAsync();
+
+        // Book1: Fantasy, Mystery (2 genres, count as 1 book)
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book1.Id, GenreId = fantasyGenre.Id });
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book1.Id, GenreId = mysteryGenre.Id });
+
+        // Book2: Fantasy, Sci-Fi
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book2.Id, GenreId = fantasyGenre.Id });
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book2.Id, GenreId = scifiGenre.Id });
+
+        // Book3: Mystery
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book3.Id, GenreId = mysteryGenre.Id });
+
+        // UncompletedBook: Fantasy (should be excluded)
+        await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = uncompletedBook.Id, GenreId = fantasyGenre.Id });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _service.GetGenreRadarDataAsync(maxGenres: 8);
+
+        // Assert
+        result.Should().HaveCount(3);
+        result["Fantasy"].Should().Be(2); // Book1, Book2
+        result["Mystery"].Should().Be(2); // Book1, Book3
+        result["Sci-Fi"].Should().Be(1);  // Book2
+    }
+
+    // ===== GetCompletionRateAsync =====
+
+    [Fact]
+    public async Task GetCompletionRateAsync_CountsCorrectly()
+    {
+        // Arrange
+        await _unitOfWork.Books.AddAsync(new Book { Title = "Completed 1", Author = "Author", Status = ReadingStatus.Completed });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "Completed 2", Author = "Author", Status = ReadingStatus.Completed });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "Abandoned 1", Author = "Author", Status = ReadingStatus.Abandoned });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "Reading", Author = "Author", Status = ReadingStatus.Reading });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "Planned", Author = "Author", Status = ReadingStatus.Planned });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var (completed, abandoned) = await _service.GetCompletionRateAsync();
+
+        // Assert
+        completed.Should().Be(2);
+        abandoned.Should().Be(1);
     }
 
     [Fact]
-    public async Task GetGenreRadarDataAsync_ShouldThrowNotImplemented()
+    public async Task GetCompletionRateAsync_EmptyData_ReturnsZeros()
     {
         // Act
-        var act = () => _service.GetGenreRadarDataAsync();
+        var (completed, abandoned) = await _service.GetCompletionRateAsync();
 
         // Assert
-        await act.Should().ThrowAsync<NotImplementedException>();
+        completed.Should().Be(0);
+        abandoned.Should().Be(0);
+    }
+
+    // ===== GetPageCountDistributionAsync =====
+
+    [Fact]
+    public async Task GetPageCountDistributionAsync_BucketsCorrectly()
+    {
+        // Arrange
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Short", Author = "Author",
+            Status = ReadingStatus.Completed,
+            PageCount = 150
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Medium 1", Author = "Author",
+            Status = ReadingStatus.Completed,
+            PageCount = 350
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Medium 2", Author = "Author",
+            Status = ReadingStatus.Completed,
+            PageCount = 200
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Long 1", Author = "Author",
+            Status = ReadingStatus.Completed,
+            PageCount = 500
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Long 2", Author = "Author",
+            Status = ReadingStatus.Completed,
+            PageCount = 800
+        });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _service.GetPageCountDistributionAsync();
+
+        // Assert
+        result.Should().HaveCount(4);
+        result["<200"].Should().Be(1);   // 150
+        result["200-400"].Should().Be(2); // 350, 200
+        result["400-600"].Should().Be(1); // 500
+        result[">600"].Should().Be(1);    // 800
     }
 
     [Fact]
-    public async Task GetCompletionRateAsync_ShouldThrowNotImplemented()
+    public async Task GetPageCountDistributionAsync_AllKeysPresent_WhenEmpty()
     {
         // Act
-        var act = () => _service.GetCompletionRateAsync();
+        var result = await _service.GetPageCountDistributionAsync();
 
         // Assert
-        await act.Should().ThrowAsync<NotImplementedException>();
+        result.Should().HaveCount(4);
+        result["<200"].Should().Be(0);
+        result["200-400"].Should().Be(0);
+        result["400-600"].Should().Be(0);
+        result[">600"].Should().Be(0);
+    }
+
+    // ===== GetTopAuthorsAsync =====
+
+    [Fact]
+    public async Task GetTopAuthorsAsync_RanksByBookCount()
+    {
+        // Arrange
+        // Sanderson: 2 books, 800 pages total
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Mistborn 1", Author = "Brandon Sanderson",
+            Status = ReadingStatus.Completed,
+            PageCount = 400
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Mistborn 2", Author = "Brandon Sanderson",
+            Status = ReadingStatus.Completed,
+            PageCount = 400
+        });
+
+        // King: 1 book, 450 pages
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "The Stand", Author = "Stephen King",
+            Status = ReadingStatus.Completed,
+            PageCount = 450
+        });
+
+        // Martin: 2 books, 900 pages
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "AGOT", Author = "George R.R. Martin",
+            Status = ReadingStatus.Completed,
+            PageCount = 500
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "ACOK", Author = "George R.R. Martin",
+            Status = ReadingStatus.Completed,
+            PageCount = 400
+        });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _service.GetTopAuthorsAsync(count: 5);
+
+        // Assert
+        result.Should().HaveCount(3);
+        result[0].Author.Should().Be("George R.R. Martin");
+        result[0].BookCount.Should().Be(2);
+        result[0].TotalPages.Should().Be(900);
+
+        result[1].Author.Should().Be("Brandon Sanderson");
+        result[1].BookCount.Should().Be(2);
+        result[1].TotalPages.Should().Be(800);
+
+        result[2].Author.Should().Be("Stephen King");
+        result[2].BookCount.Should().Be(1);
+        result[2].TotalPages.Should().Be(450);
     }
 
     [Fact]
-    public async Task GetPageCountDistributionAsync_ShouldThrowNotImplemented()
+    public async Task GetTopAuthorsAsync_RanksSecondaryByPages()
     {
+        // Arrange
+        // Author1: 1 book, 500 pages
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Book A", Author = "Author1",
+            Status = ReadingStatus.Completed,
+            PageCount = 500
+        });
+
+        // Author2: 1 book, 300 pages
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Book B", Author = "Author2",
+            Status = ReadingStatus.Completed,
+            PageCount = 300
+        });
+        await _context.SaveChangesAsync();
+
         // Act
-        var act = () => _service.GetPageCountDistributionAsync();
+        var result = await _service.GetTopAuthorsAsync(count: 5);
 
         // Assert
-        await act.Should().ThrowAsync<NotImplementedException>();
+        result.Should().HaveCount(2);
+        result[0].Author.Should().Be("Author1");
+        result[0].TotalPages.Should().Be(500);
+        result[1].Author.Should().Be("Author2");
+        result[1].TotalPages.Should().Be(300);
     }
 
     [Fact]
-    public async Task GetTopAuthorsAsync_ShouldThrowNotImplemented()
+    public async Task GetTopAuthorsAsync_IgnoresNonCompletedBooks()
     {
+        // Arrange
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Completed", Author = "Active Author",
+            Status = ReadingStatus.Completed,
+            PageCount = 300
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Reading", Author = "Active Author",
+            Status = ReadingStatus.Reading,
+            PageCount = 200
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "Planned", Author = "Inactive Author",
+            Status = ReadingStatus.Planned,
+            PageCount = 400
+        });
+        await _context.SaveChangesAsync();
+
         // Act
-        var act = () => _service.GetTopAuthorsAsync();
+        var result = await _service.GetTopAuthorsAsync(count: 5);
 
         // Assert
-        await act.Should().ThrowAsync<NotImplementedException>();
+        result.Should().HaveCount(1);
+        result[0].Author.Should().Be("Active Author");
+        result[0].BookCount.Should().Be(1);
+        result[0].TotalPages.Should().Be(300);
+    }
+
+    [Fact]
+    public async Task GetTopAuthorsAsync_HandlesMissingPages()
+    {
+        // Arrange
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "No Pages", Author = "Author1",
+            Status = ReadingStatus.Completed,
+            PageCount = null
+        });
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "With Pages", Author = "Author1",
+            Status = ReadingStatus.Completed,
+            PageCount = 300
+        });
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _service.GetTopAuthorsAsync(count: 5);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result[0].Author.Should().Be("Author1");
+        result[0].BookCount.Should().Be(2);
+        result[0].TotalPages.Should().Be(300); // null treated as 0
+    }
+
+    [Fact]
+    public async Task GetTopAuthorsAsync_RespectCountParameter()
+    {
+        // Arrange
+        for (int i = 1; i <= 10; i++)
+        {
+            await _unitOfWork.Books.AddAsync(new Book
+            {
+                Title = $"Book {i}", Author = $"Author {i}",
+                Status = ReadingStatus.Completed,
+                PageCount = 100 * i
+            });
+        }
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _service.GetTopAuthorsAsync(count: 3);
+
+        // Assert
+        result.Should().HaveCount(3);
     }
 }

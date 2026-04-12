@@ -174,34 +174,127 @@ public class AdvancedStatsService : IAdvancedStatsService
         return (Math.Round(currentAvg, 1), Math.Round(previousAvg, 1));
     }
 
-    // ===== Analysen tab (stubs) =====
+    // ===== Analysen tab =====
 
-    public Task<(YearStats Year1, YearStats Year2)> GetYearComparisonAsync(int year1, int year2, CancellationToken ct = default)
+    public async Task<(YearStats Year1, YearStats Year2)> GetYearComparisonAsync(int year1, int year2, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var stats1 = await BuildYearStatsAsync(year1, ct);
+        var stats2 = await BuildYearStatsAsync(year2, ct);
+        return (stats1, stats2);
     }
 
-    public Task<Dictionary<string, int>> GetGenreRadarDataAsync(int maxGenres = 8, CancellationToken ct = default)
+    public async Task<Dictionary<string, int>> GetGenreRadarDataAsync(int maxGenres = 8, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        var completedBookIds = books
+            .Where(b => b.Status == ReadingStatus.Completed)
+            .Select(b => b.Id)
+            .ToHashSet();
+
+        var bookGenres = await _unitOfWork.BookGenres.GetAllAsync(ct);
+        var genres = await _unitOfWork.Genres.GetAllAsync(ct);
+        var genreLookup = genres.ToDictionary(g => g.Id, g => g.Name);
+
+        var result = bookGenres
+            .Where(bg => completedBookIds.Contains(bg.BookId))
+            .GroupBy(bg => genreLookup.TryGetValue(bg.GenreId, out var name) ? name : "Unknown")
+            .GroupBy(g => g.Key)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Sum(x => x.Count())
+            )
+            .OrderByDescending(kvp => kvp.Value)
+            .Take(maxGenres)
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        return result;
     }
 
-    public Task<(int Completed, int Abandoned)> GetCompletionRateAsync(CancellationToken ct = default)
+    public async Task<(int Completed, int Abandoned)> GetCompletionRateAsync(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var books = await _unitOfWork.Books.GetAllAsync(ct);
+
+        var completed = books.Count(b => b.Status == ReadingStatus.Completed);
+        var abandoned = books.Count(b => b.Status == ReadingStatus.Abandoned);
+
+        return (completed, abandoned);
     }
 
-    public Task<Dictionary<string, int>> GetPageCountDistributionAsync(CancellationToken ct = default)
+    public async Task<Dictionary<string, int>> GetPageCountDistributionAsync(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var books = await _unitOfWork.Books.GetAllAsync(ct);
+
+        var result = new Dictionary<string, int>
+        {
+            { "<200", 0 },
+            { "200-400", 0 },
+            { "400-600", 0 },
+            { ">600", 0 }
+        };
+
+        foreach (var book in books.Where(b => b.Status == ReadingStatus.Completed && b.PageCount.HasValue))
+        {
+            string bucket = book.PageCount!.Value switch
+            {
+                < 200 => "<200",
+                < 400 => "200-400",
+                < 600 => "400-600",
+                _ => ">600"
+            };
+            result[bucket]++;
+        }
+
+        return result;
     }
 
-    public Task<List<AuthorStats>> GetTopAuthorsAsync(int count = 5, CancellationToken ct = default)
+    public async Task<List<AuthorStats>> GetTopAuthorsAsync(int count = 5, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var books = await _unitOfWork.Books.GetAllAsync(ct);
+
+        var result = books
+            .Where(b => b.Status == ReadingStatus.Completed && !string.IsNullOrWhiteSpace(b.Author))
+            .GroupBy(b => b.Author)
+            .Select(g => new AuthorStats(
+                g.Key,
+                g.Count(),
+                g.Sum(b => b.PageCount ?? 0)
+            ))
+            .OrderByDescending(a => a.BookCount)
+            .ThenByDescending(a => a.TotalPages)
+            .Take(count)
+            .ToList();
+
+        return result;
     }
 
     // ===== Private helpers =====
+
+    private async Task<YearStats> BuildYearStatsAsync(int year, CancellationToken ct = default)
+    {
+        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+
+        var completedBooks = books
+            .Where(b => b.Status == ReadingStatus.Completed && b.DateCompleted.HasValue && b.DateCompleted.Value.Year == year)
+            .ToList();
+
+        int booksCompleted = completedBooks.Count;
+        int pagesRead = completedBooks.Sum(b => b.PageCount ?? 0);
+
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate);
+        int minutesRead = sessions.Sum(s => s.Minutes);
+
+        double averageRating = completedBooks
+            .Where(b => b.AverageRating.HasValue)
+            .Any()
+            ? Math.Round(completedBooks
+                .Where(b => b.AverageRating.HasValue)
+                .Average(b => b.AverageRating!.Value), 1)
+            : 0;
+
+        return new YearStats(year, booksCompleted, pagesRead, minutesRead, averageRating);
+    }
 
     private static double CalculateSpeed(List<ReadingSession> sessions)
     {
