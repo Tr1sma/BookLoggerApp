@@ -37,7 +37,18 @@
       "mcp__obsidian__list-available-vaults",
       "mcp__obsidian__create-note",
       "Bash(wc -l /c/Users/Tristan/source/repos/Tr1sma/BookLoggerApp/BookLoggerApp.Core/ViewModels/*.cs)",
-      "mcp__obsidian__delete-note"
+      "mcp__obsidian__delete-note",
+      "Bash(awk '/\\\\.stats-chips[^-]/,/^[[:space:]]*$/' /c/Users/Tristan/source/repos/Tr1sma/BookLoggerApp/BookLoggerApp/wwwroot/css/stats.css)",
+      "Bash(bash:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(dotnet ildasm:*)",
+      "Bash(cat)",
+      "Bash(powershell.exe -Command \"[System.Reflection.Assembly]::LoadFrom\\('C:/Users/Tristan/.nuget/packages/blazor-apexcharts/6.1.0/lib/net10.0/Blazor-ApexCharts.dll'\\); [Enum]::GetNames\\([ApexCharts.SeriesType]\\)\")",
+      "Bash(powershell.exe:*)"
     ],
     "deny": [],
     "ask": []

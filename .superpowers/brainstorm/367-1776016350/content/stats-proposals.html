@@ -1,0 +1,173 @@
+<h2>Erweiterte Statistiken — Vorschläge</h2>
+<p class="subtitle">Wähle alle Statistiken aus, die du haben möchtest. Deine 3 Ideen + meine Vorschläge.</p>
+
+<h3>🟢 Deine Ideen</h3>
+<div class="options" data-multiselect>
+  <div class="option" data-choice="heatmap" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Heatmap-Kalender</h3>
+      <p>GitHub-Style Contributions-Kalender — zeigt welche Tage gelesen wurde, Farbintensität = Lesedauer</p>
+      <div style="margin-top:10px; display:flex; gap:3px; flex-wrap:wrap; max-width:280px;">
+        <div style="width:14px;height:14px;border-radius:2px;background:#1a1208;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#4a3520;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#8b6914;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#1a1208;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#c4943a;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#8b6914;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#1a1208;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#4a3520;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#c4943a;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#e8b94a;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#8b6914;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#1a1208;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#4a3520;"></div>
+        <div style="width:14px;height:14px;border-radius:2px;background:#1a1208;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="speed-trend" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Lese-Geschwindigkeit Trend</h3>
+      <p>Seiten/Stunde als Liniendiagramm über die Zeit — zeigt ob du schneller oder langsamer wirst</p>
+      <div style="margin-top:10px; height:40px; display:flex; align-items:flex-end; gap:2px;">
+        <div style="width:8px;height:20px;background:linear-gradient(to top,#8b6914,#c4943a);border-radius:2px;"></div>
+        <div style="width:8px;height:25px;background:linear-gradient(to top,#8b6914,#c4943a);border-radius:2px;"></div>
+        <div style="width:8px;height:18px;background:linear-gradient(to top,#8b6914,#c4943a);border-radius:2px;"></div>
+        <div style="width:8px;height:30px;background:linear-gradient(to top,#8b6914,#c4943a);border-radius:2px;"></div>
+        <div style="width:8px;height:28px;background:linear-gradient(to top,#8b6914,#c4943a);border-radius:2px;"></div>
+        <div style="width:8px;height:35px;background:linear-gradient(to top,#8b6914,#c4943a);border-radius:2px;"></div>
+        <div style="width:8px;height:32px;background:linear-gradient(to top,#8b6914,#e8b94a);border-radius:2px;"></div>
+        <div style="width:8px;height:38px;background:linear-gradient(to top,#8b6914,#e8b94a);border-radius:2px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="year-compare" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Jahresvergleich</h3>
+      <p>Zwei Jahre nebeneinander vergleichen — Bücher, Seiten, Lesezeit, Bewertungen, Genres</p>
+      <div style="margin-top:10px; display:flex; gap:16px; font-size:12px; color:#a0937e;">
+        <div><strong style="color:#c4943a;">2025</strong><br>12 Bücher · 3400 S.</div>
+        <div style="color:#555;">vs</div>
+        <div><strong style="color:#e8b94a;">2026</strong><br>8 Bücher · 2100 S.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top:32px;">🆕 Meine Vorschläge — Lesegewohnheiten</h3>
+<div class="options" data-multiselect>
+  <div class="option" data-choice="weekday-dist" onclick="toggleSelect(this)">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>Wochentag-Verteilung</h3>
+      <p>Balkendiagramm: An welchen Wochentagen liest du am meisten? (Mo–So)</p>
+      <div style="margin-top:10px; display:flex; align-items:flex-end; gap:6px; height:40px;">
+        <div style="text-align:center;font-size:9px;color:#a0937e;">
+          <div style="width:20px;height:15px;background:#4a3520;border-radius:2px;margin-bottom:2px;"></div>Mo
+        </div>
+        <div style="text-align:center;font-size:9px;color:#a0937e;">
+          <div style="width:20px;height:22px;background:#8b6914;border-radius:2px;margin-bottom:2px;"></div>Di
+        </div>
+        <div style="text-align:center;font-size:9px;color:#a0937e;">
+          <div style="width:20px;height:12px;background:#4a3520;border-radius:2px;margin-bottom:2px;"></div>Mi
+        </div>
+        <div style="text-align:center;font-size:9px;color:#a0937e;">
+          <div style="width:20px;height:18px;background:#8b6914;border-radius:2px;margin-bottom:2px;"></div>Do
+        </div>
+        <div style="text-align:center;font-size:9px;color:#a0937e;">
+          <div style="width:20px;height:25px;background:#c4943a;border-radius:2px;margin-bottom:2px;"></div>Fr
+        </div>
+        <div style="text-align:center;font-size:9px;color:#a0937e;">
+          <div style="width:20px;height:38px;background:#e8b94a;border-radius:2px;margin-bottom:2px;"></div>Sa
+        </div>
+        <div style="text-align:center;font-size:9px;color:#a0937e;">
+          <div style="width:20px;height:35px;background:#e8b94a;border-radius:2px;margin-bottom:2px;"></div>So
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="time-of-day" onclick="toggleSelect(this)">
+    <div class="letter">5</div>
+    <div class="content">
+      <h3>Tageszeit-Analyse</h3>
+      <p>Wann liest du? Morgens / Mittags / Abends / Nachts — mit Label wie "Nachteule 🦉" oder "Frühleser 🌅"</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="avg-finish-time" onclick="toggleSelect(this)">
+    <div class="letter">6</div>
+    <div class="content">
+      <h3>Durchschnittliche Lesedauer pro Buch</h3>
+      <p>Wie viele Tage brauchst du im Schnitt um ein Buch zu beenden? Trend über Zeit.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="session-distribution" onclick="toggleSelect(this)">
+    <div class="letter">7</div>
+    <div class="content">
+      <h3>Session-Längen Verteilung</h3>
+      <p>Histogramm: Wie lang sind deine typischen Lese-Sessions? (15min, 30min, 1h, ...)</p>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top:32px;">🆕 Meine Vorschläge — Buch-Analysen</h3>
+<div class="options" data-multiselect>
+  <div class="option" data-choice="monthly-volume" onclick="toggleSelect(this)">
+    <div class="letter">8</div>
+    <div class="content">
+      <h3>Monatlicher Leseverlauf</h3>
+      <p>Balkendiagramm mit gelesenen Büchern/Seiten pro Monat — zeigt saisonale Muster</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="rating-evolution" onclick="toggleSelect(this)">
+    <div class="letter">9</div>
+    <div class="content">
+      <h3>Bewertungs-Trend</h3>
+      <p>Werden deine Bewertungen über die Zeit strenger oder milder? Linie der Durchschnittsbewertung pro Monat.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="genre-radar" onclick="toggleSelect(this)">
+    <div class="letter">10</div>
+    <div class="content">
+      <h3>Genre-Radar</h3>
+      <p>Spinnennetz-/Radardiagramm deiner Genre-Verteilung — zeigt auf einen Blick dein Leseprofil</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="completion-rate" onclick="toggleSelect(this)">
+    <div class="letter">11</div>
+    <div class="content">
+      <h3>Abschlussquote</h3>
+      <p>% der angefangenen Bücher, die abgeschlossen vs. abgebrochen wurden. Donut-Chart.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="page-count-dist" onclick="toggleSelect(this)">
+    <div class="letter">12</div>
+    <div class="content">
+      <h3>Buchlängen-Vorliebe</h3>
+      <p>Verteilung der gelesenen Bücher nach Seitenzahl-Bereichen (kurz/mittel/lang/episch)</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="top-authors" onclick="toggleSelect(this)">
+    <div class="letter">13</div>
+    <div class="content">
+      <h3>Meistgelesene Autoren</h3>
+      <p>Ranking der Autoren nach Anzahl gelesener Bücher — zeigt Lieblings-Autoren</p>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px; padding:16px; background:rgba(200,160,60,0.08); border-radius:12px; border:1px solid rgba(200,160,60,0.15);">
+  <p style="margin:0; color:#a0937e; font-size:13px;">💡 Klicke alle an, die du haben möchtest. Die 3 Gruppen sind unabhängig voneinander — du kannst aus jeder Gruppe frei wählen.</p>
+</div>

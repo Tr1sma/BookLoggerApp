@@ -1,0 +1,317 @@
+<h2>Mockup: Trends-Tab</h2>
+<p class="subtitle">So sieht der "Trends"-Tab aus. Scrollbare Seite mit allen 7 Trend-Statistiken.</p>
+
+<div style="max-width:420px; margin:0 auto; background:#1a1208; border-radius:20px; overflow:hidden; border:1px solid rgba(200,160,60,0.15); font-family:-apple-system,sans-serif;">
+
+  <!-- Tab Bar -->
+  <div style="display:flex; background:#231a0e; border-bottom:1px solid rgba(200,160,60,0.12); padding:0 8px;">
+    <div style="flex:1; text-align:center; padding:12px 4px; color:#a0937e; font-size:13px; border-bottom:2px solid transparent;">Übersicht</div>
+    <div style="flex:1; text-align:center; padding:12px 4px; color:#e8b94a; font-size:13px; font-weight:600; border-bottom:2px solid #e8b94a;">Trends</div>
+    <div style="flex:1; text-align:center; padding:12px 4px; color:#a0937e; font-size:13px; border-bottom:2px solid transparent;">Analysen</div>
+  </div>
+
+  <div style="padding:16px; display:flex; flex-direction:column; gap:16px;">
+
+    <!-- 1. Heatmap Calendar -->
+    <div style="background:#231a0e; border-radius:16px; padding:16px; border:1px solid rgba(200,160,60,0.08);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="color:#f0e6d3; font-size:15px; font-weight:600;">Lese-Kalender</div>
+        <div style="color:#a0937e; font-size:12px;">2026</div>
+      </div>
+      <!-- Month labels -->
+      <div style="display:flex; gap:2px; margin-bottom:4px; padding-left:28px;">
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">J</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">F</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">M</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">A</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">M</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">J</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">J</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">A</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">S</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">O</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">N</div>
+        <div style="width:10px; font-size:7px; color:#a0937e; text-align:center;">D</div>
+      </div>
+      <!-- Heatmap grid -->
+      <div style="display:flex; gap:3px;">
+        <div style="display:flex; flex-direction:column; gap:2px; font-size:7px; color:#a0937e; padding-right:4px;">
+          <div style="height:10px; line-height:10px;">Mo</div>
+          <div style="height:10px; line-height:10px;"></div>
+          <div style="height:10px; line-height:10px;">Mi</div>
+          <div style="height:10px; line-height:10px;"></div>
+          <div style="height:10px; line-height:10px;">Fr</div>
+          <div style="height:10px; line-height:10px;"></div>
+          <div style="height:10px; line-height:10px;">So</div>
+        </div>
+        <div style="display:flex; gap:2px; flex-wrap:wrap; flex:1;">
+          <!-- Simulated heatmap cells - 7 rows x ~52 columns (showing subset) -->
+          <div style="display:grid; grid-template-columns:repeat(20,10px); grid-template-rows:repeat(7,10px); gap:2px;">
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Legend -->
+      <div style="display:flex; align-items:center; gap:6px; margin-top:10px; justify-content:flex-end;">
+        <span style="font-size:10px; color:#a0937e;">Weniger</span>
+        <div style="width:10px;height:10px;border-radius:2px;background:#2a1f10;"></div>
+        <div style="width:10px;height:10px;border-radius:2px;background:#4a3520;"></div>
+        <div style="width:10px;height:10px;border-radius:2px;background:#8b6914;"></div>
+        <div style="width:10px;height:10px;border-radius:2px;background:#c4943a;"></div>
+        <div style="width:10px;height:10px;border-radius:2px;background:#e8b94a;"></div>
+        <span style="font-size:10px; color:#a0937e;">Mehr</span>
+      </div>
+    </div>
+
+    <!-- 2. Wochentag-Verteilung -->
+    <div style="background:#231a0e; border-radius:16px; padding:16px; border:1px solid rgba(200,160,60,0.08);">
+      <div style="color:#f0e6d3; font-size:15px; font-weight:600; margin-bottom:12px;">Wochentag-Verteilung</div>
+      <div style="display:flex; align-items:flex-end; gap:8px; height:80px; padding-bottom:4px;">
+        <div style="flex:1; text-align:center;">
+          <div style="height:25px; background:linear-gradient(to top,#4a3520,#8b6914); border-radius:4px 4px 0 0; margin-bottom:4px;"></div>
+          <div style="font-size:10px; color:#a0937e;">Mo</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="height:35px; background:linear-gradient(to top,#4a3520,#8b6914); border-radius:4px 4px 0 0; margin-bottom:4px;"></div>
+          <div style="font-size:10px; color:#a0937e;">Di</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="height:20px; background:linear-gradient(to top,#4a3520,#8b6914); border-radius:4px 4px 0 0; margin-bottom:4px;"></div>
+          <div style="font-size:10px; color:#a0937e;">Mi</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="height:30px; background:linear-gradient(to top,#4a3520,#8b6914); border-radius:4px 4px 0 0; margin-bottom:4px;"></div>
+          <div style="font-size:10px; color:#a0937e;">Do</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="height:40px; background:linear-gradient(to top,#4a3520,#c4943a); border-radius:4px 4px 0 0; margin-bottom:4px;"></div>
+          <div style="font-size:10px; color:#a0937e;">Fr</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="height:65px; background:linear-gradient(to top,#8b6914,#e8b94a); border-radius:4px 4px 0 0; margin-bottom:4px;"></div>
+          <div style="font-size:10px; color:#e8b94a; font-weight:600;">Sa</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="height:58px; background:linear-gradient(to top,#8b6914,#e8b94a); border-radius:4px 4px 0 0; margin-bottom:4px;"></div>
+          <div style="font-size:10px; color:#a0937e;">So</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Tageszeit-Analyse -->
+    <div style="background:#231a0e; border-radius:16px; padding:16px; border:1px solid rgba(200,160,60,0.08);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="color:#f0e6d3; font-size:15px; font-weight:600;">Tageszeit</div>
+        <div style="background:linear-gradient(135deg,#3a2a15,#4a3520); padding:4px 10px; border-radius:12px; font-size:12px; color:#e8b94a;">Nachteule 🦉</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <div style="flex:1; background:#2a1f10; border-radius:10px; padding:10px; text-align:center;">
+          <div style="font-size:18px; margin-bottom:2px;">🌅</div>
+          <div style="font-size:11px; color:#a0937e;">Morgens</div>
+          <div style="font-size:14px; color:#c4943a; font-weight:600;">12%</div>
+        </div>
+        <div style="flex:1; background:#2a1f10; border-radius:10px; padding:10px; text-align:center;">
+          <div style="font-size:18px; margin-bottom:2px;">☀️</div>
+          <div style="font-size:11px; color:#a0937e;">Mittags</div>
+          <div style="font-size:14px; color:#c4943a; font-weight:600;">8%</div>
+        </div>
+        <div style="flex:1; background:#3a2a15; border-radius:10px; padding:10px; text-align:center; border:1px solid rgba(232,185,74,0.2);">
+          <div style="font-size:18px; margin-bottom:2px;">🌙</div>
+          <div style="font-size:11px; color:#e8b94a;">Abends</div>
+          <div style="font-size:14px; color:#e8b94a; font-weight:700;">55%</div>
+        </div>
+        <div style="flex:1; background:#2a1f10; border-radius:10px; padding:10px; text-align:center;">
+          <div style="font-size:18px; margin-bottom:2px;">🦉</div>
+          <div style="font-size:11px; color:#a0937e;">Nachts</div>
+          <div style="font-size:14px; color:#c4943a; font-weight:600;">25%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Session-Längen -->
+    <div style="background:#231a0e; border-radius:16px; padding:16px; border:1px solid rgba(200,160,60,0.08);">
+      <div style="color:#f0e6d3; font-size:15px; font-weight:600; margin-bottom:4px;">Session-Längen</div>
+      <div style="color:#a0937e; font-size:12px; margin-bottom:12px;">Durchschnitt: 42 Min.</div>
+      <div style="display:flex; align-items:flex-end; gap:4px; height:60px;">
+        <div style="flex:1; text-align:center;">
+          <div style="height:20px; background:#4a3520; border-radius:3px 3px 0 0; margin-bottom:3px;"></div>
+          <div style="font-size:8px; color:#a0937e;">&lt;15</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="height:45px; background:#8b6914; border-radius:3px 3px 0 0; margin-bottom:3px;"></div>
+          <div style="font-size:8px; color:#a0937e;">15-30</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="height:55px; background:#e8b94a; border-radius:3px 3px 0 0; margin-bottom:3px;"></div>
+          <div style="font-size:8px; color:#e8b94a;">30-60</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="height:30px; background:#8b6914; border-radius:3px 3px 0 0; margin-bottom:3px;"></div>
+          <div style="font-size:8px; color:#a0937e;">1-2h</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="height:10px; background:#4a3520; border-radius:3px 3px 0 0; margin-bottom:3px;"></div>
+          <div style="font-size:8px; color:#a0937e;">&gt;2h</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Monatlicher Leseverlauf -->
+    <div style="background:#231a0e; border-radius:16px; padding:16px; border:1px solid rgba(200,160,60,0.08);">
+      <div style="color:#f0e6d3; font-size:15px; font-weight:600; margin-bottom:4px;">Monatlicher Verlauf</div>
+      <div style="color:#a0937e; font-size:12px; margin-bottom:12px;">Bücher abgeschlossen pro Monat</div>
+      <div style="display:flex; align-items:flex-end; gap:4px; height:70px;">
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:9px; color:#c4943a; margin-bottom:2px;">2</div>
+          <div style="height:28px; background:linear-gradient(to top,#4a3520,#8b6914); border-radius:3px 3px 0 0; margin-bottom:3px;"></div>
+          <div style="font-size:8px; color:#a0937e;">Jan</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:9px; color:#c4943a; margin-bottom:2px;">3</div>
+          <div style="height:42px; background:linear-gradient(to top,#4a3520,#c4943a); border-radius:3px 3px 0 0; margin-bottom:3px;"></div>
+          <div style="font-size:8px; color:#a0937e;">Feb</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:9px; color:#c4943a; margin-bottom:2px;">1</div>
+          <div style="height:14px; background:linear-gradient(to top,#4a3520,#8b6914); border-radius:3px 3px 0 0; margin-bottom:3px;"></div>
+          <div style="font-size:8px; color:#a0937e;">Mär</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:9px; color:#e8b94a; margin-bottom:2px;">4</div>
+          <div style="height:56px; background:linear-gradient(to top,#8b6914,#e8b94a); border-radius:3px 3px 0 0; margin-bottom:3px;"></div>
+          <div style="font-size:8px; color:#e8b94a;">Apr</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:9px; color:#a0937e; margin-bottom:2px;">—</div>
+          <div style="height:0px; margin-bottom:3px;"></div>
+          <div style="font-size:8px; color:#555;">Mai</div>
+        </div>
+        <div style="flex:1;text-align:center;"><div style="font-size:8px;color:#555;">...</div></div>
+      </div>
+    </div>
+
+    <!-- 6. Lesegeschwindigkeit + 7. Lesedauer pro Buch (compact) -->
+    <div style="display:flex; gap:12px;">
+      <div style="flex:1; background:#231a0e; border-radius:16px; padding:14px; border:1px solid rgba(200,160,60,0.08);">
+        <div style="color:#f0e6d3; font-size:13px; font-weight:600; margin-bottom:4px;">Geschwindigkeit</div>
+        <div style="font-size:24px; color:#e8b94a; font-weight:700;">32</div>
+        <div style="font-size:11px; color:#a0937e;">Seiten/Stunde</div>
+        <div style="font-size:10px; color:#6b8f3a; margin-top:4px;">+4 vs. letzter Monat</div>
+      </div>
+      <div style="flex:1; background:#231a0e; border-radius:16px; padding:14px; border:1px solid rgba(200,160,60,0.08);">
+        <div style="color:#f0e6d3; font-size:13px; font-weight:600; margin-bottom:4px;">Lesedauer</div>
+        <div style="font-size:24px; color:#e8b94a; font-weight:700;">8.5</div>
+        <div style="font-size:11px; color:#a0937e;">Tage pro Buch</div>
+        <div style="font-size:10px; color:#6b8f3a; margin-top:4px;">-1.2 vs. letzter Monat</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div style="margin-top:16px; padding:12px; background:rgba(200,160,60,0.06); border-radius:10px;">
+  <p style="margin:0; color:#a0937e; font-size:12px;">Scrollbare Ansicht. Farbschema passt zum bestehenden BookHeart Dark-Theme. ApexCharts rendert die interaktiven Charts (Heatmap, Balken, Histogramm, Linie).</p>
+</div>

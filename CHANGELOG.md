@@ -17,6 +17,9 @@ Versionsschema:
 
 ### Hinzugefügt
 
+- Erweiterte Statistiken: 3-Tab-System (Übersicht | Trends | Analysen) auf der Statistik-Seite mit Blazor-ApexCharts
+  - Trends-Tab: Lese-Kalender (Heatmap), Wochentag-Verteilung, Tageszeit-Analyse mit Fun-Labels (z.B. „Nachteule 🦉"), Session-Längen-Verteilung, Monatlicher Leseverlauf, Lesegeschwindigkeit (Seiten/Stunde), Durchschnittliche Lesedauer pro Buch
+  - Analysen-Tab: Jahresvergleich, Genre-Radar (Spinnennetz-Diagramm), Abschlussquote (Donut-Chart), Buchlängen-Vorliebe, Meistgelesene Autoren
 - Genre-spezifische Bewertungskategorien: 5 neue Kategorien (Spannung, Humor, Informationsgehalt, Emotionale Tiefe, Atmosphäre) ergänzen die bestehenden 6 Kategorien. Beim Bewerten eines Buches werden nur die zum Genre passenden Kategorien angezeigt — weitere Kategorien lassen sich per Dropdown aufklappen.
 
 ### Geändert

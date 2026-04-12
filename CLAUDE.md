@@ -51,6 +51,167 @@ dotnet ef migrations list --project BookLoggerApp.Infrastructure --startup-proje
 - ViewModels use `[ObservableProperty]` attribute (CommunityToolkit.Mvvm source generators)
 - Testing: xUnit + FluentAssertions, arrange-act-assert pattern
 
+## Patterns & Templates
+
+Kanonische Vorlagen für neue Dateien — folge diesen Mustern statt sie aus dem Code abzuleiten.
+
+### Neuen Service erstellen
+
+1. Interface: `Core/Services/Abstractions/IFooService.cs`
+   ```csharp
+   using BookLoggerApp.Core.Models;
+   namespace BookLoggerApp.Core.Services.Abstractions;
+   public interface IFooService
+   {
+       Task<Result> DoSomethingAsync(Guid id, CancellationToken ct = default);
+   }
+   ```
+2. Implementierung: `Infrastructure/Services/FooService.cs`
+   ```csharp
+   using BookLoggerApp.Core.Models;
+   using BookLoggerApp.Core.Services.Abstractions;
+   using BookLoggerApp.Infrastructure.Repositories;
+   namespace BookLoggerApp.Infrastructure.Services;
+   public class FooService : IFooService
+   {
+       private readonly IUnitOfWork _unitOfWork;
+       public FooService(IUnitOfWork unitOfWork) { _unitOfWork = unitOfWork; }
+   }
+   ```
+3. DI: In `MauiProgram.cs` → `RegisterBusinessServices()` hinzufügen:
+   ```csharp
+   builder.Services.AddTransient<IFooService, FooService>();
+   ```
+4. Test: `Tests/Services/FooServiceTests.cs`
+   ```csharp
+   public class FooServiceTests : IDisposable
+   {
+       private readonly TestDbContext _context;
+       private readonly UnitOfWork _unitOfWork;
+       private readonly FooService _service;
+       public FooServiceTests()
+       {
+           _context = TestDbContext.Create();
+           _unitOfWork = new UnitOfWork(_context);
+           _service = new FooService(_unitOfWork);
+       }
+       public void Dispose() { _context.Dispose(); }
+   }
+   ```
+
+### Neues ViewModel erstellen
+
+1. ViewModel: `Core/ViewModels/FooViewModel.cs`
+   ```csharp
+   using CommunityToolkit.Mvvm.ComponentModel;
+   using CommunityToolkit.Mvvm.Input;
+   using BookLoggerApp.Core.Services.Abstractions;
+   namespace BookLoggerApp.Core.ViewModels;
+   public partial class FooViewModel : ViewModelBase
+   {
+       private readonly IFooService _fooService;
+       public FooViewModel(IFooService fooService) { _fooService = fooService; }
+
+       [ObservableProperty]
+       private string _title = "";
+
+       [RelayCommand]
+       public async Task LoadAsync()
+       {
+           await ExecuteSafelyWithDbAsync(async () =>
+           {
+               // Load data here
+           }, "Fehler beim Laden");
+       }
+   }
+   ```
+   - `[ObservableProperty]` auf `private` Feldern → generiert öffentliche Property (z.B. `_title` → `Title`)
+   - `[RelayCommand]` auf `async Task FooAsync()` → generiert `FooCommand` Property (IAsyncRelayCommand)
+   - `ExecuteSafelyWithDbAsync` setzt `IsBusy`, fängt Exceptions, und wartet auf DB-Initialisierung
+2. DI: In `MauiProgram.cs` → `RegisterViewModels()` hinzufügen:
+   ```csharp
+   builder.Services.AddTransient<FooViewModel>();
+   ```
+3. Test: `Tests/Unit/ViewModels/FooViewModelTests.cs`
+   ```csharp
+   public class FooViewModelTests
+   {
+       private readonly IFooService _service;
+       private readonly FooViewModel _viewModel;
+       public FooViewModelTests()
+       {
+           DatabaseInitializationHelper.MarkAsInitialized(); // WICHTIG für Tests
+           _service = Substitute.For<IFooService>();
+           // Default-Returns für Mocks setzen
+           _viewModel = new FooViewModel(_service);
+       }
+   }
+   ```
+   - Services werden mit `NSubstitute` gemockt (`Substitute.For<IFoo>()`)
+   - `DatabaseInitializationHelper.MarkAsInitialized()` im Konstruktor aufrufen
+   - Act: `await _viewModel.LoadCommand.ExecuteAsync(null);`
+   - Assert: FluentAssertions (`_viewModel.Title.Should().Be("expected")`)
+
+### Neue Blazor-Komponente erstellen
+
+1. Komponente: `Components/Shared/FooComponent.razor` oder `Components/Pages/Foo.razor`
+   ```razor
+   @inject BookLoggerApp.Core.ViewModels.FooViewModel ViewModel
+
+   @if (ViewModel.IsBusy)
+   {
+       <div class="loading-state"><div class="loading-spinner"></div></div>
+   }
+   else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+   {
+       <div class="error-state"><p>@ViewModel.ErrorMessage</p></div>
+   }
+   else
+   {
+       @* Content here *@
+   }
+
+   @code {
+       protected override async Task OnInitializedAsync()
+       {
+           await ViewModel.LoadCommand.ExecuteAsync(null);
+       }
+   }
+   ```
+2. CSS: Neue Datei in `wwwroot/css/foo.css`, Link in `wwwroot/index.html` einfügen
+3. Für Pages: `@page "/foo"` Direktive oben, in BottomNavBar.razor verlinken falls nötig
+
+### CSS Theme Quick Reference
+
+```
+Primär:     #D4A574 (--primary-color)      warmes Beige
+Hover:      #E8C4A0 (--primary-hover)       helleres Beige
+Akzent:     #C9A97F (--accent-color)        helles Braun
+Sekundär:   #8B7355 (--secondary-color)     gedämpftes Braun
+
+Text:       #F5E6D3 (--text-primary)        Creme
+            #C9B5A0 (--text-secondary)       gedämpftes Beige
+            #8B7968 (--text-muted)           dunkles Braun
+
+Hintergrund:#1A1410 (--bg-primary)          fast schwarz
+            #2D2419 (--bg-secondary/card-bg) dunkles Braun
+            #3D3126 (--bg-tertiary)          mittleres Braun
+
+Border:     #4A3F32 (--border-color)
+            #3D3126 (--border-light)
+
+Status:     #88A67E (--status-completed)     Grün / positiv
+            #A67874 (--status-abandoned)     Rot / negativ
+            #7B8FA3 (--status-planned)       Blau-Grau
+            #D4A574 (--status-reading)       = primary
+
+Gradient:   linear-gradient(135deg, #D4A574, #C9A97F) (--gradient-warm)
+```
+
+**KEIN Gelb, kein reines Weiß, kein reines Schwarz.** Die Palette ist durchgehend warm-braun/beige.
+
+Breakpoints: 768px (Tablet) · 640px (Mobile) · 480px (klein) · 400px (sehr klein)
+
 ## Architecture
 
 ### Project Structure
@@ -120,7 +281,7 @@ The solution follows a layered architecture with four main projects:
 **Service Layer:**
 - Service interfaces in `BookLoggerApp.Core/Services/Abstractions/`
 - Implementations in `BookLoggerApp.Infrastructure/Services/`
-- Core domain services: `IBookService`, `IProgressService`, `IProgressionService`, `IGoalService`, `IPlantService`, `IStatsService`, `IGenreService`, `IQuoteService`, `IAnnotationService`, `IImageService`, `IImportExportService`, `IValidationService`, `INotificationService`, `ILookupService`, `IShelfService`, `IWishlistService`, `IAppSettingsProvider`
+- Core domain services: `IBookService`, `IProgressService`, `IProgressionService`, `IGoalService`, `IPlantService`, `IStatsService`, `IAdvancedStatsService`, `IGenreService`, `IQuoteService`, `IAnnotationService`, `IImageService`, `IImportExportService`, `IValidationService`, `INotificationService`, `ILookupService`, `IShelfService`, `IWishlistService`, `IAppSettingsProvider`
 - Gamification/content: `IDecorationService` (shelf decorations, separate from plants), `IOnboardingService` (missions, tutorial, feature atlas)
 - App lifecycle/meta: `IAppVersionService`, `IAppUpdateService`, `IAppRestartService`, `IChangelogService`, `IReviewPromptService`, `IShareCardService` (PNG generation for book/stats sharing), `IWidgetUpdateService` (Android home-screen widgets)
 - MAUI-specific (implementations in `BookLoggerApp/Services/`): `IPermissionService`, `IScannerService`, `IShareService`, `IFilePickerService`, `IMigrationService`, `ITimerStateService`
@@ -156,7 +317,7 @@ The solution follows a layered architecture with four main projects:
 **ViewModels:**
 - Located in `BookLoggerApp.Core/ViewModels/`, all inherit `ViewModelBase`
 - Content: `BookListViewModel`, `BookDetailViewModel`, `BookEditViewModel`, `BookshelfViewModel`, `WishlistViewModel`, `ShelfItemViewModel`
-- Activity: `ReadingViewModel`, `DashboardViewModel`, `GoalsViewModel`, `StatsViewModel`
+- Activity: `ReadingViewModel`, `DashboardViewModel`, `GoalsViewModel`, `StatsViewModel`, `StatsTrendsViewModel`, `StatsAnalysesViewModel`
 - Gamification: `PlantShopViewModel`, `DecorationShopViewModel`, `UserProgressViewModel`
 - App shell: `AppStartupViewModel`, `SettingsViewModel`
 
@@ -166,7 +327,7 @@ The solution follows a layered architecture with four main projects:
 - Share payloads: `BookShareData`, `StatsShareData` (consumed by `IShareCardService`)
 - App meta: `AppUpdateState`, `ChangelogRelease`
 - Onboarding: `OnboardingSnapshot`, `OnboardingMissionCatalog`, `OnboardingMissionDefinition`, `OnboardingMissionState`, `OnboardingMissionProgress`, `OnboardingMissionStatus`, `OnboardingMissionId`, `OnboardingEvent`, `OnboardingIntroStatus`, `OnboardingFeatureAtlasEntry`
-- Supporting types: `RatingCategory`, `RatingCategoryInfo`, `LevelMilestone`, `PlantBoostInfo`
+- Supporting types: `RatingCategory`, `RatingCategoryInfo`, `LevelMilestone`, `PlantBoostInfo`, `YearStats`, `AuthorStats`
 
 ### Blazor UI Structure
 
@@ -180,6 +341,7 @@ The solution follows a layered architecture with four main projects:
   - Widgets: `PlantWidget.razor`, `UserProgressWidget.razor`
   - Onboarding: `AppStartupOverlay.razor`, `OnboardingTutorial.razor`, `GettingStartedCta.razor`
   - Modals: `DeleteConfirmationModal.razor`, `ReviewPromptModal.razor`
+  - Stats: `StatsTrends.razor`, `StatsAnalyses.razor`
   - Other: `RatingInput.razor`, `GoalHeader.razor`
 
 ### JavaScript Interop
@@ -198,7 +360,7 @@ CSS files are in `BookLoggerApp/wwwroot/css/`:
 - `dashboard.css`, `stats.css`, `ratings.css`, `bookdetail.css`, `bookedit.css`, `bookshelf.css`
 - `reading.css`, `reading-timer-inline.css`, `quicktimer.css`
 - `plantshop.css`, `plantwidget.css`, `plant-selection.css`
-- `userprogress.css`, `bottomnav.css`, `celebrations.css`, `wishlist.css`
+- `userprogress.css`, `bottomnav.css`, `celebrations.css`, `wishlist.css`, `stats-advanced.css`
 
 **Mobile-First Design:**
 - Breakpoints: 768px (tablet), 640px (mobile), 480px (small mobile), 400px (very small)
@@ -235,16 +397,20 @@ Nach jeder Änderung (Feature, Bugfix, Sicherheitspatch) einen Eintrag in `CHANG
 - Development uses versioned feature branches (`V1`, `V2`, ... `V6`)
 - App name displayed on device: "BookHeart" (configured in `BookLoggerApp.csproj` as `ApplicationTitle`)
 - Project uses latest C# language version (`<LangVersion>latest</LangVersion>`) and .NET 10
-- Key NuGet packages: `ZXing.Net.Maui.Controls` (barcode scanning), `CsvHelper` (CSV import/export)
+- Key NuGet packages: `ZXing.Net.Maui.Controls` (barcode scanning), `CsvHelper` (CSV import/export), `Blazor-ApexCharts` (chart visualizations)
 - `ApiKeys.cs` is gitignored — copy `ApiKeys.cs.template` from `BookLoggerApp.Infrastructure/Services/` and add your Google Books API key (optional, anonymous access works with rate limits)
 
 ## Codebase Knowledge Graph (Obsidian)
 
 Es existiert ein Obsidian Vault unter `C:\Users\Tristan\Documents\Obsidian\codebase-map\`. Dieser Vault enthält eine Markdown-Datei pro Klasse, Service, Component und Page mit `[[wiki-links]]` zu Abhängigkeiten. `Index.md` im Root ist der Einstiegspunkt.
 
-### Vault als primäre Quelle für Abhängigkeiten nutzen
+### Wann den Vault nutzen
 
-**WICHTIG:** Bevor du Abhängigkeiten, Consumer oder Auswirkungen einer Änderung ermittelst, lies zuerst die zugehörige Vault-Datei (per `Read`-Tool, nicht über den Obsidian-MCP-Server). Die Vault-Dateien enthalten "Depends on"- und "Used by"-Sektionen mit allen Verknüpfungen. Erst wenn die Vault-Datei veraltet oder unvollständig erscheint, greife auf Grep/Glob im Quellcode zurück.
+- **Impact-Analyse** ("Was ist betroffen wenn ich X ändere?") → Vault-Datei lesen für "Used by"-Links
+- **Architektur-Überblick** ("Wie hängt das System zusammen?") → Index.md als Einstieg
+- **Für exakte Implementierungsdetails** (Signaturen, Patterns, Code) → direkt den Quellcode lesen, nicht den Vault
+
+Vault-Dateien per `Read`-Tool lesen, nicht über den Obsidian-MCP-Server. Wenn der Vault veraltet erscheint, Grep/Glob als Fallback nutzen.
 
 ### Ordnerstruktur
 
