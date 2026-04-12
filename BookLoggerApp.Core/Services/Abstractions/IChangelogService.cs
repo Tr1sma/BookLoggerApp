@@ -6,4 +6,5 @@ public interface IChangelogService
 {
     Task<IReadOnlyList<ChangelogRelease>> GetReleaseHistoryAsync(CancellationToken ct = default);
     Task<ChangelogRelease?> GetReleaseAsync(string version, CancellationToken ct = default);
+    Task<ChangelogRelease?> GetUnreleasedChangesAsync(CancellationToken ct = default);
 }
