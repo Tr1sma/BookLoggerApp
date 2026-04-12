@@ -7,12 +7,22 @@ namespace BookLoggerApp.Core.ViewModels;
 public partial class StatsTrendsViewModel : ViewModelBase
 {
     private readonly IAdvancedStatsService _advancedStatsService;
+    private readonly IStatsService _statsService;
 
-    public StatsTrendsViewModel(IAdvancedStatsService advancedStatsService)
+    public StatsTrendsViewModel(IAdvancedStatsService advancedStatsService, IStatsService statsService)
     {
         _advancedStatsService = advancedStatsService;
+        _statsService = statsService;
         _heatmapYear = DateTime.UtcNow.Year;
+        _monthlyVolumeYear = DateTime.UtcNow.Year;
     }
+
+    // Year navigation
+    [ObservableProperty]
+    private int _minYear;
+
+    [ObservableProperty]
+    private int _maxYear;
 
     // Heatmap
     [ObservableProperty]
@@ -41,6 +51,9 @@ public partial class StatsTrendsViewModel : ViewModelBase
 
     // Monthly volume
     [ObservableProperty]
+    private int _monthlyVolumeYear;
+
+    [ObservableProperty]
     private Dictionary<int, int> _monthlyVolumeData = new();
 
     // Reading speed
@@ -62,11 +75,17 @@ public partial class StatsTrendsViewModel : ViewModelBase
     {
         await ExecuteSafelyWithDbAsync(async () =>
         {
+            // Load available years for navigation
+            var periods = await _statsService.GetActiveReadingPeriodsAsync();
+            var years = periods.Select(p => p.Year).Distinct().OrderBy(y => y).ToList();
+            MinYear = years.Count > 0 ? years[0] : DateTime.UtcNow.Year;
+            MaxYear = DateTime.UtcNow.Year;
+
             var heatmapTask = _advancedStatsService.GetReadingHeatmapAsync(HeatmapYear);
             var weekdayTask = _advancedStatsService.GetWeekdayDistributionAsync();
             var timeOfDayTask = _advancedStatsService.GetTimeOfDayDistributionAsync();
             var sessionLengthTask = _advancedStatsService.GetSessionLengthDistributionAsync();
-            var monthlyTask = _advancedStatsService.GetMonthlyVolumeAsync(DateTime.UtcNow.Year);
+            var monthlyTask = _advancedStatsService.GetMonthlyVolumeAsync(MonthlyVolumeYear);
             var speedTask = _advancedStatsService.GetReadingSpeedTrendAsync();
             var finishTask = _advancedStatsService.GetAverageFinishTimeTrendAsync();
 
@@ -95,6 +114,13 @@ public partial class StatsTrendsViewModel : ViewModelBase
     {
         HeatmapYear = year;
         HeatmapData = await _advancedStatsService.GetReadingHeatmapAsync(year);
+    }
+
+    [RelayCommand]
+    public async Task ChangeMonthlyVolumeYearAsync(int year)
+    {
+        MonthlyVolumeYear = year;
+        MonthlyVolumeData = await _advancedStatsService.GetMonthlyVolumeAsync(year);
     }
 
     private static string DetermineTimeOfDayLabel(Dictionary<string, int> data)

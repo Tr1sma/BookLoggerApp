@@ -42,10 +42,10 @@
                             <span class="comparison-label">@row.Label</span>
                             <div class="comparison-bars">
                                 <div class="comparison-bar year1" style="width: @(row.MaxValue > 0 ? row.Value1 * 100.0 / row.MaxValue : 0)%;">
-                                    <span>@row.Formatted1</span>
+                                    <span>@ViewModel.Year1Stats.Year: @row.Formatted1</span>
                                 </div>
                                 <div class="comparison-bar year2" style="width: @(row.MaxValue > 0 ? row.Value2 * 100.0 / row.MaxValue : 0)%;">
-                                    <span>@row.Formatted2</span>
+                                    <span>@ViewModel.Year2Stats.Year: @row.Formatted2</span>
                                 </div>
                             </div>
                         </div>
@@ -181,8 +181,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        InitializeChartOptions();
         await ViewModel.LoadCommand.ExecuteAsync(null);
+        InitializeChartOptions();
         BuildChartData();
     }
 

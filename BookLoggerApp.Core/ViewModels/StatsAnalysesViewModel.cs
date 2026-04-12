@@ -79,6 +79,10 @@ public partial class StatsAnalysesViewModel : ViewModelBase
                 SelectedYear2 = DateTime.UtcNow.Year;
             }
 
+            // Ensure both selected years appear as chips
+            if (!AvailableYears.Contains(SelectedYear1))
+                AvailableYears = AvailableYears.Append(SelectedYear1).OrderByDescending(y => y).ToList();
+
             var yearTask = _advancedStatsService.GetYearComparisonAsync(SelectedYear1, SelectedYear2);
             var genreTask = _advancedStatsService.GetGenreRadarDataAsync();
             var completionTask = _advancedStatsService.GetCompletionRateAsync();

@@ -19,10 +19,11 @@
                 <div class="advanced-stats-header">
                     <h3>Lese-Kalender</h3>
                     <div class="heatmap-year-nav">
-                        <button class="year-nav-btn" @onclick="() => ChangeYear(ViewModel.HeatmapYear - 1)">&lt;</button>
+                        <button class="year-nav-btn" @onclick="() => ChangeYear(ViewModel.HeatmapYear - 1)"
+                                disabled="@(ViewModel.HeatmapYear <= ViewModel.MinYear)">&lt;</button>
                         <span>@ViewModel.HeatmapYear</span>
                         <button class="year-nav-btn" @onclick="() => ChangeYear(ViewModel.HeatmapYear + 1)"
-                                disabled="@(ViewModel.HeatmapYear >= DateTime.UtcNow.Year)">&gt;</button>
+                                disabled="@(ViewModel.HeatmapYear >= ViewModel.MaxYear)">&gt;</button>
                     </div>
                 </div>
 
@@ -156,7 +157,16 @@
         <!-- 5. Monatlicher Verlauf -->
         <section class="advanced-stats-section">
             <div class="advanced-stats-card">
-                <h3>Monatlicher Verlauf</h3>
+                <div class="advanced-stats-header">
+                    <h3>Monatlicher Verlauf</h3>
+                    <div class="heatmap-year-nav">
+                        <button class="year-nav-btn" @onclick="() => ChangeMonthlyYear(ViewModel.MonthlyVolumeYear - 1)"
+                                disabled="@(ViewModel.MonthlyVolumeYear <= ViewModel.MinYear)">&lt;</button>
+                        <span>@ViewModel.MonthlyVolumeYear</span>
+                        <button class="year-nav-btn" @onclick="() => ChangeMonthlyYear(ViewModel.MonthlyVolumeYear + 1)"
+                                disabled="@(ViewModel.MonthlyVolumeYear >= ViewModel.MaxYear)">&gt;</button>
+                    </div>
+                </div>
                 @if (_monthlyChartData.Any())
                 {
                     <ApexChart TItem="ChartDataPoint"
@@ -347,6 +357,13 @@
     private async Task ChangeYear(int year)
     {
         await ViewModel.ChangeHeatmapYearCommand.ExecuteAsync(year);
+        StateHasChanged();
+    }
+
+    private async Task ChangeMonthlyYear(int year)
+    {
+        await ViewModel.ChangeMonthlyVolumeYearCommand.ExecuteAsync(year);
+        BuildChartData();
         StateHasChanged();
     }
 

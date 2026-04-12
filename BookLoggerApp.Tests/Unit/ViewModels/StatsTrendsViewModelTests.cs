@@ -9,14 +9,17 @@ namespace BookLoggerApp.Tests.Unit.ViewModels;
 public class StatsTrendsViewModelTests
 {
     private readonly IAdvancedStatsService _service;
+    private readonly IStatsService _statsService;
     private readonly StatsTrendsViewModel _viewModel;
 
     public StatsTrendsViewModelTests()
     {
         BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
         _service = Substitute.For<IAdvancedStatsService>();
+        _statsService = Substitute.For<IStatsService>();
 
         // Default returns
+        _statsService.GetActiveReadingPeriodsAsync(Arg.Any<CancellationToken>()).Returns(new List<(int, int)>());
         _service.GetReadingHeatmapAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(new Dictionary<DateTime, int>());
         _service.GetWeekdayDistributionAsync(Arg.Any<CancellationToken>()).Returns(new Dictionary<DayOfWeek, int>());
         _service.GetTimeOfDayDistributionAsync(Arg.Any<CancellationToken>()).Returns(new Dictionary<string, int>
@@ -28,7 +31,7 @@ public class StatsTrendsViewModelTests
         _service.GetReadingSpeedTrendAsync(Arg.Any<CancellationToken>()).Returns((0.0, 0.0));
         _service.GetAverageFinishTimeTrendAsync(Arg.Any<CancellationToken>()).Returns((0.0, 0.0));
 
-        _viewModel = new StatsTrendsViewModel(_service);
+        _viewModel = new StatsTrendsViewModel(_service, _statsService);
     }
 
     [Fact]
@@ -115,5 +118,31 @@ public class StatsTrendsViewModelTests
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
         _viewModel.TimeOfDayLabel.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task LoadAsync_SetsMinYearFromActivePeriods()
+    {
+        _statsService.GetActiveReadingPeriodsAsync(Arg.Any<CancellationToken>()).Returns(new List<(int, int)>
+        {
+            (2024, 3), (2025, 1), (2026, 2)
+        });
+
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+
+        _viewModel.MinYear.Should().Be(2024);
+        _viewModel.MaxYear.Should().Be(DateTime.UtcNow.Year);
+    }
+
+    [Fact]
+    public async Task ChangeMonthlyVolumeYearCommand_ReloadsMonthlyData()
+    {
+        _service.GetMonthlyVolumeAsync(2025, Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<int, int> { [3] = 2, [6] = 1 });
+
+        await _viewModel.ChangeMonthlyVolumeYearCommand.ExecuteAsync(2025);
+
+        _viewModel.MonthlyVolumeYear.Should().Be(2025);
+        _viewModel.MonthlyVolumeData[3].Should().Be(2);
     }
 }
