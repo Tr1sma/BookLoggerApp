@@ -437,7 +437,7 @@ public partial class StatsViewModel : ViewModelBase
             {
                 Level = level,
                 XpRequired = GetXpForLevel(level),
-                CoinsReward = level * 50,
+                CoinsReward = XpCalculator.CalculateCoinsForLevel(level),
                 IsCompleted = level < CurrentLevel,
                 IsCurrent = level == CurrentLevel
             });

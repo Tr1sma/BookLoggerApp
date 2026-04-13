@@ -84,4 +84,13 @@ public static class XpCalculator
     {
         return XP_BOOK_COMPLETION;
     }
+
+    /// <summary>
+    /// Calculates the coin reward for reaching a specific level.
+    /// Progressive scaling: 50 × level + 3 × level² (matches quadratic XP growth).
+    /// </summary>
+    public static int CalculateCoinsForLevel(int level)
+    {
+        return (50 * level) + (3 * level * level);
+    }
 }

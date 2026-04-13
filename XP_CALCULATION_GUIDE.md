@@ -129,23 +129,24 @@ return level; // Current level (in progress)
 
 ### Level-Up Coins
 ```
-Coins per Level = Level × 50
+Coins per Level = 50 × Level + 3 × Level²
 ```
+Progressive scaling — higher levels award proportionally more coins to match quadratic XP growth.
 
 **Examples**:
-- Level 1 → 2: 2 × 50 = **100 coins**
-- Level 5 → 6: 6 × 50 = **300 coins**
-- Level 9 → 10: 10 × 50 = **500 coins**
+- Level 1 → 2: (50 × 2) + (3 × 4) = **112 coins**
+- Level 5 → 6: (50 × 6) + (3 × 36) = **408 coins**
+- Level 9 → 10: (50 × 10) + (3 × 100) = **800 coins**
 
 ### Multiple Level-Ups
 If a user gains multiple levels at once, coins are awarded for **each** level:
 ```
-Total Coins = Σ (Level × 50) for each level gained
+Total Coins = Σ CalculateCoinsForLevel(Level) for each level gained
 ```
 
 **Example**: Level 3 → Level 5
 ```
-Coins = (4 × 50) + (5 × 50) = 200 + 250 = 450 coins
+Coins = CalculateCoinsForLevel(4) + CalculateCoinsForLevel(5) = 248 + 325 = 573 coins
 ```
 
 ---
@@ -314,16 +315,16 @@ Levels Gained: 4 - 2 = 2 levels
 
 ### Step 5: Award Coins
 ```
-Level 3 Coins: 3 × 50 = 150
-Level 4 Coins: 4 × 50 = 200
-────────────────────────────────
-Total Coins:            = 350
+Level 3 Coins: (50 × 3) + (3 × 9) = 177
+Level 4 Coins: (50 × 4) + (3 × 16) = 248
+────────────────────────────────────────
+Total Coins:                        = 425
 ```
 
 ### Final Result
 - **XP Earned**: 1267 (845 base + 422 plant bonus)
 - **Level Up**: 2 → 4
-- **Coins Earned**: 350
+- **Coins Earned**: 425
 
 ---
 
@@ -374,11 +375,11 @@ Total Coins:            = 350
 
 6. **Level-Up**
    - User at 95 XP (Level 1), earns 50 XP → total 145 XP
-   - Expected: Level 2, +100 coins (2×50)
+   - Expected: Level 2, +112 coins (CalculateCoinsForLevel(2))
 
 7. **Multi-Level**
    - User at 2,900 XP (Level 4), earns 3,000 XP → total 5,900 XP
-   - Expected: Level 6, +550 coins (5×50 + 6×50)
+   - Expected: Level 6, +733 coins (CalculateCoinsForLevel(5) + CalculateCoinsForLevel(6))
 
 ---
 
@@ -392,5 +393,5 @@ Total Coins:            = 350
 
 ---
 
-*Last Updated: February 2026 - Fixed quadratic XP formula documentation*
+*Last Updated: April 2026 - Progressive coin reward formula (50×Level + 3×Level²)*
 *Version: V2 Progression System*
