@@ -28,6 +28,7 @@ Versionsschema:
 
 ### Geändert
 
+- XP-Boosts für höherstufige Pflanzen deutlich erhöht — teurere Pflanzen (höheres Unlock-Level und höherer Preis) bringen jetzt spürbar mehr XP (z.B. Mystic Tome Tree: 20% → 75%, Ancient Bonsai: 15% → 50%)
 - "Getting Started"-Seite auf sehr kleinen mobilen Displays kompakter gestaltet: engeres Hero-Layout, kleinere Kartenabstände und reduzierter vertikaler Leerraum ohne Funktionsänderung
 - Shop-Seite (Pflanzen & Dekorationen) deutlich kompakter gestaltet: dichteres Kartenraster (mehr Karten pro Reihe, auch auf sehr kleinen Handys zwei Spalten statt einer), kleinere Karten-Bilder und Paddings, schlankerer Header, kompakteres Kaufen-Modal mit viewport-basierter Maximalhöhe — auf einem typischen Android-Handy sind jetzt deutlich mehr Items auf einen Blick sichtbar
 - Stats-Seite: „Top Rated Books"-Abschnitt kompakter gestaltet (Inline-Rang statt Kreis-Badge, horizontal scrollbare Kategorie-Filter, engere Abstände und 3 statt 5 Einträge als Standard)
