@@ -13,7 +13,20 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
-## [Unveröffentlicht]
+
+## [0.9.3]
+
+### Hinzugefügt
+
+### Behoben
+
+### Geändert
+
+- Coin-Belohnung pro Level-Up wächst jetzt progressiv statt linear (Formel: 50×Level + 3×Level²) 
+- Bessere Pflanzen geben einen deutlich höheren XP-Boost
+- Mehrere Kleine UI/UX Updates und Verbesserungen
+
+## [0.9.2]
 
 ### Hinzugefügt
 
@@ -35,6 +48,8 @@ Versionsschema:
 - Settings-Seite: kompakteres Layout mit reduzierten Abständen, Paddings und Heading-Größen für bessere Übersicht auf mobilen Displays — mehr Sektionen auf einen Blick sichtbar, ohne Funktions- oder Bedienungsänderung
 - Settings-Seite weiter aufgeräumt: neue Hero-Karte mit Version oben, thematisch zusammengelegte Abschnitte („Data & Backup" inkl. Danger-Zone, „Help & Community" inkl. Getting Started + Buy-me-a-coffee), „More Info"-Sammelabschnitt für Diagnostics + Privacy Policy — deutlich weniger Scrollen, gleiche Funktionen
 - Stats-Seite: „Level Milestones"-Liste deutlich kompakter — aus der Vollzeilen-Liste wird ein Mini-Karten-Grid (3 Spalten auf kleinen Handys, bis zu 7 auf Desktop), kleinere Icons und Schriften, auf einem typischen Android-Handy sind dadurch viel mehr Milestones gleichzeitig sichtbar
+
+
 
 ## [0.9.0]
 

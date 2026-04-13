@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.ViewModels;
@@ -196,6 +197,10 @@ public class StatsViewModelTests
             int expectedXp = 100 * milestone.Level * milestone.Level;
             milestone.XpRequired.Should().Be(expectedXp,
                 because: $"Level {milestone.Level} requires 100 × {milestone.Level}² = {expectedXp} XP");
+
+            int expectedCoins = XpCalculator.CalculateCoinsForLevel(milestone.Level);
+            milestone.CoinsReward.Should().Be(expectedCoins,
+                because: $"Level {milestone.Level} should award {expectedCoins} coins");
         }
     }
 }

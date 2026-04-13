@@ -92,4 +92,21 @@ public class XpCalculatorTests
         result.LongSessionXp.Should().Be(0);
         result.StreakXp.Should().Be(400);
     }
+
+    [Theory]
+    [InlineData(1, 53)]      // 50 + 3
+    [InlineData(2, 112)]     // 100 + 12
+    [InlineData(5, 325)]     // 250 + 75
+    [InlineData(10, 800)]    // 500 + 300
+    [InlineData(20, 2200)]   // 1000 + 1200
+    [InlineData(30, 4200)]   // 1500 + 2700
+    [InlineData(33, 4917)]   // 1650 + 3267
+    public void CalculateCoinsForLevel_ReturnsProgressiveValues(int level, int expectedCoins)
+    {
+        // Act
+        var result = XpCalculator.CalculateCoinsForLevel(level);
+
+        // Assert
+        result.Should().Be(expectedCoins);
+    }
 }
