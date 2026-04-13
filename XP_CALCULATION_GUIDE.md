@@ -48,6 +48,24 @@ Plant Boost = Base Boost + (Current Level × (Base Boost / Max Level))
 - Level 5: 5% + (5 × 0.5%) = 7.5%
 - Level 10: 5% + (10 × 0.5%) = 10%
 
+**Example** - Mystic Tome Tree (75% base, max level 25):
+- Level 1: 75% + (1 × 3%) = 78%
+- Level 10: 75% + (10 × 3%) = 105%
+- Level 25: 75% + (25 × 3%) = 150%
+
+### Plant Species XP Boosts
+
+| Plant | Unlock Lv | Cost | Base Boost | Max Level | Boost at Max Lv |
+|---|---|---|---|---|---|
+| Starter Sprout | 1 | 500 | 5% | 10 | 10% |
+| Story Seedling | 3 | 600 | 8% | 11 | 16% |
+| Bookworm Fern | 8 | 750 | 12% | 12 | 24% |
+| Literary Lily | 14 | 850 | 18% | 14 | 36% |
+| Reading Cactus | 21 | 1000 | 25% | 15 | 50% |
+| Wisdom Willow | 28 | 1500 | 35% | 18 | 70% |
+| Ancient Knowledge Bonsai | 31 | 2500 | 50% | 20 | 100% |
+| Mystic Tome Tree | 33 | 5000 | 75% | 25 | 150% |
+
 ### Multiple Plants
 Total boost is the **sum** of all owned plants' boosts:
 ```
@@ -55,14 +73,14 @@ Total Boost = Plant1 Boost + Plant2 Boost + Plant3 Boost + ...
 ```
 
 **Example** - 3 plants:
-- Plant A (Lv5): 7.5% boost
-- Plant B (Lv3): 11% boost
-- Plant C (Lv8): 16% boost
-- **Total**: 34.5% boost
+- Starter Sprout (Lv5): 7.5% boost
+- Bookworm Fern (Lv3): 15% boost
+- Wisdom Willow (Lv8): 50.6% boost
+- **Total**: 73.1% boost
 
 ### Final XP with Boost
 ```
-Final XP = 545 × (1 + 0.345) = 545 × 1.345 = 733 XP
+Final XP = 545 × (1 + 0.731) = 545 × 1.731 = 943 XP
 ```
 
 ---
@@ -259,7 +277,7 @@ These are applied only during the **final calculation** when the session ends, e
 
 ## 📈 Example Complete Flow
 
-**Scenario**: User reads for 75 minutes, 20 pages, on day 4 of streak, with 15% total plant boost
+**Scenario**: User reads for 75 minutes, 20 pages, on day 4 of streak, with 50% total plant boost (e.g. Reading Cactus at max level)
 
 ### Step 1: Base Calculation
 ```
@@ -273,14 +291,14 @@ Base XP:                    = 845
 
 ### Step 2: Apply Plant Boost
 ```
-Boosted XP: 845 × (1 + 0.15) = 845 × 1.15 = 971 XP
-Bonus from Plants: 971 - 845 = 126 XP
+Boosted XP: 845 × (1 + 0.50) = 845 × 1.50 = 1267 XP
+Bonus from Plants: 1267 - 845 = 422 XP
 ```
 
 ### Step 3: Add to User
 ```
 Old Total XP: 450
-New Total XP: 450 + 971 = 1,421
+New Total XP: 450 + 1267 = 1,717
 ```
 
 ### Step 4: Check Level-Up
@@ -288,8 +306,8 @@ New Total XP: 450 + 971 = 1,421
 Old Level: CalculateLevelFromXp(450) = Level 2
   → 450 - 100 (Lv1) = 350, 350 < 400 (Lv2) → Level 2
 
-New Level: CalculateLevelFromXp(1,421) = Level 4
-  → 1,421 - 100 (Lv1) = 1,321 - 400 (Lv2) = 921 - 900 (Lv3) = 21, 21 < 1,600 (Lv4) → Level 4
+New Level: CalculateLevelFromXp(1,717) = Level 4
+  → 1,717 - 100 (Lv1) = 1,617 - 400 (Lv2) = 1,217 - 900 (Lv3) = 317, 317 < 1,600 (Lv4) → Level 4
 
 Levels Gained: 4 - 2 = 2 levels
 ```
@@ -303,7 +321,7 @@ Total Coins:            = 350
 ```
 
 ### Final Result
-- **XP Earned**: 971 (845 base + 126 plant bonus)
+- **XP Earned**: 1267 (845 base + 422 plant bonus)
 - **Level Up**: 2 → 4
 - **Coins Earned**: 350
 
