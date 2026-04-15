@@ -1,6 +1,7 @@
 using FluentAssertions;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Tests.TestHelpers;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
@@ -34,7 +36,10 @@ public class PlantServiceTests : IDisposable
         var contextFactory = new TestDbContextFactory(_dbHelper.DatabaseName);
         _settingsProvider = new AppSettingsProvider(contextFactory);
         var logger = NullLogger<PlantService>.Instance;
-        _plantService = new PlantService(_unitOfWork, _settingsProvider, _cache, logger);
+        var decorationService = Substitute.For<IDecorationService>();
+        decorationService.UserOwnsAbilityAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(false));
+        _plantService = new PlantService(_unitOfWork, _settingsProvider, decorationService, _cache, logger);
     }
 
     public void Dispose()

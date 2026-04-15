@@ -119,6 +119,13 @@
                                 </div>
                             </div>
 
+                            @if (!string.IsNullOrEmpty(ViewModel.SelectedSpecies.SpecialAbilityKey))
+                            {
+                                <div class="ability-callout">
+                                    ✨ <strong>Spezialfähigkeit:</strong> @GetAbilityDescription(ViewModel.SelectedSpecies.SpecialAbilityKey)
+                                </div>
+                            }
+
                             <div class="name-input-group">
                                 <label>Name your plant (optional):</label>
                                 <input type="text"
@@ -235,6 +242,13 @@
                                     <span>Lv. @DecorationVM.SelectedDecoration.UnlockLevel</span>
                                 </div>
                             </div>
+
+                            @if (!string.IsNullOrEmpty(DecorationVM.SelectedDecoration.SpecialAbilityKey))
+                            {
+                                <div class="ability-callout">
+                                    ✨ <strong>Spezialfähigkeit:</strong> @GetAbilityDescription(DecorationVM.SelectedDecoration.SpecialAbilityKey)
+                                </div>
+                            }
                         </div>
                     </div>
 
@@ -399,4 +413,12 @@
         }
         UnregisterModalBack();
     }
+
+    private static string GetAbilityDescription(string? abilityKey) => abilityKey switch
+    {
+        SpecialAbilityKeys.StreakGuardian => "Rettet alle 14 Tage einen brechenden Lese-Streak automatisch.",
+        SpecialAbilityKeys.EternalPhoenix => "Wiederbelebt sich selbst und schützt alle anderen Pflanzen vor dem Sterben.",
+        SpecialAbilityKeys.StoryHeart    => "+25% XP, +25% Level-Münzen, +400 Münzen ab 30-Minuten-Sessions, doppeltes Pflanzenwachstum, +2,5% der Next-Level-XP auf die erste Session des Tages.",
+        _ => string.Empty
+    };
 }

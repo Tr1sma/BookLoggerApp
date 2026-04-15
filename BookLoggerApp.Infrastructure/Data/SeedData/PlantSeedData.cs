@@ -16,6 +16,8 @@ public static class PlantSeedData
     private static readonly Guid _wisdomWillowId = Guid.Parse("10000000-0000-0000-0000-000000000006");
     private static readonly Guid _ancientBonsaiId = Guid.Parse("10000000-0000-0000-0000-000000000007");
     private static readonly Guid _mysticTomeTreeId = Guid.Parse("10000000-0000-0000-0000-000000000008");
+    private static readonly Guid _chronicleTreeId = Guid.Parse("10000000-0000-0000-0000-000000000009");
+    private static readonly Guid _eternalPhoenixBonsaiId = Guid.Parse("10000000-0000-0000-0000-00000000000A");
 
     public static IEnumerable<PlantSpecies> GetPlants()
     {
@@ -137,6 +139,38 @@ public static class PlantSeedData
             BaseCost = 5000,
             UnlockLevel = 33,
             IsAvailable = true
+        };
+
+        yield return new PlantSpecies
+        {
+            Id = _chronicleTreeId,
+            Name = "Chronikbaum",
+            Description = "Ein uralter Chronikbaum, dessen Blätter wie Pergament aus vergangenen Zeiten wirken. Wenn dein Lese-Streak zu brechen droht, hält er die Geschichte deiner Reise fest.",
+            ImagePath = "images/plants/chronicle_tree.svg",
+            MaxLevel = 40,
+            WaterIntervalDays = 21,
+            GrowthRate = 0.4,
+            XpBoostPercentage = 0.30m,
+            BaseCost = 20000,
+            UnlockLevel = 45,
+            IsAvailable = true,
+            SpecialAbilityKey = SpecialAbilityKeys.StreakGuardian
+        };
+
+        yield return new PlantSpecies
+        {
+            Id = _eternalPhoenixBonsaiId,
+            Name = "Ewiger Phönix-Bonsai",
+            Description = "Ein heiliger Bonsai, dessen goldene Blätter mit der Weisheit unzähliger Bücher glühen. Solange er wacht, stirbt in deinem Garten keine Pflanze — und er selbst erhebt sich immer wieder aus seiner Asche.",
+            ImagePath = "images/plants/eternal_phoenix_bonsai.svg",
+            MaxLevel = 50,
+            WaterIntervalDays = 30,
+            GrowthRate = 0.25,
+            XpBoostPercentage = 0.50m,
+            BaseCost = 80000,
+            UnlockLevel = 57,
+            IsAvailable = true,
+            SpecialAbilityKey = SpecialAbilityKeys.EternalPhoenix
         };
     }
 }

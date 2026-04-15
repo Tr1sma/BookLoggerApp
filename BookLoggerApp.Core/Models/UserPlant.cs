@@ -80,6 +80,12 @@ public class UserPlant
     /// </summary>
     public bool IsInBookshelf { get; set; } = false;
 
+    /// <summary>
+    /// Last time the Streak-Guardian ability saved the user's streak (UTC).
+    /// Null if it has never fired. Used to enforce the guardian cooldown.
+    /// </summary>
+    public DateTime? LastStreakSaveAt { get; set; }
+
     // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }

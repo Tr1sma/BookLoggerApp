@@ -60,6 +60,14 @@ public class DecorationService : IDecorationService
         if (!shopItem.IsAvailable)
             throw new InvalidOperationException("This decoration is not available for purchase.");
 
+        if (shopItem.IsSingleton)
+        {
+            bool alreadyOwned = await context.UserDecorations
+                .AnyAsync(d => d.ShopItemId == shopItemId, ct);
+            if (alreadyOwned)
+                throw new InvalidOperationException("Dieses Relikt kannst du nur einmal besitzen.");
+        }
+
         // Static pricing — use ShopItem.Cost directly (no dynamic multiplier)
         await _settingsProvider.SpendCoinsAsync(shopItem.Cost, ct);
 
@@ -95,5 +103,15 @@ public class DecorationService : IDecorationService
         await context.SaveChangesAsync(ct);
 
         _logger.LogInformation("Deleted decoration '{Name}' (ID: {Id})", decoration.Name, id);
+    }
+
+    public async Task<bool> UserOwnsAbilityAsync(string abilityKey, CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(abilityKey))
+            return false;
+
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        return await context.UserDecorations
+            .AnyAsync(d => d.ShopItem != null && d.ShopItem.SpecialAbilityKey == abilityKey, ct);
     }
 }

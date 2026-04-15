@@ -14,6 +14,20 @@ Versionsschema:
 
 ---
 
+## [Unveröffentlicht]
+
+### Hinzugefügt
+
+- Neue Prestige-Pflanze **Chronikbaum** (Lv 45 · 20.000 🪙 · 30 % XP-Boost) mit Streak-Wächter-Fähigkeit: rettet alle 14 Tage automatisch einen brechenden Lese-Streak.
+- Neue Prestige-Pflanze **Ewiger Phönix-Bonsai** (Lv 57 · 80.000 🪙 · 50 % XP-Boost) mit Phönix-Schutz: wiederbelebt sich selbst und schützt alle anderen Pflanzen vor dem Sterben, solange er im Garten steht.
+- Neue Ultimate-Dekoration **Herz der Geschichten** (Lv 70 · 200.000 🪙, nur 1× kaufbar): +25 % globaler XP-Boost, +25 % auf Level-Up-Münzen, +400 🪙 ab 30-Minuten-Sessions, doppeltes Pflanzenwachstum und +2,5 % der Next-Level-XP auf die erste Lese-Session des Tages.
+- Legendary-Visuals im Shop: warmer Beige-Rand, sanftes Pulsieren und „✨ Legendär"-Badge für Items mit Spezialfähigkeit.
+- Detail-Ansicht im Shop zeigt eine Spezialfähigkeits-Beschreibung vor dem Kauf.
+
+### Geändert
+
+- Session-Abschluss-Celebration hebt Streak-Rettung und Herz-der-Geschichten-Boni jetzt explizit hervor.
+
 ## [0.9.3]
 
 ### Hinzugefügt
