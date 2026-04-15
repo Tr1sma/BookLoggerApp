@@ -1,8 +1,13 @@
 @using BookLoggerApp.Core.Models
 
-<div class="plant-shop-card @(IsSelected ? "selected" : "") @(IsLockedByLevel ? "locked" : "")"
+<div class="plant-shop-card @(IsSelected ? "selected" : "") @(IsLockedByLevel ? "locked" : "") @(IsLegendary ? "legendary" : "")"
      @onclick="OnSelect"
      style="display: flex; flex-direction: column;">
+    @if (IsLegendary)
+    {
+        <div class="legendary-badge">✨ Legendär</div>
+    }
+
     <!-- Decoration Image -->
     <div class="plant-card-image">
         <img src="@Item.ImagePath" alt="@Item.Name" />
@@ -46,4 +51,6 @@
     [Parameter] public EventCallback OnSelect { get; set; }
 
     private bool IsLockedByLevel => UserLevel < Item.UnlockLevel;
+
+    private bool IsLegendary => !string.IsNullOrEmpty(Item.SpecialAbilityKey);
 }

@@ -12,13 +12,16 @@ public class ProgressionService : IProgressionService
 {
     private readonly IAppSettingsProvider _settingsProvider;
     private readonly IPlantService _plantService;
+    private readonly IDecorationService _decorationService;
 
     public ProgressionService(
         IAppSettingsProvider settingsProvider,
-        IPlantService plantService)
+        IPlantService plantService,
+        IDecorationService decorationService)
     {
         _settingsProvider = settingsProvider;
         _plantService = plantService;
+        _decorationService = decorationService;
     }
 
     public async Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0)
@@ -112,9 +115,6 @@ public class ProgressionService : IProgressionService
         // Filter out dead plants — they should not provide XP boosts
         var alivePlants = userPlants.Where(p => p.Status != PlantStatus.Dead).ToList();
 
-        if (!alivePlants.Any())
-            return 0m;
-
         decimal totalBoost = 0m;
 
         foreach (var plant in alivePlants)
@@ -136,7 +136,27 @@ public class ProgressionService : IProgressionService
             totalBoost += plantBoost;
         }
 
+        if (await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart))
+        {
+            totalBoost += SpecialAbilityResolver.StoryHeartXpBoostPct;
+        }
+
         return totalBoost;
+    }
+
+    public async Task<LevelUpResult?> AwardBonusXpAsync(int xp, CancellationToken ct = default)
+    {
+        if (xp <= 0)
+            return null;
+
+        var settings = await _settingsProvider.GetSettingsAsync(ct);
+        int oldXp = settings.TotalXp;
+        settings.TotalXp += xp;
+        settings.UpdatedAt = DateTime.UtcNow;
+
+        var levelUpResult = await CheckAndProcessLevelUpAsync(oldXp, settings.TotalXp, settings);
+        await _settingsProvider.UpdateSettingsAsync(settings, ct);
+        return levelUpResult;
     }
 
     public async Task<LevelUpResult?> CheckAndProcessLevelUpAsync(int oldXp, int newXp, AppSettings? settingsToUpdate = null)
@@ -155,6 +175,11 @@ public class ProgressionService : IProgressionService
         for (int level = oldLevel + 1; level <= newLevel; level++)
         {
             coinsAwarded += XpCalculator.CalculateCoinsForLevel(level);
+        }
+
+        if (await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart))
+        {
+            coinsAwarded = (int)Math.Round(coinsAwarded * SpecialAbilityResolver.StoryHeartCoinMultiplier);
         }
 
         int newCoins;

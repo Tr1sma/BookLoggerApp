@@ -1,10 +1,12 @@
 using FluentAssertions;
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using BookLoggerApp.Tests.TestHelpers;
+using NSubstitute;
 using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
@@ -17,6 +19,8 @@ public class ProgressServiceTests : IDisposable
     private readonly MockPlantService _plantService;
     private readonly MockBookService _bookService;
     private readonly MockGoalService _goalService;
+    private readonly IDecorationService _decorationService;
+    private readonly IAppSettingsProvider _settingsProvider;
     private readonly ProgressService _service;
 
     public ProgressServiceTests()
@@ -27,7 +31,15 @@ public class ProgressServiceTests : IDisposable
         _plantService = new MockPlantService();
         _bookService = new MockBookService();
         _goalService = new MockGoalService();
-        _service = new ProgressService(_unitOfWork, _progressionService, _plantService, _bookService, _goalService);
+        _decorationService = Substitute.For<IDecorationService>();
+        _decorationService.UserOwnsAbilityAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(false));
+        _settingsProvider = Substitute.For<IAppSettingsProvider>();
+        _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new AppSettings { UserLevel = 1, TotalXp = 0, Coins = 0 }));
+        _service = new ProgressService(
+            _unitOfWork, _progressionService, _plantService, _bookService,
+            _goalService, _decorationService, _settingsProvider);
     }
 
     public void Dispose()

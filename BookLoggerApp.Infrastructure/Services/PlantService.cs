@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using BookLoggerApp.Core.Exceptions;
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Repositories;
@@ -17,6 +18,7 @@ public class PlantService : IPlantService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAppSettingsProvider _settingsProvider;
+    private readonly IDecorationService _decorationService;
     private readonly IMemoryCache _cache;
     private readonly ILogger<PlantService> _logger;
     private const string SpeciesCacheKey = "AllPlantSpecies";
@@ -24,11 +26,13 @@ public class PlantService : IPlantService
     public PlantService(
         IUnitOfWork unitOfWork,
         IAppSettingsProvider settingsProvider,
+        IDecorationService decorationService,
         IMemoryCache cache,
         ILogger<PlantService> logger)
     {
         _unitOfWork = unitOfWork;
         _settingsProvider = settingsProvider;
+        _decorationService = decorationService;
         _cache = cache;
         _logger = logger;
     }
@@ -161,8 +165,10 @@ public class PlantService : IPlantService
 
         plant.LastWatered = DateTime.UtcNow;
 
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
         // Recalculate status
-        plant.Status = PlantGrowthCalculator.CalculatePlantStatus(plant.LastWatered, plant.Species.WaterIntervalDays);
+        plant.Status = PlantGrowthCalculator.CalculatePlantStatus(plant.LastWatered, plant.Species.WaterIntervalDays, growthMultiplier);
 
         try
         {
@@ -255,11 +261,14 @@ public class PlantService : IPlantService
         plant.ReadingDaysCount++;
         plant.LastReadingDayRecorded = sessionDay;
 
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
         // Calculate new level based on reading days
         int newLevel = PlantGrowthCalculator.CalculateLevelFromReadingDays(
             plant.ReadingDaysCount,
             plant.Species.GrowthRate,
-            plant.Species.MaxLevel
+            plant.Species.MaxLevel,
+            growthMultiplier
         );
 
         // Update level if changed
@@ -440,9 +449,6 @@ public class PlantService : IPlantService
         await RefreshPlantStatusesAsync(allPlants, ct);
         var plants = allPlants.Where(p => p.Status != PlantStatus.Dead).ToList();
 
-        if (!plants.Any())
-            return 0m;
-
         decimal totalBoost = 0m;
 
         foreach (var plant in plants)
@@ -459,6 +465,11 @@ public class PlantService : IPlantService
             decimal plantBoost = baseBoost + levelBonus;
 
             totalBoost += plantBoost;
+        }
+
+        if (await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct))
+        {
+            totalBoost += SpecialAbilityResolver.StoryHeartXpBoostPct;
         }
 
         return totalBoost;
@@ -486,11 +497,15 @@ public class PlantService : IPlantService
 
     private async Task RefreshPlantStatusesAsync(IEnumerable<UserPlant> plants, CancellationToken ct)
     {
+        var plantList = plants as IList<UserPlant> ?? plants.ToList();
+        bool userOwnsPhoenix = UserOwnsEternalPhoenix(plantList);
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
         bool hasChanges = false;
 
-        foreach (var plant in plants)
+        foreach (var plant in plantList)
         {
-            if (!TryApplyCurrentPlantStatus(plant))
+            if (!TryApplyCurrentPlantStatus(plant, userOwnsPhoenix, growthMultiplier))
                 continue;
 
             hasChanges = true;
@@ -505,25 +520,69 @@ public class PlantService : IPlantService
 
     private async Task RefreshPlantStatusAsync(UserPlant plant, CancellationToken ct)
     {
-        if (!TryApplyCurrentPlantStatus(plant))
+        // Phoenix ownership gates a protection rule that applies across all plants, so we
+        // load the full set to determine it even when only one plant is being refreshed.
+        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        bool userOwnsPhoenix = UserOwnsEternalPhoenix(allPlants);
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
+        if (!TryApplyCurrentPlantStatus(plant, userOwnsPhoenix, growthMultiplier))
             return;
 
         await _unitOfWork.UserPlants.UpdateAsync(plant);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    private static bool TryApplyCurrentPlantStatus(UserPlant plant)
+    private async Task<double> GetGlobalGrowthMultiplierAsync(CancellationToken ct)
+    {
+        return await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct)
+            ? (double)SpecialAbilityResolver.StoryHeartPlantGrowthMultiplier
+            : 1.0;
+    }
+
+    private static bool UserOwnsEternalPhoenix(IEnumerable<UserPlant> plants)
+    {
+        foreach (var plant in plants)
+        {
+            if (plant.Species?.SpecialAbilityKey == SpecialAbilityKeys.EternalPhoenix)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool TryApplyCurrentPlantStatus(UserPlant plant, bool userOwnsPhoenix, double growthMultiplier)
     {
         if (plant.Species == null)
             return false;
 
         var currentStatus = PlantGrowthCalculator.CalculatePlantStatus(
             plant.LastWatered,
-            plant.Species.WaterIntervalDays
+            plant.Species.WaterIntervalDays,
+            growthMultiplier
         );
 
+        // Phoenix protection: while a Phoenix-Bonsai is owned, no plant in the garden can
+        // transition to Dead. The Phoenix itself is always owned (it self-revives), so the
+        // same check handles self-revival. For the Phoenix we also reset LastWatered to now
+        // so it doesn't re-enter the "would be dead" branch every status refresh.
+        bool mutatedLastWatered = false;
+        if (currentStatus == PlantStatus.Dead && userOwnsPhoenix)
+        {
+            currentStatus = PlantStatus.Wilting;
+
+            if (plant.Species.SpecialAbilityKey == SpecialAbilityKeys.EternalPhoenix)
+            {
+                plant.LastWatered = DateTime.UtcNow;
+                mutatedLastWatered = true;
+            }
+        }
+
         if (plant.Status == currentStatus)
-            return false;
+        {
+            return mutatedLastWatered;
+        }
 
         plant.Status = currentStatus;
         return true;

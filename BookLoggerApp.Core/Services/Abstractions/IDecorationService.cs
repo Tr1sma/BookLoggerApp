@@ -27,4 +27,11 @@ public interface IDecorationService
     /// Deletes a decoration and removes all shelf placements.
     /// </summary>
     Task DeleteAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns true if the user currently owns at least one decoration whose ShopItem
+    /// carries the given <paramref name="abilityKey"/>. Used to resolve special late-game
+    /// abilities (e.g. Herz der Geschichten).
+    /// </summary>
+    Task<bool> UserOwnsAbilityAsync(string abilityKey, CancellationToken ct = default);
 }

@@ -227,7 +227,9 @@ public static class DbInitializer
                     existing.ImagePath != def.ImagePath ||
                     existing.UnlockLevel != def.UnlockLevel ||
                     existing.IsAvailable != def.IsAvailable ||
-                    existing.SlotWidth != def.SlotWidth)
+                    existing.SlotWidth != def.SlotWidth ||
+                    existing.SpecialAbilityKey != def.SpecialAbilityKey ||
+                    existing.IsSingleton != def.IsSingleton)
                 {
                     logger?.LogInformation("Updating decoration '{Name}'...", def.Name);
 
@@ -238,6 +240,8 @@ public static class DbInitializer
                     existing.UnlockLevel = def.UnlockLevel;
                     existing.IsAvailable = def.IsAvailable;
                     existing.SlotWidth = def.SlotWidth;
+                    existing.SpecialAbilityKey = def.SpecialAbilityKey;
+                    existing.IsSingleton = def.IsSingleton;
 
                     hasChanges = true;
                 }
@@ -284,10 +288,11 @@ public static class DbInitializer
                     existing.ImagePath != def.ImagePath ||
                     existing.Name != def.Name ||
                     existing.Description != def.Description ||
-                    existing.IsAvailable != def.IsAvailable)
+                    existing.IsAvailable != def.IsAvailable ||
+                    existing.SpecialAbilityKey != def.SpecialAbilityKey)
                 {
                     logger?.LogInformation("Updating plant '{Name}' stats...", def.Name);
-                    
+
                     existing.UnlockLevel = def.UnlockLevel;
                     existing.BaseCost = def.BaseCost;
                     existing.GrowthRate = def.GrowthRate;
@@ -298,7 +303,8 @@ public static class DbInitializer
                     existing.Name = def.Name;
                     existing.Description = def.Description;
                     existing.IsAvailable = def.IsAvailable;
-                    
+                    existing.SpecialAbilityKey = def.SpecialAbilityKey;
+
                     hasChanges = true;
                 }
             }

@@ -130,6 +130,9 @@
 {
     <SessionCompleteCelebration
         Result="@SessionProgressionResult"
+        StreakRescuedByGuardian="@StreakRescuedByGuardian"
+        StoryHeartCoinBonus="@StoryHeartCoinBonus"
+        StoryHeartFirstOfDayBonusXp="@StoryHeartFirstOfDayBonusXp"
         OnClose="@HandleSessionCelebrationClose" />
 }
 
@@ -192,6 +195,9 @@
     private LevelUpResult? LevelUpResult { get; set; }
     private bool GoalCompletedDuringSession { get; set; }
     private bool BookCompletedDuringSession { get; set; }
+    private bool StreakRescuedByGuardian { get; set; }
+    private int StoryHeartCoinBonus { get; set; }
+    private int StoryHeartFirstOfDayBonusXp { get; set; }
     private bool ShowBookCompletionCelebration { get; set; }
     private bool _isGeneratingBookCard;
     private bool ShowReviewPrompt { get; set; }
@@ -363,6 +369,9 @@
 
             // Store progression result for celebration
             SessionProgressionResult = result.ProgressionResult;
+            StreakRescuedByGuardian = result.StreakRescuedByGuardian;
+            StoryHeartCoinBonus = result.StoryHeartCoinBonus;
+            StoryHeartFirstOfDayBonusXp = result.StoryHeartFirstOfDayBonusXp;
             var streakCelebrationPending = ShouldShowStreakCelebration(SessionProgressionResult);
 
             // Reset timer state
