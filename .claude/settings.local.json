@@ -45,7 +45,11 @@
       "Bash(dotnet ildasm:*)",
       "Bash(cat)",
       "Bash(powershell.exe -Command \"[System.Reflection.Assembly]::LoadFrom\\('C:/Users/Tristan/.nuget/packages/blazor-apexcharts/6.1.0/lib/net10.0/Blazor-ApexCharts.dll'\\); [Enum]::GetNames\\([ApexCharts.SeriesType]\\)\")",
-      "Bash(powershell.exe:*)"
+      "Bash(powershell.exe:*)",
+      "Read(//c/tmp/**)",
+      "Bash(csc test_xp.cs)",
+      "Bash(./test_xp.exe)",
+      "Bash(python3 *)"
     ],
     "deny": [],
     "ask": []

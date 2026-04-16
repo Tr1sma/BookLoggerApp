@@ -3,11 +3,6 @@
 <div class="plant-shop-card @(IsSelected ? "selected" : "") @(IsLockedByLevel ? "locked" : "") @(IsLegendary ? "legendary" : "")"
      @onclick="OnSelect"
      style="display: flex; flex-direction: column;">
-    @if (IsLegendary)
-    {
-        <div class="legendary-badge">✨ Legendär</div>
-    }
-
     <!-- Decoration Image -->
     <div class="plant-card-image">
         <img src="@Item.ImagePath" alt="@Item.Name" />
@@ -15,6 +10,10 @@
 
     <!-- Decoration Info -->
     <div class="plant-card-body">
+        @if (IsLegendary)
+        {
+            <div class="legendary-badge">✨ Legendary</div>
+        }
         <h3 class="plant-card-title">@Item.Name</h3>
         <p class="plant-card-description">@Item.Description</p>
 

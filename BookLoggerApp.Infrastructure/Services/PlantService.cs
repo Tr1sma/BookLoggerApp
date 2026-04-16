@@ -203,17 +203,14 @@ public class PlantService : IPlantService
             plant.Species.MaxLevel
         );
 
-        // Update level if changed
+        // Compute coin payout but defer persistence until the plant save succeeds,
+        // otherwise a failed plant save would leave the user with the coins but no level-up.
+        int coinsAwarded = 0;
         if (newLevel > plant.CurrentLevel)
         {
             int levelsGained = newLevel - plant.CurrentLevel;
             plant.CurrentLevel = newLevel;
-
-            // Award 100 coins per level gained
-            int coinsAwarded = levelsGained * 100;
-            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
-            _logger.LogInformation("Plant {PlantId} leveled up to {Level}, awarded {Coins} coins",
-                plantId, newLevel, coinsAwarded);
+            coinsAwarded = levelsGained * 100;
         }
 
         try
@@ -225,6 +222,13 @@ public class PlantService : IPlantService
         {
             _logger.LogWarning(ex, "Concurrency conflict adding experience to plant {PlantId}", plantId);
             throw new ConcurrencyException($"Plant with ID {plantId} was modified by another user. Please reload and try again.", ex);
+        }
+
+        if (coinsAwarded > 0)
+        {
+            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
+            _logger.LogInformation("Plant {PlantId} leveled up to {Level}, awarded {Coins} coins",
+                plantId, newLevel, coinsAwarded);
         }
     }
 
@@ -271,17 +275,14 @@ public class PlantService : IPlantService
             growthMultiplier
         );
 
-        // Update level if changed
+        // Compute coin payout but defer persistence until the plant save succeeds,
+        // otherwise a failed plant save would leave the user with the coins but no level-up.
+        int coinsAwarded = 0;
         if (newLevel > plant.CurrentLevel)
         {
             int levelsGained = newLevel - plant.CurrentLevel;
             plant.CurrentLevel = newLevel;
-
-            // Award 100 coins per level gained
-            int coinsAwarded = levelsGained * 100;
-            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
-            _logger.LogInformation("Plant {PlantId} leveled up to {Level} after {ReadingDays} reading days, awarded {Coins} coins",
-                plantId, newLevel, plant.ReadingDaysCount, coinsAwarded);
+            coinsAwarded = levelsGained * 100;
         }
 
         try
@@ -293,6 +294,13 @@ public class PlantService : IPlantService
         {
             _logger.LogWarning(ex, "Concurrency conflict recording reading day for plant {PlantId}", plantId);
             throw new ConcurrencyException($"Plant with ID {plantId} was modified by another user. Please reload and try again.", ex);
+        }
+
+        if (coinsAwarded > 0)
+        {
+            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
+            _logger.LogInformation("Plant {PlantId} leveled up to {Level} after {ReadingDays} reading days, awarded {Coins} coins",
+                plantId, newLevel, plant.ReadingDaysCount, coinsAwarded);
         }
     }
 
@@ -439,40 +447,16 @@ public class PlantService : IPlantService
 
     /// <summary>
     /// Calculate the total XP boost percentage from all owned plants.
-    /// Formula per plant: baseBoost + (levelBonus per level)
-    /// Example: StarterSprout at level 5 = 5% + (5 * 0.5%) = 7.5%
-    /// Total boost is cumulative across all plants.
+    /// Formula per plant: baseBoost + (levelBonus per level).
+    /// Delegates to <see cref="SpecialAbilityResolver.CalculateAggregatedPlantBoost"/>
+    /// so UI display and XP-award use the same calculation.
     /// </summary>
     public async Task<decimal> CalculateTotalXpBoostAsync(CancellationToken ct = default)
     {
         var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
         await RefreshPlantStatusesAsync(allPlants, ct);
-        var plants = allPlants.Where(p => p.Status != PlantStatus.Dead).ToList();
-
-        decimal totalBoost = 0m;
-
-        foreach (var plant in plants)
-        {
-            if (plant.Species == null)
-                continue;
-
-            // Calculate boost for this plant
-            // Formula: baseBoost + (currentLevel * (baseBoost / maxLevel))
-            decimal baseBoost = plant.Species.XpBoostPercentage;
-            decimal levelBonus = plant.Species.MaxLevel > 0
-                ? plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel)
-                : 0m;
-            decimal plantBoost = baseBoost + levelBonus;
-
-            totalBoost += plantBoost;
-        }
-
-        if (await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct))
-        {
-            totalBoost += SpecialAbilityResolver.StoryHeartXpBoostPct;
-        }
-
-        return totalBoost;
+        bool hasStoryHeart = await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct);
+        return SpecialAbilityResolver.CalculateAggregatedPlantBoost(allPlants, hasStoryHeart);
     }
 
     /// <summary>
@@ -498,7 +482,7 @@ public class PlantService : IPlantService
     private async Task RefreshPlantStatusesAsync(IEnumerable<UserPlant> plants, CancellationToken ct)
     {
         var plantList = plants as IList<UserPlant> ?? plants.ToList();
-        bool userOwnsPhoenix = UserOwnsEternalPhoenix(plantList);
+        bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(plantList, SpecialAbilityKeys.EternalPhoenix);
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
 
         bool hasChanges = false;
@@ -523,7 +507,7 @@ public class PlantService : IPlantService
         // Phoenix ownership gates a protection rule that applies across all plants, so we
         // load the full set to determine it even when only one plant is being refreshed.
         var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
-        bool userOwnsPhoenix = UserOwnsEternalPhoenix(allPlants);
+        bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(allPlants, SpecialAbilityKeys.EternalPhoenix);
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
 
         if (!TryApplyCurrentPlantStatus(plant, userOwnsPhoenix, growthMultiplier))
@@ -538,18 +522,6 @@ public class PlantService : IPlantService
         return await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct)
             ? (double)SpecialAbilityResolver.StoryHeartPlantGrowthMultiplier
             : 1.0;
-    }
-
-    private static bool UserOwnsEternalPhoenix(IEnumerable<UserPlant> plants)
-    {
-        foreach (var plant in plants)
-        {
-            if (plant.Species?.SpecialAbilityKey == SpecialAbilityKeys.EternalPhoenix)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static bool TryApplyCurrentPlantStatus(UserPlant plant, bool userOwnsPhoenix, double growthMultiplier)

@@ -28,6 +28,15 @@ Versionsschema:
 
 - Session-Abschluss-Celebration hebt Streak-Rettung und Herz-der-Geschichten-Boni jetzt explizit hervor.
 
+### Behoben
+
+- Phönix-Schutz zählt tote Pflanzen nicht mehr als aktive Schutzquelle (Code-Drift zwischen `SpecialAbilityResolver` und `PlantService` behoben).
+- Herz-der-Geschichten-Bonus auf die erste Session des Tages wird jetzt korrekt vom Level vor dem Session-Level-Up berechnet.
+- Streak-Wächter-Cooldown wird erst nach erfolgreichem Speichern der Rescue-Session aktualisiert — ein fehlgeschlagener Save verbraucht die Rettung nicht mehr.
+- Doppel-Klick auf den Kaufen-Button wird während laufender Transaktion blockiert, um einen versehentlichen Doppelkauf des singulären Herz der Geschichten zu verhindern.
+- Plant-Boost-Berechnung über einen gemeinsamen Helper (`SpecialAbilityResolver.CalculateAggregatedPlantBoost`) — UI-Anzeige und XP-Gewährung nutzen jetzt dieselbe Quelle und können nicht mehr voneinander abweichen.
+- Pflanzen-Level-Up-Münzen werden erst nach erfolgreichem Speichern des neuen Levels gutgeschrieben — bei einem DB-Konflikt (`DbUpdateConcurrencyException`) im Pflanzen-Save bleiben die Münzen jetzt korrekt auf dem alten Stand, statt ohne zugehörigen Level-Aufstieg ausgezahlt zu werden.
+
 ## [0.9.3]
 
 ### Hinzugefügt

@@ -18,17 +18,17 @@
             @if (StreakRescuedByGuardian)
             {
                 <div class="ability-callout">
-                    ✨ <strong>Der Chronikbaum hat deinen Streak gerettet!</strong>
+                    ✨ <strong>The Chronicle Tree saved your streak!</strong>
                 </div>
             }
 
             @if (StoryHeartCoinBonus > 0 || StoryHeartFirstOfDayBonusXp > 0)
             {
                 <div class="ability-callout">
-                    💖 <strong>Herz der Geschichten:</strong>
+                    💖 <strong>Heart of Stories:</strong>
                     @if (StoryHeartCoinBonus > 0)
                     {
-                        <span>+@StoryHeartCoinBonus Münzen</span>
+                        <span>+@StoryHeartCoinBonus coins</span>
                     }
                     @if (StoryHeartCoinBonus > 0 && StoryHeartFirstOfDayBonusXp > 0)
                     {
@@ -36,7 +36,7 @@
                     }
                     @if (StoryHeartFirstOfDayBonusXp > 0)
                     {
-                        <span>+@StoryHeartFirstOfDayBonusXp XP (erste Session des Tages)</span>
+                        <span>+@StoryHeartFirstOfDayBonusXp XP (first session of the day)</span>
                     }
                 </div>
             }

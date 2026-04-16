@@ -224,8 +224,8 @@ public static class DecorationSeedData
         {
             Id = _storyHeartId,
             ItemType = ShopItemType.Decoration,
-            Name = "Herz der Geschichten",
-            Description = "Das Herz der Bibliothek — ein pulsierendes Relikt in warmem Beige. Es ist die ultimative Belohnung für jede Leserin, die niemals aufgibt. Seine Magie durchdringt jeden Aspekt deiner Reise.",
+            Name = "Heart of Stories",
+            Description = "The heart of the library — a pulsing relic in warm beige. The ultimate reward for every reader who never gives up. Its magic permeates every aspect of your journey.",
             Cost = 200000,
             ImagePath = "images/decorations/heart_of_stories.svg",
             IsAvailable = true,

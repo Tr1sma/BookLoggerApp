@@ -19,8 +19,8 @@ public class LateGameSeedIntegrityTests
         var chronicle = PlantSeedData.GetPlants()
             .FirstOrDefault(p => p.SpecialAbilityKey == SpecialAbilityKeys.StreakGuardian);
 
-        chronicle.Should().NotBeNull("the Chronikbaum must be seeded with streak_guardian");
-        chronicle!.Name.Should().Be("Chronikbaum");
+        chronicle.Should().NotBeNull("the Chronicle Tree must be seeded with streak_guardian");
+        chronicle!.Name.Should().Be("Chronicle Tree");
         chronicle.UnlockLevel.Should().Be(45);
         chronicle.BaseCost.Should().Be(20000);
         chronicle.MaxLevel.Should().Be(40);
@@ -32,8 +32,8 @@ public class LateGameSeedIntegrityTests
         var phoenix = PlantSeedData.GetPlants()
             .FirstOrDefault(p => p.SpecialAbilityKey == SpecialAbilityKeys.EternalPhoenix);
 
-        phoenix.Should().NotBeNull("the Ewiger Phönix-Bonsai must be seeded with eternal_phoenix");
-        phoenix!.Name.Should().Be("Ewiger Phönix-Bonsai");
+        phoenix.Should().NotBeNull("the Eternal Phoenix Bonsai must be seeded with eternal_phoenix");
+        phoenix!.Name.Should().Be("Eternal Phoenix Bonsai");
         phoenix.UnlockLevel.Should().Be(57);
         phoenix.BaseCost.Should().Be(80000);
         phoenix.MaxLevel.Should().Be(50);
@@ -45,11 +45,11 @@ public class LateGameSeedIntegrityTests
         var heart = DecorationSeedData.GetDecorations()
             .FirstOrDefault(d => d.SpecialAbilityKey == SpecialAbilityKeys.StoryHeart);
 
-        heart.Should().NotBeNull("Herz der Geschichten must be seeded with story_heart");
-        heart!.Name.Should().Be("Herz der Geschichten");
+        heart.Should().NotBeNull("Heart of Stories must be seeded with story_heart");
+        heart!.Name.Should().Be("Heart of Stories");
         heart.UnlockLevel.Should().Be(70);
         heart.Cost.Should().Be(200000);
-        heart.IsSingleton.Should().BeTrue("Herz der Geschichten must be a singleton purchase");
+        heart.IsSingleton.Should().BeTrue("Heart of Stories must be a singleton purchase");
         heart.ItemType.Should().Be(ShopItemType.Decoration);
     }
 

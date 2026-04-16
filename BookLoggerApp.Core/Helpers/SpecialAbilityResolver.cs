@@ -97,4 +97,38 @@ public static class SpecialAbilityResolver
 
         return (utcNow - guardian.LastStreakSaveAt.Value).TotalDays >= StreakGuardianCooldownDays;
     }
+
+    /// <summary>
+    /// Calculates the aggregated XP-boost percentage from all alive plants plus the
+    /// Heart-of-Stories bonus (if owned). Single source of truth used by both
+    /// PlantService.CalculateTotalXpBoostAsync and ProgressionService.GetTotalPlantBoostAsync.
+    /// </summary>
+    public static decimal CalculateAggregatedPlantBoost(IEnumerable<UserPlant> plants, bool userOwnsStoryHeart)
+    {
+        decimal totalBoost = 0m;
+
+        if (plants is not null)
+        {
+            foreach (UserPlant plant in plants)
+            {
+                if (plant.Status == PlantStatus.Dead || plant.Species is null)
+                {
+                    continue;
+                }
+
+                decimal baseBoost = plant.Species.XpBoostPercentage;
+                decimal levelBonus = plant.Species.MaxLevel > 0
+                    ? plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel)
+                    : 0m;
+                totalBoost += baseBoost + levelBonus;
+            }
+        }
+
+        if (userOwnsStoryHeart)
+        {
+            totalBoost += StoryHeartXpBoostPct;
+        }
+
+        return totalBoost;
+    }
 }
