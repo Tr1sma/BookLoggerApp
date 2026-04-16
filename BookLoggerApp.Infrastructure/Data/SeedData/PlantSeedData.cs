@@ -144,8 +144,8 @@ public static class PlantSeedData
         yield return new PlantSpecies
         {
             Id = _chronicleTreeId,
-            Name = "Chronikbaum",
-            Description = "Ein uralter Chronikbaum, dessen Blätter wie Pergament aus vergangenen Zeiten wirken. Wenn dein Lese-Streak zu brechen droht, hält er die Geschichte deiner Reise fest.",
+            Name = "Chronicle Tree",
+            Description = "An ancient chronicle tree whose leaves resemble parchment from bygone eras. When your reading streak threatens to break, it preserves the story of your journey.",
             ImagePath = "images/plants/chronicle_tree.svg",
             MaxLevel = 40,
             WaterIntervalDays = 21,
@@ -160,8 +160,8 @@ public static class PlantSeedData
         yield return new PlantSpecies
         {
             Id = _eternalPhoenixBonsaiId,
-            Name = "Ewiger Phönix-Bonsai",
-            Description = "Ein heiliger Bonsai, dessen goldene Blätter mit der Weisheit unzähliger Bücher glühen. Solange er wacht, stirbt in deinem Garten keine Pflanze — und er selbst erhebt sich immer wieder aus seiner Asche.",
+            Name = "Eternal Phoenix Bonsai",
+            Description = "A sacred bonsai whose golden leaves glow with the wisdom of countless books. While it watches your garden, no plant shall die — and it rises from its own ashes again and again.",
             ImagePath = "images/plants/eternal_phoenix_bonsai.svg",
             MaxLevel = 50,
             WaterIntervalDays = 30,

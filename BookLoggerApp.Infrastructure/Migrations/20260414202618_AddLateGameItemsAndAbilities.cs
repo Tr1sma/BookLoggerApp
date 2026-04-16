@@ -101,8 +101,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                 columns: new[] { "Id", "BaseCost", "Description", "GrowthRate", "ImagePath", "IsAvailable", "MaxLevel", "Name", "SpecialAbilityKey", "UnlockLevel", "WaterIntervalDays", "XpBoostPercentage" },
                 values: new object[,]
                 {
-                    { new Guid("10000000-0000-0000-0000-000000000009"), 20000, "Ein uralter Chronikbaum, dessen Blätter wie Pergament aus vergangenen Zeiten wirken. Wenn dein Lese-Streak zu brechen droht, hält er die Geschichte deiner Reise fest.", 0.40000000000000002, "images/plants/chronicle_tree.svg", true, 40, "Chronikbaum", "streak_guardian", 45, 21, 0.30m },
-                    { new Guid("10000000-0000-0000-0000-00000000000a"), 80000, "Ein heiliger Bonsai, dessen goldene Blätter mit der Weisheit unzähliger Bücher glühen. Solange er wacht, stirbt in deinem Garten keine Pflanze — und er selbst erhebt sich immer wieder aus seiner Asche.", 0.25, "images/plants/eternal_phoenix_bonsai.svg", true, 50, "Ewiger Phönix-Bonsai", "eternal_phoenix", 57, 30, 0.50m }
+                    { new Guid("10000000-0000-0000-0000-000000000009"), 20000, "An ancient chronicle tree whose leaves resemble parchment from bygone eras. When your reading streak threatens to break, it preserves the story of your journey.", 0.40000000000000002, "images/plants/chronicle_tree.svg", true, 40, "Chronicle Tree", "streak_guardian", 45, 21, 0.30m },
+                    { new Guid("10000000-0000-0000-0000-00000000000a"), 80000, "A sacred bonsai whose golden leaves glow with the wisdom of countless books. While it watches your garden, no plant shall die — and it rises from its own ashes again and again.", 0.25, "images/plants/eternal_phoenix_bonsai.svg", true, 50, "Eternal Phoenix Bonsai", "eternal_phoenix", 57, 30, 0.50m }
                 });
 
             migrationBuilder.UpdateData(
@@ -206,7 +206,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "ShopItems",
                 columns: new[] { "Id", "Cost", "Description", "ImagePath", "IsAvailable", "IsSingleton", "ItemType", "Name", "PlantSpeciesId", "SlotWidth", "SpecialAbilityKey", "UnlockLevel" },
-                values: new object[] { new Guid("20000000-0000-0000-0000-00000000000f"), 200000, "Das Herz der Bibliothek — ein pulsierendes Relikt in warmem Beige. Es ist die ultimative Belohnung für jede Leserin, die niemals aufgibt. Seine Magie durchdringt jeden Aspekt deiner Reise.", "images/decorations/heart_of_stories.svg", true, true, 2, "Herz der Geschichten", null, 2, "story_heart", 70 });
+                values: new object[] { new Guid("20000000-0000-0000-0000-00000000000f"), 200000, "The heart of the library — a pulsing relic in warm beige. The ultimate reward for every reader who never gives up. Its magic permeates every aspect of your journey.", "images/decorations/heart_of_stories.svg", true, true, 2, "Heart of Stories", null, 2, "story_heart", 70 });
         }
 
         /// <inheritdoc />
