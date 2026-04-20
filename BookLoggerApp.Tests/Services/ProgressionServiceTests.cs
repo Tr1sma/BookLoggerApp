@@ -40,7 +40,8 @@ public class ProgressionServiceTests
                     CreatePlant(level: 10, PlantStatus.Dead)
                 }));
 
-        var service = new ProgressionService(settingsProvider, plantService);
+        var decorationService = CreateDecorationService();
+        var service = new ProgressionService(settingsProvider, plantService, decorationService);
 
         // Act
         var totalBoost = await service.GetTotalPlantBoostAsync();
@@ -58,7 +59,8 @@ public class ProgressionServiceTests
         plantService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<UserPlant>>(Array.Empty<UserPlant>()));
 
-        var service = new ProgressionService(settingsProvider, plantService);
+        var decorationService = CreateDecorationService();
+        var service = new ProgressionService(settingsProvider, plantService, decorationService);
 
         // Act
         var result = await service.AwardSessionXpAsync(10, 5, Guid.NewGuid(), 7);
@@ -80,9 +82,18 @@ public class ProgressionServiceTests
             Task.FromResult<IReadOnlyList<UserPlant>>(
                 new[] { CreatePlant(plantLevel, PlantStatus.Healthy) }));
 
-        var service = new ProgressionService(settingsProvider, plantService);
+        var decorationService = CreateDecorationService();
+        var service = new ProgressionService(settingsProvider, plantService, decorationService);
 
         return await service.AwardSessionXpAsync(16, 0, Guid.NewGuid());
+    }
+
+    private static IDecorationService CreateDecorationService(bool ownsStoryHeart = false)
+    {
+        var decorationService = Substitute.For<IDecorationService>();
+        decorationService.UserOwnsAbilityAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(ownsStoryHeart));
+        return decorationService;
     }
 
     private static IAppSettingsProvider CreateSettingsProvider()

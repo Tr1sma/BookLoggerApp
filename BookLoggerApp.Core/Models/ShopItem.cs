@@ -33,6 +33,19 @@ public class ShopItem
     [Range(1, 4)]
     public int SlotWidth { get; set; } = 1;
 
+    /// <summary>
+    /// Optional key identifying a special gameplay ability (e.g. "story_heart").
+    /// Null for ordinary cosmetic items. See <see cref="SpecialAbilityKeys"/>.
+    /// </summary>
+    [MaxLength(50)]
+    public string? SpecialAbilityKey { get; set; }
+
+    /// <summary>
+    /// If true, the user can own at most one instance of this item.
+    /// Purchase attempts while the user already owns it must be rejected.
+    /// </summary>
+    public bool IsSingleton { get; set; }
+
     // For Plants: Reference to PlantSpecies
     public Guid? PlantSpeciesId { get; set; }
     public PlantSpecies? PlantSpecies { get; set; }

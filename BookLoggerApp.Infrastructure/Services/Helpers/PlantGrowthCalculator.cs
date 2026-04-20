@@ -94,24 +94,29 @@ public static class PlantGrowthCalculator
     /// <summary>
     /// Calculate plant status based on last watered date and water interval.
     /// Pflanzen sterben nach 2 verpassten Gießzeiten.
+    /// When <paramref name="globalGrowthMultiplier"/> > 1, the effective water interval is
+    /// shortened proportionally (faster growth also means faster thirst).
     /// </summary>
-    public static PlantStatus CalculatePlantStatus(DateTime lastWatered, int waterIntervalDays)
+    public static PlantStatus CalculatePlantStatus(DateTime lastWatered, int waterIntervalDays, double globalGrowthMultiplier = 1.0)
     {
         var daysSinceWatered = (DateTime.UtcNow - lastWatered).TotalDays;
+        double effectiveInterval = globalGrowthMultiplier > 0
+            ? waterIntervalDays / globalGrowthMultiplier
+            : waterIntervalDays;
 
         // Healthy: Innerhalb des normalen Gießintervalls
-        if (daysSinceWatered < waterIntervalDays)
+        if (daysSinceWatered < effectiveInterval)
             return PlantStatus.Healthy;
 
-        // Thirsty: 1. verpasste Gießzeit (waterIntervalDays bis waterIntervalDays * 1.5)
-        else if (daysSinceWatered < waterIntervalDays * 1.5)
+        // Thirsty: 1. verpasste Gießzeit (effectiveInterval bis effectiveInterval * 1.5)
+        else if (daysSinceWatered < effectiveInterval * 1.5)
             return PlantStatus.Thirsty;
 
-        // Wilting: Kurz vor dem Tod (waterIntervalDays * 1.5 bis waterIntervalDays * 2)
-        else if (daysSinceWatered < waterIntervalDays * 2)
+        // Wilting: Kurz vor dem Tod (effectiveInterval * 1.5 bis effectiveInterval * 2)
+        else if (daysSinceWatered < effectiveInterval * 2)
             return PlantStatus.Wilting;
 
-        // Dead: 2. verpasste Gießzeit (ab waterIntervalDays * 2)
+        // Dead: 2. verpasste Gießzeit (ab effectiveInterval * 2)
         else
             return PlantStatus.Dead;
     }
@@ -161,17 +166,19 @@ public static class PlantGrowthCalculator
 
     /// <summary>
     /// Calculate level based on reading days.
-    /// Formula: floor(readingDays * growthRate / 3) + 1
+    /// Formula: floor(readingDays * growthRate * globalGrowthMultiplier / 3) + 1
     /// At GrowthRate 1.0: 3 reading days = 1 level.
     /// At GrowthRate 1.2: ~2.5 reading days = 1 level (20% faster).
     /// At GrowthRate 0.8: ~3.75 reading days = 1 level (20% slower).
+    /// When Herz der Geschichten is owned, callers pass globalGrowthMultiplier = 2.0 which
+    /// halves the reading-days required per level globally.
     /// </summary>
-    public static int CalculateLevelFromReadingDays(int readingDays, double growthRate, int maxLevel)
+    public static int CalculateLevelFromReadingDays(int readingDays, double growthRate, int maxLevel, double globalGrowthMultiplier = 1.0)
     {
         if (readingDays <= 0)
             return 1;
 
-        int level = (int)Math.Floor(readingDays * growthRate / 3.0) + 1;
+        int level = (int)Math.Floor(readingDays * growthRate * globalGrowthMultiplier / 3.0) + 1;
         return Math.Min(level, maxLevel);
     }
 

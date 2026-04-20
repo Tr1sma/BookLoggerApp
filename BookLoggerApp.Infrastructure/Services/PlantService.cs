@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using BookLoggerApp.Core.Exceptions;
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Repositories;
@@ -17,6 +18,7 @@ public class PlantService : IPlantService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAppSettingsProvider _settingsProvider;
+    private readonly IDecorationService _decorationService;
     private readonly IMemoryCache _cache;
     private readonly ILogger<PlantService> _logger;
     private const string SpeciesCacheKey = "AllPlantSpecies";
@@ -24,11 +26,13 @@ public class PlantService : IPlantService
     public PlantService(
         IUnitOfWork unitOfWork,
         IAppSettingsProvider settingsProvider,
+        IDecorationService decorationService,
         IMemoryCache cache,
         ILogger<PlantService> logger)
     {
         _unitOfWork = unitOfWork;
         _settingsProvider = settingsProvider;
+        _decorationService = decorationService;
         _cache = cache;
         _logger = logger;
     }
@@ -161,8 +165,10 @@ public class PlantService : IPlantService
 
         plant.LastWatered = DateTime.UtcNow;
 
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
         // Recalculate status
-        plant.Status = PlantGrowthCalculator.CalculatePlantStatus(plant.LastWatered, plant.Species.WaterIntervalDays);
+        plant.Status = PlantGrowthCalculator.CalculatePlantStatus(plant.LastWatered, plant.Species.WaterIntervalDays, growthMultiplier);
 
         try
         {
@@ -197,17 +203,14 @@ public class PlantService : IPlantService
             plant.Species.MaxLevel
         );
 
-        // Update level if changed
+        // Compute coin payout but defer persistence until the plant save succeeds,
+        // otherwise a failed plant save would leave the user with the coins but no level-up.
+        int coinsAwarded = 0;
         if (newLevel > plant.CurrentLevel)
         {
             int levelsGained = newLevel - plant.CurrentLevel;
             plant.CurrentLevel = newLevel;
-
-            // Award 100 coins per level gained
-            int coinsAwarded = levelsGained * 100;
-            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
-            _logger.LogInformation("Plant {PlantId} leveled up to {Level}, awarded {Coins} coins",
-                plantId, newLevel, coinsAwarded);
+            coinsAwarded = levelsGained * 100;
         }
 
         try
@@ -219,6 +222,13 @@ public class PlantService : IPlantService
         {
             _logger.LogWarning(ex, "Concurrency conflict adding experience to plant {PlantId}", plantId);
             throw new ConcurrencyException($"Plant with ID {plantId} was modified by another user. Please reload and try again.", ex);
+        }
+
+        if (coinsAwarded > 0)
+        {
+            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
+            _logger.LogInformation("Plant {PlantId} leveled up to {Level}, awarded {Coins} coins",
+                plantId, newLevel, coinsAwarded);
         }
     }
 
@@ -255,24 +265,24 @@ public class PlantService : IPlantService
         plant.ReadingDaysCount++;
         plant.LastReadingDayRecorded = sessionDay;
 
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
         // Calculate new level based on reading days
         int newLevel = PlantGrowthCalculator.CalculateLevelFromReadingDays(
             plant.ReadingDaysCount,
             plant.Species.GrowthRate,
-            plant.Species.MaxLevel
+            plant.Species.MaxLevel,
+            growthMultiplier
         );
 
-        // Update level if changed
+        // Compute coin payout but defer persistence until the plant save succeeds,
+        // otherwise a failed plant save would leave the user with the coins but no level-up.
+        int coinsAwarded = 0;
         if (newLevel > plant.CurrentLevel)
         {
             int levelsGained = newLevel - plant.CurrentLevel;
             plant.CurrentLevel = newLevel;
-
-            // Award 100 coins per level gained
-            int coinsAwarded = levelsGained * 100;
-            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
-            _logger.LogInformation("Plant {PlantId} leveled up to {Level} after {ReadingDays} reading days, awarded {Coins} coins",
-                plantId, newLevel, plant.ReadingDaysCount, coinsAwarded);
+            coinsAwarded = levelsGained * 100;
         }
 
         try
@@ -284,6 +294,13 @@ public class PlantService : IPlantService
         {
             _logger.LogWarning(ex, "Concurrency conflict recording reading day for plant {PlantId}", plantId);
             throw new ConcurrencyException($"Plant with ID {plantId} was modified by another user. Please reload and try again.", ex);
+        }
+
+        if (coinsAwarded > 0)
+        {
+            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
+            _logger.LogInformation("Plant {PlantId} leveled up to {Level} after {ReadingDays} reading days, awarded {Coins} coins",
+                plantId, newLevel, plant.ReadingDaysCount, coinsAwarded);
         }
     }
 
@@ -354,10 +371,29 @@ public class PlantService : IPlantService
         // Spend coins (will throw if not enough)
         await _settingsProvider.SpendCoinsAsync(cost, ct);
 
-        // Level up the plant
-        plant.CurrentLevel++;
-        await _unitOfWork.UserPlants.UpdateAsync(plant);
-        await _unitOfWork.SaveChangesAsync(ct);
+        // Persist the level increase. _settingsProvider and _unitOfWork use separate DbContexts,
+        // so we can't wrap both in a single EF Core transaction — if the plant save fails after
+        // the coins are already deducted, refund them explicitly so the user isn't charged for a
+        // level they never received.
+        try
+        {
+            plant.CurrentLevel++;
+            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Plant level-up save failed after coins were spent. Refunding {Cost} coins for plant {PlantId}", cost, plantId);
+            try
+            {
+                await _settingsProvider.AddCoinsAsync(cost, ct);
+            }
+            catch (Exception refundEx)
+            {
+                _logger.LogCritical(refundEx, "CRITICAL: Could not refund {Cost} coins after failed level-up for plant {PlantId}. User coin balance is incorrect.", cost, plantId);
+            }
+            throw;
+        }
     }
 
     public async Task<UserPlant> PurchasePlantAsync(Guid speciesId, string name, CancellationToken ct = default)
@@ -375,23 +411,54 @@ public class PlantService : IPlantService
         // Spend coins (will throw if not enough)
         await _settingsProvider.SpendCoinsAsync(cost, ct);
 
-        // Increment PlantsPurchased counter for dynamic pricing
-        await _settingsProvider.IncrementPlantsPurchasedAsync(ct);
-
-        // Create the plant
-        var plant = new UserPlant
+        // Create the plant. _settingsProvider and _unitOfWork use separate DbContexts, so a
+        // single EF Core transaction can't cover both operations — if the plant save fails
+        // after the coins are already deducted, refund them explicitly so the user isn't
+        // charged for a plant they never received.
+        UserPlant result;
+        try
         {
-            SpeciesId = speciesId,
-            Name = name,
-            CurrentLevel = 1,
-            Experience = 0,
-            PlantedAt = DateTime.UtcNow,
-            LastWatered = DateTime.UtcNow,
-            IsActive = false
-        };
+            var plant = new UserPlant
+            {
+                SpeciesId = speciesId,
+                Name = name,
+                CurrentLevel = 1,
+                Experience = 0,
+                PlantedAt = DateTime.UtcNow,
+                LastWatered = DateTime.UtcNow,
+                IsActive = false
+            };
 
-        var result = await _unitOfWork.UserPlants.AddAsync(plant);
-        await _unitOfWork.SaveChangesAsync(ct);
+            result = await _unitOfWork.UserPlants.AddAsync(plant);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Plant purchase save failed after coins were spent. Refunding {Cost} coins for species {SpeciesId}", cost, speciesId);
+            try
+            {
+                await _settingsProvider.AddCoinsAsync(cost, ct);
+            }
+            catch (Exception refundEx)
+            {
+                _logger.LogCritical(refundEx, "CRITICAL: Could not refund {Cost} coins after failed plant purchase for species {SpeciesId}. User coin balance is incorrect.", cost, speciesId);
+            }
+            throw;
+        }
+
+        // Increment PlantsPurchased only after the purchase actually succeeded. Previously this
+        // ran before the plant save, so a failed save would raise the dynamic price even though
+        // no plant existed. A failure here does NOT invalidate the purchase — at worst the next
+        // plant is priced as if this one hadn't been bought yet, which is self-correcting.
+        try
+        {
+            await _settingsProvider.IncrementPlantsPurchasedAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Plant purchase succeeded but PlantsPurchased counter increment failed for species {SpeciesId}. Dynamic pricing for the next plant may be slightly off.", speciesId);
+        }
+
         return result;
     }
 
@@ -430,38 +497,16 @@ public class PlantService : IPlantService
 
     /// <summary>
     /// Calculate the total XP boost percentage from all owned plants.
-    /// Formula per plant: baseBoost + (levelBonus per level)
-    /// Example: StarterSprout at level 5 = 5% + (5 * 0.5%) = 7.5%
-    /// Total boost is cumulative across all plants.
+    /// Formula per plant: baseBoost + (levelBonus per level).
+    /// Delegates to <see cref="SpecialAbilityResolver.CalculateAggregatedPlantBoost"/>
+    /// so UI display and XP-award use the same calculation.
     /// </summary>
     public async Task<decimal> CalculateTotalXpBoostAsync(CancellationToken ct = default)
     {
         var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
         await RefreshPlantStatusesAsync(allPlants, ct);
-        var plants = allPlants.Where(p => p.Status != PlantStatus.Dead).ToList();
-
-        if (!plants.Any())
-            return 0m;
-
-        decimal totalBoost = 0m;
-
-        foreach (var plant in plants)
-        {
-            if (plant.Species == null)
-                continue;
-
-            // Calculate boost for this plant
-            // Formula: baseBoost + (currentLevel * (baseBoost / maxLevel))
-            decimal baseBoost = plant.Species.XpBoostPercentage;
-            decimal levelBonus = plant.Species.MaxLevel > 0
-                ? plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel)
-                : 0m;
-            decimal plantBoost = baseBoost + levelBonus;
-
-            totalBoost += plantBoost;
-        }
-
-        return totalBoost;
+        bool hasStoryHeart = await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct);
+        return SpecialAbilityResolver.CalculateAggregatedPlantBoost(allPlants, hasStoryHeart);
     }
 
     /// <summary>
@@ -486,11 +531,15 @@ public class PlantService : IPlantService
 
     private async Task RefreshPlantStatusesAsync(IEnumerable<UserPlant> plants, CancellationToken ct)
     {
+        var plantList = plants as IList<UserPlant> ?? plants.ToList();
+        bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(plantList, SpecialAbilityKeys.EternalPhoenix);
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
         bool hasChanges = false;
 
-        foreach (var plant in plants)
+        foreach (var plant in plantList)
         {
-            if (!TryApplyCurrentPlantStatus(plant))
+            if (!TryApplyCurrentPlantStatus(plant, userOwnsPhoenix, growthMultiplier))
                 continue;
 
             hasChanges = true;
@@ -505,25 +554,57 @@ public class PlantService : IPlantService
 
     private async Task RefreshPlantStatusAsync(UserPlant plant, CancellationToken ct)
     {
-        if (!TryApplyCurrentPlantStatus(plant))
+        // Phoenix ownership gates a protection rule that applies across all plants, so we
+        // load the full set to determine it even when only one plant is being refreshed.
+        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(allPlants, SpecialAbilityKeys.EternalPhoenix);
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
+        if (!TryApplyCurrentPlantStatus(plant, userOwnsPhoenix, growthMultiplier))
             return;
 
         await _unitOfWork.UserPlants.UpdateAsync(plant);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    private static bool TryApplyCurrentPlantStatus(UserPlant plant)
+    private async Task<double> GetGlobalGrowthMultiplierAsync(CancellationToken ct)
+    {
+        return await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct)
+            ? (double)SpecialAbilityResolver.StoryHeartPlantGrowthMultiplier
+            : 1.0;
+    }
+
+    private static bool TryApplyCurrentPlantStatus(UserPlant plant, bool userOwnsPhoenix, double growthMultiplier)
     {
         if (plant.Species == null)
             return false;
 
         var currentStatus = PlantGrowthCalculator.CalculatePlantStatus(
             plant.LastWatered,
-            plant.Species.WaterIntervalDays
+            plant.Species.WaterIntervalDays,
+            growthMultiplier
         );
 
+        // Phoenix protection: while a Phoenix-Bonsai is owned, no plant in the garden can
+        // transition to Dead. The Phoenix itself is always owned (it self-revives), so the
+        // same check handles self-revival. For the Phoenix we also reset LastWatered to now
+        // so it doesn't re-enter the "would be dead" branch every status refresh.
+        bool mutatedLastWatered = false;
+        if (currentStatus == PlantStatus.Dead && userOwnsPhoenix)
+        {
+            currentStatus = PlantStatus.Wilting;
+
+            if (plant.Species.SpecialAbilityKey == SpecialAbilityKeys.EternalPhoenix)
+            {
+                plant.LastWatered = DateTime.UtcNow;
+                mutatedLastWatered = true;
+            }
+        }
+
         if (plant.Status == currentStatus)
-            return false;
+        {
+            return mutatedLastWatered;
+        }
 
         plant.Status = currentStatus;
         return true;

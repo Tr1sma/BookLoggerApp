@@ -52,4 +52,9 @@ public class MockProgressionService : IProgressionService
     {
         return Task.FromResult<LevelUpResult?>(null);
     }
+
+    public Task<LevelUpResult?> AwardBonusXpAsync(int xp, CancellationToken ct = default)
+    {
+        return Task.FromResult<LevelUpResult?>(null);
+    }
 }

@@ -36,6 +36,9 @@ public static class DecorationSeedData
     private static readonly Guid _alchemyFlaskId = Guid.Parse("20000000-0000-0000-0000-000000000013");
     private static readonly Guid _ancientScrollId = Guid.Parse("20000000-0000-0000-0000-000000000014");
 
+    // Level 70 (ultimate, singleton) — Herz der Geschichten
+    private static readonly Guid _storyHeartId = Guid.Parse("20000000-0000-0000-0000-00000000000F");
+
     public static IEnumerable<ShopItem> GetDecorations()
     {
         yield return new ShopItem
@@ -215,6 +218,21 @@ public static class DecorationSeedData
             IsAvailable = true,
             UnlockLevel = 25,
             SlotWidth = 2
+        };
+
+        yield return new ShopItem
+        {
+            Id = _storyHeartId,
+            ItemType = ShopItemType.Decoration,
+            Name = "Heart of Stories",
+            Description = "The heart of the library — a pulsing relic in warm beige. The ultimate reward for every reader who never gives up. Its magic permeates every aspect of your journey.",
+            Cost = 200000,
+            ImagePath = "images/decorations/heart_of_stories.svg",
+            IsAvailable = true,
+            UnlockLevel = 70,
+            SlotWidth = 2,
+            SpecialAbilityKey = SpecialAbilityKeys.StoryHeart,
+            IsSingleton = true
         };
     }
 }

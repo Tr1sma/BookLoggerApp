@@ -38,4 +38,11 @@ public interface IProgressionService
     /// <param name="settingsToUpdate">Optional settings instance to update (if provided, caller must save)</param>
     /// <returns>Level-up result if level increased, otherwise null</returns>
     Task<LevelUpResult?> CheckAndProcessLevelUpAsync(int oldXp, int newXp, AppSettings? settingsToUpdate = null);
+
+    /// <summary>
+    /// Awards a flat bonus XP amount (no plant/decoration boost applied).
+    /// Used by special abilities that provide pre-computed XP rewards.
+    /// Handles level-up processing if the bonus pushes the user past a level threshold.
+    /// </summary>
+    Task<LevelUpResult?> AwardBonusXpAsync(int xp, CancellationToken ct = default);
 }

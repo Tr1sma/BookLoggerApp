@@ -62,9 +62,11 @@ public partial class DashboardViewModel : ViewModelBase
             var readingBooks = await _bookService.GetByStatusAsync(ReadingStatus.Reading);
             CurrentlyReading = readingBooks.FirstOrDefault();
 
-            // This Week Stats
-            var weekStart = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
-            var weekEnd = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
+            // This Week Stats — ISO 8601 / DE: Woche beginnt Montag
+            var today = DateTime.UtcNow.Date;
+            int daysSinceMonday = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+            var weekStart = today.AddDays(-daysSinceMonday);
+            var weekEnd = today.AddDays(1).AddTicks(-1);
 
             // Calculate books read this week (completed books)
             var completedBooksThisWeek = await _bookService.GetByStatusAsync(ReadingStatus.Completed);

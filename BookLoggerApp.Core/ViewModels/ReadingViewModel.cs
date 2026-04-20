@@ -92,6 +92,15 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool _isGeneratingBookCard;
 
+    [ObservableProperty]
+    private bool _streakRescuedByGuardian;
+
+    [ObservableProperty]
+    private int _storyHeartCoinBonus;
+
+    [ObservableProperty]
+    private int _storyHeartFirstOfDayBonusXp;
+
     public bool IsRunning => Session != null && !IsPaused;
     public bool HasReviewPromptMoment => _reviewPromptMomentPending || _bookCompletedDuringSession || _goalCompletedDuringSession || LevelUpResult != null;
 
@@ -187,6 +196,9 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             Session = result.Session;
             SessionProgressionResult = result.ProgressionResult;
             _goalCompletedDuringSession = result.GoalCompleted;
+            StreakRescuedByGuardian = result.StreakRescuedByGuardian;
+            StoryHeartCoinBonus = result.StoryHeartCoinBonus;
+            StoryHeartFirstOfDayBonusXp = result.StoryHeartFirstOfDayBonusXp;
 
             // Capture status before any updates
             var wasAlreadyCompleted = Book?.Status == ReadingStatus.Completed;
