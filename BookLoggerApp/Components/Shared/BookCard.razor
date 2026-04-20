@@ -213,18 +213,23 @@
 
     public async ValueTask DisposeAsync()
     {
-        try 
+        try
         {
             if (_observerRegistered)
             {
                 await JSRuntime.InvokeVoidAsync("lazyLoading.unobserve", _imageContainer);
             }
-            _dotNetHelper?.Dispose();
         }
         catch (Exception ex)
         {
             // Ignore disposal errors (e.g. if JS runtime is gone)
             System.Diagnostics.Debug.WriteLine($"Error disposing BookCard: {ex.Message}");
+        }
+        finally
+        {
+            // Must run even if the JS call threw, otherwise the .NET-side
+            // DotNetObjectReference leaks.
+            _dotNetHelper?.Dispose();
         }
     }
 }

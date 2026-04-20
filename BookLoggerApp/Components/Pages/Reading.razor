@@ -266,6 +266,12 @@
 
     private async Task HandleSessionCelebrationClose()
     {
+        // Guard against double-fire (rapid tap, or tap + back-button race before re-render).
+        // Without this, a second invocation re-registers a duplicate back-button handler for
+        // the next celebration in the chain, which later causes a back press to trigger a
+        // ghost close on an already-dismissed celebration.
+        if (!ViewModel.ShowSessionCelebration) return;
+
         if (_sessionCelebrationBackHandler != null)
         {
             BackButtonService.Unregister(_sessionCelebrationBackHandler);
@@ -311,6 +317,8 @@
 
     private async Task HandleStreakCelebrationClose()
     {
+        if (!ViewModel.ShowStreakCelebration) return; // idempotency guard — see HandleSessionCelebrationClose
+
         if (_streakCelebrationBackHandler != null)
         {
             BackButtonService.Unregister(_streakCelebrationBackHandler);
@@ -347,6 +355,8 @@
 
     private async Task HandleLevelUpCelebrationClose()
     {
+        if (!ViewModel.ShowLevelUpCelebration) return; // idempotency guard — see HandleSessionCelebrationClose
+
         if (_levelUpCelebrationBackHandler != null)
         {
             BackButtonService.Unregister(_levelUpCelebrationBackHandler);
@@ -374,6 +384,8 @@
 
     private async Task HandleBookCompletionCelebrationClose()
     {
+        if (!ViewModel.ShowBookCompletionCelebration) return; // idempotency guard — see HandleSessionCelebrationClose
+
         if (_bookCompletionCelebrationBackHandler != null)
         {
             BackButtonService.Unregister(_bookCompletionCelebrationBackHandler);

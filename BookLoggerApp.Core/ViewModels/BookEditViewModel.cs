@@ -512,6 +512,10 @@ public partial class BookEditViewModel : ViewModelBase
 
     public Task OnBookCompletionCelebrationClose()
     {
+        // Idempotent: a second invocation (rapid double-tap or back-button race) must not
+        // re-run the state transition, otherwise downstream navigation/review-prompt logic
+        // can fire twice.
+        if (!ShowBookCompletionCelebration) return Task.CompletedTask;
         ShowBookCompletionCelebration = false;
         BookCompletedFromSession = false;
         return Task.CompletedTask;
