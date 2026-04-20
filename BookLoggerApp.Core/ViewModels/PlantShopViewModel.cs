@@ -51,7 +51,7 @@ public partial class PlantShopViewModel : ViewModelBase
 
             // Load ALL species (including locked ones for display)
             var species = await _plantService.GetAllSpeciesAsync();
-            AvailableSpecies = new ObservableCollection<PlantSpecies>(species.Where(s => s.IsAvailable).OrderBy(s => s.UnlockLevel).ThenBy(s => s.BaseCost));
+            AvailableSpecies = new ObservableCollection<PlantSpecies>(species.Where(s => s.IsAvailable).OrderBy(s => s.UnlockLevel).ThenBy(s => s.BaseCost).ThenBy(s => s.Name));
 
             // Load dynamic prices for each species
             _dynamicPrices.Clear();

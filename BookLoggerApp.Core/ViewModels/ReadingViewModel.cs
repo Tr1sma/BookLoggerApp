@@ -379,9 +379,13 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Called when session celebration is closed. Shows streak or follow-up celebrations if applicable.
+    /// Idempotent: a second invocation (e.g. from a rapid double-tap or a back-button race with
+    /// the overlay click) bails out immediately so the pending-flag transitions don't get re-run
+    /// and accidentally show two overlays simultaneously.
     /// </summary>
     public Task OnSessionCelebrationClose()
     {
+        if (!ShowSessionCelebration) return Task.CompletedTask;
         ShowSessionCelebration = false;
 
         if (_streakCelebrationPending)
@@ -407,9 +411,11 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Called when streak celebration is closed. Shows level-up celebration if applicable.
+    /// Idempotent — see OnSessionCelebrationClose for rationale.
     /// </summary>
     public Task OnStreakCelebrationClose()
     {
+        if (!ShowStreakCelebration) return Task.CompletedTask;
         ShowStreakCelebration = false;
         _reviewPromptMomentPending = false;
 
@@ -428,9 +434,11 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Called when level-up celebration is closed. Shows book completion celebration if applicable.
+    /// Idempotent — see OnSessionCelebrationClose for rationale.
     /// </summary>
     public Task OnLevelUpCelebrationClose()
     {
+        if (!ShowLevelUpCelebration) return Task.CompletedTask;
         ShowLevelUpCelebration = false;
         LevelUpResult = null;
         _reviewPromptMomentPending = false;
@@ -449,9 +457,11 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Called when book completion celebration is closed.
+    /// Idempotent — see OnSessionCelebrationClose for rationale.
     /// </summary>
     public Task OnBookCompletionCelebrationClose()
     {
+        if (!ShowBookCompletionCelebration) return Task.CompletedTask;
         ShowBookCompletionCelebration = false;
 
         if (_streakCelebrationPending)
