@@ -465,4 +465,67 @@ public class ReadingViewModelTests
         _viewModel.ShowStreakCelebration.Should().BeFalse();
         _viewModel.HasReviewPromptMoment.Should().BeFalse();
     }
+
+    // --- Idempotency guards ---------------------------------------------------------------
+    // A rapid double-tap on a celebration's close button (or a back-button race with the
+    // overlay click) could previously fire the close handler twice. The second invocation
+    // would see the private "pending" flags already cleared by the first invocation and fall
+    // into the wrong else-if branch — e.g. after a Session close with both streak pending
+    // and a level-up result, the first call correctly shows Streak; the second call would
+    // then enter the `else if (LevelUpResult != null)` branch and set ShowLevelUpCelebration
+    // to true as well, producing two overlays stacked on top of each other. The tests below
+    // pin the idempotency guards on each OnXxxCelebrationClose method.
+
+    [Fact]
+    public async Task OnSessionCelebrationClose_WhenSessionNotShowing_ShouldNotTriggerFollowUpCelebrations()
+    {
+        // Arrange — a LevelUpResult is queued (as would remain from the first close call)
+        // but the session celebration is already hidden. Simulates the second invocation
+        // of a double-tap.
+        _viewModel.ShowSessionCelebration = false;
+        _viewModel.LevelUpResult = new LevelUpResult { OldLevel = 1, NewLevel = 2, CoinsAwarded = 112 };
+
+        // Act
+        await _viewModel.OnSessionCelebrationClose();
+
+        // Assert — guard must prevent any follow-up celebration from being re-triggered
+        _viewModel.ShowStreakCelebration.Should().BeFalse();
+        _viewModel.ShowLevelUpCelebration.Should().BeFalse();
+        _viewModel.ShowBookCompletionCelebration.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task OnStreakCelebrationClose_WhenStreakNotShowing_ShouldNotTriggerLevelUp()
+    {
+        _viewModel.ShowStreakCelebration = false;
+        _viewModel.LevelUpResult = new LevelUpResult { OldLevel = 1, NewLevel = 2, CoinsAwarded = 112 };
+
+        await _viewModel.OnStreakCelebrationClose();
+
+        _viewModel.ShowLevelUpCelebration.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task OnLevelUpCelebrationClose_WhenLevelUpNotShowing_ShouldNotClearLevelUpResult()
+    {
+        // A stale double-close must not wipe state that still belongs to an active celebration
+        _viewModel.ShowLevelUpCelebration = false;
+        var untouchedResult = new LevelUpResult { OldLevel = 1, NewLevel = 2, CoinsAwarded = 112 };
+        _viewModel.LevelUpResult = untouchedResult;
+
+        await _viewModel.OnLevelUpCelebrationClose();
+
+        _viewModel.LevelUpResult.Should().Be(untouchedResult);
+        _viewModel.ShowBookCompletionCelebration.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task OnBookCompletionCelebrationClose_WhenBookCompletionNotShowing_ShouldNotTriggerStreak()
+    {
+        _viewModel.ShowBookCompletionCelebration = false;
+
+        await _viewModel.OnBookCompletionCelebrationClose();
+
+        _viewModel.ShowStreakCelebration.Should().BeFalse();
+    }
 }

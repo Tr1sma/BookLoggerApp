@@ -580,6 +580,11 @@
 
     private async Task HandleCelebrationClose()
     {
+        // Guard against double-fire (rapid tap, or back-button race): without this,
+        // TryShowReviewPromptOrNavigateAsync could trigger twice and cause a double
+        // navigation.
+        if (!ViewModel.ShowBookCompletionCelebration) return;
+
         if (_celebrationBackHandler != null)
         {
             BackButtonService.Unregister(_celebrationBackHandler);

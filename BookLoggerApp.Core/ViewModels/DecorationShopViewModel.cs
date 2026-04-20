@@ -45,7 +45,7 @@ public partial class DecorationShopViewModel : ViewModelBase
             // Load ALL decorations (including locked) — card handles lock overlay
             var items = await _decorationService.GetAllDecorationShopItemsAsync();
             AllDecorations = new ObservableCollection<ShopItem>(
-                items.OrderBy(d => d.UnlockLevel).ThenBy(d => d.Cost));
+                items.OrderBy(d => d.UnlockLevel).ThenBy(d => d.Cost).ThenBy(d => d.Name));
         }, "Failed to load decoration shop");
     }
 
