@@ -15,10 +15,14 @@ public class ReadingGoalRepository : Repository<ReadingGoal>, IReadingGoalReposi
 
     public async Task<IEnumerable<ReadingGoal>> GetActiveGoalsAsync()
     {
-        var now = DateTime.UtcNow;
+        // Compare against today's local midnight, not DateTime.UtcNow. EndDate is stored
+        // with ticks that represent the user's local calendar midnight (the UI date picker
+        // produces Kind=Unspecified values), so using UtcNow flips goals off the "active"
+        // list several hours before local midnight for users in positive-UTC timezones.
+        var todayLocalMidnight = DateTime.Now.Date;
         return await _dbSet
             .AsNoTracking()
-            .Where(rg => !rg.IsCompleted && rg.EndDate >= now)
+            .Where(rg => !rg.IsCompleted && rg.EndDate >= todayLocalMidnight)
             .OrderBy(rg => rg.EndDate)
             .ToListAsync();
     }

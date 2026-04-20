@@ -371,10 +371,29 @@ public class PlantService : IPlantService
         // Spend coins (will throw if not enough)
         await _settingsProvider.SpendCoinsAsync(cost, ct);
 
-        // Level up the plant
-        plant.CurrentLevel++;
-        await _unitOfWork.UserPlants.UpdateAsync(plant);
-        await _unitOfWork.SaveChangesAsync(ct);
+        // Persist the level increase. _settingsProvider and _unitOfWork use separate DbContexts,
+        // so we can't wrap both in a single EF Core transaction — if the plant save fails after
+        // the coins are already deducted, refund them explicitly so the user isn't charged for a
+        // level they never received.
+        try
+        {
+            plant.CurrentLevel++;
+            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Plant level-up save failed after coins were spent. Refunding {Cost} coins for plant {PlantId}", cost, plantId);
+            try
+            {
+                await _settingsProvider.AddCoinsAsync(cost, ct);
+            }
+            catch (Exception refundEx)
+            {
+                _logger.LogCritical(refundEx, "CRITICAL: Could not refund {Cost} coins after failed level-up for plant {PlantId}. User coin balance is incorrect.", cost, plantId);
+            }
+            throw;
+        }
     }
 
     public async Task<UserPlant> PurchasePlantAsync(Guid speciesId, string name, CancellationToken ct = default)
@@ -392,23 +411,54 @@ public class PlantService : IPlantService
         // Spend coins (will throw if not enough)
         await _settingsProvider.SpendCoinsAsync(cost, ct);
 
-        // Increment PlantsPurchased counter for dynamic pricing
-        await _settingsProvider.IncrementPlantsPurchasedAsync(ct);
-
-        // Create the plant
-        var plant = new UserPlant
+        // Create the plant. _settingsProvider and _unitOfWork use separate DbContexts, so a
+        // single EF Core transaction can't cover both operations — if the plant save fails
+        // after the coins are already deducted, refund them explicitly so the user isn't
+        // charged for a plant they never received.
+        UserPlant result;
+        try
         {
-            SpeciesId = speciesId,
-            Name = name,
-            CurrentLevel = 1,
-            Experience = 0,
-            PlantedAt = DateTime.UtcNow,
-            LastWatered = DateTime.UtcNow,
-            IsActive = false
-        };
+            var plant = new UserPlant
+            {
+                SpeciesId = speciesId,
+                Name = name,
+                CurrentLevel = 1,
+                Experience = 0,
+                PlantedAt = DateTime.UtcNow,
+                LastWatered = DateTime.UtcNow,
+                IsActive = false
+            };
 
-        var result = await _unitOfWork.UserPlants.AddAsync(plant);
-        await _unitOfWork.SaveChangesAsync(ct);
+            result = await _unitOfWork.UserPlants.AddAsync(plant);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Plant purchase save failed after coins were spent. Refunding {Cost} coins for species {SpeciesId}", cost, speciesId);
+            try
+            {
+                await _settingsProvider.AddCoinsAsync(cost, ct);
+            }
+            catch (Exception refundEx)
+            {
+                _logger.LogCritical(refundEx, "CRITICAL: Could not refund {Cost} coins after failed plant purchase for species {SpeciesId}. User coin balance is incorrect.", cost, speciesId);
+            }
+            throw;
+        }
+
+        // Increment PlantsPurchased only after the purchase actually succeeded. Previously this
+        // ran before the plant save, so a failed save would raise the dynamic price even though
+        // no plant existed. A failure here does NOT invalidate the purchase — at worst the next
+        // plant is priced as if this one hadn't been bought yet, which is self-correcting.
+        try
+        {
+            await _settingsProvider.IncrementPlantsPurchasedAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Plant purchase succeeded but PlantsPurchased counter increment failed for species {SpeciesId}. Dynamic pricing for the next plant may be slightly off.", speciesId);
+        }
+
         return result;
     }
 

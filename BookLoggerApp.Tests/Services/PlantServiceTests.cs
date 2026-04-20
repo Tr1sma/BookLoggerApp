@@ -1,10 +1,12 @@
 using FluentAssertions;
 using BookLoggerApp.Core.Enums;
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Tests.TestHelpers;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -459,6 +461,121 @@ public class PlantServiceTests : IDisposable
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Plant species is not available for purchase");
+    }
+
+    [Fact]
+    public async Task PurchasePlantAsync_OnSuccess_ShouldDeductCoinsAndIncrementPlantsPurchased()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies(); // BaseCost = 100
+        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
+        var initialPurchased = await _settingsProvider.GetPlantsPurchasedAsync();
+        int expectedCost = 100; // BaseCost + (0 * 200)
+
+        // Act
+        await _plantService.PurchasePlantAsync(species.Id, "Bought Plant");
+
+        // Assert
+        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
+        var finalPurchased = await _settingsProvider.GetPlantsPurchasedAsync();
+        finalCoins.Should().Be(initialCoins - expectedCost);
+        finalPurchased.Should().Be(initialPurchased + 1);
+    }
+
+    [Fact]
+    public async Task PurchasePlantAsync_WhenPlantSaveFails_ShouldRefundCoinsAndNotIncrementCounter()
+    {
+        // Arrange
+        var species = await SeedPlantSpecies(); // seeded via real UoW, but mock returns it directly
+        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
+        var initialPurchased = await _settingsProvider.GetPlantsPurchasedAsync();
+
+        var failingService = CreatePlantServiceWithFailingSave(
+            configureMock: mock =>
+            {
+                mock.PlantSpecies.GetByIdAsync(species.Id, Arg.Any<CancellationToken>()).Returns(species);
+                mock.UserPlants.AddAsync(Arg.Any<UserPlant>(), Arg.Any<CancellationToken>())
+                    .Returns(ci => ci.Arg<UserPlant>());
+            });
+
+        // Act & Assert
+        await failingService.Invoking(s => s.PurchasePlantAsync(species.Id, "Doomed Plant"))
+            .Should().ThrowAsync<DbUpdateException>();
+
+        // Coins must be refunded to their original value
+        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
+        finalCoins.Should().Be(initialCoins);
+
+        // PlantsPurchased counter must NOT have advanced (dynamic pricing stays consistent)
+        var finalPurchased = await _settingsProvider.GetPlantsPurchasedAsync();
+        finalPurchased.Should().Be(initialPurchased);
+    }
+
+    [Fact]
+    public async Task PurchaseLevelAsync_WhenPlantSaveFails_ShouldRefundCoins()
+    {
+        // Arrange — ensure AppSettings exist, then top up so the user can afford the level-up
+        _ = await _settingsProvider.GetUserCoinsAsync(); // triggers default creation if needed
+        await _settingsProvider.AddCoinsAsync(500);
+        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
+
+        var species = new PlantSpecies
+        {
+            Id = Guid.NewGuid(),
+            Name = "Inline Species",
+            MaxLevel = 5,
+            WaterIntervalDays = 3,
+            GrowthRate = 1.0,
+            BaseCost = 100,
+            UnlockLevel = 1,
+            IsAvailable = true
+        };
+        var plant = new UserPlant
+        {
+            Id = Guid.NewGuid(),
+            SpeciesId = species.Id,
+            Species = species,
+            Name = "Level-Up Target",
+            CurrentLevel = 1, // cost = (1+1) * 100 = 200
+            Experience = 0,
+            PlantedAt = DateTime.UtcNow,
+            LastWatered = DateTime.UtcNow, // Healthy (within 3-day interval)
+            Status = PlantStatus.Healthy
+        };
+
+        var failingService = CreatePlantServiceWithFailingSave(
+            configureMock: mock =>
+            {
+                mock.UserPlants.GetPlantWithSpeciesAsync(plant.Id).Returns(plant);
+                mock.UserPlants.GetUserPlantsAsync().Returns(new List<UserPlant> { plant });
+            });
+
+        // Act & Assert
+        await failingService.Invoking(s => s.PurchaseLevelAsync(plant.Id))
+            .Should().ThrowAsync<DbUpdateException>();
+
+        // Coins must be refunded
+        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
+        finalCoins.Should().Be(initialCoins);
+    }
+
+    private PlantService CreatePlantServiceWithFailingSave(Action<IUnitOfWork> configureMock)
+    {
+        var mockUoW = Substitute.For<IUnitOfWork>();
+        configureMock(mockUoW);
+        mockUoW.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<int>(new DbUpdateException("simulated save failure")));
+
+        var decorationService = Substitute.For<IDecorationService>();
+        decorationService.UserOwnsAbilityAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(false));
+
+        return new PlantService(
+            mockUoW,
+            _settingsProvider,
+            decorationService,
+            _cache,
+            NullLogger<PlantService>.Instance);
     }
 
     #endregion

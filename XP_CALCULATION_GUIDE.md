@@ -17,15 +17,40 @@ Total XP = (Minutes × 5) + (Pages × 20) + Long Session Bonus + Streak Bonus
 - `XP_PER_MINUTE = 5`
 - `XP_PER_PAGE = 20`
 - `BONUS_XP_LONG_SESSION = 50` (for 60+ minute sessions)
-- `BONUS_XP_STREAK = 20` (for 2+ day reading streaks)
 - `XP_BOOK_COMPLETION = 100` (bonus for finishing a book)
+
+### Streak Bonus Formula
+Streaks von mindestens 2 Tagen liefern einen progressiven Bonus, der mit jedem Tag wächst und an Meilensteinen zusätzlich aufgestockt wird:
+
+```
+streakDays < 2            →   0 XP
+streakDays ≥ 2            →   streakDays × 100
+streakDays ≥ 3            → + 100  (3-Tage-Meilenstein)
+streakDays ≥ 7            → + 250  (Woche)
+streakDays ≥ 14           → + 500  (zwei Wochen)
+streakDays ≥ 30           → + 1000 (Monat)
+```
+
+Die Meilenstein-Boni werden **kumulativ** addiert, sobald sie einmal erreicht sind (wer 30 Tage schafft, bekommt auch die +100/+250/+500 dazu).
+
+**Streak-Beispiele:**
+| Streak | Grundbonus (×100) | Meilensteine | **Gesamt** |
+|--------|-------------------|--------------|------------|
+| 2 Tage | 200 | – | **200** |
+| 3 Tage | 300 | +100 | **400** |
+| 7 Tage | 700 | +100 +250 | **1.050** |
+| 14 Tage | 1.400 | +100 +250 +500 | **2.250** |
+| 30 Tage | 3.000 | +100 +250 +500 +1.000 | **4.850** |
+| 60 Tage | 6.000 | +100 +250 +500 +1.000 | **7.850** |
 
 ### Example Calculation
 **Scenario**: 45 minutes, 15 pages, with 3-day streak
 ```
-Base XP = (45 × 5) + (15 × 20) + 0 + 20
-        = 225 + 300 + 0 + 20
-        = 545 XP (before plant boost)
+Streak Bonus (3 Tage) = 3 × 100 + 100 = 400
+
+Base XP = (45 × 5) + (15 × 20) + 0 + 400
+        = 225 + 300 + 0 + 400
+        = 925 XP (before plant boost)
 ```
 
 ---
@@ -240,6 +265,12 @@ private async Task<bool> HasReadingStreakAsync()
 3. Count backwards while days are consecutive
 4. If gap > 1 day, streak ends
 
+### Streak Bonus XP
+Der Streak-Bonus skaliert progressiv mit der Länge (siehe "Streak Bonus Formula" im Abschnitt "Base XP Formula"):
+- Grundbonus: `streakDays × 100`
+- Meilenstein-Boni bei 3/7/14/30 Tagen addieren sich kumulativ
+- Kein Bonus unter 2 Tagen Streak
+
 ---
 
 ## 🎮 Live XP Preview (ReadingViewModel)
@@ -251,7 +282,7 @@ Estimated XP = (Minutes × 5) + (Pages × 20) + Long Session Bonus (if 60+ min)
 ```
 
 **Note**: This preview does NOT include:
-- Streak bonus (+20 XP)
+- Streak bonus (siehe "Streak Bonus Formula" oben — 200 bis 4.850 XP je nach Streak-Länge)
 - Plant boost percentage
 
 These are applied only during the **final calculation** when the session ends, ensuring accurate rewards based on the exact session duration and current streak status.
@@ -282,24 +313,24 @@ These are applied only during the **final calculation** when the session ends, e
 
 ### Step 1: Base Calculation
 ```
-Minutes XP:        75 × 5   = 375
-Pages XP:          20 × 20  = 400
-Long Session:      1 × 50   = 50
-Streak Bonus:      1 × 20   = 20
-────────────────────────────────
-Base XP:                    = 845
+Minutes XP:        75 × 5              = 375
+Pages XP:          20 × 20             = 400
+Long Session:      1 × 50              = 50
+Streak Bonus:      4 × 100 + 100 (Lv3) = 500
+──────────────────────────────────────────────
+Base XP:                               = 1325
 ```
 
 ### Step 2: Apply Plant Boost
 ```
-Boosted XP: 845 × (1 + 0.50) = 845 × 1.50 = 1267 XP
-Bonus from Plants: 1267 - 845 = 422 XP
+Boosted XP: 1325 × (1 + 0.50) = 1325 × 1.50 = 1987 XP
+Bonus from Plants: 1987 - 1325 = 662 XP
 ```
 
 ### Step 3: Add to User
 ```
 Old Total XP: 450
-New Total XP: 450 + 1267 = 1,717
+New Total XP: 450 + 1987 = 2,437
 ```
 
 ### Step 4: Check Level-Up
@@ -307,8 +338,8 @@ New Total XP: 450 + 1267 = 1,717
 Old Level: CalculateLevelFromXp(450) = Level 2
   → 450 - 100 (Lv1) = 350, 350 < 400 (Lv2) → Level 2
 
-New Level: CalculateLevelFromXp(1,717) = Level 4
-  → 1,717 - 100 (Lv1) = 1,617 - 400 (Lv2) = 1,217 - 900 (Lv3) = 317, 317 < 1,600 (Lv4) → Level 4
+New Level: CalculateLevelFromXp(2,437) = Level 4
+  → 2,437 - 100 (Lv1) = 2,337 - 400 (Lv2) = 1,937 - 900 (Lv3) = 1,037, 1,037 < 1,600 (Lv4) → Level 4
 
 Levels Gained: 4 - 2 = 2 levels
 ```
@@ -322,7 +353,7 @@ Total Coins:                        = 425
 ```
 
 ### Final Result
-- **XP Earned**: 1267 (845 base + 422 plant bonus)
+- **XP Earned**: 1987 (1325 base + 662 plant bonus)
 - **Level Up**: 2 → 4
 - **Coins Earned**: 425
 
@@ -362,12 +393,14 @@ Total Coins:                        = 425
    - Expected XP: (65×5) + (10×20) + 50 = 525 (before boost)
 
 3. **Streak Bonus**
-   - Read 3 days in a row, then 30 min, 8 pages on day 4
-   - Expected XP: (30×5) + (8×20) + 20 = 330 (before boost)
+   - Read 3 days in a row, then 30 min, 8 pages on day 4 (streak = 4)
+   - Streak Bonus: (4 × 100) + 100 (Lv3-Meilenstein) = 500
+   - Expected XP: (30×5) + (8×20) + 500 = 810 (before boost)
 
 4. **All Bonuses**
    - Read for 75 min, 15 pages, with 3-day streak
-   - Expected XP: (75×5) + (15×20) + 50 + 20 = 745 (before boost)
+   - Streak Bonus: (3 × 100) + 100 (Lv3-Meilenstein) = 400
+   - Expected XP: (75×5) + (15×20) + 50 + 400 = 1125 (before boost)
 
 5. **Plant Boost**
    - With 10% plant boost, 500 base XP
@@ -393,5 +426,5 @@ Total Coins:                        = 425
 
 ---
 
-*Last Updated: April 2026 - Progressive coin reward formula (50×Level + 3×Level²)*
+*Last Updated: April 2026 — Streak-Bonus-Dokumentation an progressive Code-Formel angepasst (Grundbonus × 100 + Meilenstein-Boni)*
 *Version: V2 Progression System*

@@ -16,6 +16,13 @@ Versionsschema:
 
 ## [Unveröffentlicht]
 
+### Behoben
+
+- Pflanzen-Kauf und Pflanzen-Level-Up erstatten jetzt die abgebuchten Münzen zurück, wenn das Speichern der Pflanze nach dem Coin-Abzug fehlschlägt (z. B. bei DB-Fehlern). Zuvor konnten Münzen verloren gehen, ohne dass die Pflanze bzw. der Level-Aufstieg tatsächlich zustande kam. Zusätzlich wird der interne Zähler für die dynamische Preissteigerung erst nach erfolgreichem Kauf hochgezählt — fehlgeschlagene Käufe verteuern nicht mehr den nächsten Kauf.
+- Lese-Ziele zählen Bücher und Sessions jetzt anhand der lokalen Kalender-Zeitzone statt der UTC-Zeit. Zuvor konnte ein Buch, das kurz nach Mitternacht fertig gelesen wurde, im deutschen Zeitraum (UTC+1/+2) noch dem Vortag zugeschlagen werden, weil der UI-Datepicker lokale Tages-Grenzen liefert, `DateTime.UtcNow` aber absolute UTC-Zeitpunkte — der Abgleich übersah den Offset. Betrifft auch die Anzeige „aktive Ziele" auf dem Dashboard und die `IsActive`-Logik: ein Ziel, das „heute" endet, verschwindet jetzt erst mit dem lokalen Tageswechsel und nicht mehr schon am späten Abend.
+
+## [0.9.4]
+
 ### Hinzugefügt
 
 - Neue Prestige-Pflanze **Chronikbaum** (Lv 45 · 20.000 🪙 · 30 % XP-Boost) mit Streak-Wächter-Fähigkeit: rettet alle 14 Tage automatisch einen brechenden Lese-Streak.
@@ -36,6 +43,7 @@ Versionsschema:
 - Doppel-Klick auf den Kaufen-Button wird während laufender Transaktion blockiert, um einen versehentlichen Doppelkauf des singulären Herz der Geschichten zu verhindern.
 - Plant-Boost-Berechnung über einen gemeinsamen Helper (`SpecialAbilityResolver.CalculateAggregatedPlantBoost`) — UI-Anzeige und XP-Gewährung nutzen jetzt dieselbe Quelle und können nicht mehr voneinander abweichen.
 - Pflanzen-Level-Up-Münzen werden erst nach erfolgreichem Speichern des neuen Levels gutgeschrieben — bei einem DB-Konflikt (`DbUpdateConcurrencyException`) im Pflanzen-Save bleiben die Münzen jetzt korrekt auf dem alten Stand, statt ohne zugehörigen Level-Aufstieg ausgezahlt zu werden.
+- Dashboard-Wochenstatistiken („Diese Woche": Bücher, Minuten, Seiten, XP) beginnen jetzt am **Montag** (ISO 8601 / DE-Konvention). Zuvor wurde der Sonntag als Wochenstart genommen, wodurch Montag–Samstag stets der Vorsonntag mitgezählt wurde.
 
 ## [0.9.3]
 
