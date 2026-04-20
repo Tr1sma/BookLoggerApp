@@ -14,6 +14,37 @@ Versionsschema:
 
 ---
 
+## [Unveröffentlicht]
+
+### Behoben
+
+- Pflanzen-Kauf und Pflanzen-Level-Up erstatten jetzt die abgebuchten Münzen zurück, wenn das Speichern der Pflanze nach dem Coin-Abzug fehlschlägt (z. B. bei DB-Fehlern). Zuvor konnten Münzen verloren gehen, ohne dass die Pflanze bzw. der Level-Aufstieg tatsächlich zustande kam. Zusätzlich wird der interne Zähler für die dynamische Preissteigerung erst nach erfolgreichem Kauf hochgezählt — fehlgeschlagene Käufe verteuern nicht mehr den nächsten Kauf.
+- Lese-Ziele zählen Bücher und Sessions jetzt anhand der lokalen Kalender-Zeitzone statt der UTC-Zeit. Zuvor konnte ein Buch, das kurz nach Mitternacht fertig gelesen wurde, im deutschen Zeitraum (UTC+1/+2) noch dem Vortag zugeschlagen werden, weil der UI-Datepicker lokale Tages-Grenzen liefert, `DateTime.UtcNow` aber absolute UTC-Zeitpunkte — der Abgleich übersah den Offset. Betrifft auch die Anzeige „aktive Ziele" auf dem Dashboard und die `IsActive`-Logik: ein Ziel, das „heute" endet, verschwindet jetzt erst mit dem lokalen Tageswechsel und nicht mehr schon am späten Abend.
+
+## [0.9.4]
+
+### Hinzugefügt
+
+- Neue Prestige-Pflanze **Chronikbaum** (Lv 45 · 20.000 🪙 · 30 % XP-Boost) mit Streak-Wächter-Fähigkeit: rettet alle 14 Tage automatisch einen brechenden Lese-Streak.
+- Neue Prestige-Pflanze **Ewiger Phönix-Bonsai** (Lv 57 · 80.000 🪙 · 50 % XP-Boost) mit Phönix-Schutz: wiederbelebt sich selbst und schützt alle anderen Pflanzen vor dem Sterben, solange er im Garten steht.
+- Neue Ultimate-Dekoration **Herz der Geschichten** (Lv 70 · 200.000 🪙, nur 1× kaufbar): +25 % globaler XP-Boost, +25 % auf Level-Up-Münzen, +400 🪙 ab 30-Minuten-Sessions, doppeltes Pflanzenwachstum und +2,5 % der Next-Level-XP auf die erste Lese-Session des Tages.
+- Legendary-Visuals im Shop: warmer Beige-Rand, sanftes Pulsieren und „✨ Legendär"-Badge für Items mit Spezialfähigkeit.
+- Detail-Ansicht im Shop zeigt eine Spezialfähigkeits-Beschreibung vor dem Kauf.
+
+### Geändert
+
+- Session-Abschluss-Celebration hebt Streak-Rettung und Herz-der-Geschichten-Boni jetzt explizit hervor.
+
+### Behoben
+
+- Phönix-Schutz zählt tote Pflanzen nicht mehr als aktive Schutzquelle (Code-Drift zwischen `SpecialAbilityResolver` und `PlantService` behoben).
+- Herz-der-Geschichten-Bonus auf die erste Session des Tages wird jetzt korrekt vom Level vor dem Session-Level-Up berechnet.
+- Streak-Wächter-Cooldown wird erst nach erfolgreichem Speichern der Rescue-Session aktualisiert — ein fehlgeschlagener Save verbraucht die Rettung nicht mehr.
+- Doppel-Klick auf den Kaufen-Button wird während laufender Transaktion blockiert, um einen versehentlichen Doppelkauf des singulären Herz der Geschichten zu verhindern.
+- Plant-Boost-Berechnung über einen gemeinsamen Helper (`SpecialAbilityResolver.CalculateAggregatedPlantBoost`) — UI-Anzeige und XP-Gewährung nutzen jetzt dieselbe Quelle und können nicht mehr voneinander abweichen.
+- Pflanzen-Level-Up-Münzen werden erst nach erfolgreichem Speichern des neuen Levels gutgeschrieben — bei einem DB-Konflikt (`DbUpdateConcurrencyException`) im Pflanzen-Save bleiben die Münzen jetzt korrekt auf dem alten Stand, statt ohne zugehörigen Level-Aufstieg ausgezahlt zu werden.
+- Dashboard-Wochenstatistiken („Diese Woche": Bücher, Minuten, Seiten, XP) beginnen jetzt am **Montag** (ISO 8601 / DE-Konvention). Zuvor wurde der Sonntag als Wochenstart genommen, wodurch Montag–Samstag stets der Vorsonntag mitgezählt wurde.
+
 ## [0.9.3]
 
 ### Hinzugefügt

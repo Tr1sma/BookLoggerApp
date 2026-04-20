@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -17,19 +18,25 @@ public class ProgressService : IProgressService
     private readonly IPlantService _plantService;
     private readonly IBookService _bookService;
     private readonly IGoalService _goalService;
+    private readonly IDecorationService _decorationService;
+    private readonly IAppSettingsProvider _settingsProvider;
 
     public ProgressService(
         IUnitOfWork unitOfWork,
         IProgressionService progressionService,
         IPlantService plantService,
         IBookService bookService,
-        IGoalService goalService)
+        IGoalService goalService,
+        IDecorationService decorationService,
+        IAppSettingsProvider settingsProvider)
     {
         _unitOfWork = unitOfWork;
         _progressionService = progressionService;
         _plantService = plantService;
         _bookService = bookService;
         _goalService = goalService;
+        _decorationService = decorationService;
+        _settingsProvider = settingsProvider;
     }
 
     public async Task<SessionSaveResult> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
@@ -37,22 +44,33 @@ public class ProgressService : IProgressService
         // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 
+        // Snapshot the user level BEFORE the session XP is awarded. The Story-Heart
+        // first-of-day bonus must be calculated against the pre-session level even if
+        // the session itself triggers a level-up.
+        var settingsBeforeSession = await _settingsProvider.GetSettingsAsync(ct);
+        int levelAtSessionStart = settingsBeforeSession.UserLevel;
+
         // Award the streak bonus only on the first qualifying session of the day
         // so all save paths use the same reward logic.
-        var streakDays = await GetAwardedStreakDaysAsync(session, ct);
+        var streak = await ResolveStreakForSessionAsync(session, ct);
 
         // Award XP using the progression system (with plant boost and streak bonus)
         var progressionResult = await _progressionService.AwardSessionXpAsync(
             session.Minutes,
             session.PagesRead,
             activePlant?.Id,
-            streakDays
+            streak.StreakDays
         );
 
         session.XpEarned = progressionResult.XpEarned;
 
         var result = await _unitOfWork.ReadingSessions.AddAsync(session);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        if (streak.GuardianToUpdate.HasValue)
+        {
+            await PersistGuardianCooldownAsync(streak.GuardianToUpdate.Value, ct);
+        }
 
         // Record reading day for active plant (for plant leveling)
         // Plants level up based on reading days (15+ min sessions), not XP
@@ -66,6 +84,8 @@ public class ProgressService : IProgressService
             );
         }
 
+        var heartBonus = await ApplyStoryHeartSessionBonusesAsync(session, levelAtSessionStart, ct);
+
         bool goalCompleted = await _goalService.RecalculateGoalProgressAsync(ct);
 
         // Notify that goals may have changed
@@ -75,7 +95,10 @@ public class ProgressService : IProgressService
         {
             Session = result,
             ProgressionResult = progressionResult,
-            GoalCompleted = goalCompleted
+            GoalCompleted = goalCompleted,
+            StreakRescuedByGuardian = streak.RescuedByGuardian,
+            StoryHeartCoinBonus = heartBonus.CoinBonus,
+            StoryHeartFirstOfDayBonusXp = heartBonus.BonusXp
         };
     }
 
@@ -125,16 +148,20 @@ public class ProgressService : IProgressService
         // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 
+        // Snapshot the user level BEFORE the session XP is awarded (see AddSessionAsync).
+        var settingsBeforeSession = await _settingsProvider.GetSettingsAsync(ct);
+        int levelAtSessionStart = settingsBeforeSession.UserLevel;
+
         // Award the streak bonus only on the first qualifying session of the day
         // so active timer sessions and direct session saves use the same logic.
-        var streakDays = await GetAwardedStreakDaysAsync(session, ct);
+        var streak = await ResolveStreakForSessionAsync(session, ct);
 
         // Award XP using the new progression system (with streak bonus)
         var progressionResult = await _progressionService.AwardSessionXpAsync(
             session.Minutes,
             pagesRead,
             activePlant?.Id,
-            streakDays
+            streak.StreakDays
         );
 
         // Store the XP earned in the session
@@ -155,6 +182,13 @@ public class ProgressService : IProgressService
         await _unitOfWork.ReadingSessions.UpdateAsync(session);
         await _unitOfWork.SaveChangesAsync(ct);
 
+        if (streak.GuardianToUpdate.HasValue)
+        {
+            await PersistGuardianCooldownAsync(streak.GuardianToUpdate.Value, ct);
+        }
+
+        var heartBonus = await ApplyStoryHeartSessionBonusesAsync(session, levelAtSessionStart, ct);
+
         bool goalCompleted = await _goalService.RecalculateGoalProgressAsync(ct);
 
         // Notify that goals may have changed (pages/minutes progress)
@@ -165,7 +199,10 @@ public class ProgressService : IProgressService
         {
             Session = session,
             ProgressionResult = progressionResult,
-            GoalCompleted = goalCompleted
+            GoalCompleted = goalCompleted,
+            StreakRescuedByGuardian = streak.RescuedByGuardian,
+            StoryHeartCoinBonus = heartBonus.CoinBonus,
+            StoryHeartFirstOfDayBonusXp = heartBonus.BonusXp
         };
     }
 
@@ -248,18 +285,22 @@ public class ProgressService : IProgressService
         return ReadingStreakHelper.CalculateCurrentStreak(recentSessions, today);
     }
 
-    private async Task<int> GetAwardedStreakDaysAsync(ReadingSession session, CancellationToken ct = default)
+    private readonly record struct ResolvedStreak(int StreakDays, bool RescuedByGuardian, Guid? GuardianToUpdate);
+
+    private readonly record struct StoryHeartBonus(int CoinBonus, int BonusXp);
+
+    private async Task<ResolvedStreak> ResolveStreakForSessionAsync(ReadingSession session, CancellationToken ct)
     {
         if (!ReadingStreakHelper.CountsTowardStreak(session))
         {
-            return 0;
+            return new ResolvedStreak(0, false, null);
         }
 
         var sessionDate = session.StartedAt.Date;
         var rangeEnd = sessionDate.AddDays(1).AddTicks(-1);
 
-        var recentSessions = await _unitOfWork.ReadingSessions
-            .GetSessionsInRangeAsync(sessionDate.AddDays(-365), rangeEnd);
+        var recentSessions = (await _unitOfWork.ReadingSessions
+            .GetSessionsInRangeAsync(sessionDate.AddDays(-365), rangeEnd)).ToList();
 
         var alreadyAwardedToday = recentSessions.Any(existingSession =>
             existingSession.Id != session.Id
@@ -268,10 +309,103 @@ public class ProgressService : IProgressService
 
         if (alreadyAwardedToday)
         {
-            return 0;
+            return new ResolvedStreak(0, false, null);
         }
 
-        var priorSessions = recentSessions.Where(existingSession => existingSession.Id != session.Id);
-        return ReadingStreakHelper.CalculateInclusiveStreak(priorSessions, sessionDate);
+        var priorSessions = recentSessions.Where(s => s.Id != session.Id).ToList();
+        var regularStreak = ReadingStreakHelper.CalculateInclusiveStreak(priorSessions, sessionDate);
+
+        // Streak-Wächter: fires only when the regular streak would be 1 (yesterday missed),
+        // there was a qualifying session day-before-yesterday (so a prior streak existed),
+        // and an alive Chronikbaum is off cooldown.
+        if (regularStreak != 1)
+        {
+            return new ResolvedStreak(regularStreak, false, null);
+        }
+
+        var dayBeforeYesterday = sessionDate.AddDays(-2);
+        bool priorStreakExists = priorSessions
+            .Where(ReadingStreakHelper.CountsTowardStreak)
+            .Any(s => s.StartedAt.Date == dayBeforeYesterday);
+
+        if (!priorStreakExists)
+        {
+            return new ResolvedStreak(regularStreak, false, null);
+        }
+
+        var allPlants = await _plantService.GetAllAsync(ct);
+        var utcNow = DateTime.UtcNow;
+        var guardian = allPlants.FirstOrDefault(p =>
+            p.Species?.SpecialAbilityKey == SpecialAbilityKeys.StreakGuardian
+            && p.Status != PlantStatus.Dead
+            && SpecialAbilityResolver.CanGuardianSaveStreak(p, utcNow));
+
+        if (guardian is null)
+        {
+            return new ResolvedStreak(regularStreak, false, null);
+        }
+
+        // Fill the missing yesterday and recompute.
+        var rescuedDates = priorSessions
+            .Where(ReadingStreakHelper.CountsTowardStreak)
+            .Select(s => s.StartedAt.Date)
+            .ToList();
+        rescuedDates.Add(sessionDate.AddDays(-1));
+        var rescuedStreak = ReadingStreakHelper.CalculateInclusiveStreak(rescuedDates, sessionDate);
+
+        // Defer the guardian cooldown persistence to after the session save so that
+        // a failed session save does not burn the cooldown.
+        return new ResolvedStreak(rescuedStreak, true, guardian.Id);
+    }
+
+    private async Task PersistGuardianCooldownAsync(Guid guardianId, CancellationToken ct)
+    {
+        var guardianEntity = await _unitOfWork.UserPlants.GetByIdAsync(guardianId);
+        if (guardianEntity is not null)
+        {
+            guardianEntity.LastStreakSaveAt = DateTime.UtcNow;
+            await _unitOfWork.UserPlants.UpdateAsync(guardianEntity);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+    }
+
+    private async Task<StoryHeartBonus> ApplyStoryHeartSessionBonusesAsync(ReadingSession session, int levelAtSessionStart, CancellationToken ct)
+    {
+        if (!await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct))
+        {
+            return new StoryHeartBonus(0, 0);
+        }
+
+        int coinBonus = 0;
+        int bonusXp = 0;
+
+        if (session.Minutes >= SpecialAbilityResolver.StoryHeartSessionMinMinutes)
+        {
+            await _settingsProvider.AddCoinsAsync(SpecialAbilityResolver.StoryHeartSessionCoinBonus, ct);
+            coinBonus = SpecialAbilityResolver.StoryHeartSessionCoinBonus;
+        }
+
+        var sessionDate = session.StartedAt.Date;
+        var dayRangeEnd = sessionDate.AddDays(1).AddTicks(-1);
+        var sessionsToday = await _unitOfWork.ReadingSessions
+            .GetSessionsInRangeAsync(sessionDate, dayRangeEnd);
+
+        bool isFirstQualifyingSession = ReadingStreakHelper.CountsTowardStreak(session)
+            && !sessionsToday.Any(existing =>
+                existing.Id != session.Id
+                && ReadingStreakHelper.CountsTowardStreak(existing));
+
+        if (isFirstQualifyingSession)
+        {
+            int xpForNextLevel = XpCalculator.GetXpForLevel(levelAtSessionStart);
+            bonusXp = (int)Math.Round(xpForNextLevel * SpecialAbilityResolver.StoryHeartFirstSessionXpPct);
+
+            if (bonusXp > 0)
+            {
+                await _progressionService.AwardBonusXpAsync(bonusXp, ct);
+            }
+        }
+
+        return new StoryHeartBonus(coinBonus, bonusXp);
     }
 }

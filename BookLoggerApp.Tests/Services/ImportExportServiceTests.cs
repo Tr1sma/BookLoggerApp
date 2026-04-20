@@ -174,6 +174,106 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
     }
 
     [Fact]
+    public async Task ImportFromCsvAsync_WithManyNewGenresAcrossMultipleBooks_ShouldPersistEveryGenreAssociation()
+    {
+        // Regression gate around the CSV import's "create-new-Genre-inline" path. The
+        // import creates Genre entities without assigning a Guid (Genre.Id stays as
+        // default(Guid)) and then builds BookGenre rows with `GenreId = genre.Id` before
+        // SaveChanges runs. This works because EF Core's client-side Guid key generator
+        // populates the new Genre's PK during Add(), so each BookGenre picks up a real
+        // Guid at the moment of assignment. This test pins that behavior with three books,
+        // five brand-new genres, and overlapping assignments — if a future change breaks
+        // the propagation (e.g. by adding Genre entities but not tracking them, or by
+        // reordering Add/assign), the overlap assertions will fail.
+        const string gA = "DiagGenre_A", gB = "DiagGenre_B", gC = "DiagGenre_C",
+                     gD = "DiagGenre_D", gE = "DiagGenre_E";
+        var csv = $@"Id,Title,Author,ISBN,Publisher,PublicationYear,Language,Description,PageCount,CurrentPage,CoverImagePath,Status,Rating,DateAdded,DateStarted,DateCompleted,Genres
+11111111-1111-1111-1111-111111111111,Book One,Author One,1111111111,,,,,100,0,,Planned,,2023-01-01T00:00:00,,,{gA};{gB};{gC}
+22222222-2222-2222-2222-222222222222,Book Two,Author Two,2222222222,,,,,100,0,,Planned,,2023-01-01T00:00:00,,,{gB};{gD}
+33333333-3333-3333-3333-333333333333,Book Three,Author Three,3333333333,,,,,100,0,,Planned,,2023-01-01T00:00:00,,,{gA};{gE}";
+
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
+
+        // Act
+        await service.ImportFromCsvAsync(csv);
+
+        // Assert — every diagnostic genre must exist, every book-genre link must resolve
+        using var verifyContext = TestDbContext.Create(dbName);
+        var expectedNames = new[] { gA, gB, gC, gD, gE };
+        var newGenres = verifyContext.Genres
+            .Where(g => expectedNames.Contains(g.Name))
+            .ToList();
+        newGenres.Should().HaveCount(5, "all five new genre names should be persisted once each");
+        newGenres.Should().OnlyContain(g => g.Id != Guid.Empty);
+        newGenres.Select(g => g.Id).Distinct().Should().HaveCount(5, "each new genre must have a unique ID");
+
+        var bookOne = verifyContext.Books.Single(b => b.Title == "Book One");
+        var bookTwo = verifyContext.Books.Single(b => b.Title == "Book Two");
+        var bookThree = verifyContext.Books.Single(b => b.Title == "Book Three");
+        var newGenreIds = newGenres.ToDictionary(g => g.Name, g => g.Id);
+
+        var bookOneGenreIds = verifyContext.BookGenres
+            .Where(bg => bg.BookId == bookOne.Id)
+            .Select(bg => bg.GenreId)
+            .ToHashSet();
+        bookOneGenreIds.Should().BeEquivalentTo(new[] { newGenreIds[gA], newGenreIds[gB], newGenreIds[gC] });
+
+        var bookTwoGenreIds = verifyContext.BookGenres
+            .Where(bg => bg.BookId == bookTwo.Id)
+            .Select(bg => bg.GenreId)
+            .ToHashSet();
+        bookTwoGenreIds.Should().BeEquivalentTo(new[] { newGenreIds[gB], newGenreIds[gD] });
+
+        var bookThreeGenreIds = verifyContext.BookGenres
+            .Where(bg => bg.BookId == bookThree.Id)
+            .Select(bg => bg.GenreId)
+            .ToHashSet();
+        bookThreeGenreIds.Should().BeEquivalentTo(new[] { newGenreIds[gA], newGenreIds[gE] });
+    }
+
+    [Fact]
+    public async Task ImportFromCsvAsync_WithMultipleNewGenres_ShouldPersistAllGenreAssociations()
+    {
+        // Simpler companion to the multi-book regression test above: two brand-new genre
+        // names (not in the seed data) on a single book, to confirm new Genre rows and
+        // their BookGenre junctions are persisted with real, distinct primary keys.
+        const string genreA = "ImportTestGenre_Alpha";
+        const string genreB = "ImportTestGenre_Beta";
+        var csv = $@"Id,Title,Author,ISBN,Publisher,PublicationYear,Language,Description,PageCount,CurrentPage,CoverImagePath,Status,Rating,DateAdded,DateStarted,DateCompleted,Genres
+d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publisher,2023,en,Test Description,300,0,,Planned,5,2023-01-01T00:00:00,,,{genreA};{genreB}";
+
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
+
+        // Act
+        await service.ImportFromCsvAsync(csv);
+
+        // Assert — both new Genre rows must exist with real (non-empty) IDs, and two
+        // BookGenre rows must link the imported book to those Genre IDs.
+        using var verifyContext = TestDbContext.Create(dbName);
+        var newGenres = verifyContext.Genres
+            .Where(g => g.Name == genreA || g.Name == genreB)
+            .ToList();
+        newGenres.Should().HaveCount(2, "both CSV-declared new genres must be persisted as Genre rows");
+        newGenres.Should().OnlyContain(g => g.Id != Guid.Empty, "every new Genre row must have a real primary key");
+        newGenres.Select(g => g.Id).Distinct().Should().HaveCount(2, "the two new genres must have distinct IDs (not share Guid.Empty)");
+
+        var importedBook = verifyContext.Books.Single(b => b.Title == "Test Book");
+        var bookGenres = verifyContext.BookGenres
+            .Where(bg => bg.BookId == importedBook.Id)
+            .ToList();
+        bookGenres.Should().HaveCount(2, "the imported book must be linked to both new genres");
+        var newGenreIds = newGenres.Select(g => g.Id).ToHashSet();
+        bookGenres.Should().OnlyContain(bg => newGenreIds.Contains(bg.GenreId),
+            "each BookGenre must reference one of the freshly-created Genre IDs");
+    }
+
+    [Fact]
     public async Task ImportFromJsonAsync_WithDuplicates_ShouldSkipDuplicates()
     {
         // Arrange

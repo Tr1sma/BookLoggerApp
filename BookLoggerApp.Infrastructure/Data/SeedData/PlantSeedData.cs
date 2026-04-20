@@ -16,6 +16,8 @@ public static class PlantSeedData
     private static readonly Guid _wisdomWillowId = Guid.Parse("10000000-0000-0000-0000-000000000006");
     private static readonly Guid _ancientBonsaiId = Guid.Parse("10000000-0000-0000-0000-000000000007");
     private static readonly Guid _mysticTomeTreeId = Guid.Parse("10000000-0000-0000-0000-000000000008");
+    private static readonly Guid _chronicleTreeId = Guid.Parse("10000000-0000-0000-0000-000000000009");
+    private static readonly Guid _eternalPhoenixBonsaiId = Guid.Parse("10000000-0000-0000-0000-00000000000A");
 
     public static IEnumerable<PlantSpecies> GetPlants()
     {
@@ -137,6 +139,38 @@ public static class PlantSeedData
             BaseCost = 5000,
             UnlockLevel = 33,
             IsAvailable = true
+        };
+
+        yield return new PlantSpecies
+        {
+            Id = _chronicleTreeId,
+            Name = "Chronicle Tree",
+            Description = "An ancient chronicle tree whose leaves resemble parchment from bygone eras. When your reading streak threatens to break, it preserves the story of your journey.",
+            ImagePath = "images/plants/chronicle_tree.svg",
+            MaxLevel = 40,
+            WaterIntervalDays = 21,
+            GrowthRate = 0.4,
+            XpBoostPercentage = 0.30m,
+            BaseCost = 20000,
+            UnlockLevel = 45,
+            IsAvailable = true,
+            SpecialAbilityKey = SpecialAbilityKeys.StreakGuardian
+        };
+
+        yield return new PlantSpecies
+        {
+            Id = _eternalPhoenixBonsaiId,
+            Name = "Eternal Phoenix Bonsai",
+            Description = "A sacred bonsai whose golden leaves glow with the wisdom of countless books. While it watches your garden, no plant shall die — and it rises from its own ashes again and again.",
+            ImagePath = "images/plants/eternal_phoenix_bonsai.svg",
+            MaxLevel = 50,
+            WaterIntervalDays = 30,
+            GrowthRate = 0.25,
+            XpBoostPercentage = 0.50m,
+            BaseCost = 80000,
+            UnlockLevel = 57,
+            IsAvailable = true,
+            SpecialAbilityKey = SpecialAbilityKeys.EternalPhoenix
         };
     }
 }

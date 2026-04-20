@@ -116,6 +116,79 @@ public class GoalServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task CalculateGoalProgress_WithUnspecifiedKindDatesFromUiDatePicker_ShouldCountUtcBookInRange()
+    {
+        // Regression gate for the timezone-kind mismatch in goal progress calculation.
+        // The UI binds <input type="date"> to DateTime with Kind=Unspecified (ticks
+        // represent the user's local calendar midnight), while Book.DateCompleted is
+        // written as DateTime.UtcNow (Kind=Utc). DateTime comparison ignores Kind and
+        // uses raw ticks, so without a conversion the comparisons mix local-midnight
+        // ticks with UTC-instant ticks and misclassify books near day boundaries in
+        // non-UTC timezones. The helper GoalService.GetGoalRangeUtc bridges this by
+        // calling ToUniversalTime() on the bounds; this test pins that behavior.
+
+        var nowYear = DateTime.UtcNow.Year;
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "UI-Picker Goal",
+            Type = GoalType.Books,
+            Target = 5,
+            // Exactly what <input type="date" @bind="...StartDate" /> produces
+            StartDate = new DateTime(nowYear - 1, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
+            EndDate = new DateTime(nowYear + 1, 12, 31, 0, 0, 0, DateTimeKind.Unspecified)
+        });
+
+        // Completed book stamped with the real runtime UtcNow (Kind=Utc); this lies
+        // inside the multi-year range regardless of the test runner's local timezone
+        await _unitOfWork.Books.AddAsync(new Book
+        {
+            Title = "In-range book",
+            Author = "Author",
+            Status = ReadingStatus.Completed,
+            DateCompleted = DateTime.UtcNow
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        // Act — GetActiveGoalsAsync populates Current in memory via CalculateGoalProgressAsync
+        var activeGoals = await _service.GetActiveGoalsAsync();
+
+        // Assert
+        activeGoals.Should().ContainSingle(g => g.Id == goal.Id)
+            .Which.Current.Should().Be(1, "the UTC-stamped book must match a Kind=Unspecified goal range");
+    }
+
+    [Fact]
+    public async Task GetActiveGoalsAsync_WithUnspecifiedEndDateEndingToday_ShouldStillBeActive()
+    {
+        // Regression gate for the second half of the same kind-mismatch bug: the
+        // ReadingGoalRepository.GetActiveGoalsAsync filter previously compared EndDate
+        // against DateTime.UtcNow. For a user in a positive-UTC timezone, a goal whose
+        // EndDate equals today's local midnight (Kind=Unspecified) would get filtered
+        // out several hours before the local day ended, because UtcNow's ticks already
+        // exceed the stored local-midnight ticks. The fix compares against
+        // DateTime.Now.Date so goals ending "today locally" remain visible all day.
+
+        var localToday = DateTime.Now.Date; // Kind=Local
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Ends Today",
+            Type = GoalType.Books,
+            Target = 1,
+            StartDate = new DateTime(localToday.Year - 1, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
+            // EndDate = today's local date, as the UI date picker would produce
+            EndDate = new DateTime(localToday.Year, localToday.Month, localToday.Day, 0, 0, 0, DateTimeKind.Unspecified)
+        });
+
+        // Act
+        var activeGoals = await _service.GetActiveGoalsAsync();
+
+        // Assert — goal ending "today" in the user's local calendar must remain active
+        // throughout the entire local day, not disappear when UtcNow crosses some earlier
+        // UTC threshold
+        activeGoals.Should().ContainSingle(g => g.Id == goal.Id);
+    }
+
+    [Fact]
     public async Task RecalculateGoalProgressAsync_ShouldMarkNewlyCompletedGoalsAndReturnTrue()
     {
         // Arrange

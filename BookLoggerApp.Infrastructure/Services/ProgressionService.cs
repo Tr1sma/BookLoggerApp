@@ -12,13 +12,16 @@ public class ProgressionService : IProgressionService
 {
     private readonly IAppSettingsProvider _settingsProvider;
     private readonly IPlantService _plantService;
+    private readonly IDecorationService _decorationService;
 
     public ProgressionService(
         IAppSettingsProvider settingsProvider,
-        IPlantService plantService)
+        IPlantService plantService,
+        IDecorationService decorationService)
     {
         _settingsProvider = settingsProvider;
         _plantService = plantService;
+        _decorationService = decorationService;
     }
 
     public async Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0)
@@ -106,37 +109,24 @@ public class ProgressionService : IProgressionService
 
     public async Task<decimal> GetTotalPlantBoostAsync()
     {
-        // Get all user's plants (Species is eagerly loaded via Include)
         var userPlants = await _plantService.GetAllAsync();
+        bool hasStoryHeart = await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart);
+        return SpecialAbilityResolver.CalculateAggregatedPlantBoost(userPlants, hasStoryHeart);
+    }
 
-        // Filter out dead plants — they should not provide XP boosts
-        var alivePlants = userPlants.Where(p => p.Status != PlantStatus.Dead).ToList();
+    public async Task<LevelUpResult?> AwardBonusXpAsync(int xp, CancellationToken ct = default)
+    {
+        if (xp <= 0)
+            return null;
 
-        if (!alivePlants.Any())
-            return 0m;
+        var settings = await _settingsProvider.GetSettingsAsync(ct);
+        int oldXp = settings.TotalXp;
+        settings.TotalXp += xp;
+        settings.UpdatedAt = DateTime.UtcNow;
 
-        decimal totalBoost = 0m;
-
-        foreach (var plant in alivePlants)
-        {
-            // Species is already loaded via Include in GetAllAsync — no extra DB query needed
-            if (plant.Species == null)
-                continue;
-
-            // Calculate boost for this plant
-            // Formula: baseBoost + (levelBonus per level)
-            // Example: StarterSprout = 5% base + 0.5% per level
-            // At level 5: 5% + (5 * 0.5%) = 7.5%
-            decimal baseBoost = plant.Species.XpBoostPercentage;
-            decimal levelBonus = plant.Species.MaxLevel > 0
-                ? plant.CurrentLevel * (plant.Species.XpBoostPercentage / plant.Species.MaxLevel)
-                : 0m;
-            decimal plantBoost = baseBoost + levelBonus;
-
-            totalBoost += plantBoost;
-        }
-
-        return totalBoost;
+        var levelUpResult = await CheckAndProcessLevelUpAsync(oldXp, settings.TotalXp, settings);
+        await _settingsProvider.UpdateSettingsAsync(settings, ct);
+        return levelUpResult;
     }
 
     public async Task<LevelUpResult?> CheckAndProcessLevelUpAsync(int oldXp, int newXp, AppSettings? settingsToUpdate = null)
@@ -155,6 +145,11 @@ public class ProgressionService : IProgressionService
         for (int level = oldLevel + 1; level <= newLevel; level++)
         {
             coinsAwarded += XpCalculator.CalculateCoinsForLevel(level);
+        }
+
+        if (await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart))
+        {
+            coinsAwarded = (int)Math.Round(coinsAwarded * SpecialAbilityResolver.StoryHeartCoinMultiplier);
         }
 
         int newCoins;

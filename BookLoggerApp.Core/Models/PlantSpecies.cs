@@ -42,6 +42,13 @@ public class PlantSpecies
     [Range(1, 100)]
     public int UnlockLevel { get; set; } = 1; // User must be level X to unlock
 
+    /// <summary>
+    /// Optional key identifying a special gameplay ability (e.g. "streak_guardian", "eternal_phoenix").
+    /// Null for ordinary plants. See <see cref="SpecialAbilityKeys"/>.
+    /// </summary>
+    [MaxLength(50)]
+    public string? SpecialAbilityKey { get; set; }
+
     // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }
