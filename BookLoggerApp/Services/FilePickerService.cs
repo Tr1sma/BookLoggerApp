@@ -57,15 +57,38 @@ public class FilePickerService : IFilePickerService
                 // Copy to temp file in cache directory
                 var cacheFile = Path.Combine(FileSystem.CacheDirectory, result.FileName);
                 _migrationService.Log($"[FilePicker] Cache target: {cacheFile}");
-            
+
                 // Delete if exists to ensure fresh copy
-                if (File.Exists(cacheFile)) 
+                if (File.Exists(cacheFile))
                     File.Delete(cacheFile);
 
                 using var stream = await result.OpenReadAsync();
-                using var fileStream = File.Create(cacheFile);
-                await stream.CopyToAsync(fileStream);
-                
+                try
+                {
+                    using (var fileStream = File.Create(cacheFile))
+                    {
+                        await stream.CopyToAsync(fileStream);
+                    }
+                }
+                catch
+                {
+                    // If the copy was interrupted partway through, remove the half-written
+                    // file so nothing else (or a future picker run with a different filename)
+                    // accidentally treats it as a valid backup. The next retry with the same
+                    // filename would eventually overwrite it, but that self-healing only kicks
+                    // in for matching names; clean up explicitly so the cache stays consistent.
+                    try
+                    {
+                        if (File.Exists(cacheFile))
+                            File.Delete(cacheFile);
+                    }
+                    catch (Exception cleanupEx)
+                    {
+                        _migrationService.Log($"[FilePicker] Cleanup of partial cache file failed: {cleanupEx.Message}");
+                    }
+                    throw;
+                }
+
                 _migrationService.Log("[FilePicker] Copied virtual file to cache.");
                 return cacheFile;
             }
