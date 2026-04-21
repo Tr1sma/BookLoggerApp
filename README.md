@@ -124,7 +124,7 @@ BookLoggerApp.Tests/              # Unit Tests (xUnit + FluentAssertions)
 
 ## Projektumfang & Code-Statistiken
 
-> BookHeart wird seit September 2025 von einer Person entwickelt — Architektur, Features und der Großteil der Implementierung in Eigenarbeit. AI-Assistenten kommen punktuell für Bug-Fixes, Sicherheits-Reviews und Codebase-Scans zum Einsatz.
+> BookHeart wird seit September 2025 von mir alleine entwickelt — Architektur, Features und der Großteil der Implementierung in Eigenarbeit. AI-Assistenten kommen punktuell für Bug-Fixes, Sicherheits-Reviews und Codebase-Scans zum Einsatz.
 
 ### Code-Verteilung
 
