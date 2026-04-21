@@ -67,13 +67,16 @@ public static class XpCalculator
 
     /// <summary>
     /// Applies plant XP boost to base XP amount.
+    /// Uses MidpointRounding.AwayFromZero to match the coin-multiplier rounding in
+    /// ProgressionService.CheckAndProcessLevelUpAsync, so fractional boosts don't
+    /// silently truncate (e.g. 1325 × 1.5 = 1987.5 → 1988, not 1987).
     /// </summary>
     /// <param name="baseXp">The base XP earned before boost</param>
     /// <param name="boostPercentage">The boost percentage (e.g., 0.25 for 25% boost)</param>
     /// <returns>The boosted XP amount</returns>
     public static int ApplyPlantBoost(int baseXp, decimal boostPercentage)
     {
-        return (int)(baseXp * (1 + boostPercentage));
+        return (int)Math.Round(baseXp * (1 + boostPercentage), MidpointRounding.AwayFromZero);
     }
 
     /// <summary>

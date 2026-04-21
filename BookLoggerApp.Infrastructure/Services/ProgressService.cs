@@ -59,7 +59,8 @@ public class ProgressService : IProgressService
             session.Minutes,
             session.PagesRead,
             activePlant?.Id,
-            streak.StreakDays
+            streak.StreakDays,
+            ct
         );
 
         session.XpEarned = progressionResult.XpEarned;
@@ -161,7 +162,8 @@ public class ProgressService : IProgressService
             session.Minutes,
             pagesRead,
             activePlant?.Id,
-            streak.StreakDays
+            streak.StreakDays,
+            ct
         );
 
         // Store the XP earned in the session

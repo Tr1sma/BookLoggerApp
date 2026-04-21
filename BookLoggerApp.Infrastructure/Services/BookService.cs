@@ -180,7 +180,7 @@ public class BookService : IBookService
 
             // Award book completion XP (100 XP bonus + plant boost)
             var activePlant = await _plantService.GetActivePlantAsync(ct);
-            await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
+            await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id, ct);
 
             await _goalService.RecalculateGoalProgressAsync(ct);
 
@@ -221,7 +221,7 @@ public class BookService : IBookService
             if (wasCompleted)
             {
                 var activePlant = await _plantService.GetActivePlantAsync(ct);
-                completionResult = await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
+                completionResult = await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id, ct);
             }
 
             await _goalService.RecalculateGoalProgressAsync(ct);

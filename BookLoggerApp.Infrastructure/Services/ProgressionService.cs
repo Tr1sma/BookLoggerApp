@@ -24,21 +24,21 @@ public class ProgressionService : IProgressionService
         _decorationService = decorationService;
     }
 
-    public async Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0)
+    public async Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0, CancellationToken ct = default)
     {
         // 1. Calculate base XP from session (including streak bonus)
         var (minutesXp, pagesXp, longSessionXp, streakXp) = XpCalculator.CalculateSessionXpBreakdown(minutes, pagesRead, streakDays);
         int baseXp = minutesXp + pagesXp + longSessionXp + streakXp;
 
         // 2. Get plant boost
-        decimal plantBoost = await GetTotalPlantBoostAsync();
+        decimal plantBoost = await GetTotalPlantBoostAsync(ct);
 
         // 3. Apply boost to get final XP
         int boostedXp = XpCalculator.ApplyPlantBoost(baseXp, plantBoost);
         int bonusXp = boostedXp - baseXp;
 
         // 4. Get current settings
-        var settings = await _settingsProvider.GetSettingsAsync();
+        var settings = await _settingsProvider.GetSettingsAsync(ct);
         int oldXp = settings.TotalXp;
 
         // 5. Add XP to user
@@ -46,10 +46,10 @@ public class ProgressionService : IProgressionService
         settings.UpdatedAt = DateTime.UtcNow;
 
         // 6. Check for level-up and update UserLevel in the same settings instance
-        var levelUpResult = await CheckAndProcessLevelUpAsync(oldXp, settings.TotalXp, settings);
+        var levelUpResult = await CheckAndProcessLevelUpAsync(oldXp, settings.TotalXp, settings, ct);
 
         // 7. Save settings (with both TotalXp and UserLevel updated)
-        await _settingsProvider.UpdateSettingsAsync(settings);
+        await _settingsProvider.UpdateSettingsAsync(settings, ct);
 
         // 8. Return result
         return new ProgressionResult
@@ -68,20 +68,20 @@ public class ProgressionService : IProgressionService
         };
     }
 
-    public async Task<ProgressionResult> AwardBookCompletionXpAsync(Guid? activePlantId)
+    public async Task<ProgressionResult> AwardBookCompletionXpAsync(Guid? activePlantId, CancellationToken ct = default)
     {
         // 1. Calculate base XP for book completion
         int baseXp = XpCalculator.CalculateXpForBookCompletion();
 
         // 2. Get plant boost
-        decimal plantBoost = await GetTotalPlantBoostAsync();
+        decimal plantBoost = await GetTotalPlantBoostAsync(ct);
 
         // 3. Apply boost to get final XP
         int boostedXp = XpCalculator.ApplyPlantBoost(baseXp, plantBoost);
         int bonusXp = boostedXp - baseXp;
 
         // 4. Get current settings
-        var settings = await _settingsProvider.GetSettingsAsync();
+        var settings = await _settingsProvider.GetSettingsAsync(ct);
         int oldXp = settings.TotalXp;
 
         // 5. Add XP to user
@@ -89,10 +89,10 @@ public class ProgressionService : IProgressionService
         settings.UpdatedAt = DateTime.UtcNow;
 
         // 6. Check for level-up and update UserLevel in the same settings instance
-        var levelUpResult = await CheckAndProcessLevelUpAsync(oldXp, settings.TotalXp, settings);
+        var levelUpResult = await CheckAndProcessLevelUpAsync(oldXp, settings.TotalXp, settings, ct);
 
         // 7. Save settings (with both TotalXp and UserLevel updated)
-        await _settingsProvider.UpdateSettingsAsync(settings);
+        await _settingsProvider.UpdateSettingsAsync(settings, ct);
 
         // 8. Return result
         return new ProgressionResult
@@ -107,10 +107,10 @@ public class ProgressionService : IProgressionService
         };
     }
 
-    public async Task<decimal> GetTotalPlantBoostAsync()
+    public async Task<decimal> GetTotalPlantBoostAsync(CancellationToken ct = default)
     {
-        var userPlants = await _plantService.GetAllAsync();
-        bool hasStoryHeart = await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart);
+        var userPlants = await _plantService.GetAllAsync(ct);
+        bool hasStoryHeart = await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct);
         return SpecialAbilityResolver.CalculateAggregatedPlantBoost(userPlants, hasStoryHeart);
     }
 
@@ -129,7 +129,7 @@ public class ProgressionService : IProgressionService
         return levelUpResult;
     }
 
-    public async Task<LevelUpResult?> CheckAndProcessLevelUpAsync(int oldXp, int newXp, AppSettings? settingsToUpdate = null)
+    public async Task<LevelUpResult?> CheckAndProcessLevelUpAsync(int oldXp, int newXp, AppSettings? settingsToUpdate = null, CancellationToken ct = default)
     {
         int oldLevel = XpCalculator.CalculateLevelFromXp(oldXp);
         int newLevel = XpCalculator.CalculateLevelFromXp(newXp);
@@ -147,7 +147,7 @@ public class ProgressionService : IProgressionService
             coinsAwarded += XpCalculator.CalculateCoinsForLevel(level);
         }
 
-        if (await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart))
+        if (await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct))
         {
             coinsAwarded = (int)Math.Round(coinsAwarded * SpecialAbilityResolver.StoryHeartCoinMultiplier);
         }
@@ -171,11 +171,11 @@ public class ProgressionService : IProgressionService
             // Previously this called AddCoinsAsync (separate save) then UpdateSettingsAsync
             // (another save), which could lose coin updates in a race condition.
             _settingsProvider.InvalidateCache();
-            var settings = await _settingsProvider.GetSettingsAsync();
+            var settings = await _settingsProvider.GetSettingsAsync(ct);
             settings.Coins += coinsAwarded;
             settings.UserLevel = newLevel;
             settings.UpdatedAt = DateTime.UtcNow;
-            await _settingsProvider.UpdateSettingsAsync(settings);
+            await _settingsProvider.UpdateSettingsAsync(settings, ct);
             newCoins = settings.Coins;
         }
 
