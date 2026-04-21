@@ -1,6 +1,7 @@
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using SkiaSharp;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
@@ -80,6 +81,7 @@ public class ShareCardService : IShareCardService
     // Stats Card
     // ─────────────────────────────────────────────────────────────────────────
 
+    [ExcludeFromCodeCoverage]
     private static void DrawStatsCard(SKCanvas canvas, StatsShareData data, int w, int h)
     {
         const int Pad = 60;
@@ -173,6 +175,7 @@ public class ShareCardService : IShareCardService
     // Book Card
     // ─────────────────────────────────────────────────────────────────────────
 
+    [ExcludeFromCodeCoverage]
     private static void DrawBookCard(SKCanvas canvas, BookShareData data, int w, int h)
     {
         const int Pad = 60;
@@ -332,6 +335,7 @@ public class ShareCardService : IShareCardService
     /// Draws a path-based heart icon followed by text, all centered at (cx, y).
     /// Avoids Unicode glyph rendering failures on Android default typefaces.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static void DrawHeartAndText(SKCanvas canvas, string text, float cx, float y,
         SKTypeface typeface, float fontSize, SKColor color)
     {
@@ -359,6 +363,7 @@ public class ShareCardService : IShareCardService
     /// <summary>
     /// Draws a filled heart at (cx, cy) using cubic bezier curves — no glyph required.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static void DrawHeartIcon(SKCanvas canvas, float cx, float cy, float size, SKColor color)
     {
         using var path = new SKPath();
@@ -396,6 +401,7 @@ public class ShareCardService : IShareCardService
     /// Draws a 5-pointed star at (cx, cy) using path geometry — no Unicode glyph required.
     /// Avoids glyph rendering failures on Android default typefaces.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static void DrawStarIcon(SKCanvas canvas, float cx, float cy, float outerRadius,
         SKColor color, bool filled)
     {
@@ -426,6 +432,7 @@ public class ShareCardService : IShareCardService
         canvas.DrawPath(path, paint);
     }
 
+    [ExcludeFromCodeCoverage]
     private static void DrawText(SKCanvas canvas, string text, float x, float y, SKTypeface typeface,
         float fontSize, SKColor color, SKTextAlign align)
     {
@@ -434,12 +441,14 @@ public class ShareCardService : IShareCardService
         canvas.DrawText(text, x, y, align, font, paint);
     }
 
+    [ExcludeFromCodeCoverage]
     private static void DrawHorizontalLine(SKCanvas canvas, float x1, float x2, float y, SKColor color)
     {
         using var paint = new SKPaint { Color = color, StrokeWidth = 1.5f, IsAntialias = true };
         canvas.DrawLine(x1, y, x2, y, paint);
     }
 
+    [ExcludeFromCodeCoverage]
     private static void DrawChip(SKCanvas canvas, string text, float centerX, float y,
         SKColor bgColor, SKColor textColor, SKTypeface typeface, float fontSize)
     {
@@ -462,6 +471,7 @@ public class ShareCardService : IShareCardService
     /// <summary>
     /// Draws a stat tile with a colored accent bar at the top clipped to the tile's rounded corners.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static void DrawStatTile(SKCanvas canvas, string value, string label, float x, float y,
         float w, float h, SKTypeface boldTypeface, SKTypeface regularTypeface,
         SKColor accentColor, float valueFontSize = 80)
@@ -491,6 +501,7 @@ public class ShareCardService : IShareCardService
         canvas.DrawText(label, midX, y + h * 0.84f, SKTextAlign.Center, labelFont, labelPaint);
     }
 
+    [ExcludeFromCodeCoverage]
     private static void DrawBookRow(SKCanvas canvas, int rank, string title, string author,
         double? rating, float x, float y, float width,
         SKTypeface regularTypeface, SKTypeface boldTypeface)
@@ -538,6 +549,7 @@ public class ShareCardService : IShareCardService
         DrawHorizontalLine(canvas, x, x + width, y + 165, BorderColor);
     }
 
+    [ExcludeFromCodeCoverage]
     private static void DrawRoundedBitmap(SKCanvas canvas, SKBitmap bitmap,
         float x, float y, float w, float h, float cornerRadius)
     {
@@ -553,6 +565,7 @@ public class ShareCardService : IShareCardService
     /// <summary>
     /// Draws a soft radial gradient circle for ambient glow/bokeh effects.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static void DrawGlowOrb(SKCanvas canvas, float cx, float cy, float radius,
         SKColor color, byte peakAlpha)
     {
@@ -569,6 +582,7 @@ public class ShareCardService : IShareCardService
     /// <summary>
     /// Draws a horizontal line that fades in from transparent, transitions colors, and fades out.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static void DrawGradientDivider(SKCanvas canvas, float x1, float x2, float y,
         SKColor leftColor, SKColor rightColor)
     {
@@ -590,6 +604,7 @@ public class ShareCardService : IShareCardService
     /// <summary>
     /// Draws an info chip with a colored accent dot and tinted gradient background.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static void DrawColoredInfoChip(SKCanvas canvas, string text, float x, float y,
         float maxW, float chipH, SKTypeface typeface, float fontSize, SKColor accentColor)
     {
@@ -619,6 +634,7 @@ public class ShareCardService : IShareCardService
     /// <summary>
     /// Draws gold-filled star rating with per-star glow halos.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static void DrawStarRatingGold(SKCanvas canvas, double rating, float centerX, float y, float fontSize)
     {
         int filled = Math.Clamp((int)Math.Round(rating), 0, 5);
@@ -647,6 +663,7 @@ public class ShareCardService : IShareCardService
     /// <summary>
     /// Draws a "HIGHLY RECOMMENDED" pill badge with gradient background.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static void DrawRecommendedBadge(SKCanvas canvas, float cx, float y,
         SKTypeface boldTypeface)
     {
@@ -689,6 +706,7 @@ public class ShareCardService : IShareCardService
     /// <summary>
     /// Draws a 2-column category ratings grid with per-category accent colors and progress bars.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static void DrawColoredCategoryRatings(SKCanvas canvas,
         List<KeyValuePair<RatingCategory, int?>> categories,
         float x, float y, float totalW, SKTypeface regularTypeface, SKTypeface boldTypeface)
@@ -766,6 +784,7 @@ public class ShareCardService : IShareCardService
     /// <summary>
     /// Maps each RatingCategory to a unique accent color for visual variety.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private static SKColor CategoryAccentColor(RatingCategory category) => category switch
     {
         RatingCategory.Characters    => AccentGreen,
@@ -782,6 +801,7 @@ public class ShareCardService : IShareCardService
         _ => Primary
     };
 
+    [ExcludeFromCodeCoverage]
     private static void DrawCoverPlaceholder(SKCanvas canvas, string title,
         float x, float y, float w, float h, SKTypeface boldTypeface)
     {
@@ -795,6 +815,7 @@ public class ShareCardService : IShareCardService
         canvas.DrawText(letter, x + w / 2f, y + h / 2f + 40, SKTextAlign.Center, font, paint);
     }
 
+    [ExcludeFromCodeCoverage]
     private static void DrawInfoChip(SKCanvas canvas, string text, float x, float y,
         float maxW, float chipH, SKTypeface typeface, float fontSize)
     {
@@ -808,6 +829,7 @@ public class ShareCardService : IShareCardService
             SKTextAlign.Center, font, paint);
     }
 
+    [ExcludeFromCodeCoverage]
     private static void DrawStarRating(SKCanvas canvas, double rating, float centerX, float y, float fontSize)
     {
         int filled = Math.Clamp((int)Math.Round(rating), 0, 5);
@@ -824,6 +846,7 @@ public class ShareCardService : IShareCardService
         }
     }
 
+    [ExcludeFromCodeCoverage]
     private static void DrawCategoryRatings(SKCanvas canvas,
         List<KeyValuePair<RatingCategory, int?>> categories,
         float x, float y, float totalW, SKTypeface regularTypeface, SKTypeface boldTypeface)
@@ -859,6 +882,7 @@ public class ShareCardService : IShareCardService
         }
     }
 
+    [ExcludeFromCodeCoverage]
     private static void DrawWatermark(SKCanvas canvas, int w, int h,
         SKTypeface boldTypeface, SKTypeface regularTypeface)
     {
@@ -876,6 +900,7 @@ public class ShareCardService : IShareCardService
     // Utility helpers
     // ─────────────────────────────────────────────────────────────────────────
 
+    [ExcludeFromCodeCoverage]
     private static byte[] EncodePng(SKBitmap bitmap)
     {
         using var image = SKImage.FromBitmap(bitmap);
@@ -883,12 +908,14 @@ public class ShareCardService : IShareCardService
         return data.ToArray();
     }
 
+    [ExcludeFromCodeCoverage]
     private static string TruncateText(string text, int maxChars)
     {
         if (text.Length <= maxChars) return text;
         return text[..(maxChars - 1)] + "…";
     }
 
+    [ExcludeFromCodeCoverage]
     private static List<string> WrapText(string text, float maxWidth, SKTypeface typeface, float fontSize)
     {
         using var font  = new SKFont(typeface, fontSize);
@@ -919,6 +946,7 @@ public class ShareCardService : IShareCardService
         return lines;
     }
 
+    [ExcludeFromCodeCoverage]
     private static string FormatReadingTime(int minutes)
     {
         if (minutes <= 0) return "0m";
@@ -928,6 +956,7 @@ public class ShareCardService : IShareCardService
         return m > 0 ? $"{h}h {m}m" : $"{h}h";
     }
 
+    [ExcludeFromCodeCoverage]
     private static string CategoryLabel(RatingCategory category) => category switch
     {
         RatingCategory.Characters    => "Characters",

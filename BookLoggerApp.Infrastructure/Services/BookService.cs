@@ -169,6 +169,10 @@ public class BookService : IBookService
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
+        // Idempotency guard: callers may retry (rapid double-tap, VM back-button race).
+        // Completion-XP and goal-recalc must fire exactly once across repeated calls.
+        bool wasAlreadyCompleted = book.Status == ReadingStatus.Completed;
+
         book.Status = ReadingStatus.Completed;
         book.DateCompleted ??= DateTime.UtcNow;
         book.CurrentPage = book.PageCount ?? book.CurrentPage;
@@ -178,14 +182,14 @@ public class BookService : IBookService
             await _unitOfWork.Books.UpdateAsync(book);
             await _unitOfWork.SaveChangesAsync(ct);
 
-            // Award book completion XP (100 XP bonus + plant boost)
-            var activePlant = await _plantService.GetActivePlantAsync(ct);
-            await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
+            if (!wasAlreadyCompleted)
+            {
+                var activePlant = await _plantService.GetActivePlantAsync(ct);
+                await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id, ct);
 
-            await _goalService.RecalculateGoalProgressAsync(ct);
-
-            // Notify that goals may have changed (book completed)
-            _goalService.NotifyGoalsChanged();
+                await _goalService.RecalculateGoalProgressAsync(ct);
+                _goalService.NotifyGoalsChanged();
+            }
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -200,15 +204,26 @@ public class BookService : IBookService
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
-        book.CurrentPage = currentPage;
-        var wasCompleted = false;
+        // Idempotency guard: if the book is already completed, hitting the last page again
+        // (e.g. after the user scrubbed the page slider down and back up) must not re-award
+        // completion XP nor clobber the original DateCompleted.
+        bool wasAlreadyCompleted = book.Status == ReadingStatus.Completed;
+        // Clamp to [0, PageCount] so a stray >PageCount input from the UI cannot persist
+        // an inconsistent "600 / 500 (100%)" state — the percentage is already clamped
+        // for display but the raw CurrentPage used to leak through.
+        int clampedPage = Math.Max(0, currentPage);
+        if (book.PageCount.HasValue)
+        {
+            clampedPage = Math.Min(clampedPage, book.PageCount.Value);
+        }
+        book.CurrentPage = clampedPage;
+        bool justCompleted = false;
 
-        // Auto-complete if reached last page
         if (book.PageCount.HasValue && currentPage >= book.PageCount.Value)
         {
             book.Status = ReadingStatus.Completed;
-            book.DateCompleted = DateTime.UtcNow;
-            wasCompleted = true;
+            book.DateCompleted ??= DateTime.UtcNow;
+            justCompleted = !wasAlreadyCompleted;
         }
 
         try
@@ -216,12 +231,11 @@ public class BookService : IBookService
             await _unitOfWork.Books.UpdateAsync(book);
             await _unitOfWork.SaveChangesAsync(ct);
 
-            // Award XP and notify goals if book was auto-completed
             ProgressionResult? completionResult = null;
-            if (wasCompleted)
+            if (justCompleted)
             {
                 var activePlant = await _plantService.GetActivePlantAsync(ct);
-                completionResult = await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id);
+                completionResult = await _progressionService.AwardBookCompletionXpAsync(activePlant?.Id, ct);
             }
 
             await _goalService.RecalculateGoalProgressAsync(ct);

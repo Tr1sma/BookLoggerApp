@@ -528,4 +528,132 @@ public class ReadingViewModelTests
 
         _viewModel.ShowStreakCelebration.Should().BeFalse();
     }
+
+    // --- Story-Heart Bonus → Level-Up celebration ------------------------------------------
+    // Regression: the Story-Heart first-of-day XP bonus was awarded in ProgressService AFTER
+    // the main session save and its LevelUpResult was dropped on the floor. If that bonus
+    // pushed the user over a level threshold, no celebration fired. These tests pin the
+    // new SessionSaveResult.StoryHeartLevelUp plumbing through ReadingViewModel.EndSessionAsync.
+
+    [Fact]
+    public async Task EndSessionAsync_StoryHeartBonusLevelUp_PrimaryLevelUpIsPromoted()
+    {
+        // Arrange — no session-XP level-up, only the Story-Heart bonus produces one.
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 30, PageCount = 300, Status = ReadingStatus.Reading };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+
+        var storyHeartLevelUp = new LevelUpResult
+        {
+            OldLevel = 7,
+            NewLevel = 8,
+            CoinsAwarded = 500,
+            NewTotalCoins = 12345
+        };
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult { XpEarned = 150 },
+            StoryHeartLevelUp = storyHeartLevelUp
+        };
+
+        _bookService.GetByIdAsync(bookId).Returns(book);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+
+        // Act
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+
+        // Assert — LevelUp is visible for the celebration chain.
+        _viewModel.LevelUpResult.Should().NotBeNull();
+        _viewModel.LevelUpResult!.OldLevel.Should().Be(7);
+        _viewModel.LevelUpResult.NewLevel.Should().Be(8);
+        _viewModel.LevelUpResult.NewTotalCoins.Should().Be(12345);
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_SessionAndStoryHeartBothLevelUp_RangeIsCombined()
+    {
+        // Arrange — session XP itself triggers a level-up, Story-Heart bonus pushes through another.
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 30, PageCount = 300, Status = ReadingStatus.Reading };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+
+        var sessionLevelUp = new LevelUpResult
+        {
+            OldLevel = 5,
+            NewLevel = 6,
+            CoinsAwarded = 100,
+            NewTotalCoins = 5000
+        };
+        var storyHeartLevelUp = new LevelUpResult
+        {
+            OldLevel = 6,
+            NewLevel = 7,
+            CoinsAwarded = 200,
+            NewTotalCoins = 5200
+        };
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult { XpEarned = 1500, LevelUp = sessionLevelUp },
+            StoryHeartLevelUp = storyHeartLevelUp
+        };
+
+        _bookService.GetByIdAsync(bookId).Returns(book);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+
+        // Act
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+
+        // Assert — combined range, summed coins, later balance.
+        _viewModel.LevelUpResult.Should().NotBeNull();
+        _viewModel.LevelUpResult!.OldLevel.Should().Be(5);
+        _viewModel.LevelUpResult.NewLevel.Should().Be(7);
+        _viewModel.LevelUpResult.CoinsAwarded.Should().Be(300);
+        _viewModel.LevelUpResult.NewTotalCoins.Should().Be(5200);
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_NoStoryHeartLevelUp_KeepsExistingLevelUpUnchanged()
+    {
+        // Regression guard: merging must be a no-op when StoryHeartLevelUp is null.
+        var bookId = Guid.NewGuid();
+        var book = new Book { Id = bookId, CurrentPage = 30, PageCount = 300, Status = ReadingStatus.Reading };
+        var session = new ReadingSession { Id = Guid.NewGuid(), BookId = bookId, StartedAt = DateTime.UtcNow };
+
+        var sessionLevelUp = new LevelUpResult
+        {
+            OldLevel = 3,
+            NewLevel = 4,
+            CoinsAwarded = 50,
+            NewTotalCoins = 1000
+        };
+        var endResult = new SessionEndResult
+        {
+            Session = session,
+            ProgressionResult = new ProgressionResult { XpEarned = 500, LevelUp = sessionLevelUp },
+            StoryHeartLevelUp = null
+        };
+
+        _bookService.GetByIdAsync(bookId).Returns(book);
+        _progressService.StartSessionAsync(bookId).Returns(session);
+        _progressService.EndSessionAsync(session.Id, Arg.Any<int>()).Returns(endResult);
+
+        await _viewModel.StartCommand.ExecuteAsync(bookId);
+
+        // Act
+        await _viewModel.EndSessionCommand.ExecuteAsync(null);
+
+        // Assert
+        _viewModel.LevelUpResult.Should().NotBeNull();
+        _viewModel.LevelUpResult!.OldLevel.Should().Be(3);
+        _viewModel.LevelUpResult.NewLevel.Should().Be(4);
+        _viewModel.LevelUpResult.CoinsAwarded.Should().Be(50);
+    }
 }

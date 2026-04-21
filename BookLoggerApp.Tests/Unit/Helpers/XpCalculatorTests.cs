@@ -109,4 +109,20 @@ public class XpCalculatorTests
         // Assert
         result.Should().Be(expectedCoins);
     }
+
+    [Theory]
+    [InlineData(100, 0.0, 100)]        // No boost
+    [InlineData(100, 0.25, 125)]       // 25% boost, exact
+    [InlineData(100, 0.5, 150)]        // 50% boost, exact
+    [InlineData(1325, 0.5, 1988)]      // 1325 × 1.5 = 1987.5 → rounds up to 1988 (was 1987 with truncation)
+    [InlineData(1000, 0.255, 1255)]    // 1000 × 1.255 = 1255.0 exact
+    [InlineData(33, 0.5, 50)]          // 33 × 1.5 = 49.5 → rounds up to 50 (was 49 with truncation)
+    public void ApplyPlantBoost_RoundsCorrectly(int baseXp, double boostPercentage, int expectedXp)
+    {
+        // Act
+        var result = XpCalculator.ApplyPlantBoost(baseXp, (decimal)boostPercentage);
+
+        // Assert
+        result.Should().Be(expectedXp);
+    }
 }

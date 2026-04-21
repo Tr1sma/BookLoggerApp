@@ -573,4 +573,215 @@ public class StatsServiceTests : IDisposable
     }
 
     #endregion
+
+    #region Coverage-ergänzende Tests
+
+    [Fact]
+    public async Task GetTotalBooksReadAsync_CountsOnlyCompleted()
+    {
+        await _unitOfWork.Books.AddAsync(new Book { Title = "c1", Author = "a", Status = ReadingStatus.Completed });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "c2", Author = "a", Status = ReadingStatus.Completed });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "r", Author = "a", Status = ReadingStatus.Reading });
+        await _context.SaveChangesAsync();
+
+        var count = await _service.GetTotalBooksReadAsync();
+
+        count.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetTotalPagesReadAsync_SumsCompletedBookPages()
+    {
+        await _unitOfWork.Books.AddAsync(new Book { Title = "c1", Author = "a", Status = ReadingStatus.Completed, PageCount = 200 });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "c2", Author = "a", Status = ReadingStatus.Completed, PageCount = 300 });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "r", Author = "a", Status = ReadingStatus.Reading, PageCount = 150 });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "nopages", Author = "a", Status = ReadingStatus.Completed, PageCount = null });
+        await _context.SaveChangesAsync();
+
+        var total = await _service.GetTotalPagesReadAsync();
+
+        total.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task GetTotalMinutesReadAsync_SumsSessionMinutes()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = DateTime.UtcNow, Minutes = 20 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = DateTime.UtcNow, Minutes = 35 });
+        await _context.SaveChangesAsync();
+
+        var total = await _service.GetTotalMinutesReadAsync();
+
+        total.Should().Be(55);
+    }
+
+    [Fact]
+    public async Task GetReadingTrendAsync_GroupsSessionsByDate()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        var d1 = DateTime.UtcNow.Date.AddDays(-3);
+        var d2 = DateTime.UtcNow.Date.AddDays(-1);
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = d1, EndedAt = d1.AddMinutes(20), Minutes = 20 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = d1, EndedAt = d1.AddMinutes(10), Minutes = 10 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = d2, EndedAt = d2.AddMinutes(15), Minutes = 15 });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetReadingTrendAsync(d1.AddDays(-1), d2.AddDays(1));
+
+        result.Should().HaveCount(2);
+        result[d1].Should().Be(30);
+        result[d2].Should().Be(15);
+    }
+
+    [Fact]
+    public async Task GetPagesReadInRangeAsync_SumsOnlyInRange()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = today.AddDays(-10), EndedAt = today.AddDays(-10).AddMinutes(5), Minutes = 5, PagesRead = 10 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = today, EndedAt = today.AddMinutes(5), Minutes = 5, PagesRead = 20 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = today, EndedAt = today.AddMinutes(5), Minutes = 5, PagesRead = null });
+        await _context.SaveChangesAsync();
+
+        var pages = await _service.GetPagesReadInRangeAsync(today.AddDays(-1), today.AddDays(1));
+
+        pages.Should().Be(20);
+    }
+
+    [Fact]
+    public async Task GetBooksCompletedInYearAsync_FiltersByYear()
+    {
+        await _unitOfWork.Books.AddAsync(new Book { Title = "2023", Author = "a", Status = ReadingStatus.Completed, DateCompleted = new DateTime(2023, 6, 15) });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "2024", Author = "a", Status = ReadingStatus.Completed, DateCompleted = new DateTime(2024, 1, 5) });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "2024b", Author = "a", Status = ReadingStatus.Completed, DateCompleted = new DateTime(2024, 12, 31) });
+        await _context.SaveChangesAsync();
+
+        (await _service.GetBooksCompletedInYearAsync(2023)).Should().Be(1);
+        (await _service.GetBooksCompletedInYearAsync(2024)).Should().Be(2);
+        (await _service.GetBooksCompletedInYearAsync(2022)).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetBooksCompletedInRangeAsync_FiltersByDateRange()
+    {
+        await _unitOfWork.Books.AddAsync(new Book { Title = "In", Author = "a", Status = ReadingStatus.Completed, DateCompleted = new DateTime(2024, 6, 15) });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "Out", Author = "a", Status = ReadingStatus.Completed, DateCompleted = new DateTime(2023, 1, 1) });
+        await _context.SaveChangesAsync();
+
+        var count = await _service.GetBooksCompletedInRangeAsync(new DateTime(2024, 1, 1), new DateTime(2024, 12, 31));
+
+        count.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetTopBooksInRangeAsync_OrdersByAverageRating()
+    {
+        var low = new Book { Title = "Low", Author = "a", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow, CharactersRating = 1, PlotRating = 1 };
+        var high = new Book { Title = "High", Author = "a", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow, CharactersRating = 5, PlotRating = 5 };
+        var mid = new Book { Title = "Mid", Author = "a", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow, CharactersRating = 3, PlotRating = 3 };
+        await _unitOfWork.Books.AddAsync(low);
+        await _unitOfWork.Books.AddAsync(high);
+        await _unitOfWork.Books.AddAsync(mid);
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetTopBooksInRangeAsync(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(1), count: 2);
+
+        result.Should().HaveCount(2);
+        result[0].Title.Should().Be("High");
+        result[1].Title.Should().Be("Mid");
+    }
+
+    [Fact]
+    public async Task GetBooksByGenreAsync_GroupsCorrectly()
+    {
+        var fantasy = new Genre { Name = "Fantasy" };
+        var sf = new Genre { Name = "SF" };
+        _context.Genres.AddRange(fantasy, sf);
+        var b1 = new Book { Title = "B1", Author = "A", Status = ReadingStatus.Completed };
+        var b2 = new Book { Title = "B2", Author = "A", Status = ReadingStatus.Completed };
+        var b3 = new Book { Title = "B3", Author = "A", Status = ReadingStatus.Completed };
+        _context.Books.AddRange(b1, b2, b3);
+        _context.BookGenres.AddRange(
+            new BookGenre { BookId = b1.Id, GenreId = fantasy.Id },
+            new BookGenre { BookId = b2.Id, GenreId = fantasy.Id },
+            new BookGenre { BookId = b3.Id, GenreId = sf.Id }
+        );
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetBooksByGenreAsync();
+
+        result["Fantasy"].Should().Be(2);
+        result["SF"].Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetFavoriteGenreAsync_NoBooks_ReturnsNull()
+    {
+        var result = await _service.GetFavoriteGenreAsync();
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetFavoriteGenreAsync_ReturnsMostFrequent()
+    {
+        var fantasy = new Genre { Name = "Fantasy" };
+        var sf = new Genre { Name = "SF" };
+        _context.Genres.AddRange(fantasy, sf);
+        var b1 = new Book { Title = "B1", Author = "A", Status = ReadingStatus.Completed };
+        var b2 = new Book { Title = "B2", Author = "A", Status = ReadingStatus.Completed };
+        var b3 = new Book { Title = "B3", Author = "A", Status = ReadingStatus.Completed };
+        _context.Books.AddRange(b1, b2, b3);
+        _context.BookGenres.AddRange(
+            new BookGenre { BookId = b1.Id, GenreId = fantasy.Id },
+            new BookGenre { BookId = b2.Id, GenreId = fantasy.Id },
+            new BookGenre { BookId = b3.Id, GenreId = sf.Id }
+        );
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetFavoriteGenreAsync();
+
+        result.Should().Be("Fantasy");
+    }
+
+    [Fact]
+    public async Task GetAverageRatingAsync_NoBooks_ReturnsZero()
+    {
+        var result = await _service.GetAverageRatingAsync();
+
+        result.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetAverageRatingAsync_ComputesAverage()
+    {
+        await _unitOfWork.Books.AddAsync(new Book { Title = "A", Author = "x", CharactersRating = 4, PlotRating = 4 });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "x", CharactersRating = 2, PlotRating = 2 });
+        await _context.SaveChangesAsync();
+
+        var avg = await _service.GetAverageRatingAsync();
+
+        avg.Should().Be(3.0);
+    }
+
+    [Fact]
+    public async Task GetActiveReadingPeriodsAsync_ReturnsDistinctYearMonthTuples()
+    {
+        await _unitOfWork.Books.AddAsync(new Book { Title = "A", Author = "x", Status = ReadingStatus.Completed, DateCompleted = new DateTime(2024, 3, 10) });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "x", Status = ReadingStatus.Completed, DateCompleted = new DateTime(2024, 3, 20) });
+        await _unitOfWork.Books.AddAsync(new Book { Title = "C", Author = "x", Status = ReadingStatus.Completed, DateCompleted = new DateTime(2024, 5, 5) });
+        await _context.SaveChangesAsync();
+
+        var periods = await _service.GetActiveReadingPeriodsAsync();
+
+        periods.Should().HaveCount(2);
+        periods[0].Should().Be((2024, 5));
+        periods[1].Should().Be((2024, 3));
+    }
+
+    #endregion
 }

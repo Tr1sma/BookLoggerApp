@@ -36,6 +36,7 @@ public static class DatabaseInitializationHelper
     /// <summary>
     /// Marks the database as initialized successfully.
     /// This should be called by the Infrastructure layer's DbInitializer.
+    /// Idempotent — a second call becomes a no-op rather than crashing.
     /// </summary>
     public static void MarkAsInitialized()
     {
@@ -47,15 +48,17 @@ public static class DatabaseInitializationHelper
             _isInitialized = true;
         }
 
-        _initializationTcs.SetResult(true);
+        _initializationTcs.TrySetResult(true);
     }
 
     /// <summary>
     /// Marks the database initialization as failed.
     /// This should be called by the Infrastructure layer's DbInitializer.
+    /// Idempotent — calling this after MarkAsInitialized or a previous MarkAsFailed
+    /// is a no-op instead of crashing with InvalidOperationException.
     /// </summary>
     public static void MarkAsFailed(Exception exception)
     {
-        _initializationTcs.SetException(exception);
+        _initializationTcs.TrySetException(exception);
     }
 }

@@ -1,6 +1,8 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Core.Helpers
 @using BookLoggerApp.Infrastructure.Services.Helpers
+@inject BookLoggerApp.Core.Services.Abstractions.IDecorationService DecorationService
 
 <div class="plant-detail-card">
     <div class="plant-detail-visual">
@@ -100,16 +102,26 @@
     private string _editedName = string.Empty;
     private string? _renameError;
 
+    // Mirrors PlantService.GetGlobalGrowthMultiplierAsync: Herz der Geschichten halves the
+    // effective water interval. Without this the "Next Water" countdown would disagree with
+    // the plant's actual Thirsty/Wilting transitions.
+    private double _growthMultiplier = 1.0;
+
     private bool IsWaterButtonDisabled => IsWatering || Plant.Status is PlantStatus.Healthy or PlantStatus.Dead;
 
     private int GetMaxLevel() => Plant.Species?.MaxLevel ?? 1;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         if (!_isEditingName)
         {
             _editedName = Plant.Name;
         }
+
+        bool hasStoryHeart = await DecorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart);
+        _growthMultiplier = hasStoryHeart
+            ? (double)SpecialAbilityResolver.StoryHeartPlantGrowthMultiplier
+            : 1.0;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -143,7 +155,7 @@
             return "Missed watering window";
         }
 
-        var nextWaterDue = PlantGrowthCalculator.GetNextWaterDueAt(Plant.LastWatered, waterIntervalDays);
+        var nextWaterDue = PlantGrowthCalculator.GetNextWaterDueAt(Plant.LastWatered, waterIntervalDays, _growthMultiplier);
         var timeRemaining = nextWaterDue - DateTime.UtcNow;
 
         if (timeRemaining <= TimeSpan.Zero)
