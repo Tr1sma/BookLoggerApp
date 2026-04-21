@@ -13,6 +13,7 @@
 @inject BookLoggerApp.Services.IScannerService ScannerService
 @inject IOnboardingService OnboardingService
 @inject IJSRuntime JSRuntime
+@inject IDatabaseInitializer DatabaseInitializer
 @implements IAsyncDisposable
 
 <PageTitle>Bookshelf - BookHeart</PageTitle>
@@ -85,6 +86,13 @@
     @if (ViewModel.IsBusy)
     {
         <div class="loading">Loading your books...</div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            <p>@ViewModel.ErrorMessage</p>
+            <button class="btn btn-primary" @onclick="RetryLoadAsync">Erneut versuchen</button>
+        </div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.SearchQuery) || ViewModel.FilterStatus.HasValue ||
     ViewModel.FilterGenreId.HasValue)
@@ -576,6 +584,15 @@
     protected override async Task OnInitializedAsync()
     {
         GoalService.GoalsChanged += OnGoalsChanged;
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private async Task RetryLoadAsync()
+    {
+        if (ViewModel.IsDatabaseInitializationFailed)
+        {
+            DatabaseInitializer.Retry();
+        }
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
 

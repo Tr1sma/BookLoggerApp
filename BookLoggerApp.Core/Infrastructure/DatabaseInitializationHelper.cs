@@ -7,17 +7,19 @@ namespace BookLoggerApp.Core.Infrastructure;
 /// </summary>
 public static class DatabaseInitializationHelper
 {
-    private static readonly TaskCompletionSource<bool> _initializationTcs = new();
-    private static bool _isInitialized = false;
-    private static readonly object _lock = new();
-
     /// <summary>
-    /// Waits for database initialization to complete.
+    /// Default timeout applied by <see cref="EnsureInitializedAsync()"/>. On slow
+    /// budget Android devices, first-install EF migrations plus seed synchronisation
+    /// can legitimately take ~10-15 seconds; 45s buys enough headroom while still
+    /// surfacing a real hang within a minute.
     /// </summary>
-    public static async Task EnsureInitializedAsync()
-    {
-        await _initializationTcs.Task.ConfigureAwait(false);
-    }
+    public static TimeSpan DefaultTimeout { get; } = TimeSpan.FromSeconds(45);
+
+    private static TaskCompletionSource<bool> _initializationTcs = new();
+    private static bool _isInitialized;
+    private static bool _initializationFailed;
+    private static Exception? _initializationException;
+    private static readonly object _lock = new();
 
     /// <summary>
     /// Checks if the database has been initialized.
@@ -34,21 +36,102 @@ public static class DatabaseInitializationHelper
     }
 
     /// <summary>
+    /// True when <see cref="MarkAsFailed"/> has been called and the state has not
+    /// been cleared via <see cref="ResetForRetry"/>. Used to decide whether to
+    /// offer a retry path in the UI.
+    /// </summary>
+    public static bool InitializationFailed
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _initializationFailed;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The exception captured by the most recent <see cref="MarkAsFailed"/> call,
+    /// or null when no failure is currently recorded.
+    /// </summary>
+    public static Exception? InitializationException
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _initializationException;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Waits for database initialization using <see cref="DefaultTimeout"/>.
+    /// </summary>
+    public static Task EnsureInitializedAsync()
+    {
+        return EnsureInitializedAsync(DefaultTimeout, CancellationToken.None);
+    }
+
+    /// <summary>
+    /// Waits for database initialization to complete. Throws
+    /// <see cref="TimeoutException"/> when the wait exceeds <paramref name="timeout"/>,
+    /// <see cref="OperationCanceledException"/> when <paramref name="cancellationToken"/>
+    /// is cancelled, or the stored exception when <see cref="MarkAsFailed"/> has been
+    /// called.
+    /// </summary>
+    public static async Task EnsureInitializedAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        Task<bool> tcsTask;
+        lock (_lock)
+        {
+            tcsTask = _initializationTcs.Task;
+        }
+
+        if (tcsTask.IsCompleted)
+        {
+            await tcsTask.ConfigureAwait(false);
+            return;
+        }
+
+        using CancellationTokenSource delayCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        Task delayTask = Task.Delay(timeout, delayCts.Token);
+
+        Task completed = await Task.WhenAny(tcsTask, delayTask).ConfigureAwait(false);
+        if (completed == tcsTask)
+        {
+            delayCts.Cancel();
+            await tcsTask.ConfigureAwait(false);
+            return;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        throw new TimeoutException("Datenbank-Initialisierung hat zu lange gedauert.");
+    }
+
+    /// <summary>
     /// Marks the database as initialized successfully.
     /// This should be called by the Infrastructure layer's DbInitializer.
     /// Idempotent — a second call becomes a no-op rather than crashing.
     /// </summary>
     public static void MarkAsInitialized()
     {
+        TaskCompletionSource<bool> tcs;
         lock (_lock)
         {
             if (_isInitialized)
+            {
                 return;
+            }
 
             _isInitialized = true;
+            _initializationFailed = false;
+            _initializationException = null;
+            tcs = _initializationTcs;
         }
 
-        _initializationTcs.TrySetResult(true);
+        tcs.TrySetResult(true);
     }
 
     /// <summary>
@@ -59,6 +142,54 @@ public static class DatabaseInitializationHelper
     /// </summary>
     public static void MarkAsFailed(Exception exception)
     {
-        _initializationTcs.TrySetException(exception);
+        TaskCompletionSource<bool> tcs;
+        lock (_lock)
+        {
+            if (_isInitialized)
+            {
+                return;
+            }
+
+            _initializationFailed = true;
+            _initializationException = exception;
+            tcs = _initializationTcs;
+        }
+
+        tcs.TrySetException(exception);
+    }
+
+    /// <summary>
+    /// Clears a failed state and installs a fresh <see cref="TaskCompletionSource{TResult}"/>
+    /// so a caller can re-run the initialization. No-op when initialization has
+    /// already succeeded (retrying a success makes no sense).
+    /// </summary>
+    public static void ResetForRetry()
+    {
+        lock (_lock)
+        {
+            if (_isInitialized)
+            {
+                return;
+            }
+
+            _initializationFailed = false;
+            _initializationException = null;
+            _initializationTcs = new TaskCompletionSource<bool>();
+        }
+    }
+
+    /// <summary>
+    /// Unconditional reset exposed to the test assembly so individual tests start
+    /// from a clean state regardless of any prior <see cref="MarkAsInitialized"/> call.
+    /// </summary>
+    internal static void ResetForTests()
+    {
+        lock (_lock)
+        {
+            _isInitialized = false;
+            _initializationFailed = false;
+            _initializationException = null;
+            _initializationTcs = new TaskCompletionSource<bool>();
+        }
     }
 }

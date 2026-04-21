@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Infrastructure;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -13,6 +14,12 @@ public abstract partial class ViewModelBase : ObservableObject
 
     [ObservableProperty]
     private string? _errorMessage;
+
+    /// <summary>
+    /// True when the current error reflects a failed or timed-out database
+    /// initialization. Pages use this to decide whether to show a "retry" button.
+    /// </summary>
+    public bool IsDatabaseInitializationFailed => DatabaseInitializationHelper.InitializationFailed;
 
     protected void ClearError()
     {
@@ -60,10 +67,15 @@ public abstract partial class ViewModelBase : ObservableObject
             IsBusy = true;
             ClearError();
 
-            // Wait for database initialization to complete
-            await BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.EnsureInitializedAsync();
+            await DatabaseInitializationHelper.EnsureInitializedAsync(DatabaseInitializationHelper.DefaultTimeout);
 
             await action();
+        }
+        catch (TimeoutException)
+        {
+            var prefix = errorPrefix ?? "Fehler";
+            SetError($"{prefix}: Datenbank wird noch vorbereitet. Bitte versuche es erneut.");
+            System.Diagnostics.Debug.WriteLine("Timeout beim Warten auf Datenbank-Initialisierung.");
         }
         catch (Exception ex)
         {
