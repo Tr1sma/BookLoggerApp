@@ -124,7 +124,7 @@ BookLoggerApp.Tests/              # Unit Tests (xUnit + FluentAssertions)
 
 ## Projektumfang & Code-Statistiken
 
-> BookHeart wird seit September 2025 von mir alleine entwickelt — Architektur, Features und der Großteil der Implementierung in Eigenarbeit. AI-Assistenten kommen punktuell für Bug-Fixes, Sicherheits-Reviews und Codebase-Scans zum Einsatz.
+> BookHeart wird seit September 2025 von einer Person entwickelt — Architektur, Features und der Großteil der Implementierung in Eigenarbeit. AI-Assistenten kommen punktuell für Bug-Fixes, Sicherheits-Reviews und Codebase-Scans zum Einsatz.
 
 ### Code-Verteilung
 
@@ -142,6 +142,18 @@ Gemessen mit [`scc`](https://github.com/boyter/scc) (ohne `obj/`, `bin/`, `Migra
 | **Gesamt**    |   472 |  **59.711** |      5.269 |       2.713 |
 
 **App-Code (C# + Razor): ~40.300 Zeilen.**
+
+### Test-Suite & Coverage
+
+| Kennzahl                        | Wert         |
+|---------------------------------|--------------|
+| **Unit Tests (alle grün)**      | **1.073**    |
+| **Code Block Coverage**         | **96 %**     |
+| **Code Line Coverage**          | **98 %**     |
+| Test-Framework                  | xUnit + FluentAssertions |
+| Test-Code-Zeilen                | ~19.600      |
+
+Die Test-Suite deckt die gesamte Domänenlogik (Core), Repository- und Service-Layer (Infrastructure) sowie ViewModels und kritische Präsentationspfade ab. Jeder Bug-Fix wird durch mindestens einen Regression-Test gegen erneutes Auftreten gepinnt.
 
 ### Qualitäts-Metriken (Visual Studio Code Metrics)
 
