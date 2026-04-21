@@ -122,6 +122,55 @@ BookLoggerApp.Tests/              # Unit Tests (xUnit + FluentAssertions)
 
 ---
 
+## Projektumfang & Code-Statistiken
+
+> **BookHeart wurde komplett solo entwickelt — ohne AI-Coding-Assistenten.**  
+> Die folgenden Zahlen geben einen objektiven Überblick über Umfang, Komplexität und Qualität der Codebasis.
+
+### Code-Verteilung
+
+Gemessen mit [`scc`](https://github.com/boyter/scc) (ohne `obj/`, `bin/`, `Migrations/` und auto-generierten `.g.cs`):
+> scc --exclude-dir obj,bin,Migrations --not-match ".*\.g\.cs$" .
+
+| Sprache       | Files | Code-Zeilen | Kommentare | Komplexität |
+|---------------|------:|------------:|-----------:|------------:|
+| **C#**        |   299 |  **30.936** |      4.173 |       1.765 |
+| **Razor**     |    42 |   **9.364** |        153 |         787 |
+| **CSS**       |    29 |      11.211 |        437 |           – |
+| Markdown      |    12 |       3.320 |          – |           – |
+| SVG           |    30 |       1.234 |        263 |           – |
+| HTML / JS     |    10 |       1.575 |        125 |         116 |
+| Build / Misc  |    50 |       2.071 |        118 |          45 |
+| **Gesamt**    |   472 |  **59.711** |      5.269 |       2.713 |
+
+**Handgeschriebener App-Code (C# + Razor): ~40.300 Zeilen.**
+
+### Qualitäts-Metriken (Visual Studio Code Metrics)
+
+| Projekt                          | Wartbarkeitsindex | Zykl. Komplexität | Klassenkopplung |
+|----------------------------------|------------------:|------------------:|----------------:|
+| BookLoggerApp                    |                69 |             2.166 |             461 |
+| BookLoggerApp.Core               |            **86** |             3.292 |             207 |
+| BookLoggerApp.Infrastructure     |                55 |             1.483 |             322 |
+| BookLoggerApp.Tests              |                70 |             1.298 |             360 |
+
+Wartbarkeitsindex ≥ 70 gilt als gut, ≥ 80 als sehr gut. Der Core-Layer (reine Domänenlogik) erreicht **86**.
+
+### Industriestandard-Aufwandsschätzung (COCOMO)
+
+Auf Basis der Code-Zeilen berechnet `scc` automatisch das [COCOMO-Modell](https://en.wikipedia.org/wiki/COCOMO) (Boehm, 1981) — eine in der Industrie etablierte Schätzung dafür, was ein Unternehmensprojekt vergleichbaren Umfangs in einem klassischen Wasserfall-Setting kosten würde:
+
+| Kennzahl                              | Wert                |
+|---------------------------------------|---------------------|
+| Geschätzte Entwicklungskosten         | **$1.979.030**      |
+| Geschätzte Projektdauer               | **17,83 Monate**    |
+| Geschätzte Teamgröße                  | **~10 Entwickler**  |
+| Entspricht ca. Personenmonaten        | **176**             |
+
+> **Wichtige Einordnung:** Die COCOMO-Werte sind **keine realen Entwicklungskosten** dieses Projekts, sondern eine standardisierte Branchenschätzung. Sie zeigen, welcher Aufwand für eine vergleichbare Codebasis in einem klassischen Industrie-Setting (mehrköpfiges Team, Overhead, Reviews, QA, Meetings) anfallen würde. BookHeart wurde demgegenüber von einer Person entwickelt — was den Effizienz-Vorteil moderner Tooling- und Architektur-Entscheidungen unterstreicht.
+
+---
+
 ## Entwicklung
 
 ### Voraussetzungen
@@ -166,5 +215,4 @@ Details siehe [`LICENSE.md`](LICENSE.md).
 ---
 
 ## Autor
-Entwickelt von **Ben Sowieja**  
-
+Entwickelt von **Ben Sowieja**
