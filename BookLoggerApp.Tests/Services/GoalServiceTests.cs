@@ -1,4 +1,5 @@
 using FluentAssertions;
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Infrastructure.Data;
@@ -626,5 +627,202 @@ public class GoalServiceTests : IDisposable
         // Assert: Fantasy + Romance = 2 books (Mystery excluded by genre filter)
         var loadedGoal = activeGoals.First();
         loadedGoal.Current.Should().Be(2);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Coverage-ergänzende Tests (GetAllAsync, GetByIdAsync, DeleteAsync,
+    // UpdateAsync, GetCompletedGoalsAsync, GetGoalsByTypeAsync, Minutes,
+    // NotifyGoalsChanged, Exceptions, GetExcludedBooks/GoalGenres)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsAllGoals()
+    {
+        await _service.AddAsync(new ReadingGoal { Title = "G1", Type = GoalType.Books, Target = 5, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(30) });
+        await _service.AddAsync(new ReadingGoal { Title = "G2", Type = GoalType.Books, Target = 5, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(30), IsCompleted = true, CompletedAt = DateTime.UtcNow });
+
+        var all = await _service.GetAllAsync();
+
+        all.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_Existing_ReturnsGoal()
+    {
+        var goal = await _service.AddAsync(new ReadingGoal { Title = "X", Type = GoalType.Books, Target = 1, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(1) });
+
+        var result = await _service.GetByIdAsync(goal.Id);
+
+        result.Should().NotBeNull();
+        result!.Title.Should().Be("X");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_NotExisting_ReturnsNull()
+    {
+        var result = await _service.GetByIdAsync(Guid.NewGuid());
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_Existing_Removes()
+    {
+        var goal = await _service.AddAsync(new ReadingGoal { Title = "Del", Type = GoalType.Books, Target = 1, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(1) });
+
+        await _service.DeleteAsync(goal.Id);
+
+        (await _service.GetByIdAsync(goal.Id)).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_NotExisting_IsNoOp()
+    {
+        Func<Task> act = async () => await _service.DeleteAsync(Guid.NewGuid());
+
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_PersistsChanges()
+    {
+        var goal = await _service.AddAsync(new ReadingGoal { Title = "Original", Type = GoalType.Books, Target = 1, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(1) });
+        goal.Title = "Updated";
+
+        await _service.UpdateAsync(goal);
+
+        var reloaded = await _service.GetByIdAsync(goal.Id);
+        reloaded!.Title.Should().Be("Updated");
+    }
+
+    [Fact]
+    public async Task GetCompletedGoalsAsync_ReturnsOnlyCompleted()
+    {
+        await _service.AddAsync(new ReadingGoal { Title = "Active", Type = GoalType.Books, Target = 10, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(30) });
+        var doneGoal = new ReadingGoal
+        {
+            Title = "Done",
+            Type = GoalType.Books,
+            Target = 1,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow,
+            IsCompleted = true,
+            CompletedAt = DateTime.UtcNow
+        };
+        await _service.AddAsync(doneGoal);
+
+        var completed = await _service.GetCompletedGoalsAsync();
+
+        completed.Should().HaveCount(1);
+        completed[0].Title.Should().Be("Done");
+    }
+
+    [Fact]
+    public async Task GetGoalsByTypeAsync_FiltersByType()
+    {
+        await _service.AddAsync(new ReadingGoal { Title = "Pages", Type = GoalType.Pages, Target = 100, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(30) });
+        await _service.AddAsync(new ReadingGoal { Title = "Books", Type = GoalType.Books, Target = 5, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(30) });
+        await _service.AddAsync(new ReadingGoal { Title = "Minutes", Type = GoalType.Minutes, Target = 60, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(30) });
+
+        var pagesGoals = await _service.GetGoalsByTypeAsync(GoalType.Pages);
+        var booksGoals = await _service.GetGoalsByTypeAsync(GoalType.Books);
+        var minGoals = await _service.GetGoalsByTypeAsync(GoalType.Minutes);
+
+        pagesGoals.Should().HaveCount(1);
+        booksGoals.Should().HaveCount(1);
+        minGoals.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task UpdateGoalProgressAsync_NotExisting_ThrowsEntityNotFound()
+    {
+        Func<Task> act = async () => await _service.UpdateGoalProgressAsync(Guid.NewGuid(), 10);
+
+        await act.Should().ThrowAsync<EntityNotFoundException>();
+    }
+
+    [Fact]
+    public void NotifyGoalsChanged_TriggersEvent()
+    {
+        var invoked = false;
+        _service.GoalsChanged += (s, e) => invoked = true;
+
+        _service.NotifyGoalsChanged();
+
+        invoked.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetExcludedBooksAsync_ReturnsExclusionsForGoal()
+    {
+        var goal = await _service.AddAsync(new ReadingGoal { Title = "G", Type = GoalType.Books, Target = 10, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(30) });
+        var bookId = Guid.NewGuid();
+        await _service.ExcludeBookFromGoalAsync(goal.Id, bookId);
+
+        var exclusions = await _service.GetExcludedBooksAsync(goal.Id);
+
+        exclusions.Should().HaveCount(1);
+        exclusions[0].BookId.Should().Be(bookId);
+    }
+
+    [Fact]
+    public async Task GetGoalGenresAsync_ReturnsGenresForGoal()
+    {
+        var goal = await _service.AddAsync(new ReadingGoal { Title = "G", Type = GoalType.Books, Target = 10, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(30) });
+        var genreId = Guid.NewGuid();
+        _context.Genres.Add(new Genre { Id = genreId, Name = "SF" });
+        await _context.SaveChangesAsync();
+        await _service.AddGenreToGoalAsync(goal.Id, genreId);
+
+        var genres = await _service.GetGoalGenresAsync(goal.Id);
+
+        genres.Should().HaveCount(1);
+        genres[0].GenreId.Should().Be(genreId);
+    }
+
+    [Fact]
+    public async Task RecalculateGoalProgressAsync_NoGoals_ReturnsFalse()
+    {
+        var result = await _service.RecalculateGoalProgressAsync();
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetActiveGoalsAsync_MinutesType_SumsSessionMinutes()
+    {
+        var book = new Book { Title = "B", Author = "A", Status = ReadingStatus.Reading };
+        _context.Books.Add(book);
+        var goal = new ReadingGoal
+        {
+            Title = "MinGoal",
+            Type = GoalType.Minutes,
+            Target = 120,
+            Current = 0,
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        };
+        _context.ReadingGoals.Add(goal);
+
+        _context.ReadingSessions.Add(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow,
+            EndedAt = DateTime.UtcNow.AddMinutes(45),
+            Minutes = 45
+        });
+        _context.ReadingSessions.Add(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow,
+            EndedAt = DateTime.UtcNow.AddMinutes(30),
+            Minutes = 30
+        });
+        await _context.SaveChangesAsync();
+
+        var activeGoals = await _service.GetActiveGoalsAsync();
+
+        activeGoals.Should().HaveCount(1);
+        activeGoals[0].Current.Should().Be(75);
     }
 }

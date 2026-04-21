@@ -171,8 +171,12 @@ public static class WidgetDataService
                         .ToHashSet();
                 }
 
-                var startDate = goal.StartDate.Date;
-                var endDate = goal.EndDate.Date.AddDays(1).AddTicks(-1);
+                // Use the shared helper so the widget's goal window matches the app's
+                // (ToUniversalTime() is essential — goal dates come from the UI as
+                // Kind=Unspecified local dates, and the DateCompleted/EndedAt values
+                // are stored as UTC. Skipping the conversion was showing different
+                // progress in the widget vs. the main Goals page for non-UTC users.)
+                var (startDate, endDate) = BookLoggerApp.Core.Helpers.GoalDateRangeHelper.GetGoalRangeUtc(goal);
 
                 int current = goal.Type switch
                 {

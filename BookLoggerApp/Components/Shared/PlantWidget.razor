@@ -165,7 +165,8 @@
         if (Plant.Species == null) return "?";
         var daysUntil = PlantGrowthCalculator.GetDaysUntilWaterNeeded(
             Plant.LastWatered,
-            Plant.Species.WaterIntervalDays
+            Plant.Species.WaterIntervalDays,
+            _growthMultiplier
         );
 
         return $"{daysUntil:F1}";

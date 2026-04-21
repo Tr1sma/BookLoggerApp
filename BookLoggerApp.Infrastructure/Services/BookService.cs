@@ -208,7 +208,15 @@ public class BookService : IBookService
         // (e.g. after the user scrubbed the page slider down and back up) must not re-award
         // completion XP nor clobber the original DateCompleted.
         bool wasAlreadyCompleted = book.Status == ReadingStatus.Completed;
-        book.CurrentPage = currentPage;
+        // Clamp to [0, PageCount] so a stray >PageCount input from the UI cannot persist
+        // an inconsistent "600 / 500 (100%)" state — the percentage is already clamped
+        // for display but the raw CurrentPage used to leak through.
+        int clampedPage = Math.Max(0, currentPage);
+        if (book.PageCount.HasValue)
+        {
+            clampedPage = Math.Min(clampedPage, book.PageCount.Value);
+        }
+        book.CurrentPage = clampedPage;
         bool justCompleted = false;
 
         if (book.PageCount.HasValue && currentPage >= book.PageCount.Value)
