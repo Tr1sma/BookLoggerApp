@@ -10,7 +10,7 @@ namespace BookLoggerApp.Tests.TestHelpers;
 /// </summary>
 public class MockProgressionService : IProgressionService
 {
-    public Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0)
+    public Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0, CancellationToken ct = default)
     {
         var (minutesXp, pagesXp, longSessionXp, streakXp) = XpCalculator.CalculateSessionXpBreakdown(minutes, pagesRead, streakDays);
         int baseXp = minutesXp + pagesXp + longSessionXp + streakXp;
@@ -31,7 +31,7 @@ public class MockProgressionService : IProgressionService
         });
     }
 
-    public Task<ProgressionResult> AwardBookCompletionXpAsync(Guid? activePlantId)
+    public Task<ProgressionResult> AwardBookCompletionXpAsync(Guid? activePlantId, CancellationToken ct = default)
     {
         return Task.FromResult(new ProgressionResult
         {
@@ -43,12 +43,12 @@ public class MockProgressionService : IProgressionService
         });
     }
 
-    public Task<decimal> GetTotalPlantBoostAsync()
+    public Task<decimal> GetTotalPlantBoostAsync(CancellationToken ct = default)
     {
         return Task.FromResult(0m);
     }
 
-    public Task<LevelUpResult?> CheckAndProcessLevelUpAsync(int oldXp, int newXp, AppSettings? settingsToUpdate = null)
+    public Task<LevelUpResult?> CheckAndProcessLevelUpAsync(int oldXp, int newXp, AppSettings? settingsToUpdate = null, CancellationToken ct = default)
     {
         return Task.FromResult<LevelUpResult?>(null);
     }

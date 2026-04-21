@@ -503,8 +503,6 @@ public partial class BookEditViewModel : ViewModelBase
 
             byte[] cardBytes = await _shareCardService.GenerateBookCardAsync(data);
             BookShareCardReady?.Invoke(cardBytes);
-
-            IsGeneratingBookCard = false;
         }, "Failed to generate book share card");
 
         IsGeneratingBookCard = false;

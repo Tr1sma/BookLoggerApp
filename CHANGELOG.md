@@ -18,12 +18,18 @@ Versionsschema:
 
 ### Behoben
 
+- XP-Berechnung mit Pflanzen-Boost rundet jetzt mathematisch korrekt statt abzuschneiden (`MidpointRounding.AwayFromZero`). Zuvor wurde bei Halbwerten (z. B. Basis-XP × 1,5 = 1987,5) immer abgerundet → `1987` statt `1988`. In realen Sessions mit fraktionierten Boosts gingen so vereinzelt 1 XP pro Session verloren. Das passt die XP-Rundung an die ohnehin schon mit `Math.Round` arbeitende Coin-Berechnung in der Level-Up-Logik an.
 - Pflanzen-Kauf und Pflanzen-Level-Up erstatten jetzt die abgebuchten Münzen zurück, wenn das Speichern der Pflanze nach dem Coin-Abzug fehlschlägt (z. B. bei DB-Fehlern). Zuvor konnten Münzen verloren gehen, ohne dass die Pflanze bzw. der Level-Aufstieg tatsächlich zustande kam. Zusätzlich wird der interne Zähler für die dynamische Preissteigerung erst nach erfolgreichem Kauf hochgezählt — fehlgeschlagene Käufe verteuern nicht mehr den nächsten Kauf.
 - Lese-Ziele zählen Bücher und Sessions jetzt anhand der lokalen Kalender-Zeitzone statt der UTC-Zeit. Zuvor konnte ein Buch, das kurz nach Mitternacht fertig gelesen wurde, im deutschen Zeitraum (UTC+1/+2) noch dem Vortag zugeschlagen werden, weil der UI-Datepicker lokale Tages-Grenzen liefert, `DateTime.UtcNow` aber absolute UTC-Zeitpunkte — der Abgleich übersah den Offset. Betrifft auch die Anzeige „aktive Ziele" auf dem Dashboard und die `IsActive`-Logik: ein Ziel, das „heute" endet, verschwindet jetzt erst mit dem lokalen Tageswechsel und nicht mehr schon am späten Abend.
 - Session-Abschluss-Celebrations (Session → Streak → Level-Up → Book-Completion) können bei einem Doppel-Tap auf den „Awesome!"-Button nicht mehr zwei Overlays gleichzeitig anzeigen. Zuvor konnte ein zweiter Tap in der Übergangs-Frame-Lücke einen falschen else-if-Zweig treffen und z. B. Streak- und Level-Up-Celebration parallel einblenden sowie einen verwaisten Back-Button-Handler zurücklassen, der später eine zwischenzeitlich geschlossene Celebration „geisterhaft" wieder öffnete.
 - Backup-Import (Datei-Picker für virtuelle Dateien, z. B. Google Drive) löscht eine halb kopierte Zwischendatei im Cache-Verzeichnis, wenn der Kopiervorgang mitten im Stream abbricht. Zuvor blieb die angefangene Datei zurück, bis der nächste Versuch mit gleichem Dateinamen kam.
 - Buch-Cover-Karten räumen ihre JS-Interop-Referenz (`DotNetObjectReference`) jetzt auch dann sauber auf, wenn der `unobserve`-Aufruf beim Seiten-Teardown ins Leere läuft (z. B. weil die WebView-JS-Runtime schon beendet ist). Zuvor konnte in diesem seltenen Fehlerpfad ein kleiner .NET-seitiger Handle-Leak pro Cover-Karte entstehen.
 - Shop-Sortierung (Pflanzen und Dekorationen) ist jetzt deterministisch: bei identischem Level und Preis entscheidet der Name als dritter Sortierschlüssel, damit Items nach jedem Reload in derselben Reihenfolge erscheinen.
+
+### Geändert
+
+- `IProgressionService` nimmt jetzt durchgängig einen `CancellationToken` entgegen (`AwardSessionXpAsync`, `AwardBookCompletionXpAsync`, `GetTotalPlantBoostAsync`, `CheckAndProcessLevelUpAsync`) und reicht ihn an die internen Settings-, Plant- und Decoration-Reads/Writes weiter. Zuvor war das Cancellation-Verhalten uneinheitlich (nur `AwardBonusXpAsync` hatte den Parameter), sodass beim App-Shutdown laufende Progression-Operationen nicht mehr sauber abgebrochen werden konnten.
+- Buch-Empfehlungs- bzw. Buch-Share-Karten-Generierung in `ReadingViewModel`, `BookDetailViewModel` und `BookEditViewModel` setzt den `IsGeneratingBookCard`-Spinner nur noch einmal (nach Abschluss der Operation) zurück. Das redundante Inner-Reset innerhalb des Erfolgs-Pfades wurde entfernt — die Funktion ist unverändert, der Code ist sauberer.
 
 ## [0.9.4]
 
