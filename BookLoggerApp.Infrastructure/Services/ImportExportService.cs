@@ -668,6 +668,13 @@ public class ImportExportService : IImportExportService
             context.BookTropes.RemoveRange(context.BookTropes);
             context.BookShelves.RemoveRange(context.BookShelves);
             context.PlantShelves.RemoveRange(context.PlantShelves);
+            // DecorationShelves references UserDecoration (Cascade) and Shelf — must go
+            // before UserDecorations, which in turn has DeleteBehavior.Restrict on its
+            // ShopItem FK, so UserDecorations must be gone before ShopItems are removed
+            // below, otherwise the SaveChanges below fails with an FK violation once the
+            // user has purchased any decoration.
+            context.DecorationShelves.RemoveRange(context.DecorationShelves);
+            context.UserDecorations.RemoveRange(context.UserDecorations);
             context.WishlistInfos.RemoveRange(context.WishlistInfos);
             context.GoalExcludedBooks.RemoveRange(context.GoalExcludedBooks);
             context.GoalGenres.RemoveRange(context.GoalGenres);

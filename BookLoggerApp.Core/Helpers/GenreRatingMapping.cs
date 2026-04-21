@@ -89,8 +89,11 @@ public static class GenreRatingMapping
     /// Returns the union of all relevant rating categories for the given genre IDs.
     /// If genreIds is null/empty or contains no recognized genres, returns ALL categories.
     /// </summary>
-    public static IReadOnlySet<RatingCategory> GetRelevantCategories(IEnumerable<Guid> genreIds)
+    public static IReadOnlySet<RatingCategory> GetRelevantCategories(IEnumerable<Guid>? genreIds)
     {
+        if (genreIds is null)
+            return AllCategories;
+
         var result = new HashSet<RatingCategory>();
 
         foreach (Guid genreId in genreIds)
@@ -107,7 +110,7 @@ public static class GenreRatingMapping
     /// <summary>
     /// Returns all categories NOT in the relevant set for the given genres.
     /// </summary>
-    public static IReadOnlyList<RatingCategory> GetAdditionalCategories(IEnumerable<Guid> genreIds)
+    public static IReadOnlyList<RatingCategory> GetAdditionalCategories(IEnumerable<Guid>? genreIds)
     {
         IReadOnlySet<RatingCategory> relevant = GetRelevantCategories(genreIds);
 

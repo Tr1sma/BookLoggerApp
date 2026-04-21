@@ -116,4 +116,80 @@ public class DashboardViewModelTests
         await _plantService.Received(1).DeleteAsync(plant.Id);
         _viewModel.ActivePlant.Should().BeNull();
     }
+
+    [Fact]
+    public async Task WaterPlantAsync_NoActivePlant_IsNoOp()
+    {
+        _viewModel.ActivePlant = null;
+
+        await _viewModel.WaterPlantCommand.ExecuteAsync(null);
+
+        await _plantService.DidNotReceive().WaterPlantAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeletePlantAsync_NoActivePlant_IsNoOp()
+    {
+        _viewModel.ActivePlant = null;
+
+        await _viewModel.DeletePlantCommand.ExecuteAsync(null);
+
+        await _plantService.DidNotReceive().DeleteAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task LoadAsync_ServiceThrows_SetsErrorMessage()
+    {
+        _plantService.UpdatePlantStatusesAsync(Arg.Any<CancellationToken>())
+            .Returns<Task>(_ => throw new InvalidOperationException("db err"));
+
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+
+        _viewModel.ErrorMessage.Should().NotBeNull();
+        _viewModel.ErrorMessage!.Should().Contain("Failed to load dashboard");
+    }
+
+    [Fact]
+    public async Task LoadAsync_NoReadingBook_CurrentlyReadingIsNull()
+    {
+        _bookService.GetByStatusAsync(ReadingStatus.Reading, Arg.Any<CancellationToken>())
+            .Returns(new List<Book>());
+        _bookService.GetByStatusAsync(ReadingStatus.Completed, Arg.Any<CancellationToken>())
+            .Returns(new List<Book>());
+        _progressService.GetSessionsInRangeAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(new List<ReadingSession>());
+        _goalService.GetActiveGoalsAsync(Arg.Any<CancellationToken>()).Returns(new List<ReadingGoal>());
+        _plantService.GetActivePlantAsync(Arg.Any<CancellationToken>()).Returns((UserPlant?)null);
+        _progressService.GetRecentSessionsAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(new List<ReadingSession>());
+
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+
+        _viewModel.CurrentlyReading.Should().BeNull();
+        _viewModel.ActivePlant.Should().BeNull();
+        _viewModel.BooksReadThisWeek.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task LoadAsync_CompletedBookOutsideWeekRange_NotCounted()
+    {
+        _bookService.GetByStatusAsync(ReadingStatus.Reading, Arg.Any<CancellationToken>())
+            .Returns(new List<Book>());
+        var oldBook = new Book
+        {
+            Title = "Old",
+            Status = ReadingStatus.Completed,
+            DateCompleted = DateTime.UtcNow.AddDays(-30)
+        };
+        _bookService.GetByStatusAsync(ReadingStatus.Completed, Arg.Any<CancellationToken>())
+            .Returns(new List<Book> { oldBook });
+        _progressService.GetSessionsInRangeAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(new List<ReadingSession>());
+        _goalService.GetActiveGoalsAsync(Arg.Any<CancellationToken>()).Returns(new List<ReadingGoal>());
+        _plantService.GetActivePlantAsync(Arg.Any<CancellationToken>()).Returns((UserPlant?)null);
+        _progressService.GetRecentSessionsAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(new List<ReadingSession>());
+
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+
+        _viewModel.BooksReadThisWeek.Should().Be(0);
+    }
 }

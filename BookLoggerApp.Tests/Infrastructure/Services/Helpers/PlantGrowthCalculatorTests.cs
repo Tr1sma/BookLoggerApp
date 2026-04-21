@@ -704,4 +704,99 @@ public class PlantGrowthCalculatorTests
     }
 
     #endregion
+
+    #region Global Growth Multiplier (Herz der Geschichten) Tests
+
+    // Regression guard for V9 code-review: inverse helpers used to ignore the global
+    // multiplier while CalculateLevelFromReadingDays honoured it. UI would then show
+    // ~2x the actual days to next level while Herz der Geschichten was active.
+
+    [Theory]
+    [InlineData(2, 1.0, 2.0, 2)]   // Level 2 at GR 1.0 × 2.0 = ceil(3/2) = 2 days (was 3)
+    [InlineData(5, 1.0, 2.0, 6)]   // Level 5 at GR 1.0 × 2.0 = ceil(12/2) = 6 days (was 12)
+    [InlineData(10, 1.0, 2.0, 14)] // Level 10 at GR 1.0 × 2.0 = ceil(27/2) = 14 days (was 27)
+    public void GetReadingDaysForLevel_WithGlobalGrowthMultiplier_HalvesDays(
+        int level, double growthRate, double multiplier, int expectedDays)
+    {
+        var days = PlantGrowthCalculator.GetReadingDaysForLevel(level, growthRate, multiplier);
+
+        days.Should().Be(expectedDays);
+    }
+
+    [Fact]
+    public void GetReadingDaysForLevel_DefaultMultiplier_UnchangedBehavior()
+    {
+        // Abwärtskompatibilität: Default (multiplier = 1.0) darf das vorherige Verhalten nicht ändern.
+        PlantGrowthCalculator.GetReadingDaysForLevel(5, 1.0).Should().Be(12);
+        PlantGrowthCalculator.GetReadingDaysForLevel(10, 1.2).Should().Be(23);
+    }
+
+    [Fact]
+    public void GetReadingDaysToNextLevel_WithMultiplier2_MatchesForwardFormula()
+    {
+        // Forward-Formel: 6 Lesetage × 2.0 / 3 = 4 → Level 5
+        int forwardLevel = PlantGrowthCalculator.CalculateLevelFromReadingDays(6, 1.0, 100, 2.0);
+        forwardLevel.Should().Be(5);
+
+        // Inverse: bei Level 5 + 6 Tagen + Multiplier 2.0 sollen es bis Level 6 nur noch
+        // wenige Tage sein — nicht 9 wie vor dem Fix.
+        int daysToNext = PlantGrowthCalculator.GetReadingDaysToNextLevel(
+            currentLevel: 5,
+            readingDays: 6,
+            growthRate: 1.0,
+            maxLevel: 100,
+            globalGrowthMultiplier: 2.0);
+
+        // GetReadingDaysForLevel(6, 1.0, 2.0) = ceil(5*3/2) = 8 → 8 - 6 = 2 days remaining
+        daysToNext.Should().Be(2);
+    }
+
+    [Fact]
+    public void GetReadingDaysPercentage_WithMultiplier_ConsistentWithLevel()
+    {
+        // Bei aktivem Herz: Multiplier = 2.0, Level = 3 (ab 3 Lesetagen)
+        // Die Prozentanzeige muss konsistent mit den Level-Schwellen sein.
+        int level = PlantGrowthCalculator.CalculateLevelFromReadingDays(3, 1.0, 100, 2.0);
+        level.Should().Be(3); // floor(3*2/3)+1 = 3
+
+        int pct = PlantGrowthCalculator.GetReadingDaysPercentage(
+            currentLevel: 3,
+            readingDays: 3,
+            growthRate: 1.0,
+            maxLevel: 100,
+            globalGrowthMultiplier: 2.0);
+
+        // GetReadingDaysForLevel(3, 1.0, 2.0) = ceil(2*3/2) = 3 days
+        // GetReadingDaysForLevel(4, 1.0, 2.0) = ceil(3*3/2) = 5 days
+        // daysIntoLevel = 3 - 3 = 0 → 0%
+        pct.Should().Be(0);
+    }
+
+    [Fact]
+    public void ReadingDays_FullCycleConsistencyWithMultiplier()
+    {
+        // Cross-check forward × inverse must agree across a range of multipliers
+        // (guards against future drift like the V9 bug).
+        double[] multipliers = [1.0, 1.5, 2.0];
+        double[] growthRates = [0.8, 1.0, 1.2];
+        int maxLevel = 10;
+
+        foreach (var mult in multipliers)
+        {
+            foreach (var rate in growthRates)
+            {
+                for (int level = 2; level <= maxLevel; level++)
+                {
+                    int daysForLevel = PlantGrowthCalculator.GetReadingDaysForLevel(level, rate, mult);
+                    int calculatedLevel = PlantGrowthCalculator.CalculateLevelFromReadingDays(
+                        daysForLevel, rate, maxLevel, mult);
+
+                    calculatedLevel.Should().BeGreaterThanOrEqualTo(level,
+                        $"mult={mult}, rate={rate}: {daysForLevel} days should give at least level {level}");
+                }
+            }
+        }
+    }
+
+    #endregion
 }

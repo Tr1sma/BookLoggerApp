@@ -474,15 +474,19 @@ public class PlantService : IPlantService
 
     /// <summary>
     /// Get plants that need watering soon (within 6 hours).
+    /// Honours the global growth multiplier (Story-Heart halves the effective interval)
+    /// so notifications align with the real thirst timeline the user sees in the UI.
     /// </summary>
     public async Task<IReadOnlyList<UserPlant>> GetPlantsNeedingWaterAsync(CancellationToken ct = default)
     {
         var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
         await RefreshPlantStatusesAsync(plants, ct);
 
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
         return plants
             .Where(p => p.Status != PlantStatus.Dead)
-            .Where(p => PlantGrowthCalculator.NeedsWateringSoon(p.LastWatered, p.Species.WaterIntervalDays))
+            .Where(p => PlantGrowthCalculator.NeedsWateringSoon(p.LastWatered, p.Species.WaterIntervalDays, growthMultiplier))
             .ToList();
     }
 

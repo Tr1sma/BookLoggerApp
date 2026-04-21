@@ -1,6 +1,8 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Core.Helpers
 @using BookLoggerApp.Infrastructure.Services.Helpers
+@inject BookLoggerApp.Core.Services.Abstractions.IDecorationService DecorationService
 
 <div class="plant-widget @GetStatusClass()">
     <!-- Plant Visual -->
@@ -82,6 +84,19 @@
     [Parameter] public EventCallback OnDelete { get; set; }
     [Parameter] public bool IsWatering { get; set; }
 
+    // Mirrors PlantService.GetGlobalGrowthMultiplierAsync: Herz der Geschichten halves the
+    // reading-days needed per level. The widget's display helpers must use the same multiplier
+    // as the authoritative level formula, otherwise "days to next level" is ~2× the actual value.
+    private double _growthMultiplier = 1.0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        bool hasStoryHeart = await DecorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart);
+        _growthMultiplier = hasStoryHeart
+            ? (double)SpecialAbilityResolver.StoryHeartPlantGrowthMultiplier
+            : 1.0;
+    }
+
     private string GetPlantImage()
     {
         // In the future, could be level-dependent (different sprites for different levels)
@@ -128,7 +143,8 @@
             Plant.CurrentLevel,
             Plant.ReadingDaysCount,
             Plant.Species.GrowthRate,
-            Plant.Species.MaxLevel
+            Plant.Species.MaxLevel,
+            _growthMultiplier
         );
     }
 
@@ -139,7 +155,8 @@
             Plant.CurrentLevel,
             Plant.ReadingDaysCount,
             Plant.Species.GrowthRate,
-            Plant.Species.MaxLevel
+            Plant.Species.MaxLevel,
+            _growthMultiplier
         );
     }
 
@@ -148,7 +165,8 @@
         if (Plant.Species == null) return "?";
         var daysUntil = PlantGrowthCalculator.GetDaysUntilWaterNeeded(
             Plant.LastWatered,
-            Plant.Species.WaterIntervalDays
+            Plant.Species.WaterIntervalDays,
+            _growthMultiplier
         );
 
         return $"{daysUntil:F1}";

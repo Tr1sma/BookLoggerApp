@@ -71,19 +71,39 @@ public class DecorationService : IDecorationService
         // Static pricing — use ShopItem.Cost directly (no dynamic multiplier)
         await _settingsProvider.SpendCoinsAsync(shopItem.Cost, ct);
 
-        var decoration = new UserDecoration
+        // _settingsProvider and the decoration context use separate DbContexts, so a single
+        // EF Core transaction can't cover both operations. Mirror PlantService.PurchasePlantAsync:
+        // if the decoration save fails after coins are spent, refund them explicitly so the
+        // user isn't charged for a decoration they never received.
+        try
         {
-            Id = Guid.NewGuid(),
-            ShopItemId = shopItemId,
-            Name = shopItem.Name,
-            PurchasedAt = DateTime.UtcNow
-        };
+            var decoration = new UserDecoration
+            {
+                Id = Guid.NewGuid(),
+                ShopItemId = shopItemId,
+                Name = shopItem.Name,
+                PurchasedAt = DateTime.UtcNow
+            };
 
-        context.UserDecorations.Add(decoration);
-        await context.SaveChangesAsync(ct);
+            context.UserDecorations.Add(decoration);
+            await context.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Purchased decoration '{Name}' for {Cost} coins", shopItem.Name, shopItem.Cost);
-        return decoration;
+            _logger.LogInformation("Purchased decoration '{Name}' for {Cost} coins", shopItem.Name, shopItem.Cost);
+            return decoration;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Decoration purchase save failed after coins were spent. Refunding {Cost} coins for ShopItem {ShopItemId}.", shopItem.Cost, shopItemId);
+            try
+            {
+                await _settingsProvider.AddCoinsAsync(shopItem.Cost, ct);
+            }
+            catch (Exception refundEx)
+            {
+                _logger.LogCritical(refundEx, "CRITICAL: Could not refund {Cost} coins after failed decoration purchase for ShopItem {ShopItemId}. User coin balance is incorrect.", shopItem.Cost, shopItemId);
+            }
+            throw;
+        }
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)

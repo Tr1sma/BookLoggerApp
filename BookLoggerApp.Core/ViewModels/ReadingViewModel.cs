@@ -227,6 +227,17 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
                 Session.XpEarned = SessionProgressionResult.XpEarned;
             }
 
+            // Fold the Story-Heart first-of-day bonus's level-up into the visible LevelUp
+            // so the celebration fires. The bonus XP is awarded after the main session save
+            // in ProgressService, which means it was never represented in ProgressionResult
+            // — without this merge the user would see the XP change but no level-up overlay.
+            if (result.StoryHeartLevelUp != null && SessionProgressionResult != null)
+            {
+                SessionProgressionResult.LevelUp = MergeLevelUpResults(
+                    SessionProgressionResult.LevelUp,
+                    result.StoryHeartLevelUp);
+            }
+
             XpEarned = SessionProgressionResult?.XpEarned ?? 0;
             _streakCelebrationPending = ShouldShowStreakCelebration(SessionProgressionResult);
 
@@ -247,6 +258,24 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
                 LevelUpResult = SessionProgressionResult.LevelUp;
             }
         }, "Failed to end session");
+    }
+
+    private static LevelUpResult? MergeLevelUpResults(LevelUpResult? primary, LevelUpResult? secondary)
+    {
+        if (primary == null) return secondary;
+        if (secondary == null) return primary;
+
+        // Both present: combine into a single range [primary.OldLevel, secondary.NewLevel].
+        // This handles the rare but possible case where the session XP caused a level-up AND
+        // the Story-Heart bonus pushed through another level on top. Coin totals are summed,
+        // NewTotalCoins is taken from the later LevelUp (post-bonus).
+        return new LevelUpResult
+        {
+            OldLevel = primary.OldLevel,
+            NewLevel = secondary.NewLevel,
+            CoinsAwarded = primary.CoinsAwarded + secondary.CoinsAwarded,
+            NewTotalCoins = secondary.NewTotalCoins
+        };
     }
 
     private ProgressionResult MergeProgressionResults(ProgressionResult? r1, ProgressionResult r2)
@@ -531,8 +560,6 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
 
             byte[] cardBytes = await _shareCardService.GenerateBookCardAsync(data);
             BookShareCardReady?.Invoke(cardBytes);
-
-            IsGeneratingBookCard = false;
         }, "Failed to generate book recommendation card");
 
         IsGeneratingBookCard = false;

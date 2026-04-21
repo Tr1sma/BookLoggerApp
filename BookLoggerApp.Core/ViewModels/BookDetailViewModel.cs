@@ -287,8 +287,6 @@ public partial class BookDetailViewModel : ViewModelBase
 
             byte[] cardBytes = await _shareCardService.GenerateBookCardAsync(data);
             BookShareCardReady?.Invoke(cardBytes);
-
-            IsGeneratingBookCard = false;
         }, "Failed to generate book recommendation card");
 
         IsGeneratingBookCard = false;

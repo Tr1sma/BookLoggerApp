@@ -1,4 +1,5 @@
 using FluentAssertions;
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
@@ -561,5 +562,231 @@ public class ProgressServiceTests : IDisposable
 
         // Assert
         result.Session.PagesRead.Should().Be(500);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Coverage-ergänzende Tests (DeleteSessionAsync, Getter-Methoden,
+    // Update, GetMinutesByDateAsync, GetTotalMinutesAllBooks, GetTotalPages,
+    // EndSession Exceptions, StartSessionAsync)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task DeleteSessionAsync_ExistingSession_Removes()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        var session = await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow,
+            EndedAt = DateTime.UtcNow.AddMinutes(10),
+            Minutes = 10
+        });
+        await _context.SaveChangesAsync();
+
+        await _service.DeleteSessionAsync(session.Id);
+
+        var reloaded = await _service.GetSessionByIdAsync(session.Id);
+        reloaded.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteSessionAsync_NonExisting_IsNoOp()
+    {
+        Func<Task> act = async () => await _service.DeleteSessionAsync(Guid.NewGuid());
+
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task GetSessionByIdAsync_Existing_ReturnsSession()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        var session = await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow,
+            EndedAt = DateTime.UtcNow.AddMinutes(5),
+            Minutes = 5
+        });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetSessionByIdAsync(session.Id);
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(session.Id);
+    }
+
+    [Fact]
+    public async Task GetSessionByIdAsync_NonExisting_ReturnsNull()
+    {
+        var result = await _service.GetSessionByIdAsync(Guid.NewGuid());
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetSessionsByBookAsync_ReturnsOnlySessionsForThatBook()
+    {
+        var bookA = await _unitOfWork.Books.AddAsync(new Book { Title = "A", Author = "X" });
+        var bookB = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "X" });
+        await _context.SaveChangesAsync();
+
+        var now = DateTime.UtcNow;
+        _context.ReadingSessions.Add(new ReadingSession { BookId = bookA.Id, StartedAt = now, EndedAt = now.AddMinutes(5), Minutes = 5 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = bookA.Id, StartedAt = now, EndedAt = now.AddMinutes(10), Minutes = 10 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = bookB.Id, StartedAt = now, EndedAt = now.AddMinutes(3), Minutes = 3 });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetSessionsByBookAsync(bookA.Id);
+
+        result.Should().HaveCount(2);
+        result.Should().OnlyContain(s => s.BookId == bookA.Id);
+    }
+
+    [Fact]
+    public async Task GetSessionsInRangeAsync_FiltersByDate()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = today.AddDays(-10), EndedAt = today.AddDays(-10).AddMinutes(5), Minutes = 5 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = today, EndedAt = today.AddMinutes(10), Minutes = 10 });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetSessionsInRangeAsync(today.AddDays(-1), today.AddDays(1));
+
+        result.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetRecentSessionsAsync_ReturnsLimitedCount()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        for (int i = 0; i < 5; i++)
+        {
+            _context.ReadingSessions.Add(new ReadingSession
+            {
+                BookId = book.Id,
+                StartedAt = DateTime.UtcNow.AddMinutes(-i),
+                EndedAt = DateTime.UtcNow.AddMinutes(-i + 1),
+                Minutes = 1
+            });
+        }
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetRecentSessionsAsync(count: 3);
+
+        result.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task GetTotalPagesAsync_SumsPages()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = DateTime.UtcNow, Minutes = 10, PagesRead = 20 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = DateTime.UtcNow, Minutes = 10, PagesRead = 30 });
+        await _context.SaveChangesAsync();
+
+        var total = await _service.GetTotalPagesAsync(book.Id);
+
+        total.Should().Be(50);
+    }
+
+    [Fact]
+    public async Task GetTotalMinutesAllBooksAsync_SumsAcrossBooks()
+    {
+        var bookA = await _unitOfWork.Books.AddAsync(new Book { Title = "A", Author = "X" });
+        var bookB = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "X" });
+        await _context.SaveChangesAsync();
+        _context.ReadingSessions.Add(new ReadingSession { BookId = bookA.Id, StartedAt = DateTime.UtcNow, Minutes = 15 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = bookB.Id, StartedAt = DateTime.UtcNow, Minutes = 25 });
+        await _context.SaveChangesAsync();
+
+        var total = await _service.GetTotalMinutesAllBooksAsync();
+
+        total.Should().Be(40);
+    }
+
+    [Fact]
+    public async Task GetMinutesByDateAsync_GroupsByDate()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        var day1 = DateTime.UtcNow.Date.AddDays(-2);
+        var day2 = DateTime.UtcNow.Date.AddDays(-1);
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = day1, EndedAt = day1.AddMinutes(30), Minutes = 30 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = day1, EndedAt = day1.AddMinutes(20), Minutes = 20 });
+        _context.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = day2, EndedAt = day2.AddMinutes(15), Minutes = 15 });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetMinutesByDateAsync(day1.AddDays(-1), day2.AddDays(1));
+
+        result.Should().HaveCount(2);
+        result[day1].Should().Be(50);
+        result[day2].Should().Be(15);
+    }
+
+    [Fact]
+    public async Task UpdateSessionAsync_PersistsChanges()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        var session = await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession { BookId = book.Id, StartedAt = DateTime.UtcNow, Minutes = 5 });
+        await _context.SaveChangesAsync();
+
+        session.Minutes = 99;
+        await _service.UpdateSessionAsync(session);
+
+        var reloaded = await _service.GetSessionByIdAsync(session.Id);
+        reloaded!.Minutes.Should().Be(99);
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_NonExistingSession_ThrowsEntityNotFound()
+    {
+        Func<Task> act = async () => await _service.EndSessionAsync(Guid.NewGuid(), 10);
+
+        await act.Should().ThrowAsync<EntityNotFoundException>();
+    }
+
+    [Fact]
+    public async Task StartSessionAsync_CreatesOpenSession()
+    {
+        var book = new Book { Id = Guid.NewGuid(), Title = "B", Author = "A", Status = ReadingStatus.Reading };
+        await _bookService.AddAsync(book);
+
+        var session = await _service.StartSessionAsync(book.Id);
+
+        session.Should().NotBeNull();
+        session.BookId.Should().Be(book.Id);
+        session.StartedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+        session.EndedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetCurrentStreakAsync_ReturnsCalculatedStreak()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        var today = DateTime.UtcNow.Date;
+        for (int i = 0; i < 3; i++)
+        {
+            _context.ReadingSessions.Add(new ReadingSession
+            {
+                BookId = book.Id,
+                StartedAt = today.AddDays(-i).AddHours(12),
+                EndedAt = today.AddDays(-i).AddHours(12).AddMinutes(20),
+                Minutes = 20
+            });
+        }
+        await _context.SaveChangesAsync();
+
+        var streak = await _service.GetCurrentStreakAsync();
+
+        streak.Should().BeGreaterThanOrEqualTo(1);
     }
 }
