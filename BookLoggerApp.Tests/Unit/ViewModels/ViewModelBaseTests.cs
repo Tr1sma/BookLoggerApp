@@ -91,3 +91,77 @@ public class ViewModelBaseTests
         vm.ErrorMessage.Should().StartWith("DB fail:");
     }
 }
+
+public class ViewModelBaseTimeoutTests : IDisposable
+{
+    public ViewModelBaseTimeoutTests()
+    {
+        DatabaseInitializationHelper.ResetForTests();
+    }
+
+    public void Dispose()
+    {
+        DatabaseInitializationHelper.ResetForTests();
+        DatabaseInitializationHelper.MarkAsInitialized();
+    }
+
+    private class TestViewModel : ViewModelBase
+    {
+        public Task RunWithDbAsync(Func<Task> action, string? prefix = null)
+            => ExecuteSafelyWithDbAsync(action, prefix);
+    }
+
+    [Fact]
+    public async Task ExecuteSafelyWithDbAsync_WhenInitFaultedAsTimeout_SetsGermanErrorMessage()
+    {
+        var vm = new TestViewModel();
+        DatabaseInitializationHelper.MarkAsFailed(new TimeoutException("slow"));
+
+        await vm.RunWithDbAsync(() => Task.CompletedTask, "Fehler beim Laden");
+
+        vm.ErrorMessage.Should().NotBeNull();
+        vm.ErrorMessage!.Should().StartWith("Fehler beim Laden:");
+        vm.ErrorMessage.Should().Contain("Datenbank");
+    }
+
+    [Fact]
+    public async Task ExecuteSafelyWithDbAsync_WhenInitFaultedAsTimeout_ClearsIsBusy()
+    {
+        var vm = new TestViewModel();
+        DatabaseInitializationHelper.MarkAsFailed(new TimeoutException("slow"));
+
+        await vm.RunWithDbAsync(() => Task.CompletedTask);
+
+        vm.IsBusy.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ExecuteSafelyWithDbAsync_WhenInitFaultedAsTimeout_DoesNotRunAction()
+    {
+        var vm = new TestViewModel();
+        DatabaseInitializationHelper.MarkAsFailed(new TimeoutException("slow"));
+        var ran = false;
+
+        await vm.RunWithDbAsync(() =>
+        {
+            ran = true;
+            return Task.CompletedTask;
+        });
+
+        ran.Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsDatabaseInitializationFailed_ReflectsHelperState()
+    {
+        var vm = new TestViewModel();
+        vm.IsDatabaseInitializationFailed.Should().BeFalse();
+
+        DatabaseInitializationHelper.MarkAsFailed(new InvalidOperationException("x"));
+        vm.IsDatabaseInitializationFailed.Should().BeTrue();
+
+        DatabaseInitializationHelper.ResetForTests();
+        DatabaseInitializationHelper.MarkAsInitialized();
+        vm.IsDatabaseInitializationFailed.Should().BeFalse();
+    }
+}
