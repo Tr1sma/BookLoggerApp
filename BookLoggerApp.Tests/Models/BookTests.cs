@@ -76,6 +76,42 @@ public class BookTests
         percentage.Should().Be(0);
     }
 
+    [Fact]
+    public void ProgressPercentage_CurrentPageExceedsPageCount_ClampedTo100()
+    {
+        // Arrange: a downward correction of PageCount (e.g. user fixed a typo)
+        // must not produce a >100% display.
+        var book = new Book
+        {
+            PageCount = 100,
+            CurrentPage = 150
+        };
+
+        // Act
+        var percentage = book.ProgressPercentage;
+
+        // Assert
+        percentage.Should().Be(100);
+    }
+
+    [Fact]
+    public void ProgressPercentage_NegativeCurrentPage_ClampedToZero()
+    {
+        // Arrange: defensive — should never happen in practice, but the clamp
+        // guarantees a valid display value.
+        var book = new Book
+        {
+            PageCount = 100,
+            CurrentPage = -10
+        };
+
+        // Act
+        var percentage = book.ProgressPercentage;
+
+        // Assert
+        percentage.Should().Be(0);
+    }
+
     #region Multi-Category Rating Tests
 
     [Fact]

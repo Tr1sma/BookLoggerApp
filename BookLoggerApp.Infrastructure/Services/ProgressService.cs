@@ -99,7 +99,8 @@ public class ProgressService : IProgressService
             GoalCompleted = goalCompleted,
             StreakRescuedByGuardian = streak.RescuedByGuardian,
             StoryHeartCoinBonus = heartBonus.CoinBonus,
-            StoryHeartFirstOfDayBonusXp = heartBonus.BonusXp
+            StoryHeartFirstOfDayBonusXp = heartBonus.BonusXp,
+            StoryHeartLevelUp = heartBonus.LevelUp
         };
     }
 
@@ -204,7 +205,8 @@ public class ProgressService : IProgressService
             GoalCompleted = goalCompleted,
             StreakRescuedByGuardian = streak.RescuedByGuardian,
             StoryHeartCoinBonus = heartBonus.CoinBonus,
-            StoryHeartFirstOfDayBonusXp = heartBonus.BonusXp
+            StoryHeartFirstOfDayBonusXp = heartBonus.BonusXp,
+            StoryHeartLevelUp = heartBonus.LevelUp
         };
     }
 
@@ -289,7 +291,7 @@ public class ProgressService : IProgressService
 
     private readonly record struct ResolvedStreak(int StreakDays, bool RescuedByGuardian, Guid? GuardianToUpdate);
 
-    private readonly record struct StoryHeartBonus(int CoinBonus, int BonusXp);
+    private readonly record struct StoryHeartBonus(int CoinBonus, int BonusXp, LevelUpResult? LevelUp);
 
     private async Task<ResolvedStreak> ResolveStreakForSessionAsync(ReadingSession session, CancellationToken ct)
     {
@@ -375,11 +377,12 @@ public class ProgressService : IProgressService
     {
         if (!await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct))
         {
-            return new StoryHeartBonus(0, 0);
+            return new StoryHeartBonus(0, 0, null);
         }
 
         int coinBonus = 0;
         int bonusXp = 0;
+        LevelUpResult? bonusLevelUp = null;
 
         if (session.Minutes >= SpecialAbilityResolver.StoryHeartSessionMinMinutes)
         {
@@ -404,10 +407,13 @@ public class ProgressService : IProgressService
 
             if (bonusXp > 0)
             {
-                await _progressionService.AwardBonusXpAsync(bonusXp, ct);
+                // Capture the LevelUp so the caller can surface a celebration — the
+                // bonus XP is awarded AFTER the main session save, so any level-up it
+                // triggers never showed up in ProgressionResult.LevelUp before.
+                bonusLevelUp = await _progressionService.AwardBonusXpAsync(bonusXp, ct);
             }
         }
 
-        return new StoryHeartBonus(coinBonus, bonusXp);
+        return new StoryHeartBonus(coinBonus, bonusXp, bonusLevelUp);
     }
 }

@@ -184,38 +184,46 @@ public static class PlantGrowthCalculator
 
     /// <summary>
     /// Calculate required reading days for a specific level.
-    /// Formula: ceil((level - 1) * 3 / growthRate)
+    /// Formula: ceil((level - 1) * 3 / (growthRate * globalGrowthMultiplier))
+    /// The multiplier must mirror <see cref="CalculateLevelFromReadingDays"/>; otherwise
+    /// display-oriented helpers below would disagree with the authoritative level formula
+    /// whenever Herz der Geschichten is owned (multiplier = 2.0) and show roughly twice
+    /// the actual remaining days to next level.
     /// </summary>
-    public static int GetReadingDaysForLevel(int level, double growthRate)
+    public static int GetReadingDaysForLevel(int level, double growthRate, double globalGrowthMultiplier = 1.0)
     {
         if (level <= 1)
             return 0;
 
-        return (int)Math.Ceiling((level - 1) * 3.0 / growthRate);
+        double effective = growthRate * globalGrowthMultiplier;
+        if (effective <= 0)
+            return int.MaxValue;
+
+        return (int)Math.Ceiling((level - 1) * 3.0 / effective);
     }
 
     /// <summary>
     /// Calculate remaining reading days until next level.
     /// </summary>
-    public static int GetReadingDaysToNextLevel(int currentLevel, int readingDays, double growthRate, int maxLevel)
+    public static int GetReadingDaysToNextLevel(int currentLevel, int readingDays, double growthRate, int maxLevel, double globalGrowthMultiplier = 1.0)
     {
         if (currentLevel >= maxLevel)
             return 0;
 
-        int daysForNextLevel = GetReadingDaysForLevel(currentLevel + 1, growthRate);
+        int daysForNextLevel = GetReadingDaysForLevel(currentLevel + 1, growthRate, globalGrowthMultiplier);
         return Math.Max(0, daysForNextLevel - readingDays);
     }
 
     /// <summary>
     /// Calculate progress percentage towards next level based on reading days.
     /// </summary>
-    public static int GetReadingDaysPercentage(int currentLevel, int readingDays, double growthRate, int maxLevel)
+    public static int GetReadingDaysPercentage(int currentLevel, int readingDays, double growthRate, int maxLevel, double globalGrowthMultiplier = 1.0)
     {
         if (currentLevel >= maxLevel)
             return 100;
 
-        int daysForCurrent = GetReadingDaysForLevel(currentLevel, growthRate);
-        int daysForNext = GetReadingDaysForLevel(currentLevel + 1, growthRate);
+        int daysForCurrent = GetReadingDaysForLevel(currentLevel, growthRate, globalGrowthMultiplier);
+        int daysForNext = GetReadingDaysForLevel(currentLevel + 1, growthRate, globalGrowthMultiplier);
         int daysIntoLevel = readingDays - daysForCurrent;
         int daysNeeded = daysForNext - daysForCurrent;
 

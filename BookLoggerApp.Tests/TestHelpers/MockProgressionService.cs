@@ -10,6 +10,9 @@ namespace BookLoggerApp.Tests.TestHelpers;
 /// </summary>
 public class MockProgressionService : IProgressionService
 {
+    /// <summary>Number of times <see cref="AwardBookCompletionXpAsync"/> has been called.</summary>
+    public int AwardBookCompletionXpCallCount { get; private set; }
+
     public Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0, CancellationToken ct = default)
     {
         var (minutesXp, pagesXp, longSessionXp, streakXp) = XpCalculator.CalculateSessionXpBreakdown(minutes, pagesRead, streakDays);
@@ -33,6 +36,7 @@ public class MockProgressionService : IProgressionService
 
     public Task<ProgressionResult> AwardBookCompletionXpAsync(Guid? activePlantId, CancellationToken ct = default)
     {
+        AwardBookCompletionXpCallCount++;
         return Task.FromResult(new ProgressionResult
         {
             XpEarned = 0,

@@ -168,6 +168,114 @@ public class BookServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task CompleteBookAsync_CalledTwice_AwardsCompletionXpOnce()
+    {
+        // Arrange
+        var book = await _service.AddAsync(new Book
+        {
+            Title = "Test Book",
+            Author = "Test Author",
+            Status = ReadingStatus.Reading,
+            PageCount = 100,
+            CurrentPage = 95
+        });
+
+        // Act
+        await _service.CompleteBookAsync(book.Id);
+        await _service.CompleteBookAsync(book.Id);
+
+        // Assert
+        _progressionService.AwardBookCompletionXpCallCount.Should().Be(1,
+            "a second completion of the same book must not re-award XP");
+        _goalService.RecalculateGoalProgressCallCount.Should().Be(1,
+            "goal-recalc only runs on the first completion transition");
+    }
+
+    [Fact]
+    public async Task CompleteBookAsync_PreservesOriginalDateCompleted()
+    {
+        // Arrange
+        var originalCompletion = new DateTime(2025, 6, 1, 12, 0, 0, DateTimeKind.Utc);
+        var book = await _service.AddAsync(new Book
+        {
+            Title = "Test Book",
+            Author = "Test Author",
+            Status = ReadingStatus.Completed,
+            PageCount = 100,
+            CurrentPage = 100,
+            DateCompleted = originalCompletion
+        });
+
+        // Act
+        await _service.CompleteBookAsync(book.Id);
+
+        // Assert
+        var updated = await _service.GetByIdAsync(book.Id);
+        updated!.DateCompleted.Should().Be(originalCompletion,
+            "DateCompleted must not be overwritten when the book is already completed");
+    }
+
+    [Fact]
+    public async Task UpdateProgressAsync_ReachingLastPageAgain_DoesNotAwardXpTwice()
+    {
+        // Arrange
+        var originalCompletion = new DateTime(2025, 6, 1, 12, 0, 0, DateTimeKind.Utc);
+        var book = await _service.AddAsync(new Book
+        {
+            Title = "Test Book",
+            Author = "Test Author",
+            Status = ReadingStatus.Completed,
+            PageCount = 100,
+            CurrentPage = 100,
+            DateCompleted = originalCompletion
+        });
+        // Reset the counter — we want to measure only subsequent calls.
+        var initialCount = _progressionService.AwardBookCompletionXpCallCount;
+
+        // Act: user scrubs progress back below PageCount and then to PageCount again.
+        await _service.UpdateProgressAsync(book.Id, 80);
+        var resultSecondCompletion = await _service.UpdateProgressAsync(book.Id, 100);
+
+        // Assert
+        resultSecondCompletion.Should().BeNull(
+            "UpdateProgressAsync must only return a ProgressionResult on the first completion");
+        _progressionService.AwardBookCompletionXpCallCount.Should().Be(initialCount,
+            "re-reaching the last page must not re-award completion XP");
+
+        var updated = await _service.GetByIdAsync(book.Id);
+        updated!.DateCompleted.Should().Be(originalCompletion,
+            "DateCompleted must not be overwritten by re-completion");
+        updated.Status.Should().Be(ReadingStatus.Completed);
+        updated.CurrentPage.Should().Be(100);
+    }
+
+    [Fact]
+    public async Task UpdateProgressAsync_FirstCompletion_AwardsXpAndSetsDate()
+    {
+        // Arrange
+        var book = await _service.AddAsync(new Book
+        {
+            Title = "Test Book",
+            Author = "Test Author",
+            Status = ReadingStatus.Reading,
+            PageCount = 100,
+            CurrentPage = 99
+        });
+        var initialCount = _progressionService.AwardBookCompletionXpCallCount;
+
+        // Act
+        var result = await _service.UpdateProgressAsync(book.Id, 100);
+
+        // Assert
+        result.Should().NotBeNull("first completion must return a ProgressionResult");
+        _progressionService.AwardBookCompletionXpCallCount.Should().Be(initialCount + 1);
+
+        var updated = await _service.GetByIdAsync(book.Id);
+        updated!.Status.Should().Be(ReadingStatus.Completed);
+        updated.DateCompleted.Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task SearchAsync_ShouldFindBooksByTitleOrAuthor()
     {
         // Arrange

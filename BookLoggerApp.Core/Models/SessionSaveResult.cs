@@ -17,4 +17,12 @@ public class SessionSaveResult
 
     /// <summary>Flat XP bonus granted by Herz der Geschichten for the first session of the day.</summary>
     public int StoryHeartFirstOfDayBonusXp { get; set; }
+
+    /// <summary>
+    /// Level-up triggered specifically by the Story-Heart first-of-day bonus (if any).
+    /// Separate from <see cref="ProgressionResult.LevelUp"/> because the bonus is awarded
+    /// after the main session XP save and used to be silently swallowed, so the user saw
+    /// no level-up celebration even though their level had changed.
+    /// </summary>
+    public LevelUpResult? StoryHeartLevelUp { get; set; }
 }

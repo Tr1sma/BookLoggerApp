@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Services;
@@ -300,6 +301,91 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         // Need to query from a new context to verify count
         using var verifyContext = TestDbContext.Create(dbName);
         verifyContext.Books.Should().HaveCount(1); // Still only 1 book
+    }
+
+    [Fact]
+    public async Task DeleteAllDataAsync_WithOwnedDecorations_RemovesDecorationsAndShelves()
+    {
+        // Regression: DeleteAllDataAsync previously omitted UserDecorations and
+        // DecorationShelves from the RemoveRange chain. Because UserDecoration →
+        // ShopItem has DeleteBehavior.Restrict, the subsequent ShopItems.RemoveRange
+        // would raise an FK-violation on a real SQLite DB as soon as any decoration
+        // had been purchased. On the in-memory provider (which doesn't enforce FKs)
+        // the visible symptom was zombie UserDecoration rows referencing deleted
+        // ShopItems. Both aspects are pinned by this test.
+        var dbName = Guid.NewGuid().ToString();
+        var shopItemId = Guid.NewGuid();
+        var decorationId = Guid.NewGuid();
+        var shelfId = Guid.NewGuid();
+
+        using (var context = TestDbContext.Create(dbName))
+        {
+            context.ShopItems.Add(new ShopItem
+            {
+                Id = shopItemId,
+                Name = "Test Decoration",
+                Description = "Test",
+                Cost = 100,
+                ItemType = ShopItemType.Decoration,
+                ImagePath = "test.svg",
+                UnlockLevel = 1,
+                IsAvailable = true,
+                SlotWidth = 1
+            });
+            context.Shelves.Add(new Shelf { Id = shelfId, Name = "Test Shelf", SortOrder = 0 });
+            context.UserDecorations.Add(new UserDecoration
+            {
+                Id = decorationId,
+                ShopItemId = shopItemId,
+                Name = "Test Decoration",
+                PurchasedAt = DateTime.UtcNow
+            });
+            context.DecorationShelves.Add(new DecorationShelf
+            {
+                DecorationId = decorationId,
+                ShelfId = shelfId,
+                Position = 0
+            });
+            await context.SaveChangesAsync();
+        }
+
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
+
+        // Act — must not throw
+        await service.DeleteAllDataAsync();
+
+        // Assert
+        using var verifyContext = TestDbContext.Create(dbName);
+        verifyContext.UserDecorations.Should().BeEmpty(
+            "purchased decorations must be removed on DeleteAllDataAsync");
+        verifyContext.DecorationShelves.Should().BeEmpty(
+            "decoration placements must be removed on DeleteAllDataAsync");
+        verifyContext.ShopItems.Should().BeEmpty(
+            "shop items continue to be removed (DbInitializer re-seeds them on next start)");
+    }
+
+    [Fact]
+    public async Task DeleteAllDataAsync_WithoutDecorations_CompletesCleanly()
+    {
+        // Regression guard: the path that previously worked must not regress.
+        var dbName = Guid.NewGuid().ToString();
+        using (var context = TestDbContext.Create(dbName))
+        {
+            context.Books.Add(new Book { Title = "Test", Author = "Test" });
+            await context.SaveChangesAsync();
+        }
+
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
+
+        // Act
+        await service.DeleteAllDataAsync();
+
+        // Assert
+        using var verifyContext = TestDbContext.Create(dbName);
+        verifyContext.Books.Should().BeEmpty();
+        verifyContext.UserDecorations.Should().BeEmpty();
     }
 
     [Fact]
