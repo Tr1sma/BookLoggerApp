@@ -94,7 +94,7 @@ public class Book
 
     // Computed Properties
     public int ProgressPercentage => PageCount.HasValue && PageCount.Value > 0
-        ? (CurrentPage * 100 / PageCount.Value)
+        ? Math.Clamp(CurrentPage * 100 / PageCount.Value, 0, 100)
         : 0;
 
     /// <summary>

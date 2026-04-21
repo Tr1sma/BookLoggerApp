@@ -182,9 +182,11 @@ public partial class BookEditViewModel : ViewModelBase
             var isLeavingWishlist = persistedStatus == ReadingStatus.Wishlist &&
                                     Book.Status != ReadingStatus.Wishlist;
 
+            // Phase 1: persist the book record itself (without triggering goal-recalc yet).
+            // For new books: optionally set "create as completed" flag to handle after genres.
+            bool createdAsCompleted = false;
             if (isNewBook)
             {
-                // New book
                 Book = await _bookService.AddAsync(Book);
 
                 // Download and save cover image if it's a URL
@@ -199,47 +201,28 @@ public partial class BookEditViewModel : ViewModelBase
                     }
                 }
 
-                // If new book is being added as completed, award XP
-                if (Book.Status == ReadingStatus.Completed)
-                {
-                    await _bookService.CompleteBookAsync(Book.Id);
-                    ShowBookCompletionCelebration = true;
-                }
+                createdAsCompleted = Book.Status == ReadingStatus.Completed;
             }
             else
             {
-                // Update existing book
-                // Always save changes first to persist any property edits (Title, Author, Spine Mode, etc.)
                 await _bookService.UpdateAsync(Book);
-
-                if (isBeingCompleted)
-                {
-                    // Book is being marked as completed - use CompleteBookAsync for XP and side effects
-                    await _bookService.CompleteBookAsync(Book.Id);
-                    ShowBookCompletionCelebration = true;
-                    BookCompletedFromSession = true;
-                }
 
                 if (isLeavingWishlist)
                 {
-                    // Book left wishlist — remove WishlistInfo metadata
                     await _wishlistService.ClearWishlistInfoAsync(Book.Id);
                 }
             }
 
-            // Auto-select shelf if none selected
+            // Auto-select shelf if none selected (only used by the Shelves sync below)
             if (SelectedShelfIds.Count == 0 && AvailableShelves.Any())
             {
-                // Try to find "Main Shelf" (case-insensitive)
                 var mainShelf = AvailableShelves.FirstOrDefault(s => s.Name.Equals("Main Shelf", StringComparison.OrdinalIgnoreCase));
-                
                 if (mainShelf != null)
                 {
                     SelectedShelfIds.Add(mainShelf.Id);
                 }
                 else
                 {
-                    // Fallback to random shelf
                     var randomShelf = AvailableShelves.OrderBy(_ => Guid.NewGuid()).FirstOrDefault();
                     if (randomShelf != null)
                     {
@@ -248,37 +231,33 @@ public partial class BookEditViewModel : ViewModelBase
                 }
             }
 
-            // Update genres
+            // Phase 2: sync genres/shelves/tropes BEFORE Phase 3's goal-recalc so that a
+            // simultaneous Genre change + Complete-in-the-same-save sees the updated genre
+            // associations when `CompleteBookAsync` runs `RecalculateGoalProgressAsync`.
             if (Book.Id != Guid.Empty)
             {
                 var currentGenres = await _genreService.GetGenresForBookAsync(Book.Id);
                 var currentGenreIds = currentGenres.Select(g => g.Id).ToHashSet();
 
-                // Remove genres that are no longer selected
                 foreach (var genreId in currentGenreIds.Where(id => !SelectedGenreIds.Contains(id)))
                 {
                     await _genreService.RemoveGenreFromBookAsync(Book.Id, genreId);
                 }
 
-                // Add new genres
                 foreach (var genreId in SelectedGenreIds.Where(id => !currentGenreIds.Contains(id)))
                 {
                     await _genreService.AddGenreToBookAsync(Book.Id, genreId);
                 }
 
-                // Update Shelves (Similar logic)
-                // Note: GetWithDetailsAsync was called in Load, but Book might be fresh if AddAsync was just called
-                // We should re-fetch with details to be safe or rely on what we have if loaded
+                // Update Shelves — re-fetch with details to see the persisted state even
+                // when AddAsync just ran (Book may be fresh without navigation properties).
                 var bookWithShelves = await _bookService.GetWithDetailsAsync(Book.Id);
                 if (bookWithShelves != null)
                 {
                     var currentShelfIds = bookWithShelves.BookShelves.Select(bs => bs.ShelfId).ToHashSet();
 
-                    // Remove from deselected manual shelves
                     foreach (var shelfId in currentShelfIds.Where(id => !SelectedShelfIds.Contains(id)))
                     {
-                        // Verify it is a manual shelf? (UI only shows manual, but safety check or just assume)
-                        // For now assume filtering happened in UI/ViewModel
                         var shelf = AvailableShelves.FirstOrDefault(s => s.Id == shelfId);
                         if (shelf != null) // Only remove if it's one of the manual shelves we allow editing
                         {
@@ -286,30 +265,40 @@ public partial class BookEditViewModel : ViewModelBase
                         }
                     }
 
-                    // Add to newly selected shelves
                     foreach (var shelfId in SelectedShelfIds.Where(id => !currentShelfIds.Contains(id)))
                     {
                         await _shelfService.AddBookToShelfAsync(shelfId, Book.Id);
                     }
                 }
 
-
-
                 // Update Tropes
                 var currentTropes = await _genreService.GetTropesForBookAsync(Book.Id);
                 var currentTropeIds = currentTropes.Select(t => t.Id).ToHashSet();
 
-                // Remove tropes
                 foreach (var tropeId in currentTropeIds.Where(id => !SelectedTropeIds.Contains(id)))
                 {
                     await _genreService.RemoveTropeFromBookAsync(Book.Id, tropeId);
                 }
 
-                // Add tropes
                 foreach (var tropeId in SelectedTropeIds.Where(id => !currentTropeIds.Contains(id)))
                 {
                     await _genreService.AddTropeToBookAsync(Book.Id, tropeId);
                 }
+            }
+
+            // Phase 3: award completion XP + goal recalc AFTER genres are synced.
+            // Covers the two completion paths that need XP: a new book added as Completed,
+            // or an existing book whose status transitioned to Completed in this save.
+            if (createdAsCompleted)
+            {
+                await _bookService.CompleteBookAsync(Book.Id);
+                ShowBookCompletionCelebration = true;
+            }
+            else if (isBeingCompleted)
+            {
+                await _bookService.CompleteBookAsync(Book.Id);
+                ShowBookCompletionCelebration = true;
+                BookCompletedFromSession = true;
             }
 
             _originalStatus = Book.Status;

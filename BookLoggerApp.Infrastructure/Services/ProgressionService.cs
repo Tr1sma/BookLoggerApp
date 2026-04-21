@@ -124,7 +124,7 @@ public class ProgressionService : IProgressionService
         settings.TotalXp += xp;
         settings.UpdatedAt = DateTime.UtcNow;
 
-        var levelUpResult = await CheckAndProcessLevelUpAsync(oldXp, settings.TotalXp, settings);
+        var levelUpResult = await CheckAndProcessLevelUpAsync(oldXp, settings.TotalXp, settings, ct);
         await _settingsProvider.UpdateSettingsAsync(settings, ct);
         return levelUpResult;
     }

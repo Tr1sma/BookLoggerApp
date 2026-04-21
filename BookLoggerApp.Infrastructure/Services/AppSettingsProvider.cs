@@ -68,6 +68,22 @@ public class AppSettingsProvider : IAppSettingsProvider
         }
     }
 
+    /// <summary>
+    /// Returns the current AppSettings, either from the in-memory cache (fresh within
+    /// <see cref="_cacheLifetime"/>) or newly loaded from the database.
+    ///
+    /// <para><b>Mutability contract:</b> the returned instance is shared by reference with
+    /// the cache. Callers that mutate fields (e.g. <c>settings.TotalXp += …</c>) MUST pair
+    /// that with a corresponding <see cref="UpdateSettingsAsync"/> call so the RowVersion
+    /// stays in sync. This is intentional — <see cref="ProgressionService"/> relies on the
+    /// shared-reference pattern to apply XP + level + coin updates atomically inside a
+    /// single save. If you need an isolated snapshot, call <see cref="InvalidateCache"/>
+    /// first to force a fresh load.</para>
+    ///
+    /// <para><b>Thread safety:</b> not guarded. The single-user app serialises all
+    /// progression writes through ProgressionService; no other call path mutates fields
+    /// concurrently.</para>
+    /// </summary>
     public async Task<AppSettings> GetSettingsAsync(CancellationToken ct = default)
     {
         // Return cached settings if still valid
@@ -105,6 +121,14 @@ public class AppSettingsProvider : IAppSettingsProvider
         return settings;
     }
 
+    /// <summary>
+    /// Persists the given settings instance. The RowVersion on <paramref name="settings"/>
+    /// must match the DB's current row version, otherwise EF raises
+    /// <see cref="DbUpdateConcurrencyException"/> — the caller either just loaded the
+    /// settings via <see cref="GetSettingsAsync"/> (cache hit) or already went through an
+    /// invalidation. The saved instance becomes the new cache entry (shared reference);
+    /// see <see cref="GetSettingsAsync"/> for the mutability contract.
+    /// </summary>
     public async Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default)
     {
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
@@ -120,7 +144,7 @@ public class AppSettingsProvider : IAppSettingsProvider
         context.AppSettings.Update(settings);
         await context.SaveChangesAsync(ct);
 
-        // Invalidate cache on update
+        // Refresh the cached reference so subsequent GetSettingsAsync calls see the saved state
         _cachedSettings = settings;
         _lastLoad = DateTime.UtcNow;
 
