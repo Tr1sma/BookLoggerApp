@@ -40,10 +40,16 @@ public class BookValidator : AbstractValidator<Book>
             .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Start date cannot be in the future")
             .When(b => b.DateStarted.HasValue);
 
+        // Future-date check on DateCompleted must fire independently of whether DateStarted
+        // is set, otherwise imports/lookups that provide only DateCompleted can slip a
+        // future date past validation (the older combined When required both fields).
+        RuleFor(b => b.DateCompleted)
+            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Completion date cannot be in the future")
+            .When(b => b.DateCompleted.HasValue);
+
         RuleFor(b => b.DateCompleted)
             .GreaterThanOrEqualTo(b => b.DateStarted ?? DateTime.MinValue)
                 .WithMessage("Completion date must be after start date")
-            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Completion date cannot be in the future")
             .When(b => b.DateCompleted.HasValue && b.DateStarted.HasValue);
     }
 }

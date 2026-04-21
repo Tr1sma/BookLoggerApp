@@ -123,31 +123,46 @@ public static class PlantGrowthCalculator
 
     /// <summary>
     /// Check if plant needs watering soon (within 6 hours).
+    /// When <paramref name="globalGrowthMultiplier"/> > 1 the effective water interval is
+    /// shortened proportionally (e.g. Story-Heart halves the time to thirst) so this helper
+    /// agrees with <see cref="CalculatePlantStatus"/> instead of firing the "needs water"
+    /// UI hours after the plant is already visibly thirsty.
     /// </summary>
-    public static bool NeedsWateringSoon(DateTime lastWatered, int waterIntervalDays)
+    public static bool NeedsWateringSoon(DateTime lastWatered, int waterIntervalDays, double globalGrowthMultiplier = 1.0)
     {
         var hoursSinceWatered = (DateTime.UtcNow - lastWatered).TotalHours;
-        var hoursUntilThirsty = waterIntervalDays * 24;
+        double effectiveIntervalDays = globalGrowthMultiplier > 0
+            ? waterIntervalDays / globalGrowthMultiplier
+            : waterIntervalDays;
+        var hoursUntilThirsty = effectiveIntervalDays * 24.0;
 
         // Return true if within 6 hours of becoming thirsty
         return hoursSinceWatered >= (hoursUntilThirsty - 6);
     }
 
     /// <summary>
-    /// Calculate days until plant needs water.
+    /// Calculate days until plant needs water. See <see cref="NeedsWateringSoon"/> for the
+    /// multiplier semantics — must stay consistent with <see cref="CalculatePlantStatus"/>.
     /// </summary>
-    public static double GetDaysUntilWaterNeeded(DateTime lastWatered, int waterIntervalDays)
+    public static double GetDaysUntilWaterNeeded(DateTime lastWatered, int waterIntervalDays, double globalGrowthMultiplier = 1.0)
     {
         var daysSinceWatered = (DateTime.UtcNow - lastWatered).TotalDays;
-        return Math.Max(0, waterIntervalDays - daysSinceWatered);
+        double effectiveIntervalDays = globalGrowthMultiplier > 0
+            ? waterIntervalDays / globalGrowthMultiplier
+            : waterIntervalDays;
+        return Math.Max(0, effectiveIntervalDays - daysSinceWatered);
     }
 
     /// <summary>
-    /// Calculate the exact UTC timestamp when the plant needs water again.
+    /// Calculate the exact UTC timestamp when the plant needs water again. See
+    /// <see cref="NeedsWateringSoon"/> for the multiplier semantics.
     /// </summary>
-    public static DateTime GetNextWaterDueAt(DateTime lastWatered, int waterIntervalDays)
+    public static DateTime GetNextWaterDueAt(DateTime lastWatered, int waterIntervalDays, double globalGrowthMultiplier = 1.0)
     {
-        return lastWatered.AddDays(waterIntervalDays);
+        double effectiveIntervalDays = globalGrowthMultiplier > 0
+            ? waterIntervalDays / globalGrowthMultiplier
+            : waterIntervalDays;
+        return lastWatered.AddDays(effectiveIntervalDays);
     }
 
     /// <summary>
