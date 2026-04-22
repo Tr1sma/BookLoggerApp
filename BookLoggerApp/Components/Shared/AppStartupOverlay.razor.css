@@ -5,7 +5,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+    padding-right: calc(1rem + env(safe-area-inset-right, 0px));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(1rem + env(safe-area-inset-left, 0px));
     background: rgba(18, 14, 10, 0.68);
     backdrop-filter: blur(10px);
 }
@@ -133,7 +136,10 @@
 @media (max-width: 640px) {
     .startup-overlay {
         align-items: flex-end;
-        padding: 0.75rem;
+        padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+        padding-right: calc(0.75rem + env(safe-area-inset-right, 0px));
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+        padding-left: calc(0.75rem + env(safe-area-inset-left, 0px));
     }
 
     .startup-modal {
