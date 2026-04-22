@@ -18,7 +18,7 @@ Versionsschema:
 ### Hinzugefügt
 
 ### Geändert
-
+- Changelogs vollständig überarbeitet/verbessert
 ### Behoben
 
 ## [0.9.6]
