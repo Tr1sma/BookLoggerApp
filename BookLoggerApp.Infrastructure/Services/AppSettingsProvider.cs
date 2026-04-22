@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
@@ -13,16 +14,23 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class AppSettingsProvider : IAppSettingsProvider
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
+    private readonly ICrashReportingService? _crashReporting;
     private AppSettings? _cachedSettings;
     private DateTime _lastLoad = DateTime.MinValue;
     private readonly TimeSpan _cacheLifetime = TimeSpan.FromMinutes(5);
+    // Guards against infinite recovery loops: if the schema guard repair didn't fix
+    // the "no such column" error, we rethrow on the next hit instead of looping forever.
+    private int _repairAttempted;
 
     public event EventHandler? ProgressionChanged;
     public event EventHandler? SettingsChanged;
 
-    public AppSettingsProvider(IDbContextFactory<AppDbContext> contextFactory)
+    public AppSettingsProvider(
+        IDbContextFactory<AppDbContext> contextFactory,
+        ICrashReportingService? crashReporting = null)
     {
         _contextFactory = contextFactory;
+        _crashReporting = crashReporting;
     }
 
     /// <summary>
@@ -93,8 +101,10 @@ public class AppSettingsProvider : IAppSettingsProvider
         // Create a new context for this operation
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-        // Load from database
-        var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+        // Load from database, with a last-chance schema-drift repair if the primary
+        // startup guard in DbInitializer missed a missing column (e.g. a future release
+        // adds a new column the hard-coded guard list doesn't know about yet).
+        var settings = await LoadSettingsWithRecoveryAsync(context, ct);
 
         if (settings == null)
         {
@@ -265,6 +275,48 @@ public class AppSettingsProvider : IAppSettingsProvider
     {
         _cachedSettings = settings;
         _lastLoad = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Runs the AppSettings read and, if it fails with a SQLite "no such column" error,
+    /// triggers <see cref="SchemaDriftGuard.EnsureCriticalColumnsAsync"/> once and retries.
+    /// This is a belt-and-braces defense — the primary repair path is in
+    /// <see cref="DbInitializer"/> right after <c>MigrateAsync</c>. Retries exactly once
+    /// per provider instance so a genuine config error can't spin forever.
+    /// </summary>
+    private async Task<AppSettings?> LoadSettingsWithRecoveryAsync(AppDbContext context, CancellationToken ct)
+    {
+        try
+        {
+            return await context.AppSettings.FirstOrDefaultAsync(ct);
+        }
+        catch (SqliteException ex) when (ex.SqliteErrorCode == 1 && ex.Message.Contains("no such column"))
+        {
+            if (Interlocked.Exchange(ref _repairAttempted, 1) != 0)
+            {
+                // Already tried to repair once and we're still hitting the same error —
+                // rethrow so the caller sees the real failure instead of looping.
+                throw;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"AppSettingsProvider: caught drift '{ex.Message}'; invoking SchemaDriftGuard.");
+            try
+            {
+                _crashReporting?.RecordNonFatal(ex, new Dictionary<string, string>
+                {
+                    ["source"] = "app_settings_provider",
+                    ["phase"] = "pre_repair"
+                });
+            }
+            catch
+            {
+                // Reporting failures must not block the repair attempt.
+            }
+
+            await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, _crashReporting, logger: null, ct);
+
+            return await context.AppSettings.FirstOrDefaultAsync(ct);
+        }
     }
 
     /// <summary>
