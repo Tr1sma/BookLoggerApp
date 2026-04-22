@@ -29,6 +29,13 @@ public class UserDecoration
     /// </summary>
     public DateTime PurchasedAt { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// True when the user's tier no longer entitles them to this decoration (e.g.
+    /// the Heart of Stories ultimate decoration held by a user who lapsed to Free).
+    /// The row is preserved so that re-upgrading restores full access.
+    /// </summary>
+    public bool IsHiddenByEntitlement { get; set; } = false;
+
     // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }

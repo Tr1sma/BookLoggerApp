@@ -33,7 +33,8 @@ public static class PlantSeedData
             XpBoostPercentage = 0.05m,
             BaseCost = 500,
             UnlockLevel = 1,
-            IsAvailable = true
+            IsAvailable = true,
+            IsFreeTier = true
         };
 
         yield return new PlantSpecies
@@ -48,7 +49,8 @@ public static class PlantSeedData
             XpBoostPercentage = 0.08m,
             BaseCost = 600,
             UnlockLevel = 3,
-            IsAvailable = true
+            IsAvailable = true,
+            IsFreeTier = true
         };
 
         yield return new PlantSpecies
@@ -63,7 +65,8 @@ public static class PlantSeedData
             XpBoostPercentage = 0.12m,
             BaseCost = 750,
             UnlockLevel = 8,
-            IsAvailable = true
+            IsAvailable = true,
+            IsFreeTier = true
         };
 
         yield return new PlantSpecies
@@ -93,7 +96,8 @@ public static class PlantSeedData
             XpBoostPercentage = 0.25m,
             BaseCost = 1000,
             UnlockLevel = 21,
-            IsAvailable = true
+            IsAvailable = true,
+            IsFreeTier = true
         };
 
         yield return new PlantSpecies
@@ -154,7 +158,8 @@ public static class PlantSeedData
             BaseCost = 20000,
             UnlockLevel = 45,
             IsAvailable = true,
-            SpecialAbilityKey = SpecialAbilityKeys.StreakGuardian
+            SpecialAbilityKey = SpecialAbilityKeys.StreakGuardian,
+            IsPrestigeTier = true
         };
 
         yield return new PlantSpecies
@@ -170,7 +175,8 @@ public static class PlantSeedData
             BaseCost = 80000,
             UnlockLevel = 57,
             IsAvailable = true,
-            SpecialAbilityKey = SpecialAbilityKeys.EternalPhoenix
+            SpecialAbilityKey = SpecialAbilityKeys.EternalPhoenix,
+            IsPrestigeTier = true
         };
     }
 }

@@ -1,0 +1,49 @@
+@using BookLoggerApp.Core.Entitlements
+@using BookLoggerApp.Core.Services.Abstractions
+@inject IEntitlementService Entitlements
+@inject IPaywallCoordinator Paywall
+
+@if (!ShouldRenderLocked)
+{
+    @ChildContent
+}
+else
+{
+    <div class="locked-feature" role="button" tabindex="0"
+         aria-label="@($"Unlock {FeatureDisplay.Get(Feature).Label}")"
+         @onclick="OpenPaywallAsync"
+         @onkeydown="HandleKeydown">
+        <div class="locked-feature-overlay">
+            <span class="locked-feature-icon" aria-hidden="true">🔒</span>
+            <span class="locked-feature-label">@FeatureDisplay.Get(Feature).Label</span>
+            <span class="locked-feature-hint">Upgrade to @FeaturePolicy.GetMinimumTier(Feature)</span>
+        </div>
+        <div class="locked-feature-child">
+            @ChildContent
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public FeatureKey Feature { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// ForceLock = null  → hard gate (lock whenever user lacks the entitlement).
+    /// ForceLock = true  → soft limit at threshold (lock only when user lacks entitlement AND caller says count is at limit).
+    /// ForceLock = false → never lock (caller has decided the current count is below the limit).
+    [Parameter] public bool? ForceLock { get; set; }
+
+    private bool ShouldRenderLocked =>
+        !Entitlements.HasAccess(Feature) && (ForceLock ?? true);
+
+    private Task OpenPaywallAsync() => Paywall.ShowAsync(Feature);
+
+    private async Task HandleKeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            await OpenPaywallAsync();
+        }
+    }
+}

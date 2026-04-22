@@ -2,6 +2,7 @@
 @page "/level-overview"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Entitlements
 @inject StatsViewModel ViewModel
 @inject NavigationManager NavigationManager
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
@@ -71,9 +72,11 @@
         <section class="stats-chips-section">
             <div class="stats-section-header">
                 <h2>📊 Your Stats</h2>
-                <button class="share-stats-btn" @onclick="OpenShareModal">
-                    📤 Share Stats
-                </button>
+                <LockedFeatureButton Feature="FeatureKey.ShareCards">
+                    <button class="share-stats-btn" @onclick="OpenShareModal">
+                        📤 Share Stats
+                    </button>
+                </LockedFeatureButton>
             </div>
             <div class="stats-chips">
                 <span class="stat-chip">
@@ -308,11 +311,15 @@
 }
 else if (activeTab == 1)
 {
-    <StatsTrends />
+    <LockedFeatureButton Feature="FeatureKey.StatsTrendsTab">
+        <StatsTrends />
+    </LockedFeatureButton>
 }
 else if (activeTab == 2)
 {
-    <StatsAnalyses />
+    <LockedFeatureButton Feature="FeatureKey.StatsInsightsTab">
+        <StatsAnalyses />
+    </LockedFeatureButton>
 }
 
 @if (ViewModel.ShowShareModal)

@@ -49,6 +49,17 @@ public class PlantSpecies
     [MaxLength(50)]
     public string? SpecialAbilityKey { get; set; }
 
+    /// <summary>
+    /// True if this species is purchasable by Free-tier users (one of the 4 starter plants).
+    /// Plus unlocks everything that is not <see cref="IsPrestigeTier"/>.
+    /// </summary>
+    public bool IsFreeTier { get; set; } = false;
+
+    /// <summary>
+    /// True for Premium-exclusive prestige plants (Chronicle Tree, Eternal Phoenix Bonsai).
+    /// </summary>
+    public bool IsPrestigeTier { get; set; } = false;
+
     // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }

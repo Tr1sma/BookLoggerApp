@@ -72,6 +72,16 @@ public static class AnalyticsParamNames
     public const string WidgetType = "widget_type";
     public const string GoalType = "goal_type";
 
+    // Monetization
+    public const string Tier = "tier";
+    public const string Period = "period";
+    public const string TriggerFeature = "trigger_feature";
+    public const string Outcome = "outcome";
+    public const string CodeType = "code_type";
+    public const string GrantedTier = "granted_tier";
+    public const string DismissReason = "dismiss_reason";
+    public const string CtaSource = "cta_source";
+
     // Forbidden-key set used by AnalyticsParamBuilder (PII guard)
     public static readonly HashSet<string> Forbidden = new(StringComparer.OrdinalIgnoreCase)
     {

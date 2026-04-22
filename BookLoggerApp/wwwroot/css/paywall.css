@@ -1,0 +1,646 @@
+/* Paywall modal + locked-feature overlay — BookHeart cozy theme */
+
+.paywall-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.72);
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.paywall-modal {
+    position: relative;
+    width: min(100%, 540px);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--bg-secondary, #2D2419);
+    color: var(--text-primary, #F5E6D3);
+    border: 1px solid var(--border-color, #4A3F32);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.paywall-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary, #C9B5A0);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.paywall-header h2 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.25rem;
+}
+
+.paywall-subtitle {
+    color: var(--text-secondary, #C9B5A0);
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+}
+
+.paywall-banner {
+    background: var(--bg-tertiary, #3D3126);
+    border: 1px solid var(--accent-color, #C9A97F);
+    color: var(--text-primary, #F5E6D3);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.paywall-comparison {
+    margin-bottom: 1rem;
+    overflow-x: auto;
+}
+
+.paywall-comparison table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.paywall-comparison .paywall-col-label {
+    width: 46%;
+}
+
+.paywall-comparison .paywall-col-tier {
+    width: 18%;
+}
+
+.paywall-comparison th,
+.paywall-comparison td {
+    border-bottom: 1px solid var(--border-light, #3D3126);
+    padding: 0.45rem 0.4rem;
+    text-align: center;
+    vertical-align: middle;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.paywall-comparison th[scope="row"] {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-primary, #F5E6D3);
+}
+
+.paywall-comparison thead th {
+    color: var(--text-secondary, #C9B5A0);
+    font-weight: 600;
+    padding-bottom: 0.55rem;
+}
+
+.paywall-category-header td {
+    background: var(--bg-tertiary, #3D3126);
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary, #C9B5A0);
+    font-weight: 700;
+    text-align: left;
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid var(--border-color, #4A3F32);
+}
+
+.paywall-tier-current {
+    color: var(--primary-color, #D4A574);
+}
+
+.paywall-row-highlight {
+    background: rgba(212, 165, 116, 0.12);
+}
+
+@media (max-width: 480px) {
+    .paywall-comparison table {
+        font-size: 0.75rem;
+    }
+
+    .paywall-comparison .paywall-col-label {
+        width: 50%;
+    }
+
+    .paywall-comparison .paywall-col-tier {
+        width: 16.66%;
+    }
+
+    .paywall-comparison th,
+    .paywall-comparison td {
+        padding: 0.4rem 0.25rem;
+    }
+
+    .paywall-category-header td {
+        font-size: 0.62rem;
+        padding: 0.35rem 0.4rem;
+    }
+}
+
+/* Billing period toggle (Monthly | Yearly) */
+
+.paywall-period-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+    padding: 0.3rem;
+    background: var(--bg-tertiary, #3D3126);
+    border: 1px solid var(--border-color, #4A3F32);
+    border-radius: 999px;
+    margin-bottom: 1rem;
+}
+
+.paywall-period-btn {
+    padding: 0.55rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary, #C9B5A0);
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.paywall-period-btn:hover:not(.active) {
+    color: var(--text-primary, #F5E6D3);
+}
+
+.paywall-period-btn.active {
+    background: var(--primary-color, #D4A574);
+    color: var(--bg-primary, #1A1410);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.paywall-period-savings-hint {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    opacity: 0.85;
+}
+
+/* Two-column tier grid (Plus | Premium) */
+
+.paywall-tier-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.paywall-tier-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 0.9rem;
+    border: 1px solid var(--border-color, #4A3F32);
+    background: var(--bg-tertiary, #3D3126);
+    color: var(--text-primary, #F5E6D3);
+    border-radius: 0.85rem;
+}
+
+.paywall-tier-card.current {
+    border-color: var(--primary-color, #D4A574);
+    box-shadow: 0 0 0 1px var(--primary-color, #D4A574) inset;
+}
+
+.paywall-tier-card-popular {
+    border-color: var(--primary-color, #D4A574);
+    background: linear-gradient(160deg, rgba(212, 165, 116, 0.12), var(--bg-tertiary, #3D3126) 65%);
+}
+
+.paywall-popular-badge {
+    position: absolute;
+    top: -0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-color, #D4A574);
+    color: var(--bg-primary, #1A1410);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.paywall-tier-card-header h3 {
+    margin: 0 0 0.15rem 0;
+    font-size: 1.05rem;
+}
+
+.paywall-tier-card-tagline {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #C9B5A0);
+    line-height: 1.3;
+}
+
+.paywall-tier-card-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+}
+
+.paywall-tier-card-price .price-amount {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary, #F5E6D3);
+}
+
+.paywall-tier-card-price .price-period {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #C9B5A0);
+}
+
+.paywall-tier-card-permonth {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #C9B5A0);
+    margin-top: -0.2rem;
+}
+
+.paywall-savings-badge,
+.paywall-intro-badge {
+    display: inline-block;
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.35rem;
+}
+
+.paywall-savings-badge {
+    background: rgba(136, 166, 126, 0.22);
+    color: var(--status-completed, #88A67E);
+}
+
+.paywall-intro-badge {
+    background: rgba(212, 165, 116, 0.2);
+    color: var(--primary-color, #D4A574);
+}
+
+.paywall-tier-cta {
+    margin-top: auto;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border-color, #4A3F32);
+    background: var(--bg-secondary, #2D2419);
+    color: var(--text-primary, #F5E6D3);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.paywall-tier-cta:hover:not(:disabled) {
+    background: var(--bg-primary, #1A1410);
+    border-color: var(--primary-color, #D4A574);
+}
+
+.paywall-tier-cta:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.paywall-tier-cta-primary {
+    background: var(--primary-color, #D4A574);
+    color: var(--bg-primary, #1A1410);
+    border-color: var(--primary-color, #D4A574);
+}
+
+.paywall-tier-cta-primary:hover:not(:disabled) {
+    background: var(--primary-hover, #E8C4A0);
+    border-color: var(--primary-hover, #E8C4A0);
+}
+
+/* Lifetime promo card (full width below tier grid) */
+
+.paywall-lifetime-card {
+    position: relative;
+    padding: 1rem;
+    border-radius: 0.85rem;
+    background: linear-gradient(135deg, #D4A574, #C9A97F);
+    color: var(--bg-primary, #1A1410);
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.paywall-lifetime-banner {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.paywall-lifetime-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.paywall-lifetime-headline h3 {
+    margin: 0 0 0.15rem 0;
+    font-size: 1.1rem;
+}
+
+.paywall-lifetime-headline p {
+    margin: 0;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.paywall-lifetime-pricing {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.paywall-lifetime-strikethrough {
+    text-decoration: line-through;
+    opacity: 0.6;
+    font-size: 0.9rem;
+}
+
+.paywall-lifetime-amount {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.paywall-lifetime-cta {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: var(--bg-primary, #1A1410);
+    color: var(--primary-color, #D4A574);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.paywall-lifetime-cta:hover:not(:disabled) {
+    background: #0F0B07;
+}
+
+.paywall-lifetime-cta:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.paywall-trust {
+    font-size: 0.72rem;
+    color: var(--text-muted, #8B7968);
+    text-align: center;
+    margin: 0 0 0.75rem 0;
+}
+
+/* Legacy helpers (kept for paywall-row-highlight highlight usage) */
+
+.price-amount {
+    font-weight: 700;
+}
+
+@media (max-width: 480px) {
+    .paywall-tier-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .paywall-tier-card-price .price-amount {
+        font-size: 1.4rem;
+    }
+
+    .paywall-lifetime-body {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.paywall-promo {
+    margin-bottom: 1rem;
+}
+
+.paywall-promo label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #C9B5A0);
+    margin-bottom: 0.35rem;
+}
+
+.paywall-promo-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.paywall-promo-row input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color, #4A3F32);
+    background: var(--bg-primary, #1A1410);
+    color: var(--text-primary, #F5E6D3);
+    border-radius: 0.5rem;
+}
+
+.paywall-promo-row button {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--accent-color, #C9A97F);
+    background: transparent;
+    color: var(--text-primary, #F5E6D3);
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.paywall-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-muted, #8B7968);
+}
+
+.paywall-footer-spacer {
+    flex: 1;
+}
+
+.paywall-link {
+    background: transparent;
+    border: none;
+    color: var(--primary-color, #D4A574);
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 0.85rem;
+    padding: 0;
+}
+
+/* Dashboard upgrade cards */
+
+.upgrade-recommendation-card,
+.wrapped-teaser-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    margin: 0.75rem 0;
+    border-radius: 1rem;
+    cursor: pointer;
+    border: 1px solid var(--border-color, #4A3F32);
+    background: var(--bg-secondary, #2D2419);
+    color: var(--text-primary, #F5E6D3);
+    transition: transform 0.1s ease, border-color 0.1s ease;
+}
+
+.upgrade-recommendation-card:hover,
+.wrapped-teaser-card:hover {
+    border-color: var(--primary-color, #D4A574);
+    transform: translateY(-1px);
+}
+
+.upgrade-recommendation-content,
+.wrapped-teaser-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.upgrade-recommendation-kicker,
+.wrapped-teaser-kicker {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary-color, #D4A574);
+}
+
+.upgrade-recommendation-title,
+.wrapped-teaser-title {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.25;
+}
+
+.upgrade-recommendation-body,
+.wrapped-teaser-body {
+    margin: 0;
+    color: var(--text-secondary, #C9B5A0);
+    font-size: 0.85rem;
+}
+
+.upgrade-recommendation-cta {
+    font-size: 1.25rem;
+    color: var(--primary-color, #D4A574);
+}
+
+.wrapped-teaser-card {
+    background: linear-gradient(135deg, rgba(212, 165, 116, 0.18), rgba(201, 169, 127, 0.12));
+    border-color: var(--accent-color, #C9A97F);
+}
+
+.wrapped-teaser-glow {
+    font-size: 1.75rem;
+    filter: drop-shadow(0 0 10px rgba(212, 165, 116, 0.5));
+}
+
+/* Feature suggestion form */
+
+.feature-suggestion-form {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border-light, #3D3126);
+}
+
+.feature-suggestion-form h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+}
+
+.feature-suggestion-hint {
+    color: var(--text-secondary, #C9B5A0);
+    font-size: 0.85rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.feature-suggestion-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color, #4A3F32);
+    border-radius: 0.5rem;
+    background: var(--bg-primary, #1A1410);
+    color: var(--text-primary, #F5E6D3);
+    font-family: inherit;
+}
+
+.feature-suggestion-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.feature-suggestion-feedback {
+    color: var(--text-secondary, #C9B5A0);
+    font-size: 0.85rem;
+}
+
+/* Locked feature wrapper */
+
+.locked-feature {
+    position: relative;
+    display: block;
+    cursor: pointer;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.locked-feature-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    background: rgba(26, 20, 16, 0.75);
+    color: var(--text-primary, #F5E6D3);
+    text-align: center;
+    padding: 0.75rem;
+}
+
+.locked-feature-icon {
+    font-size: 1.5rem;
+}
+
+.locked-feature-label {
+    font-weight: 600;
+}
+
+.locked-feature-hint {
+    font-size: 0.75rem;
+    color: var(--primary-color, #D4A574);
+}
+
+.locked-feature-child {
+    filter: blur(12px) saturate(0.35) brightness(0.9);
+    pointer-events: none;
+    user-select: none;
+}

@@ -5,6 +5,7 @@
 @using BookLoggerApp.Components.Shared
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Core.Helpers
+@using BookLoggerApp.Core.Entitlements
 @inject BookEditViewModel ViewModel
 @inject NavigationManager Navigation
 @inject IImageService ImageService
@@ -159,22 +160,24 @@
             <!-- Tropes -->
             @if (ViewModel.AvailableTropes.Any())
             {
-                <section class="form-section">
-                    <h2>Tropes & Tags</h2>
-                    <div class="form-hint">Select matching tropes based on your selected genres.</div>
-                    
-                    <div class="genres-selection">
-                        @foreach (var trope in ViewModel.AvailableTropes)
-                        {
-                            <label class="genre-checkbox">
-                                <input type="checkbox" 
-                                       checked="@ViewModel.SelectedTropeIds.Contains(trope.Id)"
-                                       @onchange="@((ChangeEventArgs e) => ToggleTrope(trope.Id, e.Value as bool? ?? false))" />
-                                <span>@trope.Name</span>
-                            </label>
-                        }
-                    </div>
-                </section>
+                <LockedFeatureButton Feature="FeatureKey.Tropes">
+                    <section class="form-section">
+                        <h2>Tropes & Tags</h2>
+                        <div class="form-hint">Select matching tropes based on your selected genres.</div>
+
+                        <div class="genres-selection">
+                            @foreach (var trope in ViewModel.AvailableTropes)
+                            {
+                                <label class="genre-checkbox">
+                                    <input type="checkbox"
+                                           checked="@ViewModel.SelectedTropeIds.Contains(trope.Id)"
+                                           @onchange="@((ChangeEventArgs e) => ToggleTrope(trope.Id, e.Value as bool? ?? false))" />
+                                    <span>@trope.Name</span>
+                                </label>
+                            }
+                        </div>
+                    </section>
+                </LockedFeatureButton>
             }
 
             <!-- Shelves -->

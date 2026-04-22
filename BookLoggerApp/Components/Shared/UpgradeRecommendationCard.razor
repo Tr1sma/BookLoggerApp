@@ -1,0 +1,68 @@
+@using BookLoggerApp.Core.Entitlements
+@using BookLoggerApp.Core.Services.Abstractions
+@implements IDisposable
+@inject IEntitlementService EntitlementService
+@inject IPaywallCoordinator PaywallCoordinator
+
+@if (_isVisible)
+{
+    <section class="upgrade-recommendation-card" role="button" tabindex="0" @onclick="OpenPaywallAsync" @onkeydown="HandleKeydownAsync">
+        <div class="upgrade-recommendation-content">
+            <span class="upgrade-recommendation-kicker">@Kicker</span>
+            <h3 class="upgrade-recommendation-title">@Title</h3>
+            <p class="upgrade-recommendation-body">@Body</p>
+        </div>
+        <div class="upgrade-recommendation-cta" aria-hidden="true">→</div>
+    </section>
+}
+
+@code {
+    private bool _isVisible;
+    private string Kicker = "Plus";
+    private string Title = "Unlock more of BookHeart";
+    private string Body = "Unlimited notes, all plants, widgets — the whole library.";
+
+    protected override void OnInitialized()
+    {
+        EntitlementService.EntitlementChanged += OnEntitlementChanged;
+        Refresh();
+    }
+
+    public void Dispose()
+    {
+        EntitlementService.EntitlementChanged -= OnEntitlementChanged;
+    }
+
+    private void OnEntitlementChanged(object? sender, EntitlementChangedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            Refresh();
+            StateHasChanged();
+        });
+    }
+
+    private void Refresh()
+    {
+        // Only Free users see this card; Plus/Premium have already upgraded.
+        _isVisible = EntitlementService.CurrentTier == SubscriptionTier.Free;
+        if (_isVisible)
+        {
+            // Pick a static message for now; heuristics can later pick based on
+            // user behaviour (notes written, streak length, etc.).
+            Kicker = "Plus · from €2.99/month";
+            Title = "Unlock unlimited notes, quotes and plants";
+            Body = "Plus keeps every feature you love and removes the Free tier's soft limits.";
+        }
+    }
+
+    private Task OpenPaywallAsync() => PaywallCoordinator.ShowAsync(FeatureKey.UnlimitedNotesAndQuotes);
+
+    private async Task HandleKeydownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            await OpenPaywallAsync();
+        }
+    }
+}
