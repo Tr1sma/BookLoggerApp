@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Placeholder Crashlytics build ID.
+
+        Normally this string is generated per-build by the Firebase Crashlytics
+        Gradle plugin (com.google.firebase.crashlytics). .NET MAUI does not run
+        Gradle, so the plugin never executes — the resource is missing, and
+        CrashlyticsCore.onPreExecute() throws IllegalStateException at
+        FirebaseInitProvider.onCreate(), hard-crashing the app before our code
+        ever runs. See Crash.txt / logcat for the original stack.
+
+        Providing any non-null, non-empty value here satisfies the runtime check.
+        Deobfuscation of stack traces is not affected because R8 renaming is
+        disabled via proguard.cfg (-dontobfuscate) — class/method names stay
+        readable in Crashlytics reports without an uploaded mapping file.
+
+        When you ship a new Release, regenerate this GUID so crashes from
+        different builds are distinguishable in the Firebase console:
+
+            powershell -Command "[guid]::NewGuid().ToString()"
+    -->
+    <string name="com.crashlytics.android.build_id" translatable="false">3e8fdefd-73da-4118-bb50-5e5b28fc4de1</string>
+</resources>
