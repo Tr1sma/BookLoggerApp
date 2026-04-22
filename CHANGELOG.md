@@ -17,6 +17,7 @@ Versionsschema:
 
 ### Behoben
 - App blieb auf Low-End-Geräten (z.B. Samsung Galaxy A16) auf allen Seiten dauerhaft auf „Loading…" stehen. Ursache: `DbInitializer` führte sieben DB-Operationen hintereinander aus (Migrationen + 6 Seed-/Maintenance-Schritte) und signalisierte erst am Ende, dass die DB nutzbar ist. Auf langsamen Geräten konnte das den 45-Sekunden-Timeout der ViewModels übersteigen. Fix: Sobald die EF-Core-Migrationen durch sind, werden Pages entsperrt; Pflanzen-/Dekorations-Sync, XP-Recalc, Entitlement-Row, Image-Path-Fix und Seed-Validierung laufen danach im Hintergrund und blockieren das UI nicht mehr.
+- SQLite-Fehler „Failed to load settings: SQLite Error 1: 'no such column: a.AnalyticsEnabled'." auf Bestands-Installationen, bei denen die V10-Migrationen zwar in `__EFMigrationsHistory` als angewendet eingetragen wurden, aber die neuen Spalten (`AnalyticsEnabled`, `CrashReportingEnabled`, `PrivacyBannerDismissed`, `PrivacyPolicyAcceptedAt`, `CurrentTier`, `EntitlementExpiresAt`) nicht anlagen. Alle Seiten blieben dadurch auf „Loading" stehen. Fix: Ein neuer Schema-Drift-Guard (`SchemaDriftGuard`) prüft nach jedem `MigrateAsync()` die tatsächlich vorhandenen Spalten via `PRAGMA table_info` und zieht fehlende Einträge per `ALTER TABLE` idempotent nach — ohne Datenverlust und ohne App-Neuinstallation. Ein defensiver zweiter Versuch im `AppSettingsProvider` fängt zusätzliche Drift-Fälle ab, die der Startup-Guard nicht kennt.
 
 ## [0.10.3]
 

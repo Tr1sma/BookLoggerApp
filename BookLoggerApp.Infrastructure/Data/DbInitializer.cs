@@ -46,6 +46,7 @@ public static class DbInitializer
             logger?.LogInformation("Starting database initialization...");
 
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var crashReporting = scope.ServiceProvider.GetService<ICrashReportingService>();
 
             // Critical path: only migrations block the UI. Pages and ViewModels need
             // a usable schema before they can query anything, but every other
@@ -53,7 +54,7 @@ public static class DbInitializer
             // sync, image path fixes) or creates fallback data that downstream
             // code already handles when absent (e.g. EntitlementStore.GetOrCreateAsync).
             var migrateStopwatch = System.Diagnostics.Stopwatch.StartNew();
-            await MigrateDatabaseAsync(dbContext, logger);
+            await MigrateDatabaseAsync(dbContext, crashReporting, logger);
             migrateStopwatch.Stop();
             logger?.LogInformation("Migrations finished in {Ms} ms", migrateStopwatch.ElapsedMilliseconds);
 
@@ -141,7 +142,10 @@ public static class DbInitializer
         }
     }
 
-    private static async Task MigrateDatabaseAsync(AppDbContext context, ILogger? logger)
+    private static async Task MigrateDatabaseAsync(
+        AppDbContext context,
+        ICrashReportingService? crashReporting,
+        ILogger? logger)
     {
         logger?.LogInformation("Checking database connection...");
         var canConnect = await context.Database.CanConnectAsync();
@@ -150,6 +154,10 @@ public static class DbInitializer
         logger?.LogInformation("Applying migrations...");
         await context.Database.MigrateAsync();
         logger?.LogInformation("Database migrations applied successfully");
+
+        // Repair any schema drift where __EFMigrationsHistory claims a migration is applied
+        // but the expected columns are missing (observed in the field on V10 upgrades).
+        await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting, logger);
     }
 
     private static async Task RecalculateUserLevelAsync(IServiceProvider services, ILogger? logger)
