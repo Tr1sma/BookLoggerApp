@@ -7,14 +7,46 @@ namespace BookLoggerApp.Platforms.AndroidImpl.Analytics;
 public sealed class FirebaseCrashlyticsService : ICrashReportingService, IDisposable
 {
     private readonly IAnalyticsConsentGate _gate;
-    private readonly FirebaseCrashlytics _crashlytics;
+    private FirebaseCrashlytics? _crashlytics;
+    private bool _initFailed;
     private bool _disposed;
 
     public FirebaseCrashlyticsService(IAnalyticsConsentGate gate)
     {
+        // Do NOT resolve FirebaseCrashlytics.Instance here — FirebaseApp may not be
+        // initialized yet when DI constructs this service (runs during MainApplication.OnCreate,
+        // which precedes MainActivity.OnCreate where explicit FirebaseApp.InitializeApp happens).
+        // We resolve lazily on first use; see GetCrashlytics().
         _gate = gate;
-        _crashlytics = FirebaseCrashlytics.Instance;
         _gate.ConsentChanged += OnConsentChanged;
+    }
+
+    private FirebaseCrashlytics? GetCrashlytics()
+    {
+        if (_crashlytics is not null) return _crashlytics;
+        if (_initFailed) return null;
+
+        try
+        {
+            _crashlytics = FirebaseCrashlytics.Instance;
+            return _crashlytics;
+        }
+        catch (Exception firstEx)
+        {
+            System.Diagnostics.Debug.WriteLine($"FirebaseCrashlytics.Instance failed, trying explicit InitializeApp: {firstEx}");
+            try
+            {
+                Firebase.FirebaseApp.InitializeApp(global::Android.App.Application.Context);
+                _crashlytics = FirebaseCrashlytics.Instance;
+                return _crashlytics;
+            }
+            catch (Exception fallbackEx)
+            {
+                System.Diagnostics.Debug.WriteLine($"FirebaseCrashlytics fallback init failed: {fallbackEx}");
+                _initFailed = true;
+                return null;
+            }
+        }
     }
 
     public void RecordNonFatal(Exception exception, IReadOnlyDictionary<string, string>? customKeys = null)
@@ -22,15 +54,18 @@ public sealed class FirebaseCrashlyticsService : ICrashReportingService, IDispos
         if (!_gate.CrashAllowed) return;
         try
         {
+            var crash = GetCrashlytics();
+            if (crash is null) return;
+
             if (customKeys is not null)
             {
                 foreach (var kvp in customKeys)
                 {
                     if (kvp.Value is null) continue;
-                    _crashlytics.SetCustomKey(kvp.Key, kvp.Value);
+                    crash.SetCustomKey(kvp.Key, kvp.Value);
                 }
             }
-            _crashlytics.RecordException(exception.ToThrowable());
+            crash.RecordException(exception.ToThrowable());
         }
         catch (Exception ex)
         {
@@ -43,8 +78,10 @@ public sealed class FirebaseCrashlyticsService : ICrashReportingService, IDispos
         if (!_gate.CrashAllowed) return;
         try
         {
-            _crashlytics.SetCustomKey("is_fatal", "true");
-            _crashlytics.RecordException(exception.ToThrowable());
+            var crash = GetCrashlytics();
+            if (crash is null) return;
+            crash.SetCustomKey("is_fatal", "true");
+            crash.RecordException(exception.ToThrowable());
         }
         catch (Exception ex)
         {
@@ -57,7 +94,7 @@ public sealed class FirebaseCrashlyticsService : ICrashReportingService, IDispos
         if (!_gate.CrashAllowed) return;
         try
         {
-            _crashlytics.Log(message);
+            GetCrashlytics()?.Log(message);
         }
         catch (Exception ex)
         {
@@ -69,7 +106,7 @@ public sealed class FirebaseCrashlyticsService : ICrashReportingService, IDispos
     {
         try
         {
-            _crashlytics.SetUserId(userId ?? string.Empty);
+            GetCrashlytics()?.SetUserId(userId ?? string.Empty);
         }
         catch (Exception ex)
         {
@@ -81,7 +118,7 @@ public sealed class FirebaseCrashlyticsService : ICrashReportingService, IDispos
     {
         try
         {
-            _crashlytics.SetCustomKey(key, value ?? string.Empty);
+            GetCrashlytics()?.SetCustomKey(key, value ?? string.Empty);
         }
         catch (Exception ex)
         {
@@ -93,7 +130,7 @@ public sealed class FirebaseCrashlyticsService : ICrashReportingService, IDispos
     {
         try
         {
-            _crashlytics.SetCrashlyticsCollectionEnabled(Java.Lang.Boolean.ValueOf(enabled));
+            GetCrashlytics()?.SetCrashlyticsCollectionEnabled(Java.Lang.Boolean.ValueOf(enabled));
         }
         catch (Exception ex)
         {
