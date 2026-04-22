@@ -14,7 +14,6 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class AppSettingsProvider : IAppSettingsProvider
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
-    private readonly ICrashReportingService? _crashReporting;
     private AppSettings? _cachedSettings;
     private DateTime _lastLoad = DateTime.MinValue;
     private readonly TimeSpan _cacheLifetime = TimeSpan.FromMinutes(5);
@@ -25,12 +24,14 @@ public class AppSettingsProvider : IAppSettingsProvider
     public event EventHandler? ProgressionChanged;
     public event EventHandler? SettingsChanged;
 
-    public AppSettingsProvider(
-        IDbContextFactory<AppDbContext> contextFactory,
-        ICrashReportingService? crashReporting = null)
+    // NOTE: Do NOT add ICrashReportingService as a ctor param here. It creates a circular
+    // dependency on Android: FirebaseCrashlyticsService → IAnalyticsConsentGate →
+    // AnalyticsConsentGate → IAppSettingsProvider → AppSettingsProvider. The startup guard
+    // in DbInitializer already reports non-fatals for the main path; this provider only
+    // hits the recovery branch as a last-chance fallback.
+    public AppSettingsProvider(IDbContextFactory<AppDbContext> contextFactory)
     {
         _contextFactory = contextFactory;
-        _crashReporting = crashReporting;
     }
 
     /// <summary>
@@ -281,8 +282,9 @@ public class AppSettingsProvider : IAppSettingsProvider
     /// Runs the AppSettings read and, if it fails with a SQLite "no such column" error,
     /// triggers <see cref="SchemaDriftGuard.EnsureCriticalColumnsAsync"/> once and retries.
     /// This is a belt-and-braces defense — the primary repair path is in
-    /// <see cref="DbInitializer"/> right after <c>MigrateAsync</c>. Retries exactly once
-    /// per provider instance so a genuine config error can't spin forever.
+    /// <see cref="DbInitializer"/> right after <c>MigrateAsync</c>, and that path is where
+    /// Crashlytics reporting happens. Retries exactly once per provider instance so a
+    /// genuine config error can't spin forever.
     /// </summary>
     private async Task<AppSettings?> LoadSettingsWithRecoveryAsync(AppDbContext context, CancellationToken ct)
     {
@@ -300,20 +302,11 @@ public class AppSettingsProvider : IAppSettingsProvider
             }
 
             System.Diagnostics.Debug.WriteLine($"AppSettingsProvider: caught drift '{ex.Message}'; invoking SchemaDriftGuard.");
-            try
-            {
-                _crashReporting?.RecordNonFatal(ex, new Dictionary<string, string>
-                {
-                    ["source"] = "app_settings_provider",
-                    ["phase"] = "pre_repair"
-                });
-            }
-            catch
-            {
-                // Reporting failures must not block the repair attempt.
-            }
 
-            await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, _crashReporting, logger: null, ct);
+            // Pass null for crashReporting: taking ICrashReportingService here would create
+            // a DI cycle with FirebaseCrashlyticsService → IAnalyticsConsentGate → this.
+            // Reporting of this recovery path is a nice-to-have; correctness comes first.
+            await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null, ct);
 
             return await context.AppSettings.FirstOrDefaultAsync(ct);
         }
