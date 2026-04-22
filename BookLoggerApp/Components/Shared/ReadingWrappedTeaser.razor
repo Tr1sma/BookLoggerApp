@@ -1,0 +1,59 @@
+@using BookLoggerApp.Core.Entitlements
+@using BookLoggerApp.Core.Services.Abstractions
+@implements IDisposable
+@inject IEntitlementService EntitlementService
+@inject IPaywallCoordinator PaywallCoordinator
+
+@if (_isVisible)
+{
+    <section class="wrapped-teaser-card" role="button" tabindex="0" @onclick="OpenPaywallAsync" @onkeydown="HandleKeydownAsync">
+        <div class="wrapped-teaser-glow" aria-hidden="true">✨</div>
+        <div class="wrapped-teaser-content">
+            <span class="wrapped-teaser-kicker">Reading Wrapped @DateTime.UtcNow.Year</span>
+            <h3 class="wrapped-teaser-title">Your year in books, beautifully wrapped</h3>
+            <p class="wrapped-teaser-body">Unlock Premium to generate your Reading Wrapped card — heatmaps, top genres, authors and more.</p>
+        </div>
+    </section>
+}
+
+@code {
+    private bool _isVisible;
+
+    protected override void OnInitialized()
+    {
+        EntitlementService.EntitlementChanged += OnEntitlementChanged;
+        Refresh();
+    }
+
+    public void Dispose()
+    {
+        EntitlementService.EntitlementChanged -= OnEntitlementChanged;
+    }
+
+    private void OnEntitlementChanged(object? sender, EntitlementChangedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            Refresh();
+            StateHasChanged();
+        });
+    }
+
+    private void Refresh()
+    {
+        // Only non-Premium users, only in the last six weeks of the year.
+        DateTime now = DateTime.UtcNow;
+        bool isWrappedSeason = now.Month == 12 || (now.Month == 11 && now.Day >= 15);
+        _isVisible = isWrappedSeason && EntitlementService.CurrentTier < SubscriptionTier.Premium;
+    }
+
+    private Task OpenPaywallAsync() => PaywallCoordinator.ShowAsync(FeatureKey.ShareCards);
+
+    private async Task HandleKeydownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            await OpenPaywallAsync();
+        }
+    }
+}

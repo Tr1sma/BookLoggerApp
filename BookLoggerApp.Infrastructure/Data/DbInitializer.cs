@@ -57,6 +57,9 @@ public static class DbInitializer
             // Sync decoration shop items
             await EnsureDecorationDataSyncedAsync(dbContext, logger);
 
+            // Ensure the user has exactly one UserEntitlement row (default Free).
+            await EnsureUserEntitlementAsync(dbContext, logger);
+
             // Validate seed data
             await ValidateSeedDataAsync(dbContext, logger);
 
@@ -229,7 +232,9 @@ public static class DbInitializer
                     existing.IsAvailable != def.IsAvailable ||
                     existing.SlotWidth != def.SlotWidth ||
                     existing.SpecialAbilityKey != def.SpecialAbilityKey ||
-                    existing.IsSingleton != def.IsSingleton)
+                    existing.IsSingleton != def.IsSingleton ||
+                    existing.IsFreeTier != def.IsFreeTier ||
+                    existing.IsUltimateTier != def.IsUltimateTier)
                 {
                     logger?.LogInformation("Updating decoration '{Name}'...", def.Name);
 
@@ -242,6 +247,8 @@ public static class DbInitializer
                     existing.SlotWidth = def.SlotWidth;
                     existing.SpecialAbilityKey = def.SpecialAbilityKey;
                     existing.IsSingleton = def.IsSingleton;
+                    existing.IsFreeTier = def.IsFreeTier;
+                    existing.IsUltimateTier = def.IsUltimateTier;
 
                     hasChanges = true;
                 }
@@ -289,7 +296,9 @@ public static class DbInitializer
                     existing.Name != def.Name ||
                     existing.Description != def.Description ||
                     existing.IsAvailable != def.IsAvailable ||
-                    existing.SpecialAbilityKey != def.SpecialAbilityKey)
+                    existing.SpecialAbilityKey != def.SpecialAbilityKey ||
+                    existing.IsFreeTier != def.IsFreeTier ||
+                    existing.IsPrestigeTier != def.IsPrestigeTier)
                 {
                     logger?.LogInformation("Updating plant '{Name}' stats...", def.Name);
 
@@ -304,6 +313,8 @@ public static class DbInitializer
                     existing.Description = def.Description;
                     existing.IsAvailable = def.IsAvailable;
                     existing.SpecialAbilityKey = def.SpecialAbilityKey;
+                    existing.IsFreeTier = def.IsFreeTier;
+                    existing.IsPrestigeTier = def.IsPrestigeTier;
 
                     hasChanges = true;
                 }
@@ -325,5 +336,26 @@ public static class DbInitializer
         {
             logger?.LogInformation("Plant data is already up to date.");
         }
+    }
+
+    private static async Task EnsureUserEntitlementAsync(AppDbContext context, ILogger? logger)
+    {
+        logger?.LogInformation("=== ENSURING USER ENTITLEMENT ROW ===");
+
+        bool hasAny = await context.UserEntitlements.AnyAsync();
+        if (hasAny)
+        {
+            logger?.LogInformation("UserEntitlement row already present; no action needed.");
+            return;
+        }
+
+        context.UserEntitlements.Add(new Core.Models.UserEntitlement
+        {
+            Id = Guid.NewGuid(),
+            Tier = Core.Entitlements.SubscriptionTier.Free,
+            CreatedAt = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+        logger?.LogInformation("Default Free UserEntitlement row created.");
     }
 }

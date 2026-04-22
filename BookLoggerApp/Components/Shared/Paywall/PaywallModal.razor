@@ -1,0 +1,151 @@
+@using BookLoggerApp.Core.Entitlements
+@using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Core.ViewModels
+@inject PaywallViewModel ViewModel
+@inject IEntitlementService Entitlements
+
+<div class="paywall-overlay" role="dialog" aria-modal="true" aria-labelledby="paywallTitle">
+    <div class="paywall-modal">
+        <button type="button" class="paywall-close" aria-label="Close" @onclick="OnDismiss">×</button>
+
+        <header class="paywall-header">
+            <h2 id="paywallTitle">@Headline</h2>
+            @if (TriggerFeature is not null)
+            {
+                <p class="paywall-subtitle">@FeatureDisplay.Get(TriggerFeature.Value).Description</p>
+            }
+            else
+            {
+                <p class="paywall-subtitle">Unlock more of BookHeart.</p>
+            }
+        </header>
+
+        @if (!string.IsNullOrWhiteSpace(ViewModel.Banner))
+        {
+            <div class="paywall-banner">@ViewModel.Banner</div>
+        }
+
+        <section class="paywall-comparison">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th class="@TierClass(SubscriptionTier.Free)">Free</th>
+                        <th class="@TierClass(SubscriptionTier.Plus)">Plus</th>
+                        <th class="@TierClass(SubscriptionTier.Premium)">Premium</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (FeatureKey feature in Enum.GetValues<FeatureKey>())
+                    {
+                        var info = FeatureDisplay.Get(feature);
+                        var minimum = FeaturePolicy.GetMinimumTier(feature);
+                        <tr class="@(TriggerFeature == feature ? "paywall-row-highlight" : string.Empty)">
+                            <th scope="row">@info.Label</th>
+                            <td>@CheckmarkFor(SubscriptionTier.Free, minimum)</td>
+                            <td>@CheckmarkFor(SubscriptionTier.Plus, minimum)</td>
+                            <td>@CheckmarkFor(SubscriptionTier.Premium, minimum)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+
+        <section class="paywall-tier-tabs">
+            <button type="button"
+                    class="paywall-tier-tab @(ViewModel.SelectedTier == SubscriptionTier.Plus ? "active" : string.Empty)"
+                    @onclick="() => ViewModel.SelectTier(SubscriptionTier.Plus)">
+                Plus
+            </button>
+            <button type="button"
+                    class="paywall-tier-tab @(ViewModel.SelectedTier == SubscriptionTier.Premium ? "active" : string.Empty)"
+                    @onclick="() => ViewModel.SelectTier(SubscriptionTier.Premium)">
+                Premium
+            </button>
+        </section>
+
+        <section class="paywall-prices">
+            @if (ViewModel.SelectedTier == SubscriptionTier.Plus)
+            {
+                <button type="button" class="paywall-price-button"
+                        disabled="@ViewModel.IsPurchaseInProgress"
+                        @onclick="() => ViewModel.PurchaseAsync(BillingPeriod.Monthly)">
+                    <span class="price-label">Monthly</span>
+                    <span class="price-amount">€2.99</span>
+                    <span class="price-intro">First month €0.99</span>
+                </button>
+                <button type="button" class="paywall-price-button paywall-price-recommended"
+                        disabled="@ViewModel.IsPurchaseInProgress"
+                        @onclick="() => ViewModel.PurchaseAsync(BillingPeriod.Yearly)">
+                    <span class="price-label">Yearly</span>
+                    <span class="price-amount">€29.99</span>
+                    <span class="price-savings">Save 16%</span>
+                </button>
+            }
+            else
+            {
+                <button type="button" class="paywall-price-button"
+                        disabled="@ViewModel.IsPurchaseInProgress"
+                        @onclick="() => ViewModel.PurchaseAsync(BillingPeriod.Monthly)">
+                    <span class="price-label">Monthly</span>
+                    <span class="price-amount">€11.99</span>
+                    <span class="price-intro">First month €0.99</span>
+                </button>
+                <button type="button" class="paywall-price-button paywall-price-recommended"
+                        disabled="@ViewModel.IsPurchaseInProgress"
+                        @onclick="() => ViewModel.PurchaseAsync(BillingPeriod.Yearly)">
+                    <span class="price-label">Yearly</span>
+                    <span class="price-amount">€99.99</span>
+                    <span class="price-savings">Save 30%</span>
+                </button>
+                <button type="button" class="paywall-price-button paywall-price-lifetime"
+                        disabled="@ViewModel.IsPurchaseInProgress"
+                        @onclick="() => ViewModel.PurchaseAsync(BillingPeriod.Lifetime)">
+                    <span class="price-label">Lifetime</span>
+                    <span class="price-amount">€99.99</span>
+                    <span class="price-savings">Launch special · normally €249.99</span>
+                </button>
+            }
+        </section>
+
+        <section class="paywall-promo">
+            <label for="paywallPromo">Have a promo code?</label>
+            <div class="paywall-promo-row">
+                <input id="paywallPromo" type="text" autocomplete="off"
+                       @bind="ViewModel.PromoCodeInput" placeholder="BH-…" />
+                <button type="button" @onclick="ViewModel.RedeemPromoAsync">Redeem</button>
+            </div>
+        </section>
+
+        <footer class="paywall-footer">
+            <button type="button" class="paywall-link" @onclick="ViewModel.RestoreAsync">Restore purchases</button>
+            <span class="paywall-footer-spacer"></span>
+            <a class="paywall-link" href="https://github.com/Tr1sma/BookLoggerApp/blob/main/PRIVACY_POLICY_DE.md" target="_blank" rel="noopener">Privacy</a>
+        </footer>
+    </div>
+</div>
+
+@code {
+    [Parameter] public FeatureKey? TriggerFeature { get; set; }
+
+    [Parameter] public EventCallback OnDismissed { get; set; }
+
+    private string Headline => TriggerFeature is null
+        ? "Upgrade BookHeart"
+        : $"Unlock {FeatureDisplay.Get(TriggerFeature.Value).Label}";
+
+    private string TierClass(SubscriptionTier tier) =>
+        Entitlements.CurrentTier == tier ? "paywall-tier-current" : string.Empty;
+
+    private static string CheckmarkFor(SubscriptionTier columnTier, SubscriptionTier minimumTier) =>
+        columnTier >= minimumTier ? "✓" : "—";
+
+    private async Task OnDismiss()
+    {
+        await ViewModel.DismissAsync();
+        if (OnDismissed.HasDelegate)
+        {
+            await OnDismissed.InvokeAsync();
+        }
+    }
+}

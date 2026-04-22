@@ -13,9 +13,12 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
-## [Unveröffentlicht]
+## [0.10.3]
 
 ### Hinzugefügt
+- Premium-Subscription-System mit zwei Tiers: **Plus** (2,99 €/Monat · 29,99 €/Jahr) und **Premium** (11,99 €/Monat · 99,99 €/Jahr · 99,99 € Lifetime als Launch-Special, danach 249,99 €). Free-Stufe bleibt vollständig nutzbar: unbegrenzt Bücher, Lese-Timer, Basis-Statistiken, XP/Coins, 4 Starter-Pflanzen, 3 Starter-Dekorationen, alle Widgets und komplettes Backup/Export/Import. Plus schaltet unbegrenzte Regale, Notizen & Zitate, Wishlist, Tropes und den vollen Shop frei. Premium ergänzt die Trends- und Insights-Statistik-Tabs, Share-Cards, Prestige-Pflanzen, das Herz der Geschichten, gefilterte Reading-Goals und Google Play Family Sharing.
+- Neue Paywall-Modal mit Feature-Vergleichstabelle, kontextuellem Titel beim Tippen auf ein gesperrtes Feature und Preisbuttons für Monat/Jahr/Lifetime — aufrufbar über jede `LockedFeatureButton`-Hülle oder manuell via Settings.
+- Promo-Code-Eingabefeld in der Paywall mit Prefix `BH-` für interne Codes (z. B. `BH-BETA2026` für 30 Tage Plus). Hochwertige Einmal-Belohnungen wie Lifetime Premium laufen über Google-Play-native Promo-Codes, die im Play Store eingelöst werden.
 - Firebase Analytics und Crashlytics für Android integriert — anonyme Nutzungsstatistiken und Absturzberichte helfen, die App zu verbessern (Buchtitel, Autoren, Notizen, Zitate und andere persönliche Daten werden **nicht** übertragen)
 - Neuer Bereich „🔒 Datenschutz" in den Einstellungen: separate Toggles für Nutzungsstatistiken und Absturzberichte, jederzeit deaktivierbar
 - Beim ersten Start nach dem Onboarding erscheint ein dezenter, nicht-blockierender Datenschutz-Banner

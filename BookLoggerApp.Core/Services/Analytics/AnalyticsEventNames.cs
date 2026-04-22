@@ -90,4 +90,19 @@ public static class AnalyticsEventNames
     public const string BuyMeACoffeeClicked = "buy_me_a_coffee_clicked";
     public const string PrivacyBannerShown = "privacy_banner_shown";
     public const string PrivacyBannerAction = "privacy_banner_action";
+
+    // Monetization — Plus & Premium subscription system
+    public const string PaywallShown = "paywall_shown";
+    public const string PaywallDismissed = "paywall_dismissed";
+    public const string PaywallTierSelected = "paywall_tier_selected";
+    public const string PurchaseInitiated = "purchase_initiated";
+    public const string PurchaseCompleted = "purchase_completed";
+    public const string PurchaseFailed = "purchase_failed";
+    public const string PurchaseCancelled = "purchase_cancelled";
+    public const string PurchaseRestored = "purchase_restored";
+    public const string SubscriptionLapsed = "subscription_lapsed";
+    public const string PromoCodeRedeemed = "promo_code_redeemed";
+    public const string PromoCodeFailed = "promo_code_failed";
+    public const string UpgradeCtaClicked = "upgrade_cta_clicked";
+    public const string FeatureSuggestionSent = "feature_suggestion_sent";
 }

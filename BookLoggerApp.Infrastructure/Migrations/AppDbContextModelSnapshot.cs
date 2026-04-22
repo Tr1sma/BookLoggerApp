@@ -87,6 +87,14 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("CurrentTier")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("EntitlementExpiresAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("HasCompletedOnboarding")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
@@ -210,6 +218,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Coins = 100,
                             CrashReportingEnabled = true,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CurrentTier = 0,
                             HasCompletedOnboarding = false,
                             HideGettingStartedCta = false,
                             Language = "en",
@@ -665,6 +674,12 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsFreeTier")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPrestigeTier")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("MaxLevel")
                         .HasColumnType("INTEGER");
 
@@ -708,6 +723,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             GrowthRate = 1.2,
                             ImagePath = "images/plants/starter_sprout.svg",
                             IsAvailable = true,
+                            IsFreeTier = true,
+                            IsPrestigeTier = false,
                             MaxLevel = 10,
                             Name = "Starter Sprout",
                             UnlockLevel = 1,
@@ -722,6 +739,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             GrowthRate = 1.1000000000000001,
                             ImagePath = "images/plants/story_seedling.svg",
                             IsAvailable = true,
+                            IsFreeTier = true,
+                            IsPrestigeTier = false,
                             MaxLevel = 11,
                             Name = "Story Seedling",
                             UnlockLevel = 3,
@@ -736,6 +755,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             GrowthRate = 1.0,
                             ImagePath = "images/plants/bookworm_fern.svg",
                             IsAvailable = true,
+                            IsFreeTier = true,
+                            IsPrestigeTier = false,
                             MaxLevel = 12,
                             Name = "Bookworm Fern",
                             UnlockLevel = 8,
@@ -750,6 +771,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             GrowthRate = 0.90000000000000002,
                             ImagePath = "images/plants/literary_lily.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
+                            IsPrestigeTier = false,
                             MaxLevel = 14,
                             Name = "Literary Lily",
                             UnlockLevel = 14,
@@ -764,6 +787,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             GrowthRate = 0.80000000000000004,
                             ImagePath = "images/plants/reading_cactus.svg",
                             IsAvailable = true,
+                            IsFreeTier = true,
+                            IsPrestigeTier = false,
                             MaxLevel = 15,
                             Name = "Reading Cactus",
                             UnlockLevel = 21,
@@ -778,6 +803,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             GrowthRate = 0.69999999999999996,
                             ImagePath = "images/plants/wisdom_willow.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
+                            IsPrestigeTier = false,
                             MaxLevel = 18,
                             Name = "Wisdom Willow",
                             UnlockLevel = 28,
@@ -792,6 +819,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             GrowthRate = 0.59999999999999998,
                             ImagePath = "images/plants/ancient_bonsai.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
+                            IsPrestigeTier = false,
                             MaxLevel = 20,
                             Name = "Ancient Knowledge Bonsai",
                             UnlockLevel = 31,
@@ -806,6 +835,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             GrowthRate = 0.5,
                             ImagePath = "images/plants/mystic_tome_tree.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
+                            IsPrestigeTier = false,
                             MaxLevel = 25,
                             Name = "Mystic Tome Tree",
                             UnlockLevel = 33,
@@ -820,6 +851,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             GrowthRate = 0.40000000000000002,
                             ImagePath = "images/plants/chronicle_tree.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
+                            IsPrestigeTier = true,
                             MaxLevel = 40,
                             Name = "Chronicle Tree",
                             SpecialAbilityKey = "streak_guardian",
@@ -835,6 +868,8 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             GrowthRate = 0.25,
                             ImagePath = "images/plants/eternal_phoenix_bonsai.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
+                            IsPrestigeTier = true,
                             MaxLevel = 50,
                             Name = "Eternal Phoenix Bonsai",
                             SpecialAbilityKey = "eternal_phoenix",
@@ -999,6 +1034,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsHiddenByEntitlement")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1033,7 +1071,13 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsFreeTier")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsSingleton")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsUltimateTier")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ItemType")
@@ -1082,7 +1126,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "A warm flickering candle — the perfect reading companion.",
                             ImagePath = "images/decorations/candle.svg",
                             IsAvailable = true,
+                            IsFreeTier = true,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Reading Candle",
                             SlotWidth = 1,
@@ -1095,7 +1141,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "A ceramic mug with a book-spine pattern. Always full.",
                             ImagePath = "images/decorations/mug.svg",
                             IsAvailable = true,
+                            IsFreeTier = true,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Cosy Book Mug",
                             SlotWidth = 1,
@@ -1108,7 +1156,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "A hand-carved oak bookend. Your books deserve a proper brace.",
                             ImagePath = "images/decorations/bookend_wood.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Wooden Bookend",
                             SlotWidth = 1,
@@ -1121,7 +1171,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "Measure your reading sessions in style.",
                             ImagePath = "images/decorations/hourglass.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Brass Hourglass",
                             SlotWidth = 2,
@@ -1134,7 +1186,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "Round brass-rimmed glasses. Any shelf gains +10 distinguished.",
                             ImagePath = "images/decorations/spectacles.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Scholar's Spectacles",
                             SlotWidth = 2,
@@ -1147,7 +1201,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "A glass inkwell with a raven feather quill. Timeless.",
                             ImagePath = "images/decorations/inkwell.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Inkwell & Quill",
                             SlotWidth = 2,
@@ -1160,7 +1216,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "A ceramic owl. Wise observer of your reading habits.",
                             ImagePath = "images/decorations/owl_figurine.svg",
                             IsAvailable = true,
+                            IsFreeTier = true,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Owl Figurine",
                             SlotWidth = 2,
@@ -1173,7 +1231,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "A vintage brass globe. Explore worlds between the shelves.",
                             ImagePath = "images/decorations/globe.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Library Globe",
                             SlotWidth = 2,
@@ -1186,7 +1246,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "Carved marble bookends — heavy, elegant, permanent.",
                             ImagePath = "images/decorations/bookend_marble.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Marble Bookend",
                             SlotWidth = 2,
@@ -1199,7 +1261,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "A miniature brass telescope. For reading between the stars.",
                             ImagePath = "images/decorations/telescope.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Brass Telescope",
                             SlotWidth = 2,
@@ -1212,7 +1276,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "An enchanted desk lamp that never runs out of oil.",
                             ImagePath = "images/decorations/magic_lamp.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Magic Reading Lamp",
                             SlotWidth = 2,
@@ -1225,7 +1291,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "A tiny dragon perched on your shelf. He's read everything.",
                             ImagePath = "images/decorations/dragon_figurine.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Dragon Figurine",
                             SlotWidth = 2,
@@ -1238,7 +1306,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "A glowing green flask of unknown purpose. Do not drink.",
                             ImagePath = "images/decorations/alchemy_flask.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Alchemy Flask",
                             SlotWidth = 2,
@@ -1251,7 +1321,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "A sealed scroll of immense wisdom. Or a grocery list. Who knows.",
                             ImagePath = "images/decorations/ancient_scroll.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = false,
+                            IsUltimateTier = false,
                             ItemType = 2,
                             Name = "Ancient Scroll",
                             SlotWidth = 2,
@@ -1264,7 +1336,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             Description = "The heart of the library — a pulsing relic in warm beige. The ultimate reward for every reader who never gives up. Its magic permeates every aspect of your journey.",
                             ImagePath = "images/decorations/heart_of_stories.svg",
                             IsAvailable = true,
+                            IsFreeTier = false,
                             IsSingleton = true,
+                            IsUltimateTier = true,
                             ItemType = 2,
                             Name = "Heart of Stories",
                             SlotWidth = 2,
@@ -1566,6 +1640,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsHiddenByEntitlement")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1589,6 +1666,103 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.ToTable("UserDecorations");
                 });
 
+            modelBuilder.Entity("BookLoggerApp.Core.Models.UserEntitlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("AutoRenewing")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<int?>("BillingPeriod")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("InGracePeriod")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsFamilyShared")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsInIntroductoryPrice")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("LapseReason")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LapsedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastVerifiedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OrderId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProductId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PromoCodeRedeemed")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PromoExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PurchaseToken")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PurchasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<int>("Tier")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserEntitlements");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("99999999-0000-0000-0000-000000000002"),
+                            AutoRenewing = false,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            InGracePeriod = false,
+                            IsFamilyShared = false,
+                            IsInIntroductoryPrice = false,
+                            Tier = 0
+                        });
+                });
+
             modelBuilder.Entity("BookLoggerApp.Core.Models.UserPlant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1606,6 +1780,9 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsHiddenByEntitlement")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsInBookshelf")

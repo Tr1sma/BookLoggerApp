@@ -1,0 +1,41 @@
+@using BookLoggerApp.Core.Entitlements
+@using BookLoggerApp.Core.Services.Abstractions
+@inject IEntitlementService Entitlements
+@inject IPaywallCoordinator Paywall
+
+@if (Entitlements.HasAccess(Feature))
+{
+    @ChildContent
+}
+else
+{
+    <div class="locked-feature" role="button" tabindex="0"
+         aria-label="@($"Unlock {FeatureDisplay.Get(Feature).Label}")"
+         @onclick="OpenPaywallAsync"
+         @onkeydown="HandleKeydown">
+        <div class="locked-feature-overlay">
+            <span class="locked-feature-icon" aria-hidden="true">🔒</span>
+            <span class="locked-feature-label">@FeatureDisplay.Get(Feature).Label</span>
+            <span class="locked-feature-hint">Upgrade to @FeaturePolicy.GetMinimumTier(Feature)</span>
+        </div>
+        <div class="locked-feature-child">
+            @ChildContent
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public FeatureKey Feature { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private Task OpenPaywallAsync() => Paywall.ShowAsync(Feature);
+
+    private async Task HandleKeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            await OpenPaywallAsync();
+        }
+    }
+}
