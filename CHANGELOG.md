@@ -13,8 +13,15 @@ Versionsschema:
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
 ---
-
 ## [Unveröffentlicht]
+
+### Geändert
+
+### Behoben
+
+### Hinzugefügt
+
+## [0.9.6]
 
 ### Geändert
 
@@ -22,6 +29,7 @@ Versionsschema:
 
 ### Behoben
 
+- Onboarding-Tutorial-Overlay (sowie Changelog- und App-Update-Modals) wurde auf Android-Geräten mit klassischer 3-Tasten-Navigationsleiste so weit nach unten geschoben, dass die Action-Buttons ("Überspringen" / "Zurück" / "Weiter" / "Fertig") ganz oder teilweise hinter der System-Navbar verschwanden. Der Overlay-Container ignorierte `env(safe-area-inset-*)`, obwohl die WebView durch `viewport-fit=cover` edge-to-edge zeichnet — im Gestenmodus fiel das nicht auf, weil der Inset dort nahezu 0 ist. Der Overlay rechnet jetzt — wie Bottom-Nav, Main-Content-Padding und FAB schon länger — `env(safe-area-inset-*)` auf sein Padding auf und bleibt damit in beiden Navigationsmodi vollständig sichtbar.
 - Android-Widget zeigte bei Nutzern außerhalb der UTC-Zeitzone einen anderen Ziel-Fortschritt als die App. Der Widget-Code wandelte die UI-Date-Picker-Werte (Kind=Unspecified, interpretiert als lokal) nicht in UTC um, bevor er sie mit `Book.DateCompleted` (UTC) verglich. Ein Buch, das am letzten Tag des Ziels in lokaler Zeit abgeschlossen wurde, konnte so im Widget fehlen oder in der falschen Periode landen. Widget und App nutzen jetzt denselben Helper `GoalDateRangeHelper.GetGoalRangeUtc`.
 - „Pflanze braucht Wasser"-Hinweise und `NeedsWateringSoon`-basierte Anzeigen berücksichtigen jetzt den globalen Wachstums-Multiplier (Herz der Geschichten 2×). Zuvor ignorierten die Helfer `NeedsWateringSoon`, `GetDaysUntilWaterNeeded` und `GetNextWaterDueAt` den Multiplier, so dass eine Pflanze mit aktivem Herz der Geschichten bereits durstig war, bevor das "bald durstig"-Signal überhaupt feuerte. Jetzt feuern Benachrichtigungen rechtzeitig vor dem tatsächlichen Thirsty/Wilting-Übergang.
 - `DatabaseInitializationHelper.MarkAsFailed` / `MarkAsInitialized` nutzen jetzt `TrySetException` / `TrySetResult`. Zuvor konnte ein zweifacher Aufruf (z. B. in Test-Szenarien oder bei defensiven Fehlerpfaden) eine `InvalidOperationException` werfen, die im `DbInitializer`-Catch eskalierte und im UnhandledException-Handler landete.
