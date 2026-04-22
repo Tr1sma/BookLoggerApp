@@ -19,7 +19,10 @@ public static class DbInitializer
     /// <summary>
     /// Initializes the database asynchronously.
     /// This should be called once at application startup.
-    /// Notifies DatabaseInitializationHelper when complete.
+    /// Notifies DatabaseInitializationHelper as soon as migrations complete so that
+    /// waiting ViewModels can load their data; non-critical maintenance (plant and
+    /// decoration sync, XP recalc, entitlement row, image path fixes, seed validation)
+    /// runs afterwards in the background without blocking the UI.
     /// </summary>
     public static async Task InitializeAsync(IServiceProvider services, ILogger? logger = null)
     {
@@ -28,56 +31,113 @@ public static class DbInitializer
             if (_isInitialized)
             {
                 logger?.LogWarning("Database initialization already completed");
+                // Re-signal the gate in case ResetForRetry replaced the TCS after a
+                // previous successful init — otherwise Retry() would leave awaiters hanging.
+                DatabaseInitializationHelper.MarkAsInitialized();
                 return;
             }
         }
 
+        var totalStopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var scope = services.CreateScope();
+        var disposeScope = true;
         try
         {
             logger?.LogInformation("Starting database initialization...");
 
-            using var scope = services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            // Apply migrations
+            // Critical path: only migrations block the UI. Pages and ViewModels need
+            // a usable schema before they can query anything, but every other
+            // initialization step below is either idempotent maintenance (seed
+            // sync, image path fixes) or creates fallback data that downstream
+            // code already handles when absent (e.g. EntitlementStore.GetOrCreateAsync).
+            var migrateStopwatch = System.Diagnostics.Stopwatch.StartNew();
             await MigrateDatabaseAsync(dbContext, logger);
-
-            // Recalculate user level from TotalXp (fixes corrupted data)
-            await RecalculateUserLevelAsync(scope.ServiceProvider, logger);
-
-            // Fix plant image paths (Existing logic) - We can keep it or let Sync handle it, 
-            // but the robust Sync below handles everything including images.
-            // However, FixPlantImagePathsAsync handles some legacy cleanup (removing leading slash). 
-            // Let's keep it for safety but run the sync AFTER to ensure stats are correct.
-            await FixPlantImagePathsAsync(dbContext, logger);
-
-            // Robust Sync: Ensure all plant definitions exactly match code (Prod Fix)
-            await EnsurePlantDataSyncedAsync(dbContext, logger);
-
-            // Sync decoration shop items
-            await EnsureDecorationDataSyncedAsync(dbContext, logger);
-
-            // Ensure the user has exactly one UserEntitlement row (default Free).
-            await EnsureUserEntitlementAsync(dbContext, logger);
-
-            // Validate seed data
-            await ValidateSeedDataAsync(dbContext, logger);
+            migrateStopwatch.Stop();
+            logger?.LogInformation("Migrations finished in {Ms} ms", migrateStopwatch.ElapsedMilliseconds);
 
             lock (_lock)
             {
                 _isInitialized = true;
             }
 
-            // Notify Core layer that initialization is complete
+            // Unblock awaiting ViewModels. Every page can start loading real data now.
             DatabaseInitializationHelper.MarkAsInitialized();
-            logger?.LogInformation("Database initialization completed successfully");
+            logger?.LogInformation("UI unblocked after {Ms} ms; running deferred maintenance in background...", totalStopwatch.ElapsedMilliseconds);
+
+            // Hand the scope off to the deferred worker and don't dispose it here.
+            disposeScope = false;
+            var capturedScope = scope;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await RunDeferredMaintenanceAsync(capturedScope, totalStopwatch, logger);
+                }
+                finally
+                {
+                    capturedScope.Dispose();
+                }
+            });
         }
         catch (Exception ex)
         {
             logger?.LogError(ex, "Database initialization failed");
-            // Notify Core layer that initialization failed
             DatabaseInitializationHelper.MarkAsFailed(ex);
             throw;
+        }
+        finally
+        {
+            if (disposeScope)
+            {
+                scope.Dispose();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Non-critical work that used to block app startup. Each step runs inside its
+    /// own try/catch so a single failure does not skip the rest, and exceptions are
+    /// logged rather than rethrown — the app is already usable at this point.
+    /// </summary>
+    private static async Task RunDeferredMaintenanceAsync(
+        IServiceScope scope,
+        System.Diagnostics.Stopwatch totalStopwatch,
+        ILogger? logger)
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        await RunDeferredStepAsync("RecalculateUserLevel", logger,
+            () => RecalculateUserLevelAsync(scope.ServiceProvider, logger));
+        await RunDeferredStepAsync("FixPlantImagePaths", logger,
+            () => FixPlantImagePathsAsync(dbContext, logger));
+        await RunDeferredStepAsync("EnsurePlantDataSynced", logger,
+            () => EnsurePlantDataSyncedAsync(dbContext, logger));
+        await RunDeferredStepAsync("EnsureDecorationDataSynced", logger,
+            () => EnsureDecorationDataSyncedAsync(dbContext, logger));
+        await RunDeferredStepAsync("EnsureUserEntitlement", logger,
+            () => EnsureUserEntitlementAsync(dbContext, logger));
+        await RunDeferredStepAsync("ValidateSeedData", logger,
+            () => ValidateSeedDataAsync(dbContext, logger));
+
+        totalStopwatch.Stop();
+        logger?.LogInformation("Database initialization fully completed in {Ms} ms", totalStopwatch.ElapsedMilliseconds);
+    }
+
+    private static async Task RunDeferredStepAsync(string stepName, ILogger? logger, Func<Task> step)
+    {
+        var stepStopwatch = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            await step();
+            stepStopwatch.Stop();
+            logger?.LogInformation("Deferred step '{Step}' completed in {Ms} ms", stepName, stepStopwatch.ElapsedMilliseconds);
+        }
+        catch (Exception ex)
+        {
+            stepStopwatch.Stop();
+            logger?.LogError(ex, "Deferred step '{Step}' failed after {Ms} ms (non-fatal)", stepName, stepStopwatch.ElapsedMilliseconds);
         }
     }
 
