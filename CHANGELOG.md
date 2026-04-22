@@ -15,284 +15,209 @@ Versionsschema:
 ---
 ## [Unveröffentlicht]
 
+### Hinzugefügt
+
 ### Geändert
 
 ### Behoben
-
-### Hinzugefügt
 
 ## [0.9.6]
 
-### Geändert
-
-- Testabdeckung deutlich erhöht: 7 komplett neue Service-Test-Klassen (Quote, Annotation, Validation, BackButton, FileSystemAdapter, Wishlist, ShareCard) sowie Erweiterungen für Book-, Goal-, Genre-, Progress-, Stats-, Shelf-, AppSettingsProvider-, Onboarding-, Lookup- und Image-Service-Tests. Neue ViewModel-Tests (ViewModelBase, BookList, ShelfItem, PlantShop, DecorationShop, Goals, Wishlist) sowie Erweiterungen für Settings-, UserProgress-, Dashboard- und BookDetail-ViewModel-Tests. Neue Tests für `Repository<T>`-Generic, `UnitOfWork`, `AppDbContextFactory`, `PlatformsDbPath`, `TimerStateData`/`BookMetadata`, `BookRatingSummary`, `OnboardingMissionCatalog` und `UserPlantValidator`; zusätzlich neue `ExceptionsTests`. Insgesamt ~545 neue Unit-Tests (1075 Tests insgesamt, alle grün). `ShareCardService`-Private-Drawing-Helpers sind mit `[ExcludeFromCodeCoverage]` markiert, damit die Coverage-Metrik nicht durch nicht automatisiert testbaren SkiaSharp-Rendering-Code verwässert wird; die beiden öffentlichen Methoden werden durch Smoke-Tests (PNG-Magic-Bytes-Check) abgedeckt.
-
 ### Behoben
 
-- Onboarding-Tutorial-Overlay (sowie Changelog- und App-Update-Modals) wurde auf Android-Geräten mit klassischer 3-Tasten-Navigationsleiste so weit nach unten geschoben, dass die Action-Buttons ("Überspringen" / "Zurück" / "Weiter" / "Fertig") ganz oder teilweise hinter der System-Navbar verschwanden. Der Overlay-Container ignorierte `env(safe-area-inset-*)`, obwohl die WebView durch `viewport-fit=cover` edge-to-edge zeichnet — im Gestenmodus fiel das nicht auf, weil der Inset dort nahezu 0 ist. Der Overlay rechnet jetzt — wie Bottom-Nav, Main-Content-Padding und FAB schon länger — `env(safe-area-inset-*)` auf sein Padding auf und bleibt damit in beiden Navigationsmodi vollständig sichtbar.
-- Android-Widget zeigte bei Nutzern außerhalb der UTC-Zeitzone einen anderen Ziel-Fortschritt als die App. Der Widget-Code wandelte die UI-Date-Picker-Werte (Kind=Unspecified, interpretiert als lokal) nicht in UTC um, bevor er sie mit `Book.DateCompleted` (UTC) verglich. Ein Buch, das am letzten Tag des Ziels in lokaler Zeit abgeschlossen wurde, konnte so im Widget fehlen oder in der falschen Periode landen. Widget und App nutzen jetzt denselben Helper `GoalDateRangeHelper.GetGoalRangeUtc`.
-- „Pflanze braucht Wasser"-Hinweise und `NeedsWateringSoon`-basierte Anzeigen berücksichtigen jetzt den globalen Wachstums-Multiplier (Herz der Geschichten 2×). Zuvor ignorierten die Helfer `NeedsWateringSoon`, `GetDaysUntilWaterNeeded` und `GetNextWaterDueAt` den Multiplier, so dass eine Pflanze mit aktivem Herz der Geschichten bereits durstig war, bevor das "bald durstig"-Signal überhaupt feuerte. Jetzt feuern Benachrichtigungen rechtzeitig vor dem tatsächlichen Thirsty/Wilting-Übergang.
-- `DatabaseInitializationHelper.MarkAsFailed` / `MarkAsInitialized` nutzen jetzt `TrySetException` / `TrySetResult`. Zuvor konnte ein zweifacher Aufruf (z. B. in Test-Szenarien oder bei defensiven Fehlerpfaden) eine `InvalidOperationException` werfen, die im `DbInitializer`-Catch eskalierte und im UnhandledException-Handler landete.
-- `GenreRatingMapping.GetRelevantCategories` / `GetAdditionalCategories` akzeptieren jetzt explizit `null` als Input und geben dann — wie in der XML-Doku versprochen — die Vollmenge aller Kategorien zurück. Zuvor warf ein `null`-Call trotz des dokumentierten Contracts eine `NullReferenceException`.
-- `BookValidator` prüft den Future-Date-Check auf `DateCompleted` jetzt unabhängig davon, ob `DateStarted` gesetzt ist. Zuvor übersprang die zusammengefasste `.When`-Bedingung die Prüfung komplett, wenn nur `DateCompleted` (z. B. bei einem Import oder Google-Books-Lookup) gesetzt war — in diesem Fall konnte ein zukünftiges Abschluss-Datum die Validierung passieren.
-- `BookService.UpdateProgressAsync` klemmt die neue `CurrentPage` jetzt auf den Bereich `[0, PageCount]`. Zuvor konnte ein UI-Wert oberhalb der Seitenzahl (z. B. durch Timer-Eingabe) als Roh-`CurrentPage` persistiert werden — die berechnete `ProgressPercentage` war zwar schon geclampt, aber die rohe DB-Anzeige zeigte z. B. „600 / 500 (100 %)".
-- `BookService` ist jetzt idempotent bei Buch-Abschluss: erneute Aufrufe von `CompleteBookAsync` oder `UpdateProgressAsync` (bei bereits abgeschlossenem Buch) vergeben weder doppelt Abschluss-XP noch überschreiben sie `DateCompleted`. Zuvor konnte ein rasches Doppel-Tippen auf „Abschließen" oder ein Hin-und-Her-Scrubbing der aktuellen Seite (unter die letzte Seite und zurück) den 100-XP-Abschluss-Bonus mehrfach auslösen und das ursprüngliche Abschluss-Datum verlieren.
-- Plant-Widget zeigte bei aktivem „Herz der Geschichten" (globaler Wachstums-Multiplier 2×) falsche „Tage bis Level-Up"-Werte. Die Anzeige ignorierte den Multiplier und zeigte bis zu doppelt so viele benötigte Lesetage wie tatsächlich nötig; das Level stieg dann scheinbar „aus dem Nichts" schon nach der Hälfte der angezeigten Tage. Die Inverse-Helfer (`GetReadingDaysForLevel`, `GetReadingDaysToNextLevel`, `GetReadingDaysPercentage`) berücksichtigen den Multiplier jetzt konsistent mit der Forward-Formel.
-- „Alle Daten löschen" in den Einstellungen bereinigt jetzt auch gekaufte Dekorationen und ihre Regal-Platzierungen mit. Zuvor blieben `UserDecoration`-Einträge als Zombies in der DB stehen und — auf produktivem SQLite (nicht in den In-Memory-Tests) — schlug der anschließende `ShopItems.RemoveRange` mit einer `FOREIGN KEY constraint failed`-Meldung fehl, sobald der User mindestens eine Dekoration besaß.
-- Level-Up-Celebration zeigte sich nicht, wenn ausschließlich der „Herz der Geschichten"-First-of-Day-XP-Bonus den User über eine Level-Grenze schob. Der Bonus wird nach dem eigentlichen Session-Save vergeben, sein `LevelUpResult` wurde aber bis jetzt verschluckt. Session-Abschluss + Bonus-Level-Up werden jetzt in einer kombinierten Celebration gezeigt (z. B. „Level 5 → 7" wenn beide Stufen aufgestiegen sind).
-- Buch-Bearbeiten synchronisiert Genres/Regale/Tropes jetzt VOR dem Abschluss-Flow, wenn Status + Genre gleichzeitig geändert werden. Zuvor sah die direkt danach laufende Ziel-Neuberechnung noch die alten Genres, wodurch ein Buch mit Genre-Wechsel + Abschluss kurzzeitig dem alten statt dem neuen Genre-Ziel zugerechnet wurde (bis zur nächsten Neuberechnung).
-- Dekorations-Kauf erstattet jetzt abgebuchte Münzen zurück, wenn das Speichern der Dekoration nach dem Coin-Abzug fehlschlägt (z. B. bei DB-Fehlern). Zuvor konnten Münzen verloren gehen, ohne dass die Dekoration tatsächlich zustande kam. Spiegelt das bereits für Pflanzen etablierte Refund-Muster.
-- `Book.ProgressPercentage` wird jetzt auf den Bereich 0–100 % geclampt. Zuvor konnte ein nachträglich korrigierter kleinerer `PageCount` (bzw. ein Import mit Page-Count < CurrentPage) in der UI einen Wert > 100 % anzeigen.
-- XP-Berechnung mit Pflanzen-Boost rundet jetzt mathematisch korrekt statt abzuschneiden (`MidpointRounding.AwayFromZero`). Zuvor wurde bei Halbwerten (z. B. Basis-XP × 1,5 = 1987,5) immer abgerundet → `1987` statt `1988`. In realen Sessions mit fraktionierten Boosts gingen so vereinzelt 1 XP pro Session verloren. Das passt die XP-Rundung an die ohnehin schon mit `Math.Round` arbeitende Coin-Berechnung in der Level-Up-Logik an.
-- Pflanzen-Kauf und Pflanzen-Level-Up erstatten jetzt die abgebuchten Münzen zurück, wenn das Speichern der Pflanze nach dem Coin-Abzug fehlschlägt (z. B. bei DB-Fehlern). Zuvor konnten Münzen verloren gehen, ohne dass die Pflanze bzw. der Level-Aufstieg tatsächlich zustande kam. Zusätzlich wird der interne Zähler für die dynamische Preissteigerung erst nach erfolgreichem Kauf hochgezählt — fehlgeschlagene Käufe verteuern nicht mehr den nächsten Kauf.
-- Lese-Ziele zählen Bücher und Sessions jetzt anhand der lokalen Kalender-Zeitzone statt der UTC-Zeit. Zuvor konnte ein Buch, das kurz nach Mitternacht fertig gelesen wurde, im deutschen Zeitraum (UTC+1/+2) noch dem Vortag zugeschlagen werden, weil der UI-Datepicker lokale Tages-Grenzen liefert, `DateTime.UtcNow` aber absolute UTC-Zeitpunkte — der Abgleich übersah den Offset. Betrifft auch die Anzeige „aktive Ziele" auf dem Dashboard und die `IsActive`-Logik: ein Ziel, das „heute" endet, verschwindet jetzt erst mit dem lokalen Tageswechsel und nicht mehr schon am späten Abend.
-- Session-Abschluss-Celebrations (Session → Streak → Level-Up → Book-Completion) können bei einem Doppel-Tap auf den „Awesome!"-Button nicht mehr zwei Overlays gleichzeitig anzeigen. Zuvor konnte ein zweiter Tap in der Übergangs-Frame-Lücke einen falschen else-if-Zweig treffen und z. B. Streak- und Level-Up-Celebration parallel einblenden sowie einen verwaisten Back-Button-Handler zurücklassen, der später eine zwischenzeitlich geschlossene Celebration „geisterhaft" wieder öffnete.
-- Backup-Import (Datei-Picker für virtuelle Dateien, z. B. Google Drive) löscht eine halb kopierte Zwischendatei im Cache-Verzeichnis, wenn der Kopiervorgang mitten im Stream abbricht. Zuvor blieb die angefangene Datei zurück, bis der nächste Versuch mit gleichem Dateinamen kam.
-- Buch-Cover-Karten räumen ihre JS-Interop-Referenz (`DotNetObjectReference`) jetzt auch dann sauber auf, wenn der `unobserve`-Aufruf beim Seiten-Teardown ins Leere läuft (z. B. weil die WebView-JS-Runtime schon beendet ist). Zuvor konnte in diesem seltenen Fehlerpfad ein kleiner .NET-seitiger Handle-Leak pro Cover-Karte entstehen.
-- Shop-Sortierung (Pflanzen und Dekorationen) ist jetzt deterministisch: bei identischem Level und Preis entscheidet der Name als dritter Sortierschlüssel, damit Items nach jedem Reload in derselben Reihenfolge erscheinen.
-
-### Geändert
-
-- `IProgressionService` nimmt jetzt durchgängig einen `CancellationToken` entgegen (`AwardSessionXpAsync`, `AwardBookCompletionXpAsync`, `GetTotalPlantBoostAsync`, `CheckAndProcessLevelUpAsync`) und reicht ihn an die internen Settings-, Plant- und Decoration-Reads/Writes weiter. Zuvor war das Cancellation-Verhalten uneinheitlich (nur `AwardBonusXpAsync` hatte den Parameter), sodass beim App-Shutdown laufende Progression-Operationen nicht mehr sauber abgebrochen werden konnten.
-- `AwardBonusXpAsync` reicht den `CancellationToken` jetzt auch an den internen `CheckAndProcessLevelUpAsync`-Aufruf weiter (zuvor ging dort ein `default`-Token hin).
-- `AppSettingsProvider.GetSettingsAsync` / `UpdateSettingsAsync` sind jetzt klar als Shared-Reference-Cache dokumentiert (keine Verhaltensänderung). Das macht den Caller-Vertrag sichtbar — insbesondere dass `ProgressionService` den zurückgegebenen Reference-Instance bewusst mutiert und mit einem einzigen `UpdateSettingsAsync`-Save persistiert.
-- Buch-Empfehlungs- bzw. Buch-Share-Karten-Generierung in `ReadingViewModel`, `BookDetailViewModel` und `BookEditViewModel` setzt den `IsGeneratingBookCard`-Spinner nur noch einmal (nach Abschluss der Operation) zurück. Das redundante Inner-Reset innerhalb des Erfolgs-Pfades wurde entfernt — die Funktion ist unverändert, der Code ist sauberer.
+- Onboarding- und Update-Overlays waren auf Geräten mit klassischer 3-Tasten-Navigation teilweise verdeckt
+- Android-Widget zeigt den Ziel-Fortschritt jetzt korrekt in der lokalen Zeitzone (zuvor konnten Bücher bei UTC-Offsets in der falschen Periode landen)
+- Gieß-Benachrichtigungen berücksichtigen jetzt den Herz-der-Geschichten-Wachstumsbonus — Hinweise feuern rechtzeitig vor dem Durstig-/Welk-Zustand
+- Buch-Fortschritt wird auf 0–100 % begrenzt; die aktuelle Seite wird nicht mehr über die Seitenzahl hinaus gespeichert (zuvor zeigte die UI z.B. „600 / 500 (100 %)")
+- Mehrfaches Tippen auf „Abschließen" vergibt nicht mehr doppelt XP und überschreibt das Abschluss-Datum nicht
+- Plant-Widget berechnet mit aktivem Herz der Geschichten die „Tage bis Level-Up" jetzt korrekt
+- Lese-Ziele nutzen die lokale Zeitzone statt UTC — Bücher am späten Abend werden korrekt dem laufenden Tag zugeordnet
+- Pflanzen- und Dekorations-Käufe erstatten Münzen zurück, wenn das Speichern fehlschlägt; fehlgeschlagene Käufe verteuern den nächsten Kauf nicht mehr
+- „Alle Daten löschen" entfernt jetzt auch gekaufte Dekorationen und ihre Regal-Platzierungen
+- Level-Up-Celebration erscheint auch, wenn nur der „Herz der Geschichten"-First-of-Day-Bonus über eine Level-Grenze hebt
+- Beim gleichzeitigen Ändern von Buch-Status und Genre wird das Buch korrekt dem neuen Genre-Ziel zugeordnet
+- XP-Berechnung mit Pflanzen-Boost rundet mathematisch korrekt (vereinzelte 1-XP-Verluste pro Session behoben)
+- Doppel-Tap auf „Awesome!" in Session-Celebrations zeigt keine überlappenden Overlays mehr
+- Abgebrochene Backup-Imports räumen halb kopierte Zwischendateien im Cache auf
+- Shop-Sortierung (Pflanzen & Dekorationen) bleibt nach Reload konsistent
+- Buch-Import mit zukünftigem Abschluss-Datum wird jetzt zuverlässig abgewiesen
 
 ## [0.9.4]
 
 ### Hinzugefügt
 
-- Neue Prestige-Pflanze **Chronikbaum** (Lv 45 · 20.000 🪙 · 30 % XP-Boost) mit Streak-Wächter-Fähigkeit: rettet alle 14 Tage automatisch einen brechenden Lese-Streak.
-- Neue Prestige-Pflanze **Ewiger Phönix-Bonsai** (Lv 57 · 80.000 🪙 · 50 % XP-Boost) mit Phönix-Schutz: wiederbelebt sich selbst und schützt alle anderen Pflanzen vor dem Sterben, solange er im Garten steht.
-- Neue Ultimate-Dekoration **Herz der Geschichten** (Lv 70 · 200.000 🪙, nur 1× kaufbar): +25 % globaler XP-Boost, +25 % auf Level-Up-Münzen, +400 🪙 ab 30-Minuten-Sessions, doppeltes Pflanzenwachstum und +2,5 % der Next-Level-XP auf die erste Lese-Session des Tages.
-- Legendary-Visuals im Shop: warmer Beige-Rand, sanftes Pulsieren und „✨ Legendär"-Badge für Items mit Spezialfähigkeit.
-- Detail-Ansicht im Shop zeigt eine Spezialfähigkeits-Beschreibung vor dem Kauf.
+- Neue Prestige-Pflanze **Chronikbaum** (Lv 45 · 20.000 🪙 · 30 % XP-Boost) mit Streak-Wächter: rettet alle 14 Tage automatisch einen brechenden Lese-Streak
+- Neue Prestige-Pflanze **Ewiger Phönix-Bonsai** (Lv 57 · 80.000 🪙 · 50 % XP-Boost) mit Phönix-Schutz: wiederbelebt sich selbst und schützt alle anderen Pflanzen vor dem Sterben
+- Neue Ultimate-Dekoration **Herz der Geschichten** (Lv 70 · 200.000 🪙, nur 1× kaufbar): +25 % globaler XP-Boost, +25 % auf Level-Up-Münzen, +400 🪙 ab 30-Minuten-Sessions, doppeltes Pflanzenwachstum und +2,5 % der Next-Level-XP auf die erste Lese-Session des Tages
+- Legendary-Visuals im Shop: warmer Beige-Rand, sanftes Pulsieren und „✨ Legendär"-Badge für Items mit Spezialfähigkeit
+- Shop-Detail-Ansicht zeigt vor dem Kauf eine Beschreibung der Spezialfähigkeit
 
 ### Geändert
 
-- Session-Abschluss-Celebration hebt Streak-Rettung und Herz-der-Geschichten-Boni jetzt explizit hervor.
+- Session-Abschluss-Celebration hebt Streak-Rettung und Herz-der-Geschichten-Boni jetzt explizit hervor
 
 ### Behoben
 
-- Phönix-Schutz zählt tote Pflanzen nicht mehr als aktive Schutzquelle (Code-Drift zwischen `SpecialAbilityResolver` und `PlantService` behoben).
-- Herz-der-Geschichten-Bonus auf die erste Session des Tages wird jetzt korrekt vom Level vor dem Session-Level-Up berechnet.
-- Streak-Wächter-Cooldown wird erst nach erfolgreichem Speichern der Rescue-Session aktualisiert — ein fehlgeschlagener Save verbraucht die Rettung nicht mehr.
-- Doppel-Klick auf den Kaufen-Button wird während laufender Transaktion blockiert, um einen versehentlichen Doppelkauf des singulären Herz der Geschichten zu verhindern.
-- Plant-Boost-Berechnung über einen gemeinsamen Helper (`SpecialAbilityResolver.CalculateAggregatedPlantBoost`) — UI-Anzeige und XP-Gewährung nutzen jetzt dieselbe Quelle und können nicht mehr voneinander abweichen.
-- Pflanzen-Level-Up-Münzen werden erst nach erfolgreichem Speichern des neuen Levels gutgeschrieben — bei einem DB-Konflikt (`DbUpdateConcurrencyException`) im Pflanzen-Save bleiben die Münzen jetzt korrekt auf dem alten Stand, statt ohne zugehörigen Level-Aufstieg ausgezahlt zu werden.
-- Dashboard-Wochenstatistiken („Diese Woche": Bücher, Minuten, Seiten, XP) beginnen jetzt am **Montag** (ISO 8601 / DE-Konvention). Zuvor wurde der Sonntag als Wochenstart genommen, wodurch Montag–Samstag stets der Vorsonntag mitgezählt wurde.
+- Plant-Boost-Berechnung nutzt einen gemeinsamen Helper — UI-Anzeige und XP-Gewährung können nicht mehr voneinander abweichen
+- Pflanzen-Level-Up-Münzen werden erst nach erfolgreichem Speichern gutgeschrieben (bei DB-Konflikten bleiben Münzen und Level konsistent)
+- Dashboard-Wochenstatistiken („Diese Woche") beginnen jetzt am **Montag** (zuvor Sonntag, wodurch der Vorsonntag fälschlich mitgezählt wurde)
 
 ## [0.9.3]
 
-### Hinzugefügt
-
-### Behoben
-
 ### Geändert
 
-- Coin-Belohnung pro Level-Up wächst jetzt progressiv statt linear (Formel: 50×Level + 3×Level²) 
+- Coin-Belohnung pro Level-Up wächst jetzt progressiv statt linear (Formel: 50×Level + 3×Level²)
 - Bessere Pflanzen geben einen deutlich höheren XP-Boost
-- Mehrere Kleine UI/UX Updates und Verbesserungen
+- Mehrere kleine UI/UX-Updates und Verbesserungen
 
 ## [0.9.2]
 
 ### Hinzugefügt
 
-- Erweiterte Statistiken: 3-Tab-System (Übersicht | Trends | Analysen) auf der Statistik-Seite mit Blazor-ApexCharts
-  - Trends-Tab: Lese-Kalender (Heatmap), Wochentag-Verteilung, Tageszeit-Analyse mit Fun-Labels (z.B. „Nachteule 🦉"), Session-Längen-Verteilung, Monatlicher Leseverlauf, Lesegeschwindigkeit (Seiten/Stunde), Durchschnittliche Lesedauer pro Buch
-  - Analysen-Tab: Jahresvergleich, Genre-Radar (Spinnennetz-Diagramm), Abschlussquote (Donut-Chart), Buchlängen-Vorliebe, Meistgelesene Autoren
-- Genre-spezifische Bewertungskategorien: 5 neue Kategorien (Spannung, Humor, Informationsgehalt, Emotionale Tiefe, Atmosphäre) ergänzen die bestehenden 6 Kategorien. Beim Bewerten eines Buches werden nur die zum Genre passenden Kategorien angezeigt — weitere Kategorien lassen sich per Dropdown aufklappen.
-
-### Behoben
-
-- Changelog wird nach einem Update wieder zuverlässig in der App angezeigt, auch wenn die aktuelle Version noch keinen eigenen Changelog-Eintrag hat
+- Erweiterte Statistiken mit 3-Tab-System (Übersicht | Trends | Analysen) auf der Statistik-Seite
+  - Trends: Lese-Kalender (Heatmap), Wochentag- und Tageszeit-Analyse mit Fun-Labels (z.B. „Nachteule 🦉"), Session-Längen, Monats-Leseverlauf, Seiten/Stunde, durchschnittliche Lesedauer pro Buch
+  - Analysen: Jahresvergleich, Genre-Radar, Abschlussquote, Buchlängen-Vorliebe, Top-Autoren
+- Genre-spezifische Bewertungskategorien: 5 neue Kategorien (Spannung, Humor, Informationsgehalt, Emotionale Tiefe, Atmosphäre) ergänzen die bestehenden 6. Beim Bewerten werden nur passende Kategorien angezeigt, weitere per Dropdown aufklappbar.
 
 ### Geändert
 
-- XP-Boosts für höherstufige Pflanzen deutlich erhöht — teurere Pflanzen (höheres Unlock-Level und höherer Preis) bringen jetzt spürbar mehr XP (z.B. Mystic Tome Tree: 20% → 75%, Ancient Bonsai: 15% → 50%)
-- "Getting Started"-Seite auf sehr kleinen mobilen Displays kompakter gestaltet: engeres Hero-Layout, kleinere Kartenabstände und reduzierter vertikaler Leerraum ohne Funktionsänderung
-- Shop-Seite (Pflanzen & Dekorationen) deutlich kompakter gestaltet: dichteres Kartenraster (mehr Karten pro Reihe, auch auf sehr kleinen Handys zwei Spalten statt einer), kleinere Karten-Bilder und Paddings, schlankerer Header, kompakteres Kaufen-Modal mit viewport-basierter Maximalhöhe — auf einem typischen Android-Handy sind jetzt deutlich mehr Items auf einen Blick sichtbar
-- Stats-Seite: „Top Rated Books"-Abschnitt kompakter gestaltet (Inline-Rang statt Kreis-Badge, horizontal scrollbare Kategorie-Filter, engere Abstände und 3 statt 5 Einträge als Standard)
-- Settings-Seite: kompakteres Layout mit reduzierten Abständen, Paddings und Heading-Größen für bessere Übersicht auf mobilen Displays — mehr Sektionen auf einen Blick sichtbar, ohne Funktions- oder Bedienungsänderung
-- Settings-Seite weiter aufgeräumt: neue Hero-Karte mit Version oben, thematisch zusammengelegte Abschnitte („Data & Backup" inkl. Danger-Zone, „Help & Community" inkl. Getting Started + Buy-me-a-coffee), „More Info"-Sammelabschnitt für Diagnostics + Privacy Policy — deutlich weniger Scrollen, gleiche Funktionen
-- Stats-Seite: „Level Milestones"-Liste deutlich kompakter — aus der Vollzeilen-Liste wird ein Mini-Karten-Grid (3 Spalten auf kleinen Handys, bis zu 7 auf Desktop), kleinere Icons und Schriften, auf einem typischen Android-Handy sind dadurch viel mehr Milestones gleichzeitig sichtbar
+- XP-Boosts für höherstufige Pflanzen deutlich erhöht (z.B. Mystic Tome Tree: 20% → 75%, Ancient Bonsai: 15% → 50%)
+- Shop-Seite (Pflanzen & Dekorationen) deutlich kompakter: dichteres Kartenraster (zwei Spalten statt einer auf kleinen Handys), kompakteres Kaufen-Modal
+- Settings-Seite aufgeräumt: Hero-Karte mit Version, thematische Abschnitte („Data & Backup", „Help & Community", „More Info"), reduzierte Abstände
+- Stats-Seite: „Top Rated Books" kompakter (Inline-Rang, scrollbare Filter, 3 statt 5 Einträge); „Level Milestones" als Mini-Karten-Grid mit bis zu 7 Spalten
+- „Getting Started"-Seite auf kleinen Displays kompakter
 
+### Behoben
 
+- Changelog wird nach einem Update wieder zuverlässig angezeigt, auch wenn die aktuelle Version keinen eigenen Eintrag hat
 
 ## [0.9.0]
 
 ### Hinzugefügt
 
-- Breite Regalgegenstände: Dekorationen mit `SlotWidth > 1` nehmen jetzt mehrere Slots auf dem Bücherregal ein (z.B. Globus, Marmorbuchstütze, Teleskop, alte Schriftrolle = 2 Slots)
-- Neue Regaldekorationen (Kerzen, Stundenglas, Eulen-Figur, Globus u.v.m.) im Shop kaufbar und auf Regalen platzierbar — rein kosmetisch, günstig, per Level freigeschaltet
+- Breite Regalgegenstände: Dekorationen mit mehreren Slots (z.B. Globus, Marmorbuchstütze, Teleskop, alte Schriftrolle = 2 Slots)
+- Neue Regaldekorationen im Shop (Kerzen, Stundenglas, Eulen-Figur, Globus u.v.m.) — rein kosmetisch, günstig, per Level freigeschaltet
 - Shop-Seite hat jetzt Tabs für Pflanzen und Dekorationen
-- Versioniertes Onboarding mit Intro-Overlay und neuem "Getting Started"-Hub für geführte Missionen rund um erstes Buch, erste Lesesession, Ziele, Pflanzen, Wunschliste, Scanner, Sharing und Backup
-- "Getting Started"-CTA auf Bücherregal und Dashboard sowie neuer Einstieg in den Settings zum erneuten Öffnen oder Wiederholen des Intros
+- Versioniertes Onboarding mit Intro-Overlay und neuer „Getting Started"-Hub für geführte Missionen (erstes Buch, erste Lesesession, Ziele, Pflanzen, Wunschliste, Scanner, Sharing, Backup)
+- „Getting Started"-CTA auf Bücherregal und Dashboard sowie Einstieg in den Settings zum erneuten Öffnen des Intros
 
 ### Geändert
 
-- Stundenglas, Tintenfass & Feder, Eulen-Figur, Magische Leselampe, Drachen-Figur und Alchemie-Kolben sind jetzt 2 Slots breit für bessere Erkennbarkeit im Regal (11 von 14 Dekorationen nun 2-slot-breit)
-- Onboarding-Overlay insgesamt kompakter (kleinere max. Breite/Höhe, engere Abstände, kleinere Überschriften) und farblich einheitlich dunkler an das BookHeart-Theme angepasst
+- 11 von 14 Dekorationen sind jetzt 2 Slots breit für bessere Erkennbarkeit im Regal (u.a. Stundenglas, Tintenfass & Feder, Magische Leselampe)
+- Onboarding-Overlay kompakter und farblich einheitlich dunkler an das BookHeart-Theme angepasst
 
 ### Behoben
 
-- Tote Pflanzen werden beim Löschen jetzt vollständig entfernt, inklusive Regal-Verknüpfungen, und tauchen danach nicht mehr als "Add Plant"-Option im Bücherregal auf.
-- Onboarding wird nach einem Update nicht mehr ungefragt Bestandsnutzern angezeigt, sondern nur noch neuen Installationen automatisch eingeblendet
-- Intro-Schritte werden jetzt exakt fortgesetzt, der Zurück-/Skip-Flow ist korrekt navigierbar und die Rating-Erklärung verwendet die echten sechs Kategorien inklusive "Spice Level"
-- "Delete All Data" setzt jetzt auch den gespeicherten Onboarding- und Missionsfortschritt sauber zurück
-- Harter Blazor-Fehler beim ersten Antippen von "Add Book" im Onboarding-Intro behoben — Fehler beim Abschließen des Intros (z.B. kurzer DB-Lock beim Erststart) führen nicht mehr zum App-Absturz, sondern werden still abgefangen und das Overlay sauber ausgeblendet
-- Changelog-Overlay erscheint jetzt nicht mehr über dem Buch-Hinzufügen-Formular wenn der Nutzer "Add Book" im Onboarding-Intro tippt — Changelog wird für neue Nutzer während des Onboardings generell unterdrückt
-- Harter Blazor-Fehler beim ersten App-Start auf einer Neuinstallation behoben: GettingStartedCta auf dem Bücherregal wurde ohne DB-Initialisierungsschutz gerendert und löste eine "no such table"-Exception aus — Komponente wartet jetzt auf die DB-Initialisierung und schluckt verbleibende Fehler still
-- Voraussetzungs-Hinweis im "Getting Started"-Hub zeigte bei bestimmten Missionen fälschlicherweise "Complete 'Add your first book' first" an, obwohl die tatsächliche Voraussetzung bereits erfüllt war — Logik korrigiert
-- Dashboard/Bücherregal laden nach den neuen AppSettings-Änderungen wieder zuverlässig: fehlende EF-Migration für `HideGettingStartedCta` ergänzt, wodurch `PendingModelChanges`-Abbrüche beim Start vermieden werden
-- "Getting Started"-CTA auf dem Bücherregal bleibt nicht mehr dauerhaft unsichtbar, wenn die Initialisierung beim ersten Laden kurz fehlschlägt; Sichtbarkeit wird jetzt robust aus Settings (`HideGettingStartedCta`) und Onboarding-Status neu aufgebaut
-- Harter Blazor-Fehler auf dem Dashboard nach einer Cloud-Backup-Wiederherstellung behoben: Wenn die Pflanzenspezie-Verknüpfung nach einem Backup nicht aufgelöst werden konnte (fehlende PlantSpecies-Zeile), griff der PlantWidget-Template direkt auf `Plant.Species.Name` zu und stürzte ab — alle Species-Zugriffe sind jetzt Null-gesichert
-- Harter Blazor-Fehler auf der Stats-Seite behoben: Division durch null bei der Pflanzenverstärkungs-Balkenanzeige wenn `TotalPlantBoost = 0` aber Pflanzendaten vorhanden waren
-- Korrupte Cloud-Backups werden jetzt vor der Wiederherstellung per SQLite `PRAGMA integrity_check` geprüft und abgelehnt, anstatt die aktive Datenbank silent zu überschreiben
-- Cloud-Backup-Wiederherstellung wirft nicht mehr den Fehler "database disk image is malformed" beim direkten Weiterverwenden der App: nach erfolgreichem Restore zeigt die Settings-Seite kurz einen "Backup restored"-Hinweis und startet BookHeart automatisch neu, damit alle SQLite-Verbindungspools, nativen File-Handles und Blazor-Komponenten frisch gegen die restaurierte Datenbank aufgebaut werden. Ein manueller Neustart ist dafür nicht mehr nötig.
-- Scholar's Spectacles (Brille) ist jetzt korrekt als 2 Slots breit markiert — ihr Inhalts-Aspect-Ratio von ~3.8:1 passte visuell nie in einen einzelnen Regal-Slot
-- Dekorationen im Bücherregal werden nicht mehr mit dem grünen Pflanzen-Tint gerendert und der Inhalt wird nicht mehr am unteren Rand gecroppt (`object-fit: contain` + zentrierte Position statt `cover` + `bottom` — die Regeln wurden bisher unbeabsichtigt von den Pflanzen-Cards geerbt)
-- Automatischer Neustart nach Cloud-Backup-Wiederherstellung funktioniert jetzt zuverlässig auf Android 12+: bisher wurde nur ein `AlarmManager`-PendingIntent geplant und der Prozess sofort beendet, was von Android seit API 31 durch die Background-Activity-Launch-Restriktionen stillschweigend blockiert wurde — die App schloss sich zwar, startete aber nie neu. Der Restart nutzt jetzt eine Hybrid-Strategie (direktes `StartActivity` aus dem Vordergrund + `AlarmManager`-Fallback + kurze Verzögerung vor dem Prozess-Kill), damit BookHeart auf allen unterstützten Android-Versionen verlässlich neu startet
-- `PendingModelChangesWarning`-Absturz beim App-Start nach dem Brille-SlotWidth-Fix behoben: die Seed-Änderung der `Scholar's Spectacles` auf `SlotWidth = 2` war ohne passende EF-Migration im Code gelandet, sodass das gebaute Modell vom `AppDbContextModelSnapshot` abwich und `Database.MigrateAsync()` beim Start schon vor dem Runtime-Sync abbrach. Nachgeliefert als Migration `FixSpectaclesSlotWidth`
-- Cloud-Backup-Restore brach mit roter `Failed to restore backup`-Meldung ab und triggerte direkt danach Folgefehler auf allen Pages, sodass nur ein manueller App-Neustart die importierten Daten sichtbar machte. Ursache: nach dem DB-Swap feuerte `ImportExportService` über `AppSettingsProvider.InvalidateCache()` das `ProgressionChanged`-Event, dessen Subscriber auf noch nicht aufgeräumte DbContexts zugriffen und die gesamte `RestoreFromBackupAsync`-Methode mit einer Exception beendeten — der automatische Restart wurde dadurch gar nicht erst getriggert. Fix: der Restore-Pfad ruft `InvalidateCache(notifyProgressionChanged: false)` und umgeht das Event, `OnProgressionChanged`/`OnSettingsChanged` fangen zusätzlich Subscriber-Exceptions pro Handler ab, der Restore-Fehlerpfad zeigt jetzt Exception-Typ plus Inner-Exception im roten Alert, und der komplette Schritt-für-Schritt-Verlauf landet im bestehenden "Data Recovery Diagnostics"-Log. `AppRestartService.RestartApp` marshalt zusätzlich explizit auf den Android-Main-Thread, falls der Blazor-Dispatcher abweicht
-- Erstinstallations-Race behoben, bei dem der erste Cloud-Backup-Restore auf einer frischen Installation mit `database disk image malformed` abbrach und anschließende Folgefehler auf allen Seiten verursachte. Ursache: `DbInitializer.InitializeAsync` läuft am App-Start fire-and-forget in einem Scope, dessen `AppDbContext` für die gesamte Init-Dauer (Migration, Plant/Decoration-Sync, Seed-Validation) eine aktive SQLite-Verbindung hält. Klickte der User schnell genug auf Restore, überschrieb `File.Copy` die DB-Datei unter dieser laufenden Verbindung und korrumpierte sie — `SqliteConnection.ClearAllPools()` räumt nur gepoolte, nicht aktiv verwendete Verbindungen. Fix: `SettingsViewModel.RestoreFromBackupAsync` und `ImportExportService.RestoreFromBackupAsync` warten jetzt beide explizit über `DatabaseInitializationHelper.EnsureInitializedAsync()` auf den vollständigen Abschluss des Startup-Initializers, bevor der DB-Swap beginnt. Beim zweiten Aufruf ist der `TaskCompletionSource` bereits gesetzt und der Await kostet nichts
-
-## [0.8.1] - 2026-04-07
-
-### Hinzugefügt
-
-- Pflanzen im Bücherregal können jetzt direkt im Detail-Modal über ein Stift-Icon umbenannt werden
-- BookHeart prüft jetzt auf Android auf verfügbare Play-Store-Updates und zeigt nach einem App-Update beim ersten Start die passenden Changelog-Einträge an
-
-### Geändert
-
-### Behoben
-
-- Projektweiter Razor-/Restore-Fehler auf Windows behoben, indem die Paketversion für alle Target Frameworks konsistent aus der App-Version abgeleitet wird
-- Das Android-App-Icon verwendet für Launcher-Themes jetzt keine monochrome Icon-Variante mehr, damit Icon Themes BookHeart nicht mehr einfarbig überlagern
+- Tote Pflanzen werden beim Löschen vollständig entfernt (inklusive Regal-Verknüpfungen) und tauchen nicht mehr als „Add Plant"-Option auf
+- Dashboard stürzt nach einem Cloud-Backup-Restore nicht mehr ab, wenn eine Pflanzenspezie-Verknüpfung fehlt
+- Stats-Seite: Division durch null bei der Pflanzenverstärkungs-Anzeige behoben (wenn Pflanzen vorhanden, aber XP-Boost = 0)
+- Korrupte Cloud-Backups werden vor der Wiederherstellung per SQLite-Integritätsprüfung abgelehnt statt die aktive Datenbank stillschweigend zu überschreiben
+- Automatischer Neustart nach Cloud-Backup-Wiederherstellung funktioniert jetzt zuverlässig auf Android 12+
+- Cloud-Backup-Restore erzeugt keinen „database disk image malformed"-Fehler mehr: die App startet nach erfolgreichem Restore automatisch neu, damit SQLite-Verbindungen, File-Handles und Blazor-Komponenten frisch aufgebaut werden
+- Erstinstallations-Race behoben: der erste Cloud-Backup-Restore auf einer frischen Installation konnte die Datenbank zuvor korrumpieren, weil der Startup-Initializer noch eine aktive Verbindung hielt
 
 ## [0.8.2] - 2026-04-07
 
 ### Hinzugefügt
 
-- Beim Beenden einer Lesesession erscheint bei aktiver Lese-Streak jetzt eine eigene Streak-Feier mit zusätzlichem, nach Streak-Tagen skaliertem XP-Bonus
-
-### Geändert
+- Beim Beenden einer Lesesession erscheint bei aktiver Lese-Streak eine eigene Streak-Feier mit zusätzlichem, nach Streak-Tagen skaliertem XP-Bonus
 
 ### Behoben
 
-- Die Feier-Reihenfolge nach einer Lesesession zeigt Level-Ups jetzt auch dann zuverlässig an, wenn gleichzeitig Buchabschluss und Streak-Bonus ausgelost wurden
-- Abgebrochene oder nur gestartete Lesesessions ohne echten Fortschritt verlängern keine Streak mehr und lösen dadurch keinen Streak-XP-Bonus mehr aus
-- Der Streak-XP-Bonus wird pro Tag nur noch einmal vergeben, nämlich bei der ersten qualifizierenden Lesesession des Tages
-- Die Stats-Seite stürzt nicht mehr ab, wenn vorhandene, aber tote Pflanzen keinen aktiven XP-Boost mehr beitragen
-- Die globale Fehleransicht wird nach einem Seitenwechsel wieder korrekt zurückgesetzt, statt weitere Seiten fälschlich ebenfalls als abgestürzt anzuzeigen
+- Stats-Seite stürzt nicht mehr ab, wenn vorhandene, aber tote Pflanzen keinen aktiven XP-Boost mehr beitragen
+- Globale Fehleransicht wird nach einem Seitenwechsel wieder korrekt zurückgesetzt, statt weitere Seiten fälschlich als abgestürzt anzuzeigen
 
 ## [0.8.1] - 2026-04-07
 
 ### Hinzugefügt
 
-- Pflanzen im Bücherregal können jetzt direkt im Detail-Modal über ein Stift-Icon umbenannt werden
-- BookHeart prüft jetzt auf Android auf verfügbare Play-Store-Updates und zeigt nach einem App-Update beim ersten Start die passenden Changelog-Einträge an
+- Pflanzen im Bücherregal können direkt im Detail-Modal über ein Stift-Icon umbenannt werden
+- BookHeart prüft auf Android auf verfügbare Play-Store-Updates und zeigt nach einem App-Update die passenden Changelog-Einträge an
 
 ### Geändert
 
-- README-Featureübersicht vollständig an die seit V0.1.0 hinzugefügten Funktionen angepasst (u.a. Widgets, Sharing, Scanner/Lookup, erweiterte Ziel- und Regalfeatures)
-- Das Pflanzen-Detail-Modal im Bücherregal wurde insgesamt kompakter gestaltet
+- README-Featureübersicht vollständig an die seit V0.1.0 hinzugefügten Funktionen angepasst
+- Pflanzen-Detail-Modal im Bücherregal insgesamt kompakter gestaltet
 
 ### Behoben
 
-- Play-Store-Update-Hinweise und die Prüfung nach dem Wiederöffnen der App reagieren jetzt robuster auf laufende oder fehlgeschlagene In-App-Updates
-- Zip-Slip-Sicherheitstest stabilisiert: Test-Mocks für Dateisystem und AppSettings sind jetzt vollständig deterministisch implementiert, damit der Test nur noch auf die eigentliche Pfadvalidierung fehlschlägt.
-- Backup-Restore findet `booklogger.db` und den `covers`-Ordner jetzt robust auch bei abweichender Groß-/Kleinschreibung in ZIP-Inhalten
-- AppSettingsProvider weist jetzt ungültige Münz-Beträge (`<= 0`) in `SpendCoinsAsync` und `AddCoinsAsync` mit `ArgumentOutOfRangeException` ab
-- Start eines Buches ist jetzt idempotent: `DateStarted` bleibt beim erneuten Start erhalten und der Status wird nicht von `Reading`/`Completed` überschrieben
-- Reading-Timer im ReadingViewModel aktualisiert die `ElapsedTime` jetzt threadsicher über den UI-Dispatcher, sodass PropertyChanged zuverlässig auf dem UI-Thread ausgelöst wird
-- Scanner-Abschlusslogik robuster gemacht: Beim Schließen der Scanner-Seite ohne Cancel-Button wird der Scan jetzt sauber mit `null` beendet, inklusive optionalem Timeout/CancellationToken im Scanner-Service.
-- Seitenvalidierung beim Beenden von Lesesessions berücksichtigt jetzt die Startseite der Session, sodass ein zu großes Seiten-Delta über das Buchende hinaus korrekt mit einer klaren Fehlermeldung abgewiesen wird
-- Buchabschluss beim Speichern bewertet den tatsächlichen Datenbankstatus und verhindert dadurch doppelte XP-Vergabe bei wiederholtem Speichern ohne erneute Statusänderung
-- Beim Verlassen der Wishlist beim Speichern wird die Bereinigung jetzt ebenfalls anhand des tatsächlich persistierten Status entschieden
-- Beim Bearbeiten von Wishlist-Büchern bleibt `WishlistInfo` jetzt erhalten, solange der Status nicht explizit im Formular geändert wird
-- Tippen auf Pflanzen im Bücherregal öffnet jetzt zuverlässig das Pflanzen-Modal; das Entfernen aus dem Regal wurde aus der überlagerten Pflanzenkarte in das Detail-Modal verlegt
+- Projektweiter Razor-/Restore-Fehler auf Windows behoben
+- Android-App-Icon verwendet für Launcher-Themes keine monochrome Variante mehr — Icon Themes überlagern BookHeart nicht mehr einfarbig
+- Backup-Restore findet `booklogger.db` und den `covers`-Ordner jetzt auch bei abweichender Groß-/Kleinschreibung in ZIP-Inhalten
+- Start eines Buches ist jetzt idempotent: `DateStarted` bleibt beim erneuten Start erhalten und der Status wird nicht von „Reading"/"Completed" überschrieben
+- Reading-Timer aktualisiert die Laufzeit threadsicher über den UI-Dispatcher
+- Scanner-Abschlusslogik beim Schließen der Scanner-Seite robuster gemacht
+- Seitenvalidierung beim Beenden von Lesesessions berücksichtigt jetzt die Startseite der Session
+- Buchabschluss beim Speichern bewertet den tatsächlichen Datenbankstatus und verhindert doppelte XP-Vergabe
+- Beim Verlassen der Wishlist beim Speichern wird die Bereinigung anhand des tatsächlich persistierten Status entschieden
+- Beim Bearbeiten von Wishlist-Büchern bleibt `WishlistInfo` erhalten, solange der Status nicht geändert wird
+- Tippen auf Pflanzen im Bücherregal öffnet jetzt zuverlässig das Pflanzen-Modal; das Entfernen aus dem Regal wurde in das Detail-Modal verlegt
 
 ## [0.8.0] - 2026-04-07
 
-### Hinzugefügt
-
 ### Geändert
 
-- Pflanzen im Bücherregal öffnen jetzt ein Detail-Modal mit Namen, Level, nächstem Gießzeitpunkt und Gießbutton
-- Pflanzennamen werden im Shop-Kaufdialog und im Pflanzen-Modal des Bücherregals etwas größer dargestellt
+- Pflanzen im Bücherregal öffnen ein Detail-Modal mit Namen, Level, nächstem Gießzeitpunkt und Gießbutton
+- Pflanzennamen im Shop-Kaufdialog und im Pflanzen-Modal etwas größer dargestellt
 
 ### Behoben
 
-- Plant-Shop-Karten zeigen bei nicht bezahlbaren Pflanzen nur noch den Preis und nicht mehr den Zusatz "Need X more"
-- Pflanzenstatus und Gießlogik werden beim Laden und Interagieren zuverlässiger aus den aktuellen Backend-Daten aktualisiert
-- Der Drag-and-Drop-Einfügebalken im Bücherregal richtet sich jetzt an der Höhe des tatsächlichen Ziel-Buchs aus statt über die gesamte Regalhöhe zu laufen
+- Plant-Shop-Karten zeigen bei nicht bezahlbaren Pflanzen nur noch den Preis, nicht mehr den Zusatz „Need X more"
+- Pflanzenstatus und Gießlogik werden beim Laden und Interagieren zuverlässiger aktualisiert
+- Drag-and-Drop-Einfügebalken im Bücherregal richtet sich jetzt an der Höhe des Ziel-Buchs aus statt über die gesamte Regalhöhe zu laufen
 
 ## [0.7.6] - 2026-04-02
 
 ### Hinzugefügt
 
-- Cover-Bild aus Galerie wählen: Beim Bearbeiten oder Anlegen eines Buches kann das Cover-Bild jetzt direkt aus der Geräte-Galerie ausgewählt werden (nur Android). Das Bild wird sofort lokal gespeichert, sodass es auch bei einmaliger Berechtigungsvergabe ("Nur dieses Mal") erhalten bleibt.
-- Android Home Screen Widgets: Drei neue Widgets fuer den Android-Startbildschirm — "Aktuelles Buch" (Cover, Titel, Fortschrittsbalken), "Lese-Streak" (aktuelle Streak-Tage mit Heute-Status), und "Lese-Ziel" (Fortschritt zum aktiven Leseziel mit Konfigurationsauswahl). Widgets aktualisieren sich automatisch alle 30 Minuten und sofort nach Aenderungen in der App (Session beenden, Buch speichern, Ziel erstellen/loeschen). Design passend zum BookHeart Cozy Dark Mode Theme.
-- Regalfarbe anpassbar: In den Settings können die Farben der Bücherleisten (Planke unter jedem Buch) und der Regalleiste (untere Leiste jedes Regals) getrennt voneinander aus je 8 Holzfarb-Presets gewählt werden
-- Der Android zurück button wurde in die app eingebunden
-
-### Geändert
+- Cover-Bild aus Galerie wählen: Beim Bearbeiten oder Anlegen eines Buches kann das Cover direkt aus der Geräte-Galerie ausgewählt werden (Android). Das Bild wird sofort lokal gespeichert, sodass es auch bei einmaliger Berechtigungsvergabe erhalten bleibt.
+- Android-Home-Screen-Widgets: „Aktuelles Buch" (Cover, Titel, Fortschritt), „Lese-Streak" (Streak-Tage mit Heute-Status) und „Lese-Ziel" (Fortschritt zum aktiven Leseziel). Automatische Aktualisierung alle 30 Minuten und sofort nach Änderungen in der App.
+- Regalfarbe anpassbar: In den Settings können Bücherleisten und Regalleiste getrennt aus je 8 Holzfarb-Presets gewählt werden
+- Android-Zurück-Button in die App eingebunden
 
 ### Behoben
 
-- Buttons (z.B. "Add Shelf", "Backup to Cloud") blieben nach dem Tippen visuell highlighted, bis man woanders hintippte — Hover-Styles werden jetzt nur noch auf Geräten mit Maus/Trackpad angewendet
+- Buttons (z.B. „Add Shelf", „Backup to Cloud") blieben nach dem Tippen visuell hervorgehoben — Hover-Styles werden jetzt nur noch auf Geräten mit Maus/Trackpad angewendet
 
 ## [V0.7.5] - 2026-04-02
 
 ### Hinzugefügt
 
-- Stats teilen (Reading Wrapped): Auf der Stats-Seite können Lesestats als PNG im Instagram-Story-Format (1080×1920) geteilt werden. Zeitraum wählbar: Week, Month, Quarter, Year, All Time. Die Karte zeigt abgeschlossene Bücher, gelesene Seiten, Lesezeit, Lieblingsgenre und Top-3-Bücher im BookHeart-Design.
-- Buchempfehlung teilen: Nach dem Abschließen eines Buchs erscheint in der Book-Completion-Feier ein "Share as Recommendation"-Button. Die Share-Karte (PNG) zeigt Titel, Autor, Cover (falls vorhanden), Seitenanzahl, Gesamtlesezeit, Gesamtbewertung mit Sternen und alle Einzelbewertungen mit farbigen Fortschrittsbalken
-- Share-Icon auf der Buchdetailseite neben "Book Information" für alle abgeschlossenen Bücher
-- "HIGHLY RECOMMENDED"-Badge auf der Share-Karte bei Bewertung ab 4.0
+- Stats teilen (Reading Wrapped): Auf der Stats-Seite können Lesestats als PNG im Instagram-Story-Format (1080×1920) geteilt werden. Zeitraum wählbar: Week, Month, Quarter, Year, All Time. Die Karte zeigt abgeschlossene Bücher, gelesene Seiten, Lesezeit, Lieblingsgenre und Top-3-Bücher.
+- Buchempfehlung teilen: Nach dem Abschließen eines Buchs erscheint in der Completion-Feier ein „Share as Recommendation"-Button. Die Share-Karte zeigt Titel, Autor, Cover, Seitenanzahl, Lesezeit, Gesamtbewertung mit Sternen und alle Einzelbewertungen mit farbigen Fortschrittsbalken.
+- Share-Icon auf der Buchdetailseite neben „Book Information" für alle abgeschlossenen Bücher
+- „HIGHLY RECOMMENDED"-Badge auf der Share-Karte ab einer Bewertung von 4.0
 
 ### Geändert
-- Der komplexere Review-Flow wurde durch zwei einfache Modals ersetzt: erst App-Feedback, dann optional der Sprung zur Play-Store-Bewertung
-- Der vereinfachte Review-Dialog erscheint erst ab Level 7, hoechstens zweimal pro Monat und kann ueber "Nicht mehr fragen" dauerhaft abgeschaltet werden
-- Share-Karte mit lebendigerem Design: Warmer Gradient-Hintergrund, Ambient-Glow-Effekte, Gold-Sterne, farbcodierte Kategorien mit Fortschrittsbalken, dynamische Kartenhöhe je nach Inhalt
-- Bei Buchabschluss wird direkt die Book-Completion-Feier angezeigt (ohne vorheriges Session-XP-Modal)
-- XP-Anzeige in der Book-Completion-Feier zeigt die tatsächlich erhaltenen Gesamt-XP in kompaktem Layout
 
-### Behoben
-- Cover-Platzhalter auf Share-Karte entfernt wenn kein Cover vorhanden ist
-- Textüberlappungen auf der Share-Karte zwischen Badge/Titel und Stats/Bewertung behoben
+- Vereinfachter Review-Flow: zwei einfache Modals statt des bisherigen komplexen Flows — erst App-Feedback, dann optional der Sprung zur Play-Store-Bewertung
+- Review-Dialog erscheint erst ab Level 7, höchstens zweimal pro Monat und kann über „Nicht mehr fragen" dauerhaft abgeschaltet werden
+- Bei Buchabschluss wird direkt die Book-Completion-Feier angezeigt (ohne vorheriges Session-XP-Modal)
 
 ## [V0.7.4] - 2026-04-01
 
 ### Geändert
-- Der "Wie Leveln Pflanzen?" Absatz auf der Plant Shop seite wurde auf Englisch Übersetzt
+
+- „Wie Leveln Pflanzen?"-Absatz auf der Plant-Shop-Seite auf Englisch übersetzt
 - Backup-Dateiname von `booklogger_backup_*.zip` auf `bookheart_backup_*.zip` umbenannt
 
 ### Behoben
-- Die untere NavBar von Android überdeckt jetzt nicht länger die In-App NavBar
-- ISBN-Autofill nutzt jetzt automatisch einen anonymen Fallback ohne API-Key, wenn Google Books für den Projekt-Key eine Quota-/Rate-Limit-Fehlermeldung liefert
+
+- Untere Android-NavBar überdeckt die In-App-NavBar nicht mehr
+- ISBN-Autofill nutzt automatisch einen anonymen Fallback ohne API-Key, wenn Google Books für den Projekt-Key eine Quota-/Rate-Limit-Fehlermeldung liefert
 
 ## [V0.7.3] - 2026-03-31
 
 ### Hinzugefügt
 
-- Changelog Datei
-- Google Play In-App Review Integration: Review-Dialog nach Level-Up, Buch-Abschluss oder Leseziel-Erreichen (max. 2x/Monat, erst ab Level 6)
+- Changelog-Datei
+- Google Play In-App-Review-Integration: Review-Dialog nach Level-Up, Buch-Abschluss oder Leseziel-Erreichen (max. 2×/Monat, erst ab Level 6)
 
 ### Geändert
 
-- Buy-me-a-Coffee-Unterstützung direkt im Backup-&-Restore-Bereich der Einstellungen hinzugefügt
-- Layout der Settings Seite wurde Optimiert
-- App-Symbol auf appicon512.png umgestellt
-- Google-Books-API-Key wird jetzt im CI-Release-Build via GitHub-Secret injiziert (behebt 429-Quota-Fehler bei ISBN-Suche in Play-Store-Versionen)
-
-### Behoben
-
-- Release-Build-Fehler behoben: `MonoAOTCompiler`-Race-Condition (`IndexOutOfRangeException` in `PrecompileLibraryParallel`) durch `AndroidAotParallelism=1` umgangen
-- App-Absturz beim Start nach Play-Store-Installation behoben: IL-Linker-Trimming auf `partial` umgestellt (schützt EF Core, FluentValidation und Blazor vor Reflection-Stripping) und `AndroidEnableProfiledAot` ohne zugehörige `.aotprofile`-Datei entfernt
-- ISBN-Autofill schlägt in Play-Store-Builds nicht mehr mit „429 Quota exceeded" fehl
+- Buy-me-a-Coffee-Unterstützung direkt im Backup-&-Restore-Bereich der Einstellungen
+- Layout der Settings-Seite optimiert
+- App-Symbol auf neues Design umgestellt
 
 ## [V0.6.3] - 2026-03-30
 
@@ -304,33 +229,28 @@ Versionsschema:
 ### Geändert
 
 - Benachrichtigungen verbessert
-- Android Keystore-Signierung und AAB-Build-Pipeline eingerichtet (Issue #134)
-- Legacy-Migrations-Hilfscode entfernt
 
 ### Behoben
 
 - Kamera- und Benachrichtigungs-Berechtigungsfehler behoben (PR #158)
 - Zielfortschritts-Bug behoben
-- Fehlerbehandlung in mehreren Services gehärtet
 
 ## [V0.6.2] - 2026-02-18
 
 ### Geändert
 
-- Abhängigkeiten aktualisiert (Dependabot)
+- Sicherheits- und Abhängigkeits-Updates (Dependabot)
 
 ## [V0.6.1] - 2026-02-18
 
-### Geändert
-
-- Interne Branch-Merges aus V6-Entwicklungszweig
+Internes Wartungs-Release.
 
 ## [V0.6.0] - 2026-02-18
 
 ### Hinzugefügt
 
 - Drag-and-Drop für Bücherregale (mit Long-Press-Geste und Auto-Scroll)
-- Push-Benachrichtigungen implementiert
+- Push-Benachrichtigungen
 - Automatische Bildskalierung für große Buchcover
 - Bücher können aus Zielen ausgeschlossen werden
 - Ziele können auf bestimmte Genres oder Tropes beschränkt werden
@@ -344,7 +264,7 @@ Versionsschema:
 
 ### Behoben
 
-- ISBN und Language MaxLength-Fehler im Datenbankschema
+- ISBN- und Language-MaxLength-Fehler im Datenbankschema
 - Division durch Null in StatsService
 
 ## [V0.5.4] - 2026-02-13
@@ -395,9 +315,9 @@ Versionsschema:
 
 ### Hinzugefügt
 
-- Natives MAUI Barcode-Scanning (ZXing.Net.Maui.Controls)
+- Natives MAUI-Barcode-Scanning (ZXing.Net.Maui.Controls)
 - Benutzerdefinierter Farbwähler für Buchrücken (erweitertes Farbspektrum)
-- Android Zurück-Button-Support
+- Android-Zurück-Button-Support
 - AOT-Kompilierung im Release-Modus (bessere Performance)
 - Plattformspezifische async Einstellungen und Datei-Saver
 
@@ -405,7 +325,7 @@ Versionsschema:
 
 ### Hinzugefügt
 
-- Google Play Store Vorbereitungen
+- Google-Play-Store-Vorbereitungen
 - Ziel-Events und Datenlöschungsfunktion
 
 ### Geändert
