@@ -2,6 +2,7 @@
 using Plugin.InAppBilling;
 using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Infrastructure.Services;
 
 namespace BookLoggerApp.Services.Billing;
 
@@ -275,7 +276,7 @@ public class AndroidBillingService : IBillingService
 
         return new BillingProduct(
             ProductId: source.ProductId,
-            Title: source.LocalizedTitle ?? source.Name ?? source.ProductId,
+            Title: source.Name ?? source.ProductId,
             Description: source.Description ?? string.Empty,
             FormattedPrice: source.LocalizedPrice ?? string.Empty,
             Tier: tier,
