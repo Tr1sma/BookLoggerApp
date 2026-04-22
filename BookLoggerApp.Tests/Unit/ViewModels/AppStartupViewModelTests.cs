@@ -15,6 +15,7 @@ public class AppStartupViewModelTests
     private readonly IChangelogService _changelogService;
     private readonly IAppUpdateService _appUpdateService;
     private readonly IOnboardingService _onboardingService;
+    private readonly IAppSettingsProvider _settingsProvider;
     private readonly AppStartupViewModel _viewModel;
 
     public AppStartupViewModelTests()
@@ -25,6 +26,8 @@ public class AppStartupViewModelTests
         _changelogService = Substitute.For<IChangelogService>();
         _appUpdateService = Substitute.For<IAppUpdateService>();
         _onboardingService = Substitute.For<IOnboardingService>();
+        _settingsProvider = Substitute.For<IAppSettingsProvider>();
+        _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(new AppSettings { PrivacyBannerDismissed = true });
 
         _appVersionService.CurrentVersion.Returns("0.8.0");
         _changelogService.GetReleaseHistoryAsync(Arg.Any<CancellationToken>()).Returns(new[]
@@ -54,7 +57,8 @@ public class AppStartupViewModelTests
             _appVersionService,
             _changelogService,
             _appUpdateService,
-            _onboardingService);
+            _onboardingService,
+            _settingsProvider);
     }
 
     [Fact]

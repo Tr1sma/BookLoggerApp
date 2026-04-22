@@ -20,7 +20,15 @@ When you look up a book by ISBN, BookHeart sends the ISBN number to the Google B
 
 ## Third-Party Services
 
-BookHeart does not include any advertising, analytics, or tracking SDKs. The only external service used is the Google Books API for optional book metadata lookup.
+BookHeart uses the following third-party services:
+
+1. **Google Books API** (optional, ISBN lookup only) — metadata retrieval (title, author, cover). No personal data transmitted.
+
+2. **Firebase Analytics** (Android only, enabled by default, can be disabled under Settings → Datenschutz) — anonymous usage statistics. Never transmits book titles, authors, ISBNs, quotes, annotations, personal notes, exact dates or exact values; only bucketed figures like "book count (6-20)". Android Advertising ID and Android ID are explicitly disabled.
+
+3. **Firebase Crashlytics** (Android only, enabled by default, can be disabled under Settings → Datenschutz) — anonymous crash reports (stack trace, Android version, device model, app version). No personal data is transmitted.
+
+**Data processing by Google:** Firebase services are operated by Google LLC (Mountain View, CA, USA). An anonymous app-instance ID and basic device info may be transmitted to Google servers in the USA. Legal basis: Art. 6(1)(f) GDPR (legitimate interest in app stability and improvement). Consent can be withdrawn at any time with effect for the future by toggling the switches under Settings → Datenschutz. Disabling analytics additionally resets the anonymous app-instance ID via `ResetAnalyticsData()`.
 
 ## Data Deletion
 

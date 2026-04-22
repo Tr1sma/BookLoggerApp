@@ -3,6 +3,7 @@ using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Services.Analytics;
 
 namespace BookLoggerApp.Core.ViewModels;
 
@@ -12,6 +13,8 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     private readonly IChangelogService _changelogService;
     private readonly IAppUpdateService _appUpdateService;
     private readonly IOnboardingService _onboardingService;
+    private readonly IAppSettingsProvider _settingsProvider;
+    private readonly UserPropertiesPublisher? _userPropertiesPublisher;
     private bool _initialized;
     private bool _dismissedUpdateAvailableThisSession;
     private bool _dismissedDownloadedUpdateThisSession;
@@ -23,12 +26,16 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         IAppVersionService appVersionService,
         IChangelogService changelogService,
         IAppUpdateService appUpdateService,
-        IOnboardingService onboardingService)
+        IOnboardingService onboardingService,
+        IAppSettingsProvider settingsProvider,
+        UserPropertiesPublisher? userPropertiesPublisher = null)
     {
         _appVersionService = appVersionService;
         _changelogService = changelogService;
         _appUpdateService = appUpdateService;
         _onboardingService = onboardingService;
+        _settingsProvider = settingsProvider;
+        _userPropertiesPublisher = userPropertiesPublisher;
         _appUpdateService.StateChanged += OnAppUpdateStateChanged;
         _onboardingService.StateChanged += OnOnboardingStateChanged;
     }
@@ -72,7 +79,42 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private int _onboardingStepCount = OnboardingMissionCatalog.IntroStepCount;
 
+    [ObservableProperty]
+    private bool _isPrivacyBannerVisible;
+
     public bool HasVisibleOverlay => IsOnboardingVisible || IsChangelogVisible || IsUpdateAvailableVisible || IsUpdateReadyVisible;
+
+    public async Task DismissPrivacyBannerAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var settings = await _settingsProvider.GetSettingsAsync(ct);
+            if (settings.PrivacyBannerDismissed) return;
+            settings.PrivacyBannerDismissed = true;
+            settings.PrivacyPolicyAcceptedAt = DateTime.UtcNow;
+            await _settingsProvider.UpdateSettingsAsync(settings, ct);
+            IsPrivacyBannerVisible = false;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"DismissPrivacyBannerAsync failed: {ex}");
+        }
+    }
+
+    private async Task RefreshPrivacyBannerVisibilityAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var settings = await _settingsProvider.GetSettingsAsync(ct);
+            IsPrivacyBannerVisible = !settings.PrivacyBannerDismissed
+                                     && settings.HasCompletedOnboarding
+                                     && !IsOnboardingVisible;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"RefreshPrivacyBannerVisibility failed: {ex}");
+        }
+    }
 
     public async Task InitializeAsync(CancellationToken ct = default)
     {
@@ -105,6 +147,20 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             }
 
             await RefreshUpdateStateAsync(ct);
+
+            try
+            {
+                if (_userPropertiesPublisher is not null)
+                {
+                    var settings = await _settingsProvider.GetSettingsAsync(ct);
+                    _userPropertiesPublisher.PublishSettingsOnly(settings);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"UserProperties publish failed: {ex}");
+            }
+
             _initialized = true;
         }, "Failed to initialize startup experience");
     }
@@ -446,6 +502,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     partial void OnIsOnboardingVisibleChanged(bool value)
     {
         OnPropertyChanged(nameof(HasVisibleOverlay));
+        _ = RefreshPrivacyBannerVisibilityAsync();
     }
 
     private void ApplyOnboardingSnapshot(OnboardingSnapshot snapshot)
@@ -458,6 +515,8 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         {
             IsOnboardingSkipConfirmationVisible = false;
         }
+
+        _ = RefreshPrivacyBannerVisibilityAsync();
     }
 
     private async Task HandleOnboardingDismissedAsync(CancellationToken ct = default)

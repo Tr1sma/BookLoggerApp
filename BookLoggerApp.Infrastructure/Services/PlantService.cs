@@ -5,6 +5,7 @@ using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Services.Analytics;
 using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Services.Helpers;
 using BookLoggerApp.Core.Enums;
@@ -21,6 +22,7 @@ public class PlantService : IPlantService
     private readonly IDecorationService _decorationService;
     private readonly IMemoryCache _cache;
     private readonly ILogger<PlantService> _logger;
+    private readonly IAnalyticsService _analytics;
     private const string SpeciesCacheKey = "AllPlantSpecies";
 
     public PlantService(
@@ -28,13 +30,15 @@ public class PlantService : IPlantService
         IAppSettingsProvider settingsProvider,
         IDecorationService decorationService,
         IMemoryCache cache,
-        ILogger<PlantService> logger)
+        ILogger<PlantService> logger,
+        IAnalyticsService? analytics = null)
     {
         _unitOfWork = unitOfWork;
         _settingsProvider = settingsProvider;
         _decorationService = decorationService;
         _cache = cache;
         _logger = logger;
+        _analytics = analytics ?? NoOpAnalyticsService.Instance;
     }
 
     public async Task<IReadOnlyList<UserPlant>> GetAllAsync(CancellationToken ct = default)
@@ -459,7 +463,29 @@ public class PlantService : IPlantService
             _logger.LogWarning(ex, "Plant purchase succeeded but PlantsPurchased counter increment failed for species {SpeciesId}. Dynamic pricing for the next plant may be slightly off.", speciesId);
         }
 
+        try
+        {
+            var settings = await _settingsProvider.GetSettingsAsync(ct);
+            _analytics.LogEvent(AnalyticsEventNames.PlantPurchased, AnalyticsParamBuilder.Create()
+                .Add(AnalyticsParamNames.SpeciesKey, SanitizeKey(species.Name))
+                .Add(AnalyticsParamNames.LevelAtPurchaseBucket, AnalyticsBuckets.Level(settings.UserLevel))
+                .Add(AnalyticsParamNames.TotalPlantsBucket, AnalyticsBuckets.Plants(settings.PlantsPurchased))
+                .Add(AnalyticsParamNames.PriceBucket, AnalyticsBuckets.Coins(cost))
+                .BuildMutable());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"PlantPurchased event logging failed: {ex}");
+        }
+
         return result;
+    }
+
+    private static string SanitizeKey(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "unknown";
+        var slug = new string(value.ToLowerInvariant().Select(ch => char.IsLetterOrDigit(ch) ? ch : '_').ToArray());
+        return slug.Length > 32 ? slug.Substring(0, 32) : slug;
     }
 
     /// <summary>

@@ -1,4 +1,6 @@
 using BookLoggerApp.Core.Infrastructure;
+using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Services.Analytics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -9,6 +11,13 @@ namespace BookLoggerApp.Core.ViewModels;
 /// </summary>
 public abstract partial class ViewModelBase : ObservableObject
 {
+    /// <summary>
+    /// Ambient crash reporter used by <see cref="ExecuteSafelyAsync"/> /
+    /// <see cref="ExecuteSafelyWithDbAsync"/> to forward caught exceptions as non-fatals.
+    /// Assigned once at app startup by AnalyticsBootstrapper; defaults to NoOp for tests.
+    /// </summary>
+    public static ICrashReportingService CrashReporter { get; set; } = NoOpCrashReportingService.Instance;
+
     [ObservableProperty]
     private bool _isBusy;
 
@@ -48,6 +57,7 @@ public abstract partial class ViewModelBase : ObservableObject
             var prefix = errorPrefix ?? "An error occurred";
             SetError($"{prefix}: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: {ex}");
+            ReportNonFatal(ex, errorPrefix, source: "viewmodel");
         }
         finally
         {
@@ -71,21 +81,40 @@ public abstract partial class ViewModelBase : ObservableObject
 
             await action();
         }
-        catch (TimeoutException)
+        catch (TimeoutException tex)
         {
             var prefix = errorPrefix ?? "Fehler";
             SetError($"{prefix}: Datenbank wird noch vorbereitet. Bitte versuche es erneut.");
             System.Diagnostics.Debug.WriteLine("Timeout beim Warten auf Datenbank-Initialisierung.");
+            ReportNonFatal(tex, errorPrefix, source: "viewmodel_db_timeout");
         }
         catch (Exception ex)
         {
             var prefix = errorPrefix ?? "An error occurred";
             SetError($"{prefix}: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: {ex}");
+            ReportNonFatal(ex, errorPrefix, source: "viewmodel_db");
         }
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    private static void ReportNonFatal(Exception ex, string? errorPrefix, string source)
+    {
+        try
+        {
+            var keys = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["source"] = source,
+                ["prefix"] = errorPrefix ?? string.Empty
+            };
+            CrashReporter.RecordNonFatal(ex, keys);
+        }
+        catch (Exception reportEx)
+        {
+            System.Diagnostics.Debug.WriteLine($"CrashReporter.RecordNonFatal failed: {reportEx}");
         }
     }
 }

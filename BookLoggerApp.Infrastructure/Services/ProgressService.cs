@@ -3,6 +3,7 @@ using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Services.Analytics;
 using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Core.Helpers;
 
@@ -20,6 +21,7 @@ public class ProgressService : IProgressService
     private readonly IGoalService _goalService;
     private readonly IDecorationService _decorationService;
     private readonly IAppSettingsProvider _settingsProvider;
+    private readonly IAnalyticsService _analytics;
 
     public ProgressService(
         IUnitOfWork unitOfWork,
@@ -28,7 +30,8 @@ public class ProgressService : IProgressService
         IBookService bookService,
         IGoalService goalService,
         IDecorationService decorationService,
-        IAppSettingsProvider settingsProvider)
+        IAppSettingsProvider settingsProvider,
+        IAnalyticsService? analytics = null)
     {
         _unitOfWork = unitOfWork;
         _progressionService = progressionService;
@@ -37,6 +40,7 @@ public class ProgressService : IProgressService
         _goalService = goalService;
         _decorationService = decorationService;
         _settingsProvider = settingsProvider;
+        _analytics = analytics ?? NoOpAnalyticsService.Instance;
     }
 
     public async Task<SessionSaveResult> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
@@ -121,6 +125,11 @@ public class ProgressService : IProgressService
 
         var result = await _unitOfWork.ReadingSessions.AddAsync(session);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        _analytics.LogEvent(AnalyticsEventNames.SessionStarted, AnalyticsParamBuilder.Create()
+            .Add(AnalyticsParamNames.FromReadingPage, true)
+            .BuildMutable());
+
         return result;
     }
 
@@ -196,6 +205,13 @@ public class ProgressService : IProgressService
 
         // Notify that goals may have changed (pages/minutes progress)
         _goalService.NotifyGoalsChanged();
+
+        _analytics.LogEvent(AnalyticsEventNames.SessionEnded, AnalyticsParamBuilder.Create()
+            .Add(AnalyticsParamNames.MinutesBucket, AnalyticsBuckets.Minutes(session.Minutes))
+            .Add(AnalyticsParamNames.PagesReadBucket, AnalyticsBuckets.Pages(pagesRead))
+            .Add(AnalyticsParamNames.XpEarnedBucket, AnalyticsBuckets.XpDelta(progressionResult.XpEarned))
+            .Add(AnalyticsParamNames.TriggeredLevelUp, progressionResult.LevelUp is not null)
+            .BuildMutable());
 
         // Return both session and progression result for UI celebrations
         return new SessionEndResult

@@ -16,6 +16,8 @@
 
 <PageTitle>@(ViewModel.Book?.Title ?? "Book Details") - BookHeart</PageTitle>
 
+
+<AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.BookDetail" />
 <div class="book-detail-container">
     @if (ViewModel.IsBusy)
     {
