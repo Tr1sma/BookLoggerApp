@@ -1,0 +1,1104 @@
+Microsoft Windows [Version 10.0.19045.6456]
+(c) Microsoft Corporation. Alle Rechte vorbehalten.
+
+C:\Users\ben.sowieja\source\repos\Tr1sma\BookLoggerApp>adb logcat -c
+Der Befehl "adb" ist entweder falsch geschrieben oder
+konnte nicht gefunden werden.
+
+C:\Users\ben.sowieja\source\repos\Tr1sma\BookLoggerApp>powershell adb logcat -c
+adb : Die Benennung "adb" wurde nicht als Name eines Cmdlet, einer Funktion, einer Skriptdatei oder eines ausführbaren
+Programms erkannt. Überprüfen Sie die Schreibweise des Namens, oder ob der Pfad korrekt ist (sofern enthalten), und
+wiederholen Sie den Vorgang.
+In Zeile:1 Zeichen:1
++ adb logcat -c
++ ~~~
+    + CategoryInfo          : ObjectNotFound: (adb:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+
+C:\Users\ben.sowieja\source\repos\Tr1sma\BookLoggerApp>C:\platform-tools\adb.exe logcat -c
+
+C:\Users\ben.sowieja\source\repos\Tr1sma\BookLoggerApp>C:\platform-tools\adb.exe logcat *:E AndroidRuntime:E
+--------- beginning of main
+04-22 12:57:30.270 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:30.282 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:30.283 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:30.283 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:30.285 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:30.291 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:33.983  2070  8484 E TetherController: property_get sys.radio.data.modem_share_flag return 0, 1!
+04-22 12:57:37.493 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:37.505 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:37.506 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:37.509 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:37.592 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:37.604 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:40.039  2215 28392 E sensors-hal: handle_sns_std_sensor_event:58, Oplus Pick_up_motion : report_ts = 13; value = [0.000000], ts=1423196526019
+04-22 12:57:40.068  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:40.069  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:40.069  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 0]
+04-22 12:57:40.080  3796  3796 E OplusGestureAnimationManagerPolicy: mScreenHeight:2772 mScreenWidth:1272 mRotation:0
+04-22 12:57:40.090  3796  5635 E SensorService: Required app com.oplus.systemui.aod.sensor.backlight.OplusAODLightController$aodLuxSensorEventListener$1, uid 10266, pid 5426
+--------- beginning of system
+04-22 12:57:40.180  3796  4962 E Orms_ManagerInner: cannot connect to orms core service!
+04-22 12:57:40.181  3796  4962 E DpcExtImpl[display=0]: execuce mBlockReasonList.add reason: android.service.fingerprint:WAKEUP
+04-22 12:57:40.181  3796  4962 E OplusCustomizeRestrictionManagerService: isBiometricDisabled start
+04-22 12:57:40.190  3394  3629 E SmcInvoke_MinkDescriptor: Invalid handle 17
+04-22 12:57:40.190  3796  4263 E SensorService: Required app com.android.server.display.feature.ambience.events.delegate.SensorDelegate, uid 1000, pid 3796
+04-22 12:57:40.208  3796  4263 E SensorService: Required app com.android.server.display.feature.ambience.events.delegate.SensorDelegate, uid 1000, pid 3796
+04-22 12:57:40.210  2215  4933 E sensors-hal: handle_sns_client_event:59, oplus_shaking: report_ts=2147483647, state=0.000000, ts=1423367989404
+04-22 12:57:40.215  2252  2306 E libsensorbridge: oppo_debug:ASensorEventQueue::onEvent
+04-22 12:57:40.215  2252  4644 E libsensorbridge: oppo_debug:ASensorEventQueue::getEvents() returned 1 events.
+04-22 12:57:40.217  3796  5247 E SensorService: Required app com.oplus.systemui.preventmode.ProximitySensorEventListener, uid 10266, pid 5426
+04-22 12:57:40.220  9339 22273 E UMS.CommonUtils: Failed to get meta data for health.fluid.export in com.heytap.health.international
+04-22 12:57:40.222  9339 26873 E SG::IntentProviderHelper: getPendingIntentFromIntentData succeed: null
+04-22 12:57:40.228  1201  1247 E QC-time-services: Receive Passed == base = 13, unit = 1, operation = 2, result = 0
+04-22 12:57:40.228  2009  2031 E QC-time-services: Daemon: Time-services: Waiting to acceptconnection
+04-22 12:57:40.228  2009  2031 E QC-time-services: Daemon: Time-services: Waiting to acceptconnection
+04-22 12:57:40.234  2215 29538 E sensors-hal: handle_sns_client_event:71, oplus lux_aod: report_ts=11, state=1.000000, ts=1423393429508
+04-22 12:57:40.243  3796  4191 E ColorTouchNodeManagerService: IOplusTouch touchWriteNodeFile failed, dId:0
+04-22 12:57:40.243  3796  4191 E ColorTouchNodeManagerService: IOplusTouch touchWriteNodeFile failed, dId:0
+04-22 12:57:40.258  3394  3629 E SmcInvoke_MinkDescriptor: mem obj with id :17 not found in list
+04-22 12:57:40.262  3394  3629 E SmcInvoke_MinkDescriptor: Invalid handle 17
+04-22 12:57:40.266  3394  3629 E SmcInvoke_MinkDescriptor: Invalid handle 17
+04-22 12:57:40.268  3796 29564 E StorageManagerService: unlockSensitiveKey fail!
+04-22 12:57:40.268  3796  4174 E SensorService: Required app com.android.server.biometrics.log.ALSProbe, uid 1000, pid 3796
+04-22 12:57:40.271  3796  4962 E Biometrics_DEBUG: execute mBlockReasonList.clear
+04-22 12:57:40.274  2279  2430 E PERFHAL-CONFIG: PERFHAL-CONFIG: GetConfig() 508: Config TFPS undefined for this target
+04-22 12:57:40.275  2279  2430 E PERFHAL-LLLITE: PERFHAL-LLLITE: CheckOngoingLaunchScenario() 199: mBoostedPkgName is empty!
+04-22 12:57:40.275  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:40.276  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:40.276  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:40.276  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:40.293  3394  3628 E SmcInvoke_MinkDescriptor: Invalid handle 17
+04-22 12:57:40.298  3394  3628 E SmcInvoke_MinkDescriptor: Invalid handle 17
+04-22 12:57:40.303  3394  3628 E SmcInvoke_MinkDescriptor: Invalid handle 17
+04-22 12:57:40.308  5824  5824 E IJankManager: latencySceneEnd unknown scene 8 mScene:-1
+04-22 12:57:40.309  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:40.309  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:40.309  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:40.309  3394  3628 E SmcInvoke_MinkDescriptor: Invalid handle 17
+04-22 12:57:40.314 22483 22501 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.314 22483 22501 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.315 22483 22501 E WeatherS_WeatherCommonServiceProxy: getLocationCityInfo
+04-22 12:57:40.315 22483 22501 E WeatherS_WeatherCommonServiceProxy: getTimeZoneOfAttendCity
+04-22 12:57:40.315 22483 22501 E WeatherS_WeatherCommonServiceProxy: getOneAttentCityWeatherInfoList
+04-22 12:57:40.316 22483 22501 E WeatherS_WeatherCommonServiceProxy: getLocationCityAndUpdate  needUpdateWeatherInfo = true, isCallFromWeatherApp = false
+04-22 12:57:40.316 22483 22501 E WeatherS_LocalUtils: startAutoGetLocalCity bg location permission:true
+04-22 12:57:40.317 22483 22501 E WeatherS_LocalUtils: startGetLocalCityByWeather startService error, call startForegroundService
+04-22 12:57:40.322  3796  4166 E OplusAppQuickStart_AppQuickStartController: not start from launcher transition:21
+04-22 12:57:40.323 22483 29582 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.323 22483 29582 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.323 22483 29582 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.323 22483 29582 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.325  3796  4166 E FlexibleWindowManagerService: notifyTaskObserverToAttachController not need to notify!
+04-22 12:57:40.330  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:40.330  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:40.330  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:40.333  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:40.333  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:40.333  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:40.334  5824 29587 E DynamicFramerate [DynamicFrameRateManagerImpl]: setFrameRateInterNalForNoContext: TIMING_DO_NO_CONTEXT_ANIMATION transaction = null, need apply actively
+04-22 12:57:40.334  5824 29587 E DynamicFramerate [DynamicFrameRateManagerImpl]: setFrameRateInterNalForNoContext: TIMING_DO_NO_CONTEXT_ANIMATION request is = FrameRateRequest: {  mUniqueID = 186285305, mVelocity = -1, mPreviousFrameRate = 0, mBindWithSC = true, mSc = null, mTransaction = android.view.SurfaceControl$Transaction@df1443e, Type = 20202 } , frameRate 120
+04-22 12:57:40.337  2268  5368 E pfaca_Cache: getLutArrayPointer: load 1nits
+04-22 12:57:40.337  2268  5368 E pfaca_BE: fillGamutInfo: is using the 1NIT LUT
+04-22 12:57:40.338  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=0 not supported
+04-22 12:57:40.339  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388856
+04-22 12:57:40.339  2268  2556 E SDM     : DRMConnector::Perform: Connector Setting HBM_EN 70: hbm_en 4,prop_id=85
+04-22 12:57:40.339  6045  6262 E ScreenCapture: Failed to generate screen capture. Error code: -12
+04-22 12:57:40.339  6045  6262 E Blur_ScreenCapture: [captureScreenInternal] exceeds fail times limit=1
+04-22 12:57:40.340  6045  6262 E ScreenCapture: Failed to generate screen capture. Error code: -22
+04-22 12:57:40.341  5824  5824 E IJankManager: latencySceneEnd unknown scene 8 mScene:14
+04-22 12:57:40.341  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:40.341  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:40.341  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:40.342  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388856
+04-22 12:57:40.345  2341  2365 E DisplayPanelInterface: SetDisplayPanelAod dp_values[0] = 0
+04-22 12:57:40.346  3796  4163 E SensorService: Required app com.android.server.wm.WindowOrientationListener, uid 1000, pid 3796
+04-22 12:57:40.348  3796  4724 E AppOps  : attributionTag OplusLBS not declared in manifest of android
+04-22 12:57:40.356  3796  3796 E OplusGestureAnimationManagerPolicy: mScreenHeight:2772 mScreenWidth:1272 mRotation:0
+04-22 12:57:40.357  5426  5426 E SystemUi--Keyguard: OplusKeyguardUpdateMonitorExImpl-->OlockStateUtil.safeModeEnable = false
+04-22 12:57:40.358  3796  4893 E VibratorController: Vibrator HAL setAmplitude failed:
+04-22 12:57:40.360  5426  5426 E LockScreenNotificationDispatcherImp: updateNotificationListOnKg size:1
+04-22 12:57:40.371  2805  2901 E QmiVsClient: sendAsyncRequest QMI_VS_SET_SYNC_WITH_AP_REQ_MSG_V01 ret 0
+04-22 12:57:40.379  5606  6489 E AMC     : [P-ooslimited_deep/0] execute failed in triggers[0]:[nwsrcht:0][nwsrcht:0]
+04-22 12:57:40.379  5606  6489 E AMC     : [P-ooslimited_deep/1] execute failed in triggers[0]:[nwsrcht:0][nwsrcht:0]
+04-22 12:57:40.379  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed in triggers[0]:[cschgc:0][cschgc:0, pschgc:0]
+04-22 12:57:40.379  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed mult in triggers!
+04-22 12:57:40.379  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[0]:[cschgc:0][cschgc:0, pschgc:0]
+04-22 12:57:40.379  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[1]:[cschgc:0][psnoregt:0, csnoregt:0]
+04-22 12:57:40.379  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed mult in triggers!
+04-22 12:57:40.379  5606  6489 E AMC     : [sleept] failed to match threshold due to invalid du:1800000 value du:1393000 gap:0
+04-22 12:57:40.379  5606  6489 E AMC     : [P-mpss_reset/0] execute failed in triggers[0]:[sleept:26][sleept:619]
+04-22 12:57:40.379  5606  6489 E AMC     : [sleept] failed to match threshold due to invalid du:1800000 value du:1393000 gap:0
+04-22 12:57:40.379  5606  6489 E AMC     : [P-mpss_reset/1] execute failed in triggers[0]:[sleept:26][sleept:619]
+04-22 12:57:40.379  5606  6489 E AMC     : [sleept] failed to match threshold due to invalid du:1800000 value du:1393000 gap:0
+04-22 12:57:40.379  5606  6489 E AMC     : [P-pidnetdisable_recovery] execute failed in triggers[0]:[sleept:26][sleept:619, pidnetdisable:null]
+04-22 12:57:40.380  5606  6489 E AMC     : [P-standby_5gbackoff/0] failed to execute check triggers, non active subId!
+04-22 12:57:40.382  5606  6489 E AMC     : [P-standby_5gbackoff/1] execute failed check triggers[0]:[sleept:26][inactive:null, charge:true]
+04-22 12:57:40.382  5606  6489 E AMC     : [P-qc_oos_qrxlv/0] failed to execute check triggers, non active subId!
+04-22 12:57:40.382  5606  6489 E AMC     : [P-qc_oos_qrxlv/1] execute failed check triggers[0]:[sleept:26][deepsleep:false, csnoregt:0]
+04-22 12:57:40.382  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed in triggers[0]:[psnoregt:158][cschgc:0, pschgc:0]
+04-22 12:57:40.382  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed mult in triggers!
+04-22 12:57:40.382  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[0]:[psnoregt:0][cschgc:0, pschgc:0]
+04-22 12:57:40.382  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[1]:[psnoregt:0][psnoregt:0, csnoregt:0]
+04-22 12:57:40.382  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed mult in triggers!
+04-22 12:57:40.382  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed in triggers[0]:[pschgc:0][cschgc:0, pschgc:0]
+04-22 12:57:40.383  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed mult in triggers!
+04-22 12:57:40.383  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[0]:[pschgc:0][cschgc:0, pschgc:0]
+04-22 12:57:40.383  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[1]:[pschgc:0][psnoregt:0, csnoregt:0]
+04-22 12:57:40.383  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed mult in triggers!
+04-22 12:57:40.383  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed in triggers[0]:[csnoregt:158][cschgc:0, pschgc:0]
+04-22 12:57:40.383  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed mult in triggers!
+04-22 12:57:40.383  5606  6489 E AMC     : [P-qc_oos_qrxlv/0] failed to execute check triggers, non active subId!
+04-22 12:57:40.383  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[0]:[csnoregt:0][cschgc:0, pschgc:0]
+04-22 12:57:40.383  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[1]:[csnoregt:0][psnoregt:0, csnoregt:0]
+04-22 12:57:40.383  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed mult in triggers!
+04-22 12:57:40.383  5606  6489 E AMC     : [P-qc_oos_qrxlv/1] execute failed check triggers[0]:[csnoregt:0][deepsleep:false, csnoregt:0]
+04-22 12:57:40.385  5536  5536 E SatelliteController: registerForSatelliteModemStateChanged: mSatelliteSessionController is not initialized yet
+04-22 12:57:40.390  5536  5536 E SatelliteController: registerForSatelliteModemStateChanged: mSatelliteSessionController is not initialized yet
+04-22 12:57:40.394  5536  5536 E SatelliteController: registerForSatelliteModemStateChanged: mSatelliteSessionController is not initialized yet
+04-22 12:57:40.432  3796  5994 E SensorService: Required app aidl_client_pid_2268, uid 1000, pid 2268
+04-22 12:57:40.433  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:40.433  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 41]
+04-22 12:57:40.433  3796  3796 E OplusGestureAnimationManagerPolicy: mScreenHeight:2772 mScreenWidth:1272 mRotation:0
+04-22 12:57:40.434  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=41 not supported
+04-22 12:57:40.435  3796  4259 E OplusCustomizeRestrictionManagerService: isBiometricDisabled start
+04-22 12:57:40.436  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:40.436  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 0]
+04-22 12:57:40.436  3394  3803 E [FP_HAL][UltraSonicCore_default]: [__doBrokenCheckAndHandle], batt_temperature = 30, frame_temperature = 30
+04-22 12:57:40.438  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=0 not supported
+04-22 12:57:40.438  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=1 not supported
+04-22 12:57:40.438  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388856
+04-22 12:57:40.439  3796  3865 E SensorService: Required app aidl_client_pid_2268, uid 1000, pid 2268
+04-22 12:57:40.441  2805  4394 E RadioProxy: radioResponseCallback invalid user data or proxy
+04-22 12:57:40.441  3548  4395 E RadioProxy: radioResponseCallback invalid user data or proxy
+04-22 12:57:40.441  3548  3565 E Proxy   : Unsupported message id 4001
+04-22 12:57:40.442  2805  2907 E Proxy   : Unsupported message id 4001
+04-22 12:57:40.444  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:57:40.445  3796  5369 E SensorService: Required app com.oplus.motionsense.MotionModule, uid 1000, pid 5817
+04-22 12:57:40.448  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 3,62 MB/s, Write: 0,06 MB/s
+04-22 12:57:40.448  3796 19150 E OplusStorageUFSBandwidth: Task time: 4ms
+04-22 12:57:40.448  3548  3562 E QmiVsClient: sendAsyncRequest QMI_VS_SET_POWER_SAVING_STATE_REQ_MSG_V01 ret 0
+04-22 12:57:40.448  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:57:40.448  2339  2339 E vendor.oplus.hardware.charger-V10-service: notifyScreenStatus: 1
+04-22 12:57:40.449  3796  5246 E SensorService: Required app b.a, uid 1000, pid 5193
+04-22 12:57:40.449  7149  7261 E horae   : tz(cpu-1-0-1) temp changed suddenly, cut temp to:45800
+04-22 12:57:40.449  7149  7261 E horae   : Recording abnormal tz:25 state:4.
+04-22 12:57:40.450  2070  8520 E TetherController: property_get sys.radio.data.modem_share_flag return 0, 1!
+04-22 12:57:40.450  3796  5131 E OplusSupplicantStaIfaceHalAidlImpl: Can't call doStringCommand, IOplusSupplicantStaIface is null
+04-22 12:57:40.450  2215 10657 E sensors-hal: handle_sns_client_event:98, pedometer_minute: report_ts=19,counter=130.000000 move_status =[SNS_CMC_STATIONARY] time_gap = 2 run_counter=55.000000 walk_counter=4.000000
+04-22 12:57:40.451  5606  6489 E AMC     : [A-ooscfg/1/20250806] failed to set asyn cancel success due to invalid state:0
+04-22 12:57:40.452  3394  3629 E SmcInvoke_MinkDescriptor: mem obj with id :17 not found in list
+04-22 12:57:40.453  3796  4178 E SensorService: Required app com.android.server.power.FaceDownDetector, uid 1000, pid 3796
+04-22 12:57:40.454  2215 10657 E sensors-hal: handle_sns_client_event:98, pedometer_minute: report_ts=20,counter=130.000000 move_status =[SNS_CMC_STATIONARY] time_gap = 1 run_counter=55.000000 walk_counter=4.000000
+04-22 12:57:40.454  2215 10657 E sensors-hal: handle_sns_client_event:98, pedometer_minute: report_ts=21,counter=130.000000 move_status =[SNS_CMC_STATIONARY] time_gap = 0 run_counter=55.000000 walk_counter=4.000000
+04-22 12:57:40.456  5732  5732 E DPMJ    : |SERVICE| sendScreenState state  trueand int value 1
+04-22 12:57:40.458  5606  6489 E AMC     : [P-unroaming_card/0] failed to execute check triggers, non active subId!
+04-22 12:57:40.460  5606  6489 E AMC     : [P-unroaming_card/1] execute failed check triggers[0]:[loop:true][oos:false, psnoregt:0, csnoregt:0, airplane:null, mccmismatch:false]
+04-22 12:57:40.462  3796  5131 E OplusSmartScanManager: Unexpected state, don't detected scene state
+04-22 12:57:40.462  3796  5131 E OplusSmartScanManager: Unexpected state, don't detected motion state
+04-22 12:57:40.471  3796  5194 E LinkPower: [JudgeMonitorProcess] failed to deleteLastRecord, mMonitorRecordAccumulate is empty!
+04-22 12:57:40.471  3796  5194 E LinkPower: [JudgeMonitorProcess] failed to deleteLastRecord, mMonitorRecordAccumulate is empty!
+04-22 12:57:40.471  3796  5194 E CommSceneService: modem stationary state=0 not update, cancel notify!
+04-22 12:57:40.473  9675 13253 E PTC.DISC.AndroidMultiLanServer: wlanSocketGroup.get null
+04-22 12:57:40.477  3796  5194 E LinkPower: [JudgeMonitorProcess] failed to deleteLastRecord, mMonitorRecordAccumulate is empty!
+04-22 12:57:40.477  3796  5194 E LinkPower: [JudgeMonitorProcess] failed to deleteLastRecord, mMonitorRecordAccumulate is empty!
+04-22 12:57:40.482  3796  5194 E LinkPower: [JudgeMonitorProcess] failed to deleteLastRecord, mMonitorRecordAccumulate is empty!
+04-22 12:57:40.482  3796  5194 E LinkPower: [JudgeMonitorProcess] failed to deleteLastRecord, mMonitorRecordAccumulate is empty!
+04-22 12:57:40.492  5426  5426 E UdfpsController: Null request when onAcquired for sensorId: 1 acquiredInfo=0
+04-22 12:57:40.493  5426  6186 E SystemUi--Keyguard: OnScreenHighLightControl-->controlPartialUpdate exception : java.util.NoSuchElementException
+04-22 12:57:40.515  3796  5986 E SensorService: Required app com.oplus.gesture.phonegesture.gestureservice.OplusGestureEngineService, uid 10297, pid 5374
+04-22 12:57:40.517  3796  5146 E GestureLog_OplusScreenDirectManager: current screen is locked, so return
+04-22 12:57:40.525  2215 29658 E sensors-hal: handle_sns_client_event:49, oplus_lay_detect: data = 0, cnt = 4, ts=1423684469504
+04-22 12:57:40.528  5426  5426 E CentralSurfaces: Keyguard is done going away, but someone left the light reveal scrim at reveal amount: 0.0
+04-22 12:57:40.529  3796  3796 E OplusCustomizeRestrictionManagerService: isBiometricDisabled start
+04-22 12:57:40.529  3796  3796 E OplusCustomizeRestrictionManagerService: isBiometricDisabled start
+04-22 12:57:40.529  3796  3796 E OplusCustomizeRestrictionManagerService: isBiometricDisabled start
+04-22 12:57:40.532  5426  5559 E FromLockscreenTransitionInteractor: Ignoring startTransition: This interactor asked to transition from LOCKSCREEN -> GONE, but we last transitioned to GONE, not LOCKSCREEN. This should never happen - check currentTransitionInfoInternal or use filterRelevantKeyguardState before starting transitions.
+04-22 12:57:40.539  5426  5426 E LockScreenNotificationDispatcherImp: updateNotificationListOnKg size:0
+04-22 12:57:40.559  5426  5426 E KeyguardViewMediator: Keyguard exit without a corresponding app to show.
+04-22 12:57:40.562  3796  5132 E OplusWifiPower_WakeupApp: updateCollectInfo finish
+04-22 12:57:40.567  5426  5426 E LockScreenNotificationDispatcherImp: updateNotificationListOnKg size:0
+04-22 12:57:40.569  9675 29643 E PTC.PLUGINMGR.AdvancedProcessor: -- pluginV2Track -- isSupportHeythings is set false
+04-22 12:57:40.577  9675 29643 E PTC.PLUGINMGR.HeythingsPluginManager: -- pluginV2Track -- isSupportHeythings is set false
+04-22 12:57:40.577  9675 29643 E PTC.DISC.ScanPluginFilter: Collect 0 normal plugins
+04-22 12:57:40.582  9675 10862 E PTC.DEVICEMGR.DeviceInfoCollectUtil: getNetworkStatus except!;getDataNetworkTypeForSubscriber
+04-22 12:57:40.585  5426  5426 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:40.585  5426  5426 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:40.585  5426  5426 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:40.585  5426  5426 E IJankManager: latencySceneEnd unknown scene 45 mScene:-1
+04-22 12:57:40.612  3394  3394 E [FP_HAL][HeartRate]: heartrate cmd_id :400004, app_state:0
+04-22 12:57:40.612  3394  3394 E [FP_HAL][HeartRate]: [start_heartrate] exit. errno=1
+04-22 12:57:40.649 22483 27894 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.649 22483 27894 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.652 22483 27894 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.652 22483 27894 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.653 22483 27894 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.653 22483 27894 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.658 22483 29686 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.658 22483 29686 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.659 22483 29686 E WeatherS_WeatherExpireTimeUtils: hasExpireTimeByCityId:59;00486900010921
+04-22 12:57:40.659 22483 29686 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.659 22483 29686 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils: supportWeatherSendNotificationTime error
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils: android.content.pm.PackageManager$NameNotFoundException: com.coloros.weather2
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at android.app.ApplicationPackageManager.getApplicationInfoAsUser(ApplicationPackageManager.java:564)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at android.app.ApplicationPackageManager.getApplicationInfo(ApplicationPackageManager.java:547)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at android.app.ApplicationPackageManager.getApplicationInfo(ApplicationPackageManager.java:541)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weatherservicesdk.Utils.WeatherServiceVersionUtils.supportWeatherSendNotificationTime(Unknown Source:13)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.notification.WeatherServiceNotificationManager.F(Unknown Source:44)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.notification.WeatherServiceNotificationManager.k(Unknown Source:16)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at n9.d.y(Unknown Source:46)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at n9.d.j(Unknown Source:0)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at n9.a.run(Unknown Source:0)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1154)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:652)
+04-22 12:57:40.660 22483 29685 E WeatherS_WeatherServiceVersionUtils:   at java.lang.Thread.run(Thread.java:1564)
+04-22 12:57:40.671  1109  1109 E lowmemorykiller: device memory 1275569 free 73258 file 1200464
+04-22 12:57:40.675 22483 29686 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.675 22483 29686 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.677 22483 29698 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.677 22483 29698 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.679 22483 29698 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.679 22483 29698 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.679 22483 29698 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.679 22483 29698 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils: supportWeatherSendNotificationTime error
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils: android.content.pm.PackageManager$NameNotFoundException: com.coloros.weather2
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at android.app.ApplicationPackageManager.getApplicationInfoAsUser(ApplicationPackageManager.java:564)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at android.app.ApplicationPackageManager.getApplicationInfo(ApplicationPackageManager.java:547)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at android.app.ApplicationPackageManager.getApplicationInfo(ApplicationPackageManager.java:541)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weatherservicesdk.Utils.WeatherServiceVersionUtils.supportWeatherSendNotificationTime(Unknown Source:13)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.notification.WeatherServiceNotificationManager.F(Unknown Source:44)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.notification.WeatherServiceNotificationManager.k(Unknown Source:16)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.notification.WeatherServiceNotificationManager.l(Unknown Source:19)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.datasource.service.WeatherInfoBaseDataSource.handleExpNotifyWhenNotNeedRequestNet(Unknown Source:7)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.datasource.service.WeatherInfoBaseDataSource.startWeatherInfoNetWorkRequest(Unknown Source:71)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.datasource.service.WeatherInfoBaseDataSource.h(Unknown Source:0)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.datasource.service.WeatherInfoBaseDataSource$a.safeRun(Unknown Source:111)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at g9.b.run(Unknown Source:0)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1154)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:652)
+04-22 12:57:40.679 22483 29698 E WeatherS_WeatherServiceVersionUtils:   at java.lang.Thread.run(Thread.java:1564)
+04-22 12:57:40.679 22483 29698 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.679 22483 29698 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.679 22483 29698 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.679 22483 29698 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.680 22483 29698 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.680 22483 29698 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.680 22483 29698 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:40.680 22483 29698 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:40.682  7186  7240 E oiface  : sched_setaffinity failed
+04-22 12:57:40.682  7186  7225 E oiface  : directSetTask: get cpuset path failed
+04-22 12:57:40.771  1109  1109 E lowmemorykiller: device memory 1277748 free 79029 file 1195844
+04-22 12:57:40.799  2268  2556 E SDM     : DRMConnector::Perform: Connector Setting HBM_EN 70: hbm_en 0,prop_id=85
+04-22 12:57:40.807  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388737
+04-22 12:57:40.836  3394  3629 E SmcInvoke_MinkDescriptor: mem obj with id :17 not found in list
+04-22 12:57:40.860  1201  1247 E QC-time-services: Receive Passed == base = 13, unit = 1, operation = 2, result = 0
+04-22 12:57:40.860  2009  2031 E QC-time-services: Daemon: Time-services: Waiting to acceptconnection
+04-22 12:57:40.860  2009  2031 E QC-time-services: Daemon: Time-services: Waiting to acceptconnection
+04-22 12:57:40.865  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:40.865  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 1]
+04-22 12:57:40.865  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:40.865  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 0]
+04-22 12:57:40.871  1109  1109 E lowmemorykiller: device memory 1284280 free 83901 file 1195902
+04-22 12:57:40.878  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:40.879  3796  5246 E system_server: No package ID ff found for resource ID 0xffffffff.
+04-22 12:57:40.890  3796  5246 E system_server: No package ID ff found for resource ID 0xffffffff.
+04-22 12:57:40.891  2070  2111 E NetlinkEvent: NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+04-22 12:57:40.891  2070  2111 E NetlinkEvent: NetlinkEvent::FindParam(): Parameter 'STATE' not found
+04-22 12:57:40.891  2070  2111 E NetlinkEvent: NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+04-22 12:57:40.891  2070  2111 E NetlinkEvent: NetlinkEvent::FindParam(): Parameter 'UID' not found
+04-22 12:57:40.907  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:40.921  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:40.930  3796  5246 E BiometricScheduler: Current operation is null,no need to start watchdog
+04-22 12:57:40.939  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:40.962  3394  3629 E SmcInvoke_MinkDescriptor: mem obj with id :17 not found in list
+04-22 12:57:40.972  1109  1109 E lowmemorykiller: device memory 1288615 free 84112 file 1196161
+04-22 12:57:40.991  3394  3629 E SmcInvoke_MinkDescriptor: mem obj with id :17 not found in list
+04-22 12:57:40.991  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:41.013  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:41.024  1321  5866 E SmcInvoke_MinkDescriptor: Invalid handle 19
+04-22 12:57:41.041 23184 23295 E msys    : E[N mns:TigonMNS]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:41.050 23184 23295 E msys    : E[N mns:TigonMNS]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:41.050 23184 23295 E msys    : E[N mns:TigonMNS]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:41.051 23184 23295 E msys    : E[N mns:TigonMNS]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:41.072  1109  1109 E lowmemorykiller: device memory 1286416 free 81525 file 1196607
+04-22 12:57:41.073  7078 29662 E Dck     : Could not get ProviderInfo when resolving the content provider authority. [CONTEXT service_id=289 ]
+04-22 12:57:41.073  7078 29662 E Dck     : Samsung Content Provider failed app verification [CONTEXT service_id=289 ]
+04-22 12:57:41.076  7078 10026 E Dck     : Could not get ProviderInfo when resolving the content provider authority. [CONTEXT service_id=289 ]
+04-22 12:57:41.076  7078 10026 E Dck     : Samsung Content Provider failed app verification [CONTEXT service_id=289 ]
+04-22 12:57:41.125  1317 14773 E keystore2: system/security/keystore2/src/error.rs:183 - system/security/keystore2/src/security_level.rs:332
+04-22 12:57:41.125  1317 14773 E keystore2:
+04-22 12:57:41.125  1317 14773 E keystore2: Caused by:
+04-22 12:57:41.125  1317 14773 E keystore2:     0: system/security/keystore2/src/enforcements.rs:599: matching auth token (challenge=0, userId=8266693859224811217, authId=0, authType=0x1, timestamp=126870ms) rcved=BootTime(119199) for sids [8266693859224811217] type Some(r#PASSWORD) is expired (1305s old > timeout=5s)
+04-22 12:57:41.125  1317 14773 E keystore2:     1: Error::Km(r#KEY_USER_NOT_AUTHENTICATED)
+04-22 12:57:41.130  9209 11935 E NfcService: isObserveModeSupported: NFC must be enabled but is: 1
+04-22 12:57:41.174  1109  1109 E lowmemorykiller: device memory 1285101 free 79139 file 1197614
+04-22 12:57:41.275  1109  1109 E lowmemorykiller: device memory 1284969 free 78974 file 1197671
+04-22 12:57:41.304  5824 29587 E DynamicFramerate [DynamicFrameRateManagerImpl]: setFrameRateInterNalForNoContext: TIMING_DO_NO_CONTEXT_ANIMATION transaction = null, need apply actively
+04-22 12:57:41.304  5824 29587 E DynamicFramerate [DynamicFrameRateManagerImpl]: setFrameRateInterNalForNoContext: TIMING_DO_NO_CONTEXT_ANIMATION request is = FrameRateRequest: {  mUniqueID = 186285305, mVelocity = -2, mPreviousFrameRate = 120, mBindWithSC = true, mSc = null, mTransaction = android.view.SurfaceControl$Transaction@ec8606d, Type = 20202 } , frameRate 0
+04-22 12:57:41.304  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:41.304  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:41.304  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:41.369  2070  8520 E TetherController: property_get sys.radio.data.modem_share_flag return 0, 1!
+04-22 12:57:41.375  1109  1109 E lowmemorykiller: device memory 1277600 free 76285 file 1198424
+04-22 12:57:41.411  3796  5539 E AppOps  : attributionTag OplusLBS not declared in manifest of android
+04-22 12:57:41.479  1109  1109 E lowmemorykiller: device memory 1277060 free 75403 file 1198766
+04-22 12:57:41.580  1109  1109 E lowmemorykiller: device memory 1276817 free 75151 file 1198775
+04-22 12:57:41.704  2070  2111 E NetlinkEvent: NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+04-22 12:57:41.704  2070  2111 E NetlinkEvent: NetlinkEvent::FindParam(): Parameter 'STATE' not found
+04-22 12:57:41.704  2070  2111 E NetlinkEvent: NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+04-22 12:57:41.704  2070  2111 E NetlinkEvent: NetlinkEvent::FindParam(): Parameter 'UID' not found
+04-22 12:57:42.286  1109  1109 E lowmemorykiller: device memory 1275743 free 73765 file 1199085
+04-22 12:57:42.449  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:57:42.450  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 23,96 MB/s, Write: 1,00 MB/s
+04-22 12:57:42.450  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:57:42.451  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:57:42.585  9675 11693 E PTC.PLUGINMGR.HeythingsPluginManager: -- pluginV2Track -- isSupportHeythings is set false
+04-22 12:57:42.585  9675 11693 E PTC.DISC.ScanPluginFilter: Collect 0 normal plugins
+04-22 12:57:42.796  1109  1109 E lowmemorykiller: device memory 1274936 free 72946 file 1199097
+04-22 12:57:43.473  6575  6724 E LocalFileUtil: getListFromStream stream is null
+04-22 12:57:43.648  3121  3121 E vendor.oplus.hardware.rpmh-V1-service: get data from /sys/module/oplus_rpmh_statics/rpmh_stats/oplus_rpmh_master_stats failed! res=-1
+04-22 12:57:43.648  3121  3121 E vendor.oplus.hardware.rpmh-V1-service: get data from /sys/module/oplus_rpmh_statics/rpmh_stats/oplus_rpmh_master_stats failed! res=-1
+04-22 12:57:43.649  3121  3121 E vendor.oplus.hardware.rpmh-V1-service: get data from /sys/module/oplus_rpmh_statics/rpmh_stats/oplus_rpmh_master_stats failed! res=-1
+04-22 12:57:43.656  1315  6157 E android.system.suspend-service: Error opening wakeup44/name for wakeup44: Permission denied
+04-22 12:57:43.657  1315  6157 E android.system.suspend-service: Error opening wakeup44/active_count for wakeup44: Permission denied
+04-22 12:57:43.657  1315  6157 E android.system.suspend-service: Error opening wakeup44/last_change_ms for wakeup44: Permission denied
+04-22 12:57:43.657  1315  6157 E android.system.suspend-service: Error opening wakeup44/max_time_ms for wakeup44: Permission denied
+04-22 12:57:43.657  1315  6157 E android.system.suspend-service: Error opening wakeup44/total_time_ms for wakeup44: Permission denied
+04-22 12:57:43.657  1315  6157 E android.system.suspend-service: Error opening wakeup44/active_time_ms for wakeup44: Permission denied
+04-22 12:57:43.657  1315  6157 E android.system.suspend-service: Error opening wakeup44/event_count for wakeup44: Permission denied
+04-22 12:57:43.657  1315  6157 E android.system.suspend-service: Error opening wakeup44/expire_count for wakeup44: Permission denied
+04-22 12:57:43.657  1315  6157 E android.system.suspend-service: Error opening wakeup44/prevent_suspend_time_ms for wakeup44: Permission denied
+04-22 12:57:43.657  1315  6157 E android.system.suspend-service: Error opening wakeup44/wakeup_count for wakeup44: Permission denied
+04-22 12:57:43.658  1315  6157 E android.system.suspend-service: Error opening wakeup9/name for wakeup9: Permission denied
+04-22 12:57:43.658  1315  6157 E android.system.suspend-service: Error opening wakeup9/active_count for wakeup9: Permission denied
+04-22 12:57:43.658  1315  6157 E android.system.suspend-service: Error opening wakeup9/last_change_ms for wakeup9: Permission denied
+04-22 12:57:43.658  1315  6157 E android.system.suspend-service: Error opening wakeup9/max_time_ms for wakeup9: Permission denied
+04-22 12:57:43.658  1315  6157 E android.system.suspend-service: Error opening wakeup9/total_time_ms for wakeup9: Permission denied
+04-22 12:57:43.658  1315  6157 E android.system.suspend-service: Error opening wakeup9/active_time_ms for wakeup9: Permission denied
+04-22 12:57:43.658  1315  6157 E android.system.suspend-service: Error opening wakeup9/event_count for wakeup9: Permission denied
+04-22 12:57:43.658  1315  6157 E android.system.suspend-service: Error opening wakeup9/expire_count for wakeup9: Permission denied
+04-22 12:57:43.658  1315  6157 E android.system.suspend-service: Error opening wakeup9/prevent_suspend_time_ms for wakeup9: Permission denied
+04-22 12:57:43.658  1315  6157 E android.system.suspend-service: Error opening wakeup9/wakeup_count for wakeup9: Permission denied
+04-22 12:57:43.659  1315  6157 E android.system.suspend-service: Error opening wakeup42/name for wakeup42: Permission denied
+04-22 12:57:43.659  1315  6157 E android.system.suspend-service: Error opening wakeup42/active_count for wakeup42: Permission denied
+04-22 12:57:43.659  1315  6157 E android.system.suspend-service: Error opening wakeup42/last_change_ms for wakeup42: Permission denied
+04-22 12:57:43.659  1315  6157 E android.system.suspend-service: Error opening wakeup42/max_time_ms for wakeup42: Permission denied
+04-22 12:57:43.659  1315  6157 E android.system.suspend-service: Error opening wakeup42/total_time_ms for wakeup42: Permission denied
+04-22 12:57:43.659  1315  6157 E android.system.suspend-service: Error opening wakeup42/active_time_ms for wakeup42: Permission denied
+04-22 12:57:43.659  1315  6157 E android.system.suspend-service: Error opening wakeup42/event_count for wakeup42: Permission denied
+04-22 12:57:43.659  1315  6157 E android.system.suspend-service: Error opening wakeup42/expire_count for wakeup42: Permission denied
+04-22 12:57:43.659  1315  6157 E android.system.suspend-service: Error opening wakeup42/prevent_suspend_time_ms for wakeup42: Permission denied
+04-22 12:57:43.659  1315  6157 E android.system.suspend-service: Error opening wakeup42/wakeup_count for wakeup42: Permission denied
+04-22 12:57:43.661  1315  6157 E android.system.suspend-service: Error opening wakeup40/name for wakeup40: Permission denied
+04-22 12:57:43.661  1315  6157 E android.system.suspend-service: Error opening wakeup40/active_count for wakeup40: Permission denied
+04-22 12:57:43.661  1315  6157 E android.system.suspend-service: Error opening wakeup40/last_change_ms for wakeup40: Permission denied
+04-22 12:57:43.661  1315  6157 E android.system.suspend-service: Error opening wakeup40/max_time_ms for wakeup40: Permission denied
+04-22 12:57:43.661  1315  6157 E android.system.suspend-service: Error opening wakeup40/total_time_ms for wakeup40: Permission denied
+04-22 12:57:43.661  1315  6157 E android.system.suspend-service: Error opening wakeup40/active_time_ms for wakeup40: Permission denied
+04-22 12:57:43.661  1315  6157 E android.system.suspend-service: Error opening wakeup40/event_count for wakeup40: Permission denied
+04-22 12:57:43.661  1315  6157 E android.system.suspend-service: Error opening wakeup40/expire_count for wakeup40: Permission denied
+04-22 12:57:43.661  1315  6157 E android.system.suspend-service: Error opening wakeup40/prevent_suspend_time_ms for wakeup40: Permission denied
+04-22 12:57:43.661  1315  6157 E android.system.suspend-service: Error opening wakeup40/wakeup_count for wakeup40: Permission denied
+04-22 12:57:43.663  1315  6157 E android.system.suspend-service: Error opening wakeup3/name for wakeup3: Permission denied
+04-22 12:57:43.664  1315  6157 E android.system.suspend-service: Error opening wakeup3/active_count for wakeup3: Permission denied
+04-22 12:57:43.664  1315  6157 E android.system.suspend-service: Error opening wakeup3/last_change_ms for wakeup3: Permission denied
+04-22 12:57:43.664  1315  6157 E android.system.suspend-service: Error opening wakeup3/max_time_ms for wakeup3: Permission denied
+04-22 12:57:43.664  1315  6157 E android.system.suspend-service: Error opening wakeup3/total_time_ms for wakeup3: Permission denied
+04-22 12:57:43.664  1315  6157 E android.system.suspend-service: Error opening wakeup3/active_time_ms for wakeup3: Permission denied
+04-22 12:57:43.664  1315  6157 E android.system.suspend-service: Error opening wakeup3/event_count for wakeup3: Permission denied
+04-22 12:57:43.664  1315  6157 E android.system.suspend-service: Error opening wakeup3/expire_count for wakeup3: Permission denied
+04-22 12:57:43.664  1315  6157 E android.system.suspend-service: Error opening wakeup3/prevent_suspend_time_ms for wakeup3: Permission denied
+04-22 12:57:43.664  1315  6157 E android.system.suspend-service: Error opening wakeup3/wakeup_count for wakeup3: Permission denied
+04-22 12:57:43.665  1315  6157 E android.system.suspend-service: Error opening wakeup55/name for wakeup55: Permission denied
+04-22 12:57:43.665  1315  6157 E android.system.suspend-service: Error opening wakeup55/active_count for wakeup55: Permission denied
+04-22 12:57:43.665  1315  6157 E android.system.suspend-service: Error opening wakeup55/last_change_ms for wakeup55: Permission denied
+04-22 12:57:43.665  1315  6157 E android.system.suspend-service: Error opening wakeup55/max_time_ms for wakeup55: Permission denied
+04-22 12:57:43.665  1315  6157 E android.system.suspend-service: Error opening wakeup55/total_time_ms for wakeup55: Permission denied
+04-22 12:57:43.665  1315  6157 E android.system.suspend-service: Error opening wakeup55/active_time_ms for wakeup55: Permission denied
+04-22 12:57:43.665  1315  6157 E android.system.suspend-service: Error opening wakeup55/event_count for wakeup55: Permission denied
+04-22 12:57:43.665  1315  6157 E android.system.suspend-service: Error opening wakeup55/expire_count for wakeup55: Permission denied
+04-22 12:57:43.665  1315  6157 E android.system.suspend-service: Error opening wakeup55/prevent_suspend_time_ms for wakeup55: Permission denied
+04-22 12:57:43.665  1315  6157 E android.system.suspend-service: Error opening wakeup55/wakeup_count for wakeup55: Permission denied
+04-22 12:57:43.669  1315  6157 E android.system.suspend-service: Error opening wakeup33/name for wakeup33: Permission denied
+04-22 12:57:43.669  1315  6157 E android.system.suspend-service: Error opening wakeup33/active_count for wakeup33: Permission denied
+04-22 12:57:43.669  1315  6157 E android.system.suspend-service: Error opening wakeup33/last_change_ms for wakeup33: Permission denied
+04-22 12:57:43.669  1315  6157 E android.system.suspend-service: Error opening wakeup33/max_time_ms for wakeup33: Permission denied
+04-22 12:57:43.669  1315  6157 E android.system.suspend-service: Error opening wakeup33/total_time_ms for wakeup33: Permission denied
+04-22 12:57:43.669  1315  6157 E android.system.suspend-service: Error opening wakeup33/active_time_ms for wakeup33: Permission denied
+04-22 12:57:43.669  1315  6157 E android.system.suspend-service: Error opening wakeup33/event_count for wakeup33: Permission denied
+04-22 12:57:43.669  1315  6157 E android.system.suspend-service: Error opening wakeup33/expire_count for wakeup33: Permission denied
+04-22 12:57:43.670  1315  6157 E android.system.suspend-service: Error opening wakeup33/prevent_suspend_time_ms for wakeup33: Permission denied
+04-22 12:57:43.670  1315  6157 E android.system.suspend-service: Error opening wakeup33/wakeup_count for wakeup33: Permission denied
+04-22 12:57:43.671  1315  6157 E android.system.suspend-service: Error opening wakeup41/name for wakeup41: Permission denied
+04-22 12:57:43.671  1315  6157 E android.system.suspend-service: Error opening wakeup41/active_count for wakeup41: Permission denied
+04-22 12:57:43.671  1315  6157 E android.system.suspend-service: Error opening wakeup41/last_change_ms for wakeup41: Permission denied
+04-22 12:57:43.671  1315  6157 E android.system.suspend-service: Error opening wakeup41/max_time_ms for wakeup41: Permission denied
+04-22 12:57:43.671  1315  6157 E android.system.suspend-service: Error opening wakeup41/total_time_ms for wakeup41: Permission denied
+04-22 12:57:43.671  1315  6157 E android.system.suspend-service: Error opening wakeup41/active_time_ms for wakeup41: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup41/event_count for wakeup41: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup41/expire_count for wakeup41: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup41/prevent_suspend_time_ms for wakeup41: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup41/wakeup_count for wakeup41: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup6/name for wakeup6: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup6/active_count for wakeup6: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup6/last_change_ms for wakeup6: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup6/max_time_ms for wakeup6: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup6/total_time_ms for wakeup6: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup6/active_time_ms for wakeup6: Permission denied
+04-22 12:57:43.672  1315  6157 E android.system.suspend-service: Error opening wakeup6/event_count for wakeup6: Permission denied
+04-22 12:57:43.673  1315  6157 E android.system.suspend-service: Error opening wakeup6/expire_count for wakeup6: Permission denied
+04-22 12:57:43.673  1315  6157 E android.system.suspend-service: Error opening wakeup6/prevent_suspend_time_ms for wakeup6: Permission denied
+04-22 12:57:43.673  1315  6157 E android.system.suspend-service: Error opening wakeup6/wakeup_count for wakeup6: Permission denied
+04-22 12:57:43.706 24977 24992 E STANDBY_NETLINK: 32 bytes received.
+04-22 12:57:43.706 24977 24992 E STANDBY_NETLINK: Message header: type=54 (0x36), len=32
+04-22 12:57:43.706 24977 24992 E STANDBY_NETLINK: parse_netlink_msg_attrs: type: 2, value: Empty
+04-22 12:57:43.706 24977 24992 E STANDBY_NETLINK: 32 bytes received.
+04-22 12:57:43.706 24977 24992 E STANDBY_NETLINK: Message header: type=54 (0x36), len=32
+04-22 12:57:43.706 24977 24992 E STANDBY_NETLINK: parse_netlink_msg_attrs: type: 4, value: Empty
+04-22 12:57:43.726  2228  2228 E WifiHAL : handleResponse: OTHER_RX_MULTICAST_CNT not found
+04-22 12:57:44.024 24977 24992 E SystemProperties: set ctl.stop failed
+04-22 12:57:44.036  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils: write /dev/memcg/memory.force_shrink_file failed
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils: java.io.IOException: write failed: EBUSY (Device or resource busy)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at libcore.io.IoBridge.write(IoBridge.java:651)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at java.io.FileOutputStream.write(FileOutputStream.java:436)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:233)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.implFlushBuffer(StreamEncoder.java:309)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.implFlush(StreamEncoder.java:313)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.flush(StreamEncoder.java:153)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at java.io.OutputStreamWriter.flush(OutputStreamWriter.java:248)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at com.android.server.oplus.osense.utils.OsenseCommonUtils.writeFile(OsenseCommonUtils.java:154)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at com.android.server.am.OplusOsenseCompressAction.doGlobalShrink(OplusOsenseCompressAction.java:1886)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at com.android.server.am.OplusOsenseCompressAction.-$$Nest$mdoGlobalShrink(Unknown Source:0)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at com.android.server.am.OplusOsenseCompressAction$CompressHandler.handleMessage(OplusOsenseCompressAction.java:1334)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at android.os.Handler.dispatchMessage(Handler.java:115)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at android.os.Looper.loopOnce(Looper.java:298)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at android.os.Looper.loop(Looper.java:408)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at android.os.HandlerThread.run(HandlerThread.java:85)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils: Caused by: android.system.ErrnoException: write failed: EBUSY (Device or resource busy)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at libcore.io.Linux.writeBytes(Native Method)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at libcore.io.Linux.write(Linux.java:338)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at libcore.io.ForwardingOs.write(ForwardingOs.java:954)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at libcore.io.BlockGuardOs.write(BlockGuardOs.java:448)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     at libcore.io.IoBridge.write(IoBridge.java:646)
+04-22 12:57:44.216  3796  4725 E OsenseCommonUtils:     ... 14 more
+04-22 12:57:44.451  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:57:44.451  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 0,50 MB/s, Write: 0,00 MB/s
+04-22 12:57:44.451  3796 19150 E OplusStorageUFSBandwidth: Task time: 0ms
+04-22 12:57:44.453  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:57:44.714 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:44.720 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:44.721 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:44.722 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:45.485  3796  5194 E LinkPower: [JudgeMonitorProcess] failed to deleteLastRecord, mMonitorRecordAccumulate is empty!
+04-22 12:57:45.485  3796  5194 E LinkPower: [JudgeMonitorProcess] failed to deleteLastRecord, mMonitorRecordAccumulate is empty!
+04-22 12:57:45.760 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:45.766 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:46.061  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388796
+04-22 12:57:46.098  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388737
+04-22 12:57:46.453  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:57:46.453  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 0,50 MB/s, Write: 0,00 MB/s
+04-22 12:57:46.453  3796 19150 E OplusStorageUFSBandwidth: Task time: 0ms
+04-22 12:57:46.456  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:57:46.898 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:46.904 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:48.454  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:57:48.454  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 0,00 MB/s, Write: 0,00 MB/s
+04-22 12:57:48.454  3796 19150 E OplusStorageUFSBandwidth: Task time: 0ms
+04-22 12:57:48.456  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils: write /dev/memcg/memory.force_shrink_file failed
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils: java.io.IOException: write failed: EBUSY (Device or resource busy)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at libcore.io.IoBridge.write(IoBridge.java:651)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at java.io.FileOutputStream.write(FileOutputStream.java:436)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:233)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.implFlushBuffer(StreamEncoder.java:309)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.implFlush(StreamEncoder.java:313)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.flush(StreamEncoder.java:153)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at java.io.OutputStreamWriter.flush(OutputStreamWriter.java:248)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at com.android.server.oplus.osense.utils.OsenseCommonUtils.writeFile(OsenseCommonUtils.java:154)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at com.android.server.am.OplusOsenseCompressAction.doGlobalShrink(OplusOsenseCompressAction.java:1886)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at com.android.server.am.OplusOsenseCompressAction.-$$Nest$mdoGlobalShrink(Unknown Source:0)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at com.android.server.am.OplusOsenseCompressAction$CompressHandler.handleMessage(OplusOsenseCompressAction.java:1334)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at android.os.Handler.dispatchMessage(Handler.java:115)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at android.os.Looper.loopOnce(Looper.java:298)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at android.os.Looper.loop(Looper.java:408)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at android.os.HandlerThread.run(HandlerThread.java:85)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils: Caused by: android.system.ErrnoException: write failed: EBUSY (Device or resource busy)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at libcore.io.Linux.writeBytes(Native Method)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at libcore.io.Linux.write(Linux.java:338)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at libcore.io.ForwardingOs.write(ForwardingOs.java:954)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at libcore.io.BlockGuardOs.write(BlockGuardOs.java:448)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     at libcore.io.IoBridge.write(IoBridge.java:646)
+04-22 12:57:50.218  3796  4725 E OsenseCommonUtils:     ... 14 more
+04-22 12:57:50.455  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:57:50.456  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 0,00 MB/s, Write: 0,50 MB/s
+04-22 12:57:50.456  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:57:50.458  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:57:51.141  5824  5824 E IJankManager: slideSceneEnd unknown scene 1000 mScene:-1
+04-22 12:57:51.142  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388856
+04-22 12:57:51.149  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.149  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.149  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.175  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.176  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.176  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:51.176  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.176  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.176  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:51.181  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.181  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.181  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.186  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388737
+04-22 12:57:51.188  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.188  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.188  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.210  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.210  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.210  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:51.211  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.221  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.221  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.221  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.221  5824  5824 E OsenseResClient: osenseClrSceneAction: handle is illegal
+04-22 12:57:51.222  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.222  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.222  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.454  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.454  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.454  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.473  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.473  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.473  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:51.473  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.474  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.474  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:51.480  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.480  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.480  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.491 22483 22505 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.491 22483 22505 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.515 22483 22505 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.515 22483 22505 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.521  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.521  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.521  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.521  5824  5824 E OsenseResClient: osenseClrSceneAction: handle is illegal
+04-22 12:57:51.522  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.522  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.522  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.523  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.523  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.523  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:51.523  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.549  2340  2340 E cryptoeng_hidl: process system_server have no permission calling cmd:10009.
+04-22 12:57:51.560  2340  2340 E cryptoeng_hidl: process system_server have no permission calling cmd:10009.
+04-22 12:57:51.734  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.734  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.734  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.764  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.764  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.764  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.771  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.771  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.771  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:51.771  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.771  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.771  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:51.788 22483 22505 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.788 22483 22505 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.789 22483 22505 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.789 22483 22505 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.792 22483 22505 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.792 22483 22505 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.795 22483 22505 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.795 22483 22505 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.800 22483 22505 E WeatherS_notifyUri: uri = content://com.oplusos.weather.service.provider.data/attent_city/59
+04-22 12:57:51.810 22483 22505 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.810 22483 22505 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.810  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.810  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.810  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:51.811 22483 22501 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.811 22483 22501 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.811  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.811  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.811  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.811  5824  5824 E OsenseResClient: osenseClrSceneAction: handle is illegal
+04-22 12:57:51.811  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:51.812  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:51.812  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:51.812  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:51.814 22483 22505 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.814 22483 22505 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.814  5426  5426 E BigClock: BigClockImpl-->call: Not found protocol=setDualClockCityAndTimeZone
+04-22 12:57:51.826 22483 22505 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.826 22483 22505 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.830 22435 22467 E Weather_ShortcutManager: AdviceLink:1
+04-22 12:57:51.830 22435 22467 E Weather_ShortcutManager: AdviceLink 1:https://weather.com/en-us/forecast/allergy/l/08f889973305df820f5e9e305b7cbdeddd11ba597c5824821d223e63bcf2a22a?par=oppo_widget&datasource=1;null
+04-22 12:57:51.831 22435 22467 E Weather_ShortcutManager: AdviceLink:2
+04-22 12:57:51.831 22435 22467 E Weather_ShortcutManager: AdviceLink:3
+04-22 12:57:51.831 22435 22467 E Weather_ShortcutManager: AdviceLink:4
+04-22 12:57:51.831 22435 22467 E Weather_ShortcutManager: AdviceLink:5
+04-22 12:57:51.831 22435 22467 E Weather_ShortcutManager: AdviceLink:6
+04-22 12:57:51.831 22435 22467 E Weather_ShortcutManager: AdviceLink:7
+04-22 12:57:51.831 22435 22467 E Weather_ShortcutManager: AdviceLink:8
+04-22 12:57:51.868 22435 22461 E CardWidget.: get id by widget code has error For input string: "22222003410000011",[sdk:v2000004]
+04-22 12:57:51.870 22435 22461 E CardWidget.: get id by widget code has error For input string: "22222003410000011",[sdk:v2000004]
+04-22 12:57:51.873 22483 29823 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.873 22483 29823 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.898 22483 29823 E WeatherS_PrivacyStatementExport: isSupportExportPrivacyVersion metaData -> true
+04-22 12:57:51.898 22483 29823 E WeatherS_PrivacyStatementExport: isAgreed1
+04-22 12:57:51.898 22483 29823 E WeatherS_WeatherCommonServiceProxy: getLocationCityInfo
+04-22 12:57:51.899 22483 29823 E WeatherS_WeatherCommonServiceProxy: getTimeZoneOfAttendCity
+04-22 12:57:51.899 22483 29823 E WeatherS_WeatherCommonServiceProxy: getOneAttentCityWeatherInfoList
+04-22 12:57:51.901 22483 29823 E WeatherS_WeatherCommonServiceProxy: getLocationCityAndUpdate  needUpdateWeatherInfo = false, isCallFromWeatherApp = false
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils: supportWeatherSendNotificationTime error
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils: android.content.pm.PackageManager$NameNotFoundException: com.coloros.weather2
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at android.app.ApplicationPackageManager.getApplicationInfoAsUser(ApplicationPackageManager.java:564)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at android.app.ApplicationPackageManager.getApplicationInfo(ApplicationPackageManager.java:547)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at android.app.ApplicationPackageManager.getApplicationInfo(ApplicationPackageManager.java:541)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weatherservicesdk.Utils.WeatherServiceVersionUtils.supportWeatherSendNotificationTime(Unknown Source:13)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.notification.WeatherServiceNotificationManager.F(Unknown Source:44)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.notification.WeatherServiceNotificationManager.k(Unknown Source:16)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.notification.WeatherServiceNotificationManager.l(Unknown Source:19)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.datasource.database.dao.WeatherCommonServiceInnerImpl.lambda$getLocationCityAndUpdate$6(Unknown Source:17)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.datasource.database.dao.WeatherCommonServiceInnerImpl.f(Unknown Source:0)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at com.oplus.weather.datasource.database.dao.a.run(Unknown Source:4)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1154)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:652)
+04-22 12:57:51.901 22483 29827 E WeatherS_WeatherServiceVersionUtils:   at java.lang.Thread.run(Thread.java:1564)
+04-22 12:57:51.902 10423 12508 E UTrace.Sdk: error, errorCode: 96000013, errorInfo: factConfig.mProviders = [com.coloros.weather2, com.coloros.weather.service, com.test.metistest, com.oplus.autotest.debugger.helper, com.oplus.pantanal.tool, com.oplus.autotest.pantanaltest], callingPackage = net.oneplus.weather [7f0000011776855471878213922435|p_22435@506|p_10423_9fa3321@1|com.oplus.metis]
+04-22 12:57:51.930 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:51.933 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:51.933 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:51.933 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:52.160  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:52.160  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:52.160  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:52.211  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:52.211  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:52.211  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:52.211  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:52.211  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:52.211  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:52.213  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:52.213  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:52.213  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:52.255  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:52.255  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:52.255  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:52.255  5824  5824 E OsenseResClient: osenseClrSceneAction: handle is illegal
+04-22 12:57:52.255  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:52.256  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:52.256  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:52.256  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:52.260  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:52.260  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:52.260  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:52.456  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:57:52.457  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 13,49 MB/s, Write: 0,00 MB/s
+04-22 12:57:52.458  3796 19150 E OplusStorageUFSBandwidth: Task time: 2ms
+04-22 12:57:52.458  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:57:52.618  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:52.618  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:52.618  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:52.737 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:52.742 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:52.776 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:52.780 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:53.266  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388796
+04-22 12:57:53.306  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388737
+04-22 12:57:54.458  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:57:54.459  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 0,00 MB/s, Write: 2,00 MB/s
+04-22 12:57:54.459  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:57:54.461  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:57:56.459  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:57:56.460  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 0,00 MB/s, Write: 0,50 MB/s
+04-22 12:57:56.460  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:57:56.463  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:57:56.945  5824  5824 E IJankManager: slideSceneEnd unknown scene 1000 mScene:-1
+04-22 12:57:56.948  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:56.948  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:56.948  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:56.950  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388856
+04-22 12:57:56.974  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388737
+04-22 12:57:57.017  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:57.017  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:57.017  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:57.017  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:57.017  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:57.017  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:57.022  3796  5719 E OplusInputManagerService_jni: updateInvalidRegion start!!!
+04-22 12:57:57.022  3796  5719 E InputDispatcherExtImpl: rectF left: 0.000000, top: 2695.000000, right: 1272.000000, bottom: 2772.000000 offset_left: 0.000000, offset_top: -91.000000, offset_right: 0.000000, offset_bottom: 0.000000, isClosedRegion:0
+04-22 12:57:57.022  3796  5719 E OplusInputManagerService_jni: updateInvalidRegion start!!!
+04-22 12:57:57.022  3796  5719 E OplusInputManagerService_jni: updateInvalidRegion start!!!
+04-22 12:57:57.023  3796  5626 E OplusAppQuickStart_AppQuickStartController: notifyStartActivity intent:Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 xflg=0x4 cmp=com.bookheart.app/crc648d704d5615faec43.MainActivity bnds=[63,1188][353,1506] (has extras) }
+04-22 12:57:57.044  2279  2430 E PERFHAL-CONFIG: PERFHAL-CONFIG: GetConfig() 508: Config S3TF undefined for this target
+04-22 12:57:57.044  2279  2430 E PERFHAL-CONFIG: PERFHAL-CONFIG: GetConfig() 508: Config TFPS undefined for this target
+04-22 12:57:57.044  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: getQapeGamePowerOptConfig() 2025: Not able to fetch object
+04-22 12:57:57.044  2279  2430 E PERFHAL-LLLITE: PERFHAL-LLLITE: CheckOngoingLaunchScenario() 199: mBoostedPkgName is empty!
+04-22 12:57:57.045  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.045  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.047  3796  4166 E FlexibleWindowManagerService: notifyTaskObserverToAttachController not need to notify!
+04-22 12:57:57.049  2279  2430 E PERFHAL-LLLITE: PERFHAL-LLLITE: CheckOngoingLaunchScenario() 199: mBoostedPkgName is empty!
+04-22 12:57:57.054  5426  5499 E OplusBracketLog: [OplusViewMirrorManager] updateHostViewRootIfNeeded, not support android.view.ViewRootImpl@f10cac2
+04-22 12:57:57.058  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:57.064  3796  4166 E FlexibleWindowManagerService: notifyTaskObserverToAttachController not need to notify!
+04-22 12:57:57.072 29888 29888 E m.bookheart.app: Unknown bits set in runtime_flags: 0x40000000
+04-22 12:57:57.074  3796  4166 E OplusAppQuickStart_AppQuickStartController: scheduleHideStartingSurface addAfterPrepareSurface for:ActivityRecord{151699545 u0 com.bookheart.app/crc648d704d5615faec43.MainActivity
+04-22 12:57:57.074  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:57.074  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:57.074  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:57.078  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:57.078  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:57.082 29903 29903 E kloadclassifier: Unknown bits set in runtime_flags: 0x40000000
+04-22 12:57:57.084  3796  5901 E FlexibleWindowManagerService: notifyTaskObserverToAttachController not need to notify!
+04-22 12:57:57.085  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=0 not supported
+04-22 12:57:57.085  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=1 not supported
+04-22 12:57:57.086  3796  4213 E OplusThermalStats: Error getting package info: com.bookheart.app
+04-22 12:57:57.091 10423 11567 E metis_v2_JenaHandlerManager: local thread match
+04-22 12:57:57.096 10423 11567 E metis_v2_JenaHandlerManager: local thread match
+04-22 12:57:57.102 29903 29903 E OplusCustomizePackageManager: mIOplusCustomizePackageManagerService is null
+04-22 12:57:57.102 29903 29903 E OplusCustomizePackageManager: mIOplusCustomizePackageManagerService is null
+04-22 12:57:57.102 29903 29903 E OplusCustomizePackageManager: isOplusCertificatePackage Errorjava.lang.NullPointerException: Attempt to invoke interface method 'boolean android.os.customize.IOplusCustomizePackageManagerService.isOplusCertificatePackage(java.lang.String)' on a null object reference
+04-22 12:57:57.112 29903 29903 E ANDR-PERF-CLIENT-SYS: death recipent object is fine
+04-22 12:57:57.117 29924 29924 E ogle.android.gm: Unknown bits set in runtime_flags: 0x40000000
+04-22 12:57:57.128 29903 29936 E ashmem  : Pinning is deprecated since Android Q. Please use trim or other methods.
+04-22 12:57:57.133  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:57.183  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:57.183  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 1]
+04-22 12:57:57.183  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:57.183  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 0]
+04-22 12:57:57.184  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=0 not supported
+04-22 12:57:57.184  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=1 not supported
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .     |  |
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .     |  |
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .     |  |
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .   \ |  | /
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .    \    /
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .     \  /
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .      \/
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: The Crashlytics build ID is missing. This occurs when the Crashlytics Gradle plugin is missing from your app's build configuration. Please review the Firebase Crashlytics onboarding instructions at https://firebase.google.com/docs/crashlytics/get-started?platform=android#add-plugin
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .      /\
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .     /  \
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .    /    \
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .   / |  | \
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .     |  |
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .     |  |
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .     |  |
+04-22 12:57:57.202 29888 29888 E FirebaseCrashlytics: .
+--------- beginning of crash
+04-22 12:57:57.202 29888 29888 E AndroidRuntime: FATAL EXCEPTION: main
+04-22 12:57:57.202 29888 29888 E AndroidRuntime: Process: com.bookheart.app, PID: 29888
+04-22 12:57:57.202 29888 29888 E AndroidRuntime: java.lang.RuntimeException: Unable to get provider com.google.firebase.provider.FirebaseInitProvider: java.lang.IllegalStateException: The Crashlytics build ID is missing. This occurs when the Crashlytics Gradle plugin is missing from your app's build configuration. Please review the Firebase Crashlytics onboarding instructions at https://firebase.google.com/docs/crashlytics/get-started?platform=android#add-plugin
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.app.ActivityThread.installProvider(ActivityThread.java:9477)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.app.ActivityThread.installContentProviders(ActivityThread.java:8981)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8611)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2798)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.os.Handler.dispatchMessage(Handler.java:115)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.os.Looper.loopOnce(Looper.java:298)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.os.Looper.loop(Looper.java:408)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.app.ActivityThread.main(ActivityThread.java:9964)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at java.lang.reflect.Method.invoke(Native Method)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime: Caused by: java.lang.IllegalStateException: The Crashlytics build ID is missing. This occurs when the Crashlytics Gradle plugin is missing from your app's build configuration. Please review the Firebase Crashlytics onboarding instructions at https://firebase.google.com/docs/crashlytics/get-started?platform=android#add-plugin
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.crashlytics.internal.common.CrashlyticsCore.onPreExecute(CrashlyticsCore.java:145)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.crashlytics.FirebaseCrashlytics.init(FirebaseCrashlytics.java:168)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.crashlytics.CrashlyticsRegistrar.buildCrashlytics(CrashlyticsRegistrar.java:79)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.crashlytics.CrashlyticsRegistrar.$r8$lambda$XFR966Xtld0zGICMasGRYAhWin4(CrashlyticsRegistrar.java:0)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.crashlytics.CrashlyticsRegistrar$$ExternalSyntheticLambda0.create(R8$$SyntheticClass:0)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.tracing.ComponentMonitor.$r8$lambda$VxUPTnF8OKnnbKKjQblzb1_PJuw(ComponentMonitor.java:38)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.tracing.ComponentMonitor$$ExternalSyntheticLambda0.create(R8$$SyntheticClass:0)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.components.ComponentRuntime.$r8$lambda$KkGLnATw7zawFxzXHI2bmfEwUaI(ComponentRuntime.java:160)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.components.ComponentRuntime$$ExternalSyntheticLambda1.get(R8$$SyntheticClass:0)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.components.Lazy.get(Lazy.java:53)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.components.ComponentRuntime.doInitializeEagerComponents(ComponentRuntime.java:322)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.components.ComponentRuntime.initializeEagerComponents(ComponentRuntime.java:312)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.FirebaseApp.initializeAllApis(FirebaseApp.java:607)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.FirebaseApp.initializeApp(FirebaseApp.java:300)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.FirebaseApp.initializeApp(FirebaseApp.java:264)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.FirebaseApp.initializeApp(FirebaseApp.java:249)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.provider.FirebaseInitProvider.onCreate(FirebaseInitProvider.java:69)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.content.ContentProvider.attachInfo(ContentProvider.java:2686)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.content.ContentProvider.attachInfo(ContentProvider.java:2655)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at com.google.firebase.provider.FirebaseInitProvider.attachInfo(FirebaseInitProvider.java:61)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        at android.app.ActivityThread.installProvider(ActivityThread.java:9472)
+04-22 12:57:57.202 29888 29888 E AndroidRuntime:        ... 11 more
+04-22 12:57:57.205 29888 29888 E monodroid-assembly: Could not load library '/data/app/~~RKBRVCiDKfJTMmYxvUdSzQ==/com.bookheart.app-0OIIDPwU_PlsFlHDbHlNTQ==/split_config.arm64_v8a.apk!/lib/arm64-v8a/liblog'. dlopen failed: library "/data/app/~~RKBRVCiDKfJTMmYxvUdSzQ==/com.bookheart.app-0OIIDPwU_PlsFlHDbHlNTQ==/split_config.arm64_v8a.apk!/lib/arm64-v8a/liblog" not found
+04-22 12:57:57.205 29888 29888 E monodroid-assembly: Could not load library 'liblog'. dlopen failed: library "liblog" not found
+04-22 12:57:57.215  2279  2430 E PERFHAL-CONFIG: PERFHAL-CONFIG: GetConfig() 508: Config TFPS undefined for this target
+04-22 12:57:57.215  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.215  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.215  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.215  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.215  2279  2430 E PERFHAL-CONFIG: PERFHAL-CONFIG: GetConfig() 508: Config S3TF undefined for this target
+04-22 12:57:57.215  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.215  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.215  2279  2430 E PERFHAL-CONFIG: PERFHAL-CONFIG: GetConfig() 508: Config TFPS undefined for this target
+04-22 12:57:57.215  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.215  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: getQapeGamePowerOptConfig() 2025: Not able to fetch object
+04-22 12:57:57.215  2279  2430 E PERFHAL-LLLITE: PERFHAL-LLLITE: CheckOngoingLaunchScenario() 199: mBoostedPkgName is empty!
+04-22 12:57:57.215  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.215  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.215  2279  2469 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.215  2279  2279 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.android.launcher
+04-22 12:57:57.217  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:57.217  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:57.217  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:57.218  3796  5626 E FlexibleWindowManagerService: notifyTaskObserverToAttachController not need to notify!
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils: write /dev/memcg/memory.force_shrink_file failed
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils: java.io.IOException: write failed: EBUSY (Device or resource busy)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at libcore.io.IoBridge.write(IoBridge.java:651)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at java.io.FileOutputStream.write(FileOutputStream.java:436)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:233)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.implFlushBuffer(StreamEncoder.java:309)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.implFlush(StreamEncoder.java:313)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at sun.nio.cs.StreamEncoder.flush(StreamEncoder.java:153)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at java.io.OutputStreamWriter.flush(OutputStreamWriter.java:248)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at com.android.server.oplus.osense.utils.OsenseCommonUtils.writeFile(OsenseCommonUtils.java:154)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at com.android.server.am.OplusOsenseCompressAction.doGlobalShrink(OplusOsenseCompressAction.java:1886)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at com.android.server.am.OplusOsenseCompressAction.-$$Nest$mdoGlobalShrink(Unknown Source:0)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at com.android.server.am.OplusOsenseCompressAction$CompressHandler.handleMessage(OplusOsenseCompressAction.java:1334)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at android.os.Handler.dispatchMessage(Handler.java:115)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at android.os.Looper.loopOnce(Looper.java:298)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at android.os.Looper.loop(Looper.java:408)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at android.os.HandlerThread.run(HandlerThread.java:85)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils: Caused by: android.system.ErrnoException: write failed: EBUSY (Device or resource busy)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at libcore.io.Linux.writeBytes(Native Method)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at libcore.io.Linux.write(Linux.java:338)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at libcore.io.ForwardingOs.write(ForwardingOs.java:954)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at libcore.io.BlockGuardOs.write(BlockGuardOs.java:448)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     at libcore.io.IoBridge.write(IoBridge.java:646)
+04-22 12:57:57.218  3796  4725 E OsenseCommonUtils:     ... 14 more
+04-22 12:57:57.219  3796  4166 E OplusAppQuickStart_AppQuickStartController: not start from launcher transition:23
+04-22 12:57:57.225  5824 14471 E RemoteAnimRunnerExt[u0]: match view fail, reason: postscriptViewId:-1 , prefaceViewId:33292300
+04-22 12:57:57.227  3796  4213 E OplusThermalStats: Error getting package info: com.android.launcher
+04-22 12:57:57.231  5824  5824 E ScreenDecorationsUtils: getWindowCornerRadius NumberFormatException
+04-22 12:57:57.233  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:57.233  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:57.233  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:57.242  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:57.242  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:57.242  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:57.280 29924 29924 E [UAH_CLIENT]: uahInit enter
+04-22 12:57:57.292 29924 29983 E ashmem  : Pinning is deprecated since Android Q. Please use trim or other methods.
+04-22 12:57:57.338  2215 10657 E sensors-hal: handle_sns_client_event:98, pedometer_minute: report_ts=22,counter=130.000000 move_status =[SNS_CMC_STATIONARY] time_gap = 0 run_counter=55.000000 walk_counter=4.000000
+04-22 12:57:57.364 29924 30010 E beum    : Sync subscriptions not available
+04-22 12:57:57.364 29924 30009 E beum    : Sync subscriptions not available
+04-22 12:57:57.396 29924 30038 E GoogleApiManager: Failed to get service from broker.
+04-22 12:57:57.396 29924 30038 E GoogleApiManager: java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'.
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at android.os.Parcel.createExceptionOrNull(Parcel.java:3369)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at android.os.Parcel.createException(Parcel.java:3353)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at android.os.Parcel.readException(Parcel.java:3336)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at android.os.Parcel.readException(Parcel.java:3278)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at bisg.a(:com.google.android.gms@261332035@26.13.32 (260400-895912391):36)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at biqh.z(:com.google.android.gms@261332035@26.13.32 (260400-895912391):143)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at bhwi.run(:com.google.android.gms@261332035@26.13.32 (260400-895912391):42)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at android.os.Handler.handleCallback(Handler.java:1027)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at android.os.Handler.dispatchMessage(Handler.java:108)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at cyil.mp(:com.google.android.gms@261332035@26.13.32 (260400-895912391):1)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at cyil.dispatchMessage(:com.google.android.gms@261332035@26.13.32 (260400-895912391):5)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at android.os.Looper.loopOnce(Looper.java:298)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at android.os.Looper.loop(Looper.java:408)
+04-22 12:57:57.396 29924 30038 E GoogleApiManager:      at android.os.HandlerThread.run(HandlerThread.java:85)
+04-22 12:57:57.398  2279  2430 E PERF_APPCLASSIFIER: PERF_APPCLASSIFIER: getData() 195: DBQuery failed for appName:com.oplus.securityguard
+04-22 12:57:57.398  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:57.399  3796  8635 E WindowProcessControllerExtImpl: shouldMakeAbnormalActivityFinishing, list may empty, mHasActivities: false
+04-22 12:57:57.399  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:57.399  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 1]
+04-22 12:57:57.399  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:57.399  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 0]
+04-22 12:57:57.401  3796  5822 E Athena  : athena_optimize: pkg: com.oplus.securityguard, processName: com.oplus.securityguardgetPercentage: 15
+04-22 12:57:57.401  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=0 not supported
+04-22 12:57:57.401  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=1 not supported
+04-22 12:57:57.412  2279  2430 E PERFHAL-BOOSTCONFIG: PERFHAL-BOOSTCONFIG: GetBoostConfig() 1872: Not able to fetch object
+04-22 12:57:57.414  3796  5822 E Athena  : athena_optimize: pkg: com.google.android.aicore, processName: com.google.android.aicoregetPercentage: 4
+04-22 12:57:57.415  3796  5404 E WindowProcessControllerExtImpl: shouldMakeAbnormalActivityFinishing, list may empty, mHasActivities: false
+04-22 12:57:57.455  7149  7261 E horae   : tz(cpu-1-0-1) temp changed suddenly, cut temp to:47000
+04-22 12:57:57.455  7149  7261 E horae   : Recording abnormal tz:25 state:4.
+04-22 12:57:57.591  1109  1109 E lowmemorykiller: device memory 1175418 free 74042 file 1151918
+04-22 12:57:57.615  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:57.615  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 1]
+04-22 12:57:57.615  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:57.615  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 0]
+04-22 12:57:57.616  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=0 not supported
+04-22 12:57:57.616  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=1 not supported
+04-22 12:57:57.691  1109  1109 E lowmemorykiller: device memory 1177512 free 88130 file 1138834
+04-22 12:57:57.718 10423 11567 E metis_v2_JenaHandlerManager: local thread match
+04-22 12:57:57.718 10423 11567 E metis_v2_JenaHandlerManager: local thread match
+04-22 12:57:57.790 29924 29924 E SchedAssist: open sharedFd failed with error=Permission denied
+04-22 12:57:57.790 29924 29924 E SchedAssist: open sharedFd failed with error=Permission denied
+04-22 12:57:57.790 29924 29924 E SchedAssist: open sharedFd failed with error=Permission denied
+04-22 12:57:57.793  1109  1109 E lowmemorykiller: device memory 1177889 free 90715 file 1136491
+04-22 12:57:57.811  1321  5866 E SmcInvoke_MinkDescriptor: Invalid handle 19
+04-22 12:57:57.821  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:57.826  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:57.831  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:57.831  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 1]
+04-22 12:57:57.831  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:57.831  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 0]
+04-22 12:57:57.832  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=0 not supported
+04-22 12:57:57.832  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=1 not supported
+04-22 12:57:57.833  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:57.854  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:57.875  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:57.888  1321  5866 E SmcInvoke_MinkDescriptor: Invalid handle 19
+04-22 12:57:57.895  1109  1109 E lowmemorykiller: device memory 1178902 free 91508 file 1136508
+04-22 12:57:57.922  5824  5824 E [OPLUS_AFS_CONFIG]: Failed to open AFS config file: /proc/oplus_afs_config/afs_config
+04-22 12:57:57.922  5824  5824 E AFS_CONFIG: Failed to get scene config
+04-22 12:57:57.922  5824  5824 E OplusAfsManager: afsConfigSceneConfigGet sceneType is null
+04-22 12:57:57.925  5824  5824 E IJankManager: latencySceneEnd unknown scene 2 mScene:-1
+04-22 12:57:57.939  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:57.939  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 1]
+04-22 12:57:57.939  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:57:57.939  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 0]
+04-22 12:57:57.995  1109  1109 E lowmemorykiller: device memory 1181760 free 88333 file 1136544
+04-22 12:57:58.095  1109  1109 E lowmemorykiller: device memory 1181569 free 88141 file 1136542
+04-22 12:57:58.296  1109  1109 E lowmemorykiller: device memory 1181522 free 88018 file 1136553
+04-22 12:57:58.395  2805  2901 E QmiVsClient: sendAsyncRequest QMI_VS_SET_SYNC_WITH_AP_REQ_MSG_V01 ret 0
+04-22 12:57:58.396  5606  6489 E AMC     : [P-ooslimited_deep/0] execute failed in triggers[0]:[nwsrcht:0][nwsrcht:0]
+04-22 12:57:58.396  5606  6489 E AMC     : [P-ooslimited_deep/1] execute failed in triggers[0]:[nwsrcht:0][nwsrcht:0]
+04-22 12:57:58.396  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed in triggers[0]:[cschgc:0][cschgc:0, pschgc:0]
+04-22 12:57:58.396  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed mult in triggers!
+04-22 12:57:58.396  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[0]:[cschgc:0][cschgc:0, pschgc:0]
+04-22 12:57:58.396  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[1]:[cschgc:0][psnoregt:0, csnoregt:0]
+04-22 12:57:58.396  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed mult in triggers!
+04-22 12:57:58.396  5606  6489 E AMC     : [sleept] failed to match threshold due to invalid du:1800000 value du:1411000 gap:0
+04-22 12:57:58.396  5606  6489 E AMC     : [P-mpss_reset/0] execute failed in triggers[0]:[sleept:2][sleept:621]
+04-22 12:57:58.396  5606  6489 E AMC     : [sleept] failed to match threshold due to invalid du:1800000 value du:1411000 gap:0
+04-22 12:57:58.396  5606  6489 E AMC     : [P-mpss_reset/1] execute failed in triggers[0]:[sleept:2][sleept:621]
+04-22 12:57:58.396  5606  6489 E AMC     : [sleept] failed to match threshold due to invalid du:1800000 value du:1411000 gap:0
+04-22 12:57:58.396  5606  6489 E AMC     : [P-pidnetdisable_recovery] execute failed in triggers[0]:[sleept:2][sleept:621, pidnetdisable:null]
+04-22 12:57:58.396  5606  6489 E AMC     : [P-standby_5gbackoff/0] failed to execute check triggers, non active subId!
+04-22 12:57:58.398  5606  6489 E AMC     : [P-standby_5gbackoff/1] execute failed check triggers[0]:[sleept:2][inactive:null, charge:true, screen:true]
+04-22 12:57:58.398  5606  6489 E AMC     : [P-qc_oos_qrxlv/0] failed to execute check triggers, non active subId!
+04-22 12:57:58.399  5606  6489 E AMC     : [P-qc_oos_qrxlv/1] execute failed check triggers[0]:[sleept:2][deepsleep:false, csnoregt:0, screen:true]
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed in triggers[0]:[psnoregt:18][cschgc:0, pschgc:0]
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed mult in triggers!
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[0]:[psnoregt:0][cschgc:0, pschgc:0]
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[1]:[psnoregt:0][psnoregt:0, csnoregt:0]
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed mult in triggers!
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed in triggers[0]:[pschgc:0][cschgc:0, pschgc:0]
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed mult in triggers!
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[0]:[pschgc:0][cschgc:0, pschgc:0]
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[1]:[pschgc:0][psnoregt:0, csnoregt:0]
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed mult in triggers!
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed in triggers[0]:[csnoregt:18][cschgc:0, pschgc:0]
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/0] execute failed mult in triggers!
+04-22 12:57:58.399  5606  6489 E AMC     : [P-qc_oos_qrxlv/0] failed to execute check triggers, non active subId!
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[0]:[csnoregt:0][cschgc:0, pschgc:0]
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed in triggers[1]:[csnoregt:0][psnoregt:0, csnoregt:0]
+04-22 12:57:58.399  5606  6489 E AMC     : [P-idle_cs_ps_change/1] execute failed mult in triggers!
+04-22 12:57:58.399  5606  6489 E AMC     : [P-qc_oos_qrxlv/1] execute failed check triggers[0]:[csnoregt:0][deepsleep:false, csnoregt:0, screen:true]
+04-22 12:57:58.460  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:57:58.460  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 57,50 MB/s, Write: 1,50 MB/s
+04-22 12:57:58.460  3796 19150 E OplusStorageUFSBandwidth: Task time: 0ms
+04-22 12:57:58.460  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:57:58.496  1109  1109 E lowmemorykiller: device memory 1181558 free 87773 file 1136834
+04-22 12:57:58.500  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:57:58.596  1109  1109 E lowmemorykiller: device memory 1180661 free 85568 file 1138142
+04-22 12:57:58.718  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388796
+04-22 12:57:58.743  2268  2556 E SDM     : DRMConnector::Perform: Connector 70: Setting Qsync min fps 8388737
+04-22 12:57:59.023  3796  5892 E OplusInputManagerService_jni: updateInvalidRegion start!!!
+04-22 12:57:59.023  3796  5892 E InputDispatcherExtImpl: rectF left: 0.000000, top: 2695.000000, right: 1272.000000, bottom: 2772.000000 offset_left: 0.000000, offset_top: -91.000000, offset_right: 0.000000, offset_bottom: 0.000000, isClosedRegion:0
+04-22 12:57:59.023  3796  4722 E OplusInputManagerService_jni: updateInvalidRegion start!!!
+04-22 12:57:59.023  3796  4722 E OplusInputManagerService_jni: updateInvalidRegion start!!!
+04-22 12:57:59.137 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:59.144 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:57:59.144 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:57:59.145 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:00.086 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:58:00.093 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:00.442  3796  5892 E AppOps  : attributionTag OplusLBS not declared in manifest of android
+04-22 12:58:00.460  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:58:00.461  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 2,50 MB/s, Write: 0,50 MB/s
+04-22 12:58:00.461  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:58:00.462  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:58:00.609 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:58:00.615 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:01.519  1321  5866 E SmcInvoke_MinkDescriptor: mem obj with id :19 not found in list
+04-22 12:58:02.038  2725  2725 E perfetto: ng_service_impl.cc:3788 Unable to read ro.boot.hardware.revision
+04-22 12:58:02.038  2725  2725 E perfetto: ng_service_impl.cc:3795 Unable to read ro.boot.hardware.ufs
+04-22 12:58:02.038  2725  2725 E perfetto: ng_service_impl.cc:3802 Unable to read ro.boot.hardware.ddr
+04-22 12:58:02.455  7149  7261 E horae   : 0: back:30223,back_1:30648,frame:30274,frame_1:29805,frame_2:29492,front:30623,front_1:31680, 2, +(1982), 1 ,30300,33489,34621,30340,33343,34097,30300,33499,34717,30340,33287,33970,30300,33513,34971,30435,33321,34040,30400,33662,35084,30571,33680,34599, target_temp:31680, algo:0
+04-22 12:58:02.462  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:58:02.463  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 0,00 MB/s, Write: 0,00 MB/s
+04-22 12:58:02.463  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:58:02.464  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:58:04.464  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:58:04.464  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 2,00 MB/s, Write: 0,00 MB/s
+04-22 12:58:04.464  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:58:04.467  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:58:06.346 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:58:06.348 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:06.348 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:58:06.349 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:06.465  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:58:06.466  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 12,49 MB/s, Write: 0,50 MB/s
+04-22 12:58:06.466  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:58:06.467  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:58:07.281 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:58:07.287 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:07.421 29924 30038 E GoogleApiManager: Failed to get service from broker.
+04-22 12:58:07.421 29924 30038 E GoogleApiManager: java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'.
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at android.os.Parcel.createExceptionOrNull(Parcel.java:3369)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at android.os.Parcel.createException(Parcel.java:3353)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at android.os.Parcel.readException(Parcel.java:3336)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at android.os.Parcel.readException(Parcel.java:3278)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at bisg.a(:com.google.android.gms@261332035@26.13.32 (260400-895912391):36)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at biqh.z(:com.google.android.gms@261332035@26.13.32 (260400-895912391):143)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at bhwi.run(:com.google.android.gms@261332035@26.13.32 (260400-895912391):42)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at android.os.Handler.handleCallback(Handler.java:1027)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at android.os.Handler.dispatchMessage(Handler.java:108)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at cyil.mp(:com.google.android.gms@261332035@26.13.32 (260400-895912391):1)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at cyil.dispatchMessage(:com.google.android.gms@261332035@26.13.32 (260400-895912391):5)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at android.os.Looper.loopOnce(Looper.java:298)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at android.os.Looper.loop(Looper.java:408)
+04-22 12:58:07.421 29924 30038 E GoogleApiManager:      at android.os.HandlerThread.run(HandlerThread.java:85)
+04-22 12:58:07.621 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:58:07.627 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:08.467  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:58:08.467  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 1,00 MB/s, Write: 0,50 MB/s
+04-22 12:58:08.468  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:58:08.471  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:58:08.726  2279  2378 E PERFHAL-OPTSHANDLER: PERFHAL-OPTSHANDLER: unsupported() 942: Error: This resource is not supported
+04-22 12:58:08.726  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: RemoveAndApply() 292: Failed to reset optimization here [18, 41]
+04-22 12:58:08.728  2279  2378 E PERFHAL-RESOURCEQS: PERFHAL-RESOURCEQS: AddAndApply() 130: Resource with major=18, minor=41 not supported
+04-22 12:58:10.469  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:58:10.469  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 0,00 MB/s, Write: 0,00 MB/s
+04-22 12:58:10.470  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:58:10.471  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:58:10.964 15112 15407 E msys    : E[N WA]_WAJMNSStreamImplOnMNSFailure(287)=>[LogLevel:I] WAJMNSStream/impl/callback/onMNSFailure/p=0xb4000075234ff180 (error=MNSTCPSocketReceive(): Received EOF)
+04-22 12:58:10.965 15112 15407 E msys    : E[N WA]_WAJMNSStreamImplCreateConnectionReport(194)=>[LogLevel:I] WAJMNSStream/impl/report port=443, connectedIPVersion=6, resolvedIPAddressCount=2, dnsResolutionStartTimeMS=240631, dnsResolutionEndTimeMS=240632, dnsCacheHit=Yes, connectStartTimeMS=240632, connectEndTimeMS=240866, proxyConnectStartTimeMS=0, proxyConnectEndTimeMS=0
+04-22 12:58:10.965 15112 15407 E msys    : E[N WA]_WAJMNSStreamImplUpdateStreamState(230)=>[LogLevel:I] WAJMNSStream/impl/state-changed/p=0xb4000075234ff180 (connected=>disconnected)
+04-22 12:58:10.967 15112 15375 E msys    : E[N WA]WAJMNSStreamImplDisconnectSync(497)=>[LogLevel:W] WAJMNSStream/impl/disconnect/p=0xb4000075234ff180 (bytesSent=2515)(bytesRecv=7233)
+04-22 12:58:12.471  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:58:12.472  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 2,50 MB/s, Write: 0,00 MB/s
+04-22 12:58:12.472  3796 19150 E OplusStorageUFSBandwidth: Task time: 1ms
+04-22 12:58:12.473  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:58:13.557 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:58:13.563 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:13.564 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:58:13.566 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:13.802  2339  2376 E ChargerInfo: SingleHyperPath not found
+04-22 12:58:14.429 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:58:14.435 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:14.473  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:58:14.473  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 0,00 MB/s, Write: 0,00 MB/s
+04-22 12:58:14.473  3796 19150 E OplusStorageUFSBandwidth: Task time: 0ms
+04-22 12:58:14.475  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
+04-22 12:58:14.607 23184 23321 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(1175)=>Start post callback cache refresh DNS resolution
+04-22 12:58:14.613 23184 23321 E msys    : E[N mns:DGWClient]_LogError(295)=>Failed to resolve using system DNS resolver, getaddrinfo(): No address associated with hostname
+04-22 12:58:16.474  3796 19150 E OplusStorageUFSBandwidth: storage_io_metrics_path is /proc/oplus_storage/io_metrics/forever/
+04-22 12:58:16.474  3796 19150 E OplusStorageUFSBandwidth: Bandwidth - Read: 0,50 MB/s, Write: 0,50 MB/s
+04-22 12:58:16.474  3796 19150 E OplusStorageUFSBandwidth: Task time: 0ms
+04-22 12:58:16.476  3796 19150 E OplusStorageUFSBandwidth: Alarm set to trigger in 10 seconds
