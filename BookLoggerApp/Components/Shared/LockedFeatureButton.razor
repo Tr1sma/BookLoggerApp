@@ -3,7 +3,7 @@
 @inject IEntitlementService Entitlements
 @inject IPaywallCoordinator Paywall
 
-@if (Entitlements.HasAccess(Feature))
+@if (!ShouldRenderLocked)
 {
     @ChildContent
 }
@@ -28,6 +28,14 @@ else
     [Parameter, EditorRequired] public FeatureKey Feature { get; set; }
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// ForceLock = null  → hard gate (lock whenever user lacks the entitlement).
+    /// ForceLock = true  → soft limit at threshold (lock only when user lacks entitlement AND caller says count is at limit).
+    /// ForceLock = false → never lock (caller has decided the current count is below the limit).
+    [Parameter] public bool? ForceLock { get; set; }
+
+    private bool ShouldRenderLocked =>
+        !Entitlements.HasAccess(Feature) && (ForceLock ?? true);
 
     private Task OpenPaywallAsync() => Paywall.ShowAsync(Feature);
 

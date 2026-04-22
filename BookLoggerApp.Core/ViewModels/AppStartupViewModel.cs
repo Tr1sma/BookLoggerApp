@@ -184,7 +184,12 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             CurrentVersion = _appVersionService.CurrentVersion;
 
             var onboardingSnapshot = await _onboardingService.GetSnapshotAsync(ct);
-            var isFirstLaunchForVersion = _appVersionService.IsFirstLaunchForCurrentVersion;
+
+            // Gate on our own persisted "last seen changelog version" flag rather than
+            // solely MAUI's VersionTracking.IsFirstLaunchForCurrentVersion, which has been
+            // observed to fire on every cold start on some devices.
+            var lastSeenChangelog = _appVersionService.LastSeenChangelogVersion;
+            var hasUnseenChangelog = !string.Equals(lastSeenChangelog, CurrentVersion, StringComparison.OrdinalIgnoreCase);
 
             ApplyOnboardingSnapshot(onboardingSnapshot);
 
@@ -195,7 +200,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
                 // replay the intro have already seen the changelog.
                 _showChangelogAfterOnboarding = false;
             }
-            else if (isFirstLaunchForVersion)
+            else if (hasUnseenChangelog)
             {
                 await LoadChangelogAsync(ct);
             }
@@ -279,6 +284,14 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     public async Task CloseChangelogAsync()
     {
         IsChangelogVisible = false;
+
+        // Persist that the user has now seen this version's changelog so it does not
+        // re-appear on every subsequent cold start.
+        if (!string.IsNullOrWhiteSpace(CurrentVersion))
+        {
+            _appVersionService.MarkChangelogSeen(CurrentVersion);
+        }
+
         ShowNextQueuedUpdatePrompt();
         await Task.CompletedTask;
     }

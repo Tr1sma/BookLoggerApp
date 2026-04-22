@@ -27,6 +27,12 @@
 
         <section class="paywall-comparison">
             <table>
+                <colgroup>
+                    <col class="paywall-col-label" />
+                    <col class="paywall-col-tier" />
+                    <col class="paywall-col-tier" />
+                    <col class="paywall-col-tier" />
+                </colgroup>
                 <thead>
                     <tr>
                         <th></th>
@@ -36,77 +42,133 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (FeatureKey feature in Enum.GetValues<FeatureKey>())
+                    @{
+                        PaywallComparisonCatalog.Category? lastCategory = null;
+                    }
+                    @foreach (PaywallComparisonCatalog.Row row in PaywallComparisonCatalog.Rows)
                     {
-                        var info = FeatureDisplay.Get(feature);
-                        var minimum = FeaturePolicy.GetMinimumTier(feature);
-                        <tr class="@(TriggerFeature == feature ? "paywall-row-highlight" : string.Empty)">
-                            <th scope="row">@info.Label</th>
-                            <td>@CheckmarkFor(SubscriptionTier.Free, minimum)</td>
-                            <td>@CheckmarkFor(SubscriptionTier.Plus, minimum)</td>
-                            <td>@CheckmarkFor(SubscriptionTier.Premium, minimum)</td>
+                        if (lastCategory != row.Category)
+                        {
+                            <tr class="paywall-category-header">
+                                <td colspan="4">@PaywallComparisonCatalog.GetCategoryLabel(row.Category)</td>
+                            </tr>
+                            lastCategory = row.Category;
+                        }
+                        <tr class="@(TriggerFeature is not null && row.MappedFeature == TriggerFeature ? "paywall-row-highlight" : string.Empty)">
+                            <th scope="row">@row.Label</th>
+                            <td>@row.FreeValue</td>
+                            <td>@row.PlusValue</td>
+                            <td>@row.PremiumValue</td>
                         </tr>
                     }
                 </tbody>
             </table>
         </section>
 
-        <section class="paywall-tier-tabs">
+        <section class="paywall-period-toggle" role="tablist" aria-label="Billing period">
             <button type="button"
-                    class="paywall-tier-tab @(ViewModel.SelectedTier == SubscriptionTier.Plus ? "active" : string.Empty)"
-                    @onclick="() => ViewModel.SelectTier(SubscriptionTier.Plus)">
-                Plus
+                    role="tab"
+                    aria-selected="@(ViewModel.SelectedPeriod == BillingPeriod.Monthly)"
+                    class="paywall-period-btn @(ViewModel.SelectedPeriod == BillingPeriod.Monthly ? "active" : string.Empty)"
+                    @onclick="() => ViewModel.SelectPeriod(BillingPeriod.Monthly)">
+                Monthly
             </button>
             <button type="button"
-                    class="paywall-tier-tab @(ViewModel.SelectedTier == SubscriptionTier.Premium ? "active" : string.Empty)"
-                    @onclick="() => ViewModel.SelectTier(SubscriptionTier.Premium)">
-                Premium
+                    role="tab"
+                    aria-selected="@(ViewModel.SelectedPeriod == BillingPeriod.Yearly)"
+                    class="paywall-period-btn @(ViewModel.SelectedPeriod == BillingPeriod.Yearly ? "active" : string.Empty)"
+                    @onclick="() => ViewModel.SelectPeriod(BillingPeriod.Yearly)">
+                Yearly
+                <span class="paywall-period-savings-hint">save up to 30%</span>
             </button>
         </section>
 
-        <section class="paywall-prices">
-            @if (ViewModel.SelectedTier == SubscriptionTier.Plus)
-            {
-                <button type="button" class="paywall-price-button"
-                        disabled="@ViewModel.IsPurchaseInProgress"
-                        @onclick="() => ViewModel.PurchaseAsync(BillingPeriod.Monthly)">
-                    <span class="price-label">Monthly</span>
-                    <span class="price-amount">€2.99</span>
-                    <span class="price-intro">First month €0.99</span>
-                </button>
-                <button type="button" class="paywall-price-button paywall-price-recommended"
-                        disabled="@ViewModel.IsPurchaseInProgress"
-                        @onclick="() => ViewModel.PurchaseAsync(BillingPeriod.Yearly)">
-                    <span class="price-label">Yearly</span>
-                    <span class="price-amount">€29.99</span>
-                    <span class="price-savings">Save 16%</span>
-                </button>
+        <section class="paywall-tier-grid">
+            @{
+                PriceDisplay plusPrice = GetPrice(SubscriptionTier.Plus, ViewModel.SelectedPeriod);
+                PriceDisplay premiumPrice = GetPrice(SubscriptionTier.Premium, ViewModel.SelectedPeriod);
+                bool currentIsPlus = Entitlements.CurrentTier == SubscriptionTier.Plus;
+                bool currentIsPremium = Entitlements.CurrentTier == SubscriptionTier.Premium;
             }
-            else
-            {
-                <button type="button" class="paywall-price-button"
-                        disabled="@ViewModel.IsPurchaseInProgress"
-                        @onclick="() => ViewModel.PurchaseAsync(BillingPeriod.Monthly)">
-                    <span class="price-label">Monthly</span>
-                    <span class="price-amount">€11.99</span>
-                    <span class="price-intro">First month €0.99</span>
+
+            <article class="paywall-tier-card @(currentIsPlus ? "current" : string.Empty)">
+                <header class="paywall-tier-card-header">
+                    <h3>Plus</h3>
+                    <p class="paywall-tier-card-tagline">Comfort + full gamification</p>
+                </header>
+                <div class="paywall-tier-card-price">
+                    <span class="price-amount">@plusPrice.Amount</span>
+                    <span class="price-period">/ @plusPrice.PeriodSuffix</span>
+                </div>
+                @if (!string.IsNullOrEmpty(plusPrice.PerMonth))
+                {
+                    <div class="paywall-tier-card-permonth">@plusPrice.PerMonth</div>
+                }
+                @if (ViewModel.SelectedPeriod == BillingPeriod.Monthly)
+                {
+                    <div class="paywall-intro-badge">1st month €0.99</div>
+                }
+                else if (!string.IsNullOrEmpty(plusPrice.Savings))
+                {
+                    <div class="paywall-savings-badge">@plusPrice.Savings</div>
+                }
+                <button type="button" class="paywall-tier-cta"
+                        disabled="@(ViewModel.IsPurchaseInProgress || currentIsPlus || currentIsPremium)"
+                        @onclick="() => ViewModel.PurchaseTierAsync(SubscriptionTier.Plus, ViewModel.SelectedPeriod)">
+                    @(currentIsPlus ? "Current plan" : currentIsPremium ? "Included in Premium" : "Get Plus")
                 </button>
-                <button type="button" class="paywall-price-button paywall-price-recommended"
-                        disabled="@ViewModel.IsPurchaseInProgress"
-                        @onclick="() => ViewModel.PurchaseAsync(BillingPeriod.Yearly)">
-                    <span class="price-label">Yearly</span>
-                    <span class="price-amount">€99.99</span>
-                    <span class="price-savings">Save 30%</span>
+            </article>
+
+            <article class="paywall-tier-card paywall-tier-card-popular @(currentIsPremium ? "current" : string.Empty)">
+                <div class="paywall-popular-badge">Most popular</div>
+                <header class="paywall-tier-card-header">
+                    <h3>Premium</h3>
+                    <p class="paywall-tier-card-tagline">Analytics, Share cards, prestige</p>
+                </header>
+                <div class="paywall-tier-card-price">
+                    <span class="price-amount">@premiumPrice.Amount</span>
+                    <span class="price-period">/ @premiumPrice.PeriodSuffix</span>
+                </div>
+                @if (!string.IsNullOrEmpty(premiumPrice.PerMonth))
+                {
+                    <div class="paywall-tier-card-permonth">@premiumPrice.PerMonth</div>
+                }
+                @if (ViewModel.SelectedPeriod == BillingPeriod.Monthly)
+                {
+                    <div class="paywall-intro-badge">1st month €0.99</div>
+                }
+                else if (!string.IsNullOrEmpty(premiumPrice.Savings))
+                {
+                    <div class="paywall-savings-badge">@premiumPrice.Savings</div>
+                }
+                <button type="button" class="paywall-tier-cta paywall-tier-cta-primary"
+                        disabled="@(ViewModel.IsPurchaseInProgress || currentIsPremium)"
+                        @onclick="() => ViewModel.PurchaseTierAsync(SubscriptionTier.Premium, ViewModel.SelectedPeriod)">
+                    @(currentIsPremium ? "Current plan" : "Get Premium")
                 </button>
-                <button type="button" class="paywall-price-button paywall-price-lifetime"
-                        disabled="@ViewModel.IsPurchaseInProgress"
-                        @onclick="() => ViewModel.PurchaseAsync(BillingPeriod.Lifetime)">
-                    <span class="price-label">Lifetime</span>
-                    <span class="price-amount">€99.99</span>
-                    <span class="price-savings">Launch special · normally €249.99</span>
-                </button>
-            }
+            </article>
         </section>
+
+        <section class="paywall-lifetime-card">
+            <div class="paywall-lifetime-banner">✨ Launch special — limited time</div>
+            <div class="paywall-lifetime-body">
+                <div class="paywall-lifetime-headline">
+                    <h3>Premium Lifetime</h3>
+                    <p>Pay once · own it forever</p>
+                </div>
+                <div class="paywall-lifetime-pricing">
+                    <span class="paywall-lifetime-strikethrough">€249.99</span>
+                    <span class="paywall-lifetime-amount">€99.99</span>
+                </div>
+            </div>
+            <button type="button" class="paywall-lifetime-cta"
+                    disabled="@(ViewModel.IsPurchaseInProgress || currentIsPremium)"
+                    @onclick="() => ViewModel.PurchaseTierAsync(SubscriptionTier.Premium, BillingPeriod.Lifetime)">
+                @(currentIsPremium ? "Already Premium" : "Get Lifetime for €99.99")
+            </button>
+        </section>
+
+        <p class="paywall-trust">Cancel anytime in Google Play · Auto-renews until cancelled</p>
 
         <section class="paywall-promo">
             <label for="paywallPromo">Have a promo code?</label>
@@ -137,8 +199,34 @@
     private string TierClass(SubscriptionTier tier) =>
         Entitlements.CurrentTier == tier ? "paywall-tier-current" : string.Empty;
 
-    private static string CheckmarkFor(SubscriptionTier columnTier, SubscriptionTier minimumTier) =>
-        columnTier >= minimumTier ? "✓" : "—";
+    private record PriceDisplay(string Amount, string PeriodSuffix, string PerMonth, string Savings);
+
+    // Hardcoded prices mirror the Play Console SKU configuration for plus_monthly / plus_yearly
+    // / premium_monthly / premium_yearly. Swap to BillingProduct.FormattedPrice once
+    // IBillingService.QueryProductsAsync is wired into the Paywall (regional pricing story).
+    private static PriceDisplay GetPrice(SubscriptionTier tier, BillingPeriod period)
+    {
+        if (tier == SubscriptionTier.Plus && period == BillingPeriod.Monthly)
+        {
+            return new PriceDisplay("€2.99", "month", string.Empty, string.Empty);
+        }
+        if (tier == SubscriptionTier.Plus && period == BillingPeriod.Yearly)
+        {
+            // €29.99 / 12 ≈ €2.50
+            return new PriceDisplay("€29.99", "year", "just €2.50/mo", "Save 16%");
+        }
+        if (tier == SubscriptionTier.Premium && period == BillingPeriod.Monthly)
+        {
+            return new PriceDisplay("€11.99", "month", string.Empty, string.Empty);
+        }
+        if (tier == SubscriptionTier.Premium && period == BillingPeriod.Yearly)
+        {
+            // €99.99 / 12 ≈ €8.33
+            return new PriceDisplay("€99.99", "year", "just €8.33/mo", "Save 30%");
+        }
+        // Lifetime isn't rendered via this helper — the lifetime card has its own hard-coded layout.
+        return new PriceDisplay("—", string.Empty, string.Empty, string.Empty);
+    }
 
     private async Task OnDismiss()
     {

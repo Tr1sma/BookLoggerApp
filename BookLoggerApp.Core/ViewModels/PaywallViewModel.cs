@@ -36,8 +36,10 @@ public partial class PaywallViewModel : ViewModelBase
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
     }
 
+    /// Billing period toggle controlling the price shown on each tier card.
+    /// Defaults to Yearly (higher conversion and retention than Monthly).
     [ObservableProperty]
-    private SubscriptionTier _selectedTier = SubscriptionTier.Plus;
+    private BillingPeriod _selectedPeriod = BillingPeriod.Yearly;
 
     [ObservableProperty]
     private string _promoCodeInput = string.Empty;
@@ -52,32 +54,27 @@ public partial class PaywallViewModel : ViewModelBase
 
     public bool IsTierUnlocked(SubscriptionTier tier) => _entitlementService.CurrentTier >= tier;
 
-    [RelayCommand]
-    public void SelectTier(SubscriptionTier tier)
+    public void SelectPeriod(BillingPeriod period)
     {
-        SelectedTier = tier;
-        _analytics.LogEvent(AnalyticsEventNames.PaywallTierSelected, AnalyticsParamBuilder.Create()
-            .Add(AnalyticsParamNames.Tier, tier.ToString())
-            .BuildMutable());
+        SelectedPeriod = period;
     }
 
-    [RelayCommand]
-    public async Task PurchaseAsync(BillingPeriod period)
+    public async Task PurchaseTierAsync(SubscriptionTier tier, BillingPeriod period)
     {
         await ExecuteSafelyAsync(async () =>
         {
             IsPurchaseInProgress = true;
             Banner = null;
 
-            string? productId = _productCatalog.GetProductId(SelectedTier, period);
+            string? productId = _productCatalog.GetProductId(tier, period);
             if (productId is null)
             {
-                Banner = $"{SelectedTier} is not available as {period}.";
+                Banner = $"{tier} is not available as {period}.";
                 return;
             }
 
             _analytics.LogEvent(AnalyticsEventNames.PurchaseInitiated, AnalyticsParamBuilder.Create()
-                .Add(AnalyticsParamNames.Tier, SelectedTier.ToString())
+                .Add(AnalyticsParamNames.Tier, tier.ToString())
                 .Add(AnalyticsParamNames.Period, period.ToString())
                 .BuildMutable());
 
@@ -96,7 +93,7 @@ public partial class PaywallViewModel : ViewModelBase
             };
 
             _analytics.LogEvent(eventName, AnalyticsParamBuilder.Create()
-                .Add(AnalyticsParamNames.Tier, SelectedTier.ToString())
+                .Add(AnalyticsParamNames.Tier, tier.ToString())
                 .Add(AnalyticsParamNames.Period, period.ToString())
                 .Add(AnalyticsParamNames.Outcome, outcome.ToString())
                 .BuildMutable());

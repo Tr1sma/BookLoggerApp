@@ -66,21 +66,51 @@
 
 .paywall-comparison table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     font-size: 0.85rem;
+}
+
+.paywall-comparison .paywall-col-label {
+    width: 46%;
+}
+
+.paywall-comparison .paywall-col-tier {
+    width: 18%;
 }
 
 .paywall-comparison th,
 .paywall-comparison td {
     border-bottom: 1px solid var(--border-light, #3D3126);
-    padding: 0.4rem 0.5rem;
+    padding: 0.45rem 0.4rem;
+    text-align: center;
+    vertical-align: middle;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.paywall-comparison th[scope="row"] {
     text-align: left;
-    vertical-align: top;
+    font-weight: 500;
+    color: var(--text-primary, #F5E6D3);
 }
 
 .paywall-comparison thead th {
     color: var(--text-secondary, #C9B5A0);
     font-weight: 600;
+    padding-bottom: 0.55rem;
+}
+
+.paywall-category-header td {
+    background: var(--bg-tertiary, #3D3126);
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary, #C9B5A0);
+    font-weight: 700;
+    text-align: left;
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid var(--border-color, #4A3F32);
 }
 
 .paywall-tier-current {
@@ -91,93 +121,319 @@
     background: rgba(212, 165, 116, 0.12);
 }
 
-.paywall-tier-tabs {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+@media (max-width: 480px) {
+    .paywall-comparison table {
+        font-size: 0.75rem;
+    }
+
+    .paywall-comparison .paywall-col-label {
+        width: 50%;
+    }
+
+    .paywall-comparison .paywall-col-tier {
+        width: 16.66%;
+    }
+
+    .paywall-comparison th,
+    .paywall-comparison td {
+        padding: 0.4rem 0.25rem;
+    }
+
+    .paywall-category-header td {
+        font-size: 0.62rem;
+        padding: 0.35rem 0.4rem;
+    }
 }
 
-.paywall-tier-tab {
-    flex: 1;
-    padding: 0.5rem 0.75rem;
+/* Billing period toggle (Monthly | Yearly) */
+
+.paywall-period-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+    padding: 0.3rem;
+    background: var(--bg-tertiary, #3D3126);
+    border: 1px solid var(--border-color, #4A3F32);
+    border-radius: 999px;
+    margin-bottom: 1rem;
+}
+
+.paywall-period-btn {
+    padding: 0.55rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary, #C9B5A0);
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.paywall-period-btn:hover:not(.active) {
+    color: var(--text-primary, #F5E6D3);
+}
+
+.paywall-period-btn.active {
+    background: var(--primary-color, #D4A574);
+    color: var(--bg-primary, #1A1410);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.paywall-period-savings-hint {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    opacity: 0.85;
+}
+
+/* Two-column tier grid (Plus | Premium) */
+
+.paywall-tier-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.paywall-tier-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 0.9rem;
     border: 1px solid var(--border-color, #4A3F32);
     background: var(--bg-tertiary, #3D3126);
+    color: var(--text-primary, #F5E6D3);
+    border-radius: 0.85rem;
+}
+
+.paywall-tier-card.current {
+    border-color: var(--primary-color, #D4A574);
+    box-shadow: 0 0 0 1px var(--primary-color, #D4A574) inset;
+}
+
+.paywall-tier-card-popular {
+    border-color: var(--primary-color, #D4A574);
+    background: linear-gradient(160deg, rgba(212, 165, 116, 0.12), var(--bg-tertiary, #3D3126) 65%);
+}
+
+.paywall-popular-badge {
+    position: absolute;
+    top: -0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-color, #D4A574);
+    color: var(--bg-primary, #1A1410);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.paywall-tier-card-header h3 {
+    margin: 0 0 0.15rem 0;
+    font-size: 1.05rem;
+}
+
+.paywall-tier-card-tagline {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #C9B5A0);
+    line-height: 1.3;
+}
+
+.paywall-tier-card-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+}
+
+.paywall-tier-card-price .price-amount {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary, #F5E6D3);
+}
+
+.paywall-tier-card-price .price-period {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #C9B5A0);
+}
+
+.paywall-tier-card-permonth {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #C9B5A0);
+    margin-top: -0.2rem;
+}
+
+.paywall-savings-badge,
+.paywall-intro-badge {
+    display: inline-block;
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.35rem;
+}
+
+.paywall-savings-badge {
+    background: rgba(136, 166, 126, 0.22);
+    color: var(--status-completed, #88A67E);
+}
+
+.paywall-intro-badge {
+    background: rgba(212, 165, 116, 0.2);
+    color: var(--primary-color, #D4A574);
+}
+
+.paywall-tier-cta {
+    margin-top: auto;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border-color, #4A3F32);
+    background: var(--bg-secondary, #2D2419);
     color: var(--text-primary, #F5E6D3);
     border-radius: 0.5rem;
     cursor: pointer;
     font-weight: 600;
+    transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.paywall-tier-tab.active {
+.paywall-tier-cta:hover:not(:disabled) {
+    background: var(--bg-primary, #1A1410);
+    border-color: var(--primary-color, #D4A574);
+}
+
+.paywall-tier-cta:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.paywall-tier-cta-primary {
     background: var(--primary-color, #D4A574);
     color: var(--bg-primary, #1A1410);
     border-color: var(--primary-color, #D4A574);
 }
 
-.paywall-prices {
-    display: grid;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+.paywall-tier-cta-primary:hover:not(:disabled) {
+    background: var(--primary-hover, #E8C4A0);
+    border-color: var(--primary-hover, #E8C4A0);
 }
 
-.paywall-price-button {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.15rem;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border-color, #4A3F32);
-    background: var(--bg-tertiary, #3D3126);
-    color: var(--text-primary, #F5E6D3);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    text-align: left;
-}
+/* Lifetime promo card (full width below tier grid) */
 
-.paywall-price-button:hover:not(:disabled) {
-    background: var(--bg-secondary, #2D2419);
-    border-color: var(--primary-color, #D4A574);
-}
-
-.paywall-price-button:disabled {
-    opacity: 0.6;
-    cursor: progress;
-}
-
-.paywall-price-recommended {
-    border-color: var(--primary-color, #D4A574);
-}
-
-.paywall-price-lifetime {
-    border-color: var(--accent-color, #C9A97F);
+.paywall-lifetime-card {
+    position: relative;
+    padding: 1rem;
+    border-radius: 0.85rem;
     background: linear-gradient(135deg, #D4A574, #C9A97F);
     color: var(--bg-primary, #1A1410);
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
 }
 
-.paywall-price-lifetime .price-savings {
-    color: var(--bg-primary, #1A1410);
-}
-
-.price-label {
-    font-size: 0.8rem;
+.paywall-lifetime-banner {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary, #C9B5A0);
+    opacity: 0.8;
 }
 
-.paywall-price-lifetime .price-label {
-    color: rgba(26, 20, 16, 0.7);
+.paywall-lifetime-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
-.price-amount {
-    font-size: 1.25rem;
+.paywall-lifetime-headline h3 {
+    margin: 0 0 0.15rem 0;
+    font-size: 1.1rem;
+}
+
+.paywall-lifetime-headline p {
+    margin: 0;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.paywall-lifetime-pricing {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.paywall-lifetime-strikethrough {
+    text-decoration: line-through;
+    opacity: 0.6;
+    font-size: 0.9rem;
+}
+
+.paywall-lifetime-amount {
+    font-size: 1.6rem;
     font-weight: 700;
 }
 
-.price-intro,
-.price-savings {
-    font-size: 0.75rem;
+.paywall-lifetime-cta {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: var(--bg-primary, #1A1410);
     color: var(--primary-color, #D4A574);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.paywall-lifetime-cta:hover:not(:disabled) {
+    background: #0F0B07;
+}
+
+.paywall-lifetime-cta:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.paywall-trust {
+    font-size: 0.72rem;
+    color: var(--text-muted, #8B7968);
+    text-align: center;
+    margin: 0 0 0.75rem 0;
+}
+
+/* Legacy helpers (kept for paywall-row-highlight highlight usage) */
+
+.price-amount {
+    font-weight: 700;
+}
+
+@media (max-width: 480px) {
+    .paywall-tier-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .paywall-tier-card-price .price-amount {
+        font-size: 1.4rem;
+    }
+
+    .paywall-lifetime-body {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 
 .paywall-promo {
@@ -384,6 +640,7 @@
 }
 
 .locked-feature-child {
-    filter: blur(3px) saturate(0.5);
+    filter: blur(12px) saturate(0.35) brightness(0.9);
     pointer-events: none;
+    user-select: none;
 }

@@ -70,22 +70,30 @@
                 </div>
             </div>
 
-            <div class="setting-row" style="flex-wrap: wrap; gap: 0.5rem;">
-                @if (EntitlementService.CurrentTier == SubscriptionTier.Free)
-                {
+            @if (EntitlementService.CurrentTier == SubscriptionTier.Free)
+            {
+                <div class="setting-row" style="flex-wrap: wrap; gap: 0.5rem;">
                     <button class="btn btn-primary" @onclick="OpenPaywallAsync">Upgrade to Plus or Premium</button>
-                }
-                else if (EntitlementService.CurrentEntitlement?.BillingPeriod != BillingPeriod.Lifetime)
-                {
-                    <button class="btn btn-primary" @onclick="OpenSubscriptionManagementAsync">Manage subscription</button>
+                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">Restore purchases</button>
+                </div>
+            }
+            else if (EntitlementService.CurrentEntitlement?.BillingPeriod != BillingPeriod.Lifetime)
+            {
+                <div class="settings-entitlement-actions">
                     <button class="btn btn-secondary" @onclick="OpenPaywallAsync">Change plan</button>
-                }
-                else
-                {
+                    <button class="btn btn-primary" @onclick="OpenSubscriptionManagementAsync">Manage subscription</button>
+                </div>
+                <div class="setting-row" style="flex-wrap: wrap; gap: 0.5rem;">
+                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">Restore purchases</button>
+                </div>
+            }
+            else
+            {
+                <div class="setting-row" style="flex-wrap: wrap; gap: 0.5rem;">
                     <button class="btn btn-secondary" @onclick="OpenPaywallAsync">See plans</button>
-                }
-                <button class="btn btn-link" @onclick="RestorePurchasesAsync">Restore purchases</button>
-            </div>
+                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">Restore purchases</button>
+                </div>
+            }
 
             @if (EntitlementService.HasAccess(FeatureKey.FeatureSuggestionForm))
             {
@@ -170,19 +178,21 @@
 
             @if (_showShelfAppearance)
             {
-                <div class="settings-collapse-content">
-                    <ColorPresetPicker Label="Ledge Color"
-                                       Description="The plank under each book"
-                                       SelectedColor="@ViewModel.ShelfLedgeColor"
-                                       Presets="_shelfLedgeColorPresets"
-                                       OnColorChanged="@(hex => ViewModel.UpdateShelfLedgeColorCommand.ExecuteAsync(hex))" />
+                <LockedFeatureButton Feature="FeatureKey.CustomShelfColors">
+                    <div class="settings-collapse-content">
+                        <ColorPresetPicker Label="Ledge Color"
+                                           Description="The plank under each book"
+                                           SelectedColor="@ViewModel.ShelfLedgeColor"
+                                           Presets="_shelfLedgeColorPresets"
+                                           OnColorChanged="@(hex => ViewModel.UpdateShelfLedgeColorCommand.ExecuteAsync(hex))" />
 
-                    <ColorPresetPicker Label="Shelf Bar Color"
-                                       Description="The bottom bar of each shelf"
-                                       SelectedColor="@ViewModel.ShelfBaseColor"
-                                       Presets="_shelfBaseColorPresets"
-                                       OnColorChanged="@(hex => ViewModel.UpdateShelfBaseColorCommand.ExecuteAsync(hex))" />
-                </div>
+                        <ColorPresetPicker Label="Shelf Bar Color"
+                                           Description="The bottom bar of each shelf"
+                                           SelectedColor="@ViewModel.ShelfBaseColor"
+                                           Presets="_shelfBaseColorPresets"
+                                           OnColorChanged="@(hex => ViewModel.UpdateShelfBaseColorCommand.ExecuteAsync(hex))" />
+                    </div>
+                </LockedFeatureButton>
             }
         </section>
 
@@ -573,7 +583,17 @@
         };
         BackButtonService.Register(_navBackHandler);
 
+        // Re-render when a purchase, lapse, promo, or debug-tier-switch changes the
+        // active entitlement so "Current plan" updates immediately without requiring
+        // a page reload or back-and-forth navigation.
+        EntitlementService.EntitlementChanged += OnEntitlementChanged;
+
         await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private void OnEntitlementChanged(object? sender, BookLoggerApp.Core.Entitlements.EntitlementChangedEventArgs e)
+    {
+        _ = InvokeAsync(StateHasChanged);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -710,6 +730,8 @@
 
     public void Dispose()
     {
+        EntitlementService.EntitlementChanged -= OnEntitlementChanged;
+
         if (_navBackHandler != null)
         {
             BackButtonService.Unregister(_navBackHandler);
