@@ -147,6 +147,9 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IDecorationService, BookLoggerApp.Infrastructure.Services.DecorationService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IWishlistService, BookLoggerApp.Infrastructure.Services.WishlistService>();
 
+        // Database initializer service — used by the UI to retry a failed DB init
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IDatabaseInitializer, BookLoggerApp.Infrastructure.Services.DatabaseInitializer>();
+
         // Register timer state service as Singleton (must survive across component lifetimes)
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.ITimerStateService, BookLoggerApp.Services.TimerStateService>();
 
@@ -276,7 +279,12 @@ public static class MauiProgram
                     System.Diagnostics.Debug.WriteLine($"Inner Stack: {ex.InnerException.StackTrace}");
                 }
                 System.Diagnostics.Debug.WriteLine("=== END EXCEPTION ===");
-                throw; // Re-throw to ensure TCS gets the exception
+
+                // Safety net: DbInitializer already calls MarkAsFailed in its own catch,
+                // but if it throws before reaching that (e.g. service resolution fails),
+                // the TCS would never fault and awaiters would hang until their timeout.
+                // MarkAsFailed is idempotent, so calling it here is always safe.
+                BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsFailed(ex);
             }
         });
     }
