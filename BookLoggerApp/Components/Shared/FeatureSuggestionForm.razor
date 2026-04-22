@@ -1,0 +1,74 @@
+@using System.Text
+@using BookLoggerApp.Core.Entitlements
+@using BookLoggerApp.Core.Services.Abstractions
+@inject IEntitlementService EntitlementService
+@inject NavigationManager Navigation
+
+<div class="feature-suggestion-form">
+    <h3>💡 Suggest a feature</h3>
+    <p class="feature-suggestion-hint">Premium members can send ideas directly to the developer.</p>
+
+    <textarea class="feature-suggestion-input"
+              rows="4"
+              placeholder="What would make BookHeart better for you?"
+              maxlength="2000"
+              @bind="_text"></textarea>
+
+    <div class="feature-suggestion-actions">
+        <button class="btn btn-primary" disabled="@(!CanSubmit)" @onclick="SubmitAsync">Send via email</button>
+        @if (!string.IsNullOrEmpty(_feedback))
+        {
+            <span class="feature-suggestion-feedback">@_feedback</span>
+        }
+    </div>
+</div>
+
+@code {
+    private const string RecipientEmail = "tristan.atze@gmail.com";
+    private string _text = string.Empty;
+    private string? _feedback;
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(_text) && _text.Length <= 2000;
+
+    private async Task SubmitAsync()
+    {
+        if (!CanSubmit)
+        {
+            return;
+        }
+
+        try
+        {
+            string subject = "[BookHeart Premium] Feature suggestion";
+            string body = $"Tier: {EntitlementService.CurrentTier}\n\n{_text}";
+            string uri = BuildMailtoUri(RecipientEmail, subject, body);
+
+#if ANDROID
+            await Microsoft.Maui.ApplicationModel.Launcher.OpenAsync(new Uri(uri));
+#else
+            Navigation.NavigateTo(uri);
+            await Task.CompletedTask;
+#endif
+
+            _feedback = "Thanks! Your email composer has been opened.";
+            _text = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _feedback = "Could not open the email composer.";
+            System.Diagnostics.Debug.WriteLine($"FeatureSuggestionForm.SubmitAsync failed: {ex}");
+        }
+    }
+
+    private static string BuildMailtoUri(string recipient, string subject, string body)
+    {
+        StringBuilder sb = new();
+        sb.Append("mailto:");
+        sb.Append(Uri.EscapeDataString(recipient));
+        sb.Append("?subject=");
+        sb.Append(Uri.EscapeDataString(subject));
+        sb.Append("&body=");
+        sb.Append(Uri.EscapeDataString(body));
+        return sb.ToString();
+    }
+}

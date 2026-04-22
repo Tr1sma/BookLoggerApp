@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BookLoggerApp.Core.Entitlements;
 
 namespace BookLoggerApp.Core.Models;
 
@@ -63,6 +64,11 @@ public class AppSettings
 
     // UI Preferences
     public bool HideGettingStartedCta { get; set; } = false;
+
+    // Entitlements — denormalized hot-read copy of UserEntitlement.Tier / .ExpiresAt.
+    // Source of truth is the UserEntitlements table; these are mirrored by EntitlementService.
+    public SubscriptionTier CurrentTier { get; set; } = SubscriptionTier.Free;
+    public DateTime? EntitlementExpiresAt { get; set; }
 
     // Misc
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

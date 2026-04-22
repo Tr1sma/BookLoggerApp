@@ -30,6 +30,13 @@ public class Shelf
     [MaxLength(20)]
     public string Icon { get; set; } = "📚";
 
+    /// <summary>
+    /// True when this shelf exceeds the Free-tier cap (3 shelves) after a Plus/Premium
+    /// downgrade. Stays in the DB; <see cref="ShelfService"/> filters it from queries.
+    /// Cleared on re-upgrade.
+    /// </summary>
+    public bool IsHiddenByEntitlement { get; set; } = false;
+
     // Navigation
     public ICollection<BookShelf> BookShelves { get; set; } = new List<BookShelf>();
     public ICollection<PlantShelf> PlantShelves { get; set; } = new List<PlantShelf>();

@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
@@ -8,17 +9,22 @@ namespace BookLoggerApp.Infrastructure.Services;
 
 public class ShelfService : IShelfService
 {
-    private readonly IDbContextFactory<AppDbContext> _contextFactory;
+    private const int FreeTierShelfCap = 3;
 
-    public ShelfService(IDbContextFactory<AppDbContext> contextFactory)
+    private readonly IDbContextFactory<AppDbContext> _contextFactory;
+    private readonly IFeatureGuard? _featureGuard;
+
+    public ShelfService(IDbContextFactory<AppDbContext> contextFactory, IFeatureGuard? featureGuard = null)
     {
         _contextFactory = contextFactory;
+        _featureGuard = featureGuard;
     }
 
     public async Task<List<Shelf>> GetAllShelvesAsync()
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
         return await context.Shelves
+            .Where(s => !s.IsHiddenByEntitlement)
             .OrderBy(s => s.SortOrder)
             .ToListAsync();
     }
@@ -41,6 +47,16 @@ public class ShelfService : IShelfService
     public async Task<Shelf> CreateShelfAsync(Shelf shelf)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
+
+        if (_featureGuard is not null)
+        {
+            int visibleShelfCount = await context.Shelves.CountAsync(s => !s.IsHiddenByEntitlement);
+            _featureGuard.EnforceSoftLimit(
+                FeatureKey.UnlimitedShelves,
+                visibleShelfCount,
+                FreeTierShelfCap,
+                $"Free tier is limited to {FreeTierShelfCap} shelves. Upgrade to Plus for unlimited shelves.");
+        }
 
         // Assign sort order to be last
         var maxSortOrder = await context.Shelves.MaxAsync(s => (int?)s.SortOrder) ?? 0;

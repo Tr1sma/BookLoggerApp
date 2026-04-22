@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Models;
 
 namespace BookLoggerApp.Infrastructure.Data.Configurations;
@@ -83,5 +84,12 @@ public class AppSettingsConfiguration : IEntityTypeConfiguration<AppSettings>
             .HasDefaultValue(false);
 
         builder.Property(a => a.PrivacyPolicyAcceptedAt);
+
+        builder.Property(a => a.CurrentTier)
+            .IsRequired()
+            .HasConversion<int>()
+            .HasDefaultValue(SubscriptionTier.Free);
+
+        builder.Property(a => a.EntitlementExpiresAt);
     }
 }

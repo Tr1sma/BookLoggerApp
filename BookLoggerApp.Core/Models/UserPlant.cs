@@ -86,6 +86,13 @@ public class UserPlant
     /// </summary>
     public DateTime? LastStreakSaveAt { get; set; }
 
+    /// <summary>
+    /// True when the user's tier no longer entitles them to this plant (e.g. a Premium
+    /// Prestige plant held by a user who has lapsed to Free). The row is preserved so
+    /// that re-upgrading restores full access.
+    /// </summary>
+    public bool IsHiddenByEntitlement { get; set; } = false;
+
     // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }
