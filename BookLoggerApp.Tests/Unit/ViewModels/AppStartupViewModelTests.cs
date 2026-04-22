@@ -30,6 +30,10 @@ public class AppStartupViewModelTests
         _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(new AppSettings { PrivacyBannerDismissed = true });
 
         _appVersionService.CurrentVersion.Returns("0.8.0");
+        // Default to "user has already seen this version's changelog" so tests that don't
+        // care about the changelog aren't poisoned by the first-launch path. Tests that
+        // expect the changelog to surface override this with .Returns((string?)null).
+        _appVersionService.LastSeenChangelogVersion.Returns("0.8.0");
         _changelogService.GetReleaseHistoryAsync(Arg.Any<CancellationToken>()).Returns(new[]
         {
             new ChangelogRelease
@@ -66,6 +70,7 @@ public class AppStartupViewModelTests
     {
         // Arrange
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(true);
+        _appVersionService.LastSeenChangelogVersion.Returns((string?)null);
 
         // Act
         await _viewModel.InitializeAsync();
@@ -82,6 +87,7 @@ public class AppStartupViewModelTests
     {
         // Arrange
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(true);
+        _appVersionService.LastSeenChangelogVersion.Returns((string?)null);
         _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(new AppUpdateState
         {
             IsSupported = true,
@@ -316,6 +322,7 @@ public class AppStartupViewModelTests
         // Arrange
         _appVersionService.CurrentVersion.Returns("0.9.2");
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(true);
+        _appVersionService.LastSeenChangelogVersion.Returns((string?)null);
         _changelogService.GetReleaseHistoryAsync(Arg.Any<CancellationToken>()).Returns(new[]
         {
             new ChangelogRelease
@@ -349,6 +356,7 @@ public class AppStartupViewModelTests
         // Arrange
         _appVersionService.CurrentVersion.Returns("0.9.2");
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(true);
+        _appVersionService.LastSeenChangelogVersion.Returns((string?)null);
         _changelogService.GetReleaseHistoryAsync(Arg.Any<CancellationToken>()).Returns(new[]
         {
             new ChangelogRelease

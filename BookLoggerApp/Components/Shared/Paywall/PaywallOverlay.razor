@@ -1,0 +1,25 @@
+@using BookLoggerApp.Core.Services.Abstractions
+@implements IDisposable
+@inject IPaywallCoordinator Coordinator
+
+@if (Coordinator.IsVisible)
+{
+    <PaywallModal TriggerFeature="@Coordinator.TriggerFeature" />
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        Coordinator.VisibilityChanged += HandleVisibilityChanged;
+    }
+
+    public void Dispose()
+    {
+        Coordinator.VisibilityChanged -= HandleVisibilityChanged;
+    }
+
+    private void HandleVisibilityChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+}

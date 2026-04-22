@@ -1,11 +1,16 @@
 @page "/settings"
+@using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.ViewModels
 @implements IDisposable
 @inject SettingsViewModel ViewModel
+@inject AppStartupViewModel StartupViewModel
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
 @inject BookLoggerApp.Core.Services.Abstractions.IAppRestartService AppRestartService
+@inject BookLoggerApp.Core.Services.Abstractions.IEntitlementService EntitlementService
+@inject BookLoggerApp.Core.Services.Abstractions.IPaywallCoordinator PaywallCoordinator
+@inject BookLoggerApp.Core.Services.Abstractions.IBillingService BillingService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Settings - BookHeart</PageTitle>
@@ -36,6 +41,64 @@
                 <span class="version-label">Version</span>
                 <strong>@ViewModel.AppVersion</strong>
             </div>
+        </section>
+
+        <!-- Plus & Premium -->
+        <section class="settings-card">
+            <div class="section-header">
+                <h2>⭐ Plus & Premium</h2>
+                <p>Manage your subscription and unlock more of BookHeart</p>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-label">Current plan</span>
+                    <span class="setting-description">
+                        @switch (EntitlementService.CurrentTier)
+                        {
+                            case SubscriptionTier.Free:
+                                <span>Free</span>
+                                break;
+                            case SubscriptionTier.Plus:
+                                <span>Plus@(EntitlementService.CurrentEntitlement?.ExpiresAt is { } plusExpiry ? $" — renews {plusExpiry:yyyy-MM-dd}" : string.Empty)</span>
+                                break;
+                            case SubscriptionTier.Premium:
+                                <span>Premium@(EntitlementService.CurrentEntitlement?.BillingPeriod == BillingPeriod.Lifetime ? " Lifetime" : EntitlementService.CurrentEntitlement?.ExpiresAt is { } premExpiry ? $" — renews {premExpiry:yyyy-MM-dd}" : string.Empty)</span>
+                                break;
+                        }
+                    </span>
+                </div>
+            </div>
+
+            @if (EntitlementService.CurrentTier == SubscriptionTier.Free)
+            {
+                <div class="setting-row" style="flex-wrap: wrap; gap: 0.5rem;">
+                    <button class="btn btn-primary" @onclick="OpenPaywallAsync">Upgrade to Plus or Premium</button>
+                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">Restore purchases</button>
+                </div>
+            }
+            else if (EntitlementService.CurrentEntitlement?.BillingPeriod != BillingPeriod.Lifetime)
+            {
+                <div class="settings-entitlement-actions">
+                    <button class="btn btn-secondary" @onclick="OpenPaywallAsync">Change plan</button>
+                    <button class="btn btn-primary" @onclick="OpenSubscriptionManagementAsync">Manage subscription</button>
+                </div>
+                <div class="setting-row" style="flex-wrap: wrap; gap: 0.5rem;">
+                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">Restore purchases</button>
+                </div>
+            }
+            else
+            {
+                <div class="setting-row" style="flex-wrap: wrap; gap: 0.5rem;">
+                    <button class="btn btn-secondary" @onclick="OpenPaywallAsync">See plans</button>
+                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">Restore purchases</button>
+                </div>
+            }
+
+            @if (EntitlementService.HasAccess(FeatureKey.FeatureSuggestionForm))
+            {
+                <FeatureSuggestionForm />
+            }
         </section>
 
         <!-- Notifications -->
@@ -115,19 +178,21 @@
 
             @if (_showShelfAppearance)
             {
-                <div class="settings-collapse-content">
-                    <ColorPresetPicker Label="Ledge Color"
-                                       Description="The plank under each book"
-                                       SelectedColor="@ViewModel.ShelfLedgeColor"
-                                       Presets="_shelfLedgeColorPresets"
-                                       OnColorChanged="@(hex => ViewModel.UpdateShelfLedgeColorCommand.ExecuteAsync(hex))" />
+                <LockedFeatureButton Feature="FeatureKey.CustomShelfColors">
+                    <div class="settings-collapse-content">
+                        <ColorPresetPicker Label="Ledge Color"
+                                           Description="The plank under each book"
+                                           SelectedColor="@ViewModel.ShelfLedgeColor"
+                                           Presets="_shelfLedgeColorPresets"
+                                           OnColorChanged="@(hex => ViewModel.UpdateShelfLedgeColorCommand.ExecuteAsync(hex))" />
 
-                    <ColorPresetPicker Label="Shelf Bar Color"
-                                       Description="The bottom bar of each shelf"
-                                       SelectedColor="@ViewModel.ShelfBaseColor"
-                                       Presets="_shelfBaseColorPresets"
-                                       OnColorChanged="@(hex => ViewModel.UpdateShelfBaseColorCommand.ExecuteAsync(hex))" />
-                </div>
+                        <ColorPresetPicker Label="Shelf Bar Color"
+                                           Description="The bottom bar of each shelf"
+                                           SelectedColor="@ViewModel.ShelfBaseColor"
+                                           Presets="_shelfBaseColorPresets"
+                                           OnColorChanged="@(hex => ViewModel.UpdateShelfBaseColorCommand.ExecuteAsync(hex))" />
+                    </div>
+                </LockedFeatureButton>
             }
         </section>
 
@@ -172,6 +237,9 @@
                 </button>
                 <button class="btn btn-secondary" @onclick="ReplayIntroFromSettingsAsync">
                     Replay Intro
+                </button>
+                <button class="btn btn-secondary" @onclick="OpenChangelogAsync">
+                    What's New
                 </button>
                 <button id="buy-me-a-coffee-fallback"
                         class="btn buy-me-a-coffee-fallback"
@@ -457,6 +525,47 @@
 
     private void ToggleMigrationLog() => _showMigrationLog = !_showMigrationLog;
 
+    private Task OpenPaywallAsync() => PaywallCoordinator.ShowAsync(trigger: null);
+
+    private async Task OpenSubscriptionManagementAsync()
+    {
+        await BillingService.OpenSubscriptionManagementAsync(EntitlementService.CurrentEntitlement?.ProductId);
+    }
+
+    private async Task RestorePurchasesAsync()
+    {
+        try
+        {
+            if (!BillingService.IsConnected)
+            {
+                await BillingService.ConnectAsync();
+            }
+
+            if (BillingService.IsConnected)
+            {
+                var active = await BillingService.QueryActivePurchasesAsync();
+                foreach (var purchase in active)
+                {
+                    await EntitlementService.ApplyPurchaseAsync(purchase, EntitlementChangeReason.Restore);
+                }
+
+                if (active.Count == 0
+                    && EntitlementService.CurrentTier != SubscriptionTier.Free
+                    && EntitlementService.CurrentEntitlement?.BillingPeriod != BillingPeriod.Lifetime)
+                {
+                    await EntitlementService.ApplyLapseAsync("expired");
+                }
+            }
+
+            await EntitlementService.RefreshAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"RestorePurchasesAsync failed: {ex}");
+        }
+    }
+
     private void ToggleShelfAppearance() => _showShelfAppearance = !_showShelfAppearance;
 
     private void ToggleMoreInfo() => _showMoreInfo = !_showMoreInfo;
@@ -474,7 +583,17 @@
         };
         BackButtonService.Register(_navBackHandler);
 
+        // Re-render when a purchase, lapse, promo, or debug-tier-switch changes the
+        // active entitlement so "Current plan" updates immediately without requiring
+        // a page reload or back-and-forth navigation.
+        EntitlementService.EntitlementChanged += OnEntitlementChanged;
+
         await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private void OnEntitlementChanged(object? sender, BookLoggerApp.Core.Entitlements.EntitlementChangedEventArgs e)
+    {
+        _ = InvokeAsync(StateHasChanged);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -499,6 +618,11 @@
     {
         await OnboardingService.ResetIntroAsync();
         Navigation.NavigateTo("/");
+    }
+
+    private async Task OpenChangelogAsync()
+    {
+        await StartupViewModel.OpenChangelogAsync();
     }
 
     private async Task HandleBackupToCloudAsync()
@@ -606,6 +730,8 @@
 
     public void Dispose()
     {
+        EntitlementService.EntitlementChanged -= OnEntitlementChanged;
+
         if (_navBackHandler != null)
         {
             BackButtonService.Unregister(_navBackHandler);

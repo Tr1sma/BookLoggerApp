@@ -37,6 +37,7 @@ public class AppDbContext : DbContext
     public DbSet<WishlistInfo> WishlistInfos => Set<WishlistInfo>();
     public DbSet<GoalExcludedBook> GoalExcludedBooks => Set<GoalExcludedBook>();
     public DbSet<GoalGenre> GoalGenres => Set<GoalGenre>();
+    public DbSet<UserEntitlement> UserEntitlements => Set<UserEntitlement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -179,5 +180,15 @@ public class AppDbContext : DbContext
 
         // Seed Tropes
         modelBuilder.Entity<Trope>().HasData(TropeSeedData.GetTropes());
+
+        // Seed default UserEntitlement (single-row — everyone starts as Free).
+        modelBuilder.Entity<UserEntitlement>().HasData(
+            new UserEntitlement
+            {
+                Id = Guid.Parse("99999999-0000-0000-0000-000000000002"),
+                Tier = BookLoggerApp.Core.Entitlements.SubscriptionTier.Free,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            }
+        );
     }
 }

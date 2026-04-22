@@ -1,6 +1,7 @@
 @page "/shop"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Components.Shared
 @inject PlantShopViewModel ViewModel
 @inject DecorationShopViewModel DecorationVM
@@ -65,13 +66,29 @@
             <div class="shop-grid">
                 @foreach (var species in ViewModel.AvailableSpecies)
                 {
-                    <PlantShopCard
-                        Species="@species"
-                        UserCoins="@ViewModel.UserCoins"
-                        UserLevel="@ViewModel.UserLevel"
-                        CurrentPrice="@ViewModel.GetDynamicPrice(species.Id)"
-                        IsSelected="@(ViewModel.SelectedSpecies?.Id == species.Id)"
-                        OnSelect="() => SelectSpecies(species)" />
+                    FeatureKey? plantTierFeature = GetPlantTierFeature(species);
+                    if (plantTierFeature is null)
+                    {
+                        <PlantShopCard
+                            Species="@species"
+                            UserCoins="@ViewModel.UserCoins"
+                            UserLevel="@ViewModel.UserLevel"
+                            CurrentPrice="@ViewModel.GetDynamicPrice(species.Id)"
+                            IsSelected="@(ViewModel.SelectedSpecies?.Id == species.Id)"
+                            OnSelect="() => SelectSpecies(species)" />
+                    }
+                    else
+                    {
+                        <LockedFeatureButton Feature="plantTierFeature.Value">
+                            <PlantShopCard
+                                Species="@species"
+                                UserCoins="@ViewModel.UserCoins"
+                                UserLevel="@ViewModel.UserLevel"
+                                CurrentPrice="@ViewModel.GetDynamicPrice(species.Id)"
+                                IsSelected="@(ViewModel.SelectedSpecies?.Id == species.Id)"
+                                OnSelect="() => SelectSpecies(species)" />
+                        </LockedFeatureButton>
+                    }
                 }
             </div>
 
@@ -198,12 +215,27 @@
             <div class="shop-grid">
                 @foreach (var item in DecorationVM.AllDecorations)
                 {
-                    <DecorationShopCard
-                        Item="@item"
-                        UserCoins="@DecorationVM.UserCoins"
-                        UserLevel="@DecorationVM.UserLevel"
-                        IsSelected="@(DecorationVM.SelectedDecoration?.Id == item.Id)"
-                        OnSelect="() => SelectDecoration(item)" />
+                    FeatureKey? decoTierFeature = GetDecorationTierFeature(item);
+                    if (decoTierFeature is null)
+                    {
+                        <DecorationShopCard
+                            Item="@item"
+                            UserCoins="@DecorationVM.UserCoins"
+                            UserLevel="@DecorationVM.UserLevel"
+                            IsSelected="@(DecorationVM.SelectedDecoration?.Id == item.Id)"
+                            OnSelect="() => SelectDecoration(item)" />
+                    }
+                    else
+                    {
+                        <LockedFeatureButton Feature="decoTierFeature.Value">
+                            <DecorationShopCard
+                                Item="@item"
+                                UserCoins="@DecorationVM.UserCoins"
+                                UserLevel="@DecorationVM.UserLevel"
+                                IsSelected="@(DecorationVM.SelectedDecoration?.Id == item.Id)"
+                                OnSelect="() => SelectDecoration(item)" />
+                        </LockedFeatureButton>
+                    }
                 }
             </div>
 
@@ -414,6 +446,32 @@
             _navBackHandler = null;
         }
         UnregisterModalBack();
+    }
+
+    private static FeatureKey? GetPlantTierFeature(PlantSpecies species)
+    {
+        if (species.IsPrestigeTier)
+        {
+            return FeatureKey.PrestigePlants;
+        }
+        if (species.IsFreeTier)
+        {
+            return null;
+        }
+        return FeatureKey.StandardPlantsAndDecorations;
+    }
+
+    private static FeatureKey? GetDecorationTierFeature(ShopItem item)
+    {
+        if (item.IsUltimateTier)
+        {
+            return FeatureKey.UltimateDecorations;
+        }
+        if (item.IsFreeTier)
+        {
+            return null;
+        }
+        return FeatureKey.StandardPlantsAndDecorations;
     }
 
     private static string GetAbilityDescription(string? abilityKey) => abilityKey switch
