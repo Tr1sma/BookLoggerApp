@@ -8,15 +8,46 @@ namespace BookLoggerApp.Platforms.AndroidImpl.Analytics;
 public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
 {
     private readonly IAnalyticsConsentGate _gate;
-    private readonly FirebaseAnalytics _analytics;
+    private FirebaseAnalytics? _analytics;
+    private bool _initFailed;
     private bool _disposed;
 
     public FirebaseAnalyticsService(IAnalyticsConsentGate gate)
     {
+        // Do NOT resolve FirebaseAnalytics.GetInstance here — FirebaseApp may not be
+        // initialized yet when DI constructs this service. See GetAnalytics() below.
         _gate = gate;
-        var ctx = global::Android.App.Application.Context;
-        _analytics = FirebaseAnalytics.GetInstance(ctx);
         _gate.ConsentChanged += OnConsentChanged;
+    }
+
+    private FirebaseAnalytics? GetAnalytics()
+    {
+        if (_analytics is not null) return _analytics;
+        if (_initFailed) return null;
+
+        try
+        {
+            var ctx = global::Android.App.Application.Context;
+            _analytics = FirebaseAnalytics.GetInstance(ctx);
+            return _analytics;
+        }
+        catch (Exception firstEx)
+        {
+            System.Diagnostics.Debug.WriteLine($"FirebaseAnalytics.GetInstance failed, trying explicit InitializeApp: {firstEx}");
+            try
+            {
+                var ctx = global::Android.App.Application.Context;
+                Firebase.FirebaseApp.InitializeApp(ctx);
+                _analytics = FirebaseAnalytics.GetInstance(ctx);
+                return _analytics;
+            }
+            catch (Exception fallbackEx)
+            {
+                System.Diagnostics.Debug.WriteLine($"FirebaseAnalytics fallback init failed: {fallbackEx}");
+                _initFailed = true;
+                return null;
+            }
+        }
     }
 
     public void LogEvent(string name, IDictionary<string, object?>? parameters = null)
@@ -24,7 +55,7 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
         if (!_gate.AnalyticsAllowed) return;
         try
         {
-            _analytics.LogEvent(name, parameters.ToBundle());
+            GetAnalytics()?.LogEvent(name, parameters.ToBundle());
         }
         catch (Exception ex)
         {
@@ -37,13 +68,16 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
         if (!_gate.AnalyticsAllowed) return;
         try
         {
+            var analytics = GetAnalytics();
+            if (analytics is null) return;
+
             var bundle = new global::Android.OS.Bundle();
             bundle.PutString(FirebaseAnalytics.Param.ScreenName, screenName);
             if (!string.IsNullOrEmpty(screenClass))
             {
                 bundle.PutString(FirebaseAnalytics.Param.ScreenClass, screenClass);
             }
-            _analytics.LogEvent(FirebaseAnalytics.Event.ScreenView, bundle);
+            analytics.LogEvent(FirebaseAnalytics.Event.ScreenView, bundle);
         }
         catch (Exception ex)
         {
@@ -55,7 +89,7 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
     {
         try
         {
-            _analytics.SetUserProperty(name, value);
+            GetAnalytics()?.SetUserProperty(name, value);
         }
         catch (Exception ex)
         {
@@ -67,7 +101,7 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
     {
         try
         {
-            _analytics.SetUserId(userId);
+            GetAnalytics()?.SetUserId(userId);
         }
         catch (Exception ex)
         {
@@ -83,7 +117,7 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
             {
                 try
                 {
-                    _analytics.SetAnalyticsCollectionEnabled(enabled);
+                    GetAnalytics()?.SetAnalyticsCollectionEnabled(enabled);
                 }
                 catch (Exception innerEx)
                 {
@@ -101,7 +135,7 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
     {
         try
         {
-            _analytics.ResetAnalyticsData();
+            GetAnalytics()?.ResetAnalyticsData();
         }
         catch (Exception ex)
         {
