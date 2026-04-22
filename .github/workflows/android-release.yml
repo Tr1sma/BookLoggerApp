@@ -44,6 +44,25 @@ jobs:
           cp BookLoggerApp.Infrastructure/Services/ApiKeys.cs.template BookLoggerApp.Infrastructure/Services/ApiKeys.cs
           sed -i "s|GoogleBooks = null|GoogleBooks = \"$GOOGLE_BOOKS_API_KEY\"|" BookLoggerApp.Infrastructure/Services/ApiKeys.cs
 
+      - name: Decode google-services.json
+        env:
+          FIREBASE_CONFIG_BASE64: ${{ secrets.FIREBASE_CONFIG_BASE64 }}
+        run: |
+          if [ -z "$FIREBASE_CONFIG_BASE64" ]; then
+            echo "::error::FIREBASE_CONFIG_BASE64 secret is not set"
+            exit 1
+          fi
+          mkdir -p BookLoggerApp/Platforms/Android
+          echo "$FIREBASE_CONFIG_BASE64" | base64 --decode > BookLoggerApp/Platforms/Android/google-services.json
+          if ! grep -q '"project_info"' BookLoggerApp/Platforms/Android/google-services.json; then
+            echo "::error::Decoded google-services.json appears invalid (no project_info)"
+            exit 1
+          fi
+          if ! grep -q '"package_name": "com.bookheart.app"' BookLoggerApp/Platforms/Android/google-services.json; then
+            echo "::warning::google-services.json does not mention com.bookheart.app — Firebase events may not reach the expected project"
+          fi
+          echo "google-services.json decoded OK"
+
       - name: Extract version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then

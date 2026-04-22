@@ -31,8 +31,14 @@ public class AppSettings
     public bool AutoBackupEnabled { get; set; } = false;
     public DateTime? LastBackupDate { get; set; }
 
-    // Privacy
+    // Privacy — legacy, no longer read (kept for migration safety). Replaced by the granular flags below.
     public bool TelemetryEnabled { get; set; } = false;
+
+    // Privacy — Firebase Analytics & Crashlytics consent (opt-out model, default ON).
+    public bool AnalyticsEnabled { get; set; } = true;
+    public bool CrashReportingEnabled { get; set; } = true;
+    public bool PrivacyBannerDismissed { get; set; } = false;
+    public DateTime? PrivacyPolicyAcceptedAt { get; set; }
 
     // Gamification
     public int UserLevel { get; set; } = 1;

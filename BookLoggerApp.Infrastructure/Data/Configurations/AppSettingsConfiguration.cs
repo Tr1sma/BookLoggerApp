@@ -69,5 +69,19 @@ public class AppSettingsConfiguration : IEntityTypeConfiguration<AppSettings>
         builder.Property(a => a.HideGettingStartedCta)
             .IsRequired()
             .HasDefaultValue(false);
+
+        builder.Property(a => a.AnalyticsEnabled)
+            .IsRequired()
+            .HasDefaultValue(true);
+
+        builder.Property(a => a.CrashReportingEnabled)
+            .IsRequired()
+            .HasDefaultValue(true);
+
+        builder.Property(a => a.PrivacyBannerDismissed)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(a => a.PrivacyPolicyAcceptedAt);
     }
 }

@@ -373,3 +373,8 @@ BookLoggerApp/AndroidSigning.Release.props
 .gemini/
 gha-creds-*.json
 /BookLoggerApp.Infrastructure/Services/ApiKeys.cs
+
+# Firebase config (decoded in CI from FIREBASE_CONFIG_BASE64 secret)
+google-services.json
+**/google-services.json
+BookLoggerApp/Platforms/Android/google-services.json

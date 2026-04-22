@@ -38,6 +38,10 @@ jobs:
       - name: Create ApiKeys.cs from template
         run: cp BookLoggerApp.Infrastructure/Services/ApiKeys.cs.template BookLoggerApp.Infrastructure/Services/ApiKeys.cs
 
+      # Note: google-services.json is NOT required here — CI only builds Core + Tests,
+      # which do not reference Firebase. The android-release.yml workflow decodes the
+      # Firebase config from the FIREBASE_CONFIG_BASE64 secret for the Android AAB build.
+
       - run: dotnet restore BookLoggerApp.Core/BookLoggerApp.Core.csproj
       - run: dotnet restore BookLoggerApp.Tests/BookLoggerApp.Tests.csproj
 

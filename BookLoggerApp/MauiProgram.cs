@@ -1,5 +1,8 @@
 using BookLoggerApp;
 using BookLoggerApp.Core.Exceptions;
+using BookLoggerApp.Core.Infrastructure;
+using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Services.Analytics;
 using BookLoggerApp.Core.ViewModels;
 using BookLoggerApp.Infrastructure;
 using BookLoggerApp.Infrastructure.Data;
@@ -40,6 +43,10 @@ public static class MauiProgram
 
         var app = builder.Build();
 
+        // Wire the ambient CrashReporter on ViewModelBase so ExecuteSafely* catch-blocks
+        // forward non-fatals to Crashlytics (no-op outside Android).
+        AnalyticsBootstrapper.Install(app.Services.GetRequiredService<ICrashReportingService>());
+
         // Setup global exception handler
         SetupGlobalExceptionHandler(app);
 
@@ -73,6 +80,16 @@ public static class MauiProgram
 #endif
         // Add Memory Cache for performance optimization
         builder.Services.AddMemoryCache();
+
+#if ANDROID
+        // Fan ILogger<T> messages into Firebase Crashlytics breadcrumbs (Information+).
+        // The provider is resolved after Build() via a keyed services resolver so the
+        // consent gate + crash service are already wired when logs start flowing.
+        builder.Logging.Services.AddSingleton<ILoggerProvider>(sp =>
+            new BookLoggerApp.Platforms.AndroidImpl.Analytics.CrashlyticsLoggerProvider(
+                sp.GetRequiredService<ICrashReportingService>(),
+                sp.GetRequiredService<IAnalyticsConsentGate>()));
+#endif
     }
 
     private static void RegisterDatabase(MauiAppBuilder builder)
@@ -163,6 +180,26 @@ public static class MauiProgram
 
         // Register Widget Update Service as Singleton (triggers Android widget refresh on data changes)
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService, BookLoggerApp.Services.WidgetUpdateService>();
+
+        RegisterAnalyticsServices(builder);
+    }
+
+    private static void RegisterAnalyticsServices(MauiAppBuilder builder)
+    {
+        // Consent gate is platform-agnostic — reads from IAppSettingsProvider.
+        builder.Services.AddSingleton<IAnalyticsConsentGate, AnalyticsConsentGate>();
+
+#if ANDROID
+        // Native Firebase bindings live in Platforms/Android/Analytics.
+        builder.Services.AddSingleton<IAnalyticsService, BookLoggerApp.Platforms.AndroidImpl.Analytics.FirebaseAnalyticsService>();
+        builder.Services.AddSingleton<ICrashReportingService, BookLoggerApp.Platforms.AndroidImpl.Analytics.FirebaseCrashlyticsService>();
+#else
+        // Non-Android targets (tests, other MAUI heads) use no-op implementations.
+        builder.Services.AddSingleton<IAnalyticsService>(_ => NoOpAnalyticsService.Instance);
+        builder.Services.AddSingleton<ICrashReportingService>(_ => NoOpCrashReportingService.Instance);
+#endif
+
+        builder.Services.AddSingleton<UserPropertiesPublisher>();
     }
 
     private static void RegisterViewModels(MauiAppBuilder builder)
@@ -203,6 +240,15 @@ public static class MauiProgram
             var logger = app.Services.GetService<ILogger<MauiApp>>();
 
             logger?.LogCritical(exception, "Unhandled exception occurred");
+
+            try
+            {
+                app.Services.GetService<ICrashReportingService>()?.RecordFatal(exception);
+            }
+            catch (Exception reportEx)
+            {
+                System.Diagnostics.Debug.WriteLine($"RecordFatal(UnhandledException) failed: {reportEx}");
+            }
 
             // Log user-friendly message for custom exceptions
             if (exception is BookLoggerException bookLoggerEx)
@@ -248,6 +294,17 @@ public static class MauiProgram
             System.Diagnostics.Debug.WriteLine($"=== UNOBSERVED TASK EXCEPTION ===");
             System.Diagnostics.Debug.WriteLine($"Exception: {args.Exception}");
             System.Diagnostics.Debug.WriteLine("=================================");
+
+            try
+            {
+                app.Services.GetService<ICrashReportingService>()?.RecordNonFatal(
+                    args.Exception,
+                    new Dictionary<string, string> { ["source"] = "unobserved_task" });
+            }
+            catch (Exception reportEx)
+            {
+                System.Diagnostics.Debug.WriteLine($"RecordNonFatal(UnobservedTask) failed: {reportEx}");
+            }
 
             // Mark as observed to prevent app crash
             args.SetObserved();

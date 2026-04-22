@@ -10,6 +10,8 @@
 
 <PageTitle>Settings - BookHeart</PageTitle>
 
+
+<AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.Settings" />
 <link rel="stylesheet" href="css/settings.css" />
 
 <div class="settings-container">
@@ -193,6 +195,49 @@
             </div>
         </section>
 
+        <!-- Privacy (Firebase Analytics & Crashlytics opt-out) -->
+        <section id="privacy" class="settings-card">
+            <div class="section-header">
+                <h2>🔒 Privacy</h2>
+                <p>Control which anonymous data BookHeart collects</p>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-label">Usage statistics</span>
+                    <span class="setting-description">
+                        Helps us understand which features are being used. No book titles, authors or personal notes are transmitted.
+                    </span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox"
+                           checked="@ViewModel.Settings.AnalyticsEnabled"
+                           @onchange="@(e => ViewModel.ToggleAnalyticsCommand.ExecuteAsync((bool)e.Value!))" />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-label">Crash reports</span>
+                    <span class="setting-description">
+                        Sends an anonymous error report when the app crashes so the issue can be fixed. No personal data is included.
+                    </span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox"
+                           checked="@ViewModel.Settings.CrashReportingEnabled"
+                           @onchange="@(e => ViewModel.ToggleCrashReportingCommand.ExecuteAsync((bool)e.Value!))" />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <p class="privacy-note">
+                When disabled, cached events and the anonymous device ID are reset.
+                Data that was already transmitted cannot be recalled.
+            </p>
+        </section>
+
         <!-- More Info (Diagnostics + Privacy Policy) -->
         <section class="settings-card">
             <button class="settings-collapse-toggle" @onclick="ToggleMoreInfo">
@@ -257,9 +302,14 @@
 
                             <h3>Third-Party Services</h3>
                             <p>
-                                BookHeart does not include any advertising, analytics, or tracking SDKs.
-                                The only external service used is the Google Books API for optional book
-                                metadata lookup.
+                                BookHeart uses three third-party services: the Google Books API for
+                                optional ISBN lookup, Firebase Analytics for anonymous usage statistics
+                                (Android only, enabled by default, opt-out under Settings → Privacy),
+                                and Firebase Crashlytics for anonymous crash reports (Android only,
+                                enabled by default, opt-out under Settings → Privacy). Firebase never
+                                receives book titles, authors, ISBNs, quotes, annotations, or personal
+                                notes — only coarse bucketed counts. The Android Advertising ID and
+                                Android ID are explicitly disabled.
                             </p>
 
                             <h3>Data Deletion</h3>
