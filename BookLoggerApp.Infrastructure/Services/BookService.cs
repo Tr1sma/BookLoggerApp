@@ -1,6 +1,7 @@
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Services.Analytics;
 using BookLoggerApp.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -17,19 +18,22 @@ public class BookService : IBookService
     private readonly IPlantService _plantService;
     private readonly IGoalService _goalService;
     private readonly ILogger<BookService> _logger;
+    private readonly IAnalyticsService _analytics;
 
     public BookService(
         IUnitOfWork unitOfWork,
         IProgressionService progressionService,
         IPlantService plantService,
         IGoalService goalService,
-        ILogger<BookService> logger)
+        ILogger<BookService> logger,
+        IAnalyticsService? analytics = null)
     {
         _unitOfWork = unitOfWork;
         _progressionService = progressionService;
         _plantService = plantService;
         _goalService = goalService;
         _logger = logger;
+        _analytics = analytics ?? NoOpAnalyticsService.Instance;
     }
 
     public async Task<IReadOnlyList<Book>> GetAllAsync(CancellationToken ct = default)
@@ -51,6 +55,12 @@ public class BookService : IBookService
 
         var result = await _unitOfWork.Books.AddAsync(book);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        _analytics.LogEvent(AnalyticsEventNames.BookAdded, AnalyticsParamBuilder.Create()
+            .Add(AnalyticsParamNames.HasCover, !string.IsNullOrEmpty(book.CoverImagePath))
+            .Add(AnalyticsParamNames.PagesBucket, AnalyticsBuckets.Pages(book.PageCount ?? 0))
+            .BuildMutable());
+
         return result;
     }
 
@@ -189,6 +199,13 @@ public class BookService : IBookService
 
                 await _goalService.RecalculateGoalProgressAsync(ct);
                 _goalService.NotifyGoalsChanged();
+
+                var avgRatingInt = book.AverageRating.HasValue ? (int?)Math.Round(book.AverageRating.Value) : null;
+                _analytics.LogEvent(AnalyticsEventNames.BookCompleted, AnalyticsParamBuilder.Create()
+                    .Add(AnalyticsParamNames.PagesBucket, AnalyticsBuckets.Pages(book.PageCount ?? 0))
+                    .Add(AnalyticsParamNames.RatingBucket, AnalyticsBuckets.RatingInt(avgRatingInt))
+                    .Add(AnalyticsParamNames.HasRating, avgRatingInt.HasValue)
+                    .BuildMutable());
             }
         }
         catch (DbUpdateConcurrencyException ex)

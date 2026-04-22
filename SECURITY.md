@@ -20,7 +20,15 @@ When searching for a book by ISBN, BookHeart sends the ISBN to the Google Books 
 
 ## Third-Party Services
 
-BookHeart does not include any advertising, analytics, or tracking SDKs. The only external service used is the Google Books API for the optional retrieval of book metadata.
+BookHeart uses the following third-party services:
+
+1. **Google Books API** (optional, only for ISBN lookup): The scanned or manually entered ISBN is sent to `googleapis.com/books/v1/volumes` in order to retrieve metadata (title, author, cover image). No personal data is transmitted.
+
+2. **Firebase Analytics** (Android only, enabled by default, can be disabled at any time under Settings → Datenschutz): Sends anonymous usage statistics to Google in order to help us understand which features are being used. **Never** transmits book titles, authors, ISBNs, quotes, annotations, personal notes or any other personal data — only coarse, bucketed figures such as "book count (6-20)" or "current level (11-20)". The Android Advertising ID and Android ID are explicitly disabled in our Firebase configuration.
+
+3. **Firebase Crashlytics** (Android only, enabled by default, can be disabled at any time under Settings → Datenschutz): Sends anonymous crash reports (stack trace, Android version, device model, app version) when the app crashes, so the bug can be fixed. No personal data is transmitted.
+
+**Data processing by Google:** Firebase Analytics and Crashlytics are operated by Google LLC (1600 Amphitheatre Parkway, Mountain View, CA 94043, USA). An anonymous app instance ID and basic device information (Android version, device model, language, region) may be transmitted to servers in the USA. Legal basis: Art. 6(1)(f) GDPR (legitimate interest in app stability and improvement). You can withdraw your consent at any time with effect for the future by toggling the switches under Settings → Datenschutz. When disabled, the anonymous app instance ID is additionally reset via `ResetAnalyticsData()` so that previously collected data can no longer be tied to your device.
 
 ## Data Deletion
 
@@ -60,7 +68,15 @@ Bei der Suche nach einem Buch über die ISBN-Nummer sendet BookHeart diese an di
 
 ## Drittanbieterdienste
 
-BookHeart enthält keine Werbe-, Analyse- oder Tracking-SDKs. Der einzige verwendete externe Dienst ist die Google Books API für den optionalen Abruf von Buchmetadaten.
+BookHeart nutzt folgende externe Dienste:
+
+1. **Google Books API** (optional, nur bei ISBN-Suche): Die gescannte oder manuell eingegebene ISBN wird an `googleapis.com/books/v1/volumes` gesendet, um Metadaten (Titel, Autor, Cover) abzurufen. Keine personenbezogenen Daten werden übertragen.
+
+2. **Firebase Analytics** (nur Android, standardmäßig AKTIVIERT, jederzeit unter Einstellungen → Datenschutz deaktivierbar): Sendet anonyme Nutzungsstatistiken an Google, damit wir verstehen, welche Funktionen genutzt werden. Es werden **keine** Buchtitel, Autoren, ISBNs, Zitate, Annotationen, persönliche Notizen oder andere personenbezogene Daten übertragen — nur grob zusammengefasste Kennzahlen wie „Anzahl Bücher (Bucket 6-20)" oder „aktuelles Level (Bucket 11-20)". Die Android Advertising ID und die Android ID sind in unserer Firebase-Konfiguration ausdrücklich deaktiviert.
+
+3. **Firebase Crashlytics** (nur Android, standardmäßig AKTIVIERT, jederzeit unter Einstellungen → Datenschutz deaktivierbar): Sendet bei App-Abstürzen anonyme Fehlerberichte (Stacktrace, Android-Version, Gerätemodell, App-Version) an Google, damit der Fehler behoben werden kann. Keine personenbezogenen Daten werden übertragen.
+
+**Datenverarbeitung durch Google:** Firebase Analytics und Crashlytics werden von Google LLC (1600 Amphitheatre Parkway, Mountain View, CA 94043, USA) betrieben. Dabei kann die anonyme App-Instance-ID sowie grundlegende Geräteinformationen (Android-Version, Gerätemodell, Sprache, Region) an Server in den USA übertragen werden. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an App-Stabilität und -Verbesserung). Eine Einwilligung kann durch das Deaktivieren der Schalter unter Einstellungen → Datenschutz jederzeit mit Wirkung für die Zukunft widerrufen werden; bei Deaktivierung wird die anonyme App-Instance-ID zusätzlich über `ResetAnalyticsData()` zurückgesetzt, sodass bereits erhobene Daten nicht mehr mit deinem Gerät verknüpft werden können.
 
 ## Datenlöschung
 

@@ -31,8 +31,8 @@
         <ApplicationId>com.bookheart.app</ApplicationId>
 
         <!-- Versions (werden beim CI-Release-Build durch den Tag überschrieben) -->
-        <ApplicationDisplayVersion>0.9.5</ApplicationDisplayVersion>
-        <ApplicationVersion>905</ApplicationVersion>
+        <ApplicationDisplayVersion>0.10.1</ApplicationDisplayVersion>
+        <ApplicationVersion>1001</ApplicationVersion>
 
         <!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
         <WindowsPackageType>None</WindowsPackageType>
@@ -52,7 +52,14 @@
         <TrimMode>partial</TrimMode>
         <!-- Workaround for MonoAOTCompiler race condition (IndexOutOfRangeException in PrecompileLibraryParallel) -->
         <AndroidAotParallelism>1</AndroidAotParallelism>
+        <!-- R8 Java shrinking: ON (size savings); renaming: OFF via proguard.cfg
+             so Crashlytics reports remain readable without a mapping upload. -->
+        <AndroidLinkTool>r8</AndroidLinkTool>
     </PropertyGroup>
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+        <ProguardConfiguration Include="proguard.cfg" />
+    </ItemGroup>
 
     <ItemGroup>
         <!-- App Icon -->
@@ -92,6 +99,30 @@
         <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.7.2" />
 
 
+    </ItemGroup>
+
+    <!-- Firebase Analytics + Crashlytics (Android only).
+         Buildtools NuGet does not exist for .NET MAUI as of early 2026 — Crashlytics
+         de-obfuscated stack traces in R8/ProGuard release builds are a known MAUI
+         limitation (see SECURITY.md). Non-fatals and symbolicated debug stacks work. -->
+    <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+        <PackageReference Include="Xamarin.Firebase.Analytics" Version="123.0.0.3" />
+        <PackageReference Include="Xamarin.Firebase.Crashlytics" Version="120.0.4.1" />
+        <PackageReference Include="Xamarin.GooglePlayServices.Base" Version="118.10.0.1" />
+    </ItemGroup>
+
+    <!-- google-services.json wiring (file is gitignored; provided via CI secret or local dev copy) -->
+    <ItemGroup Condition="$(TargetFramework.Contains('-android')) and Exists('Platforms\Android\google-services.json')">
+        <GoogleServicesJson Include="Platforms\Android\google-services.json" />
+    </ItemGroup>
+
+    <!-- Defensive trim roots for Firebase bindings (native SDK uses JNI reflection).
+         RootMode="library" keeps every public entry point of the assembly; required
+         since .NET 8 (prior versions accepted the plain Include form). -->
+    <ItemGroup Condition="$(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release'">
+        <TrimmerRootAssembly Include="Xamarin.Firebase.Analytics" RootMode="library" />
+        <TrimmerRootAssembly Include="Xamarin.Firebase.Crashlytics" RootMode="library" />
+        <TrimmerRootAssembly Include="Xamarin.GooglePlayServices.Base" RootMode="library" />
     </ItemGroup>
 
     <ItemGroup>

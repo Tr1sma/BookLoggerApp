@@ -16,9 +16,15 @@ Versionsschema:
 ## [Unveröffentlicht]
 
 ### Hinzugefügt
+- Firebase Analytics und Crashlytics für Android integriert — anonyme Nutzungsstatistiken und Absturzberichte helfen, die App zu verbessern (Buchtitel, Autoren, Notizen, Zitate und andere persönliche Daten werden **nicht** übertragen)
+- Neuer Bereich „🔒 Datenschutz" in den Einstellungen: separate Toggles für Nutzungsstatistiken und Absturzberichte, jederzeit deaktivierbar
+- Beim ersten Start nach dem Onboarding erscheint ein dezenter, nicht-blockierender Datenschutz-Banner
+- Datenschutzerklärung (DE + EN) um einen ausführlichen Firebase-Abschnitt erweitert
 
 ### Geändert
 - Changelogs vollständig überarbeitet/verbessert
+- Beim Deaktivieren der Nutzungsstatistiken wird die anonyme Geräte-ID zurückgesetzt (`ResetAnalyticsData`), sodass künftige Ereignisse — falls wieder aktiviert — als neuer anonymer Nutzer erscheinen
+
 ### Behoben
 
 ## [0.9.6]
