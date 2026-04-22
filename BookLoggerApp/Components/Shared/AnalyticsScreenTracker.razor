@@ -1,0 +1,26 @@
+@inject BookLoggerApp.Core.Services.Abstractions.IAnalyticsService Analytics
+
+@code {
+    [Parameter, EditorRequired]
+    public string Screen { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? ScreenClass { get; set; }
+
+    private bool _logged;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender || _logged) return;
+        if (string.IsNullOrEmpty(Screen)) return;
+        _logged = true;
+        try
+        {
+            Analytics.LogScreenView(Screen, ScreenClass);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"AnalyticsScreenTracker failed for '{Screen}': {ex}");
+        }
+    }
+}

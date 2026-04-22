@@ -3,6 +3,7 @@ using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Services.Analytics;
 using BookLoggerApp.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,10 +15,12 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class GoalService : IGoalService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IAnalyticsService _analytics;
 
-    public GoalService(IUnitOfWork unitOfWork)
+    public GoalService(IUnitOfWork unitOfWork, IAnalyticsService? analytics = null)
     {
         _unitOfWork = unitOfWork;
+        _analytics = analytics ?? NoOpAnalyticsService.Instance;
     }
 
     /// <inheritdoc />
@@ -45,6 +48,12 @@ public class GoalService : IGoalService
         var result = await _unitOfWork.ReadingGoals.AddAsync(goal);
         await _unitOfWork.SaveChangesAsync(ct);
         await RecalculateGoalProgressAsync(ct);
+
+        _analytics.LogEvent(AnalyticsEventNames.GoalCreated, AnalyticsParamBuilder.Create()
+            .Add(AnalyticsParamNames.GoalType, goal.Type.ToString())
+            .Add(AnalyticsParamNames.TargetBucket, AnalyticsBuckets.Count(goal.Target))
+            .BuildMutable());
+
         return result;
     }
 

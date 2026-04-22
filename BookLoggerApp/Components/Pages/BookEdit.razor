@@ -20,6 +20,8 @@
 
 <PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? "Add Book" : "Edit Book") - BookHeart</PageTitle>
 
+
+<AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.BookEdit" />
 <div class="book-edit-container">
     <div class="book-edit-header">
         <h1>@(ViewModel.Book?.Id == Guid.Empty ? "Add New Book" : "Edit Book")</h1>

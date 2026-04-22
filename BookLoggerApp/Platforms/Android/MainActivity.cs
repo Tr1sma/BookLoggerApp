@@ -20,6 +20,63 @@ namespace BookLoggerApp
             OnBackPressedDispatcher.AddCallback(this, new BackPressCallback(this));
 
             System.Diagnostics.Debug.WriteLine("=== MainActivity: Registered AndroidX BackPressCallback ===");
+
+            InitializeFirebase();
+        }
+
+        private void InitializeFirebase()
+        {
+            try
+            {
+                Firebase.FirebaseApp.InitializeApp(this);
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Firebase.InitializeApp failed: {ex}");
+                return;
+            }
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var services = Microsoft.Maui.IPlatformApplication.Current?.Services;
+                    var gate = services?.GetService<BookLoggerApp.Core.Services.Abstractions.IAnalyticsConsentGate>();
+                    var analytics = services?.GetService<BookLoggerApp.Core.Services.Abstractions.IAnalyticsService>();
+                    var crash = services?.GetService<BookLoggerApp.Core.Services.Abstractions.ICrashReportingService>();
+
+                    if (gate is not null)
+                    {
+                        await gate.InitializeAsync().ConfigureAwait(false);
+                    }
+
+                    RunOnUiThread(() =>
+                    {
+                        try
+                        {
+                            analytics?.SetAnalyticsCollectionEnabled(gate?.AnalyticsAllowed ?? true);
+                            crash?.SetCrashlyticsCollectionEnabled(gate?.CrashAllowed ?? true);
+
+                            const string envKey = "environment";
+#if DEBUG
+                            const string envValue = "debug";
+#else
+                            const string envValue = "release";
+#endif
+                            analytics?.SetUserProperty(envKey, envValue);
+                            crash?.SetCustomKey(envKey, envValue);
+                        }
+                        catch (System.Exception innerEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Firebase post-init on UI thread failed: {innerEx}");
+                        }
+                    });
+                }
+                catch (System.Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Firebase consent init failed: {ex}");
+                }
+            });
         }
 
         private void CreateNotificationChannels()

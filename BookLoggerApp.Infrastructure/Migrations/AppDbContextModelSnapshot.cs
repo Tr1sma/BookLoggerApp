@@ -15,7 +15,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.6");
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Annotation", b =>
                 {
@@ -68,11 +68,21 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("AnalyticsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("AutoBackupEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Coins")
                         .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CrashReportingEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -135,6 +145,14 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<int>("PlantsPurchased")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("PrivacyBannerDismissed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("PrivacyPolicyAcceptedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("ReadingRemindersEnabled")
                         .HasColumnType("INTEGER");
 
@@ -187,8 +205,10 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("99999999-0000-0000-0000-000000000001"),
+                            AnalyticsEnabled = true,
                             AutoBackupEnabled = false,
                             Coins = 100,
+                            CrashReportingEnabled = true,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             HasCompletedOnboarding = false,
                             HideGettingStartedCta = false,
@@ -200,6 +220,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             OnboardingIntroStatus = 0,
                             OnboardingTutorialPlantNeedsWateringAssist = false,
                             PlantsPurchased = 0,
+                            PrivacyBannerDismissed = false,
                             ReadingRemindersEnabled = false,
                             ReviewPromptDisabled = false,
                             ReviewPromptMonthCount = 0,

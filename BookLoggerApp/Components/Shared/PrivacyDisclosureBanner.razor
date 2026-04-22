@@ -1,0 +1,80 @@
+@using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Core.Services.Analytics
+@inject BookLoggerApp.Core.ViewModels.AppStartupViewModel ViewModel
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject IAnalyticsService Analytics
+
+@if (ViewModel.IsPrivacyBannerVisible)
+{
+    <div class="privacy-banner" role="region" aria-label="Privacy notice">
+        <div class="privacy-banner-content">
+            <strong class="privacy-banner-title">Privacy &amp; Statistics</strong>
+            <p class="privacy-banner-text">
+                BookHeart uses Firebase Analytics and Crashlytics to help improve the app.
+                No book titles, authors, notes or personal data are ever transmitted.
+                You can disable both at any time in Settings.
+            </p>
+        </div>
+        <div class="privacy-banner-actions">
+            <button type="button" class="privacy-banner-btn privacy-banner-btn-secondary" @onclick="OpenSettingsAsync">
+                Settings
+            </button>
+            <button type="button" class="privacy-banner-btn privacy-banner-btn-primary" @onclick="DismissAsync">
+                Got it
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loggedShownEvent;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (ViewModel.IsPrivacyBannerVisible && !_loggedShownEvent)
+        {
+            _loggedShownEvent = true;
+            try
+            {
+                Analytics.LogEvent(AnalyticsEventNames.PrivacyBannerShown);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"PrivacyBannerShown log failed: {ex}");
+            }
+        }
+    }
+
+    private async Task DismissAsync()
+    {
+        try
+        {
+            Analytics.LogEvent(AnalyticsEventNames.PrivacyBannerAction, AnalyticsParamBuilder.Create()
+                .Add(AnalyticsParamNames.Action, "understood")
+                .BuildMutable());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"PrivacyBannerAction log failed: {ex}");
+        }
+
+        await ViewModel.DismissPrivacyBannerAsync();
+    }
+
+    private async Task OpenSettingsAsync()
+    {
+        try
+        {
+            Analytics.LogEvent(AnalyticsEventNames.PrivacyBannerAction, AnalyticsParamBuilder.Create()
+                .Add(AnalyticsParamNames.Action, "go_to_settings")
+                .BuildMutable());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"PrivacyBannerAction log failed: {ex}");
+        }
+
+        await ViewModel.DismissPrivacyBannerAsync();
+        Navigation.NavigateTo("/settings#privacy");
+    }
+}

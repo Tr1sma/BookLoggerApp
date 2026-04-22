@@ -1,5 +1,7 @@
-﻿@page "/books"
+@page "/books"
 @inject BookLoggerApp.Core.ViewModels.BookListViewModel Vm
+
+<AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.BookList" />
 
 <h1>Books</h1>
 

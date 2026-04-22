@@ -16,6 +16,7 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IMigrationService _migrationService;
     private readonly INotificationService _notificationService;
     private readonly IAppVersionService _appVersionService;
+    private readonly IAnalyticsService? _analytics;
 
 
     public SettingsViewModel(
@@ -26,7 +27,8 @@ public partial class SettingsViewModel : ViewModelBase
         IFilePickerService filePickerService,
         IMigrationService migrationService,
         INotificationService notificationService,
-        IAppVersionService appVersionService)
+        IAppVersionService appVersionService,
+        IAnalyticsService? analytics = null)
     {
         _importExportService = importExportService;
         _settingsProvider = settingsProvider;
@@ -36,6 +38,7 @@ public partial class SettingsViewModel : ViewModelBase
         _migrationService = migrationService;
         _notificationService = notificationService;
         _appVersionService = appVersionService;
+        _analytics = analytics;
 
         MigrationLog = _migrationService.GetMigrationLog();
         AppVersion = _appVersionService.CurrentVersion;
@@ -45,7 +48,7 @@ public partial class SettingsViewModel : ViewModelBase
     private AppSettings _settings = new();
 
     [ObservableProperty]
-    private string _appVersion = "0.9.5";
+    private string _appVersion = "0.10.0";
 
     [ObservableProperty]
     private string _migrationLog;
@@ -179,6 +182,46 @@ public partial class SettingsViewModel : ViewModelBase
     {
         Settings.UpdatedAt = DateTime.UtcNow;
         await _settingsProvider.UpdateSettingsAsync(Settings);
+    }
+
+    [RelayCommand]
+    public async Task ToggleAnalyticsAsync(bool enabled)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            Settings.AnalyticsEnabled = enabled;
+            OnPropertyChanged(nameof(Settings));
+            await SaveSettingsInternalAsync();
+            LogSettingChanged("analytics");
+        }, "Failed to update analytics settings");
+    }
+
+    [RelayCommand]
+    public async Task ToggleCrashReportingAsync(bool enabled)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            Settings.CrashReportingEnabled = enabled;
+            OnPropertyChanged(nameof(Settings));
+            await SaveSettingsInternalAsync();
+            LogSettingChanged("crash_reporting");
+        }, "Failed to update crash reporting settings");
+    }
+
+    private void LogSettingChanged(string settingKey)
+    {
+        try
+        {
+            _analytics?.LogEvent(
+                BookLoggerApp.Core.Services.Analytics.AnalyticsEventNames.AppSettingsChanged,
+                BookLoggerApp.Core.Services.Analytics.AnalyticsParamBuilder.Create()
+                    .Add(BookLoggerApp.Core.Services.Analytics.AnalyticsParamNames.SettingKey, settingKey)
+                    .BuildMutable());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LogSettingChanged failed: {ex}");
+        }
     }
 
     [RelayCommand]

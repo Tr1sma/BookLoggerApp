@@ -1,6 +1,7 @@
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Core.Services.Analytics;
 using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp.Infrastructure.Services;
@@ -13,15 +14,18 @@ public class ProgressionService : IProgressionService
     private readonly IAppSettingsProvider _settingsProvider;
     private readonly IPlantService _plantService;
     private readonly IDecorationService _decorationService;
+    private readonly IAnalyticsService _analytics;
 
     public ProgressionService(
         IAppSettingsProvider settingsProvider,
         IPlantService plantService,
-        IDecorationService decorationService)
+        IDecorationService decorationService,
+        IAnalyticsService? analytics = null)
     {
         _settingsProvider = settingsProvider;
         _plantService = plantService;
         _decorationService = decorationService;
+        _analytics = analytics ?? NoOpAnalyticsService.Instance;
     }
 
     public async Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0, CancellationToken ct = default)
@@ -179,12 +183,18 @@ public class ProgressionService : IProgressionService
             newCoins = settings.Coins;
         }
 
-        return new LevelUpResult
+        var result = new LevelUpResult
         {
             OldLevel = oldLevel,
             NewLevel = newLevel,
             CoinsAwarded = coinsAwarded,
             NewTotalCoins = newCoins
         };
+
+        _analytics.LogEvent(AnalyticsEventNames.LevelUp, AnalyticsParamBuilder.Create()
+            .Add(AnalyticsParamNames.NewLevelBucket, AnalyticsBuckets.Level(newLevel))
+            .BuildMutable());
+
+        return result;
     }
 }
