@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Repositories;
@@ -6,14 +7,19 @@ namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
 /// Service implementation for managing annotations.
+/// Free tier is capped at 3 notes per book via <see cref="IFeatureGuard"/>.
 /// </summary>
 public class AnnotationService : IAnnotationService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private const int FreeTierPerBookCap = 3;
 
-    public AnnotationService(IUnitOfWork unitOfWork)
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IFeatureGuard? _featureGuard;
+
+    public AnnotationService(IUnitOfWork unitOfWork, IFeatureGuard? featureGuard = null)
     {
         _unitOfWork = unitOfWork;
+        _featureGuard = featureGuard;
     }
 
     public async Task<IReadOnlyList<Annotation>> GetAllAsync(CancellationToken ct = default)
@@ -29,6 +35,16 @@ public class AnnotationService : IAnnotationService
 
     public async Task<Annotation> AddAsync(Annotation annotation, CancellationToken ct = default)
     {
+        if (_featureGuard is not null)
+        {
+            int currentCountForBook = (await _unitOfWork.Annotations.FindAsync(a => a.BookId == annotation.BookId)).Count();
+            _featureGuard.EnforceSoftLimit(
+                FeatureKey.UnlimitedNotesAndQuotes,
+                currentCountForBook,
+                FreeTierPerBookCap,
+                $"Free tier is limited to {FreeTierPerBookCap} notes per book. Upgrade to Plus for unlimited notes.");
+        }
+
         if (annotation.CreatedAt == default)
             annotation.CreatedAt = DateTime.UtcNow;
 

@@ -4,6 +4,7 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
 @using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Components.Shared
 @inject BookshelfViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
@@ -232,9 +233,12 @@
     }
     <!-- Floating Action Buttons (Shelves Tab) -->
     <div class="fab-container">
-        <button class="fab-button secondary" @onclick="OpenAddShelfModal" title="New Shelf">
-            📚
-        </button>
+        <LockedFeatureButton Feature="FeatureKey.UnlimitedShelves"
+                             ForceLock="@(ViewModel.Shelves.Count >= 3)">
+            <button class="fab-button secondary" @onclick="OpenAddShelfModal" title="New Shelf">
+                📚
+            </button>
+        </LockedFeatureButton>
         <button class="fab-button" @onclick="NavigateToAddBook" title="Add Book">
             +
         </button>
@@ -243,6 +247,7 @@
 
     @if (activeTab == "wishlist")
     {
+    <LockedFeatureButton Feature="FeatureKey.Wishlist">
     <!-- Wishlist Content -->
     <div class="wishlist-controls">
         <input type="text" class="search-input" placeholder="Search wishlist..."
@@ -322,6 +327,7 @@
             +
         </button>
     </div>
+    </LockedFeatureButton>
     } @* end activeTab == "wishlist" *@
 </div>
 

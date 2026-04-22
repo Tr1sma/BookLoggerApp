@@ -3,6 +3,7 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Helpers
 @using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Components.Shared
 @inject BookDetailViewModel ViewModel
 @inject IProgressService ProgressService
@@ -68,19 +69,21 @@
                     <h2>Book Information</h2>
                     @if (ViewModel.Book.Status == ReadingStatus.Completed)
                     {
-                        <button class="share-icon-btn"
-                                @onclick="HandleShareAsRecommendation"
-                                disabled="@ViewModel.IsGeneratingBookCard"
-                                title="Share as Recommendation">
-                            @if (ViewModel.IsGeneratingBookCard)
-                            {
-                                <span class="share-icon-spinner">...</span>
-                            }
-                            else
-                            {
-                                <span>📤</span>
-                            }
-                        </button>
+                        <LockedFeatureButton Feature="FeatureKey.ShareCards">
+                            <button class="share-icon-btn"
+                                    @onclick="HandleShareAsRecommendation"
+                                    disabled="@ViewModel.IsGeneratingBookCard"
+                                    title="Share as Recommendation">
+                                @if (ViewModel.IsGeneratingBookCard)
+                                {
+                                    <span class="share-icon-spinner">...</span>
+                                }
+                                else
+                                {
+                                    <span>📤</span>
+                                }
+                            </button>
+                        </LockedFeatureButton>
                     }
                 </div>
 

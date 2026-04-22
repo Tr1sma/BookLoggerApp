@@ -148,6 +148,20 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
         builder.Services.AddSingleton<BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider>(sp => sp.GetRequiredService<BookLoggerApp.Infrastructure.Services.AppSettingsProvider>());
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IEntitlementStore, BookLoggerApp.Infrastructure.Services.EntitlementStore>();
+        builder.Services.AddSingleton<BookLoggerApp.Infrastructure.Services.EntitlementLapseHandler>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IEntitlementService, BookLoggerApp.Infrastructure.Services.EntitlementService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFeatureGuard, BookLoggerApp.Infrastructure.Services.FeatureGuard>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IProductCatalog, BookLoggerApp.Infrastructure.Services.ProductCatalog>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IPaywallCoordinator, BookLoggerApp.Infrastructure.Services.PaywallCoordinator>();
+
+        // Billing: real Android implementation on device, no-op on every other head.
+#if ANDROID
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IBillingService, BookLoggerApp.Services.Billing.AndroidBillingService>();
+#else
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IBillingService>(_ => BookLoggerApp.Infrastructure.Services.NoOpBillingService.Instance);
+#endif
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IPromoCodeService, BookLoggerApp.Infrastructure.Services.PromoCodeService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IOnboardingService, BookLoggerApp.Infrastructure.Services.OnboardingService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IReviewPromptService, BookLoggerApp.Infrastructure.Services.ReviewPromptService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppVersionService, BookLoggerApp.Services.AppVersionService>();
@@ -219,6 +233,7 @@ public static class MauiProgram
         builder.Services.AddTransient<DecorationShopViewModel>();
         builder.Services.AddTransient<UserProgressViewModel>();
         builder.Services.AddTransient<WishlistViewModel>();
+        builder.Services.AddTransient<PaywallViewModel>();
         builder.Services.AddSingleton<AppStartupViewModel>();
     }
 

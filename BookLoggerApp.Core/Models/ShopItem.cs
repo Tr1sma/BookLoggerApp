@@ -46,6 +46,17 @@ public class ShopItem
     /// </summary>
     public bool IsSingleton { get; set; }
 
+    /// <summary>
+    /// True if this item is purchasable by Free-tier users (one of the 3 starter decorations).
+    /// Plus unlocks everything that is not <see cref="IsUltimateTier"/>.
+    /// </summary>
+    public bool IsFreeTier { get; set; } = false;
+
+    /// <summary>
+    /// True for the Premium-exclusive ultimate decoration (Heart of Stories).
+    /// </summary>
+    public bool IsUltimateTier { get; set; } = false;
+
     // For Plants: Reference to PlantSpecies
     public Guid? PlantSpeciesId { get; set; }
     public PlantSpecies? PlantSpecies { get; set; }

@@ -592,6 +592,19 @@ public class ImportExportService : IImportExportService
                 await freshContext.Database.MigrateAsync(ct);
                 // End Modification
 
+                // Entitlement state is device-bound: it reflects what Google Play says
+                // THIS device owns, not what the backup source had. Wipe the UserEntitlement
+                // rows from the restored DB so DbInitializer re-seeds a Free row on the next
+                // app-launch; AppStartup then re-queries Play Billing and upgrades if the
+                // Google account has an active subscription.
+                if (await freshContext.UserEntitlements.AnyAsync(ct))
+                {
+                    _logger?.LogInformation("Wiping {Count} imported UserEntitlement rows; they will be re-verified against Play Billing on next startup.",
+                        await freshContext.UserEntitlements.CountAsync(ct));
+                    freshContext.UserEntitlements.RemoveRange(freshContext.UserEntitlements);
+                    await freshContext.SaveChangesAsync(ct);
+                }
+
                 progress?.Report("Restoring cover images");
                 // 4. Restore Covers
                 // Case-insensitive search for covers directory

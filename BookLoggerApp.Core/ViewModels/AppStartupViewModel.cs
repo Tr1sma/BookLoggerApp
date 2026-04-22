@@ -14,7 +14,10 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     private readonly IAppUpdateService _appUpdateService;
     private readonly IOnboardingService _onboardingService;
     private readonly IAppSettingsProvider _settingsProvider;
+    private readonly IEntitlementService? _entitlementService;
+    private readonly IBillingService? _billingService;
     private readonly UserPropertiesPublisher? _userPropertiesPublisher;
+    private bool _billingEventHookInstalled;
     private bool _initialized;
     private bool _dismissedUpdateAvailableThisSession;
     private bool _dismissedDownloadedUpdateThisSession;
@@ -28,6 +31,8 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         IAppUpdateService appUpdateService,
         IOnboardingService onboardingService,
         IAppSettingsProvider settingsProvider,
+        IEntitlementService? entitlementService = null,
+        IBillingService? billingService = null,
         UserPropertiesPublisher? userPropertiesPublisher = null)
     {
         _appVersionService = appVersionService;
@@ -35,6 +40,8 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         _appUpdateService = appUpdateService;
         _onboardingService = onboardingService;
         _settingsProvider = settingsProvider;
+        _entitlementService = entitlementService;
+        _billingService = billingService;
         _userPropertiesPublisher = userPropertiesPublisher;
         _appUpdateService.StateChanged += OnAppUpdateStateChanged;
         _onboardingService.StateChanged += OnOnboardingStateChanged;
@@ -126,11 +133,63 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         await ExecuteSafelyAsync(async () =>
         {
             await DatabaseInitializationHelper.EnsureInitializedAsync();
+
+            // Load the current entitlement tier into memory before any UI renders so
+            // HasAccess returns the correct answer on the first paint.
+            if (_entitlementService is not null)
+            {
+                try
+                {
+                    await _entitlementService.InitializeAsync(ct);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"EntitlementService.InitializeAsync failed: {ex}");
+                }
+            }
+
+            // Connect to Google Play Billing and pull every active purchase back
+            // into the entitlement store. Runs best-effort — a billing hiccup
+            // must never block the rest of startup.
+            if (_billingService is not null && _entitlementService is not null)
+            {
+                try
+                {
+                    if (!_billingEventHookInstalled)
+                    {
+                        _billingService.PurchaseUpdated += OnBillingPurchaseUpdated;
+                        _billingEventHookInstalled = true;
+                    }
+
+                    if (!_billingService.IsConnected)
+                    {
+                        await _billingService.ConnectAsync(ct);
+                    }
+
+                    if (_billingService.IsConnected)
+                    {
+                        foreach (var active in await _billingService.QueryActivePurchasesAsync(ct))
+                        {
+                            await _entitlementService.ApplyPurchaseAsync(active, Core.Entitlements.EntitlementChangeReason.Restore, ct);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Billing restore at startup failed: {ex}");
+                }
+            }
+
             _appVersionService.TrackCurrentVersion();
             CurrentVersion = _appVersionService.CurrentVersion;
 
             var onboardingSnapshot = await _onboardingService.GetSnapshotAsync(ct);
-            var isFirstLaunchForVersion = _appVersionService.IsFirstLaunchForCurrentVersion;
+
+            // Gate on our own persisted "last seen changelog version" flag rather than
+            // solely MAUI's VersionTracking.IsFirstLaunchForCurrentVersion, which has been
+            // observed to fire on every cold start on some devices.
+            var lastSeenChangelog = _appVersionService.LastSeenChangelogVersion;
+            var hasUnseenChangelog = !string.Equals(lastSeenChangelog, CurrentVersion, StringComparison.OrdinalIgnoreCase);
 
             ApplyOnboardingSnapshot(onboardingSnapshot);
 
@@ -141,7 +200,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
                 // replay the intro have already seen the changelog.
                 _showChangelogAfterOnboarding = false;
             }
-            else if (isFirstLaunchForVersion)
+            else if (hasUnseenChangelog)
             {
                 await LoadChangelogAsync(ct);
             }
@@ -176,6 +235,44 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         await ExecuteSafelyAsync(
             async () => await RefreshUpdateStateAsync(ct),
             "Failed to refresh app update state");
+
+        // Re-query Play Billing and update the tier cache. If the user cancelled
+        // their subscription in the Play Store while the app was backgrounded,
+        // this detects the lapse on the next foreground. Best-effort.
+        if (_billingService is not null && _entitlementService is not null)
+        {
+            try
+            {
+                if (!_billingService.IsConnected)
+                {
+                    await _billingService.ConnectAsync(ct);
+                }
+
+                if (_billingService.IsConnected)
+                {
+                    IReadOnlyList<Core.Entitlements.PurchaseResult> active = await _billingService.QueryActivePurchasesAsync(ct);
+                    if (active.Count > 0)
+                    {
+                        foreach (var p in active)
+                        {
+                            await _entitlementService.ApplyPurchaseAsync(p, Core.Entitlements.EntitlementChangeReason.Restore, ct);
+                        }
+                    }
+                    else if (_entitlementService.CurrentTier != Core.Entitlements.SubscriptionTier.Free
+                             && _entitlementService.CurrentEntitlement?.BillingPeriod != Core.Entitlements.BillingPeriod.Lifetime)
+                    {
+                        // Subscription is gone from Play; downgrade to Free.
+                        await _entitlementService.ApplyLapseAsync("expired", ct);
+                    }
+                }
+
+                await _entitlementService.RefreshAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Entitlement refresh on resume failed: {ex}");
+            }
+        }
     }
 
     public Task ToggleHistoryAsync()
@@ -187,8 +284,37 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     public async Task CloseChangelogAsync()
     {
         IsChangelogVisible = false;
+
+        // Persist that the user has now seen this version's changelog so it does not
+        // re-appear on every subsequent cold start.
+        if (!string.IsNullOrWhiteSpace(CurrentVersion))
+        {
+            _appVersionService.MarkChangelogSeen(CurrentVersion);
+        }
+
         ShowNextQueuedUpdatePrompt();
         await Task.CompletedTask;
+    }
+
+    public async Task OpenChangelogAsync(CancellationToken ct = default)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            if (string.IsNullOrEmpty(CurrentVersion))
+            {
+                _appVersionService.TrackCurrentVersion();
+                CurrentVersion = _appVersionService.CurrentVersion;
+            }
+
+            ShowFullHistory = true;
+            await LoadChangelogAsync(ct);
+
+            if (CurrentRelease == null && ReleaseHistory.Count > 0)
+            {
+                CurrentRelease = ReleaseHistory[0];
+                IsChangelogVisible = true;
+            }
+        }, "Failed to open changelog");
     }
 
     public async Task DismissUpdateAvailableAsync()
@@ -340,6 +466,23 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
     {
         _appUpdateService.StateChanged -= OnAppUpdateStateChanged;
         _onboardingService.StateChanged -= OnOnboardingStateChanged;
+        if (_billingService is not null && _billingEventHookInstalled)
+        {
+            _billingService.PurchaseUpdated -= OnBillingPurchaseUpdated;
+            _billingEventHookInstalled = false;
+        }
+    }
+
+    private void OnBillingPurchaseUpdated(object? sender, Core.Entitlements.PurchaseResult purchase)
+    {
+        if (_entitlementService is null)
+        {
+            return;
+        }
+
+        _ = ExecuteSafelyAsync(
+            () => _entitlementService.ApplyPurchaseAsync(purchase, Core.Entitlements.EntitlementChangeReason.Purchase),
+            "Failed to apply Google Play purchase");
     }
 
     private void OnAppUpdateStateChanged(object? sender, AppUpdateState state)

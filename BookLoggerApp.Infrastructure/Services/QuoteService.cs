@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -7,14 +8,19 @@ namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
 /// Service implementation for managing quotes.
+/// Free tier is capped at 3 quotes per book via <see cref="IFeatureGuard"/>.
 /// </summary>
 public class QuoteService : IQuoteService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private const int FreeTierPerBookCap = 3;
 
-    public QuoteService(IUnitOfWork unitOfWork)
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IFeatureGuard? _featureGuard;
+
+    public QuoteService(IUnitOfWork unitOfWork, IFeatureGuard? featureGuard = null)
     {
         _unitOfWork = unitOfWork;
+        _featureGuard = featureGuard;
     }
 
     public async Task<IReadOnlyList<Quote>> GetAllAsync(CancellationToken ct = default)
@@ -30,6 +36,16 @@ public class QuoteService : IQuoteService
 
     public async Task<Quote> AddAsync(Quote quote, CancellationToken ct = default)
     {
+        if (_featureGuard is not null)
+        {
+            int currentCountForBook = (await _unitOfWork.Quotes.FindAsync(q => q.BookId == quote.BookId)).Count();
+            _featureGuard.EnforceSoftLimit(
+                FeatureKey.UnlimitedNotesAndQuotes,
+                currentCountForBook,
+                FreeTierPerBookCap,
+                $"Free tier is limited to {FreeTierPerBookCap} quotes per book. Upgrade to Plus for unlimited quotes.");
+        }
+
         if (quote.CreatedAt == default)
             quote.CreatedAt = DateTime.UtcNow;
 

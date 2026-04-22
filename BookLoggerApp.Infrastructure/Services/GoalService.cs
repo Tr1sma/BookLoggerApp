@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
@@ -11,16 +12,21 @@ namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
 /// Service implementation for managing reading goals.
+/// Free tier is capped at 3 active goals; goals with genre/trope filters require Premium.
 /// </summary>
 public class GoalService : IGoalService
 {
+    private const int FreeTierActiveGoalCap = 3;
+
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAnalyticsService _analytics;
+    private readonly IFeatureGuard? _featureGuard;
 
-    public GoalService(IUnitOfWork unitOfWork, IAnalyticsService? analytics = null)
+    public GoalService(IUnitOfWork unitOfWork, IAnalyticsService? analytics = null, IFeatureGuard? featureGuard = null)
     {
         _unitOfWork = unitOfWork;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
+        _featureGuard = featureGuard;
     }
 
     /// <inheritdoc />
@@ -45,6 +51,25 @@ public class GoalService : IGoalService
 
     public async Task<ReadingGoal> AddAsync(ReadingGoal goal, CancellationToken ct = default)
     {
+        if (_featureGuard is not null)
+        {
+            int activeCount = (await _unitOfWork.ReadingGoals.GetActiveGoalsAsync()).Count();
+            _featureGuard.EnforceSoftLimit(
+                FeatureKey.UnlimitedReadingGoals,
+                activeCount,
+                FreeTierActiveGoalCap,
+                $"Free tier is limited to {FreeTierActiveGoalCap} active reading goals. Upgrade to Plus for unlimited goals.");
+
+            bool usesFilters = goal.GoalGenres.Count > 0
+                               || goal.ExcludedBooks.Count > 0;
+            if (usesFilters)
+            {
+                _featureGuard.RequireAccess(
+                    FeatureKey.ReadingGoalsWithGenreTropeFilter,
+                    "Filtered goals (by genre or excluded books) require Premium.");
+            }
+        }
+
         var result = await _unitOfWork.ReadingGoals.AddAsync(goal);
         await _unitOfWork.SaveChangesAsync(ct);
         await RecalculateGoalProgressAsync(ct);

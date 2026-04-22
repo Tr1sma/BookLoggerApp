@@ -1,10 +1,13 @@
 using BookLoggerApp.Core.Services.Abstractions;
 using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Storage;
 
 namespace BookLoggerApp.Services;
 
 public sealed class AppVersionService : IAppVersionService
 {
+    private const string PrefKeyLastSeenChangelogVersion = "last_seen_changelog_version";
+
     private bool _tracked;
 
     public string CurrentVersion
@@ -52,5 +55,24 @@ public sealed class AppVersionService : IAppVersionService
 
         VersionTracking.Default.Track();
         _tracked = true;
+    }
+
+    public string? LastSeenChangelogVersion
+    {
+        get
+        {
+            string value = Preferences.Default.Get(PrefKeyLastSeenChangelogVersion, string.Empty);
+            return string.IsNullOrEmpty(value) ? null : value;
+        }
+    }
+
+    public void MarkChangelogSeen(string version)
+    {
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            return;
+        }
+
+        Preferences.Default.Set(PrefKeyLastSeenChangelogVersion, version);
     }
 }

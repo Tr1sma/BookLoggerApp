@@ -50,7 +50,8 @@ public static class DecorationSeedData
             Cost = 100,
             ImagePath = "images/decorations/candle.svg",
             IsAvailable = true,
-            UnlockLevel = 1
+            UnlockLevel = 1,
+            IsFreeTier = true
         };
 
         yield return new ShopItem
@@ -62,7 +63,8 @@ public static class DecorationSeedData
             Cost = 120,
             ImagePath = "images/decorations/mug.svg",
             IsAvailable = true,
-            UnlockLevel = 1
+            UnlockLevel = 1,
+            IsFreeTier = true
         };
 
         yield return new ShopItem
@@ -126,7 +128,8 @@ public static class DecorationSeedData
             ImagePath = "images/decorations/owl_figurine.svg",
             IsAvailable = true,
             UnlockLevel = 10,
-            SlotWidth = 2
+            SlotWidth = 2,
+            IsFreeTier = true
         };
 
         yield return new ShopItem
@@ -232,7 +235,8 @@ public static class DecorationSeedData
             UnlockLevel = 70,
             SlotWidth = 2,
             SpecialAbilityKey = SpecialAbilityKeys.StoryHeart,
-            IsSingleton = true
+            IsSingleton = true,
+            IsUltimateTier = true
         };
     }
 }
