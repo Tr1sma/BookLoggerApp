@@ -26,6 +26,7 @@ Versionsschema:
 - Beim Deaktivieren der Nutzungsstatistiken wird die anonyme Geräte-ID zurückgesetzt (`ResetAnalyticsData`), sodass künftige Ereignisse — falls wieder aktiviert — als neuer anonymer Nutzer erscheinen
 
 ### Behoben
+- Release-Builds crashten direkt beim Start mit `IllegalStateException: The Crashlytics build ID is missing` aus `FirebaseInitProvider.onCreate`. Ursache: die Firebase-Crashlytics-Gradle-Plugin-Integration existiert in .NET MAUI nicht, entsprechend wird die erwartete String-Resource `com.crashlytics.android.build_id` nie generiert und Crashlytics wirft beim Auto-Init. Fix: Platzhalter-Build-ID in `Platforms/Android/Resources/values/crashlytics-build-id.xml` bereitgestellt (GUID per Release manuell neu generieren).
 
 ## [0.9.6]
 
