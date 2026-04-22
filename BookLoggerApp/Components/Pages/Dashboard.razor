@@ -9,6 +9,7 @@
 @inject IImageService ImageService
 @inject IBackButtonService BackButtonService
 @inject IOnboardingService OnboardingService
+@inject IDatabaseInitializer DatabaseInitializer
 @implements IDisposable
 
 <PageTitle>Dashboard - BookHeart</PageTitle>
@@ -23,7 +24,8 @@
     else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
         <div class="alert alert-danger">
-            @ViewModel.ErrorMessage
+            <p>@ViewModel.ErrorMessage</p>
+            <button class="btn btn-primary" @onclick="RetryLoadAsync">Erneut versuchen</button>
         </div>
     }
     else
@@ -170,6 +172,16 @@
             System.Diagnostics.Debug.WriteLine("=== END EXCEPTION ===");
             // Don't throw - let the UI render with error message
         }
+    }
+
+    private async Task RetryLoadAsync()
+    {
+        if (ViewModel.IsDatabaseInitializationFailed)
+        {
+            DatabaseInitializer.Retry();
+        }
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+        await LoadCoverImageAsync();
     }
 
     private async void OnGoalsChanged(object? sender, EventArgs e)

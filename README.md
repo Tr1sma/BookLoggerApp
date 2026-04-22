@@ -124,13 +124,11 @@ BookLoggerApp.Tests/              # Unit Tests (xUnit + FluentAssertions)
 
 ## Projektumfang & Code-Statistiken
 
-> **BookHeart wurde komplett solo entwickelt — ohne AI-Coding-Assistenten.**  
-> Die folgenden Zahlen geben einen objektiven Überblick über Umfang, Komplexität und Qualität der Codebasis.
+> BookHeart wird seit September 2025 von einer Person entwickelt — Architektur, Features und der Großteil der Implementierung in Eigenarbeit. AI-Assistenten kommen punktuell für Bug-Fixes, Sicherheits-Reviews und Codebase-Scans zum Einsatz.
 
 ### Code-Verteilung
 
 Gemessen mit [`scc`](https://github.com/boyter/scc) (ohne `obj/`, `bin/`, `Migrations/` und auto-generierten `.g.cs`):
-> scc --exclude-dir obj,bin,Migrations --not-match ".*\.g\.cs$" .
 
 | Sprache       | Files | Code-Zeilen | Kommentare | Komplexität |
 |---------------|------:|------------:|-----------:|------------:|
@@ -143,7 +141,19 @@ Gemessen mit [`scc`](https://github.com/boyter/scc) (ohne `obj/`, `bin/`, `Migra
 | Build / Misc  |    50 |       2.071 |        118 |          45 |
 | **Gesamt**    |   472 |  **59.711** |      5.269 |       2.713 |
 
-**Handgeschriebener App-Code (C# + Razor): ~40.300 Zeilen.**
+**App-Code (C# + Razor): ~40.300 Zeilen.**
+
+### Test-Suite & Coverage
+
+| Kennzahl                        | Wert         |
+|---------------------------------|--------------|
+| **Unit Tests (alle grün)**      | **1.073**    |
+| **Code Block Coverage**         | **96 %**     |
+| **Code Line Coverage**          | **98 %**     |
+| Test-Framework                  | xUnit + FluentAssertions |
+| Test-Code-Zeilen                | ~19.600      |
+
+Die Test-Suite deckt die gesamte Domänenlogik (Core), Repository- und Service-Layer (Infrastructure) sowie ViewModels und kritische Präsentationspfade ab. Jeder Bug-Fix wird durch mindestens einen Regression-Test gegen erneutes Auftreten gepinnt.
 
 ### Qualitäts-Metriken (Visual Studio Code Metrics)
 
@@ -167,7 +177,7 @@ Auf Basis der Code-Zeilen berechnet `scc` automatisch das [COCOMO-Modell](https:
 | Geschätzte Teamgröße                  | **~10 Entwickler**  |
 | Entspricht ca. Personenmonaten        | **176**             |
 
-> **Wichtige Einordnung:** Die COCOMO-Werte sind **keine realen Entwicklungskosten** dieses Projekts, sondern eine standardisierte Branchenschätzung. Sie zeigen, welcher Aufwand für eine vergleichbare Codebasis in einem klassischen Industrie-Setting (mehrköpfiges Team, Overhead, Reviews, QA, Meetings) anfallen würde. BookHeart wurde demgegenüber von einer Person entwickelt — was den Effizienz-Vorteil moderner Tooling- und Architektur-Entscheidungen unterstreicht.
+> Die COCOMO-Werte sind **keine realen Entwicklungskosten** dieses Projekts, sondern eine standardisierte Branchenschätzung. Sie zeigen, welcher Aufwand für eine vergleichbare Codebasis in einem klassischen Industrie-Setting (mehrköpfiges Team, Overhead, Reviews, QA, Meetings) anfallen würde.
 
 ---
 
@@ -199,7 +209,7 @@ dotnet test BookLoggerApp.Tests/BookLoggerApp.Tests.csproj
 
 ```bash
 # Neue Migration erstellen
-dotnet ef migrations add <Name> --project BookLoggerApp.Infrastructure --startup-project BookLoggerApp
+dotnet ef migrations add <n> --project BookLoggerApp.Infrastructure --startup-project BookLoggerApp
 
 # Datenbank updaten
 dotnet ef database update --project BookLoggerApp.Infrastructure --startup-project BookLoggerApp
