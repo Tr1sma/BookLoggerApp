@@ -2,9 +2,11 @@
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Helpers
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Components.Shared
+@using Microsoft.Extensions.Localization
 @inject BookDetailViewModel ViewModel
 @inject IProgressService ProgressService
 @inject IImageService ImageService
@@ -13,16 +15,17 @@
 @inject IOnboardingService OnboardingService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
+@inject IStringLocalizer<AppResources> L
 @implements IDisposable
 
-<PageTitle>@(ViewModel.Book?.Title ?? "Book Details") - BookHeart</PageTitle>
+<PageTitle>@(ViewModel.Book?.Title ?? L["BookDetail_DefaultTitle"].Value) - BookHeart</PageTitle>
 
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.BookDetail" />
 <div class="book-detail-container">
     @if (ViewModel.IsBusy)
     {
-        <div class="loading">Loading book details...</div>
+        <div class="loading">@L["BookDetail_Loading"]</div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
@@ -31,9 +34,9 @@
     else if (ViewModel.Book == null)
     {
         <div class="empty-state">
-            <h2>Book not found</h2>
-            <p>This book could not be loaded.</p>
-            <button class="btn btn-primary" @onclick="NavigateToBookshelf">← Back to Bookshelf</button>
+            <h2>@L["BookDetail_NotFound_Title"]</h2>
+            <p>@L["BookDetail_NotFound_Body"]</p>
+            <button class="btn btn-primary" @onclick="NavigateToBookshelf">← @L["BookDetail_BackToBookshelf"]</button>
         </div>
     }
     else
@@ -42,8 +45,8 @@
         <div class="book-detail-header">
             <h1>@ViewModel.Book.Title</h1>
             <div class="book-detail-actions">
-                <button class="btn btn-secondary" @onclick="NavigateToEdit">✏️ Edit</button>
-                <button class="btn btn-secondary" @onclick="NavigateToBookshelf">← Back</button>
+                <button class="btn btn-secondary" @onclick="NavigateToEdit">✏️ @L["Common_Edit"]</button>
+                <button class="btn btn-secondary" @onclick="NavigateToBookshelf">← @L["Common_Back"]</button>
             </div>
         </div>
 
@@ -66,14 +69,14 @@
             <!-- Info Section -->
             <div class="book-info-section">
                 <div class="book-info-header">
-                    <h2>Book Information</h2>
+                    <h2>@L["BookDetail_BookInfo"]</h2>
                     @if (ViewModel.Book.Status == ReadingStatus.Completed)
                     {
                         <LockedFeatureButton Feature="FeatureKey.ShareCards">
                             <button class="share-icon-btn"
                                     @onclick="HandleShareAsRecommendation"
                                     disabled="@ViewModel.IsGeneratingBookCard"
-                                    title="Share as Recommendation">
+                                    title="@L["BookDetail_ShareAsRecommendation"]">
                                 @if (ViewModel.IsGeneratingBookCard)
                                 {
                                     <span class="share-icon-spinner">...</span>
@@ -89,19 +92,19 @@
 
                 <div class="book-meta">
                     <div class="book-meta-item">
-                        <span class="book-meta-label">Author</span>
+                        <span class="book-meta-label">@L["BookDetail_Author"]</span>
                         <span class="book-meta-value">@ViewModel.Book.Author</span>
                     </div>
 
                     <div class="book-meta-item">
-                        <span class="book-meta-label">Status</span>
+                        <span class="book-meta-label">@L["BookDetail_Status"]</span>
                         <span class="book-meta-value status-badge status-@ViewModel.Book.Status.ToString().ToLower()">
-                            @GetStatusIcon() @ViewModel.Book.Status
+                            @GetStatusIcon() @GetStatusLabel()
                         </span>
                     </div>
 
                     <div class="book-meta-item">
-                        <span class="book-meta-label">Shelves</span>
+                        <span class="book-meta-label">@L["BookDetail_Shelves"]</span>
                         <div class="book-meta-value">
                             @if (ViewModel.Book.BookShelves != null && ViewModel.Book.BookShelves.Any())
                             {
@@ -116,7 +119,7 @@
                             }
                             else
                             {
-                                <span>None</span>
+                                <span>@L["BookDetail_None"]</span>
                             }
                         </div>
                     </div>
@@ -124,7 +127,7 @@
                     @if (ViewModel.Book.AverageRating.HasValue)
                     {
                         <div class="book-meta-item">
-                            <span class="book-meta-label">Rating</span>
+                            <span class="book-meta-label">@L["BookDetail_Rating"]</span>
                             <span class="book-meta-value">
                                 @{
                                     var rating = (int)Math.Round(ViewModel.Book.AverageRating.Value);
@@ -140,7 +143,7 @@
                     @if (ViewModel.Book.PageCount.HasValue)
                     {
                         <div class="book-meta-item">
-                            <span class="book-meta-label">Pages</span>
+                            <span class="book-meta-label">@L["BookDetail_Pages"]</span>
                             <span class="book-meta-value">@GetCurrentPageDisplay() / @ViewModel.Book.PageCount (@GetProgressDisplay()%)</span>
                         </div>
                     }
@@ -156,7 +159,7 @@
                     @if (!string.IsNullOrEmpty(ViewModel.Book.Publisher))
                     {
                         <div class="book-meta-item">
-                            <span class="book-meta-label">Publisher</span>
+                            <span class="book-meta-label">@L["BookDetail_Publisher"]</span>
                             <span class="book-meta-value">@ViewModel.Book.Publisher</span>
                         </div>
                     }
@@ -164,7 +167,7 @@
                     @if (ViewModel.Book.PublicationYear.HasValue)
                     {
                         <div class="book-meta-item">
-                            <span class="book-meta-label">Year</span>
+                            <span class="book-meta-label">@L["BookDetail_Year"]</span>
                             <span class="book-meta-value">@ViewModel.Book.PublicationYear</span>
                         </div>
                     }
@@ -173,7 +176,7 @@
                 @if (!string.IsNullOrEmpty(ViewModel.Book.Description))
                 {
                     <div class="book-description">
-                        <h3>Description</h3>
+                        <h3>@L["BookDetail_Description"]</h3>
                         <p>@ViewModel.Book.Description</p>
                     </div>
                 }
@@ -184,10 +187,10 @@
         @if (ViewModel.Book.Status == ReadingStatus.Wishlist && ViewModel.Book.WishlistInfo != null)
         {
             <div class="wishlist-info-section">
-                <h3>Wishlist Details</h3>
+                <h3>@L["BookDetail_WishlistDetails"]</h3>
                 <div class="wishlist-meta-grid">
                     <div class="wishlist-meta-item">
-                        <span class="book-meta-label">Priority</span>
+                        <span class="book-meta-label">@L["BookDetail_Priority"]</span>
                         <span class="wishlist-priority priority-@ViewModel.Book.WishlistInfo.Priority.ToString().ToLower()">
                             @GetPriorityLabel(ViewModel.Book.WishlistInfo.Priority)
                         </span>
@@ -195,20 +198,20 @@
                     @if (!string.IsNullOrEmpty(ViewModel.Book.WishlistInfo.RecommendedBy))
                     {
                         <div class="wishlist-meta-item">
-                            <span class="book-meta-label">Recommended by</span>
+                            <span class="book-meta-label">@L["BookDetail_RecommendedBy"]</span>
                             <span class="book-meta-value">@ViewModel.Book.WishlistInfo.RecommendedBy</span>
                         </div>
                     }
                     @if (!string.IsNullOrEmpty(ViewModel.Book.WishlistInfo.WishlistNotes))
                     {
                         <div class="wishlist-meta-item">
-                            <span class="book-meta-label">Notes</span>
+                            <span class="book-meta-label">@L["BookDetail_Notes"]</span>
                             <span class="book-meta-value">@ViewModel.Book.WishlistInfo.WishlistNotes</span>
                         </div>
                     }
                 </div>
                 <button class="btn btn-primary" style="margin-top: 1rem;" @onclick="HandleMoveToLibrary">
-                    Move to Library
+                    @L["BookDetail_MoveToLibrary"]
                 </button>
             </div>
         }
@@ -217,7 +220,7 @@
         @if (ViewModel.Book.Status == ReadingStatus.Completed)
         {
             <div class="book-ratings-section">
-                <h3>📊 Book Ratings</h3>
+                <h3>📊 @L["BookDetail_BookRatings"]</h3>
 
                 <div class="ratings-grid">
                     @foreach (var cat in GetPrimaryCategoryInfos())
@@ -237,11 +240,11 @@
                                 @onclick="() => _showAdditionalCategories = !_showAdditionalCategories">
                             @if (_showAdditionalCategories)
                             {
-                                <span>▾ Weitere Kategorien ausblenden</span>
+                                <span>▾ @L["BookDetail_HideMoreCategories"]</span>
                             }
                             else
                             {
-                                <span>▸ Weitere Kategorien (@additionalCategories.Count)</span>
+                                <span>▸ @L["BookDetail_MoreCategories", additionalCategories.Count]</span>
                             }
                         </button>
 
@@ -263,7 +266,7 @@
                 @if (ViewModel.Book.AverageRating.HasValue)
                 {
                     <div class="average-rating-display">
-                        <span class="average-label">Average Rating:</span>
+                        <span class="average-label">@L["BookDetail_AverageRating"]:</span>
                         <span class="average-value">@ViewModel.Book.AverageRating.Value.ToString("F1") / 5.0</span>
                     </div>
                 }
@@ -275,19 +278,19 @@
         @if (ViewModel.Book.Status == ReadingStatus.Reading || ViewModel.Book.Status == ReadingStatus.Completed)
         {
             <div class="reading-progress-section">
-                <h3>📊 Reading Progress</h3>
+                <h3>📊 @L["BookDetail_ReadingProgress"]</h3>
 
                 <div class="progress-stats">
                     <div class="progress-stat-item">
-                        <label>Total Time</label>
+                        <label>@L["BookDetail_TotalTime"]</label>
                         <p>@FormatMinutes(ViewModel.TotalMinutes)</p>
                     </div>
                     <div class="progress-stat-item">
-                        <label>Pages Read</label>
+                        <label>@L["BookDetail_PagesRead"]</label>
                         <p>@GetCurrentPageDisplay() / @(ViewModel.Book.PageCount ?? 0)</p>
                     </div>
                     <div class="progress-stat-item">
-                        <label>Completion</label>
+                        <label>@L["BookDetail_Completion"]</label>
                         <p>@GetProgressDisplay()%</p>
                     </div>
                 </div>
@@ -305,7 +308,7 @@
         @if (ViewModel.Sessions?.Any() == true)
         {
             <div class="reading-sessions-section">
-                <h3>📚 Reading Sessions (@GetSessionsCount())</h3>
+                <h3>📚 @L["BookDetail_Sessions", GetSessionsCount()]</h3>
 
                 <div class="sessions-list">
                     @foreach (var session in GetRecentSessions())
@@ -313,10 +316,10 @@
                         <div class="session-item" @key="@session.Id">
                             <div class="session-date">@session.StartedAt.ToString("g")</div>
                             <div class="session-details">
-                                <span>⏱️ @session.Minutes minutes</span>
+                                <span>⏱️ @L["BookDetail_SessionMinutes", session.Minutes]</span>
                                 @if (session.PagesRead.HasValue && session.PagesRead > 0)
                                 {
-                                    <span>📄 @session.PagesRead pages</span>
+                                    <span>📄 @L["BookDetail_SessionPages", session.PagesRead]</span>
                                 }
                             </div>
                         </div>
@@ -325,22 +328,22 @@
 
                 @if (ViewModel.Sessions.Count > 5)
                 {
-                    <p class="sessions-note">Showing latest 5 of @GetSessionsCount() sessions</p>
+                    <p class="sessions-note">@L["BookDetail_ShowingLatest", GetSessionsCount()]</p>
                 }
             </div>
         }
         <!-- Notes Section -->
         <div class="book-notes-section" style="margin-top: 2rem; padding: 1.5rem; background: var(--card-bg, #fff); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-            <h3 style="margin-bottom: 1rem; color: var(--text-primary, #333);">📝 Book Notes</h3>
-            <p class="section-hint" style="font-size: 0.9rem; color: var(--text-secondary, #666); margin-bottom: 0.5rem;">Write your thoughts, quotes, or analysis here. Auto-saved.</p>
-            <textarea class="form-control notes-editor" 
-                      placeholder="Write your notes here..."
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary, #333);">📝 @L["BookDetail_BookNotes"]</h3>
+            <p class="section-hint" style="font-size: 0.9rem; color: var(--text-secondary, #666); margin-bottom: 0.5rem;">@L["BookDetail_NotesHint"]</p>
+            <textarea class="form-control notes-editor"
+                      placeholder="@L["BookDetail_NotesPlaceholder"]"
                       style="width: 100%; min-height: 200px; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical; background-color: var(--bg-tertiary); color: #ffffff;"
                       @bind="ViewModel.Book.Notes"
                       @bind:after="SaveNotes"></textarea>
             @if (_isSavingNotes)
             {
-                <div class="saving-indicator" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--accent-color, #4facfe);">Saving...</div>
+                <div class="saving-indicator" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--accent-color, #4facfe);">@L["BookDetail_Saving"]</div>
             }
         </div>
     }
@@ -442,11 +445,21 @@
 
     private string FormatMinutes(int minutes)
     {
-        if (minutes < 60) return $"{minutes}m";
+        if (minutes < 60) return L["Common_Time_Minutes", minutes];
         var hours = minutes / 60;
         var remainingMinutes = minutes % 60;
-        return $"{hours}h {remainingMinutes}m";
+        return L["Common_Time_HoursMinutes", hours, remainingMinutes];
     }
+
+    private string GetStatusLabel() => ViewModel.Book?.Status switch
+    {
+        ReadingStatus.Planned => L["Status_Planned"],
+        ReadingStatus.Reading => L["Status_Reading"],
+        ReadingStatus.Completed => L["Status_Completed"],
+        ReadingStatus.Abandoned => L["Status_Abandoned"],
+        ReadingStatus.Wishlist => L["Status_Wishlist"],
+        _ => string.Empty
+    };
 
     private async Task StartReadingSession()
     {
@@ -566,10 +579,10 @@
     }
     private string GetPriorityLabel(BookLoggerApp.Core.Enums.WishlistPriority priority) => priority switch
     {
-        BookLoggerApp.Core.Enums.WishlistPriority.High => "High",
-        BookLoggerApp.Core.Enums.WishlistPriority.Medium => "Medium",
-        BookLoggerApp.Core.Enums.WishlistPriority.Low => "Low",
-        _ => "Medium"
+        BookLoggerApp.Core.Enums.WishlistPriority.High => L["Priority_High"],
+        BookLoggerApp.Core.Enums.WishlistPriority.Medium => L["Priority_Medium"],
+        BookLoggerApp.Core.Enums.WishlistPriority.Low => L["Priority_Low"],
+        _ => L["Priority_Medium"]
     };
 
     private async Task HandleMoveToLibrary()
@@ -611,7 +624,7 @@
             var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
             var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
             await File.WriteAllBytesAsync(filePath, cardBytes);
-            await ShareService.ShareFileAsync("Book Recommendation", filePath, "image/png");
+            await ShareService.ShareFileAsync(L["Reading_ShareFileName"], filePath, "image/png");
 
             if (ViewModel.Book?.Status == ReadingStatus.Completed)
             {
