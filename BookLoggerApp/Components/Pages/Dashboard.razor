@@ -1,10 +1,8 @@
 @page "/dashboard"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
-@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Components.Shared
-@using Microsoft.Extensions.Localization
 @inject DashboardViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
@@ -12,10 +10,9 @@
 @inject IBackButtonService BackButtonService
 @inject IOnboardingService OnboardingService
 @inject IDatabaseInitializer DatabaseInitializer
-@inject IStringLocalizer<AppResources> L
 @implements IDisposable
 
-<PageTitle>@L["PageTitle_Dashboard"] - BookHeart</PageTitle>
+<PageTitle>Dashboard - BookHeart</PageTitle>
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.Dashboard" />
 
@@ -23,14 +20,14 @@
     @if (ViewModel.IsBusy)
     {
         <div class="loading-spinner">
-            <p>@L["Common_Loading"]</p>
+            <p>Loading...</p>
         </div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
         <div class="alert alert-danger">
             <p>@ViewModel.ErrorMessage</p>
-            <button class="btn btn-primary" @onclick="RetryLoadAsync">@L["Common_Retry"]</button>
+            <button class="btn btn-primary" @onclick="RetryLoadAsync">Erneut versuchen</button>
         </div>
     }
     else
@@ -39,28 +36,28 @@
 
         <!-- Currently Reading Section -->
         <section class="currently-reading">
-            <h2>@L["Dashboard_CurrentlyReading"]</h2>
+            <h2>Currently Reading</h2>
             @if (ViewModel.CurrentlyReading != null)
             {
                 <div class="book-card-large">
                     @if (!string.IsNullOrEmpty(_coverImageDataUrl))
                     {
-                        <img src="@_coverImageDataUrl" alt="@L["Dashboard_CoverAlt"]" class="book-cover" />
+                        <img src="@_coverImageDataUrl" alt="Book Cover" class="book-cover" />
                     }
                     <div class="book-info">
                         <h3>@ViewModel.CurrentlyReading.Title</h3>
-                        <p class="author">@L["Dashboard_By"] @ViewModel.CurrentlyReading.Author</p>
+                        <p class="author">by @ViewModel.CurrentlyReading.Author</p>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: @ViewModel.CurrentlyReading.ProgressPercentage%"></div>
                         </div>
-                        <p class="progress-text">@L["Dashboard_PageProgress", ViewModel.CurrentlyReading.CurrentPage, ViewModel.CurrentlyReading.PageCount ?? 0, ViewModel.CurrentlyReading.ProgressPercentage]</p>
-                        <button class="btn btn-primary" @onclick="NavigateToContinueReading">@L["Dashboard_ContinueReading"]</button>
+                        <p class="progress-text">Page @ViewModel.CurrentlyReading.CurrentPage / @(ViewModel.CurrentlyReading.PageCount ?? 0) (@ViewModel.CurrentlyReading.ProgressPercentage%)</p>
+                        <button class="btn btn-primary" @onclick="NavigateToContinueReading">Continue Reading →</button>
                     </div>
                 </div>
             }
             else
             {
-                <p>@((MarkupString)string.Format(L["Dashboard_NoCurrentBook"].Value, "<a href=\"/bookshelf\">" + L["Dashboard_NoCurrentBook_Link"] + "</a>"))</p>
+                <p>No book currently reading. <a href="/bookshelf">Browse your bookshelf</a></p>
             }
         </section>
 
@@ -69,12 +66,12 @@
 
         <!-- This Week Stats - Compact Chips -->
         <section class="weekly-stats-section">
-            <h2>@L["Dashboard_WeeklyStats"]</h2>
+            <h2>Weekly Stats</h2>
             <div class="stats-chips">
                 <span class="stat-chip">
                     <span class="stat-chip-icon">📚</span>
                     <span class="stat-chip-value">@ViewModel.BooksReadThisWeek</span>
-                    <span class="stat-chip-label">@L["Dashboard_Chip_Books"]</span>
+                    <span class="stat-chip-label">books</span>
                 </span>
                 <span class="stat-chip">
                     <span class="stat-chip-icon">⏱️</span>
@@ -83,7 +80,7 @@
                 <span class="stat-chip">
                     <span class="stat-chip-icon">📄</span>
                     <span class="stat-chip-value">@ViewModel.PagesReadThisWeek</span>
-                    <span class="stat-chip-label">@L["Dashboard_Chip_Pages"]</span>
+                    <span class="stat-chip-label">pages</span>
                 </span>
                 <span class="stat-chip">
                     <span class="stat-chip-icon">⭐</span>
@@ -95,7 +92,7 @@
 
         <!-- Active Goals -->
         <section class="goals-section">
-            <h2>@L["Dashboard_ActiveGoals"]</h2>
+            <h2>Active Goals</h2>
             @if (ViewModel.ActiveGoals.Any())
             {
                 <div class="goals-list">
@@ -107,7 +104,7 @@
             }
             else
             {
-                <p>@((MarkupString)string.Format(L["Dashboard_NoActiveGoals"].Value, "<a href=\"/goals\">" + L["Dashboard_NoActiveGoals_Link"] + "</a>"))</p>
+                <p>No active goals. <a href="/goals">Create a goal</a></p>
             }
         </section>
 
@@ -123,7 +120,7 @@
 
         <!-- Recent Activity -->
         <section class="recent-activity">
-            <h2>@L["Dashboard_RecentActivity"]</h2>
+            <h2>Recent Activity</h2>
             @if (ViewModel.RecentActivity.Any())
             {
                 <ul class="activity-list">
@@ -131,7 +128,7 @@
                     {
                         <li>
                             <span class="activity-icon">📖</span>
-                            <span class="activity-text">@L["Dashboard_ActivityReading", FormatMinutes(session.Minutes)]</span>
+                            <span class="activity-text">@FormatMinutes(session.Minutes) reading</span>
                             <span class="activity-time">@FormatRelativeTime(session.StartedAt)</span>
                         </li>
                     }
@@ -139,7 +136,7 @@
             }
             else
             {
-                <p>@L["Dashboard_NoRecentActivity"]</p>
+                <p>No recent activity.</p>
             }
         </section>
     }
@@ -274,9 +271,9 @@
     private string FormatRelativeTime(DateTime dateTime)
     {
         var diff = DateTime.UtcNow - dateTime;
-        if (diff.TotalMinutes < 60) return L["Dashboard_Time_MinutesAgo", (int)diff.TotalMinutes];
-        if (diff.TotalHours < 24) return L["Dashboard_Time_HoursAgo", (int)diff.TotalHours];
-        return L["Dashboard_Time_DaysAgo", (int)diff.TotalDays];
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} minutes ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} hours ago";
+        return $"{(int)diff.TotalDays} days ago";
     }
 
     private void NavigateToContinueReading()

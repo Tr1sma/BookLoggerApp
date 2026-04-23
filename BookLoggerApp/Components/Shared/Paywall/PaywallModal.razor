@@ -1,15 +1,12 @@
 @using BookLoggerApp.Core.Entitlements
-@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Core.ViewModels
-@using Microsoft.Extensions.Localization
 @inject PaywallViewModel ViewModel
 @inject IEntitlementService Entitlements
-@inject IStringLocalizer<AppResources> L
 
 <div class="paywall-overlay" role="dialog" aria-modal="true" aria-labelledby="paywallTitle">
     <div class="paywall-modal">
-        <button type="button" class="paywall-close" aria-label="@L["Common_Close"]" @onclick="OnDismiss">×</button>
+        <button type="button" class="paywall-close" aria-label="Close" @onclick="OnDismiss">×</button>
 
         <header class="paywall-header">
             <h2 id="paywallTitle">@Headline</h2>
@@ -19,7 +16,7 @@
             }
             else
             {
-                <p class="paywall-subtitle">@L["Paywall_DefaultSubtitle"]</p>
+                <p class="paywall-subtitle">Unlock more of BookHeart.</p>
             }
         </header>
 
@@ -39,9 +36,9 @@
                 <thead>
                     <tr>
                         <th></th>
-                        <th class="@TierClass(SubscriptionTier.Free)">@L["Settings_PlusPremium_Tier_Free"]</th>
-                        <th class="@TierClass(SubscriptionTier.Plus)">@L["Settings_PlusPremium_Tier_Plus"]</th>
-                        <th class="@TierClass(SubscriptionTier.Premium)">@L["Settings_PlusPremium_Tier_Premium"]</th>
+                        <th class="@TierClass(SubscriptionTier.Free)">Free</th>
+                        <th class="@TierClass(SubscriptionTier.Plus)">Plus</th>
+                        <th class="@TierClass(SubscriptionTier.Premium)">Premium</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,21 +65,21 @@
             </table>
         </section>
 
-        <section class="paywall-period-toggle" role="tablist" aria-label="@L["Paywall_BillingPeriodAria"]">
+        <section class="paywall-period-toggle" role="tablist" aria-label="Billing period">
             <button type="button"
                     role="tab"
                     aria-selected="@(ViewModel.SelectedPeriod == BillingPeriod.Monthly)"
                     class="paywall-period-btn @(ViewModel.SelectedPeriod == BillingPeriod.Monthly ? "active" : string.Empty)"
                     @onclick="() => ViewModel.SelectPeriod(BillingPeriod.Monthly)">
-                @L["Paywall_Monthly"]
+                Monthly
             </button>
             <button type="button"
                     role="tab"
                     aria-selected="@(ViewModel.SelectedPeriod == BillingPeriod.Yearly)"
                     class="paywall-period-btn @(ViewModel.SelectedPeriod == BillingPeriod.Yearly ? "active" : string.Empty)"
                     @onclick="() => ViewModel.SelectPeriod(BillingPeriod.Yearly)">
-                @L["Paywall_Yearly"]
-                <span class="paywall-period-savings-hint">@L["Paywall_SaveUpTo30"]</span>
+                Yearly
+                <span class="paywall-period-savings-hint">save up to 30%</span>
             </button>
         </section>
 
@@ -96,8 +93,8 @@
 
             <article class="paywall-tier-card @(currentIsPlus ? "current" : string.Empty)">
                 <header class="paywall-tier-card-header">
-                    <h3>@L["Settings_PlusPremium_Tier_Plus"]</h3>
-                    <p class="paywall-tier-card-tagline">@L["Paywall_Tagline_Plus"]</p>
+                    <h3>Plus</h3>
+                    <p class="paywall-tier-card-tagline">Comfort + full gamification</p>
                 </header>
                 <div class="paywall-tier-card-price">
                     <span class="price-amount">@plusPrice.Amount</span>
@@ -109,7 +106,7 @@
                 }
                 @if (ViewModel.SelectedPeriod == BillingPeriod.Monthly)
                 {
-                    <div class="paywall-intro-badge">@L["Paywall_FirstMonth"]</div>
+                    <div class="paywall-intro-badge">1st month €0.99</div>
                 }
                 else if (!string.IsNullOrEmpty(plusPrice.Savings))
                 {
@@ -118,15 +115,15 @@
                 <button type="button" class="paywall-tier-cta"
                         disabled="@(ViewModel.IsPurchaseInProgress || currentIsPlus || currentIsPremium)"
                         @onclick="() => ViewModel.PurchaseTierAsync(SubscriptionTier.Plus, ViewModel.SelectedPeriod)">
-                    @(currentIsPlus ? L["Settings_PlusPremium_CurrentPlan"].Value : currentIsPremium ? L["Paywall_IncludedInPremium"].Value : L["Paywall_GetPlus"].Value)
+                    @(currentIsPlus ? "Current plan" : currentIsPremium ? "Included in Premium" : "Get Plus")
                 </button>
             </article>
 
             <article class="paywall-tier-card paywall-tier-card-popular @(currentIsPremium ? "current" : string.Empty)">
-                <div class="paywall-popular-badge">@L["Paywall_MostPopular"]</div>
+                <div class="paywall-popular-badge">Most popular</div>
                 <header class="paywall-tier-card-header">
-                    <h3>@L["Settings_PlusPremium_Tier_Premium"]</h3>
-                    <p class="paywall-tier-card-tagline">@L["Paywall_Tagline_Premium"]</p>
+                    <h3>Premium</h3>
+                    <p class="paywall-tier-card-tagline">Analytics, Share cards, prestige</p>
                 </header>
                 <div class="paywall-tier-card-price">
                     <span class="price-amount">@premiumPrice.Amount</span>
@@ -138,7 +135,7 @@
                 }
                 @if (ViewModel.SelectedPeriod == BillingPeriod.Monthly)
                 {
-                    <div class="paywall-intro-badge">@L["Paywall_FirstMonth"]</div>
+                    <div class="paywall-intro-badge">1st month €0.99</div>
                 }
                 else if (!string.IsNullOrEmpty(premiumPrice.Savings))
                 {
@@ -147,17 +144,17 @@
                 <button type="button" class="paywall-tier-cta paywall-tier-cta-primary"
                         disabled="@(ViewModel.IsPurchaseInProgress || currentIsPremium)"
                         @onclick="() => ViewModel.PurchaseTierAsync(SubscriptionTier.Premium, ViewModel.SelectedPeriod)">
-                    @(currentIsPremium ? L["Settings_PlusPremium_CurrentPlan"].Value : L["Paywall_GetPremium"].Value)
+                    @(currentIsPremium ? "Current plan" : "Get Premium")
                 </button>
             </article>
         </section>
 
         <section class="paywall-lifetime-card">
-            <div class="paywall-lifetime-banner">✨ @L["Paywall_LaunchSpecial"]</div>
+            <div class="paywall-lifetime-banner">✨ Launch special — limited time</div>
             <div class="paywall-lifetime-body">
                 <div class="paywall-lifetime-headline">
-                    <h3>@L["Paywall_PremiumLifetime"]</h3>
-                    <p>@L["Paywall_PayOnce"]</p>
+                    <h3>Premium Lifetime</h3>
+                    <p>Pay once · own it forever</p>
                 </div>
                 <div class="paywall-lifetime-pricing">
                     <span class="paywall-lifetime-strikethrough">€249.99</span>
@@ -167,25 +164,25 @@
             <button type="button" class="paywall-lifetime-cta"
                     disabled="@(ViewModel.IsPurchaseInProgress || currentIsPremium)"
                     @onclick="() => ViewModel.PurchaseTierAsync(SubscriptionTier.Premium, BillingPeriod.Lifetime)">
-                @(currentIsPremium ? L["Paywall_AlreadyPremium"].Value : L["Paywall_GetLifetime"].Value)
+                @(currentIsPremium ? "Already Premium" : "Get Lifetime for €99.99")
             </button>
         </section>
 
-        <p class="paywall-trust">@L["Paywall_TrustNote"]</p>
+        <p class="paywall-trust">Cancel anytime in Google Play · Auto-renews until cancelled</p>
 
         <section class="paywall-promo">
-            <label for="paywallPromo">@L["Paywall_PromoLabel"]</label>
+            <label for="paywallPromo">Have a promo code?</label>
             <div class="paywall-promo-row">
                 <input id="paywallPromo" type="text" autocomplete="off"
                        @bind="ViewModel.PromoCodeInput" placeholder="BH-…" />
-                <button type="button" @onclick="ViewModel.RedeemPromoAsync">@L["Paywall_Redeem"]</button>
+                <button type="button" @onclick="ViewModel.RedeemPromoAsync">Redeem</button>
             </div>
         </section>
 
         <footer class="paywall-footer">
-            <button type="button" class="paywall-link" @onclick="ViewModel.RestoreAsync">@L["Settings_PlusPremium_Restore"]</button>
+            <button type="button" class="paywall-link" @onclick="ViewModel.RestoreAsync">Restore purchases</button>
             <span class="paywall-footer-spacer"></span>
-            <a class="paywall-link" href="https://github.com/Tr1sma/BookLoggerApp/blob/main/PRIVACY_POLICY_DE.md" target="_blank" rel="noopener">@L["Settings_Privacy_Title"]</a>
+            <a class="paywall-link" href="https://github.com/Tr1sma/BookLoggerApp/blob/main/PRIVACY_POLICY_DE.md" target="_blank" rel="noopener">Privacy</a>
         </footer>
     </div>
 </div>
@@ -201,8 +198,8 @@
     [Parameter] public EventCallback OnDismissed { get; set; }
 
     private string Headline => TriggerFeature is null
-        ? L["Paywall_DefaultHeadline"]
-        : L["Paywall_UnlockFeature", FeatureDisplay.Get(TriggerFeature.Value).Label];
+        ? "Upgrade BookHeart"
+        : $"Unlock {FeatureDisplay.Get(TriggerFeature.Value).Label}";
 
     private string TierClass(SubscriptionTier tier) =>
         Entitlements.CurrentTier == tier ? "paywall-tier-current" : string.Empty;

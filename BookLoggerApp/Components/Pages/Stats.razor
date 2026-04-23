@@ -2,28 +2,25 @@
 @page "/level-overview"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
-@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Entitlements
-@using Microsoft.Extensions.Localization
 @inject StatsViewModel ViewModel
 @inject NavigationManager NavigationManager
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject BookLoggerApp.Core.Services.Abstractions.IShareService ShareService
 @inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
-@inject IStringLocalizer<AppResources> L
 @implements IDisposable
 @using System.Globalization
 
-<PageTitle>@L["PageTitle_Stats"] - BookHeart</PageTitle>
+<PageTitle>Level Overview - BookHeart</PageTitle>
 
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.Stats" />
 <link rel="stylesheet" href="css/stats.css" />
 
 <div class="stats-tab-bar">
-    <button class="@TabClass(0)" @onclick="() => SetTab(0)">@L["Stats_Tab_Overview"]</button>
-    <button class="@TabClass(1)" @onclick="() => SetTab(1)">@L["Stats_Tab_Trends"]</button>
-    <button class="@TabClass(2)" @onclick="() => SetTab(2)">@L["Stats_Tab_Insights"]</button>
+    <button class="@TabClass(0)" @onclick="() => SetTab(0)">Overview</button>
+    <button class="@TabClass(1)" @onclick="() => SetTab(1)">Trends</button>
+    <button class="@TabClass(2)" @onclick="() => SetTab(2)">Insights</button>
 </div>
 
 @if (activeTab == 0)
@@ -31,7 +28,7 @@
 <div class="level-overview-container">
     @if (ViewModel.IsBusy)
     {
-        <div class="loading">@L["Stats_Loading"]</div>
+        <div class="loading">Loading statistics...</div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
@@ -46,27 +43,27 @@
                 <div class="level-badge-hero">
                     <div class="badge-inner">
                         <div class="level-number">@ViewModel.CurrentLevel</div>
-                        <div class="level-label">@L["Stats_LevelLabel"]</div>
+                        <div class="level-label">LEVEL</div>
                     </div>
                 </div>
 
                 <!-- XP Progress -->
                 <div class="xp-progress-section">
-                    <h2 class="hero-title">🏆 @L["Stats_YourProgress"]</h2>
+                    <h2 class="hero-title">🏆 Your Progress</h2>
                     <div class="xp-text">@ViewModel.CurrentLevelXp / @ViewModel.NextLevelXp XP</div>
                     <div class="xp-progress-bar-container">
                         <div class="xp-progress-bar">
                             <div class="xp-progress-fill" style="width: @ViewModel.ProgressPercentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%"></div>
                         </div>
                     </div>
-                    <div class="xp-percentage-text">@L["Stats_ProgressToLevel", ViewModel.ProgressPercentage.ToString("F1"), ViewModel.CurrentLevel + 1]</div>
+                    <div class="xp-percentage-text">@ViewModel.ProgressPercentage.ToString("F1")% to Level @(ViewModel.CurrentLevel + 1)</div>
                 </div>
 
                 <!-- Coins -->
                 <div class="coins-display">
                     <span class="coins-icon">💰</span>
                     <span class="coins-amount">@ViewModel.TotalCoins</span>
-                    <span class="coins-label">@L["Stats_Coins"]</span>
+                    <span class="coins-label">Coins</span>
                 </div>
             </div>
         </section>
@@ -74,10 +71,10 @@
         <!-- Stats - Compact Chips -->
         <section class="stats-chips-section">
             <div class="stats-section-header">
-                <h2>📊 @L["Stats_YourStats"]</h2>
+                <h2>📊 Your Stats</h2>
                 <LockedFeatureButton Feature="FeatureKey.ShareCards">
                     <button class="share-stats-btn" @onclick="OpenShareModal">
-                        📤 @L["Stats_ShareStats"]
+                        📤 Share Stats
                     </button>
                 </LockedFeatureButton>
             </div>
@@ -90,22 +87,22 @@
                 <span class="stat-chip">
                     <span class="stat-chip-icon">💰</span>
                     <span class="stat-chip-value">@ViewModel.TotalCoins</span>
-                    <span class="stat-chip-label">@L["Stats_Chip_Coins"]</span>
+                    <span class="stat-chip-label">coins</span>
                 </span>
                 <span class="stat-chip">
                     <span class="stat-chip-icon">🌱</span>
                     <span class="stat-chip-value">+@((ViewModel.TotalPlantBoost * 100).ToString("F0"))%</span>
-                    <span class="stat-chip-label">@L["Stats_Chip_Boost"]</span>
+                    <span class="stat-chip-label">boost</span>
                 </span>
                 <span class="stat-chip">
                     <span class="stat-chip-icon">📚</span>
                     <span class="stat-chip-value">@ViewModel.TotalBooksRead</span>
-                    <span class="stat-chip-label">@L["Stats_Chip_Books"]</span>
+                    <span class="stat-chip-label">books</span>
                 </span>
                 <span class="stat-chip">
                     <span class="stat-chip-icon">📄</span>
                     <span class="stat-chip-value">@ViewModel.TotalPagesRead</span>
-                    <span class="stat-chip-label">@L["Stats_Chip_Pages"]</span>
+                    <span class="stat-chip-label">pages</span>
                 </span>
                 <span class="stat-chip">
                     <span class="stat-chip-icon">⏱️</span>
@@ -114,12 +111,12 @@
                 <span class="stat-chip">
                     <span class="stat-chip-icon">🔥</span>
                     <span class="stat-chip-value">@ViewModel.CurrentStreak</span>
-                    <span class="stat-chip-label">@L["Stats_Chip_DayStreak"]</span>
+                    <span class="stat-chip-label">day streak</span>
                 </span>
                 <span class="stat-chip">
                     <span class="stat-chip-icon">📈</span>
                     <span class="stat-chip-value">@ViewModel.AverageRating.ToString("F1")</span>
-                    <span class="stat-chip-label">@L["Stats_Chip_Avg"]</span>
+                    <span class="stat-chip-label">avg</span>
                 </span>
             </div>
         </section>
@@ -129,9 +126,9 @@
         {
             <section class="plant-boost-section">
                 <div class="section-header">
-                    <h2>🌱 @L["Stats_PlantBoosts"]</h2>
+                    <h2>🌱 Plant XP Boosts</h2>
                     <div class="total-boost">
-                        @L["Stats_TotalBoost"]: <span class="boost-value">+@((ViewModel.TotalPlantBoost * 100).ToString("F0"))%</span>
+                        Total Boost: <span class="boost-value">+@((ViewModel.TotalPlantBoost * 100).ToString("F0"))%</span>
                     </div>
                 </div>
                 <div class="plant-boost-grid">
@@ -140,7 +137,7 @@
                         <div class="plant-boost-card" @key="plant.PlantId">
                             <div class="plant-boost-header">
                                 <span class="plant-name">@plant.PlantName</span>
-                                <span class="plant-level">@L["Stats_LevelAbbrev"] @plant.PlantLevel</span>
+                                <span class="plant-level">Lv. @plant.PlantLevel</span>
                             </div>
                             <div class="plant-boost-value">@plant.BoostDisplay</div>
                             <div class="plant-boost-bar">
@@ -156,7 +153,7 @@
         @if (!string.IsNullOrEmpty(ViewModel.FavoriteGenre))
         {
             <section class="favorite-genre-section">
-                <h2>🎭 @L["Stats_FavoriteGenre"]</h2>
+                <h2>🎭 Favorite Genre</h2>
                 <div class="favorite-genre-card">
                     <p class="genre-name">@ViewModel.FavoriteGenre</p>
                 </div>
@@ -167,13 +164,13 @@
         @if (ViewModel.BooksByGenre.Any())
         {
             <section class="genre-breakdown-section">
-                <h2>📖 @L["Stats_BooksByGenre"]</h2>
+                <h2>📖 Books by Genre</h2>
                 <div class="genre-grid">
                     @foreach (var genre in ViewModel.BooksByGenre.OrderByDescending(g => g.Value))
                     {
                         <div class="genre-card" @key="genre.Key">
                             <div class="genre-name">@genre.Key</div>
-                            <div class="genre-count">@genre.Value <span class="label">@L["Stats_Chip_Books"]</span></div>
+                            <div class="genre-count">@genre.Value <span class="label">books</span></div>
                         </div>
                     }
                 </div>
@@ -184,7 +181,7 @@
         @if (ViewModel.CategoryAverages.Any(x => x.Value > 0))
         {
             <section class="rating-averages-section">
-                <h2>📊 @L["Stats_AvgByCategory"]</h2>
+                <h2>📊 Average Ratings by Category</h2>
                 <div class="rating-averages-grid">
                     @foreach (var category in RatingCategoryInfo.GetAllCategories())
                     {
@@ -212,13 +209,13 @@
 
         <!-- Top Rated Books -->
         <section class="top-rated-books-section compact">
-            <h2>🏆 @L["Stats_TopRated"]</h2>
+            <h2>🏆 Top Rated Books</h2>
 
             <!-- Category Filter Chips (horizontally scrollable) -->
-            <div class="category-filter-buttons" role="tablist" aria-label="@L["Stats_CategoryFilter"]">
+            <div class="category-filter-buttons" role="tablist" aria-label="Rating category filter">
                 <button class="btn category-filter-btn @(selectedCategory == null ? "active" : "")"
                         @onclick="() => FilterByCategory(null)">
-                    @L["Stats_Filter_All"]
+                    All
                 </button>
                 @foreach (var category in RatingCategoryInfo.GetAllCategories())
                 {
@@ -262,14 +259,14 @@
                 @if (ViewModel.TopRatedBooks.Count > 3)
                 {
                     <button class="btn show-more-books-btn" @onclick="() => showAllTopBooks = !showAllTopBooks">
-                        @(showAllTopBooks ? L["Stats_ShowLess"] : L["Stats_ShowMore"])
+                        @(showAllTopBooks ? "Show less" : "Show more")
                     </button>
                 }
             }
             else if (selectedCategory.HasValue)
             {
                 <p class="advanced-stats-subtitle" style="text-align:center; padding:1rem 0;">
-                    @L["Stats_NoRatedInCategory"]
+                    No books rated in this category
                 </p>
             }
         </section>
@@ -278,7 +275,7 @@
         @if (ViewModel.LevelMilestones.Any())
         {
             <section class="level-milestones-section">
-                <h2>🎯 @L["Stats_LevelMilestones"]</h2>
+                <h2>🎯 Level Milestones</h2>
                 <div class="milestones-list">
                     @foreach (var milestone in ViewModel.LevelMilestones)
                     {
@@ -298,7 +295,7 @@
                                 }
                             </div>
                             <div class="milestone-content">
-                                <div class="milestone-level">@L["Stats_Milestone_Level", milestone.Level]</div>
+                                <div class="milestone-level">Level @milestone.Level</div>
                                 <div class="milestone-requirements">
                                     <span class="xp-req">@milestone.XpRequired XP</span>
                                     <span class="coins-reward">+@milestone.CoinsReward 💰</span>
@@ -329,22 +326,22 @@ else if (activeTab == 2)
 {
     <div class="celebration-overlay" @onclick="CloseShareModal">
         <div class="share-modal-card" @onclick:stopPropagation="true">
-            <h2>@L["Stats_Share_Title"]</h2>
-            <p class="share-modal-subtitle">@L["Stats_Share_Subtitle"]</p>
+            <h2>Share Reading Stats</h2>
+            <p class="share-modal-subtitle">Choose a time period for your reading card</p>
 
             <div class="share-period-picker">
                 <div class="period-type-tabs">
                     <button class="@("period-chip period-type" + (sharePeriodType == "alltime" ? " active" : ""))"
                             @onclick='() => SelectPeriodType("alltime")'>
-                        @L["Stats_Period_AllTime"]
+                        All Time
                     </button>
                     <button class="@("period-chip period-type" + (sharePeriodType == "year" ? " active" : ""))"
                             @onclick='() => SelectPeriodType("year")'>
-                        @L["Stats_Period_Year"]
+                        Year
                     </button>
                     <button class="@("period-chip period-type" + (sharePeriodType == "month" ? " active" : ""))"
                             @onclick='() => SelectPeriodType("month")'>
-                        @L["Stats_Period_Month"]
+                        Month
                     </button>
                 </div>
 
@@ -383,17 +380,17 @@ else if (activeTab == 2)
                     disabled="@ViewModel.IsGeneratingCard">
                 @if (ViewModel.IsGeneratingCard)
                 {
-                    <span>@L["Stats_Generating"]</span>
+                    <span>Generating…</span>
                 }
                 else
                 {
-                    <span>📤 @L["Stats_CreateShare"]</span>
+                    <span>📤 Create &amp; Share</span>
                 }
             </button>
 
             <button class="btn btn-secondary share-modal-action"
                     @onclick="CloseShareModal">
-                @L["Common_Cancel"]
+                Cancel
             </button>
         </div>
     </div>
@@ -452,7 +449,7 @@ else if (activeTab == 2)
                 var fileName = $"share_stats_{DateTime.UtcNow:yyyyMMddHHmmss}.png";
                 var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
                 await File.WriteAllBytesAsync(filePath, cardBytes);
-                await ShareService.ShareFileAsync(L["Stats_Share_FileName"], filePath, "image/png");
+                await ShareService.ShareFileAsync("My Reading Stats", filePath, "image/png");
                 await OnboardingService.TrackEventAsync(OnboardingEvent.StatsShared);
             }
             catch (Exception ex)
@@ -538,7 +535,7 @@ else if (activeTab == 2)
 
         ViewModel.ShowShareModal = true;
         sharePeriodType = "alltime";
-        ViewModel.SelectedSharePeriod = L["Stats_Period_AllTime"];
+        ViewModel.SelectedSharePeriod = "All Time";
         await ViewModel.LoadActivePeriodsAsync();
         StateHasChanged();
     }
@@ -562,7 +559,7 @@ else if (activeTab == 2)
                 => ViewModel.AvailableShareYears[0].ToString(),
             "month" when ViewModel.AvailableShareMonths.Count > 0
                 => new DateTime(ViewModel.AvailableShareMonths[0].Year, ViewModel.AvailableShareMonths[0].Month, 1).ToString("yyyy-MM"),
-            _ => L["Stats_Period_AllTime"]
+            _ => "All Time"
         };
     }
 

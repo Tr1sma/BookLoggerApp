@@ -1,46 +1,43 @@
 @using System.Globalization
-@using BookLoggerApp.Core.Resources
-@using Microsoft.Extensions.Localization
-@inject IStringLocalizer<AppResources> L
 
 <div class="goal-header">
     <div class="goal-header-title">
-        <h2>@L["GoalHeader_Title", CurrentYear]</h2>
+        <h2>@CurrentYear Reading Goal</h2>
     </div>
 
     <div class="goal-stats-container">
         <div class="goal-stat-card">
             <div class="stat-value">@TbrCount</div>
-            <div class="stat-label">@L["GoalHeader_Label_Tbr"]</div>
+            <div class="stat-label">in TBR</div>
         </div>
 
         <div class="goal-stat-card">
             <div class="stat-value">@GoalTarget</div>
-            <div class="stat-label">@L["GoalHeader_Label_Goal"]</div>
+            <div class="stat-label">in Goal</div>
         </div>
 
         <div class="goal-stat-card">
             <div class="stat-value">@BooksRead</div>
-            <div class="stat-label">@L["GoalHeader_Label_Read"]</div>
+            <div class="stat-label">Read</div>
         </div>
     </div>
 
     @if (BooksRemaining > 0)
     {
         <div class="goal-message">
-            <p>@((MarkupString)L["GoalHeader_Remaining", BooksRemaining].Value)</p>
+            <p>You have <strong>@BooksRemaining books</strong> left to complete your yearly reading goal</p>
         </div>
     }
     else if (BooksRemaining == 0 && GoalTarget > 0)
     {
         <div class="goal-message goal-complete">
-            <p>@L["GoalHeader_Complete"]</p>
+            <p>🎉 Congratulations! You've completed your yearly reading goal!</p>
         </div>
     }
     else if (BooksRemaining < 0)
     {
         <div class="goal-message goal-exceeded">
-            <p>@((MarkupString)L["GoalHeader_Exceeded", Math.Abs(BooksRemaining)].Value)</p>
+            <p>🌟 Amazing! You've read <strong>@Math.Abs(BooksRemaining) more books</strong> than your goal!</p>
         </div>
     }
 </div>

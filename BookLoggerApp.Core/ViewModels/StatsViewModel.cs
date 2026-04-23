@@ -175,7 +175,7 @@ public partial class StatsViewModel : ViewModelBase
 
             // Load progression statistics
             await LoadProgressionStatisticsAsync();
-        }, Tr("Error_FailedTo_LoadStatistics"));
+        }, "Failed to load statistics");
     }
 
     /// <summary>
@@ -218,7 +218,7 @@ public partial class StatsViewModel : ViewModelBase
         {
             var topBooks = await _statsService.GetTopRatedBooksAsync(10, category);
             TopRatedBooks = new ObservableCollection<BookRatingSummary>(topBooks);
-        }, Tr("Error_FailedTo_FilterTopBooks"));
+        }, "Failed to filter top books");
     }
 
     /// <summary>
@@ -313,7 +313,7 @@ public partial class StatsViewModel : ViewModelBase
             var periods = await _statsService.GetActiveReadingPeriodsAsync();
             AvailableShareYears = periods.Select(p => p.Year).Distinct().OrderByDescending(y => y).ToList();
             AvailableShareMonths = periods;
-        }, Tr("Error_FailedTo_LoadSharePeriods"));
+        }, "Failed to load share periods");
     }
 
     [RelayCommand]
@@ -372,7 +372,7 @@ public partial class StatsViewModel : ViewModelBase
 
             ShowShareModal = false;
             IsGeneratingCard = false;
-        }, Tr("Error_FailedTo_GenerateShareCard"));
+        }, "Failed to generate share card");
 
         IsGeneratingCard = false;
     }

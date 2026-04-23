@@ -1,7 +1,4 @@
 @using BookLoggerApp.Core.Models
-@using BookLoggerApp.Core.Resources
-@using Microsoft.Extensions.Localization
-@inject IStringLocalizer<AppResources> L
 
 @if (IsVisible && Book != null)
 {
@@ -15,24 +12,24 @@
 
             <!-- Header -->
             <div class="book-complete-header">
-                <h1>📚 @L["BookCompletion_Header"]</h1>
+                <h1>📚 Book Completed!</h1>
             </div>
 
             <!-- Book Info -->
             <div class="completed-book-info">
                 <h2>@Book.Title</h2>
-                <p class="book-author">@L["Dashboard_By"] @Book.Author</p>
+                <p class="book-author">by @Book.Author</p>
             </div>
 
             <!-- XP Reward -->
             <div class="xp-reward">
-                <span class="xp-reward-label">@L["BookCompletion_YouEarned"]</span>
+                <span class="xp-reward-label">You earned</span>
                 <span class="xp-reward-value">✨ @TotalXpEarned XP</span>
             </div>
 
             <!-- Continue Button -->
             <button class="celebration-button" @onclick="HandleClose">
-                @L["BookCompletion_Awesome"]
+                Awesome!
             </button>
 
             @if (ShowShareButton)
@@ -42,11 +39,11 @@
                         disabled="@IsGeneratingCard">
                     @if (IsGeneratingCard)
                     {
-                        <span>@L["Stats_Generating"]</span>
+                        <span>Generating…</span>
                     }
                     else
                     {
-                        <span>📤 @L["BookDetail_ShareAsRecommendation"]</span>
+                        <span>📤 Share as Recommendation</span>
                     }
                 </button>
             }

@@ -196,9 +196,7 @@ public class AppStartupViewModelTests
         await _viewModel.HandleAppResumedAsync();
 
         // Assert
-        // Error prefix now goes through ViewModelBase.Tr(); with no ambient Localizer the
-        // resource key is returned verbatim.
-        _viewModel.ErrorMessage.Should().Be("Error_FailedTo_RefreshAppUpdateState: Play Store offline");
+        _viewModel.ErrorMessage.Should().Be("Failed to refresh app update state: Play Store offline");
     }
 
     [Fact]

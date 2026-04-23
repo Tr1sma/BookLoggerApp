@@ -221,7 +221,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             }
 
             _initialized = true;
-        }, Tr("Error_FailedTo_InitializeStartupExperience"));
+        }, "Failed to initialize startup experience");
     }
 
     public async Task HandleAppResumedAsync(CancellationToken ct = default)
@@ -234,7 +234,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
 
         await ExecuteSafelyAsync(
             async () => await RefreshUpdateStateAsync(ct),
-            Tr("Error_FailedTo_RefreshAppUpdateState"));
+            "Failed to refresh app update state");
 
         // Re-query Play Billing and update the tier cache. If the user cancelled
         // their subscription in the Play Store while the app was backgrounded,
@@ -314,7 +314,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
                 CurrentRelease = ReleaseHistory[0];
                 IsChangelogVisible = true;
             }
-        }, Tr("Error_FailedTo_OpenChangelog"));
+        }, "Failed to open changelog");
     }
 
     public async Task DismissUpdateAvailableAsync()
@@ -340,7 +340,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         {
             ApplyOnboardingSnapshot(await _onboardingService.CompleteIntroAsync(skipped: true, ct));
             await HandleOnboardingDismissedAsync(ct);
-        }, Tr("Error_FailedTo_SkipOnboardingIntro"));
+        }, "Failed to skip onboarding intro");
         IsOnboardingVisible = false;
     }
 
@@ -351,7 +351,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         {
             ApplyOnboardingSnapshot(await _onboardingService.CompleteIntroAsync(skipped: false, ct));
             await HandleOnboardingDismissedAsync(ct);
-        }, Tr("Error_FailedTo_CompleteOnboardingIntro"));
+        }, "Failed to complete onboarding intro");
         IsOnboardingVisible = false;
     }
 
@@ -404,7 +404,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             }
 
             await RefreshUpdateStateAsync(ct);
-        }, Tr("Error_FailedTo_StartAppUpdate"));
+        }, "Failed to start app update");
 
         IsStartingUpdate = false;
     }
@@ -418,7 +418,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
                 IsUpdateReadyVisible = false;
                 _pendingDownloadedUpdatePrompt = false;
             }
-        }, Tr("Error_FailedTo_InstallAppUpdate"));
+        }, "Failed to install app update");
     }
 
     public async Task<bool> HandleBackAsync()
@@ -482,7 +482,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
 
         _ = ExecuteSafelyAsync(
             () => _entitlementService.ApplyPurchaseAsync(purchase, Core.Entitlements.EntitlementChangeReason.Purchase),
-            Tr("Error_FailedTo_ApplyGooglePlayPurchase"));
+            "Failed to apply Google Play purchase");
     }
 
     private void OnAppUpdateStateChanged(object? sender, AppUpdateState state)
@@ -504,7 +504,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             {
                 await HandleOnboardingDismissedAsync();
             }
-        }, Tr("Error_FailedTo_RefreshOnboardingState"));
+        }, "Failed to refresh onboarding state");
     }
 
     private async Task LoadChangelogAsync(CancellationToken ct)
