@@ -19,17 +19,18 @@ Versionsschema:
 ### Hinzugefügt
 
 ### Geändert
-- Changelogs vollständig überarbeitet/verbessert
-- Beim Deaktivieren der Nutzungsstatistiken wird die anonyme Geräte-ID zurückgesetzt (`ResetAnalyticsData`), sodass künftige Ereignisse — falls wieder aktiviert — als neuer anonymer Nutzer erscheinen
 
 ### Behoben
-
+ - Goals können jetzt nicht mehr zu mehr als 100% abegschlossen werden
 
 ## [0.10.5]
 
 ### Hinzugefügt
 - Beim ersten Start nach dem Onboarding erscheint ein dezenter, nicht-blockierender Datenschutz-Banner
 - Datenschutzerklärung (DE + EN) um einen ausführlichen Firebase-Abschnitt erweitert
+- Changelogs vollständig überarbeitet/verbessert
+- Beim Deaktivieren der Nutzungsstatistiken wird die anonyme Geräte-ID zurückgesetzt (`ResetAnalyticsData`), sodass künftige Ereignisse — falls wieder aktiviert — als neuer anonymer Nutzer erscheinen
+
 
 ### Geändert
 
