@@ -58,6 +58,321 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Nav_Bookshelf" xml:space="preserve">
+    <value>Regal</value>
+  </data>
+  <data name="Nav_Dashboard" xml:space="preserve">
+    <value>Übersicht</value>
+  </data>
+  <data name="Nav_Stats" xml:space="preserve">
+    <value>Statistik</value>
+  </data>
+  <data name="Nav_Goals" xml:space="preserve">
+    <value>Ziele</value>
+  </data>
+  <data name="Nav_Shop" xml:space="preserve">
+    <value>Shop</value>
+  </data>
+  <data name="Nav_PlantShop" xml:space="preserve">
+    <value>Pflanzen-Shop</value>
+  </data>
+  <data name="Nav_Settings" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="Common_Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Common_Save" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="Common_Delete" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="Common_Close" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="Common_Back" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="Common_Loading" xml:space="preserve">
+    <value>Wird geladen …</value>
+  </data>
+  <data name="Common_Retry" xml:space="preserve">
+    <value>Erneut versuchen</value>
+  </data>
+  <data name="Common_Yes" xml:space="preserve">
+    <value>Ja</value>
+  </data>
+  <data name="Common_No" xml:space="preserve">
+    <value>Nein</value>
+  </data>
+  <data name="Settings_Loading" xml:space="preserve">
+    <value>Einstellungen werden geladen …</value>
+  </data>
+  <data name="Settings_Title" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="Settings_Subtitle" xml:space="preserve">
+    <value>Offline-first Buch-Tracker</value>
+  </data>
+  <data name="Settings_Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Settings_PlusPremium_Title" xml:space="preserve">
+    <value>Plus &amp; Premium</value>
+  </data>
+  <data name="Settings_PlusPremium_Subtitle" xml:space="preserve">
+    <value>Abo verwalten und mehr BookHeart freischalten</value>
+  </data>
+  <data name="Settings_PlusPremium_CurrentPlan" xml:space="preserve">
+    <value>Aktueller Plan</value>
+  </data>
+  <data name="Settings_PlusPremium_Tier_Free" xml:space="preserve">
+    <value>Kostenlos</value>
+  </data>
+  <data name="Settings_PlusPremium_Tier_Plus" xml:space="preserve">
+    <value>Plus</value>
+  </data>
+  <data name="Settings_PlusPremium_Tier_Premium" xml:space="preserve">
+    <value>Premium</value>
+  </data>
+  <data name="Settings_PlusPremium_Lifetime" xml:space="preserve">
+    <value>Lifetime</value>
+  </data>
+  <data name="Settings_PlusPremium_RenewsOn" xml:space="preserve">
+    <value>verlängert sich am {0}</value>
+  </data>
+  <data name="Settings_PlusPremium_Upgrade" xml:space="preserve">
+    <value>Upgrade auf Plus oder Premium</value>
+  </data>
+  <data name="Settings_PlusPremium_Restore" xml:space="preserve">
+    <value>Käufe wiederherstellen</value>
+  </data>
+  <data name="Settings_PlusPremium_ChangePlan" xml:space="preserve">
+    <value>Plan ändern</value>
+  </data>
+  <data name="Settings_PlusPremium_Manage" xml:space="preserve">
+    <value>Abo verwalten</value>
+  </data>
+  <data name="Settings_PlusPremium_SeePlans" xml:space="preserve">
+    <value>Pläne ansehen</value>
+  </data>
+  <data name="Settings_Notifications_Title" xml:space="preserve">
+    <value>Benachrichtigungen</value>
+  </data>
+  <data name="Settings_Notifications_Subtitle" xml:space="preserve">
+    <value>Lese-Anstöße und Erinnerungen</value>
+  </data>
+  <data name="Settings_Notifications_Enable" xml:space="preserve">
+    <value>Benachrichtigungen aktivieren</value>
+  </data>
+  <data name="Settings_Notifications_EnableDescription" xml:space="preserve">
+    <value>BookHeart erlauben, dir Benachrichtigungen zu senden</value>
+  </data>
+  <data name="Settings_Notifications_DailyReminder" xml:space="preserve">
+    <value>Tägliche Lese-Erinnerung</value>
+  </data>
+  <data name="Settings_Notifications_DailyReminderDescription" xml:space="preserve">
+    <value>Täglichen Anstoß zum Lesen erhalten</value>
+  </data>
+  <data name="Settings_Notifications_ReminderTime" xml:space="preserve">
+    <value>Erinnerungszeit</value>
+  </data>
+  <data name="Settings_Notifications_ReminderTimeDescription" xml:space="preserve">
+    <value>Wann sollen wir dich erinnern?</value>
+  </data>
+  <data name="Settings_Shelf_Title" xml:space="preserve">
+    <value>Regal-Aussehen</value>
+  </data>
+  <data name="Settings_Shelf_LedgeColor" xml:space="preserve">
+    <value>Bretterfarbe</value>
+  </data>
+  <data name="Settings_Shelf_LedgeDescription" xml:space="preserve">
+    <value>Das Brett unter jedem Buch</value>
+  </data>
+  <data name="Settings_Shelf_BarColor" xml:space="preserve">
+    <value>Regalfarbe</value>
+  </data>
+  <data name="Settings_Shelf_BarDescription" xml:space="preserve">
+    <value>Die Unterleiste jedes Regals</value>
+  </data>
+  <data name="Settings_Data_Title" xml:space="preserve">
+    <value>Daten &amp; Backup</value>
+  </data>
+  <data name="Settings_Data_Subtitle" xml:space="preserve">
+    <value>Bibliothek sichern, wiederherstellen oder löschen</value>
+  </data>
+  <data name="Settings_Data_Backup" xml:space="preserve">
+    <value>In Cloud sichern</value>
+  </data>
+  <data name="Settings_Data_Restore" xml:space="preserve">
+    <value>Aus Backup wiederherstellen</value>
+  </data>
+  <data name="Settings_Danger_Title" xml:space="preserve">
+    <value>Gefahrenzone</value>
+  </data>
+  <data name="Settings_Danger_Description" xml:space="preserve">
+    <value>Löscht alle Bücher, Lesesitzungen, Ziele, Pflanzen und setzt deinen Fortschritt zurück. Diese Aktion kann nicht rückgängig gemacht werden.</value>
+  </data>
+  <data name="Settings_Danger_DeleteAll" xml:space="preserve">
+    <value>Alle Daten löschen</value>
+  </data>
+  <data name="Settings_Help_Title" xml:space="preserve">
+    <value>Hilfe &amp; Community</value>
+  </data>
+  <data name="Settings_Help_Subtitle" xml:space="preserve">
+    <value>App kennenlernen, Intro wiederholen oder Entwicklung unterstützen</value>
+  </data>
+  <data name="Settings_Help_GettingStarted" xml:space="preserve">
+    <value>Erste Schritte öffnen</value>
+  </data>
+  <data name="Settings_Help_ReplayIntro" xml:space="preserve">
+    <value>Intro wiederholen</value>
+  </data>
+  <data name="Settings_Help_WhatsNew" xml:space="preserve">
+    <value>Was ist neu</value>
+  </data>
+  <data name="Settings_Help_BuyMeCoffee" xml:space="preserve">
+    <value>Spendier mir einen Kaffee</value>
+  </data>
+  <data name="Settings_Help_HideCta" xml:space="preserve">
+    <value>Erste Schritte im Regal ausblenden</value>
+  </data>
+  <data name="Settings_Help_HideCtaDescription" xml:space="preserve">
+    <value>Blendet die Checkliste auf der Regal-Seite aus, auch wenn noch Schritte offen sind</value>
+  </data>
+  <data name="Settings_Privacy_Title" xml:space="preserve">
+    <value>Datenschutz</value>
+  </data>
+  <data name="Settings_Privacy_Subtitle" xml:space="preserve">
+    <value>Wählen, welche anonymen Daten BookHeart sammelt</value>
+  </data>
+  <data name="Settings_Privacy_UsageStats" xml:space="preserve">
+    <value>Nutzungsstatistik</value>
+  </data>
+  <data name="Settings_Privacy_UsageStatsDescription" xml:space="preserve">
+    <value>Hilft uns zu verstehen, welche Funktionen verwendet werden. Es werden keine Buchtitel, Autoren oder persönlichen Notizen übertragen.</value>
+  </data>
+  <data name="Settings_Privacy_CrashReports" xml:space="preserve">
+    <value>Absturzberichte</value>
+  </data>
+  <data name="Settings_Privacy_CrashReportsDescription" xml:space="preserve">
+    <value>Sendet einen anonymen Fehlerbericht, wenn die App abstürzt, damit das Problem behoben werden kann. Es werden keine persönlichen Daten übertragen.</value>
+  </data>
+  <data name="Settings_Privacy_DisableNote" xml:space="preserve">
+    <value>Beim Deaktivieren werden zwischengespeicherte Ereignisse und die anonyme Geräte-ID zurückgesetzt. Bereits übertragene Daten können nicht zurückgerufen werden.</value>
+  </data>
+  <data name="Settings_MoreInfo_Title" xml:space="preserve">
+    <value>Weitere Infos</value>
+  </data>
+  <data name="Settings_MoreInfo_Diagnostics" xml:space="preserve">
+    <value>Datenwiederherstellungs-Diagnose</value>
+  </data>
+  <data name="Settings_MoreInfo_DiagnosticsHint" xml:space="preserve">
+    <value>Wenn Daten fehlen, mach einen Screenshot dieses Logs und sende ihn an den Support.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Title" xml:space="preserve">
+    <value>Datenschutzerklärung</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_LastUpdated" xml:space="preserve">
+    <value>Zuletzt aktualisiert: April 2026</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Overview_Title" xml:space="preserve">
+    <value>Überblick</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Overview_Body" xml:space="preserve">
+    <value>BookHeart ist eine Offline-first-App zur Buchverwaltung. Deine Daten werden ausschließlich lokal auf deinem Gerät gespeichert und niemals an unsere Server übermittelt. Wir erheben, speichern oder teilen keine personenbezogenen Daten.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Storage_Title" xml:space="preserve">
+    <value>Datenspeicherung</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Storage_Body" xml:space="preserve">
+    <value>Sämtliche Bücher, Lesesitzungen, Ziele, Pflanzen und Einstellungen werden in einer lokalen Datenbank (SQLite) auf deinem Gerät gespeichert. Diese Daten verlassen dein Gerät nicht, es sei denn du nutzt ausdrücklich die Sicherungs- und Wiederherstellungsfunktion.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Camera_Title" xml:space="preserve">
+    <value>Kameraberechtigung</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Camera_Body" xml:space="preserve">
+    <value>BookHeart fordert Zugriff auf die Kamera ausschließlich zum Scannen von Buch-Barcodes (ISBN) an. Es werden keine Fotos oder Videos aufgenommen, gespeichert oder übermittelt. Der Kamerazugriff ist optional und kann ohne Einschränkung der übrigen App-Funktionen verweigert werden.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Network_Title" xml:space="preserve">
+    <value>Netzwerknutzung</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Network_Body" xml:space="preserve">
+    <value>Bei der Suche nach einem Buch über die ISBN-Nummer sendet BookHeart diese an die Google Books API, um Buchmetadaten (Titel, Autor, Coverbild) abzurufen. Dabei werden keine personenbezogenen Daten oder Gerätekennungen übermittelt. Die App ist auch ohne diese Funktion vollständig offline nutzbar.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_ThirdParty_Title" xml:space="preserve">
+    <value>Drittanbieterdienste</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_ThirdParty_Body" xml:space="preserve">
+    <value>BookHeart nutzt drei Drittanbieterdienste: die Google Books API für optionale ISBN-Suche, Firebase Analytics für anonyme Nutzungsstatistiken (nur Android, standardmäßig aktiviert, deaktivierbar unter Einstellungen → Datenschutz) und Firebase Crashlytics für anonyme Absturzberichte (nur Android, standardmäßig aktiviert, deaktivierbar unter Einstellungen → Datenschutz). Firebase erhält niemals Buchtitel, Autoren, ISBNs, Zitate, Annotationen oder persönliche Notizen — nur grob gebucketete Kennzahlen. Die Android Advertising ID und Android ID sind ausdrücklich deaktiviert.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Deletion_Title" xml:space="preserve">
+    <value>Datenlöschung</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Deletion_Body" xml:space="preserve">
+    <value>Du kannst deine gesamten Daten jederzeit über die Option „Alle Daten löschen" in den Einstellungen entfernen. Durch die Deinstallation der App werden ebenfalls sämtliche gespeicherten Daten von deinem Gerät gelöscht.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Children_Title" xml:space="preserve">
+    <value>Datenschutz für Kinder</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Children_Body" xml:space="preserve">
+    <value>BookHeart erhebt wissentlich keine Daten von Kindern. Die App erfordert weder die Erstellung eines Benutzerkontos noch die Angabe personenbezogener Informationen.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Changes_Title" xml:space="preserve">
+    <value>Änderungen dieser Erklärung</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Changes_Body" xml:space="preserve">
+    <value>Änderungen an dieser Datenschutzerklärung werden im Rahmen von App-Updates veröffentlicht. Das Datum „Zuletzt aktualisiert" am Anfang gibt den Zeitpunkt der letzten Überarbeitung an.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Contact_Title" xml:space="preserve">
+    <value>Kontakt</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Contact_Body" xml:space="preserve">
+    <value>Bei Fragen zu dieser Datenschutzerklärung kannst du ein Issue im GitHub-Repository eröffnen oder uns über den Play-Store-Eintrag kontaktieren.</value>
+  </data>
+  <data name="Settings_Delete_Title" xml:space="preserve">
+    <value>Alle Daten löschen?</value>
+  </data>
+  <data name="Settings_Delete_Warning" xml:space="preserve">
+    <value>Das wird dauerhaft folgendes löschen:</value>
+  </data>
+  <data name="Settings_Delete_Item_Books" xml:space="preserve">
+    <value>Alle Bücher</value>
+  </data>
+  <data name="Settings_Delete_Item_Sessions" xml:space="preserve">
+    <value>Alle Lesesitzungen</value>
+  </data>
+  <data name="Settings_Delete_Item_Goals" xml:space="preserve">
+    <value>Alle Leseziele</value>
+  </data>
+  <data name="Settings_Delete_Item_Plants" xml:space="preserve">
+    <value>Alle Pflanzen</value>
+  </data>
+  <data name="Settings_Delete_Item_Progress" xml:space="preserve">
+    <value>Dein Level und XP-Fortschritt</value>
+  </data>
+  <data name="Settings_Delete_Item_Coins" xml:space="preserve">
+    <value>Deine Münzen</value>
+  </data>
+  <data name="Settings_Delete_TypeConfirm" xml:space="preserve">
+    <value>Tippe &lt;strong&gt;DELETE&lt;/strong&gt; zur Bestätigung:</value>
+  </data>
+  <data name="Settings_Delete_Placeholder" xml:space="preserve">
+    <value>DELETE eingeben</value>
+  </data>
+  <data name="Settings_Delete_Confirm" xml:space="preserve">
+    <value>Alles löschen</value>
+  </data>
+  <data name="Settings_Delete_Success_Title" xml:space="preserve">
+    <value>Daten gelöscht</value>
+  </data>
+  <data name="Settings_Delete_Success_Body" xml:space="preserve">
+    <value>Alle deine Daten wurden gelöscht. Frischer Start!</value>
+  </data>
   <data name="Settings_Language_Title" xml:space="preserve">
     <value>Sprache</value>
   </data>
