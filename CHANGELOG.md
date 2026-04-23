@@ -18,6 +18,9 @@ Versionsschema:
 ### Behoben
 - App blieb auf Low-End-Geräten (z.B. Samsung Galaxy A16) auf allen Seiten dauerhaft auf „Loading…" stehen. Ursache: `DbInitializer` führte sieben DB-Operationen hintereinander aus (Migrationen + 6 Seed-/Maintenance-Schritte) und signalisierte erst am Ende, dass die DB nutzbar ist. Auf langsamen Geräten konnte das den 45-Sekunden-Timeout der ViewModels übersteigen. Fix: Sobald die EF-Core-Migrationen durch sind, werden Pages entsperrt; Pflanzen-/Dekorations-Sync, XP-Recalc, Entitlement-Row, Image-Path-Fix und Seed-Validierung laufen danach im Hintergrund und blockieren das UI nicht mehr.
 
+### Geändert
+- SQLite-Verbindungen setzen beim Öffnen jetzt Performance-Pragmas (`synchronous=NORMAL`, `temp_store=MEMORY`, `cache_size=-8000`, plus idempotentes `journal_mode=WAL`). Auf Geräten mit langsamem eMMC-Speicher (typisch in Low-End-Android-Phones) reduziert das die fsync-dominierte Schreibzeit massiv — Erstinstallations-Migrationen und jede `SaveChangesAsync` sind spürbar schneller, ohne Einbußen bei der Crash-Sicherheit der lokalen DB.
+
 ## [0.10.3]
 
 ### Hinzugefügt

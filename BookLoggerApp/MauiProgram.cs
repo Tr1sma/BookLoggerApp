@@ -99,11 +99,17 @@ public static class MauiProgram
         // Perform migration check (XP-based recovery)
         DatabaseMigrationHelper.MigrateIfNecessary(dbPath);
 
+        // Shared interceptor — applies SQLite tuning pragmas on every connection
+        // open. On low-end Android devices with eMMC storage, synchronous=NORMAL
+        // is the difference between a 30 s first-launch migration and a 5 s one.
+        var pragmaInterceptor = new SqlitePerformancePragmaInterceptor();
+
         // Register DbContextFactory for creating DbContext instances on demand
         // This is the recommended approach for Blazor to avoid concurrency issues
         builder.Services.AddDbContextFactory<AppDbContext>(options =>
         {
             options.UseSqlite($"Data Source={dbPath}");
+            options.AddInterceptors(pragmaInterceptor);
         });
 
         // Also register DbContext as Transient for compatibility with existing code
@@ -111,6 +117,7 @@ public static class MauiProgram
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
             options.UseSqlite($"Data Source={dbPath}");
+            options.AddInterceptors(pragmaInterceptor);
         }, ServiceLifetime.Transient);
     }
 
