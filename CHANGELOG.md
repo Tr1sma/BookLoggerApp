@@ -12,27 +12,49 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
----
-## [Unveröffentlicht]
+
+
+## [0.10.6]
+
+### Hinzugefügt
+
+### Geändert
+- Changelogs vollständig überarbeitet/verbessert
+- Beim Deaktivieren der Nutzungsstatistiken wird die anonyme Geräte-ID zurückgesetzt (`ResetAnalyticsData`), sodass künftige Ereignisse — falls wieder aktiviert — als neuer anonymer Nutzer erscheinen
 
 ### Behoben
-- App blieb auf Low-End-Geräten (z.B. Samsung Galaxy A16) auf allen Seiten dauerhaft auf „Loading…" stehen. Ursache: `DbInitializer` führte sieben DB-Operationen hintereinander aus (Migrationen + 6 Seed-/Maintenance-Schritte) und signalisierte erst am Ende, dass die DB nutzbar ist. Auf langsamen Geräten konnte das den 45-Sekunden-Timeout der ViewModels übersteigen. Fix: Sobald die EF-Core-Migrationen durch sind, werden Pages entsperrt; Pflanzen-/Dekorations-Sync, XP-Recalc, Entitlement-Row, Image-Path-Fix und Seed-Validierung laufen danach im Hintergrund und blockieren das UI nicht mehr.
-- SQLite-Fehler „Failed to load settings: SQLite Error 1: 'no such column: a.AnalyticsEnabled'." auf Bestands-Installationen, bei denen die V10-Migrationen zwar in `__EFMigrationsHistory` als angewendet eingetragen wurden, aber die neuen Spalten (`AnalyticsEnabled`, `CrashReportingEnabled`, `PrivacyBannerDismissed`, `PrivacyPolicyAcceptedAt`, `CurrentTier`, `EntitlementExpiresAt`) nicht anlagen. Alle Seiten blieben dadurch auf „Loading" stehen. Fix: Ein neuer Schema-Drift-Guard (`SchemaDriftGuard`) prüft nach jedem `MigrateAsync()` die tatsächlich vorhandenen Spalten via `PRAGMA table_info` und zieht fehlende Einträge per `ALTER TABLE` idempotent nach — ohne Datenverlust und ohne App-Neuinstallation. Ein defensiver zweiter Versuch im `AppSettingsProvider` fängt zusätzliche Drift-Fälle ab, die der Startup-Guard nicht kennt.
 
+
+## [0.10.5]
+
+### Hinzugefügt
+- Beim ersten Start nach dem Onboarding erscheint ein dezenter, nicht-blockierender Datenschutz-Banner
+- Datenschutzerklärung (DE + EN) um einen ausführlichen Firebase-Abschnitt erweitert
+
+### Geändert
+
+### Behoben
+
+## [0.10.4]
+
+### Hinzugefügt
+- Promo-Code-Eingabefeld in der Paywall mit Prefix `BH-` für interne Codes (z. B. `BH-BETA2026` für 30 Tage Plus). Hochwertige Einmal-Belohnungen wie Lifetime Premium laufen über Google-Play-native Promo-Codes, die im Play Store eingelöst werden.
+- Firebase Analytics und Crashlytics für Android integriert — anonyme Nutzungsstatistiken und Absturzberichte helfen, die App zu verbessern (Buchtitel, Autoren, Notizen, Zitate und andere persönliche Daten werden **nicht** übertragen)
+- Neuer Bereich „🔒 Datenschutz" in den Einstellungen: separate Toggles für Nutzungsstatistiken und Absturzberichte, jederzeit deaktivierbar
+
+### Geändert
+
+### Behoben
+
+
+---
 ## [0.10.3]
 
 ### Hinzugefügt
 - Premium-Subscription-System mit zwei Tiers: **Plus** (2,99 €/Monat · 29,99 €/Jahr) und **Premium** (11,99 €/Monat · 99,99 €/Jahr · 99,99 € Lifetime als Launch-Special, danach 249,99 €). Free-Stufe bleibt vollständig nutzbar: unbegrenzt Bücher, Lese-Timer, Basis-Statistiken, XP/Coins, 4 Starter-Pflanzen, 3 Starter-Dekorationen, alle Widgets und komplettes Backup/Export/Import. Plus schaltet unbegrenzte Regale, Notizen & Zitate, Wishlist, Tropes und den vollen Shop frei. Premium ergänzt die Trends- und Insights-Statistik-Tabs, Share-Cards, Prestige-Pflanzen, das Herz der Geschichten, gefilterte Reading-Goals und Google Play Family Sharing.
 - Neue Paywall-Modal mit Feature-Vergleichstabelle, kontextuellem Titel beim Tippen auf ein gesperrtes Feature und Preisbuttons für Monat/Jahr/Lifetime — aufrufbar über jede `LockedFeatureButton`-Hülle oder manuell via Settings.
-- Promo-Code-Eingabefeld in der Paywall mit Prefix `BH-` für interne Codes (z. B. `BH-BETA2026` für 30 Tage Plus). Hochwertige Einmal-Belohnungen wie Lifetime Premium laufen über Google-Play-native Promo-Codes, die im Play Store eingelöst werden.
-- Firebase Analytics und Crashlytics für Android integriert — anonyme Nutzungsstatistiken und Absturzberichte helfen, die App zu verbessern (Buchtitel, Autoren, Notizen, Zitate und andere persönliche Daten werden **nicht** übertragen)
-- Neuer Bereich „🔒 Datenschutz" in den Einstellungen: separate Toggles für Nutzungsstatistiken und Absturzberichte, jederzeit deaktivierbar
-- Beim ersten Start nach dem Onboarding erscheint ein dezenter, nicht-blockierender Datenschutz-Banner
-- Datenschutzerklärung (DE + EN) um einen ausführlichen Firebase-Abschnitt erweitert
 
 ### Geändert
-- Changelogs vollständig überarbeitet/verbessert
-- Beim Deaktivieren der Nutzungsstatistiken wird die anonyme Geräte-ID zurückgesetzt (`ResetAnalyticsData`), sodass künftige Ereignisse — falls wieder aktiviert — als neuer anonymer Nutzer erscheinen
 
 ### Behoben
 - Release-Builds crashten direkt beim Start mit `IllegalStateException: The Crashlytics build ID is missing` aus `FirebaseInitProvider.onCreate`. Ursache: die Firebase-Crashlytics-Gradle-Plugin-Integration existiert in .NET MAUI nicht, entsprechend wird die erwartete String-Resource `com.crashlytics.android.build_id` nie generiert und Crashlytics wirft beim Auto-Init. Fix: Platzhalter-Build-ID in `Platforms/Android/Resources/values/crashlytics-build-id.xml` bereitgestellt (GUID per Release manuell neu generieren).
