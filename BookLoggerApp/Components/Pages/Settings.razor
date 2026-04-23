@@ -11,6 +11,7 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IEntitlementService EntitlementService
 @inject BookLoggerApp.Core.Services.Abstractions.IPaywallCoordinator PaywallCoordinator
 @inject BookLoggerApp.Core.Services.Abstractions.IBillingService BillingService
+@inject BookLoggerApp.Core.Services.Abstractions.ILanguageService LanguageService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Settings - BookHeart</PageTitle>
@@ -647,6 +648,10 @@
         // mask a successful restore.
         if (ViewModel.BackupRestoreSucceeded)
         {
+            // Re-seed the Preferences language mirror from the restored AppSettings so
+            // the first render after restart already uses the restored language.
+            try { await LanguageService.SyncFromSettingsAsync(); } catch { }
+
             _showRestartNotice = true;
             StateHasChanged();
             await Task.Delay(1500);
