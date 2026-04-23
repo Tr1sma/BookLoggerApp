@@ -13,12 +13,12 @@
 else
 {
     <div class="locked-feature" role="button" tabindex="0"
-         aria-label="@(L["Locked_AriaUnlock", FeatureDisplay.Get(Feature).Label].Value)"
+         aria-label="@(L["Locked_AriaUnlock", FeatureDisplay.GetLocalizedLabel(Feature, L)].Value)"
          @onclick="OpenPaywallAsync"
          @onkeydown="HandleKeydown">
         <div class="locked-feature-overlay">
             <span class="locked-feature-icon" aria-hidden="true">🔒</span>
-            <span class="locked-feature-label">@FeatureDisplay.Get(Feature).Label</span>
+            <span class="locked-feature-label">@FeatureDisplay.GetLocalizedLabel(Feature, L)</span>
             <span class="locked-feature-hint">@L["Locked_UpgradeTo", FeaturePolicy.GetMinimumTier(Feature)]</span>
         </div>
         <div class="locked-feature-child">

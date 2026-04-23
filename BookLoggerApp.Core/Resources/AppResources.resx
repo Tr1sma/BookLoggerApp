@@ -2844,4 +2844,100 @@
   <data name="Paywall_Category_PremiumOnly" xml:space="preserve">
     <value>Premium only</value>
   </data>
+  <data name="Feature_UnlimitedNotesAndQuotes_Label" xml:space="preserve">
+    <value>Unlimited notes &amp; quotes</value>
+  </data>
+  <data name="Feature_UnlimitedNotesAndQuotes_Description" xml:space="preserve">
+    <value>Write as many notes and quotes per book as you want — no 3-per-book cap.</value>
+  </data>
+  <data name="Feature_UnlimitedReadingGoals_Label" xml:space="preserve">
+    <value>Unlimited reading goals</value>
+  </data>
+  <data name="Feature_UnlimitedReadingGoals_Description" xml:space="preserve">
+    <value>Track as many goals as you want — no 3-goal cap.</value>
+  </data>
+  <data name="Feature_ReadingGoalsWithGenreTropeFilter_Label" xml:space="preserve">
+    <value>Goals with genre &amp; trope filters</value>
+  </data>
+  <data name="Feature_ReadingGoalsWithGenreTropeFilter_Description" xml:space="preserve">
+    <value>Only count books from specific genres or tropes toward your goal.</value>
+  </data>
+  <data name="Feature_UnlimitedShelves_Label" xml:space="preserve">
+    <value>Unlimited shelves</value>
+  </data>
+  <data name="Feature_UnlimitedShelves_Description" xml:space="preserve">
+    <value>Organize your library in as many shelves as you like — no 3-shelf cap.</value>
+  </data>
+  <data name="Feature_CustomShelfColors_Label" xml:space="preserve">
+    <value>Custom shelf colors</value>
+  </data>
+  <data name="Feature_CustomShelfColors_Description" xml:space="preserve">
+    <value>Paint each shelf with its own ledge and base color.</value>
+  </data>
+  <data name="Feature_StandardPlantsAndDecorations_Label" xml:space="preserve">
+    <value>All plants &amp; decorations</value>
+  </data>
+  <data name="Feature_StandardPlantsAndDecorations_Description" xml:space="preserve">
+    <value>Unlock the full shop beyond the 4 starter plants and 3 starter decorations.</value>
+  </data>
+  <data name="Feature_PrestigePlants_Label" xml:space="preserve">
+    <value>Prestige plants</value>
+  </data>
+  <data name="Feature_PrestigePlants_Description" xml:space="preserve">
+    <value>Grow the Chronicle Tree and the Eternal Phoenix Bonsai with unique bonuses.</value>
+  </data>
+  <data name="Feature_UltimateDecorations_Label" xml:space="preserve">
+    <value>Ultimate decoration</value>
+  </data>
+  <data name="Feature_UltimateDecorations_Description" xml:space="preserve">
+    <value>Place the Heart of Stories for boosted XP, coins and plant growth.</value>
+  </data>
+  <data name="Feature_StatsTrendsTab_Label" xml:space="preserve">
+    <value>Stats trends</value>
+  </data>
+  <data name="Feature_StatsTrendsTab_Description" xml:space="preserve">
+    <value>Heatmaps, weekday patterns, reading-time distribution and genre radar.</value>
+  </data>
+  <data name="Feature_StatsInsightsTab_Label" xml:space="preserve">
+    <value>Stats insights</value>
+  </data>
+  <data name="Feature_StatsInsightsTab_Description" xml:space="preserve">
+    <value>Year-over-year comparisons, top authors, completion rates and more.</value>
+  </data>
+  <data name="Feature_ShareCards_Label" xml:space="preserve">
+    <value>Share cards</value>
+  </data>
+  <data name="Feature_ShareCards_Description" xml:space="preserve">
+    <value>Generate your Reading Wrapped and book-recommendation cards as beautiful images.</value>
+  </data>
+  <data name="Feature_Wishlist_Label" xml:space="preserve">
+    <value>Wishlist</value>
+  </data>
+  <data name="Feature_Wishlist_Description" xml:space="preserve">
+    <value>Keep a prioritized list of books you want to read next.</value>
+  </data>
+  <data name="Feature_Tropes_Label" xml:space="preserve">
+    <value>Tropes</value>
+  </data>
+  <data name="Feature_Tropes_Description" xml:space="preserve">
+    <value>Tag books with tropes and filter your library by them.</value>
+  </data>
+  <data name="Feature_PremiumThemes_Label" xml:space="preserve">
+    <value>Extra themes</value>
+  </data>
+  <data name="Feature_PremiumThemes_Description" xml:space="preserve">
+    <value>Pick from additional color themes beyond the default.</value>
+  </data>
+  <data name="Feature_FeatureSuggestionForm_Label" xml:space="preserve">
+    <value>Suggest a feature</value>
+  </data>
+  <data name="Feature_FeatureSuggestionForm_Description" xml:space="preserve">
+    <value>Send feature requests directly to the developer from inside the app.</value>
+  </data>
+  <data name="Feature_FamilySharing_Label" xml:space="preserve">
+    <value>Google Play Family Sharing</value>
+  </data>
+  <data name="Feature_FamilySharing_Description" xml:space="preserve">
+    <value>Share your Premium subscription with up to 5 family members.</value>
+  </data>
 </root>

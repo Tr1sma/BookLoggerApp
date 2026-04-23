@@ -15,7 +15,7 @@
             <h2 id="paywallTitle">@Headline</h2>
             @if (TriggerFeature is not null)
             {
-                <p class="paywall-subtitle">@FeatureDisplay.Get(TriggerFeature.Value).Description</p>
+                <p class="paywall-subtitle">@FeatureDisplay.GetLocalizedDescription(TriggerFeature.Value, L)</p>
             }
             else
             {
@@ -202,7 +202,7 @@
 
     private string Headline => TriggerFeature is null
         ? L["Paywall_DefaultHeadline"]
-        : L["Paywall_UnlockFeature", FeatureDisplay.Get(TriggerFeature.Value).Label];
+        : L["Paywall_UnlockFeature", FeatureDisplay.GetLocalizedLabel(TriggerFeature.Value, L)];
 
     private string TierClass(SubscriptionTier tier) =>
         Entitlements.CurrentTier == tier ? "paywall-tier-current" : string.Empty;

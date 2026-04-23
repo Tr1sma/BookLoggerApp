@@ -2785,4 +2785,100 @@
   <data name="Paywall_Category_PremiumOnly" xml:space="preserve">
     <value>Nur Premium</value>
   </data>
+  <data name="Feature_UnlimitedNotesAndQuotes_Label" xml:space="preserve">
+    <value>Unbegrenzte Notizen &amp; Zitate</value>
+  </data>
+  <data name="Feature_UnlimitedNotesAndQuotes_Description" xml:space="preserve">
+    <value>Schreibe so viele Notizen und Zitate pro Buch, wie du möchtest — kein Limit von 3 pro Buch.</value>
+  </data>
+  <data name="Feature_UnlimitedReadingGoals_Label" xml:space="preserve">
+    <value>Unbegrenzte Leseziele</value>
+  </data>
+  <data name="Feature_UnlimitedReadingGoals_Description" xml:space="preserve">
+    <value>Verfolge so viele Ziele, wie du möchtest — kein Limit von 3 Zielen.</value>
+  </data>
+  <data name="Feature_ReadingGoalsWithGenreTropeFilter_Label" xml:space="preserve">
+    <value>Ziele mit Genre- &amp; Trope-Filtern</value>
+  </data>
+  <data name="Feature_ReadingGoalsWithGenreTropeFilter_Description" xml:space="preserve">
+    <value>Lass nur Bücher aus bestimmten Genres oder Tropes zu deinem Ziel zählen.</value>
+  </data>
+  <data name="Feature_UnlimitedShelves_Label" xml:space="preserve">
+    <value>Unbegrenzte Regale</value>
+  </data>
+  <data name="Feature_UnlimitedShelves_Description" xml:space="preserve">
+    <value>Sortiere deine Bibliothek in so viele Regale, wie du möchtest — kein Limit von 3 Regalen.</value>
+  </data>
+  <data name="Feature_CustomShelfColors_Label" xml:space="preserve">
+    <value>Eigene Regalfarben</value>
+  </data>
+  <data name="Feature_CustomShelfColors_Description" xml:space="preserve">
+    <value>Gib jedem Regal seine eigene Brett- und Regalfarbe.</value>
+  </data>
+  <data name="Feature_StandardPlantsAndDecorations_Label" xml:space="preserve">
+    <value>Alle Pflanzen &amp; Dekorationen</value>
+  </data>
+  <data name="Feature_StandardPlantsAndDecorations_Description" xml:space="preserve">
+    <value>Schalte den kompletten Shop frei — über die 4 Starter-Pflanzen und 3 Starter-Dekorationen hinaus.</value>
+  </data>
+  <data name="Feature_PrestigePlants_Label" xml:space="preserve">
+    <value>Prestige-Pflanzen</value>
+  </data>
+  <data name="Feature_PrestigePlants_Description" xml:space="preserve">
+    <value>Züchte den Chronik-Baum und den Ewigen Phönix-Bonsai mit einzigartigen Boni.</value>
+  </data>
+  <data name="Feature_UltimateDecorations_Label" xml:space="preserve">
+    <value>Ultimative Dekoration</value>
+  </data>
+  <data name="Feature_UltimateDecorations_Description" xml:space="preserve">
+    <value>Platziere das Herz der Geschichten für zusätzliche XP, Münzen und Pflanzen-Wachstum.</value>
+  </data>
+  <data name="Feature_StatsTrendsTab_Label" xml:space="preserve">
+    <value>Statistik-Trends</value>
+  </data>
+  <data name="Feature_StatsTrendsTab_Description" xml:space="preserve">
+    <value>Heatmaps, Wochentags-Muster, Lesezeit-Verteilung und Genre-Radar.</value>
+  </data>
+  <data name="Feature_StatsInsightsTab_Label" xml:space="preserve">
+    <value>Statistik-Einblicke</value>
+  </data>
+  <data name="Feature_StatsInsightsTab_Description" xml:space="preserve">
+    <value>Jahresvergleiche, Top-Autoren, Abschlussquoten und mehr.</value>
+  </data>
+  <data name="Feature_ShareCards_Label" xml:space="preserve">
+    <value>Share-Cards</value>
+  </data>
+  <data name="Feature_ShareCards_Description" xml:space="preserve">
+    <value>Erstelle dein Reading Wrapped und Buchempfehlungs-Karten als schöne Bilder.</value>
+  </data>
+  <data name="Feature_Wishlist_Label" xml:space="preserve">
+    <value>Wunschliste</value>
+  </data>
+  <data name="Feature_Wishlist_Description" xml:space="preserve">
+    <value>Führe eine priorisierte Liste der Bücher, die du als Nächstes lesen möchtest.</value>
+  </data>
+  <data name="Feature_Tropes_Label" xml:space="preserve">
+    <value>Tropes</value>
+  </data>
+  <data name="Feature_Tropes_Description" xml:space="preserve">
+    <value>Markiere Bücher mit Tropes und filtere deine Bibliothek danach.</value>
+  </data>
+  <data name="Feature_PremiumThemes_Label" xml:space="preserve">
+    <value>Zusätzliche Designs</value>
+  </data>
+  <data name="Feature_PremiumThemes_Description" xml:space="preserve">
+    <value>Wähle aus zusätzlichen Farb-Designs jenseits des Standards.</value>
+  </data>
+  <data name="Feature_FeatureSuggestionForm_Label" xml:space="preserve">
+    <value>Feature vorschlagen</value>
+  </data>
+  <data name="Feature_FeatureSuggestionForm_Description" xml:space="preserve">
+    <value>Sende Feature-Wünsche direkt aus der App an den Entwickler.</value>
+  </data>
+  <data name="Feature_FamilySharing_Label" xml:space="preserve">
+    <value>Google Play Familienfreigabe</value>
+  </data>
+  <data name="Feature_FamilySharing_Description" xml:space="preserve">
+    <value>Teile dein Premium-Abo mit bis zu 5 Familienmitgliedern.</value>
+  </data>
 </root>
