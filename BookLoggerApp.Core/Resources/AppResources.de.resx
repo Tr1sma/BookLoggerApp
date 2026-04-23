@@ -1472,13 +1472,13 @@
     <value>Worldbuilding</value>
   </data>
   <data name="Onboarding_StepN_Title" xml:space="preserve">
-    <value>Haupt-Bereiche</value>
+    <value>Hauptbereiche</value>
   </data>
   <data name="Onboarding_Area_Bookshelf" xml:space="preserve">
     <value>Regal: Bücher und Pflanzen organisieren</value>
   </data>
   <data name="Onboarding_Area_Dashboard" xml:space="preserve">
-    <value>Übersicht: Schnell-Übersicht und Aktivität</value>
+    <value>Übersicht: Schnellzugriff und Aktivität</value>
   </data>
   <data name="Onboarding_Area_Goals" xml:space="preserve">
     <value>Ziele: Leseziele anlegen und verfolgen</value>
@@ -1490,7 +1490,7 @@
     <value>Shop: Pflanzen kaufen und verwalten</value>
   </data>
   <data name="Onboarding_Area_Settings" xml:space="preserve">
-    <value>Einstellungen: App individuell anpassen</value>
+    <value>Einstellungen: App-Einstellungen anpassen</value>
   </data>
   <data name="Onboarding_ContinueTutorial" xml:space="preserve">
     <value>Tutorial fortsetzen</value>
@@ -1751,13 +1751,13 @@
     <value>In Premium enthalten</value>
   </data>
   <data name="Paywall_GetPlus" xml:space="preserve">
-    <value>Plus holen</value>
+    <value>Plus wählen</value>
   </data>
   <data name="Paywall_MostPopular" xml:space="preserve">
     <value>Am beliebtesten</value>
   </data>
   <data name="Paywall_GetPremium" xml:space="preserve">
-    <value>Premium holen</value>
+    <value>Premium wählen</value>
   </data>
   <data name="Paywall_LaunchSpecial" xml:space="preserve">
     <value>Launch-Special — zeitlich begrenzt</value>
@@ -1772,10 +1772,10 @@
     <value>Bereits Premium</value>
   </data>
   <data name="Paywall_GetLifetime" xml:space="preserve">
-    <value>Lifetime für 99,99 € holen</value>
+    <value>Lifetime für 99,99 € freischalten</value>
   </data>
   <data name="Paywall_TrustNote" xml:space="preserve">
-    <value>Jederzeit im Google Play kündbar · Verlängert sich automatisch bis zur Kündigung</value>
+    <value>Jederzeit über Google Play kündbar · Verlängert sich automatisch bis zur Kündigung</value>
   </data>
   <data name="Paywall_PromoLabel" xml:space="preserve">
     <value>Promo-Code vorhanden?</value>
@@ -1880,7 +1880,7 @@
     <value>Bibliothek sichern, wiederherstellen oder löschen</value>
   </data>
   <data name="Settings_Data_Backup" xml:space="preserve">
-    <value>In Cloud sichern</value>
+    <value>In die Cloud sichern</value>
   </data>
   <data name="Settings_Data_Restore" xml:space="preserve">
     <value>Aus Backup wiederherstellen</value>
@@ -2120,10 +2120,10 @@
     <value>Diese Pflanze benoetigt Level {0}. Du bist aktuell auf Level {1}.</value>
   </data>
   <data name="Error_NotEnoughCoins" xml:space="preserve">
-    <value>Nicht genug Muenzen. Du brauchst {0} Muenzen, hast aber nur {1}.</value>
+    <value>Nicht genug Münzen. Du brauchst {0} Münzen, hast aber nur {1}.</value>
   </data>
   <data name="Error_NotEnoughCoinsShort" xml:space="preserve">
-    <value>Nicht genug Muenzen. Du brauchst {0}, hast aber nur {1}.</value>
+    <value>Nicht genug Münzen. Du brauchst {0}, hast aber nur {1}.</value>
   </data>
   <data name="Error_DecorationNotFound" xml:space="preserve">
     <value>Dekoration nicht gefunden.</value>
@@ -2141,13 +2141,13 @@
     <value>Titel und Autor sind erforderlich</value>
   </data>
   <data name="Error_NotificationPermissionDenied" xml:space="preserve">
-    <value>Benachrichtigungen wurden verweigert. Bitte aktiviere sie in den Geraete-Einstellungen.</value>
+    <value>Benachrichtigungen wurden verweigert. Bitte aktiviere sie in den Geräte-Einstellungen.</value>
   </data>
   <data name="Error_FilePickCancelled" xml:space="preserve">
     <value>Dateiauswahl fehlgeschlagen oder abgebrochen. Falls die Datei aus Google Drive stammt, speichere sie erst lokal.</value>
   </data>
   <data name="Error_RestoreDbInitFailed" xml:space="preserve">
-    <value>Wiederherstellung nicht moeglich: DB-Initialisierung fehlgeschlagen. Bitte starte BookHeart neu. ({0}: {1})</value>
+    <value>Wiederherstellung nicht möglich: DB-Initialisierung fehlgeschlagen. Bitte starte BookHeart neu. ({0}: {1})</value>
   </data>
   <data name="Error_RestoreBackupFailed" xml:space="preserve">
     <value>Backup-Wiederherstellung fehlgeschlagen: {0}: {1}{2}</value>
@@ -2156,7 +2156,7 @@
     <value>Pflanzendetails konnten nicht geladen werden: {0}</value>
   </data>
   <data name="Settings_Restore_PickerTitle" xml:space="preserve">
-    <value>Backup-Datei waehlen</value>
+    <value>Backup-Datei wählen</value>
   </data>
   <data name="GoalStatus_UpdateSuccess" xml:space="preserve">
     <value>Update erfolgreich</value>
@@ -2171,19 +2171,19 @@
     <value>Zeit zu lesen!</value>
   </data>
   <data name="Notification_Reminder_Body" xml:space="preserve">
-    <value>Vergiss nicht deine taegliche Lesesitzung</value>
+    <value>Vergiss nicht deine tägliche Lesesitzung</value>
   </data>
   <data name="Notification_Goal_Title" xml:space="preserve">
     <value>Ziel erreicht!</value>
   </data>
   <data name="Notification_Goal_Body" xml:space="preserve">
-    <value>Glueckwunsch! Du hast dein Ziel erreicht: {0}</value>
+    <value>Glückwunsch! Du hast dein Ziel erreicht: {0}</value>
   </data>
   <data name="Notification_Plant_Title" xml:space="preserve">
     <value>Deine Pflanze braucht Wasser!</value>
   </data>
   <data name="Notification_Plant_Body" xml:space="preserve">
-    <value>{0} hat Durst! Giess sie, damit sie gesund bleibt.</value>
+    <value>{0} hat Durst! Gieß sie, damit sie gesund bleibt.</value>
   </data>
   <data name="Validator_Book_TitleRequired" xml:space="preserve">
     <value>Titel ist erforderlich</value>
@@ -2201,7 +2201,7 @@
     <value>ISBN darf maximal 20 Zeichen haben</value>
   </data>
   <data name="Validator_Book_PageCountPositive" xml:space="preserve">
-    <value>Seitenzahl muss groesser als 0 sein</value>
+    <value>Seitenzahl muss größer als 0 sein</value>
   </data>
   <data name="Validator_Book_PageCountMax" xml:space="preserve">
     <value>Seitenzahl darf maximal 50.000 sein</value>
@@ -2210,7 +2210,7 @@
     <value>Aktuelle Seite darf nicht negativ sein</value>
   </data>
   <data name="Validator_Book_CurrentPageMax" xml:space="preserve">
-    <value>Aktuelle Seite darf die Gesamtseitenzahl nicht ueberschreiten</value>
+    <value>Aktuelle Seite darf die Gesamtseitenzahl nicht überschreiten</value>
   </data>
   <data name="Validator_Book_DateStartedFuture" xml:space="preserve">
     <value>Startdatum darf nicht in der Zukunft liegen</value>
@@ -2231,10 +2231,10 @@
     <value>Beschreibung darf maximal 1.000 Zeichen haben</value>
   </data>
   <data name="Validator_Goal_TargetPositive" xml:space="preserve">
-    <value>Zielwert muss groesser als 0 sein</value>
+    <value>Zielwert muss größer als 0 sein</value>
   </data>
   <data name="Validator_Goal_TargetMax" xml:space="preserve">
-    <value>Zielwert darf 100.000 nicht ueberschreiten</value>
+    <value>Zielwert darf 100.000 nicht überschreiten</value>
   </data>
   <data name="Validator_Goal_CurrentNonNegative" xml:space="preserve">
     <value>Aktueller Wert darf nicht negativ sein</value>
@@ -2264,19 +2264,19 @@
     <value>Endzeit darf nicht in der Zukunft liegen</value>
   </data>
   <data name="Validator_Session_MinutesPositive" xml:space="preserve">
-    <value>Lesedauer muss groesser als 0 sein</value>
+    <value>Lesedauer muss größer als 0 sein</value>
   </data>
   <data name="Validator_Session_MinutesMax" xml:space="preserve">
-    <value>Lesedauer darf 24 Stunden (1440 Minuten) nicht ueberschreiten</value>
+    <value>Lesedauer darf 24 Stunden (1440 Minuten) nicht überschreiten</value>
   </data>
   <data name="Validator_Session_PagesNonNegative" xml:space="preserve">
-    <value>Gelesene Seiten duerfen nicht negativ sein</value>
+    <value>Gelesene Seiten dürfen nicht negativ sein</value>
   </data>
   <data name="Validator_Session_PagesMax" xml:space="preserve">
-    <value>Gelesene Seiten duerfen 10.000 nicht ueberschreiten</value>
+    <value>Gelesene Seiten dürfen 10.000 nicht überschreiten</value>
   </data>
   <data name="Validator_Session_XpNonNegative" xml:space="preserve">
-    <value>XP duerfen nicht negativ sein</value>
+    <value>XP dürfen nicht negativ sein</value>
   </data>
   <data name="Validator_Plant_NameRequired" xml:space="preserve">
     <value>Pflanzenname ist erforderlich</value>
@@ -2291,7 +2291,7 @@
     <value>Aktuelles Level muss mindestens 1 sein</value>
   </data>
   <data name="Validator_Plant_LevelMax" xml:space="preserve">
-    <value>Aktuelles Level darf 100 nicht ueberschreiten</value>
+    <value>Aktuelles Level darf 100 nicht überschreiten</value>
   </data>
   <data name="Validator_Plant_ExperienceNonNegative" xml:space="preserve">
     <value>Erfahrung darf nicht negativ sein</value>
@@ -2303,10 +2303,10 @@
     <value>Pflanzdatum darf nicht in der Zukunft liegen</value>
   </data>
   <data name="Validator_Plant_LastWateredRequired" xml:space="preserve">
-    <value>Letztes Giess-Datum ist erforderlich</value>
+    <value>Letztes Gieß-Datum ist erforderlich</value>
   </data>
   <data name="Validator_Plant_LastWateredFuture" xml:space="preserve">
-    <value>Letztes Giess-Datum darf nicht in der Zukunft liegen</value>
+    <value>Letztes Gieß-Datum darf nicht in der Zukunft liegen</value>
   </data>
   <data name="Error_FailedTo_LoadShop" xml:space="preserve">
     <value>Shop konnte nicht geladen werden</value>
