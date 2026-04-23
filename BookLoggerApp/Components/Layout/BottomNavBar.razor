@@ -1,37 +1,34 @@
-@using BookLoggerApp.Core.Resources
-@using Microsoft.Extensions.Localization
 @inject NavigationManager Navigation
-@inject IStringLocalizer<AppResources> L
 
 <nav class="bottom-nav">
     <NavLink class="nav-item" href="/" Match="NavLinkMatch.All">
         <span class="nav-icon">📚</span>
-        <span class="nav-label">@L["Nav_Bookshelf"]</span>
+        <span class="nav-label">Bookshelf</span>
     </NavLink>
 
     <NavLink class="nav-item" href="/dashboard">
         <span class="nav-icon">🏠</span>
-        <span class="nav-label">@L["Nav_Dashboard"]</span>
+        <span class="nav-label">Dashboard</span>
     </NavLink>
 
     <NavLink class="nav-item" href="/stats">
         <span class="nav-icon">📊</span>
-        <span class="nav-label">@L["Nav_Stats"]</span>
+        <span class="nav-label">Stats</span>
     </NavLink>
 
     <NavLink class="nav-item" href="/goals">
         <span class="nav-icon">🎯</span>
-        <span class="nav-label">@L["Nav_Goals"]</span>
+        <span class="nav-label">Goals</span>
     </NavLink>
 
     <NavLink class="nav-item" href="/shop">
         <span class="nav-icon">🌱</span>
-        <span class="nav-label">@L["Nav_Shop"]</span>
+        <span class="nav-label">Shop</span>
     </NavLink>
 
     <NavLink class="nav-item" href="/settings">
         <span class="nav-icon">⚙️</span>
-        <span class="nav-label">@L["Nav_Settings"]</span>
+        <span class="nav-label">Settings</span>
     </NavLink>
 </nav>
 

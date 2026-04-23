@@ -71,7 +71,7 @@ public partial class BookDetailViewModel : ViewModelBase
             Book = await _bookService.GetWithDetailsAsync(bookId);
             if (Book == null)
             {
-                SetError(Tr("Error_BookNotFound"));
+                SetError("Book not found");
                 return;
             }
 
@@ -88,7 +88,7 @@ public partial class BookDetailViewModel : ViewModelBase
             Annotations = new ObservableCollection<Annotation>(annotations);
 
             BookGenres = (await _genreService.GetGenresForBookAsync(bookId)).ToList();
-        }, Tr("Error_FailedTo_LoadBookDetails"));
+        }, "Failed to load book details");
     }
 
     [RelayCommand]
@@ -100,7 +100,7 @@ public partial class BookDetailViewModel : ViewModelBase
         {
             await _bookService.StartReadingAsync(Book.Id);
             await LoadAsync(Book.Id); // Reload
-        }, Tr("Error_FailedTo_StartReading"));
+        }, "Failed to start reading");
     }
 
     [RelayCommand]
@@ -112,7 +112,7 @@ public partial class BookDetailViewModel : ViewModelBase
         {
             await _bookService.CompleteBookAsync(Book.Id);
             await LoadAsync(Book.Id); // Reload
-        }, Tr("Error_FailedTo_CompleteBook"));
+        }, "Failed to complete book");
     }
 
     public async Task AddQuoteAsync(string text, int? pageNumber)
@@ -129,7 +129,7 @@ public partial class BookDetailViewModel : ViewModelBase
             };
             await _quoteService.AddAsync(quote);
             await LoadAsync(Book.Id); // Reload
-        }, Tr("Error_FailedTo_AddQuote"));
+        }, "Failed to add quote");
     }
 
     [RelayCommand]
@@ -146,7 +146,7 @@ public partial class BookDetailViewModel : ViewModelBase
                 StartedAt = DateTime.UtcNow
             });
             await LoadAsync(Book.Id); // Reload
-        }, Tr("Error_FailedTo_AddSession"));
+        }, "Failed to add session");
     }
 
     /// <summary>
@@ -201,7 +201,7 @@ public partial class BookDetailViewModel : ViewModelBase
 
             // Reload to refresh computed properties
             await LoadAsync(Book.Id);
-        }, Tr("Error_FailedTo_UpdateCategoryRating"));
+        }, $"Failed to update {category} rating");
     }
 
     /// <summary>
@@ -215,7 +215,7 @@ public partial class BookDetailViewModel : ViewModelBase
         {
             Book.Notes = notes;
             await _bookService.UpdateAsync(Book);
-        }, Tr("Error_FailedTo_UpdateNotes"));
+        }, "Failed to update notes");
     }
 
     /// <summary>
@@ -287,7 +287,7 @@ public partial class BookDetailViewModel : ViewModelBase
 
             byte[] cardBytes = await _shareCardService.GenerateBookCardAsync(data);
             BookShareCardReady?.Invoke(cardBytes);
-        }, Tr("Error_FailedTo_GenerateBookRecommendationCard"));
+        }, "Failed to generate book recommendation card");
 
         IsGeneratingBookCard = false;
     }

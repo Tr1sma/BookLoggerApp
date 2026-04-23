@@ -2,9 +2,7 @@
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Core.Models
-@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Entitlements
-@using Microsoft.Extensions.Localization
 @using System.ComponentModel
 @inject GoalsViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
@@ -12,25 +10,24 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
 @inject IOnboardingService OnboardingService
-@inject IStringLocalizer<AppResources> L
 @implements IDisposable
 
-<PageTitle>@L["PageTitle_Goals"] - BookHeart</PageTitle>
+<PageTitle>Goals - BookHeart</PageTitle>
 
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.Goals" />
 <div class="goals-container">
     <div class="goals-header">
-        <h1>🎯 @L["Goals_Title"]</h1>
+        <h1>🎯 Reading Goals</h1>
         <LockedFeatureButton Feature="FeatureKey.UnlimitedReadingGoals"
                              ForceLock="@(ViewModel.ActiveGoals.Count >= 3)">
-            <button class="btn btn-primary" @onclick="ShowCreateForm">+ @L["Goals_New"]</button>
+            <button class="btn btn-primary" @onclick="ShowCreateForm">+ New Goal</button>
         </LockedFeatureButton>
     </div>
 
     @if (ViewModel.IsBusy)
     {
-        <div class="loading">@L["Goals_Loading"]</div>
+        <div class="loading">Loading goals...</div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
@@ -47,37 +44,37 @@
         @if (ViewModel.ShowCreateForm && ViewModel.NewGoal != null)
         {
             <div class="goal-form">
-                <h2>@(ViewModel.IsEditing ? L["Goals_Form_EditTitle"] : L["Goals_Form_CreateTitle"])</h2>
+                <h2>@(ViewModel.IsEditing ? "Edit Goal" : "Create New Goal")</h2>
                 <div class="form-group">
-                    <label>@L["Goals_Field_Title"]</label>
-                    <input @bind="ViewModel.NewGoal.Title" @bind:event="oninput" placeholder="@L["Goals_Field_Title_Placeholder"]" />
+                    <label>Title:</label>
+                    <input @bind="ViewModel.NewGoal.Title" @bind:event="oninput" placeholder="e.g., Read 5 books this month" />
                 </div>
                 <div class="form-group">
-                    <label>@L["Goals_Field_Type"]</label>
+                    <label>Type:</label>
                     <select @bind="ViewModel.NewGoal.Type">
-                        <option value="@BookLoggerApp.Core.Enums.GoalType.Books">@L["Goals_Type_Books"]</option>
-                        <option value="@BookLoggerApp.Core.Enums.GoalType.Pages">@L["Goals_Type_Pages"]</option>
-                        <option value="@BookLoggerApp.Core.Enums.GoalType.Minutes">@L["Goals_Type_Minutes"]</option>
+                        <option value="@BookLoggerApp.Core.Enums.GoalType.Books">Books</option>
+                        <option value="@BookLoggerApp.Core.Enums.GoalType.Pages">Pages</option>
+                        <option value="@BookLoggerApp.Core.Enums.GoalType.Minutes">Minutes</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>@L["Goals_Field_Target"]</label>
+                    <label>Target:</label>
                     <input type="number" @bind="ViewModel.NewGoal.Target" min="1" />
                 </div>
                 <div class="form-group">
-                    <label>@L["Goals_Field_StartDate"]</label>
+                    <label>Start Date:</label>
                     <input type="date" @bind="ViewModel.NewGoal.StartDate" />
                 </div>
                 <div class="form-group">
-                    <label>@L["Goals_Field_EndDate"]</label>
+                    <label>End Date:</label>
                     <input type="date" @bind="ViewModel.NewGoal.EndDate" />
                 </div>
                 @if (ViewModel.AllGenres.Any())
                 {
                     <LockedFeatureButton Feature="FeatureKey.ReadingGoalsWithGenreTropeFilter">
                         <div class="form-group">
-                            <label>@L["Goals_Field_GenreFilter"]</label>
-                            <p class="genre-filter-hint">@L["Goals_Field_GenreFilter_Hint"]</p>
+                            <label>Genre-Filter (optional):</label>
+                            <p class="genre-filter-hint">Nur Bücher mit mindestens einem dieser Genres zählen zum Fortschritt.</p>
                             <div class="goal-genres-selection">
                                 @foreach (var genre in ViewModel.AllGenres)
                                 {
@@ -93,19 +90,19 @@
                     </LockedFeatureButton>
                 }
                 <div class="form-actions">
-                    <button class="btn btn-primary" @onclick="SaveGoal">@(ViewModel.IsEditing ? L["Goals_Form_Update"] : L["Goals_Form_Create"])</button>
+                    <button class="btn btn-primary" @onclick="SaveGoal">@(ViewModel.IsEditing ? "Update" : "Create")</button>
                     @if (ViewModel.IsEditing)
                     {
-                        <button class="btn btn-danger" @onclick="RequestDelete">@L["Common_Delete"]</button>
+                        <button class="btn btn-danger" @onclick="RequestDelete">Delete</button>
                     }
-                    <button class="btn btn-secondary" @onclick="CancelCreate">@L["Common_Cancel"]</button>
+                    <button class="btn btn-secondary" @onclick="CancelCreate">Cancel</button>
                 </div>
             </div>
         }
 
         <!-- Active Goals -->
         <section class="active-goals">
-            <h2>@L["Goals_ActiveGoals"]</h2>
+            <h2>Active Goals</h2>
             @if (ViewModel.ActiveGoals.Any())
             {
                 <div class="goals-list">
@@ -119,13 +116,13 @@
             }
             else
             {
-                <p>@L["Goals_NoActiveGoals"]</p>
+                <p>No active goals.</p>
             }
         </section>
 
         <!-- Completed Goals -->
         <section class="completed-goals">
-            <h2>@L["Goals_CompletedGoals"]</h2>
+            <h2>Completed Goals</h2>
             @if (ViewModel.CompletedGoals.Any())
             {
                 <div class="goals-list">
@@ -139,7 +136,7 @@
             }
             else
             {
-                <p>@L["Goals_NoCompletedGoals"]</p>
+                <p>No completed goals yet.</p>
             }
         </section>
     }
@@ -149,11 +146,11 @@
 {
     <div class="modal-overlay" @onclick="CancelDelete">
         <div class="modal-content" @onclick:stopPropagation="true">
-            <h3>@L["Goals_Delete_Title"]</h3>
-            <p>@L["Goals_Delete_Confirm", ViewModel.NewGoal?.Title ?? string.Empty]</p>
+            <h3>Delete Goal?</h3>
+            <p>Are you sure you want to delete "@(ViewModel.NewGoal?.Title)"? This action cannot be undone.</p>
             <div class="modal-actions">
-                <button class="btn btn-danger" @onclick="ConfirmDelete">@L["Common_Delete"]</button>
-                <button class="btn btn-secondary" @onclick="CancelDelete">@L["Common_Cancel"]</button>
+                <button class="btn btn-danger" @onclick="ConfirmDelete">Delete</button>
+                <button class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
             </div>
         </div>
     </div>
@@ -165,7 +162,7 @@
     <div class="modal-overlay" @onclick="CloseExcludeModal">
         <div class="exclude-modal" @onclick:stopPropagation="true">
             <div class="exclude-modal-header">
-                <h3>🎯 @L["Goals_EditGoal"]</h3>
+                <h3>🎯 Ziel bearbeiten</h3>
             </div>
 
             <div class="exclude-modal-body">
@@ -174,30 +171,30 @@
                 {
                     <div class="modal-edit-section">
                         <div class="form-group">
-                            <label>@L["Goals_Field_Title"]</label>
-                            <input @bind="ViewModel.NewGoal.Title" @bind:event="oninput" placeholder="@L["Goals_Field_Title_Placeholder"]" />
+                            <label>Title:</label>
+                            <input @bind="ViewModel.NewGoal.Title" @bind:event="oninput" placeholder="e.g., Read 5 books this month" />
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>@L["Goals_Field_Type"]</label>
+                                <label>Type:</label>
                                 <select @bind="ViewModel.NewGoal.Type">
-                                    <option value="@BookLoggerApp.Core.Enums.GoalType.Books">@L["Goals_Type_Books"]</option>
-                                    <option value="@BookLoggerApp.Core.Enums.GoalType.Pages">@L["Goals_Type_Pages"]</option>
-                                    <option value="@BookLoggerApp.Core.Enums.GoalType.Minutes">@L["Goals_Type_Minutes"]</option>
+                                    <option value="@BookLoggerApp.Core.Enums.GoalType.Books">Books</option>
+                                    <option value="@BookLoggerApp.Core.Enums.GoalType.Pages">Pages</option>
+                                    <option value="@BookLoggerApp.Core.Enums.GoalType.Minutes">Minutes</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>@L["Goals_Field_Target"]</label>
+                                <label>Target:</label>
                                 <input type="number" @bind="ViewModel.NewGoal.Target" min="1" />
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>@L["Goals_Field_StartDate"]</label>
+                                <label>Start Date:</label>
                                 <input type="date" @bind="ViewModel.NewGoal.StartDate" />
                             </div>
                             <div class="form-group">
-                                <label>@L["Goals_Field_EndDate"]</label>
+                                <label>End Date:</label>
                                 <input type="date" @bind="ViewModel.NewGoal.EndDate" />
                             </div>
                         </div>
@@ -209,8 +206,8 @@
                 <!-- Genre filter section -->
                 @if (ViewModel.AllGenres.Any())
                 {
-                    <h4 class="exclude-section-title">🏷️ @L["Goals_GenreFilter"]</h4>
-                    <p class="genre-filter-hint">@L["Goals_Field_GenreFilter_Hint"]</p>
+                    <h4 class="exclude-section-title">🏷️ Genre-Filter</h4>
+                    <p class="genre-filter-hint">Nur Bücher mit mindestens einem dieser Genres zählen zum Fortschritt.</p>
                     <div class="goal-genres-selection">
                         @foreach (var genre in ViewModel.AllGenres)
                         {
@@ -226,14 +223,14 @@
                 }
 
                 <!-- Exclude books section -->
-                <h4 class="exclude-section-title">📚 @L["Goals_ExcludeBooks"]</h4>
+                <h4 class="exclude-section-title">📚 Bücher ausschließen</h4>
                 @if (!ViewModel.AllBooks.Any())
                 {
-                    <p class="no-books-message">@L["Goals_NoBooksAvailable"]</p>
+                    <p class="no-books-message">Keine Bücher vorhanden.</p>
                 }
                 else
                 {
-                    <p class="exclude-hint">@L["Goals_ExcludeBooks_Hint"]</p>
+                    <p class="exclude-hint">Ausgeschlossene Bücher zählen nicht zum Fortschritt dieses Ziels.</p>
                     <div class="exclude-book-list">
                         @foreach (var book in ViewModel.AllBooks)
                         {
@@ -246,11 +243,11 @@
                                 <div class="exclude-toggle">
                                     @if (isExcluded)
                                     {
-                                        <span class="toggle-excluded">✗ @L["Goals_Excluded"]</span>
+                                        <span class="toggle-excluded">✗ Ausgeschlossen</span>
                                     }
                                     else
                                     {
-                                        <span class="toggle-included">✓ @L["Goals_Counts"]</span>
+                                        <span class="toggle-included">✓ Zählt mit</span>
                                     }
                                 </div>
                             </div>
@@ -261,10 +258,10 @@
 
             <div class="exclude-modal-footer">
                 <div class="footer-top-row">
-                    <button class="btn btn-danger" @onclick="RequestDelete">@L["Common_Delete"]</button>
-                    <button class="btn btn-secondary" @onclick="CloseExcludeModal">@L["Common_Cancel"]</button>
+                    <button class="btn btn-danger" @onclick="RequestDelete">Löschen</button>
+                    <button class="btn btn-secondary" @onclick="CloseExcludeModal">Abbrechen</button>
                 </div>
-                <button class="btn btn-primary footer-save-btn" @onclick="SaveGoalFromModal">@L["Common_Save"]</button>
+                <button class="btn btn-primary footer-save-btn" @onclick="SaveGoalFromModal">Speichern</button>
             </div>
         </div>
     </div>

@@ -72,7 +72,7 @@ public partial class GoalsViewModel : ViewModelBase
 
             var completed = await _goalService.GetCompletedGoalsAsync();
             CompletedGoals = completed.ToList();
-        }, Tr("Error_FailedTo_LoadGoals"));
+        }, "Failed to load goals");
     }
 
     [RelayCommand]
@@ -142,7 +142,7 @@ public partial class GoalsViewModel : ViewModelBase
 
         if (string.IsNullOrWhiteSpace(NewGoal.Title))
         {
-            SetError(Tr("Error_GoalTitleRequired"));
+            SetError("Goal title is required");
             return;
         }
 
@@ -166,7 +166,7 @@ public partial class GoalsViewModel : ViewModelBase
                     await _goalService.AddGenreToGoalAsync(NewGoal.Id, genreId);
                 }
 
-                StatusMessage = Tr("GoalStatus_UpdateSuccess");
+                StatusMessage = "Update erfolgreich";
             }
             else
             {
@@ -176,7 +176,7 @@ public partial class GoalsViewModel : ViewModelBase
                 {
                     await _goalService.AddGenreToGoalAsync(created.Id, genreId);
                 }
-                StatusMessage = Tr("GoalStatus_Created");
+                StatusMessage = "Ziel erstellt";
             }
             
             ShowCreateForm = false;
@@ -187,7 +187,7 @@ public partial class GoalsViewModel : ViewModelBase
             // Clear message after 3 seconds
             ScheduleStatusClear();
 
-        }, IsEditing ? Tr("Error_FailedTo_UpdateGoal") : Tr("Error_FailedTo_CreateGoal"));
+        }, IsEditing ? "Failed to update goal" : "Failed to create goal");
     }
 
     [RelayCommand]
@@ -201,13 +201,13 @@ public partial class GoalsViewModel : ViewModelBase
                 ShowCreateForm = false;
                 NewGoal = null;
             }
-            StatusMessage = Tr("GoalStatus_Deleted");
+            StatusMessage = "Erfolgreich gelöscht";
             await LoadAsync();
             
             // Clear message after 3 seconds
             ScheduleStatusClear();
 
-        }, Tr("Error_FailedTo_DeleteGoal"));
+        }, "Failed to delete goal");
     }
 
     [RelayCommand]
@@ -217,7 +217,7 @@ public partial class GoalsViewModel : ViewModelBase
         {
             await _goalService.UpdateAsync(goal);
             await LoadAsync();
-        }, Tr("Error_FailedTo_UpdateGoal"));
+        }, "Failed to update goal");
     }
 
     [RelayCommand]

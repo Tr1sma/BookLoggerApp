@@ -1,11 +1,8 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
 @using BookLoggerApp.Core.Helpers
-@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Infrastructure.Services.Helpers
-@using Microsoft.Extensions.Localization
 @inject BookLoggerApp.Core.Services.Abstractions.IDecorationService DecorationService
-@inject IStringLocalizer<AppResources> L
 
 <div class="plant-detail-card">
     <div class="plant-detail-visual">
@@ -30,7 +27,7 @@
                        @onblur="HandleNameBlur"
                        maxlength="100"
                        disabled="@IsRenaming"
-                       aria-label="@L["PlantDetail_PlantName"]" />
+                       aria-label="Plant name" />
             }
             else
             {
@@ -39,8 +36,8 @@
                         class="plant-detail-edit-btn"
                         @onclick="BeginRename"
                         disabled="@IsRenaming"
-                        aria-label="@L["PlantDetail_Rename"]"
-                        title="@L["PlantDetail_Rename"]">
+                        aria-label="Rename plant"
+                        title="Rename plant">
                     ✏️
                 </button>
             }
@@ -51,22 +48,22 @@
             <p class="plant-detail-name-error">@_renameError</p>
         }
 
-        <p class="plant-detail-species">@(Plant.Species?.Name ?? L["PlantCard_UnknownPlant"].Value)</p>
+        <p class="plant-detail-species">@(Plant.Species?.Name ?? "Unknown Plant")</p>
 
         <div class="plant-detail-stats">
             <div class="plant-detail-stat">
-                <span class="plant-detail-label">@L["Shop_LevelPrefix"]</span>
+                <span class="plant-detail-label">Level</span>
                 <span class="plant-detail-value">@(Plant.CurrentLevel) / @GetMaxLevel()</span>
             </div>
             <div class="plant-detail-stat">
-                <span class="plant-detail-label">@L["PlantDetail_NextWater"]</span>
+                <span class="plant-detail-label">Next Water</span>
                 <span class="plant-detail-value">@GetNextWaterText()</span>
             </div>
         </div>
 
         @if (Plant.Status == PlantStatus.Dead)
         {
-            <p class="plant-detail-note">@L["PlantDetail_DriedOut"]</p>
+            <p class="plant-detail-note">This plant has dried out and can no longer be watered.</p>
         }
 
         <button class="btn btn-water-now"
@@ -74,19 +71,19 @@
                 disabled="@IsWaterButtonDisabled">
             @if (IsWatering)
             {
-                <span>💧 @L["PlantWidget_Watering"]</span>
+                <span>💧 Watering...</span>
             }
             else if (Plant.Status == PlantStatus.Healthy)
             {
-                <span>💧 @L["PlantDetail_AlreadyWatered"]</span>
+                <span>💧 Already Watered</span>
             }
             else if (Plant.Status == PlantStatus.Dead)
             {
-                <span>💧 @L["PlantDetail_CannotWater"]</span>
+                <span>💧 Cannot Water</span>
             }
             else
             {
-                <span>💧 @L["PlantWidget_WaterPlant"]</span>
+                <span>💧 Water Plant</span>
             }
         </button>
     </div>
@@ -150,12 +147,12 @@
         var waterIntervalDays = Plant.Species?.WaterIntervalDays ?? 0;
         if (waterIntervalDays <= 0)
         {
-            return L["PlantDetail_NextWater_Unknown"];
+            return "Unknown";
         }
 
         if (Plant.Status == PlantStatus.Dead)
         {
-            return L["PlantDetail_NextWater_Missed"];
+            return "Missed watering window";
         }
 
         var nextWaterDue = PlantGrowthCalculator.GetNextWaterDueAt(Plant.LastWatered, waterIntervalDays, _growthMultiplier);
@@ -163,15 +160,15 @@
 
         if (timeRemaining <= TimeSpan.Zero)
         {
-            return L["PlantDetail_NextWater_Now"];
+            return "Now";
         }
 
         if (timeRemaining.TotalHours < 24)
         {
-            return L["PlantDetail_NextWater_Hours", Math.Max(1, (int)Math.Ceiling(timeRemaining.TotalHours))];
+            return $"In {Math.Max(1, (int)Math.Ceiling(timeRemaining.TotalHours))} hour(s)";
         }
 
-        return L["PlantDetail_NextWater_Days", Math.Max(1, (int)Math.Ceiling(timeRemaining.TotalDays))];
+        return $"In {Math.Max(1, (int)Math.Ceiling(timeRemaining.TotalDays))} day(s)";
     }
 
     private void BeginRename()
@@ -220,14 +217,14 @@
         var trimmedName = _editedName.Trim();
         if (string.IsNullOrWhiteSpace(trimmedName))
         {
-            _renameError = L["PlantDetail_Error_NameEmpty"];
+            _renameError = "Plant name cannot be empty";
             _focusNameInput = true;
             return;
         }
 
         if (trimmedName.Length > 100)
         {
-            _renameError = L["PlantDetail_Error_NameTooLong"];
+            _renameError = "Plant name cannot exceed 100 characters";
             _focusNameInput = true;
             return;
         }
@@ -250,7 +247,7 @@
         catch (Exception ex)
         {
             _renameError = string.IsNullOrWhiteSpace(ex.Message)
-                ? L["PlantDetail_Error_RenameFailed"]
+                ? "Failed to rename plant"
                 : ex.Message;
             _focusNameInput = true;
         }

@@ -181,56 +181,6 @@ Kanonische Vorlagen für neue Dateien — folge diesen Mustern statt sie aus dem
 2. CSS: Neue Datei in `wwwroot/css/foo.css`, Link in `wwwroot/index.html` einfügen
 3. Für Pages: `@page "/foo"` Direktive oben, in BottomNavBar.razor verlinken falls nötig
 
-### Lokalisierung (EN + DE)
-
-Die App verwendet `Microsoft.Extensions.Localization` mit einem einzigen Shared-Resource-Paar:
-
-- `BookLoggerApp.Core/Resources/AppResources.resx` — Englisch (neutral / Fallback)
-- `BookLoggerApp.Core/Resources/AppResources.de.resx` — Deutsch
-- `BookLoggerApp.Core/Resources/AppResources.cs` — leere Marker-Klasse für `IStringLocalizer<AppResources>`
-
-Aktive Sprache wird über `ILanguageService` verwaltet (Impl. in `BookLoggerApp/Services/LanguageService.cs`). Kanonisch in `AppSettings.Language` (SQLite), gespiegelt in MAUI `Preferences` (Key `app_language`) — letzteres wird synchron in `MauiProgram.InitializeCulture()` vor dem ersten Render gelesen. Sprachwechsel in Settings triggert einen App-Neustart via `IAppRestartService`.
-
-**Neue Keys hinzufügen:**
-
-1. Eintrag in `AppResources.resx` (Englisch):
-   ```xml
-   <data name="Bereich_Key" xml:space="preserve">
-     <value>English text</value>
-   </data>
-   ```
-2. Identischen Key mit deutschem Wert in `AppResources.de.resx`. Fehlende Keys werden vom Test `AppResourcesCoverageTests` gemeldet.
-3. Key-Präfixe nach Bereich: `Nav_*`, `Settings_*`, `Dashboard_*`, `BookDetail_*`, `Bookshelf_*`, `Reading_*`, `Goals_*`, `Stats_*`, `StatsTrends_*`, `StatsAnalyses_*`, `Shop_*`, `Onboarding_*`, `Paywall_*`, `Validator_*`, `Error_*`, `Error_FailedTo_*`, `Common_*`, `Status_*`, `Priority_*`, `Notification_*`, `Lookup_*`, `PlantWidget_*`, `PlantDetail_*`, `ShopCard_*`, `Startup_*`, `TimerInline_*`, `QuickTimer_*`, `PageTitle_*` usw.
-
-**Razor-Komponente verwenden:**
-
-```razor
-@using BookLoggerApp.Core.Resources
-@using Microsoft.Extensions.Localization
-@inject IStringLocalizer<AppResources> L
-
-<h1>@L["Bereich_Titel"]</h1>
-<p>@L["Bereich_Hinweis", arg1, arg2]</p>   @* mit Format-Args *@
-```
-
-**ViewModel verwenden:** `ViewModelBase` hat einen statischen Ambient-`Localizer` und einen `Tr(key, args...)`-Helper. Kein DI-Parameter nötig:
-
-```csharp
-SetError(Tr("Error_BookNotFound"));
-SetError(Tr("Error_PlantRequiresLevel", species.UnlockLevel, UserLevel));
-
-// ExecuteSafely*Async errorPrefix genauso:
-await ExecuteSafelyAsync(async () => { ... }, Tr("Error_FailedTo_LoadBooks"));
-```
-
-In Unit-Tests ist der Ambient-Localizer null → `Tr()` gibt den Schlüssel unverändert zurück. Soll Code echte lokalisierte Werte sehen, setze in der Test-Setup-Methode `ViewModelBase.Localizer = new TestStringLocalizer<AppResources>();` (Helper unter `Tests/TestHelpers/TestStringLocalizer.cs`).
-
-**Validator verwenden:** FluentValidation-Validatoren akzeptieren einen optionalen `IStringLocalizer<AppResources>` im Konstruktor und nutzen `.WithMessage(_ => Tr(key))` — lazy, damit Messages pro Request in der aktuellen Kultur aufgelöst werden.
-
-**Android-Widget-Strings:** Separate XML-Dateien, Android wählt automatisch:
-- `BookLoggerApp/Platforms/Android/Resources/values/strings.xml` (Englisch)
-- `BookLoggerApp/Platforms/Android/Resources/values-de/strings.xml` (Deutsch)
-
 ### CSS Theme Quick Reference
 
 ```

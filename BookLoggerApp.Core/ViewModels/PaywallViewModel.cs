@@ -143,7 +143,7 @@ public partial class PaywallViewModel : ViewModelBase
                 .Add(AnalyticsParamNames.Tier, _entitlementService.CurrentTier.ToString())
                 .BuildMutable());
             Banner = $"Current tier: {_entitlementService.CurrentTier}.";
-        }, Tr("Error_FailedTo_RestorePurchases"));
+        }, "Failed to restore purchases");
     }
 
     [RelayCommand]
@@ -172,7 +172,7 @@ public partial class PaywallViewModel : ViewModelBase
                     .Add(AnalyticsParamNames.Reason, result.Message)
                     .BuildMutable());
             }
-        }, Tr("Error_FailedTo_RedeemPromoCode"));
+        }, "Failed to redeem promo code");
     }
 
     [RelayCommand]

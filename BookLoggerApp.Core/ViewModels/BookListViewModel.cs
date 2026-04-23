@@ -34,7 +34,7 @@ public partial class BookListViewModel : ViewModelBase
             Items.Clear();
             var all = await _books.GetAllAsync();
             foreach (var b in all) Items.Add(b);
-        }, Tr("Error_FailedTo_LoadBooks"));
+        }, "Failed to load books");
     }
 
     [RelayCommand(CanExecute = nameof(CanAdd))]

@@ -1,11 +1,8 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
 @using BookLoggerApp.Core.Helpers
-@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Infrastructure.Services.Helpers
-@using Microsoft.Extensions.Localization
 @inject BookLoggerApp.Core.Services.Abstractions.IDecorationService DecorationService
-@inject IStringLocalizer<AppResources> L
 
 <div class="plant-widget @GetStatusClass()">
     <!-- Plant Visual -->
@@ -17,11 +14,11 @@
     <!-- Plant Info -->
     <div class="plant-info">
         <h3 class="plant-name">@Plant.Name</h3>
-        <p class="plant-species">@(Plant.Species?.Name ?? L["PlantWidget_Unknown"].Value)</p>
+        <p class="plant-species">@(Plant.Species?.Name ?? "Unknown")</p>
 
         <!-- Level Badge -->
         <div class="plant-level">
-            <span class="level-badge">@L["PlantWidget_Level", Plant.CurrentLevel, Plant.Species?.MaxLevel ?? 0]</span>
+            <span class="level-badge">Level @Plant.CurrentLevel / @(Plant.Species?.MaxLevel ?? 0)</span>
         </div>
 
         <!-- Reading Days Progress -->
@@ -32,11 +29,11 @@
             <p class="progress-text">
                 @if (Plant.Species == null || Plant.CurrentLevel >= Plant.Species.MaxLevel)
                 {
-                    <span>📖 @L["PlantWidget_ReadingDays_Max", Plant.ReadingDaysCount]</span>
+                    <span>📖 @Plant.ReadingDaysCount Lesetage (Max Level erreicht!)</span>
                 }
                 else
                 {
-                    <span>📖 @L["PlantWidget_ReadingDays", Plant.ReadingDaysCount, GetDaysToNextLevel(), Plant.CurrentLevel + 1]</span>
+                    <span>📖 @Plant.ReadingDaysCount Lesetage (@GetDaysToNextLevel() bis Level @(Plant.CurrentLevel + 1))</span>
                 }
             </p>
         </div>
@@ -51,21 +48,21 @@
                         disabled="@(Plant.Status == PlantStatus.Healthy || IsWatering)">
                     @if (IsWatering)
                     {
-                        <span>💧 @L["PlantWidget_Watering"]</span>
+                        <span>💧 Watering...</span>
                     }
                     else
                     {
-                        <span>💧 @L["PlantWidget_WaterPlant"]</span>
+                        <span>💧 Water Plant</span>
                     }
                 </button>
             }
             else
             {
-                <p class="plant-dead-message">😢 @L["PlantWidget_DeadMessage"]</p>
+                <p class="plant-dead-message">😢 Your plant has died. It can no longer provide XP boosts.</p>
                 @if (OnDelete.HasDelegate)
                 {
                     <button class="btn btn-danger" @onclick="() => OnDelete.InvokeAsync()">
-                        🗑️ @L["PlantWidget_DeleteDead"]
+                        🗑️ Delete Dead Plant
                     </button>
                 }
             }
@@ -75,7 +72,7 @@
         @if (Plant.Status == PlantStatus.Healthy)
         {
             <p class="water-timer">
-                @L["PlantWidget_NextWaterIn", GetDaysUntilWater()]
+                Next water in @GetDaysUntilWater() day(s)
             </p>
         }
     </div>
@@ -128,11 +125,11 @@
         var daysSince = (DateTime.UtcNow - Plant.LastWatered).TotalDays;
         return Plant.Status switch
         {
-            PlantStatus.Healthy => L["PlantWidget_Watered_Healthy", (int)daysSince],
-            PlantStatus.Thirsty => L["PlantWidget_Watered_Thirsty"],
-            PlantStatus.Wilting => L["PlantWidget_Watered_Wilting"],
-            PlantStatus.Dead => L["PlantWidget_Watered_Dead"],
-            _ => string.Empty
+            PlantStatus.Healthy => $"Last watered {(int)daysSince} day(s) ago. Doing great! 🌿",
+            PlantStatus.Thirsty => "⚠️ Needs water soon!",
+            PlantStatus.Wilting => "⚠️⚠️ Needs water urgently!",
+            PlantStatus.Dead => "😢 Plant has died.",
+            _ => ""
         };
     }
 

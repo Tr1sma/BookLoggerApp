@@ -1,7 +1,4 @@
 @using BookLoggerApp.Core.Models
-@using BookLoggerApp.Core.Resources
-@using Microsoft.Extensions.Localization
-@inject IStringLocalizer<AppResources> L
 
 <div class="plant-shop-card @(IsSelected ? "selected" : "") @(IsLockedByLevel ? "locked" : "") @(IsLegendary ? "legendary" : "")" @onclick="OnSelect" style="display: flex; flex-direction: column;">
     <!-- Plant Image -->
@@ -13,7 +10,7 @@
     <div class="plant-card-body">
         @if (IsLegendary)
         {
-            <div class="legendary-badge">✨ @L["ShopCard_Legendary"]</div>
+            <div class="legendary-badge">✨ Legendary</div>
         }
         <h3 class="plant-card-title">@Species.Name</h3>
         <p class="plant-card-description">@Species.Description</p>
@@ -22,11 +19,11 @@
         <div class="plant-card-stats">
             <div class="stat-mini">
                 <span class="stat-icon">📊</span>
-                <span>@L["Stats_LevelAbbrev"] @Species.MaxLevel</span>
+                <span>Lv. @Species.MaxLevel</span>
             </div>
             <div class="stat-mini">
                 <span class="stat-icon">💧</span>
-                <span>@Species.WaterIntervalDays @L["ShopCard_DayUnit"]</span>
+                <span>@Species.WaterIntervalDays d</span>
             </div>
             <div class="stat-mini">
                 <span class="stat-icon">⚡</span>
@@ -41,9 +38,9 @@
             </span>
             @if (IsLockedByLevel)
             {
-                <span class="buy-label locked">@L["ShopCard_UnlocksAt", Species.UnlockLevel]</span>
+                <span class="buy-label locked">Unlocks at Lv. @Species.UnlockLevel</span>
             }
-
+            
         </div>
     </div>
 
@@ -53,7 +50,7 @@
         <div class="locked-overlay-full">
             <div class="lock-content">
                 <span class="lock-icon-large">🔒</span>
-                <span class="lock-text">@L["Shop_RequiresLevel", Species.UnlockLevel]</span>
+                <span class="lock-text">Requires Level @Species.UnlockLevel</span>
             </div>
         </div>
     }

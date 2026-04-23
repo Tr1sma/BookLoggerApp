@@ -1,33 +1,30 @@
 @page "/shop"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
-@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Components.Shared
-@using Microsoft.Extensions.Localization
 @inject PlantShopViewModel ViewModel
 @inject DecorationShopViewModel DecorationVM
 @inject NavigationManager Navigation
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
-@inject IStringLocalizer<AppResources> L
 @implements IDisposable
 
-<PageTitle>@L["PageTitle_Shop"] - BookHeart</PageTitle>
+<PageTitle>Shop - BookHeart</PageTitle>
 
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.PlantShop" />
 <div class="plant-shop-container">
     <!-- Header -->
     <div class="shop-header">
-        <h1>🛍️ @L["Shop_Title"]</h1>
+        <h1>🛍️ Shop</h1>
         <div class="user-stats">
             <div class="stat-coin">
                 <span class="coin-icon">🪙</span>
-                <span class="coin-count">@(activeTab == "plants" ? ViewModel.UserCoins : DecorationVM.UserCoins) @L["Shop_Coins"]</span>
+                <span class="coin-count">@(activeTab == "plants" ? ViewModel.UserCoins : DecorationVM.UserCoins) Coins</span>
             </div>
             <div class="stat-level">
-                <span>@L["Shop_LevelPrefix"] @(activeTab == "plants" ? ViewModel.UserLevel : DecorationVM.UserLevel)</span>
+                <span>Level @(activeTab == "plants" ? ViewModel.UserLevel : DecorationVM.UserLevel)</span>
             </div>
         </div>
     </div>
@@ -36,11 +33,11 @@
     <div class="shop-tabs">
         <button class="shop-tab-btn @(activeTab == "plants" ? "active" : "")"
                 @onclick='() => SwitchTab("plants")'>
-            🌱 @L["Shop_Tab_Plants"]
+            🌱 Pflanzen
         </button>
         <button class="shop-tab-btn @(activeTab == "decorations" ? "active" : "")"
                 @onclick='() => SwitchTab("decorations")'>
-            🕯️ @L["Shop_Tab_Decorations"]
+            🕯️ Dekorationen
         </button>
     </div>
 
@@ -49,12 +46,12 @@
     {
         <!-- Description -->
         <div class="shop-description">
-            <p>🌿 @L["Shop_Plants_Description"]</p>
+            <p>🌿 Welcome to the Plant Shop! Buy plants to grow as you read. Each plant has unique growth rates and care requirements.</p>
         </div>
 
         @if (ViewModel.IsBusy)
         {
-            <div class="loading">@L["Shop_Loading"]</div>
+            <div class="loading">Loading shop...</div>
         }
         else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
         {
@@ -98,8 +95,8 @@
             @if (!ViewModel.AvailableSpecies.Any())
             {
                 <div class="empty-state">
-                    <h3>@L["Shop_Plants_Empty_Title"]</h3>
-                    <p>@L["Shop_Plants_Empty_Body"]</p>
+                    <h3>No plants available</h3>
+                    <p>Level up to unlock more plants!</p>
                 </div>
             }
         }
@@ -110,7 +107,7 @@
             <div class="purchase-modal-overlay" @onclick="ClearSelection">
                 <div class="purchase-modal" @onclick:stopPropagation="true">
                     <div class="modal-header">
-                        <h2>@L["Shop_Purchase_Prefix"] <span class="purchase-plant-name">@ViewModel.SelectedSpecies.Name</span></h2>
+                        <h2>Purchase <span class="purchase-plant-name">@ViewModel.SelectedSpecies.Name</span></h2>
                         <button class="btn-close" @onclick="ClearSelection">×</button>
                     </div>
 
@@ -124,19 +121,19 @@
 
                             <div class="plant-stats-grid">
                                 <div class="stat-item">
-                                    <label>@L["Shop_Plants_MaxLevel"]</label>
+                                    <label>Max Level</label>
                                     <span>@ViewModel.SelectedSpecies.MaxLevel</span>
                                 </div>
                                 <div class="stat-item">
-                                    <label>@L["Shop_Plants_WaterInterval"]</label>
-                                    <span>@L["Shop_Plants_EveryDays", ViewModel.SelectedSpecies.WaterIntervalDays]</span>
+                                    <label>Water Interval</label>
+                                    <span>Every @ViewModel.SelectedSpecies.WaterIntervalDays days</span>
                                 </div>
                                 <div class="stat-item">
-                                    <label>@L["Shop_Plants_GrowthRate"]</label>
+                                    <label>Growth Rate</label>
                                     <span>@ViewModel.SelectedSpecies.GrowthRate.ToString("0.0")x</span>
                                 </div>
                                 <div class="stat-item">
-                                    <label>@L["Shop_Plants_Cost"]</label>
+                                    <label>Cost</label>
                                     <span>🪙 @ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id)</span>
                                 </div>
                             </div>
@@ -144,15 +141,15 @@
                             @if (!string.IsNullOrEmpty(ViewModel.SelectedSpecies.SpecialAbilityKey))
                             {
                                 <div class="ability-callout">
-                                    ✨ <strong>@L["Shop_SpecialAbility"]:</strong> @GetAbilityDescription(ViewModel.SelectedSpecies.SpecialAbilityKey)
+                                    ✨ <strong>Special Ability:</strong> @GetAbilityDescription(ViewModel.SelectedSpecies.SpecialAbilityKey)
                                 </div>
                             }
 
                             <div class="name-input-group">
-                                <label>@L["Shop_Plants_NameLabel"]</label>
+                                <label>Name your plant (optional):</label>
                                 <input type="text"
                                        class="plant-name-input"
-                                       placeholder="@(L["Shop_Plants_NamePlaceholder", ViewModel.SelectedSpecies.Name].Value)"
+                                       placeholder="@($"Default: {ViewModel.SelectedSpecies.Name}")"
                                        @bind="ViewModel.NewPlantName"
                                        @bind:event="oninput"
                                        maxlength="100" />
@@ -162,18 +159,18 @@
 
                     <div class="modal-footer">
                         <button class="btn btn-secondary" @onclick="ClearSelection">
-                            @L["Common_Cancel"]
+                            Cancel
                         </button>
                         <button class="btn btn-primary"
                                 @onclick="HandlePlantPurchaseAsync"
                                 disabled="@(ViewModel.IsBusy || ViewModel.UserCoins < ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))">
                             @if (ViewModel.UserCoins >= ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id))
                             {
-                                <span>@L["Shop_PurchaseForCoins", ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id)]</span>
+                                <span>Purchase for 🪙 @ViewModel.GetDynamicPrice(ViewModel.SelectedSpecies.Id)</span>
                             }
                             else
                             {
-                                <span>@L["Shop_NotEnoughCoins"]</span>
+                                <span>Not Enough Coins</span>
                             }
                         </button>
                     </div>
@@ -182,13 +179,13 @@
         }
 
         <div class="info-box">
-            <h4>📚 @L["Shop_HowPlantsGrow_Title"]</h4>
+            <h4>📚 How do Plants Grow?</h4>
             <ul>
-                <li>@((MarkupString)L["Shop_HowPlantsGrow_Bullet1"].Value)</li>
-                <li>@((MarkupString)L["Shop_HowPlantsGrow_Bullet2"].Value)</li>
-                <li>@((MarkupString)L["Shop_HowPlantsGrow_Bullet3"].Value)</li>
-                <li>@((MarkupString)L["Shop_HowPlantsGrow_Bullet4"].Value)</li>
-                <li>@((MarkupString)L["Shop_HowPlantsGrow_Bullet5"].Value)</li>
+                <li>📖 One <strong>reading day</strong> = a day with at least 15 minutes of reading</li>
+                <li>🌱 <strong>3 reading days</strong> = 1 level (at Growth Rate 1.0)</li>
+                <li>⚡ <strong>Growth Rate 1.2</strong> = 20% faster (~2.5 days/level)</li>
+                <li>🐢 <strong>Growth Rate 0.8</strong> = 20% slower (~3.75 days/level)</li>
+                <li>✨ Higher level = higher XP boost while reading</li>
             </ul>
         </div>
     }
@@ -198,12 +195,12 @@
     {
         <!-- Description -->
         <div class="shop-description">
-            <p>🕯️ @L["Shop_Decorations_Description"]</p>
+            <p>🕯️ Decorate your shelves! Cosmetic items to make your bookshelf cosy and unique.</p>
         </div>
 
         @if (DecorationVM.IsBusy)
         {
-            <div class="loading">@L["Shop_Decorations_Loading"]</div>
+            <div class="loading">Loading decorations...</div>
         }
         else if (!string.IsNullOrEmpty(DecorationVM.ErrorMessage))
         {
@@ -245,8 +242,8 @@
             @if (!DecorationVM.AllDecorations.Any())
             {
                 <div class="empty-state">
-                    <h3>@L["Shop_Decorations_Empty_Title"]</h3>
-                    <p>@L["Shop_Decorations_Empty_Body"]</p>
+                    <h3>No decorations available</h3>
+                    <p>Check back later!</p>
                 </div>
             }
         }
@@ -257,7 +254,7 @@
             <div class="purchase-modal-overlay" @onclick="ClearDecorationSelection">
                 <div class="purchase-modal" @onclick:stopPropagation="true">
                     <div class="modal-header">
-                        <h2>@L["Shop_Purchase_Prefix"] <span class="purchase-plant-name">@DecorationVM.SelectedDecoration.Name</span></h2>
+                        <h2>Purchase <span class="purchase-plant-name">@DecorationVM.SelectedDecoration.Name</span></h2>
                         <button class="btn-close" @onclick="ClearDecorationSelection">×</button>
                     </div>
 
@@ -271,19 +268,19 @@
 
                             <div class="plant-stats-grid">
                                 <div class="stat-item">
-                                    <label>@L["Shop_Plants_Cost"]</label>
+                                    <label>Cost</label>
                                     <span>🪙 @DecorationVM.SelectedDecoration.Cost</span>
                                 </div>
                                 <div class="stat-item">
-                                    <label>@L["Shop_UnlockLevel"]</label>
-                                    <span>@L["Stats_LevelAbbrev"] @DecorationVM.SelectedDecoration.UnlockLevel</span>
+                                    <label>Unlock Level</label>
+                                    <span>Lv. @DecorationVM.SelectedDecoration.UnlockLevel</span>
                                 </div>
                             </div>
 
                             @if (!string.IsNullOrEmpty(DecorationVM.SelectedDecoration.SpecialAbilityKey))
                             {
                                 <div class="ability-callout">
-                                    ✨ <strong>@L["Shop_SpecialAbility"]:</strong> @GetAbilityDescription(DecorationVM.SelectedDecoration.SpecialAbilityKey)
+                                    ✨ <strong>Special Ability:</strong> @GetAbilityDescription(DecorationVM.SelectedDecoration.SpecialAbilityKey)
                                 </div>
                             }
                         </div>
@@ -291,22 +288,22 @@
 
                     <div class="modal-footer">
                         <button class="btn btn-secondary" @onclick="ClearDecorationSelection">
-                            @L["Common_Cancel"]
+                            Cancel
                         </button>
                         <button class="btn btn-primary"
                                 @onclick="HandleDecorationPurchaseAsync"
                                 disabled="@(DecorationVM.IsBusy || DecorationVM.UserCoins < DecorationVM.SelectedDecoration.Cost || DecorationVM.UserLevel < DecorationVM.SelectedDecoration.UnlockLevel)">
                             @if (DecorationVM.UserLevel < DecorationVM.SelectedDecoration.UnlockLevel)
                             {
-                                <span>@L["Shop_RequiresLevel", DecorationVM.SelectedDecoration.UnlockLevel]</span>
+                                <span>Requires Level @DecorationVM.SelectedDecoration.UnlockLevel</span>
                             }
                             else if (DecorationVM.UserCoins >= DecorationVM.SelectedDecoration.Cost)
                             {
-                                <span>@L["Shop_PurchaseForCoins", DecorationVM.SelectedDecoration.Cost]</span>
+                                <span>Purchase for 🪙 @DecorationVM.SelectedDecoration.Cost</span>
                             }
                             else
                             {
-                                <span>@L["Shop_NotEnoughCoins"]</span>
+                                <span>Not Enough Coins</span>
                             }
                         </button>
                     </div>
@@ -477,11 +474,11 @@
         return FeatureKey.StandardPlantsAndDecorations;
     }
 
-    private string GetAbilityDescription(string? abilityKey) => abilityKey switch
+    private static string GetAbilityDescription(string? abilityKey) => abilityKey switch
     {
-        SpecialAbilityKeys.StreakGuardian => L["Shop_Ability_StreakGuardian"],
-        SpecialAbilityKeys.EternalPhoenix => L["Shop_Ability_EternalPhoenix"],
-        SpecialAbilityKeys.StoryHeart    => L["Shop_Ability_StoryHeart"],
+        SpecialAbilityKeys.StreakGuardian => "Automatically rescues a breaking reading streak once every 14 days.",
+        SpecialAbilityKeys.EternalPhoenix => "Revives itself and shields all other plants from dying.",
+        SpecialAbilityKeys.StoryHeart    => "+25% XP, +25% level-up coins, +400 coins on sessions of 30 minutes or more, doubled plant growth, +2.5% of next-level XP on the first session of each day.",
         _ => string.Empty
     };
 }

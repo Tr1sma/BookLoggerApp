@@ -1,26 +1,22 @@
-@using BookLoggerApp.Core.Resources
-@using Microsoft.Extensions.Localization
-@inject IStringLocalizer<AppResources> L
-
 @if (IsVisible)
 {
     <div class="delete-modal-overlay" @onclick="HandleCancel">
         <div class="delete-modal" @onclick:stopPropagation="true">
             <div class="delete-modal-header">
-                <h2>@L["DeleteModal_Title"]</h2>
+                <h2>Buch löschen?</h2>
             </div>
 
             <div class="delete-modal-content">
                 <p class="book-title">@BookTitle</p>
 
                 <div class="warning-box">
-                    <p class="warning-title">@L["DeleteModal_Warning_Title"]</p>
-                    <p class="warning-text">@L["DeleteModal_Warning_Body"]</p>
+                    <p class="warning-title">Diese Aktion kann nicht rückgängig gemacht werden!</p>
+                    <p class="warning-text">Folgende Daten werden ebenfalls gelöscht:</p>
                     <ul>
-                        <li>@L["DeleteModal_Item_Sessions"]</li>
-                        <li>@L["DeleteModal_Item_Quotes"]</li>
-                        <li>@L["DeleteModal_Item_Annotations"]</li>
-                        <li>@L["DeleteModal_Item_Genres"]</li>
+                        <li>Alle Lese-Sessions</li>
+                        <li>Alle Zitate</li>
+                        <li>Alle Annotationen</li>
+                        <li>Genre-Zuordnungen</li>
                     </ul>
                 </div>
             </div>
@@ -29,15 +25,15 @@
                 <button type="button" class="btn btn-danger" @onclick="HandleConfirm" disabled="@IsDeleting">
                     @if (IsDeleting)
                     {
-                        <span>@L["DeleteModal_Deleting"]</span>
+                        <span>Löschen...</span>
                     }
                     else
                     {
-                        <span>@L["DeleteModal_Confirm"]</span>
+                        <span>Endgültig löschen</span>
                     }
                 </button>
                 <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsDeleting">
-                    @L["Common_Cancel"]
+                    Abbrechen
                 </button>
             </div>
         </div>

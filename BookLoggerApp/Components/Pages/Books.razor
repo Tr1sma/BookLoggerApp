@@ -1,25 +1,20 @@
 @page "/books"
-@using BookLoggerApp.Core.Resources
-@using Microsoft.Extensions.Localization
 @inject BookLoggerApp.Core.ViewModels.BookListViewModel Vm
-@inject IStringLocalizer<AppResources> L
-
-<PageTitle>@L["PageTitle_Books"] - BookHeart</PageTitle>
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.BookList" />
 
-<h1>@L["Books_Title"]</h1>
+<h1>Books</h1>
 
 @if (Vm.IsBusy)
 {
-    <p>@L["Common_Loading"]</p>
+    <p>Loading…</p>
 }
 else
 {
     <div>
-        <input placeholder="@L["Books_Title_Placeholder"]" @bind="Vm.NewTitle" />
-        <input placeholder="@L["Books_Author_Placeholder"]" @bind="Vm.NewAuthor" />
-        <button @onclick="Vm.AddAsync" disabled="@(!Vm.AddAsyncCommand.CanExecute(null))">@L["Books_Add"]</button>
+        <input placeholder="Title" @bind="Vm.NewTitle" />
+        <input placeholder="Author" @bind="Vm.NewAuthor" />
+        <button @onclick="Vm.AddAsync" disabled="@(!Vm.AddAsyncCommand.CanExecute(null))">Add</button>
     </div>
 
     <ul>

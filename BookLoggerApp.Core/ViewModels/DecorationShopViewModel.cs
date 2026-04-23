@@ -46,7 +46,7 @@ public partial class DecorationShopViewModel : ViewModelBase
             var items = await _decorationService.GetAllDecorationShopItemsAsync();
             AllDecorations = new ObservableCollection<ShopItem>(
                 items.OrderBy(d => d.UnlockLevel).ThenBy(d => d.Cost).ThenBy(d => d.Name));
-        }, Tr("Error_FailedTo_LoadDecorationShop"));
+        }, "Failed to load decoration shop");
     }
 
     [RelayCommand]
@@ -57,26 +57,26 @@ public partial class DecorationShopViewModel : ViewModelBase
             var item = AllDecorations.FirstOrDefault(d => d.Id == shopItemId);
             if (item == null)
             {
-                SetError(Tr("Error_DecorationNotFound"));
+                SetError("Decoration not found.");
                 return;
             }
 
             if (UserLevel < item.UnlockLevel)
             {
-                SetError(Tr("Error_DecorationRequiresLevel", item.UnlockLevel));
+                SetError($"This decoration requires level {item.UnlockLevel}.");
                 return;
             }
 
             if (UserCoins < item.Cost)
             {
-                SetError(Tr("Error_NotEnoughCoinsShort", item.Cost, UserCoins));
+                SetError($"Not enough coins. You need {item.Cost} but only have {UserCoins}.");
                 return;
             }
 
             await _decorationService.PurchaseDecorationAsync(shopItemId);
             SelectedDecoration = null;
             await LoadAsync();
-        }, Tr("Error_PurchaseDecorationFailed"));
+        }, "Failed to purchase decoration");
     }
 
     [RelayCommand]
