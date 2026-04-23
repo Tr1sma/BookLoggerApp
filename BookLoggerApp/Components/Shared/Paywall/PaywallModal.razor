@@ -187,6 +187,11 @@
     </div>
 </div>
 
+<PaywallCelebration IsVisible="ViewModel.ShowCelebration"
+                    Headline="@ViewModel.CelebrationHeadline"
+                    Detail="@ViewModel.CelebrationDetail"
+                    OnClose="HandleCelebrationClose" />
+
 @code {
     [Parameter] public FeatureKey? TriggerFeature { get; set; }
 
@@ -235,5 +240,10 @@
         {
             await OnDismissed.InvokeAsync();
         }
+    }
+
+    private void HandleCelebrationClose()
+    {
+        ViewModel.DismissCelebration();
     }
 }

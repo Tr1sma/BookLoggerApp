@@ -1,0 +1,33 @@
+@if (IsVisible)
+{
+    <div class="celebration-overlay" @onclick="HandleClose">
+        <div class="celebration-card" @onclick:stopPropagation="true">
+            @for (int i = 0; i < 9; i++)
+            {
+                <div class="confetti"></div>
+            }
+
+            <div class="session-complete-header">
+                <h1>🎉 @Headline</h1>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Detail))
+            {
+                <div class="ability-callout">@Detail</div>
+            }
+
+            <button class="celebration-button" @onclick="HandleClose">
+                Continue
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public string Headline { get; set; } = string.Empty;
+    [Parameter] public string? Detail { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private Task HandleClose() => OnClose.InvokeAsync();
+}
