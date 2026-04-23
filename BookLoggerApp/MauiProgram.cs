@@ -376,15 +376,23 @@ public static class MauiProgram
 
     private static void InitializeDatabase(MauiApp app)
     {
-        // Initialize database using DbInitializer
-        // This runs asynchronously but provides EnsureInitializedAsync() for ViewModels to await
+        // Runs DbInitializer on a dedicated background thread rather than Task.Run.
+        // On budget Android devices (reported on Samsung Galaxy A16) the ThreadPool
+        // during cold start is busy with BlazorWebView, MAUI handlers and Android
+        // activity setup, which can delay a Task.Run worker far enough to push
+        // EF migrations past the UI timeout. A dedicated thread starts immediately
+        // and doesn't compete for a ThreadPool slot.
         System.Diagnostics.Debug.WriteLine("Starting database initialization...");
-        _ = Task.Run(async () =>
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.AppendInitLog(
+            "MauiProgram.InitializeDatabase: spawning dedicated DbInit thread");
+        var thread = new Thread(() =>
         {
+            BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.AppendInitLog(
+                $"DbInit thread running (managed thread id={Environment.CurrentManagedThreadId})");
             try
             {
                 var logger = app.Services.GetService<ILogger<AppDbContext>>();
-                await DbInitializer.InitializeAsync(app.Services, logger);
+                DbInitializer.InitializeAsync(app.Services, logger).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
@@ -406,6 +414,11 @@ public static class MauiProgram
                 // MarkAsFailed is idempotent, so calling it here is always safe.
                 BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsFailed(ex);
             }
-        });
+        })
+        {
+            IsBackground = true,
+            Name = "DbInit"
+        };
+        thread.Start();
     }
 }

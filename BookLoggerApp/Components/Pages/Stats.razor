@@ -11,6 +11,7 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IShareService ShareService
 @inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
 @inject IStringLocalizer<AppResources> L
+@inherits BookLoggerApp.Components.ObservableComponentBase
 @implements IDisposable
 @using System.Globalization
 
@@ -420,6 +421,7 @@ else if (activeTab == 2)
 
     protected override async Task OnInitializedAsync()
     {
+        Observe(ViewModel);
         NavigationManager.LocationChanged += OnLocationChanged;
         ViewModel.ShareCardReady += OnShareCardReady;
 
@@ -492,7 +494,7 @@ else if (activeTab == 2)
         }
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
         ViewModel.ShareCardReady -= OnShareCardReady;
@@ -506,6 +508,7 @@ else if (activeTab == 2)
             BackButtonService.Unregister(_shareModalBackHandler);
             _shareModalBackHandler = null;
         }
+        base.Dispose();
     }
 
     private string FormatMinutes(int minutes)

@@ -120,6 +120,11 @@ public abstract partial class ViewModelBase : ObservableObject
         }
         catch (TimeoutException tex)
         {
+            // Surface the timeout to the helper too, so IsDatabaseInitializationFailed
+            // reflects reality for the retry UI. Without this, pages that gate Retry()
+            // on InitializationFailed would never trigger a fresh init.
+            DatabaseInitializationHelper.MarkAsFailed(tex);
+
             var prefix = errorPrefix ?? (Localizer?["Error_GenericShort"].Value ?? "Error");
             var body = Localizer?["Error_DbInitializing"].Value
                        ?? "Database is still initializing. Please try again.";

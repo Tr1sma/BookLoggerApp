@@ -1,6 +1,7 @@
 @page "/books"
 @using BookLoggerApp.Core.Resources
 @using Microsoft.Extensions.Localization
+@inherits BookLoggerApp.Components.ObservableComponentBase
 @inject BookLoggerApp.Core.ViewModels.BookListViewModel Vm
 @inject IStringLocalizer<AppResources> L
 
@@ -33,5 +34,9 @@ else
 }
 
 @code {
-    protected override async Task OnInitializedAsync() => await Vm.LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        Observe(Vm);
+        await Vm.LoadAsync();
+    }
 }

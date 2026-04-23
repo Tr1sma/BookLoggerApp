@@ -4,6 +4,7 @@
 @using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.ViewModels
 @using Microsoft.Extensions.Localization
+@inherits BookLoggerApp.Components.ObservableComponentBase
 @implements IDisposable
 @inject SettingsViewModel ViewModel
 @inject AppStartupViewModel StartupViewModel
@@ -541,7 +542,16 @@
 
     private void TogglePrivacyPolicy() => _showPrivacyPolicy = !_showPrivacyPolicy;
 
-    private void ToggleMigrationLog() => _showMigrationLog = !_showMigrationLog;
+    private void ToggleMigrationLog()
+    {
+        _showMigrationLog = !_showMigrationLog;
+        if (_showMigrationLog)
+        {
+            // Pull the latest DB init log on demand — the ctor's snapshot can be
+            // stale if init is still running in the background.
+            ViewModel.RefreshMigrationLog();
+        }
+    }
 
     private Task OpenPaywallAsync() => PaywallCoordinator.ShowAsync(trigger: null);
 
@@ -593,6 +603,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Observe(ViewModel);
+
         // Register navigation back handler (Settings -> Bookshelf)
         _navBackHandler = async () =>
         {
@@ -750,7 +762,7 @@
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
-    public void Dispose()
+    public override void Dispose()
     {
         EntitlementService.EntitlementChanged -= OnEntitlementChanged;
 
@@ -764,5 +776,6 @@
             BackButtonService.Unregister(_modalBackHandler);
             _modalBackHandler = null;
         }
+        base.Dispose();
     }
 }

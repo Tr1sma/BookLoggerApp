@@ -16,6 +16,7 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject IStringLocalizer<AppResources> L
+@inherits BookLoggerApp.Components.ObservableComponentBase
 @implements IDisposable
 
 <PageTitle>@(ViewModel.Book?.Title ?? L["BookDetail_DefaultTitle"].Value) - BookHeart</PageTitle>
@@ -358,6 +359,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Observe(ViewModel);
+
         _navBackHandler = async () =>
         {
             NavigateToBookshelf();
@@ -639,7 +642,7 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         if (_navBackHandler != null)
         {
@@ -647,5 +650,6 @@
             _navBackHandler = null;
         }
         ViewModel.BookShareCardReady -= OnBookShareCardReady;
+        base.Dispose();
     }
 }

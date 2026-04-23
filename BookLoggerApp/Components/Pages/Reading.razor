@@ -14,6 +14,7 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject IOnboardingService OnboardingService
 @inject IStringLocalizer<AppResources> L
+@inherits BookLoggerApp.Components.ObservableComponentBase
 @implements IDisposable
 
 <PageTitle>@L["PageTitle_Reading"] - BookHeart</PageTitle>
@@ -197,6 +198,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Observe(ViewModel);
+
         _navBackHandler = async () =>
         {
             NavigateToBook();
@@ -511,7 +514,7 @@
         return L["Reading_TimeFormat_MS", timeSpan.Minutes, timeSpan.Seconds];
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         if (_navBackHandler != null)
         {
@@ -546,6 +549,7 @@
         TimerStateService.AppResumed -= OnAppResumed;
         ViewModel.BookShareCardReady -= OnBookShareCardReady;
         ViewModel.Dispose();
+        base.Dispose();
     }
 }
 

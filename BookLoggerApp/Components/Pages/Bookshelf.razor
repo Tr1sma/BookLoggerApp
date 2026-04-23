@@ -18,6 +18,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDatabaseInitializer DatabaseInitializer
 @inject IStringLocalizer<AppResources> L
+@inherits BookLoggerApp.Components.ObservableComponentBase
 @implements IAsyncDisposable
 
 <PageTitle>@L["PageTitle_Bookshelf"] - BookHeart</PageTitle>
@@ -593,16 +594,19 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Observe(ViewModel);
+        Observe(WishlistVM);
         GoalService.GoalsChanged += OnGoalsChanged;
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
 
     private async Task RetryLoadAsync()
     {
-        if (ViewModel.IsDatabaseInitializationFailed)
-        {
-            DatabaseInitializer.Retry();
-        }
+        // Always trigger a fresh DB init: after a ViewModel-level TimeoutException
+        // the helper's InitializationFailed flag is false, so gating on it would
+        // leave the original pending TCS in place and the retry would just wait
+        // for it again.
+        DatabaseInitializer.Retry();
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
 
@@ -652,6 +656,7 @@
         }
         catch { /* Ignore if JS runtime already gone */ }
         _dotNetHelper?.Dispose();
+        Dispose();
     }
 
     private void ToggleFilters() => filtersExpanded = !filtersExpanded;
