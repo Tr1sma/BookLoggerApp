@@ -112,16 +112,19 @@ public class ViewModelBaseTimeoutTests : IDisposable
     }
 
     [Fact]
-    public async Task ExecuteSafelyWithDbAsync_WhenInitFaultedAsTimeout_SetsGermanErrorMessage()
+    public async Task ExecuteSafelyWithDbAsync_WhenInitFaultedAsTimeout_SetsDbInitErrorMessage()
     {
         var vm = new TestViewModel();
         DatabaseInitializationHelper.MarkAsFailed(new TimeoutException("slow"));
 
         await vm.RunWithDbAsync(() => Task.CompletedTask, "Fehler beim Laden");
 
+        // Prefix is caller-supplied and left verbatim; body is now pulled via the
+        // ambient Localizer from Error_DbInitializing (English under invariant culture
+        // in tests).
         vm.ErrorMessage.Should().NotBeNull();
         vm.ErrorMessage!.Should().StartWith("Fehler beim Laden:");
-        vm.ErrorMessage.Should().Contain("Datenbank");
+        vm.ErrorMessage.Should().Contain("Database is still initializing");
     }
 
     [Fact]

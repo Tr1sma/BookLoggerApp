@@ -34,7 +34,11 @@ public static class MauiProgram
                .UseBarcodeReader()
                .UseLocalNotification();
         builder.Services.AddMauiBlazorWebView();
-        builder.Services.AddLocalization(opts => opts.ResourcesPath = "Resources");
+        // ResourcesPath stays empty: the AppResources marker type lives in the
+        // BookLoggerApp.Core.Resources namespace already, and ResourceManagerStringLocalizer
+        // derives the base name from the type's namespace. Setting ResourcesPath = "Resources"
+        // would produce BookLoggerApp.Core.Resources.Resources.AppResources.
+        builder.Services.AddLocalization();
 
         // Configure platform-specific handlers
         ConfigurePlatformHandlers(builder);
