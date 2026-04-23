@@ -16,9 +16,9 @@
         <p class="goal-description">@Goal.Description</p>
     }
     <div class="progress-bar">
-        <div class="progress-fill" style="width: @Goal.ProgressPercentage%"></div>
+        <div class="progress-fill" style="width: @(Math.Min(Goal.ProgressPercentage, 100))%"></div>
     </div>
-    <p class="goal-progress-text">@Goal.Current / @Goal.Target @GetGoalTypeUnit(Goal.Type) (@Goal.ProgressPercentage%)</p>
+    <p class="goal-progress-text">@Math.Min(Goal.Current, Goal.Target) / @Goal.Target @GetGoalTypeUnit(Goal.Type) (@Math.Min(Goal.ProgressPercentage, 100)%)</p>
     @if (Goal.EndDate != default)
     {
         <p class="goal-date">Until @Goal.EndDate.ToString("yyyy-MM-dd")</p>
