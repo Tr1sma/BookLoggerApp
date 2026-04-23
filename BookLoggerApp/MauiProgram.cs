@@ -54,6 +54,11 @@ public static class MauiProgram
         // forward non-fatals to Crashlytics (no-op outside Android).
         AnalyticsBootstrapper.Install(app.Services.GetRequiredService<ICrashReportingService>());
 
+        // Wire the ambient localizer on ViewModelBase for the generic fallbacks used
+        // by ExecuteSafely*Async when a caller didn't pass an explicit errorPrefix.
+        BookLoggerApp.Core.ViewModels.ViewModelBase.Localizer =
+            app.Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<BookLoggerApp.Core.Resources.AppResources>>();
+
         // Setup global exception handler
         SetupGlobalExceptionHandler(app);
 

@@ -107,7 +107,7 @@ public partial class PaywallViewModel : ViewModelBase
                 BillingPurchaseOutcome.NotAvailable => "This product is not available in your region.",
                 _ => "Purchase failed. Please try again."
             };
-        }, "Failed to start purchase");
+        }, Tr("Error_FailedTo_StartPurchase"));
 
         IsPurchaseInProgress = false;
     }
@@ -123,7 +123,7 @@ public partial class PaywallViewModel : ViewModelBase
                 .Add(AnalyticsParamNames.Tier, _entitlementService.CurrentTier.ToString())
                 .BuildMutable());
             Banner = $"Current tier: {_entitlementService.CurrentTier}.";
-        }, "Failed to restore purchases");
+        }, Tr("Error_FailedTo_RestorePurchases"));
     }
 
     [RelayCommand]
@@ -148,7 +148,7 @@ public partial class PaywallViewModel : ViewModelBase
                     .Add(AnalyticsParamNames.Reason, result.Message)
                     .BuildMutable());
             }
-        }, "Failed to redeem promo code");
+        }, Tr("Error_FailedTo_RedeemPromoCode"));
     }
 
     [RelayCommand]

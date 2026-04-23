@@ -2071,4 +2071,493 @@
   <data name="Settings_Restart_LanguageBody" xml:space="preserve">
     <value>BookHeart startet neu, um die neue Sprache anzuwenden …</value>
   </data>
+    <data name="Lookup_EnterIsbnFirst" xml:space="preserve">
+    <value>Bitte zuerst eine ISBN eingeben</value>
+  </data>
+  <data name="Lookup_NoBookFound" xml:space="preserve">
+    <value>Kein Buch zu dieser ISBN gefunden</value>
+  </data>
+  <data name="Lookup_NoBookFoundDot" xml:space="preserve">
+    <value>Kein Buch zu dieser ISBN gefunden.</value>
+  </data>
+  <data name="Lookup_LoadedSuccess" xml:space="preserve">
+    <value>Buchdaten erfolgreich geladen!</value>
+  </data>
+  <data name="Lookup_BookFound" xml:space="preserve">
+    <value>Buch gefunden!</value>
+  </data>
+  <data name="Lookup_NoInternet" xml:space="preserve">
+    <value>Keine Internetverbindung. Bitte Netzwerk prüfen und erneut versuchen.</value>
+  </data>
+  <data name="Lookup_QuotaReached" xml:space="preserve">
+    <value>Google-Books-API-Kontingent erreicht. Bitte später erneut versuchen.</value>
+  </data>
+  <data name="Lookup_Timeout" xml:space="preserve">
+    <value>Zeitüberschreitung der Anfrage. Bitte erneut versuchen.</value>
+  </data>
+<data name="Error_Generic" xml:space="preserve">
+    <value>Ein Fehler ist aufgetreten</value>
+  </data>
+  <data name="Error_GenericShort" xml:space="preserve">
+    <value>Fehler</value>
+  </data>
+  <data name="Error_DbInitializing" xml:space="preserve">
+    <value>Datenbank wird noch vorbereitet. Bitte versuche es erneut.</value>
+  </data>
+  <data name="Error_BookNotFound" xml:space="preserve">
+    <value>Buch nicht gefunden</value>
+  </data>
+  <data name="Error_SessionNotFound" xml:space="preserve">
+    <value>Sitzung nicht gefunden</value>
+  </data>
+  <data name="Error_PlantNotFound" xml:space="preserve">
+    <value>Pflanze nicht gefunden</value>
+  </data>
+  <data name="Error_PlantSpeciesNotFound" xml:space="preserve">
+    <value>Pflanzenart nicht gefunden</value>
+  </data>
+  <data name="Error_PlantRequiresLevel" xml:space="preserve">
+    <value>Diese Pflanze benoetigt Level {0}. Du bist aktuell auf Level {1}.</value>
+  </data>
+  <data name="Error_NotEnoughCoins" xml:space="preserve">
+    <value>Nicht genug Muenzen. Du brauchst {0} Muenzen, hast aber nur {1}.</value>
+  </data>
+  <data name="Error_NotEnoughCoinsShort" xml:space="preserve">
+    <value>Nicht genug Muenzen. Du brauchst {0}, hast aber nur {1}.</value>
+  </data>
+  <data name="Error_DecorationNotFound" xml:space="preserve">
+    <value>Dekoration nicht gefunden.</value>
+  </data>
+  <data name="Error_DecorationRequiresLevel" xml:space="preserve">
+    <value>Diese Dekoration benoetigt Level {0}.</value>
+  </data>
+  <data name="Error_PurchaseDecorationFailed" xml:space="preserve">
+    <value>Dekoration konnte nicht gekauft werden</value>
+  </data>
+  <data name="Error_GoalTitleRequired" xml:space="preserve">
+    <value>Ziel-Titel ist erforderlich</value>
+  </data>
+  <data name="Error_BookTitleAuthorRequired" xml:space="preserve">
+    <value>Titel und Autor sind erforderlich</value>
+  </data>
+  <data name="Error_NotificationPermissionDenied" xml:space="preserve">
+    <value>Benachrichtigungen wurden verweigert. Bitte aktiviere sie in den Geraete-Einstellungen.</value>
+  </data>
+  <data name="Error_FilePickCancelled" xml:space="preserve">
+    <value>Dateiauswahl fehlgeschlagen oder abgebrochen. Falls die Datei aus Google Drive stammt, speichere sie erst lokal.</value>
+  </data>
+  <data name="Error_RestoreDbInitFailed" xml:space="preserve">
+    <value>Wiederherstellung nicht moeglich: DB-Initialisierung fehlgeschlagen. Bitte starte BookHeart neu. ({0}: {1})</value>
+  </data>
+  <data name="Error_RestoreBackupFailed" xml:space="preserve">
+    <value>Backup-Wiederherstellung fehlgeschlagen: {0}: {1}{2}</value>
+  </data>
+  <data name="Error_LoadPlantDetailsFailed" xml:space="preserve">
+    <value>Pflanzendetails konnten nicht geladen werden: {0}</value>
+  </data>
+  <data name="Settings_Restore_PickerTitle" xml:space="preserve">
+    <value>Backup-Datei waehlen</value>
+  </data>
+  <data name="GoalStatus_UpdateSuccess" xml:space="preserve">
+    <value>Update erfolgreich</value>
+  </data>
+  <data name="GoalStatus_Created" xml:space="preserve">
+    <value>Ziel erstellt</value>
+  </data>
+  <data name="GoalStatus_Deleted" xml:space="preserve">
+    <value>Erfolgreich gelöscht</value>
+  </data>
+  <data name="Notification_Reminder_Title" xml:space="preserve">
+    <value>Zeit zu lesen!</value>
+  </data>
+  <data name="Notification_Reminder_Body" xml:space="preserve">
+    <value>Vergiss nicht deine taegliche Lesesitzung</value>
+  </data>
+  <data name="Notification_Goal_Title" xml:space="preserve">
+    <value>Ziel erreicht!</value>
+  </data>
+  <data name="Notification_Goal_Body" xml:space="preserve">
+    <value>Glueckwunsch! Du hast dein Ziel erreicht: {0}</value>
+  </data>
+  <data name="Notification_Plant_Title" xml:space="preserve">
+    <value>Deine Pflanze braucht Wasser!</value>
+  </data>
+  <data name="Notification_Plant_Body" xml:space="preserve">
+    <value>{0} hat Durst! Giess sie, damit sie gesund bleibt.</value>
+  </data>
+  <data name="Validator_Book_TitleRequired" xml:space="preserve">
+    <value>Titel ist erforderlich</value>
+  </data>
+  <data name="Validator_Book_TitleTooLong" xml:space="preserve">
+    <value>Titel darf maximal 500 Zeichen haben</value>
+  </data>
+  <data name="Validator_Book_AuthorRequired" xml:space="preserve">
+    <value>Autor ist erforderlich</value>
+  </data>
+  <data name="Validator_Book_AuthorTooLong" xml:space="preserve">
+    <value>Autor darf maximal 300 Zeichen haben</value>
+  </data>
+  <data name="Validator_Book_IsbnTooLong" xml:space="preserve">
+    <value>ISBN darf maximal 20 Zeichen haben</value>
+  </data>
+  <data name="Validator_Book_PageCountPositive" xml:space="preserve">
+    <value>Seitenzahl muss groesser als 0 sein</value>
+  </data>
+  <data name="Validator_Book_PageCountMax" xml:space="preserve">
+    <value>Seitenzahl darf maximal 50.000 sein</value>
+  </data>
+  <data name="Validator_Book_CurrentPageNonNegative" xml:space="preserve">
+    <value>Aktuelle Seite darf nicht negativ sein</value>
+  </data>
+  <data name="Validator_Book_CurrentPageMax" xml:space="preserve">
+    <value>Aktuelle Seite darf die Gesamtseitenzahl nicht ueberschreiten</value>
+  </data>
+  <data name="Validator_Book_DateStartedFuture" xml:space="preserve">
+    <value>Startdatum darf nicht in der Zukunft liegen</value>
+  </data>
+  <data name="Validator_Book_DateCompletedFuture" xml:space="preserve">
+    <value>Abschlussdatum darf nicht in der Zukunft liegen</value>
+  </data>
+  <data name="Validator_Book_DateCompletedBeforeStart" xml:space="preserve">
+    <value>Abschlussdatum muss nach dem Startdatum liegen</value>
+  </data>
+  <data name="Validator_Goal_TitleRequired" xml:space="preserve">
+    <value>Ziel-Titel ist erforderlich</value>
+  </data>
+  <data name="Validator_Goal_TitleTooLong" xml:space="preserve">
+    <value>Ziel-Titel darf maximal 200 Zeichen haben</value>
+  </data>
+  <data name="Validator_Goal_DescriptionTooLong" xml:space="preserve">
+    <value>Beschreibung darf maximal 1.000 Zeichen haben</value>
+  </data>
+  <data name="Validator_Goal_TargetPositive" xml:space="preserve">
+    <value>Zielwert muss groesser als 0 sein</value>
+  </data>
+  <data name="Validator_Goal_TargetMax" xml:space="preserve">
+    <value>Zielwert darf 100.000 nicht ueberschreiten</value>
+  </data>
+  <data name="Validator_Goal_CurrentNonNegative" xml:space="preserve">
+    <value>Aktueller Wert darf nicht negativ sein</value>
+  </data>
+  <data name="Validator_Goal_StartDateRequired" xml:space="preserve">
+    <value>Startdatum ist erforderlich</value>
+  </data>
+  <data name="Validator_Goal_EndAfterStart" xml:space="preserve">
+    <value>Enddatum muss nach dem Startdatum liegen</value>
+  </data>
+  <data name="Validator_Goal_PeriodTooLong" xml:space="preserve">
+    <value>Ziel-Zeitraum darf maximal 1 Jahr umfassen</value>
+  </data>
+  <data name="Validator_Session_BookIdRequired" xml:space="preserve">
+    <value>Buch-ID ist erforderlich</value>
+  </data>
+  <data name="Validator_Session_StartedRequired" xml:space="preserve">
+    <value>Startzeit ist erforderlich</value>
+  </data>
+  <data name="Validator_Session_StartedFuture" xml:space="preserve">
+    <value>Startzeit darf nicht in der Zukunft liegen</value>
+  </data>
+  <data name="Validator_Session_EndAfterStart" xml:space="preserve">
+    <value>Endzeit muss nach der Startzeit liegen</value>
+  </data>
+  <data name="Validator_Session_EndFuture" xml:space="preserve">
+    <value>Endzeit darf nicht in der Zukunft liegen</value>
+  </data>
+  <data name="Validator_Session_MinutesPositive" xml:space="preserve">
+    <value>Lesedauer muss groesser als 0 sein</value>
+  </data>
+  <data name="Validator_Session_MinutesMax" xml:space="preserve">
+    <value>Lesedauer darf 24 Stunden (1440 Minuten) nicht ueberschreiten</value>
+  </data>
+  <data name="Validator_Session_PagesNonNegative" xml:space="preserve">
+    <value>Gelesene Seiten duerfen nicht negativ sein</value>
+  </data>
+  <data name="Validator_Session_PagesMax" xml:space="preserve">
+    <value>Gelesene Seiten duerfen 10.000 nicht ueberschreiten</value>
+  </data>
+  <data name="Validator_Session_XpNonNegative" xml:space="preserve">
+    <value>XP duerfen nicht negativ sein</value>
+  </data>
+  <data name="Validator_Plant_NameRequired" xml:space="preserve">
+    <value>Pflanzenname ist erforderlich</value>
+  </data>
+  <data name="Validator_Plant_NameTooLong" xml:space="preserve">
+    <value>Pflanzenname darf maximal 100 Zeichen haben</value>
+  </data>
+  <data name="Validator_Plant_SpeciesIdRequired" xml:space="preserve">
+    <value>Pflanzenart-ID ist erforderlich</value>
+  </data>
+  <data name="Validator_Plant_LevelMin" xml:space="preserve">
+    <value>Aktuelles Level muss mindestens 1 sein</value>
+  </data>
+  <data name="Validator_Plant_LevelMax" xml:space="preserve">
+    <value>Aktuelles Level darf 100 nicht ueberschreiten</value>
+  </data>
+  <data name="Validator_Plant_ExperienceNonNegative" xml:space="preserve">
+    <value>Erfahrung darf nicht negativ sein</value>
+  </data>
+  <data name="Validator_Plant_PlantedRequired" xml:space="preserve">
+    <value>Pflanzdatum ist erforderlich</value>
+  </data>
+  <data name="Validator_Plant_PlantedFuture" xml:space="preserve">
+    <value>Pflanzdatum darf nicht in der Zukunft liegen</value>
+  </data>
+  <data name="Validator_Plant_LastWateredRequired" xml:space="preserve">
+    <value>Letztes Giess-Datum ist erforderlich</value>
+  </data>
+  <data name="Validator_Plant_LastWateredFuture" xml:space="preserve">
+    <value>Letztes Giess-Datum darf nicht in der Zukunft liegen</value>
+  </data>
+  <data name="Error_FailedTo_LoadShop" xml:space="preserve">
+    <value>Shop konnte nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_PurchasePlant" xml:space="preserve">
+    <value>Pflanze konnte nicht gekauft werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateNotificationSettings" xml:space="preserve">
+    <value>Benachrichtigungseinstellungen konnten nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateReminderSettings" xml:space="preserve">
+    <value>Erinnerungseinstellungen konnten nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateReminderTime" xml:space="preserve">
+    <value>Erinnerungszeit konnte nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateGettingStartedVisibility" xml:space="preserve">
+    <value>Sichtbarkeit von Erste Schritte konnte nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateShelfLedgeColor" xml:space="preserve">
+    <value>Bretterfarbe konnte nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateShelfBaseColor" xml:space="preserve">
+    <value>Regalfarbe konnte nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateAnalyticsSettings" xml:space="preserve">
+    <value>Analytics-Einstellungen konnten nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateCrashReportingSettings" xml:space="preserve">
+    <value>Absturzbericht-Einstellungen konnten nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadSettings" xml:space="preserve">
+    <value>Einstellungen konnten nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_ChangeLanguage" xml:space="preserve">
+    <value>Sprache konnte nicht geändert werden</value>
+  </data>
+  <data name="Error_FailedTo_SaveSettings" xml:space="preserve">
+    <value>Einstellungen konnten nicht gespeichert werden</value>
+  </data>
+  <data name="Error_FailedTo_ExportData" xml:space="preserve">
+    <value>Daten konnten nicht exportiert werden</value>
+  </data>
+  <data name="Error_FailedTo_ImportData" xml:space="preserve">
+    <value>Daten konnten nicht importiert werden</value>
+  </data>
+  <data name="Error_FailedTo_DeleteData" xml:space="preserve">
+    <value>Daten konnten nicht gelöscht werden</value>
+  </data>
+  <data name="Error_FailedTo_BackupData" xml:space="preserve">
+    <value>Backup konnte nicht erstellt werden</value>
+  </data>
+  <data name="Error_FailedTo_StartPurchase" xml:space="preserve">
+    <value>Kauf konnte nicht gestartet werden</value>
+  </data>
+  <data name="Error_FailedTo_RestorePurchases" xml:space="preserve">
+    <value>Käufe konnten nicht wiederhergestellt werden</value>
+  </data>
+  <data name="Error_FailedTo_RedeemPromoCode" xml:space="preserve">
+    <value>Promo-Code konnte nicht eingelöst werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadTrendStatistics" xml:space="preserve">
+    <value>Trend-Statistik konnte nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadWishlist" xml:space="preserve">
+    <value>Wunschliste konnte nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_AddToWishlist" xml:space="preserve">
+    <value>Hinzufügen zur Wunschliste fehlgeschlagen</value>
+  </data>
+  <data name="Error_FailedTo_MoveToLibrary" xml:space="preserve">
+    <value>Verschieben in die Bibliothek fehlgeschlagen</value>
+  </data>
+  <data name="Error_FailedTo_RemoveFromWishlist" xml:space="preserve">
+    <value>Entfernen von der Wunschliste fehlgeschlagen</value>
+  </data>
+  <data name="Error_FailedTo_SearchWishlist" xml:space="preserve">
+    <value>Wunschlistensuche fehlgeschlagen</value>
+  </data>
+  <data name="Error_FailedTo_LoadGoals" xml:space="preserve">
+    <value>Ziele konnten nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateGoal" xml:space="preserve">
+    <value>Ziel konnte nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_CreateGoal" xml:space="preserve">
+    <value>Ziel konnte nicht erstellt werden</value>
+  </data>
+  <data name="Error_FailedTo_DeleteGoal" xml:space="preserve">
+    <value>Ziel konnte nicht gelöscht werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadReadingSession" xml:space="preserve">
+    <value>Lesesitzung konnte nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_StartReadingSession" xml:space="preserve">
+    <value>Lesesitzung konnte nicht gestartet werden</value>
+  </data>
+  <data name="Error_FailedTo_EndSession" xml:space="preserve">
+    <value>Sitzung konnte nicht beendet werden</value>
+  </data>
+  <data name="Error_FailedTo_GenerateBookRecommendationCard" xml:space="preserve">
+    <value>Buchempfehlungskarte konnte nicht erstellt werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadBook" xml:space="preserve">
+    <value>Buch konnte nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_SaveBook" xml:space="preserve">
+    <value>Buch konnte nicht gespeichert werden</value>
+  </data>
+  <data name="Error_FailedTo_GenerateBookShareCard" xml:space="preserve">
+    <value>Buch-Share-Karte konnte nicht erstellt werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateAvailableTropes" xml:space="preserve">
+    <value>Verfügbare Tropes konnten nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadDashboard" xml:space="preserve">
+    <value>Dashboard konnte nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_WaterPlant" xml:space="preserve">
+    <value>Pflanze konnte nicht gegossen werden</value>
+  </data>
+  <data name="Error_FailedTo_DeletePlant" xml:space="preserve">
+    <value>Pflanze konnte nicht gelöscht werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadBookDetails" xml:space="preserve">
+    <value>Buchdetails konnten nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_StartReading" xml:space="preserve">
+    <value>Lesen konnte nicht gestartet werden</value>
+  </data>
+  <data name="Error_FailedTo_CompleteBook" xml:space="preserve">
+    <value>Buch konnte nicht abgeschlossen werden</value>
+  </data>
+  <data name="Error_FailedTo_AddQuote" xml:space="preserve">
+    <value>Zitat konnte nicht hinzugefügt werden</value>
+  </data>
+  <data name="Error_FailedTo_AddSession" xml:space="preserve">
+    <value>Sitzung konnte nicht hinzugefügt werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateCategoryRating" xml:space="preserve">
+    <value>Bewertung für {category} konnte nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_UpdateNotes" xml:space="preserve">
+    <value>Notizen konnten nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadStatistics" xml:space="preserve">
+    <value>Statistik konnte nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_FilterTopBooks" xml:space="preserve">
+    <value>Top-Bücher konnten nicht gefiltert werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadSharePeriods" xml:space="preserve">
+    <value>Zeiträume für Teilen konnten nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_GenerateShareCard" xml:space="preserve">
+    <value>Share-Karte konnte nicht erstellt werden</value>
+  </data>
+  <data name="Error_FailedTo_InitializeStartupExperience" xml:space="preserve">
+    <value>Start-Erlebnis konnte nicht initialisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_RefreshAppUpdateState" xml:space="preserve">
+    <value>App-Update-Status konnte nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_OpenChangelog" xml:space="preserve">
+    <value>Changelog konnte nicht geöffnet werden</value>
+  </data>
+  <data name="Error_FailedTo_SkipOnboardingIntro" xml:space="preserve">
+    <value>Onboarding-Intro konnte nicht übersprungen werden</value>
+  </data>
+  <data name="Error_FailedTo_CompleteOnboardingIntro" xml:space="preserve">
+    <value>Onboarding-Intro konnte nicht abgeschlossen werden</value>
+  </data>
+  <data name="Error_FailedTo_StartAppUpdate" xml:space="preserve">
+    <value>App-Update konnte nicht gestartet werden</value>
+  </data>
+  <data name="Error_FailedTo_InstallAppUpdate" xml:space="preserve">
+    <value>App-Update konnte nicht installiert werden</value>
+  </data>
+  <data name="Error_FailedTo_ApplyGooglePlayPurchase" xml:space="preserve">
+    <value>Google-Play-Kauf konnte nicht angewendet werden</value>
+  </data>
+  <data name="Error_FailedTo_RefreshOnboardingState" xml:space="preserve">
+    <value>Onboarding-Status konnte nicht aktualisiert werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadAnalysisStatistics" xml:space="preserve">
+    <value>Analyse-Statistik konnte nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadUserProgress" xml:space="preserve">
+    <value>Nutzer-Fortschritt konnte nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadDecorationShop" xml:space="preserve">
+    <value>Dekorations-Shop konnte nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_LoadBooks" xml:space="preserve">
+    <value>Bücher konnten nicht geladen werden</value>
+  </data>
+  <data name="Error_FailedTo_CreateShelf" xml:space="preserve">
+    <value>Regal konnte nicht erstellt werden</value>
+  </data>
+  <data name="Error_FailedTo_DeleteShelf" xml:space="preserve">
+    <value>Regal konnte nicht gelöscht werden</value>
+  </data>
+  <data name="Error_FailedTo_MoveShelfUp" xml:space="preserve">
+    <value>Regal konnte nicht nach oben verschoben werden</value>
+  </data>
+  <data name="Error_FailedTo_MoveShelfDown" xml:space="preserve">
+    <value>Regal konnte nicht nach unten verschoben werden</value>
+  </data>
+  <data name="Error_FailedTo_MoveBookToShelf" xml:space="preserve">
+    <value>Buch konnte nicht ins Regal verschoben werden</value>
+  </data>
+  <data name="Error_FailedTo_RemoveBookFromShelf" xml:space="preserve">
+    <value>Buch konnte nicht aus dem Regal entfernt werden</value>
+  </data>
+  <data name="Error_FailedTo_SearchBooks" xml:space="preserve">
+    <value>Buchsuche fehlgeschlagen</value>
+  </data>
+  <data name="Error_FailedTo_DeleteBook" xml:space="preserve">
+    <value>Buch konnte nicht gelöscht werden</value>
+  </data>
+  <data name="Error_FailedTo_PlacePlant" xml:space="preserve">
+    <value>Pflanze konnte nicht platziert werden</value>
+  </data>
+  <data name="Error_FailedTo_RemovePlant" xml:space="preserve">
+    <value>Pflanze konnte nicht entfernt werden</value>
+  </data>
+  <data name="Error_FailedTo_RenamePlant" xml:space="preserve">
+    <value>Pflanze konnte nicht umbenannt werden</value>
+  </data>
+  <data name="Error_FailedTo_MovePlant" xml:space="preserve">
+    <value>Pflanze konnte nicht verschoben werden</value>
+  </data>
+  <data name="Error_FailedTo_ReorderItems" xml:space="preserve">
+    <value>Reihenfolge konnte nicht geändert werden</value>
+  </data>
+  <data name="Error_FailedTo_MoveItemBetweenShelves" xml:space="preserve">
+    <value>Element konnte nicht zwischen Regalen verschoben werden</value>
+  </data>
+  <data name="Error_FailedTo_PersistShelfMove" xml:space="preserve">
+    <value>Regal-Verschiebung konnte nicht gespeichert werden</value>
+  </data>
+  <data name="Error_FailedTo_PlaceDecoration" xml:space="preserve">
+    <value>Dekoration konnte nicht platziert werden</value>
+  </data>
+  <data name="Error_FailedTo_RemoveDecoration" xml:space="preserve">
+    <value>Dekoration konnte nicht entfernt werden</value>
+  </data>
+  <data name="Error_FailedTo_DeleteDecoration" xml:space="preserve">
+    <value>Dekoration konnte nicht gelöscht werden</value>
+  </data>
+  <data name="Error_FailedTo_RefreshGoalStats" xml:space="preserve">
+    <value>Ziel-Statistik konnte nicht aktualisiert werden</value>
+  </data>
 </root>

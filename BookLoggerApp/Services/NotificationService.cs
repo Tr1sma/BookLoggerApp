@@ -1,4 +1,6 @@
+using BookLoggerApp.Core.Resources;
 using BookLoggerApp.Core.Services.Abstractions;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Plugin.LocalNotification;
 #if ANDROID
@@ -16,6 +18,7 @@ namespace BookLoggerApp.Services;
 public class NotificationService : Core.Services.Abstractions.INotificationService
 {
     private readonly IAppSettingsProvider _settingsProvider;
+    private readonly IStringLocalizer<AppResources> _localizer;
     private readonly ILogger<NotificationService>? _logger;
 
     private const int ReadingReminderId = 1000;
@@ -27,9 +30,10 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
     private const string ReminderChannelId = "bookheart_reminders";
     private const string GeneralChannelId = "bookheart_general";
 
-    public NotificationService(IAppSettingsProvider settingsProvider, ILogger<NotificationService>? logger = null)
+    public NotificationService(IAppSettingsProvider settingsProvider, IStringLocalizer<AppResources> localizer, ILogger<NotificationService>? logger = null)
     {
         _settingsProvider = settingsProvider;
+        _localizer = localizer;
         _logger = logger;
     }
 
@@ -117,8 +121,8 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
             var notification = new NotificationRequest
             {
                 NotificationId = ReadingReminderId,
-                Title = "Time to Read!",
-                Description = "Don't forget your daily reading session",
+                Title = _localizer["Notification_Reminder_Title"],
+                Description = _localizer["Notification_Reminder_Body"],
                 CategoryType = NotificationCategoryType.Reminder,
                 Android = new Plugin.LocalNotification.AndroidOption.AndroidOptions
                 {
@@ -172,8 +176,8 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
             var notification = new NotificationRequest
             {
                 NotificationId = GoalCompletedId,
-                Title = "Goal Completed!",
-                Description = $"Congratulations! You've completed your goal: {goalTitle}",
+                Title = _localizer["Notification_Goal_Title"],
+                Description = _localizer["Notification_Goal_Body", goalTitle],
                 Android = new Plugin.LocalNotification.AndroidOption.AndroidOptions
                 {
                     ChannelId = GeneralChannelId,
@@ -201,8 +205,8 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
             var notification = new NotificationRequest
             {
                 NotificationId = PlantWaterId,
-                Title = "Your Plant Needs Water!",
-                Description = $"{plantName} is thirsty! Give it some water to keep it healthy.",
+                Title = _localizer["Notification_Plant_Title"],
+                Description = _localizer["Notification_Plant_Body", plantName],
                 Android = new Plugin.LocalNotification.AndroidOption.AndroidOptions
                 {
                     ChannelId = GeneralChannelId,
