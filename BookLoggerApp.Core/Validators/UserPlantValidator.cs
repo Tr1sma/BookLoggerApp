@@ -1,7 +1,5 @@
 using FluentValidation;
 using BookLoggerApp.Core.Models;
-using BookLoggerApp.Core.Resources;
-using Microsoft.Extensions.Localization;
 
 namespace BookLoggerApp.Core.Validators;
 
@@ -11,30 +9,28 @@ namespace BookLoggerApp.Core.Validators;
 /// </summary>
 public class UserPlantValidator : AbstractValidator<UserPlant>
 {
-    public UserPlantValidator(IStringLocalizer<AppResources>? localizer = null)
+    public UserPlantValidator()
     {
-        string Tr(string key) => localizer?[key].Value ?? key;
-
         RuleFor(p => p.Name)
-            .NotEmpty().WithMessage(_ => Tr("Validator_Plant_NameRequired"))
-            .MaximumLength(100).WithMessage(_ => Tr("Validator_Plant_NameTooLong"));
+            .NotEmpty().WithMessage("Plant name is required")
+            .MaximumLength(100).WithMessage("Plant name cannot exceed 100 characters");
 
         RuleFor(p => p.SpeciesId)
-            .NotEmpty().WithMessage(_ => Tr("Validator_Plant_SpeciesIdRequired"));
+            .NotEmpty().WithMessage("Plant species ID is required");
 
         RuleFor(p => p.CurrentLevel)
-            .GreaterThanOrEqualTo(1).WithMessage(_ => Tr("Validator_Plant_LevelMin"))
-            .LessThanOrEqualTo(100).WithMessage(_ => Tr("Validator_Plant_LevelMax"));
+            .GreaterThanOrEqualTo(1).WithMessage("Current level must be at least 1")
+            .LessThanOrEqualTo(100).WithMessage("Current level cannot exceed 100");
 
         RuleFor(p => p.Experience)
-            .GreaterThanOrEqualTo(0).WithMessage(_ => Tr("Validator_Plant_ExperienceNonNegative"));
+            .GreaterThanOrEqualTo(0).WithMessage("Experience cannot be negative");
 
         RuleFor(p => p.PlantedAt)
-            .NotEmpty().WithMessage(_ => Tr("Validator_Plant_PlantedRequired"))
-            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage(_ => Tr("Validator_Plant_PlantedFuture"));
+            .NotEmpty().WithMessage("Planted date is required")
+            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Planted date cannot be in the future");
 
         RuleFor(p => p.LastWatered)
-            .NotEmpty().WithMessage(_ => Tr("Validator_Plant_LastWateredRequired"))
-            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage(_ => Tr("Validator_Plant_LastWateredFuture"));
+            .NotEmpty().WithMessage("Last watered date is required")
+            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Last watered date cannot be in the future");
     }
 }

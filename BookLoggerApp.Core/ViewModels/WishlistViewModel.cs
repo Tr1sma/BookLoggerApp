@@ -81,7 +81,7 @@ public partial class WishlistViewModel : ViewModelBase
                 WishlistBooks.Add(b);
 
             WishlistCount = books.Count;
-        }, Tr("Error_FailedTo_LoadWishlist"));
+        }, "Failed to load wishlist");
     }
 
     [RelayCommand]
@@ -112,7 +112,7 @@ public partial class WishlistViewModel : ViewModelBase
             WishlistBooks.Insert(0, added);
             WishlistCount = WishlistBooks.Count;
             ClearAddForm();
-        }, Tr("Error_FailedTo_AddToWishlist"));
+        }, "Failed to add to wishlist");
     }
 
     [RelayCommand]
@@ -133,20 +133,20 @@ public partial class WishlistViewModel : ViewModelBase
                 _lookupPageCount = metadata.PageCount;
                 _lookupCoverUrl = metadata.CoverImageUrl;
                 _lookupDescription = metadata.Description;
-                LookupMessage = Tr("Lookup_BookFound");
+                LookupMessage = "Book found!";
             }
             else
             {
-                LookupMessage = Tr("Lookup_NoBookFoundDot");
+                LookupMessage = "No book found for this ISBN.";
             }
         }
         catch (HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
         {
-            LookupMessage = Tr("Lookup_NoInternet");
+            LookupMessage = "No internet connection. Please check your network and try again.";
         }
         catch (HttpRequestException ex) when (IsQuotaExceeded(ex))
         {
-            LookupMessage = Tr("Lookup_QuotaReached");
+            LookupMessage = "Google Books API quota reached. Please try again later.";
         }
         catch (HttpRequestException ex)
         {
@@ -156,7 +156,7 @@ public partial class WishlistViewModel : ViewModelBase
         }
         catch (TaskCanceledException)
         {
-            LookupMessage = Tr("Lookup_Timeout");
+            LookupMessage = "Request timed out. Please try again.";
         }
         catch (Exception ex)
         {
@@ -178,7 +178,7 @@ public partial class WishlistViewModel : ViewModelBase
             if (book != null)
                 WishlistBooks.Remove(book);
             WishlistCount = WishlistBooks.Count;
-        }, Tr("Error_FailedTo_MoveToLibrary"));
+        }, "Failed to move to library");
     }
 
     [RelayCommand]
@@ -191,7 +191,7 @@ public partial class WishlistViewModel : ViewModelBase
             if (book != null)
                 WishlistBooks.Remove(book);
             WishlistCount = WishlistBooks.Count;
-        }, Tr("Error_FailedTo_RemoveFromWishlist"));
+        }, "Failed to remove from wishlist");
     }
 
     [RelayCommand]
@@ -210,7 +210,7 @@ public partial class WishlistViewModel : ViewModelBase
             foreach (var b in ApplySort(books))
                 WishlistBooks.Add(b);
             WishlistCount = books.Count;
-        }, Tr("Error_FailedTo_SearchWishlist"));
+        }, "Failed to search wishlist");
     }
 
     [RelayCommand]

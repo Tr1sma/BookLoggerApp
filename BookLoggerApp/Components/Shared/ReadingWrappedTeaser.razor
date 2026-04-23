@@ -1,20 +1,17 @@
 @using BookLoggerApp.Core.Entitlements
-@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
-@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject IEntitlementService EntitlementService
 @inject IPaywallCoordinator PaywallCoordinator
-@inject IStringLocalizer<AppResources> L
 
 @if (_isVisible)
 {
     <section class="wrapped-teaser-card" role="button" tabindex="0" @onclick="OpenPaywallAsync" @onkeydown="HandleKeydownAsync">
         <div class="wrapped-teaser-glow" aria-hidden="true">✨</div>
         <div class="wrapped-teaser-content">
-            <span class="wrapped-teaser-kicker">@L["Wrapped_Kicker", DateTime.UtcNow.Year]</span>
-            <h3 class="wrapped-teaser-title">@L["Wrapped_Title"]</h3>
-            <p class="wrapped-teaser-body">@L["Wrapped_Body"]</p>
+            <span class="wrapped-teaser-kicker">Reading Wrapped @DateTime.UtcNow.Year</span>
+            <h3 class="wrapped-teaser-title">Your year in books, beautifully wrapped</h3>
+            <p class="wrapped-teaser-body">Unlock Premium to generate your Reading Wrapped card — heatmaps, top genres, authors and more.</p>
         </div>
     </section>
 }

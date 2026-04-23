@@ -1,8 +1,6 @@
 @using BookLoggerApp.Core.Models
-@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Components.Shared
-@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
@@ -12,25 +10,24 @@
 @inject IShareService ShareService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IReviewPromptService ReviewPromptService
-@inject IStringLocalizer<AppResources> L
 
 @if (Book != null)
 {
     <div class="reading-timer-inline">
         <!-- Timer Header -->
         <div class="timer-inline-header">
-            <h3>📖 @L["TimerInline_Title"]</h3>
+            <h3>📖 Reading Session</h3>
             @if (!IsRunning && ElapsedTime.TotalSeconds == 0)
             {
-                <span class="timer-status-badge ready">@L["TimerInline_ReadyToRead"]</span>
+                <span class="timer-status-badge ready">Ready to read</span>
             }
             else if (IsRunning)
             {
-                <span class="timer-status-badge active">● @L["TimerInline_Active"]</span>
+                <span class="timer-status-badge active">● Active</span>
             }
             else
             {
-                <span class="timer-status-badge paused">⏸ @L["QuickTimer_Status_Paused"]</span>
+                <span class="timer-status-badge paused">⏸ Paused</span>
             }
         </div>
 
@@ -46,25 +43,25 @@
                 @if (!IsRunning && ElapsedTime.TotalSeconds == 0)
                 {
                     <button class="btn btn-primary btn-large" @onclick="HandleStart">
-                        ▶ @L["QuickTimer_StartReading"]
+                        ▶ Start Reading
                     </button>
                 }
                 else if (IsRunning)
                 {
                     <button class="btn btn-secondary btn-large" @onclick="HandlePause">
-                        ⏸ @L["Reading_Pause"]
+                        ⏸ Pause
                     </button>
                 }
                 else
                 {
                     <button class="btn btn-primary" @onclick="HandleResume">
-                        ▶ @L["Reading_Resume"]
+                        ▶ Resume
                     </button>
                     <button class="btn btn-success" @onclick="HandleSave">
-                        ✓ @L["QuickTimer_SaveSession"]
+                        ✓ Save Session
                     </button>
                     <button class="btn btn-danger" @onclick="HandleCancel">
-                        ✕ @L["Common_Cancel"]
+                        ✕ Cancel
                     </button>
                 }
             </div>
@@ -76,7 +73,7 @@
             <div class="timer-inline-details">
                 <div class="timer-detail-row">
                     <div class="timer-detail-item">
-                        <label>@L["Reading_CurrentPage"]</label>
+                        <label>Current Page</label>
                         <div class="pages-input-group-inline">
                             <button class="btn-adjust" @onclick="DecrementCurrentPage" disabled="@(CurrentPageInput <= Book.CurrentPage)">-</button>
                             <input type="number"
@@ -88,18 +85,18 @@
                                    placeholder="@Book.CurrentPage.ToString()" />
                             <button class="btn-adjust" @onclick="IncrementCurrentPage">+</button>
                         </div>
-                        <small class="input-hint">@L["TimerInline_WasOnPage", Book.CurrentPage]</small>
+                        <small class="input-hint">Was on page @Book.CurrentPage</small>
                     </div>
 
                     <div class="timer-detail-item">
-                        <label>@L["Reading_PagesRead"]</label>
+                        <label>Pages Read</label>
                         <div class="pages-display">
-                            @L["TimerInline_PagesValue", CalculatePagesRead()]
+                            @CalculatePagesRead() pages
                         </div>
                     </div>
 
                     <div class="timer-detail-item">
-                        <label>@L["TimerInline_XpToEarn"]</label>
+                        <label>XP to Earn</label>
                         <div class="xp-display-inline">
                             <span class="xp-value">@CalculateXP()</span>
                             <span class="xp-label">XP</span>
@@ -107,9 +104,9 @@
                     </div>
 
                     <div class="timer-detail-item">
-                        <label>@L["TimerInline_Minutes"]</label>
+                        <label>Minutes</label>
                         <div class="minutes-display">
-                            @L["TimerInline_MinutesValue", (int)Math.Ceiling(ElapsedTime.TotalMinutes)]
+                            @((int)Math.Ceiling(ElapsedTime.TotalMinutes)) min
                         </div>
                     </div>
                 </div>
@@ -120,7 +117,8 @@
         {
             <div class="timer-progress-info">
                 <p class="progress-text">
-                    @L["TimerInline_Progress", Book.CurrentPage, CurrentPageInput, Book.PageCount, CalculateNewProgressPercentage()]
+                    Progress: @Book.CurrentPage → @CurrentPageInput / @Book.PageCount
+                    (@CalculateNewProgressPercentage()%)
                 </p>
             </div>
         }
@@ -606,7 +604,7 @@
             var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
             var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
             await File.WriteAllBytesAsync(filePath, cardBytes);
-            await ShareService.ShareFileAsync(L["Reading_ShareFileName"], filePath, "image/png");
+            await ShareService.ShareFileAsync("Book Recommendation", filePath, "image/png");
         }
         catch (Exception ex)
         {

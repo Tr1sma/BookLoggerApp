@@ -105,7 +105,7 @@ public partial class StatsAnalysesViewModel : ViewModelBase
 
             PageCountData = pageCountTask.Result;
             TopAuthors = authorsTask.Result;
-        }, Tr("Error_FailedTo_LoadAnalysisStatistics"));
+        }, "Failed to load analysis statistics");
     }
 
     [RelayCommand]

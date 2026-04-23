@@ -146,7 +146,7 @@ public partial class BookEditViewModel : ViewModelBase
                 SelectedStatusForDisplay = ReadingStatus.Planned;
                 _isInitializingStatusSelection = false;
             }
-        }, Tr("Error_FailedTo_LoadBook"));
+        }, "Failed to load book");
     }
 
     [RelayCommand]
@@ -162,7 +162,7 @@ public partial class BookEditViewModel : ViewModelBase
         {
             if (string.IsNullOrWhiteSpace(Book.Title) || string.IsNullOrWhiteSpace(Book.Author))
             {
-                SetError(Tr("Error_BookTitleAuthorRequired"));
+                SetError("Title and Author are required");
                 return;
             }
 
@@ -302,7 +302,7 @@ public partial class BookEditViewModel : ViewModelBase
             }
 
             _originalStatus = Book.Status;
-        }, Tr("Error_FailedTo_SaveBook"));
+        }, "Failed to save book");
     }
 
     [RelayCommand]
@@ -310,7 +310,7 @@ public partial class BookEditViewModel : ViewModelBase
     {
         if (Book == null || string.IsNullOrWhiteSpace(Book.ISBN))
         {
-            LookupMessage = Tr("Lookup_EnterIsbnFirst");
+            LookupMessage = "Please enter an ISBN first";
             return;
         }
 
@@ -323,7 +323,7 @@ public partial class BookEditViewModel : ViewModelBase
 
             if (metadata == null)
             {
-                LookupMessage = Tr("Lookup_NoBookFound");
+                LookupMessage = "No book found with this ISBN";
                 return;
             }
 
@@ -376,15 +376,15 @@ public partial class BookEditViewModel : ViewModelBase
                 await MapCategoriesToGenresAsync(metadata.Categories);
             }
 
-            LookupMessage = Tr("Lookup_LoadedSuccess");
+            LookupMessage = "Book data loaded successfully!";
         }
         catch (HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
         {
-            LookupMessage = Tr("Lookup_NoInternet");
+            LookupMessage = "No internet connection. Please check your network and try again.";
         }
         catch (HttpRequestException ex) when (IsQuotaExceeded(ex))
         {
-            LookupMessage = Tr("Lookup_QuotaReached");
+            LookupMessage = "Google Books API quota reached. Please try again later.";
         }
         catch (HttpRequestException ex)
         {
@@ -394,7 +394,7 @@ public partial class BookEditViewModel : ViewModelBase
         }
         catch (TaskCanceledException)
         {
-            LookupMessage = Tr("Lookup_Timeout");
+            LookupMessage = "Request timed out. Please try again.";
         }
         catch (Exception ex)
         {
@@ -492,7 +492,7 @@ public partial class BookEditViewModel : ViewModelBase
 
             byte[] cardBytes = await _shareCardService.GenerateBookCardAsync(data);
             BookShareCardReady?.Invoke(cardBytes);
-        }, Tr("Error_FailedTo_GenerateBookShareCard"));
+        }, "Failed to generate book share card");
 
         IsGeneratingBookCard = false;
     }
@@ -541,7 +541,7 @@ public partial class BookEditViewModel : ViewModelBase
     {
         _ = ExecuteSafelyAsync(
             () => UpdateAvailableTropesAsync(),
-            Tr("Error_FailedTo_UpdateAvailableTropes"));
+            "Failed to update available tropes");
     }
 
     public async Task ToggleGenreAsync(Guid genreId, bool isSelected)

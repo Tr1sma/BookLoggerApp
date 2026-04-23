@@ -227,7 +227,7 @@ public partial class BookshelfViewModel : ViewModelBase
             );
 
             await CalculateGoalStatsAsync();
-        }, Tr("Error_FailedTo_LoadBooks"));
+        }, "Failed to load books");
     }
 
     public Task<UserPlant?> GetPlantByIdAsync(Guid plantId)
@@ -243,7 +243,7 @@ public partial class BookshelfViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            SetError(Tr("Error_LoadPlantDetailsFailed", ex.Message));
+            SetError($"Failed to load plant details: {ex.Message}");
             return null;
         }
     }
@@ -261,7 +261,7 @@ public partial class BookshelfViewModel : ViewModelBase
             };
             await _shelfService.CreateShelfAsync(newShelf);
             await LoadAsync();
-        }, Tr("Error_FailedTo_CreateShelf"));
+        }, "Failed to create shelf");
     }
 
     [RelayCommand]
@@ -271,7 +271,7 @@ public partial class BookshelfViewModel : ViewModelBase
         {
             await _shelfService.DeleteShelfAsync(shelfId);
             await LoadAsync();
-        }, Tr("Error_FailedTo_DeleteShelf"));
+        }, "Failed to delete shelf");
     }
 
     [RelayCommand]
@@ -292,7 +292,7 @@ public partial class BookshelfViewModel : ViewModelBase
                 var newOrderIds = Shelves.Select(s => s.Shelf.Id).ToList();
                 await _shelfService.ReorderShelvesAsync(newOrderIds);
             }
-        }, Tr("Error_FailedTo_MoveShelfUp"));
+        }, "Failed to move shelf up");
     }
 
     [RelayCommand]
@@ -313,7 +313,7 @@ public partial class BookshelfViewModel : ViewModelBase
                 var newOrderIds = Shelves.Select(s => s.Shelf.Id).ToList();
                 await _shelfService.ReorderShelvesAsync(newOrderIds);
             }
-        }, Tr("Error_FailedTo_MoveShelfDown"));
+        }, "Failed to move shelf down");
     }
 
     [RelayCommand]
@@ -335,7 +335,7 @@ public partial class BookshelfViewModel : ViewModelBase
 
             // Refresh
             await LoadAsync();
-        }, Tr("Error_FailedTo_MoveBookToShelf"));
+        }, "Failed to move book to shelf");
     }
 
     [RelayCommand]
@@ -345,7 +345,7 @@ public partial class BookshelfViewModel : ViewModelBase
         {
             await _shelfService.RemoveBookFromShelfAsync(args.shelfId, args.bookId);
             await LoadAsync();
-        }, Tr("Error_FailedTo_RemoveBookFromShelf"));
+        }, "Failed to remove book from shelf");
     }
 
     private async Task CalculateGoalStatsAsync()
@@ -427,7 +427,7 @@ public partial class BookshelfViewModel : ViewModelBase
             // Clear shelves to indicate search mode
             Shelves.Clear();
 
-        }, Tr("Error_FailedTo_SearchBooks"));
+        }, "Failed to search books");
     }
 
     [RelayCommand]
@@ -437,7 +437,7 @@ public partial class BookshelfViewModel : ViewModelBase
         {
             await _bookService.DeleteAsync(bookId);
             await LoadAsync();
-        }, Tr("Error_FailedTo_DeleteBook"));
+        }, "Failed to delete book");
     }
 
     [RelayCommand]
@@ -467,7 +467,7 @@ public partial class BookshelfViewModel : ViewModelBase
 
             // Refresh
             await LoadAsync();
-        }, Tr("Error_FailedTo_PlacePlant"));
+        }, "Failed to place plant");
     }
 
     [RelayCommand]
@@ -477,7 +477,7 @@ public partial class BookshelfViewModel : ViewModelBase
         {
             await _shelfService.RemovePlantFromShelfAsync(args.shelfId, args.plantId);
             await LoadAsync();
-        }, Tr("Error_FailedTo_RemovePlant"));
+        }, "Failed to remove plant");
     }
 
     [RelayCommand]
@@ -488,20 +488,20 @@ public partial class BookshelfViewModel : ViewModelBase
             var trimmedName = args.newName.Trim();
             if (string.IsNullOrWhiteSpace(trimmedName))
             {
-                SetError(Tr("PlantDetail_Error_NameEmpty"));
+                SetError("Plant name cannot be empty");
                 return;
             }
 
             if (trimmedName.Length > 100)
             {
-                SetError(Tr("PlantDetail_Error_NameTooLong"));
+                SetError("Plant name cannot exceed 100 characters");
                 return;
             }
 
             var plant = await _plantService.GetByIdAsync(args.plantId);
             if (plant == null)
             {
-                SetError(Tr("Error_PlantNotFound"));
+                SetError("Plant not found");
                 return;
             }
 
@@ -513,7 +513,7 @@ public partial class BookshelfViewModel : ViewModelBase
             plant.Name = trimmedName;
             await _plantService.UpdateAsync(plant);
             await LoadAsync();
-        }, Tr("Error_FailedTo_RenamePlant"));
+        }, "Failed to rename plant");
     }
 
     [RelayCommand]
@@ -524,7 +524,7 @@ public partial class BookshelfViewModel : ViewModelBase
             await _plantService.WaterPlantAsync(plantId);
             // Reload to reflect status changes
             await LoadAsync();
-        }, Tr("Error_FailedTo_WaterPlant"));
+        }, "Failed to water plant");
     }
 
     [RelayCommand]
@@ -534,7 +534,7 @@ public partial class BookshelfViewModel : ViewModelBase
         {
             await _plantService.DeleteAsync(plantId);
             await LoadAsync();
-        }, Tr("Error_FailedTo_DeletePlant"));
+        }, "Failed to delete plant");
     }
 
     // Dropping "MovePlantToPositionAsync" in favor of generic Drag/Drop reordering if possible
@@ -549,7 +549,7 @@ public partial class BookshelfViewModel : ViewModelBase
             var plant = BookshelfPlants.FirstOrDefault(p => p.Id == args.plantId);
             if (plant == null)
             {
-                SetError(Tr("Error_PlantNotFound"));
+                SetError("Plant not found");
                 return;
             }
 
@@ -558,7 +558,7 @@ public partial class BookshelfViewModel : ViewModelBase
 
             // Reload to reflect new positions
             await LoadAsync();
-        }, Tr("Error_FailedTo_MovePlant"));
+        }, "Failed to move plant");
     }
 
     [RelayCommand]
@@ -603,7 +603,7 @@ public partial class BookshelfViewModel : ViewModelBase
             // Persist
             await _shelfService.UpdateShelfPositionsAsync(args.shelfId, bookPositions, plantPositions, decorationPositions);
 
-        }, Tr("Error_FailedTo_ReorderItems"));
+        }, "Failed to reorder items");
     }
 
     [RelayCommand]
@@ -623,7 +623,7 @@ public partial class BookshelfViewModel : ViewModelBase
                     args.sourceShelfId, args.targetShelfId, args.itemId, args.position);
 
             await LoadAsync();
-        }, Tr("Error_FailedTo_MoveItemBetweenShelves"));
+        }, "Failed to move item between shelves");
     }
 
     /// <summary>
@@ -676,7 +676,7 @@ public partial class BookshelfViewModel : ViewModelBase
             else if (type == ShelfItemType.Decoration)
                 await _shelfService.MoveDecorationBetweenShelvesAsync(
                     sourceShelfId, targetShelfId, itemId, position);
-        }, Tr("Error_FailedTo_PersistShelfMove"));
+        }, "Failed to persist shelf move");
     }
 
     [RelayCommand]
@@ -686,7 +686,7 @@ public partial class BookshelfViewModel : ViewModelBase
         {
             await _shelfService.AddDecorationToShelfAsync(args.shelfId, args.decorationId);
             await LoadAsync();
-        }, Tr("Error_FailedTo_PlaceDecoration"));
+        }, "Failed to place decoration");
     }
 
     [RelayCommand]
@@ -696,7 +696,7 @@ public partial class BookshelfViewModel : ViewModelBase
         {
             await _shelfService.RemoveDecorationFromShelfAsync(args.shelfId, args.decorationId);
             await LoadAsync();
-        }, Tr("Error_FailedTo_RemoveDecoration"));
+        }, "Failed to remove decoration");
     }
 
     [RelayCommand]
@@ -706,7 +706,7 @@ public partial class BookshelfViewModel : ViewModelBase
         {
             await _decorationService.DeleteAsync(decorationId);
             await LoadAsync();
-        }, Tr("Error_FailedTo_DeleteDecoration"));
+        }, "Failed to delete decoration");
     }
 
     /// <summary>
@@ -717,7 +717,7 @@ public partial class BookshelfViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             await CalculateGoalStatsAsync();
-        }, Tr("Error_FailedTo_RefreshGoalStats"));
+        }, "Failed to refresh goal stats");
     }
 }
 

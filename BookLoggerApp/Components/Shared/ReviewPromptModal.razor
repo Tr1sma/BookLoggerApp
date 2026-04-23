@@ -1,33 +1,29 @@
-@using BookLoggerApp.Core.Resources
-@using Microsoft.Extensions.Localization
-@inject IStringLocalizer<AppResources> L
-
 @if (IsVisible)
 {
     <div class="review-prompt-overlay">
         <div class="review-prompt-modal" role="dialog" aria-modal="true" aria-labelledby="reviewPromptTitle">
             @if (!_showStorePrompt)
             {
-                <h3 id="reviewPromptTitle" class="review-prompt-title">@L["Review_LikePrompt"]</h3>
+                <h3 id="reviewPromptTitle" class="review-prompt-title">Magst du BookHeart?</h3>
                 <p class="review-prompt-text">
-                    @L["Review_LikeBody"]
+                    Wenn dir die App gerade gefaellt, freuen wir uns ueber kurzes Feedback.
                 </p>
                 <div class="review-prompt-actions">
-                    <button type="button" class="btn review-prompt-never-btn" @onclick="NeverAskAgainAsync">@L["Review_NeverAsk"]</button>
-                    <button type="button" class="btn btn-secondary" @onclick="CloseAsync">@L["Common_No"]</button>
-                    <button type="button" class="btn btn-primary" @onclick="ShowStorePrompt">@L["Common_Yes"]</button>
+                    <button type="button" class="btn review-prompt-never-btn" @onclick="NeverAskAgainAsync">Nicht mehr fragen</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CloseAsync">Nein</button>
+                    <button type="button" class="btn btn-primary" @onclick="ShowStorePrompt">Ja</button>
                 </div>
             }
             else
             {
-                <h3 id="reviewPromptTitle" class="review-prompt-title">@L["Review_StorePrompt"]</h3>
+                <h3 id="reviewPromptTitle" class="review-prompt-title">Willst du BookHeart im Play Store bewerten?</h3>
                 <p class="review-prompt-text">
-                    @L["Review_StoreBody"]
+                    Wir oeffnen dann einfach die App-Seite im Play Store.
                 </p>
                 <div class="review-prompt-actions">
-                    <button type="button" class="btn review-prompt-never-btn" @onclick="NeverAskAgainAsync">@L["Review_NeverAsk"]</button>
-                    <button type="button" class="btn btn-secondary" @onclick="CloseAsync">@L["Common_No"]</button>
-                    <button type="button" class="btn btn-primary" @onclick="OpenStoreAndCloseAsync">@L["Common_Yes"]</button>
+                    <button type="button" class="btn review-prompt-never-btn" @onclick="NeverAskAgainAsync">Nicht mehr fragen</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CloseAsync">Nein</button>
+                    <button type="button" class="btn btn-primary" @onclick="OpenStoreAndCloseAsync">Ja</button>
                 </div>
             }
         </div>

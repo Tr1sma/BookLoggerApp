@@ -1,12 +1,9 @@
 @using BookLoggerApp.Core.Models
-@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
-@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
 @inject ITimerStateService TimerStateService
-@inject IStringLocalizer<AppResources> L
 
 @if (Book != null && IsVisible)
 {
@@ -24,12 +21,12 @@
             <!-- Timer Display -->
             <div class="quick-timer-display">
                 <div class="timer-value">@FormatTime(ElapsedTime)</div>
-                <div class="timer-status">@(IsRunning ? L["QuickTimer_Status_Reading"].Value : (ElapsedTime.TotalSeconds > 0 ? L["QuickTimer_Status_Paused"].Value : L["QuickTimer_Status_Ready"].Value))</div>
+                <div class="timer-status">@(IsRunning ? "Reading..." : (ElapsedTime.TotalSeconds > 0 ? "Paused" : "Ready"))</div>
             </div>
 
             <!-- Pages Input -->
             <div class="quick-timer-pages">
-                <label>@L["Reading_PagesRead"]</label>
+                <label>Pages Read</label>
                 <div class="pages-input-group">
                     <button class="btn-adjust" @onclick="DecrementPages" disabled="@(PagesRead <= 0)">-</button>
                     <input type="number"
@@ -46,22 +43,22 @@
                 @if (!IsRunning && ElapsedTime.TotalSeconds == 0)
                 {
                     <button class="btn btn-primary btn-large" @onclick="HandleStart">
-                        ▶ @L["QuickTimer_StartReading"]
+                        ▶ Start Reading
                     </button>
                 }
                 else if (IsRunning)
                 {
                     <button class="btn btn-secondary btn-large" @onclick="HandlePause">
-                        ⏸ @L["Reading_Pause"]
+                        ⏸ Pause
                     </button>
                 }
                 else
                 {
                     <button class="btn btn-primary" @onclick="HandleResume">
-                        ▶ @L["Reading_Resume"]
+                        ▶ Resume
                     </button>
                     <button class="btn btn-success" @onclick="HandleSave">
-                        ✓ @L["QuickTimer_SaveSession"]
+                        ✓ Save Session
                     </button>
                 }
             </div>
@@ -71,11 +68,11 @@
             {
                 <div class="quick-timer-info">
                     <div class="info-item">
-                        <span class="info-label">@L["QuickTimer_Time"]:</span>
+                        <span class="info-label">Time:</span>
                         <span class="info-value">@FormatTime(ElapsedTime)</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">@L["QuickTimer_Pages"]:</span>
+                        <span class="info-label">Pages:</span>
                         <span class="info-value">@PagesRead</span>
                     </div>
                     <div class="info-item">
