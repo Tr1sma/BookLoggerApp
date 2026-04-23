@@ -28,6 +28,7 @@ Versionsschema:
 ## [0.10.6]
 
 ### Hinzugefügt
+- Celebration-Modal mit Konfetti nach erfolgreichem Einlösen eines Promo-Codes ("Successfully redeemed code") und nach Abschluss einer Subscription in der Paywall.
 
 ### Geändert
 

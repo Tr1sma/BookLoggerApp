@@ -348,8 +348,6 @@ public partial class BookshelfViewModel : ViewModelBase
         }, Tr("Error_FailedTo_RemoveBookFromShelf"));
     }
 
-    // ... (Keep existing goal stats and search logic, update Search to filter shelves maybe?)
-
     private async Task CalculateGoalStatsAsync()
     {
         // Count TBR (To Be Read) books - those with "Planned" status
@@ -451,7 +449,6 @@ public partial class BookshelfViewModel : ViewModelBase
         await LoadAsync(); // Reload to show shelves again
     }
 
-    // ... (Keep existing plant commands)
     [RelayCommand]
     public async Task AddPlantToShelfAsync((Guid plantId, Guid shelfId) args)
     {
@@ -735,7 +732,3 @@ public partial class ShelfViewModel : ObservableObject
     [ObservableProperty]
     private bool _isExpanded = true;
 }
-
-
-
-
