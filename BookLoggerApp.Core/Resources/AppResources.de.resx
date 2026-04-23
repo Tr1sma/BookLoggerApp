@@ -1054,6 +1054,735 @@
   <data name="Wishlist_NotesPlaceholder" xml:space="preserve">
     <value>Warum möchtest du es lesen?</value>
   </data>
+  <data name="GoalCard_Until" xml:space="preserve">
+    <value>Bis {0}</value>
+  </data>
+  <data name="GoalCard_Unit_Books" xml:space="preserve">
+    <value>Bücher</value>
+  </data>
+  <data name="GoalCard_Unit_Pages" xml:space="preserve">
+    <value>Seiten</value>
+  </data>
+  <data name="GoalCard_Unit_Minutes" xml:space="preserve">
+    <value>Minuten</value>
+  </data>
+  <data name="GoalHeader_Title" xml:space="preserve">
+    <value>Leseziel {0}</value>
+  </data>
+  <data name="GoalHeader_Label_Tbr" xml:space="preserve">
+    <value>in TBR</value>
+  </data>
+  <data name="GoalHeader_Label_Goal" xml:space="preserve">
+    <value>im Ziel</value>
+  </data>
+  <data name="GoalHeader_Label_Read" xml:space="preserve">
+    <value>gelesen</value>
+  </data>
+  <data name="GoalHeader_Remaining" xml:space="preserve">
+    <value>Dir fehlen noch &lt;strong&gt;{0} Bücher&lt;/strong&gt; bis zum Jahresziel</value>
+  </data>
+  <data name="GoalHeader_Complete" xml:space="preserve">
+    <value>🎉 Glückwunsch! Dein Jahresziel ist erreicht!</value>
+  </data>
+  <data name="GoalHeader_Exceeded" xml:space="preserve">
+    <value>🌟 Großartig! Du hast &lt;strong&gt;{0} Bücher mehr&lt;/strong&gt; gelesen als dein Ziel!</value>
+  </data>
+  <data name="BookCompletion_Header" xml:space="preserve">
+    <value>Buch abgeschlossen!</value>
+  </data>
+  <data name="BookCompletion_YouEarned" xml:space="preserve">
+    <value>Du hast erhalten</value>
+  </data>
+  <data name="BookCompletion_Awesome" xml:space="preserve">
+    <value>Super!</value>
+  </data>
+  <data name="LevelUp_Header" xml:space="preserve">
+    <value>LEVEL UP!</value>
+  </data>
+  <data name="LevelUp_CoinsEarned" xml:space="preserve">
+    <value>{0} Münzen!</value>
+  </data>
+  <data name="LevelUp_TotalCoins" xml:space="preserve">
+    <value>Gesamt-Münzen: {0}</value>
+  </data>
+  <data name="Session_Header" xml:space="preserve">
+    <value>Session abgeschlossen!</value>
+  </data>
+  <data name="Session_Continue" xml:space="preserve">
+    <value>Weiter</value>
+  </data>
+  <data name="Session_StreakGuardianSaved" xml:space="preserve">
+    <value>Der Chronikbaum hat deine Streak gerettet!</value>
+  </data>
+  <data name="Session_StoryHeart_Title" xml:space="preserve">
+    <value>Herz der Geschichten</value>
+  </data>
+  <data name="Session_StoryHeart_Coins" xml:space="preserve">
+    <value>+{0} Münzen</value>
+  </data>
+  <data name="Session_StoryHeart_FirstOfDayXp" xml:space="preserve">
+    <value>+{0} XP (erste Session des Tages)</value>
+  </data>
+  <data name="Session_Row_Pages" xml:space="preserve">
+    <value>Gelesene Seiten</value>
+  </data>
+  <data name="Session_Row_Time" xml:space="preserve">
+    <value>Lesezeit</value>
+  </data>
+  <data name="Session_Row_LongBonus" xml:space="preserve">
+    <value>Bonus für lange Session</value>
+  </data>
+  <data name="Session_Row_BookCompleted" xml:space="preserve">
+    <value>Buch abgeschlossen</value>
+  </data>
+  <data name="Session_Row_StreakBonus" xml:space="preserve">
+    <value>Streak-Bonus</value>
+  </data>
+  <data name="Session_Row_Subtotal" xml:space="preserve">
+    <value>Zwischensumme</value>
+  </data>
+  <data name="Session_Row_PlantBoost" xml:space="preserve">
+    <value>Pflanzen-Boost ({0}%)</value>
+  </data>
+  <data name="Session_Row_Total" xml:space="preserve">
+    <value>Gesamt-XP gewonnen</value>
+  </data>
+  <data name="Streak_Days" xml:space="preserve">
+    <value>{0}-Tage-Streak</value>
+  </data>
+  <data name="Streak_Caption" xml:space="preserve">
+    <value>Du hast deine Lese-Streak am Leben gehalten.</value>
+  </data>
+  <data name="Streak_RewardLabel" xml:space="preserve">
+    <value>Zusätzliche Streak-XP</value>
+  </data>
+  <data name="Streak_KeepGoing" xml:space="preserve">
+    <value>Weiter so</value>
+  </data>
+  <data name="Review_LikePrompt" xml:space="preserve">
+    <value>Magst du BookHeart?</value>
+  </data>
+  <data name="Review_LikeBody" xml:space="preserve">
+    <value>Wenn dir die App gefällt, freuen wir uns über kurzes Feedback.</value>
+  </data>
+  <data name="Review_StorePrompt" xml:space="preserve">
+    <value>Willst du BookHeart im Play Store bewerten?</value>
+  </data>
+  <data name="Review_StoreBody" xml:space="preserve">
+    <value>Wir öffnen dann die App-Seite im Play Store.</value>
+  </data>
+  <data name="Review_NeverAsk" xml:space="preserve">
+    <value>Nicht mehr fragen</value>
+  </data>
+  <data name="DeleteModal_Title" xml:space="preserve">
+    <value>Buch löschen?</value>
+  </data>
+  <data name="DeleteModal_Warning_Title" xml:space="preserve">
+    <value>Diese Aktion kann nicht rückgängig gemacht werden!</value>
+  </data>
+  <data name="DeleteModal_Warning_Body" xml:space="preserve">
+    <value>Folgende Daten werden ebenfalls gelöscht:</value>
+  </data>
+  <data name="DeleteModal_Item_Sessions" xml:space="preserve">
+    <value>Alle Lesesitzungen</value>
+  </data>
+  <data name="DeleteModal_Item_Quotes" xml:space="preserve">
+    <value>Alle Zitate</value>
+  </data>
+  <data name="DeleteModal_Item_Annotations" xml:space="preserve">
+    <value>Alle Annotationen</value>
+  </data>
+  <data name="DeleteModal_Item_Genres" xml:space="preserve">
+    <value>Genre-Zuordnungen</value>
+  </data>
+  <data name="DeleteModal_Deleting" xml:space="preserve">
+    <value>Lösche …</value>
+  </data>
+  <data name="DeleteModal_Confirm" xml:space="preserve">
+    <value>Endgültig löschen</value>
+  </data>
+  <data name="PrivacyBanner_AriaLabel" xml:space="preserve">
+    <value>Datenschutzhinweis</value>
+  </data>
+  <data name="PrivacyBanner_Title" xml:space="preserve">
+    <value>Datenschutz &amp; Statistik</value>
+  </data>
+  <data name="PrivacyBanner_Body" xml:space="preserve">
+    <value>BookHeart verwendet Firebase Analytics und Crashlytics zur App-Verbesserung. Buchtitel, Autoren, Notizen oder persönliche Daten werden niemals übertragen. Du kannst beides jederzeit in den Einstellungen deaktivieren.</value>
+  </data>
+  <data name="PrivacyBanner_GotIt" xml:space="preserve">
+    <value>Verstanden</value>
+  </data>
+  <data name="Locked_AriaUnlock" xml:space="preserve">
+    <value>{0} freischalten</value>
+  </data>
+  <data name="Locked_UpgradeTo" xml:space="preserve">
+    <value>Upgrade auf {0}</value>
+  </data>
+  <data name="FeatureSuggestion_Title" xml:space="preserve">
+    <value>Feature vorschlagen</value>
+  </data>
+  <data name="FeatureSuggestion_Hint" xml:space="preserve">
+    <value>Premium-Mitglieder können Ideen direkt an den Entwickler senden.</value>
+  </data>
+  <data name="FeatureSuggestion_Placeholder" xml:space="preserve">
+    <value>Was würde BookHeart für dich besser machen?</value>
+  </data>
+  <data name="FeatureSuggestion_Send" xml:space="preserve">
+    <value>Per E-Mail senden</value>
+  </data>
+  <data name="FeatureSuggestion_Success" xml:space="preserve">
+    <value>Danke! Dein E-Mail-Programm wurde geöffnet.</value>
+  </data>
+  <data name="FeatureSuggestion_Error" xml:space="preserve">
+    <value>E-Mail-Programm konnte nicht geöffnet werden.</value>
+  </data>
+  <data name="UpgradeCard_Kicker" xml:space="preserve">
+    <value>Plus · ab 2,99 €/Monat</value>
+  </data>
+  <data name="UpgradeCard_Title" xml:space="preserve">
+    <value>Unbegrenzte Notizen, Zitate und Pflanzen freischalten</value>
+  </data>
+  <data name="UpgradeCard_Body" xml:space="preserve">
+    <value>Plus behält alle Features und entfernt die Soft-Limits der Free-Version.</value>
+  </data>
+  <data name="Wrapped_Kicker" xml:space="preserve">
+    <value>Reading Wrapped {0}</value>
+  </data>
+  <data name="Wrapped_Title" xml:space="preserve">
+    <value>Dein Lesejahr, liebevoll verpackt</value>
+  </data>
+  <data name="Wrapped_Body" xml:space="preserve">
+    <value>Schalte Premium frei, um deine Reading-Wrapped-Karte zu erstellen — Heatmaps, Top-Genres, Autoren und mehr.</value>
+  </data>
+  <data name="GettingStartedCta_Kicker" xml:space="preserve">
+    <value>Erste Schritte</value>
+  </data>
+  <data name="GettingStartedCta_CoreSteps" xml:space="preserve">
+    <value>{0} / {1} Kern-Schritte abgeschlossen</value>
+  </data>
+  <data name="GettingStartedCta_NextUp" xml:space="preserve">
+    <value>Als Nächstes: {0}</value>
+  </data>
+  <data name="GettingStartedCta_OpenChecklist" xml:space="preserve">
+    <value>Checkliste öffnen</value>
+  </data>
+  <data name="PlantCard_UnknownPlant" xml:space="preserve">
+    <value>Unbekannte Pflanze</value>
+  </data>
+  <data name="PlantCard_RemoveFromBookshelf" xml:space="preserve">
+    <value>Aus Regal entfernen</value>
+  </data>
+  <data name="PlantWidget_Unknown" xml:space="preserve">
+    <value>Unbekannt</value>
+  </data>
+  <data name="PlantWidget_Level" xml:space="preserve">
+    <value>Level {0} / {1}</value>
+  </data>
+  <data name="PlantWidget_ReadingDays_Max" xml:space="preserve">
+    <value>{0} Lesetage (Max Level erreicht!)</value>
+  </data>
+  <data name="PlantWidget_ReadingDays" xml:space="preserve">
+    <value>{0} Lesetage ({1} bis Level {2})</value>
+  </data>
+  <data name="PlantWidget_Watering" xml:space="preserve">
+    <value>Gießen …</value>
+  </data>
+  <data name="PlantWidget_WaterPlant" xml:space="preserve">
+    <value>Pflanze gießen</value>
+  </data>
+  <data name="PlantWidget_DeadMessage" xml:space="preserve">
+    <value>Deine Pflanze ist verwelkt. Sie gibt keine XP-Boosts mehr.</value>
+  </data>
+  <data name="PlantWidget_DeleteDead" xml:space="preserve">
+    <value>Tote Pflanze löschen</value>
+  </data>
+  <data name="PlantWidget_NextWaterIn" xml:space="preserve">
+    <value>Nächstes Gießen in {0} Tag(en)</value>
+  </data>
+  <data name="PlantWidget_Watered_Healthy" xml:space="preserve">
+    <value>Zuletzt vor {0} Tag(en) gegossen. Alles gut! 🌿</value>
+  </data>
+  <data name="PlantWidget_Watered_Thirsty" xml:space="preserve">
+    <value>⚠️ Braucht bald Wasser!</value>
+  </data>
+  <data name="PlantWidget_Watered_Wilting" xml:space="preserve">
+    <value>⚠️⚠️ Dringend Wasser nötig!</value>
+  </data>
+  <data name="PlantWidget_Watered_Dead" xml:space="preserve">
+    <value>😢 Pflanze ist tot.</value>
+  </data>
+  <data name="PlantDetail_PlantName" xml:space="preserve">
+    <value>Pflanzenname</value>
+  </data>
+  <data name="PlantDetail_Rename" xml:space="preserve">
+    <value>Pflanze umbenennen</value>
+  </data>
+  <data name="PlantDetail_NextWater" xml:space="preserve">
+    <value>Nächstes Gießen</value>
+  </data>
+  <data name="PlantDetail_DriedOut" xml:space="preserve">
+    <value>Diese Pflanze ist vertrocknet und kann nicht mehr gegossen werden.</value>
+  </data>
+  <data name="PlantDetail_AlreadyWatered" xml:space="preserve">
+    <value>Bereits gegossen</value>
+  </data>
+  <data name="PlantDetail_CannotWater" xml:space="preserve">
+    <value>Kann nicht gegossen werden</value>
+  </data>
+  <data name="PlantDetail_NextWater_Unknown" xml:space="preserve">
+    <value>Unbekannt</value>
+  </data>
+  <data name="PlantDetail_NextWater_Missed" xml:space="preserve">
+    <value>Gieß-Fenster verpasst</value>
+  </data>
+  <data name="PlantDetail_NextWater_Now" xml:space="preserve">
+    <value>Jetzt</value>
+  </data>
+  <data name="PlantDetail_NextWater_Hours" xml:space="preserve">
+    <value>In {0} Stunde(n)</value>
+  </data>
+  <data name="PlantDetail_NextWater_Days" xml:space="preserve">
+    <value>In {0} Tag(en)</value>
+  </data>
+  <data name="PlantDetail_Error_NameEmpty" xml:space="preserve">
+    <value>Pflanzenname darf nicht leer sein</value>
+  </data>
+  <data name="PlantDetail_Error_NameTooLong" xml:space="preserve">
+    <value>Pflanzenname darf maximal 100 Zeichen haben</value>
+  </data>
+  <data name="PlantDetail_Error_RenameFailed" xml:space="preserve">
+    <value>Umbenennen fehlgeschlagen</value>
+  </data>
+  <data name="ShopCard_Legendary" xml:space="preserve">
+    <value>Legendär</value>
+  </data>
+  <data name="ShopCard_DayUnit" xml:space="preserve">
+    <value>T</value>
+  </data>
+  <data name="ShopCard_UnlocksAt" xml:space="preserve">
+    <value>Freischaltung ab Lv. {0}</value>
+  </data>
+  <data name="UserProgress_Level" xml:space="preserve">
+    <value>Level {0}</value>
+  </data>
+  <data name="Startup_WhatsNew" xml:space="preserve">
+    <value>Was ist neu?</value>
+  </data>
+  <data name="Startup_HideHistory" xml:space="preserve">
+    <value>Verlauf ausblenden</value>
+  </data>
+  <data name="Startup_ShowHistory" xml:space="preserve">
+    <value>Verlauf anzeigen</value>
+  </data>
+  <data name="Startup_UpdateAvailable_Title" xml:space="preserve">
+    <value>Update verfügbar</value>
+  </data>
+  <data name="Startup_UpdateAvailable_Subtitle" xml:space="preserve">
+    <value>Eine neuere Version von BookHeart ist im Play Store verfügbar.</value>
+  </data>
+  <data name="Startup_UpdateAvailable_Body" xml:space="preserve">
+    <value>Du kannst das Update direkt in der App starten. Der Download läuft im Hintergrund weiter und du kannst die Installation danach abschließen.</value>
+  </data>
+  <data name="Startup_Later" xml:space="preserve">
+    <value>Später</value>
+  </data>
+  <data name="Startup_Starting" xml:space="preserve">
+    <value>Wird gestartet …</value>
+  </data>
+  <data name="Startup_UpdateNow" xml:space="preserve">
+    <value>Jetzt aktualisieren</value>
+  </data>
+  <data name="Startup_UpdateReady_Title" xml:space="preserve">
+    <value>Update bereit</value>
+  </data>
+  <data name="Startup_UpdateReady_Subtitle" xml:space="preserve">
+    <value>Der Download ist abgeschlossen.</value>
+  </data>
+  <data name="Startup_UpdateReady_Body" xml:space="preserve">
+    <value>Installiere das Update jetzt, um auf die neue Version zu wechseln.</value>
+  </data>
+  <data name="Startup_InstallNow" xml:space="preserve">
+    <value>Jetzt installieren</value>
+  </data>
+  <data name="Onboarding_Step" xml:space="preserve">
+    <value>Schritt {0} / {1}</value>
+  </data>
+  <data name="Onboarding_Skip_Title" xml:space="preserve">
+    <value>Intro überspringen?</value>
+  </data>
+  <data name="Onboarding_Skip_Body1" xml:space="preserve">
+    <value>Du kannst es jederzeit aus den Einstellungen oder dem „Erste Schritte"-Hub wieder öffnen.</value>
+  </data>
+  <data name="Onboarding_Skip_Body2" xml:space="preserve">
+    <value>Deine geführten Missionen bleiben danach weiterhin verfügbar.</value>
+  </data>
+  <data name="Onboarding_Step0_Title" xml:space="preserve">
+    <value>Willkommen bei BookHeart</value>
+  </data>
+  <data name="Onboarding_Step0_Body1" xml:space="preserve">
+    <value>Verfolge deine Bücher, baue Lesegewohnheiten auf und sieh deinen Fortschritt wachsen.</value>
+  </data>
+  <data name="Onboarding_Step0_Body2" xml:space="preserve">
+    <value>Dieses kurze Tutorial zeigt dir das Wichtigste, damit du schnell loslegen kannst.</value>
+  </data>
+  <data name="Onboarding_Step1_Title" xml:space="preserve">
+    <value>Füge dein erstes Buch hinzu</value>
+  </data>
+  <data name="Onboarding_Step1_Body1" xml:space="preserve">
+    <value>Lege einen ersten Eintrag mit Titel, Autor und optionalem Cover-Bild an.</value>
+  </data>
+  <data name="Onboarding_Step1_Body2" xml:space="preserve">
+    <value>Nach dem Hinzufügen kannst du Sessions starten, Seiten tracken und Fortschritt protokollieren.</value>
+  </data>
+  <data name="Onboarding_Step1_AddNow" xml:space="preserve">
+    <value>Erstes Buch jetzt hinzufügen</value>
+  </data>
+  <data name="Onboarding_Step2_Title" xml:space="preserve">
+    <value>XP &amp; Pflanzen-Wachstum</value>
+  </data>
+  <data name="Onboarding_Step2_Body1" xml:space="preserve">
+    <value>Du sammelst XP durchs Lesen, Abschließen von Büchern und Erreichen von Zielen.</value>
+  </data>
+  <data name="Onboarding_Step2_Body2" xml:space="preserve">
+    <value>Mit jedem Level-Up wachsen deine Pflanzen und du schaltest mehr Belohnungen im Shop frei.</value>
+  </data>
+  <data name="Onboarding_Step3_Title" xml:space="preserve">
+    <value>Bewertungssystem (6 Kategorien)</value>
+  </data>
+  <data name="Onboarding_Step3_Body" xml:space="preserve">
+    <value>Bewerte abgeschlossene Bücher mit 1-5 Sternen in sechs Kategorien:</value>
+  </data>
+  <data name="Onboarding_Cat_Characters" xml:space="preserve">
+    <value>Charaktere</value>
+  </data>
+  <data name="Onboarding_Cat_Plot" xml:space="preserve">
+    <value>Handlung</value>
+  </data>
+  <data name="Onboarding_Cat_Writing" xml:space="preserve">
+    <value>Schreibstil</value>
+  </data>
+  <data name="Onboarding_Cat_Spice" xml:space="preserve">
+    <value>Spice-Level</value>
+  </data>
+  <data name="Onboarding_Cat_Pacing" xml:space="preserve">
+    <value>Pacing</value>
+  </data>
+  <data name="Onboarding_Cat_World" xml:space="preserve">
+    <value>Worldbuilding</value>
+  </data>
+  <data name="Onboarding_StepN_Title" xml:space="preserve">
+    <value>Haupt-Bereiche</value>
+  </data>
+  <data name="Onboarding_Area_Bookshelf" xml:space="preserve">
+    <value>Regal: Bücher und Pflanzen organisieren</value>
+  </data>
+  <data name="Onboarding_Area_Dashboard" xml:space="preserve">
+    <value>Übersicht: Schnell-Übersicht und Aktivität</value>
+  </data>
+  <data name="Onboarding_Area_Goals" xml:space="preserve">
+    <value>Ziele: Leseziele anlegen und verfolgen</value>
+  </data>
+  <data name="Onboarding_Area_Stats" xml:space="preserve">
+    <value>Statistik: Fortschritt und Einblicke</value>
+  </data>
+  <data name="Onboarding_Area_Shop" xml:space="preserve">
+    <value>Shop: Pflanzen kaufen und verwalten</value>
+  </data>
+  <data name="Onboarding_Area_Settings" xml:space="preserve">
+    <value>Einstellungen: App individuell anpassen</value>
+  </data>
+  <data name="Onboarding_ContinueTutorial" xml:space="preserve">
+    <value>Tutorial fortsetzen</value>
+  </data>
+  <data name="Onboarding_SkipIntro" xml:space="preserve">
+    <value>Intro überspringen</value>
+  </data>
+  <data name="Onboarding_Skip" xml:space="preserve">
+    <value>Überspringen</value>
+  </data>
+  <data name="Onboarding_Next" xml:space="preserve">
+    <value>Weiter</value>
+  </data>
+  <data name="Onboarding_Finish" xml:space="preserve">
+    <value>Fertig</value>
+  </data>
+  <data name="Onboarding_Header_SkipTitle" xml:space="preserve">
+    <value>Intro überspringen?</value>
+  </data>
+  <data name="Onboarding_Header_Step0" xml:space="preserve">
+    <value>Willkommen bei BookHeart</value>
+  </data>
+  <data name="Onboarding_Header_Step1" xml:space="preserve">
+    <value>Dein erstes Buch</value>
+  </data>
+  <data name="Onboarding_Header_Step2" xml:space="preserve">
+    <value>Levels &amp; Pflanzen wachsen lassen</value>
+  </data>
+  <data name="Onboarding_Header_Step3" xml:space="preserve">
+    <value>So funktionieren Bewertungen</value>
+  </data>
+  <data name="Onboarding_Header_StepN" xml:space="preserve">
+    <value>Lerne die Navigation kennen</value>
+  </data>
+  <data name="Onboarding_Sub_Skip" xml:space="preserve">
+    <value>Du kannst es jederzeit wieder öffnen.</value>
+  </data>
+  <data name="Onboarding_Sub_Step0" xml:space="preserve">
+    <value>Deine Lesereise beginnt hier.</value>
+  </data>
+  <data name="Onboarding_Sub_Step1" xml:space="preserve">
+    <value>Lass uns deinen ersten Eintrag anlegen.</value>
+  </data>
+  <data name="Onboarding_Sub_Step2" xml:space="preserve">
+    <value>Sammle XP beim Lesen.</value>
+  </data>
+  <data name="Onboarding_Sub_Step3" xml:space="preserve">
+    <value>Halte fest, was ein Buch großartig gemacht hat.</value>
+  </data>
+  <data name="Onboarding_Sub_StepN" xml:space="preserve">
+    <value>Wo du alles schnell findest.</value>
+  </data>
+  <data name="QuickTimer_Status_Reading" xml:space="preserve">
+    <value>Lese …</value>
+  </data>
+  <data name="QuickTimer_Status_Paused" xml:space="preserve">
+    <value>Pausiert</value>
+  </data>
+  <data name="QuickTimer_Status_Ready" xml:space="preserve">
+    <value>Bereit</value>
+  </data>
+  <data name="QuickTimer_StartReading" xml:space="preserve">
+    <value>Lesen starten</value>
+  </data>
+  <data name="QuickTimer_SaveSession" xml:space="preserve">
+    <value>Session speichern</value>
+  </data>
+  <data name="QuickTimer_Time" xml:space="preserve">
+    <value>Zeit</value>
+  </data>
+  <data name="QuickTimer_Pages" xml:space="preserve">
+    <value>Seiten</value>
+  </data>
+  <data name="TimerInline_Title" xml:space="preserve">
+    <value>Lesesitzung</value>
+  </data>
+  <data name="TimerInline_ReadyToRead" xml:space="preserve">
+    <value>Bereit zum Lesen</value>
+  </data>
+  <data name="TimerInline_Active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="TimerInline_WasOnPage" xml:space="preserve">
+    <value>Warst auf Seite {0}</value>
+  </data>
+  <data name="TimerInline_PagesValue" xml:space="preserve">
+    <value>{0} Seiten</value>
+  </data>
+  <data name="TimerInline_XpToEarn" xml:space="preserve">
+    <value>XP zu erhalten</value>
+  </data>
+  <data name="TimerInline_Minutes" xml:space="preserve">
+    <value>Minuten</value>
+  </data>
+  <data name="TimerInline_MinutesValue" xml:space="preserve">
+    <value>{0} Min</value>
+  </data>
+  <data name="TimerInline_Progress" xml:space="preserve">
+    <value>Fortschritt: {0} → {1} / {2} ({3}%)</value>
+  </data>
+  <data name="StatsAnalyses_YearComparison" xml:space="preserve">
+    <value>Jahresvergleich</value>
+  </data>
+  <data name="StatsAnalyses_GenreRadar" xml:space="preserve">
+    <value>Genre-Radar</value>
+  </data>
+  <data name="StatsAnalyses_CompletionRate" xml:space="preserve">
+    <value>Abschlussquote</value>
+  </data>
+  <data name="StatsAnalyses_BookLength" xml:space="preserve">
+    <value>Buchlängen-Vorliebe</value>
+  </data>
+  <data name="StatsAnalyses_MostReadAuthors" xml:space="preserve">
+    <value>Meistgelesene Autoren</value>
+  </data>
+  <data name="StatsAnalyses_PageCount_Books" xml:space="preserve">
+    <value>{0} Bücher</value>
+  </data>
+  <data name="StatsAnalyses_AuthorDetail" xml:space="preserve">
+    <value>{0} Bücher · {1} Seiten</value>
+  </data>
+  <data name="StatsAnalyses_Bucket_Short" xml:space="preserve">
+    <value>Kurz (&lt;200 S.)</value>
+  </data>
+  <data name="StatsAnalyses_Bucket_Medium" xml:space="preserve">
+    <value>Mittel (200-400 S.)</value>
+  </data>
+  <data name="StatsAnalyses_Bucket_Long" xml:space="preserve">
+    <value>Lang (400-600 S.)</value>
+  </data>
+  <data name="StatsAnalyses_Bucket_Epic" xml:space="preserve">
+    <value>Episch (&gt;600 S.)</value>
+  </data>
+  <data name="StatsAnalyses_Donut_Completed" xml:space="preserve">
+    <value>Abgeschlossen ({0})</value>
+  </data>
+  <data name="StatsAnalyses_Donut_Abandoned" xml:space="preserve">
+    <value>Abgebrochen ({0})</value>
+  </data>
+  <data name="StatsAnalyses_Row_Books" xml:space="preserve">
+    <value>Bücher</value>
+  </data>
+  <data name="StatsAnalyses_Row_Pages" xml:space="preserve">
+    <value>Seiten</value>
+  </data>
+  <data name="StatsAnalyses_Row_Hours" xml:space="preserve">
+    <value>Stunden</value>
+  </data>
+  <data name="StatsAnalyses_Row_Rating" xml:space="preserve">
+    <value>Bewertung</value>
+  </data>
+  <data name="StatsTrends_ReadingCalendar" xml:space="preserve">
+    <value>Lese-Kalender</value>
+  </data>
+  <data name="StatsTrends_Weekday_Mon" xml:space="preserve">
+    <value>Mo</value>
+  </data>
+  <data name="StatsTrends_Weekday_Tue" xml:space="preserve">
+    <value>Di</value>
+  </data>
+  <data name="StatsTrends_Weekday_Wed" xml:space="preserve">
+    <value>Mi</value>
+  </data>
+  <data name="StatsTrends_Weekday_Thu" xml:space="preserve">
+    <value>Do</value>
+  </data>
+  <data name="StatsTrends_Weekday_Fri" xml:space="preserve">
+    <value>Fr</value>
+  </data>
+  <data name="StatsTrends_Weekday_Sat" xml:space="preserve">
+    <value>Sa</value>
+  </data>
+  <data name="StatsTrends_Weekday_Sun" xml:space="preserve">
+    <value>So</value>
+  </data>
+  <data name="StatsTrends_Less" xml:space="preserve">
+    <value>Weniger</value>
+  </data>
+  <data name="StatsTrends_More" xml:space="preserve">
+    <value>Mehr</value>
+  </data>
+  <data name="StatsTrends_WeekdayDist" xml:space="preserve">
+    <value>Wochentag-Verteilung</value>
+  </data>
+  <data name="StatsTrends_NoData" xml:space="preserve">
+    <value>Noch keine Daten verfügbar</value>
+  </data>
+  <data name="StatsTrends_TimeOfDay" xml:space="preserve">
+    <value>Tageszeit</value>
+  </data>
+  <data name="StatsTrends_Morning" xml:space="preserve">
+    <value>Morgen</value>
+  </data>
+  <data name="StatsTrends_Afternoon" xml:space="preserve">
+    <value>Nachmittag</value>
+  </data>
+  <data name="StatsTrends_Evening" xml:space="preserve">
+    <value>Abend</value>
+  </data>
+  <data name="StatsTrends_Night" xml:space="preserve">
+    <value>Nacht</value>
+  </data>
+  <data name="StatsTrends_SessionLength" xml:space="preserve">
+    <value>Session-Länge</value>
+  </data>
+  <data name="StatsTrends_AverageMin" xml:space="preserve">
+    <value>Durchschnitt: {0} Min</value>
+  </data>
+  <data name="StatsTrends_MonthlyProgress" xml:space="preserve">
+    <value>Monatlicher Verlauf</value>
+  </data>
+  <data name="StatsTrends_Speed" xml:space="preserve">
+    <value>Geschwindigkeit</value>
+  </data>
+  <data name="StatsTrends_SpeedValue" xml:space="preserve">
+    <value>{0} S/h</value>
+  </data>
+  <data name="StatsTrends_ReadingTime" xml:space="preserve">
+    <value>Lesedauer</value>
+  </data>
+  <data name="StatsTrends_FinishDaysValue" xml:space="preserve">
+    <value>{0} Tage/Buch</value>
+  </data>
+  <data name="StatsTrends_VsLastMonth" xml:space="preserve">
+    <value>vs. letzter Monat</value>
+  </data>
+  <data name="Paywall_DefaultHeadline" xml:space="preserve">
+    <value>BookHeart upgraden</value>
+  </data>
+  <data name="Paywall_UnlockFeature" xml:space="preserve">
+    <value>{0} freischalten</value>
+  </data>
+  <data name="Paywall_DefaultSubtitle" xml:space="preserve">
+    <value>Mehr von BookHeart freischalten.</value>
+  </data>
+  <data name="Paywall_BillingPeriodAria" xml:space="preserve">
+    <value>Abrechnungszeitraum</value>
+  </data>
+  <data name="Paywall_Monthly" xml:space="preserve">
+    <value>Monatlich</value>
+  </data>
+  <data name="Paywall_Yearly" xml:space="preserve">
+    <value>Jährlich</value>
+  </data>
+  <data name="Paywall_SaveUpTo30" xml:space="preserve">
+    <value>spare bis zu 30%</value>
+  </data>
+  <data name="Paywall_Tagline_Plus" xml:space="preserve">
+    <value>Komfort + volle Gamification</value>
+  </data>
+  <data name="Paywall_Tagline_Premium" xml:space="preserve">
+    <value>Analysen, Share-Cards, Prestige</value>
+  </data>
+  <data name="Paywall_FirstMonth" xml:space="preserve">
+    <value>1. Monat 0,99 €</value>
+  </data>
+  <data name="Paywall_IncludedInPremium" xml:space="preserve">
+    <value>In Premium enthalten</value>
+  </data>
+  <data name="Paywall_GetPlus" xml:space="preserve">
+    <value>Plus holen</value>
+  </data>
+  <data name="Paywall_MostPopular" xml:space="preserve">
+    <value>Am beliebtesten</value>
+  </data>
+  <data name="Paywall_GetPremium" xml:space="preserve">
+    <value>Premium holen</value>
+  </data>
+  <data name="Paywall_LaunchSpecial" xml:space="preserve">
+    <value>Launch-Special — zeitlich begrenzt</value>
+  </data>
+  <data name="Paywall_PremiumLifetime" xml:space="preserve">
+    <value>Premium Lifetime</value>
+  </data>
+  <data name="Paywall_PayOnce" xml:space="preserve">
+    <value>Einmal zahlen · für immer nutzen</value>
+  </data>
+  <data name="Paywall_AlreadyPremium" xml:space="preserve">
+    <value>Bereits Premium</value>
+  </data>
+  <data name="Paywall_GetLifetime" xml:space="preserve">
+    <value>Lifetime für 99,99 € holen</value>
+  </data>
+  <data name="Paywall_TrustNote" xml:space="preserve">
+    <value>Jederzeit im Google Play kündbar · Verlängert sich automatisch bis zur Kündigung</value>
+  </data>
+  <data name="Paywall_PromoLabel" xml:space="preserve">
+    <value>Promo-Code vorhanden?</value>
+  </data>
+  <data name="Paywall_Redeem" xml:space="preserve">
+    <value>Einlösen</value>
+  </data>
   <data name="Settings_Loading" xml:space="preserve">
     <value>Einstellungen werden geladen …</value>
   </data>

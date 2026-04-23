@@ -1,3 +1,7 @@
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
+
 @if (StreakDays >= 2 && BonusXp > 0)
 {
     <div class="celebration-overlay" @onclick="HandleClose">
@@ -9,17 +13,17 @@
 
             <div class="streak-header">
                 <div class="streak-flame">🔥</div>
-                <h1>@($"{StreakDays} Day Streak")</h1>
-                <p class="streak-caption">You kept your reading streak alive.</p>
+                <h1>@L["Streak_Days", StreakDays]</h1>
+                <p class="streak-caption">@L["Streak_Caption"]</p>
             </div>
 
             <div class="streak-reward">
-                <span class="streak-reward-label">Extra streak XP</span>
+                <span class="streak-reward-label">@L["Streak_RewardLabel"]</span>
                 <span class="streak-reward-value">+@BonusXp XP</span>
             </div>
 
             <button class="celebration-button" @onclick="HandleClose">
-                Keep it going
+                @L["Streak_KeepGoing"]
             </button>
         </div>
     </div>

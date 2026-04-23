@@ -1,21 +1,24 @@
 @using System.Text
 @using BookLoggerApp.Core.Entitlements
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
+@using Microsoft.Extensions.Localization
 @inject IEntitlementService EntitlementService
 @inject NavigationManager Navigation
+@inject IStringLocalizer<AppResources> L
 
 <div class="feature-suggestion-form">
-    <h3>💡 Suggest a feature</h3>
-    <p class="feature-suggestion-hint">Premium members can send ideas directly to the developer.</p>
+    <h3>💡 @L["FeatureSuggestion_Title"]</h3>
+    <p class="feature-suggestion-hint">@L["FeatureSuggestion_Hint"]</p>
 
     <textarea class="feature-suggestion-input"
               rows="4"
-              placeholder="What would make BookHeart better for you?"
+              placeholder="@L["FeatureSuggestion_Placeholder"]"
               maxlength="2000"
               @bind="_text"></textarea>
 
     <div class="feature-suggestion-actions">
-        <button class="btn btn-primary" disabled="@(!CanSubmit)" @onclick="SubmitAsync">Send via email</button>
+        <button class="btn btn-primary" disabled="@(!CanSubmit)" @onclick="SubmitAsync">@L["FeatureSuggestion_Send"]</button>
         @if (!string.IsNullOrEmpty(_feedback))
         {
             <span class="feature-suggestion-feedback">@_feedback</span>
@@ -50,12 +53,12 @@
             await Task.CompletedTask;
 #endif
 
-            _feedback = "Thanks! Your email composer has been opened.";
+            _feedback = L["FeatureSuggestion_Success"];
             _text = string.Empty;
         }
         catch (Exception ex)
         {
-            _feedback = "Could not open the email composer.";
+            _feedback = L["FeatureSuggestion_Error"];
             System.Diagnostics.Debug.WriteLine($"FeatureSuggestionForm.SubmitAsync failed: {ex}");
         }
     }

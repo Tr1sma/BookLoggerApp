@@ -1,7 +1,10 @@
 @using BookLoggerApp.Core.Entitlements
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
+@using Microsoft.Extensions.Localization
 @inject IEntitlementService Entitlements
 @inject IPaywallCoordinator Paywall
+@inject IStringLocalizer<AppResources> L
 
 @if (!ShouldRenderLocked)
 {
@@ -10,13 +13,13 @@
 else
 {
     <div class="locked-feature" role="button" tabindex="0"
-         aria-label="@($"Unlock {FeatureDisplay.Get(Feature).Label}")"
+         aria-label="@(L["Locked_AriaUnlock", FeatureDisplay.Get(Feature).Label].Value)"
          @onclick="OpenPaywallAsync"
          @onkeydown="HandleKeydown">
         <div class="locked-feature-overlay">
             <span class="locked-feature-icon" aria-hidden="true">🔒</span>
             <span class="locked-feature-label">@FeatureDisplay.Get(Feature).Label</span>
-            <span class="locked-feature-hint">Upgrade to @FeaturePolicy.GetMinimumTier(Feature)</span>
+            <span class="locked-feature-hint">@L["Locked_UpgradeTo", FeaturePolicy.GetMinimumTier(Feature)]</span>
         </div>
         <div class="locked-feature-child">
             @ChildContent

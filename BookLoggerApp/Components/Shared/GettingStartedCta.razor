@@ -1,25 +1,28 @@
 @using BookLoggerApp.Core.Infrastructure
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject IOnboardingService OnboardingService
 @inject IAppSettingsProvider AppSettingsProvider
 @inject NavigationManager NavigationManager
+@inject IStringLocalizer<AppResources> L
 
 @if (ShouldShowCta)
 {
     <section class="getting-started-cta-card">
         <div class="getting-started-cta-copy">
-            <span class="getting-started-cta-kicker">Getting Started</span>
-            <h2>@_snapshot.CompletedCoreCount / @_snapshot.TotalCoreCount core steps completed</h2>
+            <span class="getting-started-cta-kicker">@L["GettingStartedCta_Kicker"]</span>
+            <h2>@L["GettingStartedCta_CoreSteps", _snapshot.CompletedCoreCount, _snapshot.TotalCoreCount]</h2>
             @if (_snapshot.NextRecommendedMission != null)
             {
-                <p>Next up: @_snapshot.NextRecommendedMission.Title</p>
+                <p>@L["GettingStartedCta_NextUp", _snapshot.NextRecommendedMission.Title]</p>
             }
         </div>
 
         <button type="button" class="btn btn-primary getting-started-cta-button" @onclick="OpenHub">
-            Open checklist
+            @L["GettingStartedCta_OpenChecklist"]
         </button>
     </section>
 }
