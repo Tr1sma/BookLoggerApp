@@ -183,24 +183,40 @@ Kanonische Vorlagen für neue Dateien — folge diesen Mustern statt sie aus dem
 
 ### Lokalisierung (EN + DE)
 
-Die App verwendet `Microsoft.Extensions.Localization` mit einem einzigen Shared-Resource-Paar:
+Die App ist **vollständig zweisprachig** (Englisch + Deutsch). Stand: ~940 Keys, 1:1 zwischen beiden `.resx`, abgesichert durch `AppResourcesCoverageTests`.
+
+**Dateien:**
 
 - `BookLoggerApp.Core/Resources/AppResources.resx` — Englisch (neutral / Fallback)
 - `BookLoggerApp.Core/Resources/AppResources.de.resx` — Deutsch
-- `BookLoggerApp.Core/Resources/AppResources.cs` — leere Marker-Klasse für `IStringLocalizer<AppResources>`
+- `BookLoggerApp.Core/Resources/AppResources.cs` — leere Marker-Klasse für `IStringLocalizer<AppResources>`. **KEIN `<Generator>ResXFileCodeGenerator</Generator>` im `.csproj` eintragen** — VS generiert dann `AppResources.Designer.cs` mit derselben Klasse und es gibt CS0101 (doppelte Definition). Seit Commit 96f7ce4 entfernt.
 
-Aktive Sprache wird über `ILanguageService` verwaltet (Impl. in `BookLoggerApp/Services/LanguageService.cs`). Kanonisch in `AppSettings.Language` (SQLite), gespiegelt in MAUI `Preferences` (Key `app_language`) — letzteres wird synchron in `MauiProgram.InitializeCulture()` vor dem ersten Render gelesen. Sprachwechsel in Settings triggert einen App-Neustart via `IAppRestartService`.
+**Aktive Sprache** wird über `ILanguageService` verwaltet (Impl. in `BookLoggerApp/Services/LanguageService.cs`). Kanonisch in `AppSettings.Language` (SQLite), gespiegelt in MAUI `Preferences` (Key `app_language`) — letzteres wird synchron in `MauiProgram.InitializeCulture()` vor dem ersten Render gelesen. Beim allerersten Start wird `CultureInfo.CurrentUICulture.TwoLetterISOLanguageName` geprüft (`de` → DE, sonst EN). Sprachwechsel in Settings triggert einen App-Neustart via `IAppRestartService`. Nach Backup-Restore ruft `Settings.razor` zusätzlich `LanguageService.SyncFromSettingsAsync()` auf, damit der Preferences-Mirror zur wiederhergestellten `AppSettings.Language` passt.
+
+**DI-Setup (`MauiProgram.cs`):**
+
+```csharp
+// WICHTIG: KEIN ResourcesPath setzen. Der Factory hängt ihn an den Namespace an;
+// unser Typ liegt schon in BookLoggerApp.Core.Resources, das würde zu
+// BookLoggerApp.Core.Resources.Resources.AppResources verdoppeln.
+builder.Services.AddLocalization();
+```
+
+Dann nach `builder.Build()`:
+
+```csharp
+ViewModelBase.Localizer =
+    app.Services.GetRequiredService<IStringLocalizer<AppResources>>();
+```
+
+**Key-Präfix-Konvention** (alphabetisch):
+`BookCompletion_*`, `BookDetail_*`, `BookEdit_*`, `Books_*`, `Bookshelf_*`, `Common_*`, `Dashboard_*`, `DeleteModal_*`, `Error_*`, `Error_FailedTo_*`, `Feature_*` (Paywall-Feature-Labels + Descriptions), `FeatureSuggestion_*`, `GettingStarted_*`, `GettingStartedCta_*`, `GoalCard_*`, `GoalHeader_*`, `Goals_*`, `GoalStatus_*`, `LevelUp_*`, `Locked_*`, `Lookup_*`, `Nav_*`, `Notification_*`, `Onboarding_*`, `PageTitle_*`, `Paywall_*` (inkl. `Paywall_Feature_*` und `Paywall_Category_*` für die Vergleichstabelle), `PlantCard_*`, `PlantDetail_*`, `PlantSpecies_*` (Seed-Pflanzen-Namen + Beschreibungen), `PlantWidget_*`, `Priority_*`, `PrivacyBanner_*`, `QuickTimer_*`, `Reading_*`, `Review_*`, `Session_*`, `Settings_*`, `ShopCard_*`, `Shop_*`, `ShopItem_*` (Seed-Dekorationen), `Startup_*`, `Stats_*`, `StatsAnalyses_*`, `StatsTrends_*`, `Status_*`, `Streak_*`, `TimerInline_*`, `UpgradeCard_*`, `UserProgress_*`, `Validator_*`, `Wishlist_*`, `Wrapped_*`.
 
 **Neue Keys hinzufügen:**
 
-1. Eintrag in `AppResources.resx` (Englisch):
-   ```xml
-   <data name="Bereich_Key" xml:space="preserve">
-     <value>English text</value>
-   </data>
-   ```
-2. Identischen Key mit deutschem Wert in `AppResources.de.resx`. Fehlende Keys werden vom Test `AppResourcesCoverageTests` gemeldet.
-3. Key-Präfixe nach Bereich: `Nav_*`, `Settings_*`, `Dashboard_*`, `BookDetail_*`, `Bookshelf_*`, `Reading_*`, `Goals_*`, `Stats_*`, `StatsTrends_*`, `StatsAnalyses_*`, `Shop_*`, `Onboarding_*`, `Paywall_*`, `Validator_*`, `Error_*`, `Error_FailedTo_*`, `Common_*`, `Status_*`, `Priority_*`, `Notification_*`, `Lookup_*`, `PlantWidget_*`, `PlantDetail_*`, `ShopCard_*`, `Startup_*`, `TimerInline_*`, `QuickTimer_*`, `PageTitle_*` usw.
+1. Eintrag in beide `.resx`. Fehlende DE-Keys, fehlende EN-Keys oder leere Werte lassen `AppResourcesCoverageTests` fehlschlagen.
+2. Bei Format-Platzhaltern `{0}`, `{1}`: Beide Sprachen müssen dieselben Platzhalter nutzen.
+3. Begriffe die im Deutschen gängig englisch bleiben (bewusst, konsistent durchgehalten): `Shop`, `Backup`, `Cloud`, `Level`, `XP`, `Streak`, `Premium`, `Plus`, `Lifetime`, `Pause`, `Reading Wrapped` (Markenbegriff), `Pacing`, `Worldbuilding`, `Share-Cards`, `Gamification`, `Prestige`, `Play Store`, `Firebase`, `ISBN`. Deutsche Produktnamen wie *Trope* → *Tropes*, *Community*, *Highlight* ebenfalls belassen.
 
 **Razor-Komponente verwenden:**
 
@@ -223,13 +239,58 @@ SetError(Tr("Error_PlantRequiresLevel", species.UnlockLevel, UserLevel));
 await ExecuteSafelyAsync(async () => { ... }, Tr("Error_FailedTo_LoadBooks"));
 ```
 
-In Unit-Tests ist der Ambient-Localizer null → `Tr()` gibt den Schlüssel unverändert zurück. Soll Code echte lokalisierte Werte sehen, setze in der Test-Setup-Methode `ViewModelBase.Localizer = new TestStringLocalizer<AppResources>();` (Helper unter `Tests/TestHelpers/TestStringLocalizer.cs`).
+`ExecuteSafelyAsync` verkettet `prefix` mit der Exception-Message (`$"{prefix}: {ex.Message}"`). Wenn kein Prefix übergeben wird, nutzt die Basisklasse `Error_Generic` / `Error_GenericShort` / `Error_DbInitializing` aus der resx.
 
-**Validator verwenden:** FluentValidation-Validatoren akzeptieren einen optionalen `IStringLocalizer<AppResources>` im Konstruktor und nutzen `.WithMessage(_ => Tr(key))` — lazy, damit Messages pro Request in der aktuellen Kultur aufgelöst werden.
+**Validator verwenden:** FluentValidation-Validatoren akzeptieren einen optionalen `IStringLocalizer<AppResources>` im Konstruktor und nutzen `.WithMessage(_ => Tr(key))` — lazy, damit Messages pro Request in der aktuellen Kultur aufgelöst werden. Der Parameter ist optional (Default `null` → Fallback auf den Key), damit die bestehenden `new BookValidator()`-Aufrufe in Tests unverändert funktionieren.
 
-**Android-Widget-Strings:** Separate XML-Dateien, Android wählt automatisch:
+**Android-Widget-Strings:** Separate XML-Dateien, Android wählt automatisch anhand der System-Sprache:
 - `BookLoggerApp/Platforms/Android/Resources/values/strings.xml` (Englisch)
 - `BookLoggerApp/Platforms/Android/Resources/values-de/strings.xml` (Deutsch)
+
+**DB-gespeicherte Seed-Daten (Pflanzen, Dekorationen):**
+
+`PlantSpecies.Name/Description` und `ShopItem.Name/Description` bleiben in der SQLite-DB **kanonisch englisch** (kein Migration-Zwang für bestehende User). Der Display-Layer übersetzt über Extension-Methoden aus `BookLoggerApp.Core.Resources.SeedDataLocalization`:
+
+```razor
+@using BookLoggerApp.Core.Resources  @* bringt die Extensions in Scope *@
+
+<h3>@species.LocalizedName(L)</h3>
+<p>@species.LocalizedDescription(L)</p>
+<span>@item.LocalizedName(L)</span>                 @* ShopItem *@
+<span>@plant.LocalizedDisplayName(L)</span>         @* UserPlant: custom-Name bleibt, Default wird übersetzt *@
+<span>@decoration.LocalizedDisplayName(L)</span>    @* UserDecoration: dito *@
+```
+
+Die Helper leiten den resx-Key aus dem englischen Namen ab (PascalCase): *Ancient Knowledge Bonsai* → `PlantSpecies_AncientKnowledgeBonsai_Name`. Bei fehlendem Key wird der Originalname zurückgegeben.
+
+`UserPlant.LocalizedDisplayName` / `UserDecoration.LocalizedDisplayName` prüfen, ob der gespeicherte Name dem Species-/ShopItem-Default entspricht. Wenn ja → lokalisieren. Wenn der User umbenannt hat (z.B. "Bob der Kaktus") → verbatim belassen.
+
+In ViewModels, die Seed-Namen in DTOs schreiben (z.B. `StatsViewModel.PlantBoostInfo.PlantName`), den Ambient `Localizer` nutzen:
+```csharp
+PlantName = Localizer is null ? plant.Species.Name : plant.Species.LocalizedName(Localizer),
+```
+
+**Paywall-Features:**
+
+- `FeatureDisplayInfo.Info` (in `BookLoggerApp.Core/Entitlements/FeatureDisplayInfo.cs`) bleibt die kanonische englische Quelle für Label + Description jedes `FeatureKey`.
+- Für die UI gibt es `FeatureDisplay.GetLocalizedLabel(FeatureKey, IStringLocalizer)` und `FeatureDisplay.GetLocalizedDescription(...)`. Keys: `Feature_{EnumName}_Label` und `Feature_{EnumName}_Description`.
+- Nutzer: `LockedFeatureButton` (Sperr-Overlay auf Shop-Cards, Goal-Limits, etc.) + `PaywallModal` (Headline + Subtitle).
+- Die **Vergleichstabelle** im Paywall (`PaywallComparisonCatalog.Rows`) hat ein optionales `LabelKey`-Feld; Helfer `GetLocalizedLabel(Row, L)` und `GetLocalizedCategoryLabel(Category, L)` resolven sie mit English-Fallback. Keys: `Paywall_Feature_*` und `Paywall_Category_*`.
+
+Neuen `FeatureKey` hinzufügen: Eintrag in `FeatureDisplayInfo.Info` + zwei resx-Keys (`Feature_NeuerKey_Label`, `Feature_NeuerKey_Description`) in EN und DE. Falls das Feature auch in der Vergleichstabelle erscheint: `Paywall_Feature_NeuerKey` für den Zeilen-Namen.
+
+**Tests (`BookLoggerApp.Tests`):**
+
+- `TestHelpers/TestStringLocalizer<T>` wrappt einen echten `ResourceManagerStringLocalizer` und lädt die embedded resx-Werte. Fehlende Keys fallen weich auf den Key-Namen zurück.
+- Ein `[ModuleInitializer]` in derselben Datei setzt `ViewModelBase.Localizer` und pinnt `CultureInfo.CurrentCulture`/`CurrentUICulture` auf `InvariantCulture`, damit Tests auf einem deutschen Entwickler-Windows nicht plötzlich `"Datenbank wird noch vorbereitet..."` statt `"Database is still initializing..."` sehen. Tests die explizit die deutsche Übersetzung prüfen müssen, setzen die Kultur lokal im Test-Body um.
+- `AppResourcesCoverageTests` scannt beide `.resx` und failt bei fehlenden Keys, überzähligen Keys oder leeren DE-Werten. Wird bei jedem CI-Run mitgetestet.
+
+**Qualitäts-Tipps für Übersetzungen:**
+
+- Tone: `du`/`dein` (nicht `Sie`), konsistent durchgezogen.
+- Pflanzen-Namen mit Alliteration/Wortspiel bewahren wenn möglich: *Literary Lily* → *Literatur-Lilie* (L-L), *Wisdom Willow* → *Weise Weide* (W-W), *Bookworm Fern* → *Bücherwurm-Farn*.
+- Feature-Beschreibungen im Stil der EN-Version: knapp, imperativ, keine Floskel-Schwemme.
+- **Häufige Umlaut-Stolperfalle** wenn ihr DE-Strings per Python/Skript generiert: Umlaute direkt als UTF-8 schreiben, nicht als `ae`/`oe`/`ue`/`sz` mit nachträglicher Ersetzung — `muss`/`Lass`/`Pause`/`Pflegebedürfnisse` sind korrekt und werden von naiven Regex-basierten Umlaut-Fixern gern falsch „repariert".
 
 ### CSS Theme Quick Reference
 
