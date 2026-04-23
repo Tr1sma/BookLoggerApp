@@ -12,7 +12,18 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
+## [Unveröffentlicht]
 
+### Hinzugefügt
+- Deutsche Sprachunterstützung inkl. Sprachauswahl in den Einstellungen (Englisch + Deutsch). Beim allerersten Start wird die System-Sprache automatisch erkannt; ein späterer Sprachwechsel startet die App neu, damit die neue Sprache überall greift.
+- Neue Sektion "🌐 Sprache" in den Einstellungen mit Dropdown, das zwischen allen unterstützten Sprachen umschalten lässt.
+- Komplette UI übersetzt: Navigation, alle Pages (Regal, Dashboard, Statistik, Ziele, Lesen, Buchdetails, Buch bearbeiten, Shop, Getting Started, Einstellungen), alle Shared-Components (Karten, Modals, Celebrations, Widgets, Paywall, Onboarding), ViewModel-Fehlermeldungen, FluentValidation-Meldungen und Android-Widget-Beschreibungen.
+- Android-Widget-Strings jetzt zweisprachig (`values/strings.xml` EN, `values-de/strings.xml` DE) — das System wählt automatisch die richtige Datei basierend auf der Geräte-Sprache.
+- Notifications (Lese-Erinnerung, Ziel-Abschluss, Pflanzen-Wasserbedarf) werden in der aktiven UI-Sprache angezeigt.
+
+### Geändert
+- `AppSettings.Language` wird beim ersten App-Start automatisch aus der System-Sprache abgeleitet (statt immer `en`).
+- Backup-Restore synchronisiert die Sprach-Preference nach einem Restore mit dem wiederhergestellten `AppSettings.Language`, damit die App nach Neustart in der korrekten Sprache läuft.
 
 ## [0.10.6]
 

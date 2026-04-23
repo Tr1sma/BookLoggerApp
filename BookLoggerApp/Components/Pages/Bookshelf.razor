@@ -3,9 +3,11 @@
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Components.Shared
+@using Microsoft.Extensions.Localization
 @inject BookshelfViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IGoalService GoalService
@@ -15,9 +17,10 @@
 @inject IOnboardingService OnboardingService
 @inject IJSRuntime JSRuntime
 @inject IDatabaseInitializer DatabaseInitializer
+@inject IStringLocalizer<AppResources> L
 @implements IAsyncDisposable
 
-<PageTitle>Bookshelf - BookHeart</PageTitle>
+<PageTitle>@L["PageTitle_Bookshelf"] - BookHeart</PageTitle>
 
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.Bookshelf" />
@@ -32,11 +35,11 @@
     <div class="bookshelf-tabs">
         <button class="tab-btn @(activeTab == "shelves" ? "active" : "")"
                 @onclick='() => SwitchTab("shelves")'>
-            Shelves
+            @L["Bookshelf_Tab_Shelves"]
         </button>
         <button class="tab-btn @(activeTab == "wishlist" ? "active" : "")"
                 @onclick='() => SwitchTab("wishlist")'>
-            Wishlist
+            @L["Bookshelf_Tab_Wishlist"]
             @if (WishlistVM.WishlistCount > 0)
             {
                 <span class="wishlist-count-badge">@WishlistVM.WishlistCount</span>
@@ -48,9 +51,9 @@
     {
     <!-- Header & Controls -->
     <div class="bookshelf-header">
-        <h1>My Bookshelf</h1>
+        <h1>@L["Bookshelf_Title"]</h1>
         <div class="bookshelf-controls">
-            <input type="text" class="search-input" placeholder="Search books..."
+            <input type="text" class="search-input" placeholder="@L["Bookshelf_SearchPlaceholder"]"
                    value="@ViewModel.SearchQuery"
                    @oninput="HandleSearchInput" />
         </div>
@@ -59,28 +62,28 @@
     <!-- Filters & Sort (Collapsible) -->
     <div class="bookshelf-filters-wrapper">
         <button class="filter-toggle-btn" @onclick="ToggleFilters">
-            <span>@(filtersExpanded ? "▼" : "▶") Filters & Sort</span>
+            <span>@(filtersExpanded ? "▼" : "▶") @L["Bookshelf_FiltersSort"]</span>
             @if (HasActiveFilters())
             {
-                <span class="active-filter-badge">Active</span>
+                <span class="active-filter-badge">@L["Bookshelf_Active"]</span>
             }
         </button>
 
         <div class="bookshelf-filters @(filtersExpanded ? "expanded" : "collapsed")">
             <!-- Existing filters... -->
             <div class="filter-group">
-                <label>Sort by:</label>
+                <label>@L["Bookshelf_SortBy"]</label>
                 <select value="@ViewModel.SortBy"
                 @onchange="@((ChangeEventArgs e) => { ViewModel.SortBy = e.Value?.ToString() ?? "Title"; HandleSearch(); })">
-                    <option value="Title">Title</option>
-                    <option value="Author">Author</option>
-                    <option value="DateAdded">Date Added</option>
-                    <option value="Status">Status</option>
+                    <option value="Title">@L["Bookshelf_Sort_Title"]</option>
+                    <option value="Author">@L["BookEdit_Author"]</option>
+                    <option value="DateAdded">@L["Bookshelf_Sort_DateAdded"]</option>
+                    <option value="Status">@L["BookDetail_Status"]</option>
                 </select>
             </div>
             <!-- ... (Keeping filters simple for now, as search clears shelves) -->
             <div class="filter-group">
-                <button class="btn btn-secondary" @onclick="HandleClearFilters">Clear Filters</button>
+                <button class="btn btn-secondary" @onclick="HandleClearFilters">@L["Bookshelf_ClearFilters"]</button>
             </div>
         </div>
     </div>
@@ -88,20 +91,20 @@
     <!-- Book Grid / Shelves -->
     @if (ViewModel.IsBusy)
     {
-        <div class="loading">Loading your books...</div>
+        <div class="loading">@L["Bookshelf_Loading"]</div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
         <div class="alert alert-danger">
             <p>@ViewModel.ErrorMessage</p>
-            <button class="btn btn-primary" @onclick="RetryLoadAsync">Erneut versuchen</button>
+            <button class="btn btn-primary" @onclick="RetryLoadAsync">@L["Common_Retry"]</button>
         </div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.SearchQuery) || ViewModel.FilterStatus.HasValue ||
     ViewModel.FilterGenreId.HasValue)
     {
         <!-- Search Results View (Flat Grid) -->
-        <div class="search-results-label">Search Results: @ViewModel.Books.Count book(s)</div>
+        <div class="search-results-label">@L["Bookshelf_SearchResults", ViewModel.Books.Count]</div>
         <div class="book-grid">
             <div class="shelf-row">
                 <Virtualize Items="@ViewModel.Books" Context="book" OverscanCount="5">
@@ -140,13 +143,13 @@
                             <div class="shelf-reorder-controls" style="display: flex; gap: 2px; margin-left: 10px;">
                                 <button class="btn-icon small"
                                 @onclick="() => ViewModel.MoveShelfUpCommand.ExecuteAsync(shelfVM.Shelf.Id)"
-                                    disabled="@isFirst" title="Move Up">
+                                    disabled="@isFirst" title="@L["Bookshelf_MoveUp"]">
                                     ⬆️
                                 </button>
                                 <button class="btn-icon small"
                                 @onclick="() => ViewModel.MoveShelfDownCommand.ExecuteAsync(shelfVM.Shelf.Id)"
                                     disabled="@isLast"
-                                    title="Move Down">
+                                    title="@L["Bookshelf_MoveDown"]">
                                     ⬇️
                                 </button>
                             </div>
@@ -156,7 +159,7 @@
                             @if (shelfVM.Shelf.SortOrder > 0)
                             {
                                 <button class="btn-icon" @onclick="() => HandleDeleteShelf(shelfVM.Shelf.Id)"
-                                    title="Delete Shelf">🗑️</button>
+                                    title="@L["Bookshelf_DeleteShelfTitle"]">🗑️</button>
                             }
                         </div>
                     </div>
@@ -212,7 +215,7 @@
                             {
                                 <div class="empty-slot" @onclick="() => HandleAddPlant(shelfVM.Shelf.Id)">
                                     <div class="empty-slot-icon">🌱</div>
-                                    <div class="empty-slot-text">Add Plant</div>
+                                    <div class="empty-slot-text">@L["Bookshelf_AddPlant"]</div>
                                 </div>
                             }
 
@@ -221,7 +224,7 @@
                             {
                                 <div class="empty-slot" @onclick="() => HandleAddDecoration(shelfVM.Shelf.Id)">
                                     <div class="empty-slot-icon">🕯️</div>
-                                    <div class="empty-slot-text">Add Deco</div>
+                                    <div class="empty-slot-text">@L["Bookshelf_AddDeco"]</div>
                                 </div>
                             }
                         </div>
@@ -235,11 +238,11 @@
     <div class="fab-container">
         <LockedFeatureButton Feature="FeatureKey.UnlimitedShelves"
                              ForceLock="@(ViewModel.Shelves.Count >= 3)">
-            <button class="fab-button secondary" @onclick="OpenAddShelfModal" title="New Shelf">
+            <button class="fab-button secondary" @onclick="OpenAddShelfModal" title="@L["Bookshelf_NewShelf"]">
                 📚
             </button>
         </LockedFeatureButton>
-        <button class="fab-button" @onclick="NavigateToAddBook" title="Add Book">
+        <button class="fab-button" @onclick="NavigateToAddBook" title="@L["Bookshelf_AddBook"]">
             +
         </button>
     </div>
@@ -250,28 +253,28 @@
     <LockedFeatureButton Feature="FeatureKey.Wishlist">
     <!-- Wishlist Content -->
     <div class="wishlist-controls">
-        <input type="text" class="search-input" placeholder="Search wishlist..."
+        <input type="text" class="search-input" placeholder="@L["Wishlist_SearchPlaceholder"]"
                value="@WishlistVM.SearchQuery"
                @oninput="HandleWishlistSearchInput" />
         <select class="wishlist-sort-select" value="@WishlistVM.SortBy"
                 @onchange="HandleWishlistSort">
-            <option value="DateAdded">Date Added</option>
-            <option value="Priority">Priority</option>
-            <option value="Title">Title</option>
-            <option value="Author">Author</option>
+            <option value="DateAdded">@L["Bookshelf_Sort_DateAdded"]</option>
+            <option value="Priority">@L["BookDetail_Priority"]</option>
+            <option value="Title">@L["Bookshelf_Sort_Title"]</option>
+            <option value="Author">@L["BookEdit_Author"]</option>
         </select>
     </div>
 
     @if (WishlistVM.IsBusy)
     {
-        <div class="loading">Loading wishlist...</div>
+        <div class="loading">@L["Wishlist_Loading"]</div>
     }
     else if (!WishlistVM.WishlistBooks.Any())
     {
         <div class="wishlist-empty">
             <div class="wishlist-empty-icon">💝</div>
-            <div class="wishlist-empty-text">Your wishlist is empty</div>
-            <div class="wishlist-empty-hint">Tap + to add books you want to read</div>
+            <div class="wishlist-empty-text">@L["Wishlist_Empty_Text"]</div>
+            <div class="wishlist-empty-hint">@L["Wishlist_Empty_Hint"]</div>
         </div>
     }
     else
@@ -302,17 +305,17 @@
                                 @if (!string.IsNullOrEmpty(book.WishlistInfo.RecommendedBy))
                                 {
                                     <span class="wishlist-card-recommended">
-                                        via @book.WishlistInfo.RecommendedBy
+                                        @L["Wishlist_RecommendedPrefix"] @book.WishlistInfo.RecommendedBy
                                     </span>
                                 }
                             }
                         </div>
                     </div>
                     <div class="wishlist-card-actions" @onclick:stopPropagation="true">
-                        <button class="btn-icon" @onclick="() => NavigateToEditBook(book.Id)" title="Edit & Add to Shelf">
+                        <button class="btn-icon" @onclick="() => NavigateToEditBook(book.Id)" title="@L["Wishlist_EditAndAdd"]">
                             📚
                         </button>
-                        <button class="btn-icon danger" @onclick="() => HandleRemoveFromWishlist(book.Id)" title="Remove">
+                        <button class="btn-icon danger" @onclick="() => HandleRemoveFromWishlist(book.Id)" title="@L["Common_Remove"]">
                             🗑️
                         </button>
                     </div>
@@ -323,7 +326,7 @@
 
     <!-- Floating Action Button (Wishlist Tab) -->
     <div class="fab-container">
-        <button class="fab-button" @onclick="OpenAddToWishlistModal" title="Add to Wishlist">
+        <button class="fab-button" @onclick="OpenAddToWishlistModal" title="@L["Wishlist_AddTitle"]">
             +
         </button>
     </div>
@@ -336,25 +339,25 @@
 {
     <div class="modal-overlay" @onclick="CloseAddShelfModal">
         <div class="modal-content" @onclick:stopPropagation="true">
-            <h3>Add New Bookshelf</h3>
+            <h3>@L["Bookshelf_AddShelf_Title"]</h3>
             <div class="form-group">
-                <label>Name</label>
-                <input type="text" @bind="newShelfName" class="form-control" placeholder="e.g. Favorites, TBR..." />
+                <label>@L["Bookshelf_AddShelf_Name"]</label>
+                <input type="text" @bind="newShelfName" class="form-control" placeholder="@L["Bookshelf_AddShelf_Placeholder"]" />
             </div>
             <div class="form-group">
-                <label>Auto-Sort Rule</label>
+                <label>@L["Bookshelf_AutoSortRule"]</label>
                 <select @bind="newShelfRule" class="form-control">
-                    <option value="@ShelfAutoSortRule.None">Manual (Drag & Drop)</option>
-                    <option value="@ShelfAutoSortRule.StatusPlanned">Planned (TBR)</option>
-                    <option value="@ShelfAutoSortRule.StatusReading">Currently Reading</option>
-                    <option value="@ShelfAutoSortRule.StatusCompleted">Read / Completed</option>
-                    <option value="@ShelfAutoSortRule.StatusWishlist">Wishlist</option>
+                    <option value="@ShelfAutoSortRule.None">@L["Bookshelf_AutoSort_None"]</option>
+                    <option value="@ShelfAutoSortRule.StatusPlanned">@L["Bookshelf_AutoSort_Planned"]</option>
+                    <option value="@ShelfAutoSortRule.StatusReading">@L["Bookshelf_AutoSort_Reading"]</option>
+                    <option value="@ShelfAutoSortRule.StatusCompleted">@L["Bookshelf_AutoSort_Completed"]</option>
+                    <option value="@ShelfAutoSortRule.StatusWishlist">@L["Bookshelf_AutoSort_Wishlist"]</option>
                 </select>
-                <small>Auto-sort shelves automatically include books matching the status.</small>
+                <small>@L["Bookshelf_AutoSort_Hint"]</small>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-secondary" @onclick="CloseAddShelfModal">Cancel</button>
-                <button class="btn btn-primary" @onclick="CreateShelf">Create Shelf</button>
+                <button class="btn btn-secondary" @onclick="CloseAddShelfModal">@L["Common_Cancel"]</button>
+                <button class="btn btn-primary" @onclick="CreateShelf">@L["Bookshelf_CreateShelf"]</button>
             </div>
         </div>
     </div>
@@ -367,7 +370,7 @@
     <div class="modal-overlay" @onclick="ClosePlantDetail">
         <div class="modal-content plant-detail-modal" @onclick:stopPropagation="true">
             <div class="plant-detail-modal-header">
-                <h3>Plant Details</h3>
+                <h3>@L["Bookshelf_PlantDetails"]</h3>
                 <button class="plant-detail-close" @onclick="ClosePlantDetail">×</button>
             </div>
 
@@ -378,7 +381,7 @@
                              IsRenaming="@isRenamingPlant" />
 
             <div class="modal-actions">
-                <button class="btn btn-secondary" @onclick="ClosePlantDetail">Close</button>
+                <button class="btn btn-secondary" @onclick="ClosePlantDetail">@L["Common_Close"]</button>
                 @if (selectedPlantShelfId.HasValue)
                 {
                     <button class="btn btn-danger"
@@ -397,7 +400,7 @@
 {
     <div class="modal-overlay" @onclick="ClosePlantSelector">
         <div class="modal-content" @onclick:stopPropagation="true">
-            <h3>Select a Plant</h3>
+            <h3>@L["Bookshelf_SelectPlant"]</h3>
             <div class="plant-selector-grid" style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 0;">
                 @if (ViewModel.AvailablePlants.Any())
                 {
@@ -411,13 +414,12 @@
                 }
                 else
                 {
-                    <p style="color: #ccc; width: 100%; text-align: center;">No plants available. Visit the shop?</p>
-                    <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/shop"))" style="width: 100%;">Go
-                        to Shop</button>
+                    <p style="color: #ccc; width: 100%; text-align: center;">@L["Bookshelf_NoPlantsAvailable"]</p>
+                    <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/shop"))" style="width: 100%;">@L["Bookshelf_GoToShop"]</button>
                 }
             </div>
             <div class="modal-actions">
-                <button class="btn btn-secondary" @onclick="ClosePlantSelector">Cancel</button>
+                <button class="btn btn-secondary" @onclick="ClosePlantSelector">@L["Common_Cancel"]</button>
             </div>
         </div>
     </div>
@@ -427,7 +429,7 @@
 {
     <div class="modal-overlay" @onclick="CloseDecorationSelector">
         <div class="modal-content" @onclick:stopPropagation="true">
-            <h3>Select a Decoration</h3>
+            <h3>@L["Bookshelf_SelectDecoration"]</h3>
             <div class="plant-selector-grid" style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 0;">
                 @if (ViewModel.AvailableDecorations.Any())
                 {
@@ -441,12 +443,12 @@
                 }
                 else
                 {
-                    <p style="color: #ccc; width: 100%; text-align: center;">No decorations available. Visit the shop?</p>
-                    <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/shop"))" style="width: 100%;">Go to Shop</button>
+                    <p style="color: #ccc; width: 100%; text-align: center;">@L["Bookshelf_NoDecorationsAvailable"]</p>
+                    <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/shop"))" style="width: 100%;">@L["Bookshelf_GoToShop"]</button>
                 }
             </div>
             <div class="modal-actions">
-                <button class="btn btn-secondary" @onclick="CloseDecorationSelector">Cancel</button>
+                <button class="btn btn-secondary" @onclick="CloseDecorationSelector">@L["Common_Cancel"]</button>
             </div>
         </div>
     </div>
@@ -468,11 +470,11 @@
                 <p style="color: var(--text-secondary); text-align: center; margin-bottom: 1rem;">@selectedDecoration.ShopItem.Description</p>
             }
             <div class="modal-actions">
-                <button class="btn btn-secondary" @onclick="CloseDecorationDetail">Close</button>
+                <button class="btn btn-secondary" @onclick="CloseDecorationDetail">@L["Common_Close"]</button>
                 @if (selectedDecorationShelfId.HasValue)
                 {
                     <button class="btn btn-danger" @onclick="HandleRemoveDecorationFromShelf">
-                        Remove from Shelf
+                        @L["Bookshelf_RemoveFromShelf"]
                     </button>
                 }
             </div>
@@ -485,11 +487,11 @@
 {
     <div class="modal-overlay" @onclick="CloseDeleteShelfModal">
         <div class="modal-content" @onclick:stopPropagation="true">
-            <h3>Delete Shelf</h3>
-            <p>Are you sure you want to delete this shelf? All items will be moved to the Main Shelf.</p>
+            <h3>@L["Bookshelf_DeleteShelf_Title"]</h3>
+            <p>@L["Bookshelf_DeleteShelf_Body"]</p>
             <div class="modal-actions">
-                <button class="btn btn-secondary" @onclick="CloseDeleteShelfModal">Cancel</button>
-                <button class="btn btn-danger" @onclick="ConfirmDeleteShelf">Delete</button>
+                <button class="btn btn-secondary" @onclick="CloseDeleteShelfModal">@L["Common_Cancel"]</button>
+                <button class="btn btn-danger" @onclick="ConfirmDeleteShelf">@L["Common_Delete"]</button>
             </div>
         </div>
     </div>
@@ -500,21 +502,21 @@
 {
     <div class="modal-overlay" @onclick="CloseAddToWishlistModal">
         <div class="modal-content" @onclick:stopPropagation="true">
-            <h3>Add to Wishlist</h3>
+            <h3>@L["Wishlist_AddTitle"]</h3>
             <div class="wishlist-form">
                 <div class="wishlist-isbn-row">
                     <div class="form-group">
                         <label>ISBN</label>
-                        <input type="text" class="form-control" placeholder="Enter ISBN..."
+                        <input type="text" class="form-control" placeholder="@L["Wishlist_EnterIsbn"]"
                                @bind="WishlistVM.NewIsbn" />
                     </div>
                     <button class="btn-icon wishlist-isbn-btn"
-                            @onclick="ScanWishlistIsbnAsync" title="Scan Barcode">
+                            @onclick="ScanWishlistIsbnAsync" title="@L["Wishlist_ScanBarcode"]">
                         📷
                     </button>
                     <button class="btn-icon wishlist-isbn-btn"
                             @onclick="HandleWishlistLookup" disabled="@WishlistVM.IsLookingUp"
-                            title="Lookup ISBN">
+                            title="@L["Wishlist_LookupIsbn"]">
                         🔍
                     </button>
                 </div>
@@ -525,41 +527,41 @@
                     </div>
                 }
                 <div class="form-group">
-                    <label>Title *</label>
-                    <input type="text" class="form-control" placeholder="Book title..."
+                    <label>@L["BookEdit_Title"] *</label>
+                    <input type="text" class="form-control" placeholder="@L["Wishlist_TitlePlaceholder"]"
                            @bind="WishlistVM.NewTitle" />
                 </div>
                 <div class="form-group">
-                    <label>Author *</label>
-                    <input type="text" class="form-control" placeholder="Author name..."
+                    <label>@L["BookEdit_Author"] *</label>
+                    <input type="text" class="form-control" placeholder="@L["Wishlist_AuthorPlaceholder"]"
                            @bind="WishlistVM.NewAuthor" />
                 </div>
                 <div class="form-group">
-                    <label>Priority</label>
+                    <label>@L["BookDetail_Priority"]</label>
                     <div class="priority-select">
                         <button class="priority-option @(WishlistVM.NewPriority == WishlistPriority.Low ? "selected" : "")"
-                                @onclick="() => WishlistVM.NewPriority = WishlistPriority.Low">Low</button>
+                                @onclick="() => WishlistVM.NewPriority = WishlistPriority.Low">@L["Priority_Low"]</button>
                         <button class="priority-option @(WishlistVM.NewPriority == WishlistPriority.Medium ? "selected" : "")"
-                                @onclick="() => WishlistVM.NewPriority = WishlistPriority.Medium">Medium</button>
+                                @onclick="() => WishlistVM.NewPriority = WishlistPriority.Medium">@L["Priority_Medium"]</button>
                         <button class="priority-option @(WishlistVM.NewPriority == WishlistPriority.High ? "selected" : "")"
-                                @onclick="() => WishlistVM.NewPriority = WishlistPriority.High">High</button>
+                                @onclick="() => WishlistVM.NewPriority = WishlistPriority.High">@L["Priority_High"]</button>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Recommended by</label>
-                    <input type="text" class="form-control" placeholder="Who recommended this?"
+                    <label>@L["BookDetail_RecommendedBy"]</label>
+                    <input type="text" class="form-control" placeholder="@L["Wishlist_RecommendedPlaceholder"]"
                            @bind="WishlistVM.NewRecommendedBy" />
                 </div>
                 <div class="form-group">
-                    <label>Notes</label>
-                    <textarea class="form-control" placeholder="Why do you want to read this?"
+                    <label>@L["BookDetail_Notes"]</label>
+                    <textarea class="form-control" placeholder="@L["Wishlist_NotesPlaceholder"]"
                               @bind="WishlistVM.NewWishlistNotes"></textarea>
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-secondary" @onclick="CloseAddToWishlistModal">Cancel</button>
+                <button class="btn btn-secondary" @onclick="CloseAddToWishlistModal">@L["Common_Cancel"]</button>
                 <button class="btn btn-primary" @onclick="HandleAddToWishlist"
-                        disabled="@(string.IsNullOrWhiteSpace(WishlistVM.NewTitle))">Add</button>
+                        disabled="@(string.IsNullOrWhiteSpace(WishlistVM.NewTitle))">@L["Bookshelf_Add"]</button>
             </div>
         </div>
     </div>
@@ -1001,10 +1003,10 @@
     {
         if (isRemovingPlant)
         {
-            return IsSelectedPlantDead ? "Deleting..." : "Removing...";
+            return IsSelectedPlantDead ? L["Bookshelf_Deleting"] : L["Bookshelf_Removing"];
         }
 
-        return IsSelectedPlantDead ? "Delete Plant" : "Remove from Shelf";
+        return IsSelectedPlantDead ? L["Bookshelf_DeletePlant"] : L["Bookshelf_RemoveFromShelf"];
     }
 
     private bool showPlantSelector;

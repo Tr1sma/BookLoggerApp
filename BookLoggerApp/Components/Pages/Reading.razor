@@ -1,8 +1,10 @@
 @page "/reading/{SessionId:guid}"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Components.Shared
+@using Microsoft.Extensions.Localization
 @inject ReadingViewModel ViewModel
 @inject ITimerStateService TimerStateService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
@@ -11,16 +13,17 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject IOnboardingService OnboardingService
+@inject IStringLocalizer<AppResources> L
 @implements IDisposable
 
-<PageTitle>Reading - BookHeart</PageTitle>
+<PageTitle>@L["PageTitle_Reading"] - BookHeart</PageTitle>
 
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.Reading" />
 <div class="reading-container">
     @if (ViewModel.IsBusy)
     {
-        <div class="loading">Loading session...</div>
+        <div class="loading">@L["Reading_Loading"]</div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
@@ -29,16 +32,16 @@
     else if (ViewModel.Session == null)
     {
         <div class="empty-state">
-            <h2>No active reading session</h2>
-            <p>Start reading a book to begin a session.</p>
-            <button class="btn btn-primary" @onclick="NavigateToBookshelf">Browse Bookshelf</button>
+            <h2>@L["Reading_NoSession_Title"]</h2>
+            <p>@L["Reading_NoSession_Body"]</p>
+            <button class="btn btn-primary" @onclick="NavigateToBookshelf">@L["Reading_BrowseBookshelf"]</button>
         </div>
     }
     else if (ViewModel.Book == null)
     {
         <div class="empty-state">
-            <h2>Book not found</h2>
-            <p>The book for this reading session could not be loaded.</p>
+            <h2>@L["Reading_BookNotFound_Title"]</h2>
+            <p>@L["Reading_BookNotFound_Body"]</p>
         </div>
     }
     else
@@ -47,45 +50,45 @@
         <div class="reading-header">
             <div class="book-info">
                 <h1>@ViewModel.Book.Title</h1>
-                <p class="author">by @ViewModel.Book.Author</p>
+                <p class="author">@L["Dashboard_By"] @ViewModel.Book.Author</p>
             </div>
-            <button class="btn btn-secondary" @onclick="NavigateToBook">View Book Details</button>
+            <button class="btn btn-secondary" @onclick="NavigateToBook">@L["Reading_ViewBookDetails"]</button>
         </div>
 
         <!-- Timer & Stats -->
         <div class="reading-stats">
             <div class="stat-item timer">
-                <label>Reading Time</label>
+                <label>@L["Reading_Time"]</label>
                 <div class="timer-display">
                     <span class="timer-value">@FormatTime(ViewModel.ElapsedTime)</span>
                 </div>
                 <div class="timer-controls">
                     @if (ViewModel.IsPaused)
                     {
-                        <button class="btn btn-primary" @onclick="() => ViewModel.ResumeCommand.Execute(null)">▶ Resume</button>
+                        <button class="btn btn-primary" @onclick="() => ViewModel.ResumeCommand.Execute(null)">▶ @L["Reading_Resume"]</button>
                     }
                     else
                     {
-                        <button class="btn btn-secondary" @onclick="() => ViewModel.PauseCommand.Execute(null)">⏸ Pause</button>
+                        <button class="btn btn-secondary" @onclick="() => ViewModel.PauseCommand.Execute(null)">⏸ @L["Reading_Pause"]</button>
                     }
                 </div>
             </div>
 
             <div class="stat-item xp">
-                <label>XP Earned</label>
+                <label>@L["Reading_XpEarned"]</label>
                 <div class="xp-display">
                     <span class="xp-value">@ViewModel.XpEarned</span>
                 </div>
             </div>
 
             <div class="stat-item pages">
-                <label>Current Page</label>
+                <label>@L["Reading_CurrentPage"]</label>
                 <div class="page-input-group">
-                    <input type="number" 
-                           class="page-input" 
+                    <input type="number"
+                           class="page-input"
                            value="@ViewModel.CurrentPage"
                            @onchange="@(async (ChangeEventArgs e) => { if (int.TryParse(e.Value?.ToString(), out int page)) { ViewModel.CurrentPage = page; await HandlePageChange(); } })"
-                           min="0" 
+                           min="0"
                            max="@(ViewModel.Book.PageCount ?? int.MaxValue)" />
                     @if (ViewModel.Book.PageCount.HasValue)
                     {
@@ -97,25 +100,25 @@
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: @ViewModel.Book.ProgressPercentage%"></div>
                     </div>
-                    <p class="progress-text">@ViewModel.Book.ProgressPercentage% complete</p>
+                    <p class="progress-text">@L["Reading_PercentComplete", ViewModel.Book.ProgressPercentage]</p>
                 }
             </div>
         </div>
 
         <!-- Session Summary -->
         <div class="session-summary">
-            <h2>Session Summary</h2>
+            <h2>@L["Reading_SessionSummary"]</h2>
             <div class="summary-grid">
                 <div class="summary-item">
-                    <label>Started</label>
+                    <label>@L["Reading_Started"]</label>
                     <p>@ViewModel.SessionStartTime.ToString("g")</p>
                 </div>
                 <div class="summary-item">
-                    <label>Pages Read</label>
+                    <label>@L["Reading_PagesRead"]</label>
                     <p>@(ViewModel.CurrentPage - ViewModel.StartPage)</p>
                 </div>
                 <div class="summary-item">
-                    <label>Estimated Time</label>
+                    <label>@L["Reading_EstimatedTime"]</label>
                     <p>@FormatTime(ViewModel.ElapsedTime)</p>
                 </div>
             </div>
@@ -124,14 +127,14 @@
         <!-- Actions -->
         <div class="reading-actions">
             <button class="btn btn-primary btn-large" @onclick="HandleEndSession" disabled="@ViewModel.IsBusy">
-                ✓ End Session
+                ✓ @L["Reading_EndSession"]
             </button>
-            <button class="btn btn-secondary" @onclick="NavigateToBook">Cancel</button>
+            <button class="btn btn-secondary" @onclick="NavigateToBook">@L["Common_Cancel"]</button>
         </div>
 
         <!-- Fullscreen Option (Optional) -->
         <div class="fullscreen-hint">
-            <p>💡 Focus on reading - this session is being tracked automatically</p>
+            <p>💡 @L["Reading_FocusHint"]</p>
         </div>
     }
 </div>
@@ -425,7 +428,7 @@
             var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
             var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
             await File.WriteAllBytesAsync(filePath, cardBytes);
-            await ShareService.ShareFileAsync("Book Recommendation", filePath, "image/png");
+            await ShareService.ShareFileAsync(L["Reading_ShareFileName"], filePath, "image/png");
 
             if (ViewModel.Book?.Status == ReadingStatus.Completed)
             {
@@ -503,9 +506,9 @@
     {
         if (timeSpan.TotalHours >= 1)
         {
-            return $"{(int)timeSpan.TotalHours}h {timeSpan.Minutes}m {timeSpan.Seconds}s";
+            return L["Reading_TimeFormat_HMS", (int)timeSpan.TotalHours, timeSpan.Minutes, timeSpan.Seconds];
         }
-        return $"{timeSpan.Minutes}m {timeSpan.Seconds}s";
+        return L["Reading_TimeFormat_MS", timeSpan.Minutes, timeSpan.Seconds];
     }
 
     public void Dispose()

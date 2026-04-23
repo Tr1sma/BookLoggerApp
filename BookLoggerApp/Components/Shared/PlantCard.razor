@@ -1,12 +1,15 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
 
 <div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")"
      @onclick="HandleClick">
     <div class="plant-pot-wrapper">
         <!-- Plant Image -->
         <img src="@(Plant.Species?.ImagePath ?? "/images/unknown_plant.png")"
-            alt="@(Plant.Species?.Name ?? "Unknown Plant")" class="plant-card-image" draggable="false" />
+            alt="@(Plant.Species?.Name ?? L["PlantCard_UnknownPlant"].Value)" class="plant-card-image" draggable="false" />
 
         <div class="plant-status-badge status-@Plant.Status.ToString().ToLower()">
             @GetStatusIcon()
@@ -18,7 +21,7 @@
     @if (ShowActions && OnRemove.HasDelegate)
     {
         <div class="plant-card-actions">
-            <button class="btn-icon" @onclick:stopPropagation="true" @onclick="HandleRemove" title="Remove from Bookshelf">
+            <button class="btn-icon" @onclick:stopPropagation="true" @onclick="HandleRemove" title="@L["PlantCard_RemoveFromBookshelf"]">
                 🗑️
             </button>
         </div>

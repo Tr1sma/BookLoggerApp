@@ -1,8 +1,11 @@
 @using BookLoggerApp.Core.Entitlements
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject IEntitlementService EntitlementService
 @inject IPaywallCoordinator PaywallCoordinator
+@inject IStringLocalizer<AppResources> L
 
 @if (_isVisible)
 {
@@ -50,9 +53,9 @@
         {
             // Pick a static message for now; heuristics can later pick based on
             // user behaviour (notes written, streak length, etc.).
-            Kicker = "Plus · from €2.99/month";
-            Title = "Unlock unlimited notes, quotes and plants";
-            Body = "Plus keeps every feature you love and removes the Free tier's soft limits.";
+            Kicker = L["UpgradeCard_Kicker"];
+            Title = L["UpgradeCard_Title"];
+            Body = L["UpgradeCard_Body"];
         }
     }
 

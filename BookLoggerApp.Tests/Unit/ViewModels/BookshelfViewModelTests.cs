@@ -85,7 +85,7 @@ public class BookshelfViewModelTests
         await _viewModel.RenamePlantAsync((Guid.NewGuid(), "   "));
 
         // Assert
-        _viewModel.ErrorMessage.Should().Be("Plant name cannot be empty");
+        _viewModel.ErrorMessage.Should().Be("PlantDetail_Error_NameEmpty");
         await _plantService.DidNotReceiveWithAnyArgs().UpdateAsync(default!, default);
     }
 
