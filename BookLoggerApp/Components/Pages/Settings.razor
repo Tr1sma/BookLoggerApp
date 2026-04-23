@@ -2,7 +2,7 @@
 @using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.ViewModels
-@implements IDisposable
+@inherits BookLoggerApp.Components.ObservableComponentBase
 @inject SettingsViewModel ViewModel
 @inject AppStartupViewModel StartupViewModel
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
@@ -575,6 +575,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Observe(ViewModel);
+
         // Register navigation back handler (Settings -> Bookshelf)
         _navBackHandler = async () =>
         {
@@ -728,7 +730,7 @@
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
-    public void Dispose()
+    public override void Dispose()
     {
         EntitlementService.EntitlementChanged -= OnEntitlementChanged;
 
@@ -742,5 +744,6 @@
             BackButtonService.Unregister(_modalBackHandler);
             _modalBackHandler = null;
         }
+        base.Dispose();
     }
 }

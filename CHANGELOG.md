@@ -17,11 +17,18 @@ Versionsschema:
 ## [0.10.6]
 
 ### Hinzugefügt
+- Telemetrie für Datenbank-Initialisierung (Gesamt- und Teilschritt-Dauern) — hilft bei der Analyse von langsamen Geräten
 
 ### Geändert
+- Datenbank-Initialisierung läuft jetzt auf einem dedizierten Hintergrund-Thread statt über den ThreadPool. Auf bestimmten Geräten (u.a. Samsung Galaxy A16) wurde der Start dadurch nicht mehr rechtzeitig fertig.
+- Timeout für DB-Initialisierung von 45 s auf 20 s reduziert — schnellerer Zugriff auf den Retry-Button, wenn wirklich etwas hängt
+- Retry-Button für die Datenbank-Initialisierung startet jetzt immer einen frischen Versuch (vorher nur, wenn das Failure-Flag gesetzt war — bei reinen Timeouts blieb die App dadurch hängen)
+- Retry ist idempotent: mehrfaches Tippen spawnt keine parallelen Initialisierungs-Tasks mehr
 
 ### Behoben
  - Goals können jetzt nicht mehr zu mehr als 100% abegschlossen werden
+ - "Loading..."-Zustand auf allen Seiten löste sich nach Property-Änderungen im ViewModel nicht automatisch auf — Blazor-Komponenten beobachten jetzt `INotifyPropertyChanged` über eine zentrale Base-Klasse
+ - Retry-Button nach DB-Timeout hing in einer Schleife, weil der Helper-Zustand nicht zum UI-Zustand passte (TimeoutException im ViewModel markiert jetzt auch den Helper als gescheitert)
 
 ## [0.10.5]
 

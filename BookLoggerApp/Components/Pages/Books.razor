@@ -1,4 +1,5 @@
 @page "/books"
+@inherits BookLoggerApp.Components.ObservableComponentBase
 @inject BookLoggerApp.Core.ViewModels.BookListViewModel Vm
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.BookList" />
@@ -28,5 +29,9 @@ else
 }
 
 @code {
-    protected override async Task OnInitializedAsync() => await Vm.LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        Observe(Vm);
+        await Vm.LoadAsync();
+    }
 }

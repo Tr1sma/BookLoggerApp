@@ -112,4 +112,44 @@ public class DatabaseInitializationHelperTests : IDisposable
         DatabaseInitializationHelper.IsInitialized.Should().BeTrue();
         DatabaseInitializationHelper.InitializationFailed.Should().BeFalse();
     }
+
+    [Fact]
+    public void DefaultTimeout_IsReasonableForBudgetDevices()
+    {
+        // Keep this assertion tight — a drift back toward the old 45s silently
+        // regresses UX on affected devices. The actual value is intentional and
+        // informed by field telemetry; change both together.
+        DatabaseInitializationHelper.DefaultTimeout.Should().BeLessThanOrEqualTo(TimeSpan.FromSeconds(20));
+        DatabaseInitializationHelper.DefaultTimeout.Should().BeGreaterThanOrEqualTo(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task EnsureInitializedAsync_Continuation_RunsAsynchronously()
+    {
+        // Regression guard for RunContinuationsAsynchronously on the TCS: without
+        // that flag, awaiters resume synchronously on whatever thread called
+        // MarkAsInitialized, which in production is the DB-init worker. That
+        // hijacks the worker and can starve any subsequent init work.
+        Task awaitTask = DatabaseInitializationHelper.EnsureInitializedAsync(TimeSpan.FromSeconds(5));
+
+        int settingThreadId = 0;
+        int continuationThreadId = 0;
+
+        Task markTask = Task.Run(() =>
+        {
+            settingThreadId = Environment.CurrentManagedThreadId;
+            DatabaseInitializationHelper.MarkAsInitialized();
+        });
+
+        Task observeTask = awaitTask.ContinueWith(
+            _ => continuationThreadId = Environment.CurrentManagedThreadId,
+            TaskContinuationOptions.ExecuteSynchronously);
+
+        await Task.WhenAll(markTask, awaitTask, observeTask);
+
+        settingThreadId.Should().NotBe(0);
+        continuationThreadId.Should().NotBe(0);
+        continuationThreadId.Should().NotBe(settingThreadId,
+            "the awaiter must not resume synchronously on the thread that signalled the TCS");
+    }
 }

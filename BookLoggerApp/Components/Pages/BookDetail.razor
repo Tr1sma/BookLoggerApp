@@ -13,7 +13,7 @@
 @inject IOnboardingService OnboardingService
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
-@implements IDisposable
+@inherits BookLoggerApp.Components.ObservableComponentBase
 
 <PageTitle>@(ViewModel.Book?.Title ?? "Book Details") - BookHeart</PageTitle>
 
@@ -355,6 +355,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Observe(ViewModel);
+
         _navBackHandler = async () =>
         {
             NavigateToBookshelf();
@@ -626,7 +628,7 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         if (_navBackHandler != null)
         {
@@ -634,5 +636,6 @@
             _navBackHandler = null;
         }
         ViewModel.BookShareCardReady -= OnBookShareCardReady;
+        base.Dispose();
     }
 }

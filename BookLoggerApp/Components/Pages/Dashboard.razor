@@ -10,7 +10,7 @@
 @inject IBackButtonService BackButtonService
 @inject IOnboardingService OnboardingService
 @inject IDatabaseInitializer DatabaseInitializer
-@implements IDisposable
+@inherits BookLoggerApp.Components.ObservableComponentBase
 
 <PageTitle>Dashboard - BookHeart</PageTitle>
 
@@ -148,6 +148,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Observe(ViewModel);
+
         _navBackHandler = async () =>
         {
             Navigation.NavigateTo("/");
@@ -181,10 +183,11 @@
 
     private async Task RetryLoadAsync()
     {
-        if (ViewModel.IsDatabaseInitializationFailed)
-        {
-            DatabaseInitializer.Retry();
-        }
+        // Always trigger a fresh DB init: after a ViewModel-level TimeoutException
+        // the helper's InitializationFailed flag is false, so gating on it would
+        // leave the original pending TCS in place and the retry would just wait
+        // for it again (user-visible bug: "Retry lädt ewig").
+        DatabaseInitializer.Retry();
         await ViewModel.LoadCommand.ExecuteAsync(null);
         await LoadCoverImageAsync();
     }
@@ -207,7 +210,7 @@
         }
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         if (_navBackHandler != null)
         {
@@ -215,6 +218,7 @@
             _navBackHandler = null;
         }
         GoalService.GoalsChanged -= OnGoalsChanged;
+        base.Dispose();
     }
 
     private async Task LoadCoverImageAsync()

@@ -83,6 +83,11 @@ public abstract partial class ViewModelBase : ObservableObject
         }
         catch (TimeoutException tex)
         {
+            // Surface the timeout to the helper too, so IsDatabaseInitializationFailed
+            // reflects reality for the retry UI. Without this, pages that gate Retry()
+            // on InitializationFailed would never trigger a fresh init.
+            DatabaseInitializationHelper.MarkAsFailed(tex);
+
             var prefix = errorPrefix ?? "Fehler";
             SetError($"{prefix}: Datenbank wird noch vorbereitet. Bitte versuche es erneut.");
             System.Diagnostics.Debug.WriteLine("Timeout beim Warten auf Datenbank-Initialisierung.");

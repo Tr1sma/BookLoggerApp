@@ -8,7 +8,7 @@
 @inject NavigationManager Navigation
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject BookLoggerApp.Core.Services.Abstractions.IOnboardingService OnboardingService
-@implements IDisposable
+@inherits BookLoggerApp.Components.ObservableComponentBase
 
 <PageTitle>Shop - BookHeart</PageTitle>
 
@@ -320,6 +320,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Observe(ViewModel);
+        Observe(DecorationVM);
+
         _navBackHandler = async () =>
         {
             Navigation.NavigateTo("/");
@@ -438,7 +441,7 @@
         }
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         if (_navBackHandler != null)
         {
@@ -446,6 +449,7 @@
             _navBackHandler = null;
         }
         UnregisterModalBack();
+        base.Dispose();
     }
 
     private static FeatureKey? GetPlantTierFeature(PlantSpecies species)

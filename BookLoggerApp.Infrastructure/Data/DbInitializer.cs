@@ -41,22 +41,22 @@ public static class DbInitializer
         var totalStopwatch = System.Diagnostics.Stopwatch.StartNew();
         var scope = services.CreateScope();
         var disposeScope = true;
+        MigrationTimings timings = default;
+        ICrashReportingService? crashReporting = null;
         try
         {
             logger?.LogInformation("Starting database initialization...");
 
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var crashReporting = scope.ServiceProvider.GetService<ICrashReportingService>();
+            crashReporting = scope.ServiceProvider.GetService<ICrashReportingService>();
 
             // Critical path: only migrations block the UI. Pages and ViewModels need
             // a usable schema before they can query anything, but every other
             // initialization step below is either idempotent maintenance (seed
             // sync, image path fixes) or creates fallback data that downstream
             // code already handles when absent (e.g. EntitlementStore.GetOrCreateAsync).
-            var migrateStopwatch = System.Diagnostics.Stopwatch.StartNew();
-            await MigrateDatabaseAsync(dbContext, crashReporting, logger);
-            migrateStopwatch.Stop();
-            logger?.LogInformation("Migrations finished in {Ms} ms", migrateStopwatch.ElapsedMilliseconds);
+            timings = await MigrateDatabaseAsync(dbContext, crashReporting, logger);
+            logger?.LogInformation("Migrations finished in {Ms} ms", timings.TotalMs);
 
             lock (_lock)
             {
@@ -66,6 +66,8 @@ public static class DbInitializer
             // Unblock awaiting ViewModels. Every page can start loading real data now.
             DatabaseInitializationHelper.MarkAsInitialized();
             logger?.LogInformation("UI unblocked after {Ms} ms; running deferred maintenance in background...", totalStopwatch.ElapsedMilliseconds);
+
+            ReportInitSuccess(crashReporting, totalStopwatch.ElapsedMilliseconds, timings, logger);
 
             // Hand the scope off to the deferred worker and don't dispose it here.
             disposeScope = false;
@@ -85,6 +87,7 @@ public static class DbInitializer
         catch (Exception ex)
         {
             logger?.LogError(ex, "Database initialization failed");
+            ReportInitFailure(crashReporting, ex, totalStopwatch.ElapsedMilliseconds, timings, logger);
             DatabaseInitializationHelper.MarkAsFailed(ex);
             throw;
         }
@@ -94,6 +97,59 @@ public static class DbInitializer
             {
                 scope.Dispose();
             }
+        }
+    }
+
+    private readonly record struct MigrationTimings(long CanConnectMs, long MigrateMs, long SchemaDriftMs)
+    {
+        public long TotalMs => CanConnectMs + MigrateMs + SchemaDriftMs;
+    }
+
+    private static void ReportInitSuccess(
+        ICrashReportingService? crashReporting,
+        long totalMs,
+        MigrationTimings timings,
+        ILogger? logger)
+    {
+        if (crashReporting is null) return;
+        try
+        {
+            crashReporting.SetCustomKey("db_init_ms", totalMs.ToString());
+            crashReporting.SetCustomKey("db_init_canconnect_ms", timings.CanConnectMs.ToString());
+            crashReporting.SetCustomKey("db_init_migrate_ms", timings.MigrateMs.ToString());
+            crashReporting.SetCustomKey("db_init_schemadrift_ms", timings.SchemaDriftMs.ToString());
+            crashReporting.Log($"db_init ok total={totalMs}ms canConnect={timings.CanConnectMs}ms migrate={timings.MigrateMs}ms schemaDrift={timings.SchemaDriftMs}ms");
+        }
+        catch (Exception ex)
+        {
+            logger?.LogWarning(ex, "Failed to record db_init success telemetry");
+        }
+    }
+
+    private static void ReportInitFailure(
+        ICrashReportingService? crashReporting,
+        Exception exception,
+        long totalMs,
+        MigrationTimings timings,
+        ILogger? logger)
+    {
+        if (crashReporting is null) return;
+        try
+        {
+            var keys = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["source"] = "db_init",
+                ["db_init_ms"] = totalMs.ToString(),
+                ["db_init_canconnect_ms"] = timings.CanConnectMs.ToString(),
+                ["db_init_migrate_ms"] = timings.MigrateMs.ToString(),
+                ["db_init_schemadrift_ms"] = timings.SchemaDriftMs.ToString(),
+                ["exception_type"] = exception.GetType().FullName ?? "unknown"
+            };
+            crashReporting.RecordNonFatal(exception, keys);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogWarning(ex, "Failed to record db_init failure telemetry");
         }
     }
 
@@ -142,22 +198,34 @@ public static class DbInitializer
         }
     }
 
-    private static async Task MigrateDatabaseAsync(
+    private static async Task<MigrationTimings> MigrateDatabaseAsync(
         AppDbContext context,
         ICrashReportingService? crashReporting,
         ILogger? logger)
     {
+        var canConnectSw = System.Diagnostics.Stopwatch.StartNew();
         logger?.LogInformation("Checking database connection...");
         var canConnect = await context.Database.CanConnectAsync();
-        logger?.LogInformation("Can connect to database: {CanConnect}", canConnect);
+        canConnectSw.Stop();
+        logger?.LogInformation("Can connect to database: {CanConnect} ({Ms} ms)", canConnect, canConnectSw.ElapsedMilliseconds);
 
+        var migrateSw = System.Diagnostics.Stopwatch.StartNew();
         logger?.LogInformation("Applying migrations...");
         await context.Database.MigrateAsync();
-        logger?.LogInformation("Database migrations applied successfully");
+        migrateSw.Stop();
+        logger?.LogInformation("Database migrations applied successfully ({Ms} ms)", migrateSw.ElapsedMilliseconds);
 
         // Repair any schema drift where __EFMigrationsHistory claims a migration is applied
         // but the expected columns are missing (observed in the field on V10 upgrades).
+        var schemaDriftSw = System.Diagnostics.Stopwatch.StartNew();
         await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting, logger);
+        schemaDriftSw.Stop();
+        logger?.LogInformation("SchemaDriftGuard finished ({Ms} ms)", schemaDriftSw.ElapsedMilliseconds);
+
+        return new MigrationTimings(
+            canConnectSw.ElapsedMilliseconds,
+            migrateSw.ElapsedMilliseconds,
+            schemaDriftSw.ElapsedMilliseconds);
     }
 
     private static async Task RecalculateUserLevelAsync(IServiceProvider services, ILogger? logger)
