@@ -18,6 +18,7 @@ public class SettingsViewModelTests
     private readonly IMigrationService _migration;
     private readonly INotificationService _notifications;
     private readonly IAppVersionService _appVersion;
+    private readonly ILanguageService _language;
 
     public SettingsViewModelTests()
     {
@@ -30,15 +31,22 @@ public class SettingsViewModelTests
         _migration = Substitute.For<IMigrationService>();
         _notifications = Substitute.For<INotificationService>();
         _appVersion = Substitute.For<IAppVersionService>();
+        _language = Substitute.For<ILanguageService>();
 
         _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(new AppSettings()));
         _migration.GetMigrationLog().Returns("");
         _appVersion.CurrentVersion.Returns("1.0.0");
+        _language.CurrentLanguage.Returns("en");
+        _language.SupportedLanguages.Returns(new[]
+        {
+            new SupportedLanguage("en", "English"),
+            new SupportedLanguage("de", "Deutsch"),
+        });
     }
 
     private SettingsViewModel CreateVm() => new(
         _importExport, _settingsProvider, _fileSaver, _share, _filePicker,
-        _migration, _notifications, _appVersion);
+        _migration, _notifications, _appVersion, _language);
 
     [Fact]
     public async Task LoadAsync_ReadsAppVersionFromService()

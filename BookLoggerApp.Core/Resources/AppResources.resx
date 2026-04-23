@@ -117,4 +117,28 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Settings_Language_Title" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Settings_Language_Subtitle" xml:space="preserve">
+    <value>Choose the app language</value>
+  </data>
+  <data name="Settings_Language_Label" xml:space="preserve">
+    <value>App language</value>
+  </data>
+  <data name="Settings_Language_Description" xml:space="preserve">
+    <value>BookHeart will restart after changing the language</value>
+  </data>
+  <data name="Settings_Restart_BackupTitle" xml:space="preserve">
+    <value>Backup restored</value>
+  </data>
+  <data name="Settings_Restart_BackupBody" xml:space="preserve">
+    <value>BookHeart is restarting to finish loading your data…</value>
+  </data>
+  <data name="Settings_Restart_LanguageTitle" xml:space="preserve">
+    <value>Language changed</value>
+  </data>
+  <data name="Settings_Restart_LanguageBody" xml:space="preserve">
+    <value>BookHeart is restarting to apply the new language…</value>
+  </data>
 </root>

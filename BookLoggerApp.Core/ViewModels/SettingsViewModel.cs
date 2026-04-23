@@ -16,6 +16,7 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IMigrationService _migrationService;
     private readonly INotificationService _notificationService;
     private readonly IAppVersionService _appVersionService;
+    private readonly ILanguageService _languageService;
     private readonly IAnalyticsService? _analytics;
 
 
@@ -28,6 +29,7 @@ public partial class SettingsViewModel : ViewModelBase
         IMigrationService migrationService,
         INotificationService notificationService,
         IAppVersionService appVersionService,
+        ILanguageService languageService,
         IAnalyticsService? analytics = null)
     {
         _importExportService = importExportService;
@@ -38,11 +40,23 @@ public partial class SettingsViewModel : ViewModelBase
         _migrationService = migrationService;
         _notificationService = notificationService;
         _appVersionService = appVersionService;
+        _languageService = languageService;
         _analytics = analytics;
 
         MigrationLog = _migrationService.GetMigrationLog();
         AppVersion = _appVersionService.CurrentVersion;
+        SelectedLanguage = _languageService.CurrentLanguage;
+        SupportedLanguages = _languageService.SupportedLanguages;
     }
+
+    [ObservableProperty]
+    private string _selectedLanguage = "en";
+
+    [ObservableProperty]
+    private IReadOnlyList<SupportedLanguage> _supportedLanguages = Array.Empty<SupportedLanguage>();
+
+    [ObservableProperty]
+    private bool _languageChangedPendingRestart;
 
     [ObservableProperty]
     private AppSettings _settings = new();
@@ -235,6 +249,8 @@ public partial class SettingsViewModel : ViewModelBase
 
             ShelfLedgeColor = Settings.ShelfLedgeColor;
             ShelfBaseColor = Settings.ShelfBaseColor;
+            SelectedLanguage = _languageService.CurrentLanguage;
+            SupportedLanguages = _languageService.SupportedLanguages;
 
             if (Settings.ReminderTime.HasValue)
             {
@@ -242,6 +258,23 @@ public partial class SettingsViewModel : ViewModelBase
                 ReminderMinute = Settings.ReminderTime.Value.Minutes;
             }
         }, "Failed to load settings");
+    }
+
+    [RelayCommand]
+    public async Task ChangeLanguageAsync(string code)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            if (string.IsNullOrWhiteSpace(code) || string.Equals(code, _languageService.CurrentLanguage, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            await _languageService.SetLanguageAsync(code);
+            SelectedLanguage = _languageService.CurrentLanguage;
+            LanguageChangedPendingRestart = true;
+            LogSettingChanged("language");
+        }, "Failed to change language");
     }
 
     [RelayCommand]

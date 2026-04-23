@@ -1,7 +1,9 @@
 @page "/settings"
 @using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.ViewModels
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject SettingsViewModel ViewModel
 @inject AppStartupViewModel StartupViewModel
@@ -12,6 +14,7 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IPaywallCoordinator PaywallCoordinator
 @inject BookLoggerApp.Core.Services.Abstractions.IBillingService BillingService
 @inject BookLoggerApp.Core.Services.Abstractions.ILanguageService LanguageService
+@inject IStringLocalizer<AppResources> L
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Settings - BookHeart</PageTitle>
@@ -168,6 +171,29 @@
                     </div>
                 }
             }
+        </section>
+
+        <!-- Language -->
+        <section class="settings-card">
+            <div class="section-header">
+                <h2>🌐 @L["Settings_Language_Title"]</h2>
+                <p>@L["Settings_Language_Subtitle"]</p>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-label">@L["Settings_Language_Label"]</span>
+                    <span class="setting-description">@L["Settings_Language_Description"]</span>
+                </div>
+                <select class="time-select"
+                        value="@ViewModel.SelectedLanguage"
+                        @onchange="@(async (ChangeEventArgs e) => await HandleLanguageChangeAsync(e.Value?.ToString()))">
+                    @foreach (var lang in ViewModel.SupportedLanguages)
+                    {
+                        <option value="@lang.Code">@lang.DisplayName</option>
+                    }
+                </select>
+            </div>
         </section>
 
         <!-- Shelf Appearance (collapsible) -->
@@ -479,8 +505,22 @@
         <div class="modal-content success-modal" @onclick:stopPropagation="true">
             <div class="modal-body">
                 <div class="success-icon">&#10003;</div>
-                <h3>Backup restored</h3>
-                <p>BookHeart is restarting to finish loading your data...</p>
+                <h3>@L["Settings_Restart_BackupTitle"]</h3>
+                <p>@L["Settings_Restart_BackupBody"]</p>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Restart Notice (after language change) -->
+@if (_showLanguageRestartNotice)
+{
+    <div class="modal-overlay">
+        <div class="modal-content success-modal" @onclick:stopPropagation="true">
+            <div class="modal-body">
+                <div class="success-icon">🌐</div>
+                <h3>@L["Settings_Restart_LanguageTitle"]</h3>
+                <p>@L["Settings_Restart_LanguageBody"]</p>
             </div>
         </div>
     </div>
@@ -490,11 +530,30 @@
     private bool _showDeleteConfirmation = false;
     private bool _showSuccessModal = false;
     private bool _showRestartNotice = false;
+    private bool _showLanguageRestartNotice = false;
     private bool _showPrivacyPolicy = false;
     private bool _showMigrationLog = false;
     private bool _showShelfAppearance = false;
     private bool _showMoreInfo = false;
     private string _deleteConfirmText = string.Empty;
+
+    private async Task HandleLanguageChangeAsync(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return;
+        }
+
+        await ViewModel.ChangeLanguageCommand.ExecuteAsync(code);
+
+        if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.LanguageChangedPendingRestart)
+        {
+            _showLanguageRestartNotice = true;
+            StateHasChanged();
+            await Task.Delay(1500);
+            AppRestartService.RestartApp();
+        }
+    }
 
     private bool IsDeleteConfirmed => _deleteConfirmText.Equals("DELETE", StringComparison.Ordinal);
 
