@@ -1,14 +1,17 @@
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Services.Abstractions
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject UserProgressViewModel ViewModel
 @inject NavigationManager Navigation
 @inject IAppSettingsProvider SettingsProvider
+@inject IStringLocalizer<AppResources> L
 
 <div class="user-progress-widget" @onclick="NavigateToLevelOverview">
     <div class="progress-header">
         <span class="level-icon">🏆</span>
-        <span class="level-text">Level @ViewModel.CurrentLevel</span>
+        <span class="level-text">@L["UserProgress_Level", ViewModel.CurrentLevel]</span>
     </div>
 
     <div class="progress-bar-container">

@@ -1,5 +1,7 @@
 using FluentValidation;
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Resources;
+using Microsoft.Extensions.Localization;
 
 namespace BookLoggerApp.Core.Validators;
 
@@ -9,32 +11,34 @@ namespace BookLoggerApp.Core.Validators;
 /// </summary>
 public class ReadingGoalValidator : AbstractValidator<ReadingGoal>
 {
-    public ReadingGoalValidator()
+    public ReadingGoalValidator(IStringLocalizer<AppResources>? localizer = null)
     {
+        string Tr(string key) => localizer?[key].Value ?? key;
+
         RuleFor(g => g.Title)
-            .NotEmpty().WithMessage("Goal title is required")
-            .MaximumLength(200).WithMessage("Goal title cannot exceed 200 characters");
+            .NotEmpty().WithMessage(_ => Tr("Validator_Goal_TitleRequired"))
+            .MaximumLength(200).WithMessage(_ => Tr("Validator_Goal_TitleTooLong"));
 
         RuleFor(g => g.Description)
-            .MaximumLength(1000).WithMessage("Description cannot exceed 1,000 characters")
+            .MaximumLength(1000).WithMessage(_ => Tr("Validator_Goal_DescriptionTooLong"))
             .When(g => !string.IsNullOrEmpty(g.Description));
 
         RuleFor(g => g.Target)
-            .GreaterThan(0).WithMessage("Target value must be greater than 0")
-            .LessThanOrEqualTo(100000).WithMessage("Target value cannot exceed 100,000");
+            .GreaterThan(0).WithMessage(_ => Tr("Validator_Goal_TargetPositive"))
+            .LessThanOrEqualTo(100000).WithMessage(_ => Tr("Validator_Goal_TargetMax"));
 
         RuleFor(g => g.Current)
-            .GreaterThanOrEqualTo(0).WithMessage("Current value cannot be negative");
+            .GreaterThanOrEqualTo(0).WithMessage(_ => Tr("Validator_Goal_CurrentNonNegative"));
 
         RuleFor(g => g.StartDate)
-            .NotEmpty().WithMessage("Start date is required");
+            .NotEmpty().WithMessage(_ => Tr("Validator_Goal_StartDateRequired"));
 
         RuleFor(g => g.EndDate)
-            .GreaterThan(g => g.StartDate).WithMessage("End date must be after start date");
+            .GreaterThan(g => g.StartDate).WithMessage(_ => Tr("Validator_Goal_EndAfterStart"));
 
         // Validate that goal period is not too long (max 1 year)
         RuleFor(g => g.EndDate)
             .Must((goal, endDate) => (endDate - goal.StartDate).TotalDays <= 365)
-            .WithMessage("Goal period cannot exceed 1 year");
+            .WithMessage(_ => Tr("Validator_Goal_PeriodTooLong"));
     }
 }

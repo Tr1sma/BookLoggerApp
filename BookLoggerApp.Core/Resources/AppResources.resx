@@ -1,0 +1,2622 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Nav_Bookshelf" xml:space="preserve">
+    <value>Bookshelf</value>
+  </data>
+  <data name="Nav_Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Nav_Stats" xml:space="preserve">
+    <value>Stats</value>
+  </data>
+  <data name="Nav_Goals" xml:space="preserve">
+    <value>Goals</value>
+  </data>
+  <data name="Nav_Shop" xml:space="preserve">
+    <value>Shop</value>
+  </data>
+  <data name="Nav_PlantShop" xml:space="preserve">
+    <value>Plant Shop</value>
+  </data>
+  <data name="Nav_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common_Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Common_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Common_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Common_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Common_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Common_Loading" xml:space="preserve">
+    <value>Loading…</value>
+  </data>
+  <data name="Common_Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="Common_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Common_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Common_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Common_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Common_Time_Minutes" xml:space="preserve">
+    <value>{0}m</value>
+  </data>
+  <data name="Common_Time_HoursMinutes" xml:space="preserve">
+    <value>{0}h {1}m</value>
+  </data>
+  <data name="PageTitle_Books" xml:space="preserve">
+    <value>Books</value>
+  </data>
+  <data name="PageTitle_Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="PageTitle_Goals" xml:space="preserve">
+    <value>Goals</value>
+  </data>
+  <data name="PageTitle_Stats" xml:space="preserve">
+    <value>Level Overview</value>
+  </data>
+  <data name="PageTitle_Shop" xml:space="preserve">
+    <value>Shop</value>
+  </data>
+  <data name="PageTitle_Reading" xml:space="preserve">
+    <value>Reading</value>
+  </data>
+  <data name="PageTitle_Bookshelf" xml:space="preserve">
+    <value>Bookshelf</value>
+  </data>
+  <data name="PageTitle_GettingStarted" xml:space="preserve">
+    <value>Getting Started</value>
+  </data>
+  <data name="Status_Planned" xml:space="preserve">
+    <value>Planned</value>
+  </data>
+  <data name="Status_Reading" xml:space="preserve">
+    <value>Reading</value>
+  </data>
+  <data name="Status_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Status_Abandoned" xml:space="preserve">
+    <value>Abandoned</value>
+  </data>
+  <data name="Status_Wishlist" xml:space="preserve">
+    <value>Wishlist</value>
+  </data>
+  <data name="Priority_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="Priority_Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="Priority_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="Books_Title" xml:space="preserve">
+    <value>Books</value>
+  </data>
+  <data name="Books_Title_Placeholder" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Books_Author_Placeholder" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="Books_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Dashboard_CurrentlyReading" xml:space="preserve">
+    <value>Currently reading</value>
+  </data>
+  <data name="Dashboard_By" xml:space="preserve">
+    <value>by</value>
+  </data>
+  <data name="Dashboard_CoverAlt" xml:space="preserve">
+    <value>Book cover</value>
+  </data>
+  <data name="Dashboard_PageProgress" xml:space="preserve">
+    <value>Page {0} / {1} ({2}%)</value>
+  </data>
+  <data name="Dashboard_ContinueReading" xml:space="preserve">
+    <value>Continue reading →</value>
+  </data>
+  <data name="Dashboard_NoCurrentBook" xml:space="preserve">
+    <value>No book currently reading. {0}</value>
+  </data>
+  <data name="Dashboard_NoCurrentBook_Link" xml:space="preserve">
+    <value>Browse your bookshelf</value>
+  </data>
+  <data name="Dashboard_WeeklyStats" xml:space="preserve">
+    <value>Weekly stats</value>
+  </data>
+  <data name="Dashboard_Chip_Books" xml:space="preserve">
+    <value>books</value>
+  </data>
+  <data name="Dashboard_Chip_Pages" xml:space="preserve">
+    <value>pages</value>
+  </data>
+  <data name="Dashboard_ActiveGoals" xml:space="preserve">
+    <value>Active goals</value>
+  </data>
+  <data name="Dashboard_NoActiveGoals" xml:space="preserve">
+    <value>No active goals. {0}</value>
+  </data>
+  <data name="Dashboard_NoActiveGoals_Link" xml:space="preserve">
+    <value>Create a goal</value>
+  </data>
+  <data name="Dashboard_RecentActivity" xml:space="preserve">
+    <value>Recent activity</value>
+  </data>
+  <data name="Dashboard_ActivityReading" xml:space="preserve">
+    <value>{0} reading</value>
+  </data>
+  <data name="Dashboard_NoRecentActivity" xml:space="preserve">
+    <value>No recent activity.</value>
+  </data>
+  <data name="Dashboard_Time_MinutesAgo" xml:space="preserve">
+    <value>{0} minutes ago</value>
+  </data>
+  <data name="Dashboard_Time_HoursAgo" xml:space="preserve">
+    <value>{0} hours ago</value>
+  </data>
+  <data name="Dashboard_Time_DaysAgo" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="Goals_Title" xml:space="preserve">
+    <value>Reading goals</value>
+  </data>
+  <data name="Goals_New" xml:space="preserve">
+    <value>New goal</value>
+  </data>
+  <data name="Goals_Loading" xml:space="preserve">
+    <value>Loading goals…</value>
+  </data>
+  <data name="Goals_Form_CreateTitle" xml:space="preserve">
+    <value>Create new goal</value>
+  </data>
+  <data name="Goals_Form_EditTitle" xml:space="preserve">
+    <value>Edit goal</value>
+  </data>
+  <data name="Goals_Form_Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="Goals_Form_Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="Goals_Field_Title" xml:space="preserve">
+    <value>Title:</value>
+  </data>
+  <data name="Goals_Field_Title_Placeholder" xml:space="preserve">
+    <value>e.g. Read 5 books this month</value>
+  </data>
+  <data name="Goals_Field_Type" xml:space="preserve">
+    <value>Type:</value>
+  </data>
+  <data name="Goals_Field_Target" xml:space="preserve">
+    <value>Target:</value>
+  </data>
+  <data name="Goals_Field_StartDate" xml:space="preserve">
+    <value>Start date:</value>
+  </data>
+  <data name="Goals_Field_EndDate" xml:space="preserve">
+    <value>End date:</value>
+  </data>
+  <data name="Goals_Field_GenreFilter" xml:space="preserve">
+    <value>Genre filter (optional):</value>
+  </data>
+  <data name="Goals_Field_GenreFilter_Hint" xml:space="preserve">
+    <value>Only books with at least one of these genres count toward progress.</value>
+  </data>
+  <data name="Goals_Type_Books" xml:space="preserve">
+    <value>Books</value>
+  </data>
+  <data name="Goals_Type_Pages" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="Goals_Type_Minutes" xml:space="preserve">
+    <value>Minutes</value>
+  </data>
+  <data name="Goals_ActiveGoals" xml:space="preserve">
+    <value>Active goals</value>
+  </data>
+  <data name="Goals_NoActiveGoals" xml:space="preserve">
+    <value>No active goals.</value>
+  </data>
+  <data name="Goals_CompletedGoals" xml:space="preserve">
+    <value>Completed goals</value>
+  </data>
+  <data name="Goals_NoCompletedGoals" xml:space="preserve">
+    <value>No completed goals yet.</value>
+  </data>
+  <data name="Goals_Delete_Title" xml:space="preserve">
+    <value>Delete goal?</value>
+  </data>
+  <data name="Goals_Delete_Confirm" xml:space="preserve">
+    <value>Are you sure you want to delete "{0}"? This action cannot be undone.</value>
+  </data>
+  <data name="Goals_EditGoal" xml:space="preserve">
+    <value>Edit goal</value>
+  </data>
+  <data name="Goals_GenreFilter" xml:space="preserve">
+    <value>Genre filter</value>
+  </data>
+  <data name="Goals_ExcludeBooks" xml:space="preserve">
+    <value>Exclude books</value>
+  </data>
+  <data name="Goals_NoBooksAvailable" xml:space="preserve">
+    <value>No books available.</value>
+  </data>
+  <data name="Goals_ExcludeBooks_Hint" xml:space="preserve">
+    <value>Excluded books do not count toward this goal's progress.</value>
+  </data>
+  <data name="Goals_Excluded" xml:space="preserve">
+    <value>Excluded</value>
+  </data>
+  <data name="Goals_Counts" xml:space="preserve">
+    <value>Counts</value>
+  </data>
+  <data name="Stats_Tab_Overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Stats_Tab_Trends" xml:space="preserve">
+    <value>Trends</value>
+  </data>
+  <data name="Stats_Tab_Insights" xml:space="preserve">
+    <value>Insights</value>
+  </data>
+  <data name="Stats_Loading" xml:space="preserve">
+    <value>Loading statistics…</value>
+  </data>
+  <data name="Stats_LevelLabel" xml:space="preserve">
+    <value>LEVEL</value>
+  </data>
+  <data name="Stats_YourProgress" xml:space="preserve">
+    <value>Your progress</value>
+  </data>
+  <data name="Stats_ProgressToLevel" xml:space="preserve">
+    <value>{0}% to Level {1}</value>
+  </data>
+  <data name="Stats_Coins" xml:space="preserve">
+    <value>Coins</value>
+  </data>
+  <data name="Stats_YourStats" xml:space="preserve">
+    <value>Your stats</value>
+  </data>
+  <data name="Stats_ShareStats" xml:space="preserve">
+    <value>Share stats</value>
+  </data>
+  <data name="Stats_Chip_Coins" xml:space="preserve">
+    <value>coins</value>
+  </data>
+  <data name="Stats_Chip_Boost" xml:space="preserve">
+    <value>boost</value>
+  </data>
+  <data name="Stats_Chip_Books" xml:space="preserve">
+    <value>books</value>
+  </data>
+  <data name="Stats_Chip_Pages" xml:space="preserve">
+    <value>pages</value>
+  </data>
+  <data name="Stats_Chip_DayStreak" xml:space="preserve">
+    <value>day streak</value>
+  </data>
+  <data name="Stats_Chip_Avg" xml:space="preserve">
+    <value>avg</value>
+  </data>
+  <data name="Stats_PlantBoosts" xml:space="preserve">
+    <value>Plant XP boosts</value>
+  </data>
+  <data name="Stats_TotalBoost" xml:space="preserve">
+    <value>Total boost</value>
+  </data>
+  <data name="Stats_LevelAbbrev" xml:space="preserve">
+    <value>Lv.</value>
+  </data>
+  <data name="Stats_FavoriteGenre" xml:space="preserve">
+    <value>Favorite genre</value>
+  </data>
+  <data name="Stats_BooksByGenre" xml:space="preserve">
+    <value>Books by genre</value>
+  </data>
+  <data name="Stats_AvgByCategory" xml:space="preserve">
+    <value>Average ratings by category</value>
+  </data>
+  <data name="Stats_TopRated" xml:space="preserve">
+    <value>Top rated books</value>
+  </data>
+  <data name="Stats_CategoryFilter" xml:space="preserve">
+    <value>Rating category filter</value>
+  </data>
+  <data name="Stats_Filter_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Stats_ShowLess" xml:space="preserve">
+    <value>Show less</value>
+  </data>
+  <data name="Stats_ShowMore" xml:space="preserve">
+    <value>Show more</value>
+  </data>
+  <data name="Stats_NoRatedInCategory" xml:space="preserve">
+    <value>No books rated in this category</value>
+  </data>
+  <data name="Stats_LevelMilestones" xml:space="preserve">
+    <value>Level milestones</value>
+  </data>
+  <data name="Stats_Milestone_Level" xml:space="preserve">
+    <value>Level {0}</value>
+  </data>
+  <data name="Stats_Share_Title" xml:space="preserve">
+    <value>Share reading stats</value>
+  </data>
+  <data name="Stats_Share_Subtitle" xml:space="preserve">
+    <value>Choose a time period for your reading card</value>
+  </data>
+  <data name="Stats_Period_AllTime" xml:space="preserve">
+    <value>All Time</value>
+  </data>
+  <data name="Stats_Period_Year" xml:space="preserve">
+    <value>Year</value>
+  </data>
+  <data name="Stats_Period_Month" xml:space="preserve">
+    <value>Month</value>
+  </data>
+  <data name="Stats_Generating" xml:space="preserve">
+    <value>Generating…</value>
+  </data>
+  <data name="Stats_CreateShare" xml:space="preserve">
+    <value>Create &amp; share</value>
+  </data>
+  <data name="Stats_Share_FileName" xml:space="preserve">
+    <value>My Reading Stats</value>
+  </data>
+  <data name="GettingStarted_Loading" xml:space="preserve">
+    <value>Loading getting started…</value>
+  </data>
+  <data name="GettingStarted_Kicker" xml:space="preserve">
+    <value>BookHeart onboarding</value>
+  </data>
+  <data name="GettingStarted_Title" xml:space="preserve">
+    <value>Getting started</value>
+  </data>
+  <data name="GettingStarted_Subtitle" xml:space="preserve">
+    <value>Track the real first-run flows, replay the intro, and use the hub to cover the rest of the app.</value>
+  </data>
+  <data name="GettingStarted_CoreSetup" xml:space="preserve">
+    <value>Core setup</value>
+  </data>
+  <data name="GettingStarted_ReplayIntro" xml:space="preserve">
+    <value>Replay intro</value>
+  </data>
+  <data name="GettingStarted_ResetGuided" xml:space="preserve">
+    <value>Reset guided progress</value>
+  </data>
+  <data name="GettingStarted_Missions_Title" xml:space="preserve">
+    <value>Guided missions</value>
+  </data>
+  <data name="GettingStarted_Missions_Subtitle" xml:space="preserve">
+    <value>These missions complete only from real app actions.</value>
+  </data>
+  <data name="GettingStarted_CompletedOn" xml:space="preserve">
+    <value>Completed {0}</value>
+  </data>
+  <data name="GettingStarted_OpenAgain" xml:space="preserve">
+    <value>Open again</value>
+  </data>
+  <data name="GettingStarted_Atlas_Title" xml:space="preserve">
+    <value>Feature atlas</value>
+  </data>
+  <data name="GettingStarted_Atlas_Subtitle" xml:space="preserve">
+    <value>Covered here without forcing risky or platform-dependent actions.</value>
+  </data>
+  <data name="GettingStarted_OpenGeneric" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="GettingStarted_LoadError" xml:space="preserve">
+    <value>Failed to load getting started: {0}</value>
+  </data>
+  <data name="GettingStarted_Status_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="GettingStarted_Status_Available" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="GettingStarted_Status_Locked" xml:space="preserve">
+    <value>Locked</value>
+  </data>
+  <data name="Shop_Title" xml:space="preserve">
+    <value>Shop</value>
+  </data>
+  <data name="Shop_Coins" xml:space="preserve">
+    <value>coins</value>
+  </data>
+  <data name="Shop_LevelPrefix" xml:space="preserve">
+    <value>Level</value>
+  </data>
+  <data name="Shop_Tab_Plants" xml:space="preserve">
+    <value>Plants</value>
+  </data>
+  <data name="Shop_Tab_Decorations" xml:space="preserve">
+    <value>Decorations</value>
+  </data>
+  <data name="Shop_Loading" xml:space="preserve">
+    <value>Loading shop…</value>
+  </data>
+  <data name="Shop_Plants_Description" xml:space="preserve">
+    <value>Welcome to the Plant Shop! Buy plants to grow as you read. Each plant has unique growth rates and care requirements.</value>
+  </data>
+  <data name="Shop_Plants_Empty_Title" xml:space="preserve">
+    <value>No plants available</value>
+  </data>
+  <data name="Shop_Plants_Empty_Body" xml:space="preserve">
+    <value>Level up to unlock more plants!</value>
+  </data>
+  <data name="Shop_Purchase_Prefix" xml:space="preserve">
+    <value>Purchase</value>
+  </data>
+  <data name="Shop_Plants_MaxLevel" xml:space="preserve">
+    <value>Max level</value>
+  </data>
+  <data name="Shop_Plants_WaterInterval" xml:space="preserve">
+    <value>Water interval</value>
+  </data>
+  <data name="Shop_Plants_EveryDays" xml:space="preserve">
+    <value>Every {0} days</value>
+  </data>
+  <data name="Shop_Plants_GrowthRate" xml:space="preserve">
+    <value>Growth rate</value>
+  </data>
+  <data name="Shop_Plants_Cost" xml:space="preserve">
+    <value>Cost</value>
+  </data>
+  <data name="Shop_SpecialAbility" xml:space="preserve">
+    <value>Special ability</value>
+  </data>
+  <data name="Shop_Plants_NameLabel" xml:space="preserve">
+    <value>Name your plant (optional):</value>
+  </data>
+  <data name="Shop_Plants_NamePlaceholder" xml:space="preserve">
+    <value>Default: {0}</value>
+  </data>
+  <data name="Shop_PurchaseForCoins" xml:space="preserve">
+    <value>Purchase for 🪙 {0}</value>
+  </data>
+  <data name="Shop_NotEnoughCoins" xml:space="preserve">
+    <value>Not enough coins</value>
+  </data>
+  <data name="Shop_HowPlantsGrow_Title" xml:space="preserve">
+    <value>How do plants grow?</value>
+  </data>
+  <data name="Shop_HowPlantsGrow_Bullet1" xml:space="preserve">
+    <value>📖 One &lt;strong&gt;reading day&lt;/strong&gt; = a day with at least 15 minutes of reading</value>
+  </data>
+  <data name="Shop_HowPlantsGrow_Bullet2" xml:space="preserve">
+    <value>🌱 &lt;strong&gt;3 reading days&lt;/strong&gt; = 1 level (at growth rate 1.0)</value>
+  </data>
+  <data name="Shop_HowPlantsGrow_Bullet3" xml:space="preserve">
+    <value>⚡ &lt;strong&gt;Growth rate 1.2&lt;/strong&gt; = 20% faster (~2.5 days/level)</value>
+  </data>
+  <data name="Shop_HowPlantsGrow_Bullet4" xml:space="preserve">
+    <value>🐢 &lt;strong&gt;Growth rate 0.8&lt;/strong&gt; = 20% slower (~3.75 days/level)</value>
+  </data>
+  <data name="Shop_HowPlantsGrow_Bullet5" xml:space="preserve">
+    <value>✨ Higher level = higher XP boost while reading</value>
+  </data>
+  <data name="Shop_Decorations_Description" xml:space="preserve">
+    <value>Decorate your shelves! Cosmetic items to make your bookshelf cosy and unique.</value>
+  </data>
+  <data name="Shop_Decorations_Loading" xml:space="preserve">
+    <value>Loading decorations…</value>
+  </data>
+  <data name="Shop_Decorations_Empty_Title" xml:space="preserve">
+    <value>No decorations available</value>
+  </data>
+  <data name="Shop_Decorations_Empty_Body" xml:space="preserve">
+    <value>Check back later!</value>
+  </data>
+  <data name="Shop_UnlockLevel" xml:space="preserve">
+    <value>Unlock level</value>
+  </data>
+  <data name="Shop_RequiresLevel" xml:space="preserve">
+    <value>Requires level {0}</value>
+  </data>
+  <data name="Shop_Ability_StreakGuardian" xml:space="preserve">
+    <value>Automatically rescues a breaking reading streak once every 14 days.</value>
+  </data>
+  <data name="Shop_Ability_EternalPhoenix" xml:space="preserve">
+    <value>Revives itself and shields all other plants from dying.</value>
+  </data>
+  <data name="Shop_Ability_StoryHeart" xml:space="preserve">
+    <value>+25% XP, +25% level-up coins, +400 coins on sessions of 30 minutes or more, doubled plant growth, +2.5% of next-level XP on the first session of each day.</value>
+  </data>
+  <data name="Reading_Loading" xml:space="preserve">
+    <value>Loading session…</value>
+  </data>
+  <data name="Reading_NoSession_Title" xml:space="preserve">
+    <value>No active reading session</value>
+  </data>
+  <data name="Reading_NoSession_Body" xml:space="preserve">
+    <value>Start reading a book to begin a session.</value>
+  </data>
+  <data name="Reading_BrowseBookshelf" xml:space="preserve">
+    <value>Browse bookshelf</value>
+  </data>
+  <data name="Reading_BookNotFound_Title" xml:space="preserve">
+    <value>Book not found</value>
+  </data>
+  <data name="Reading_BookNotFound_Body" xml:space="preserve">
+    <value>The book for this reading session could not be loaded.</value>
+  </data>
+  <data name="Reading_ViewBookDetails" xml:space="preserve">
+    <value>View book details</value>
+  </data>
+  <data name="Reading_Time" xml:space="preserve">
+    <value>Reading time</value>
+  </data>
+  <data name="Reading_Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="Reading_Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Reading_XpEarned" xml:space="preserve">
+    <value>XP earned</value>
+  </data>
+  <data name="Reading_CurrentPage" xml:space="preserve">
+    <value>Current page</value>
+  </data>
+  <data name="Reading_PercentComplete" xml:space="preserve">
+    <value>{0}% complete</value>
+  </data>
+  <data name="Reading_SessionSummary" xml:space="preserve">
+    <value>Session summary</value>
+  </data>
+  <data name="Reading_Started" xml:space="preserve">
+    <value>Started</value>
+  </data>
+  <data name="Reading_PagesRead" xml:space="preserve">
+    <value>Pages read</value>
+  </data>
+  <data name="Reading_EstimatedTime" xml:space="preserve">
+    <value>Estimated time</value>
+  </data>
+  <data name="Reading_EndSession" xml:space="preserve">
+    <value>End session</value>
+  </data>
+  <data name="Reading_FocusHint" xml:space="preserve">
+    <value>Focus on reading — this session is being tracked automatically</value>
+  </data>
+  <data name="Reading_ShareFileName" xml:space="preserve">
+    <value>Book recommendation</value>
+  </data>
+  <data name="Reading_TimeFormat_HMS" xml:space="preserve">
+    <value>{0}h {1}m {2}s</value>
+  </data>
+  <data name="Reading_TimeFormat_MS" xml:space="preserve">
+    <value>{0}m {1}s</value>
+  </data>
+  <data name="BookDetail_DefaultTitle" xml:space="preserve">
+    <value>Book details</value>
+  </data>
+  <data name="BookDetail_Loading" xml:space="preserve">
+    <value>Loading book details…</value>
+  </data>
+  <data name="BookDetail_NotFound_Title" xml:space="preserve">
+    <value>Book not found</value>
+  </data>
+  <data name="BookDetail_NotFound_Body" xml:space="preserve">
+    <value>This book could not be loaded.</value>
+  </data>
+  <data name="BookDetail_BackToBookshelf" xml:space="preserve">
+    <value>Back to bookshelf</value>
+  </data>
+  <data name="BookDetail_BookInfo" xml:space="preserve">
+    <value>Book information</value>
+  </data>
+  <data name="BookDetail_ShareAsRecommendation" xml:space="preserve">
+    <value>Share as recommendation</value>
+  </data>
+  <data name="BookDetail_Author" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="BookDetail_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="BookDetail_Shelves" xml:space="preserve">
+    <value>Shelves</value>
+  </data>
+  <data name="BookDetail_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="BookDetail_Rating" xml:space="preserve">
+    <value>Rating</value>
+  </data>
+  <data name="BookDetail_Pages" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="BookDetail_Publisher" xml:space="preserve">
+    <value>Publisher</value>
+  </data>
+  <data name="BookDetail_Year" xml:space="preserve">
+    <value>Year</value>
+  </data>
+  <data name="BookDetail_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="BookDetail_WishlistDetails" xml:space="preserve">
+    <value>Wishlist details</value>
+  </data>
+  <data name="BookDetail_Priority" xml:space="preserve">
+    <value>Priority</value>
+  </data>
+  <data name="BookDetail_RecommendedBy" xml:space="preserve">
+    <value>Recommended by</value>
+  </data>
+  <data name="BookDetail_Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="BookDetail_MoveToLibrary" xml:space="preserve">
+    <value>Move to library</value>
+  </data>
+  <data name="BookDetail_BookRatings" xml:space="preserve">
+    <value>Book ratings</value>
+  </data>
+  <data name="BookDetail_HideMoreCategories" xml:space="preserve">
+    <value>Hide more categories</value>
+  </data>
+  <data name="BookDetail_MoreCategories" xml:space="preserve">
+    <value>More categories ({0})</value>
+  </data>
+  <data name="BookDetail_AverageRating" xml:space="preserve">
+    <value>Average rating</value>
+  </data>
+  <data name="BookDetail_ReadingProgress" xml:space="preserve">
+    <value>Reading progress</value>
+  </data>
+  <data name="BookDetail_TotalTime" xml:space="preserve">
+    <value>Total time</value>
+  </data>
+  <data name="BookDetail_PagesRead" xml:space="preserve">
+    <value>Pages read</value>
+  </data>
+  <data name="BookDetail_Completion" xml:space="preserve">
+    <value>Completion</value>
+  </data>
+  <data name="BookDetail_Sessions" xml:space="preserve">
+    <value>Reading sessions ({0})</value>
+  </data>
+  <data name="BookDetail_SessionMinutes" xml:space="preserve">
+    <value>{0} minutes</value>
+  </data>
+  <data name="BookDetail_SessionPages" xml:space="preserve">
+    <value>{0} pages</value>
+  </data>
+  <data name="BookDetail_ShowingLatest" xml:space="preserve">
+    <value>Showing latest 5 of {0} sessions</value>
+  </data>
+  <data name="BookDetail_BookNotes" xml:space="preserve">
+    <value>Book notes</value>
+  </data>
+  <data name="BookDetail_NotesHint" xml:space="preserve">
+    <value>Write your thoughts, quotes, or analysis here. Auto-saved.</value>
+  </data>
+  <data name="BookDetail_NotesPlaceholder" xml:space="preserve">
+    <value>Write your notes here…</value>
+  </data>
+  <data name="BookDetail_Saving" xml:space="preserve">
+    <value>Saving…</value>
+  </data>
+  <data name="BookEdit_AddTitle" xml:space="preserve">
+    <value>Add book</value>
+  </data>
+  <data name="BookEdit_EditTitle" xml:space="preserve">
+    <value>Edit book</value>
+  </data>
+  <data name="BookEdit_AddNewBook" xml:space="preserve">
+    <value>Add new book</value>
+  </data>
+  <data name="BookEdit_BasicInfo" xml:space="preserve">
+    <value>Basic information</value>
+  </data>
+  <data name="BookEdit_Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="BookEdit_Author" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="BookEdit_IsbnPlaceholder" xml:space="preserve">
+    <value>Enter ISBN-10 or ISBN-13</value>
+  </data>
+  <data name="BookEdit_Scan" xml:space="preserve">
+    <value>Scan</value>
+  </data>
+  <data name="BookEdit_AutoFill" xml:space="preserve">
+    <value>Auto-fill</value>
+  </data>
+  <data name="BookEdit_PublicationYear" xml:space="preserve">
+    <value>Publication year</value>
+  </data>
+  <data name="BookEdit_BookLanguage" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="BookEdit_BookLanguagePlaceholder" xml:space="preserve">
+    <value>e.g. en, de</value>
+  </data>
+  <data name="BookEdit_Content" xml:space="preserve">
+    <value>Content</value>
+  </data>
+  <data name="BookEdit_TotalPages" xml:space="preserve">
+    <value>Total pages</value>
+  </data>
+  <data name="BookEdit_ReadingStatus" xml:space="preserve">
+    <value>Reading status</value>
+  </data>
+  <data name="BookEdit_Genres" xml:space="preserve">
+    <value>Genres</value>
+  </data>
+  <data name="BookEdit_TropesTags" xml:space="preserve">
+    <value>Tropes &amp; tags</value>
+  </data>
+  <data name="BookEdit_TropesHint" xml:space="preserve">
+    <value>Select matching tropes based on your selected genres.</value>
+  </data>
+  <data name="BookEdit_ShelvesHint" xml:space="preserve">
+    <value>Assign this book to manual shelves. Auto-sort shelves are populated automatically.</value>
+  </data>
+  <data name="BookEdit_NoManualShelves" xml:space="preserve">
+    <value>No manual shelves available. Create them on the Bookshelf page.</value>
+  </data>
+  <data name="BookEdit_CoverImage" xml:space="preserve">
+    <value>Cover image</value>
+  </data>
+  <data name="BookEdit_CoverUrl" xml:space="preserve">
+    <value>Cover image URL / path</value>
+  </data>
+  <data name="BookEdit_PickFromGallery" xml:space="preserve">
+    <value>Pick from gallery</value>
+  </data>
+  <data name="BookEdit_CoverPreviewAlt" xml:space="preserve">
+    <value>Cover preview</value>
+  </data>
+  <data name="BookEdit_SpineDisplay" xml:space="preserve">
+    <value>Book spine display</value>
+  </data>
+  <data name="BookEdit_SpineDisplayHint" xml:space="preserve">
+    <value>Choose how the book spine should be displayed in the bookshelf</value>
+  </data>
+  <data name="BookEdit_SpineMode_Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="BookEdit_SpineMode_Cover" xml:space="preserve">
+    <value>Cover</value>
+  </data>
+  <data name="BookEdit_CoverModeRequires" xml:space="preserve">
+    <value>Cover mode requires a cover image</value>
+  </data>
+  <data name="BookEdit_SpineColor" xml:space="preserve">
+    <value>Spine color</value>
+  </data>
+  <data name="BookEdit_CustomColor" xml:space="preserve">
+    <value>Custom color</value>
+  </data>
+  <data name="BookEdit_Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="BookEdit_AddBook" xml:space="preserve">
+    <value>Add book</value>
+  </data>
+  <data name="BookEdit_SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Bookshelf_Tab_Shelves" xml:space="preserve">
+    <value>Shelves</value>
+  </data>
+  <data name="Bookshelf_Tab_Wishlist" xml:space="preserve">
+    <value>Wishlist</value>
+  </data>
+  <data name="Bookshelf_Title" xml:space="preserve">
+    <value>My bookshelf</value>
+  </data>
+  <data name="Bookshelf_SearchPlaceholder" xml:space="preserve">
+    <value>Search books…</value>
+  </data>
+  <data name="Bookshelf_FiltersSort" xml:space="preserve">
+    <value>Filters &amp; sort</value>
+  </data>
+  <data name="Bookshelf_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Bookshelf_SortBy" xml:space="preserve">
+    <value>Sort by:</value>
+  </data>
+  <data name="Bookshelf_Sort_Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Bookshelf_Sort_DateAdded" xml:space="preserve">
+    <value>Date added</value>
+  </data>
+  <data name="Bookshelf_ClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="Bookshelf_Loading" xml:space="preserve">
+    <value>Loading your books…</value>
+  </data>
+  <data name="Bookshelf_SearchResults" xml:space="preserve">
+    <value>Search results: {0} book(s)</value>
+  </data>
+  <data name="Bookshelf_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Bookshelf_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Bookshelf_DeleteShelfTitle" xml:space="preserve">
+    <value>Delete shelf</value>
+  </data>
+  <data name="Bookshelf_AddPlant" xml:space="preserve">
+    <value>Add plant</value>
+  </data>
+  <data name="Bookshelf_AddDeco" xml:space="preserve">
+    <value>Add deco</value>
+  </data>
+  <data name="Bookshelf_NewShelf" xml:space="preserve">
+    <value>New shelf</value>
+  </data>
+  <data name="Bookshelf_AddBook" xml:space="preserve">
+    <value>Add book</value>
+  </data>
+  <data name="Bookshelf_AddShelf_Title" xml:space="preserve">
+    <value>Add new bookshelf</value>
+  </data>
+  <data name="Bookshelf_AddShelf_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Bookshelf_AddShelf_Placeholder" xml:space="preserve">
+    <value>e.g. Favorites, TBR…</value>
+  </data>
+  <data name="Bookshelf_AutoSortRule" xml:space="preserve">
+    <value>Auto-sort rule</value>
+  </data>
+  <data name="Bookshelf_AutoSort_None" xml:space="preserve">
+    <value>Manual (drag &amp; drop)</value>
+  </data>
+  <data name="Bookshelf_AutoSort_Planned" xml:space="preserve">
+    <value>Planned (TBR)</value>
+  </data>
+  <data name="Bookshelf_AutoSort_Reading" xml:space="preserve">
+    <value>Currently reading</value>
+  </data>
+  <data name="Bookshelf_AutoSort_Completed" xml:space="preserve">
+    <value>Read / completed</value>
+  </data>
+  <data name="Bookshelf_AutoSort_Wishlist" xml:space="preserve">
+    <value>Wishlist</value>
+  </data>
+  <data name="Bookshelf_AutoSort_Hint" xml:space="preserve">
+    <value>Auto-sort shelves automatically include books matching the status.</value>
+  </data>
+  <data name="Bookshelf_CreateShelf" xml:space="preserve">
+    <value>Create shelf</value>
+  </data>
+  <data name="Bookshelf_PlantDetails" xml:space="preserve">
+    <value>Plant details</value>
+  </data>
+  <data name="Bookshelf_SelectPlant" xml:space="preserve">
+    <value>Select a plant</value>
+  </data>
+  <data name="Bookshelf_NoPlantsAvailable" xml:space="preserve">
+    <value>No plants available. Visit the shop?</value>
+  </data>
+  <data name="Bookshelf_GoToShop" xml:space="preserve">
+    <value>Go to shop</value>
+  </data>
+  <data name="Bookshelf_SelectDecoration" xml:space="preserve">
+    <value>Select a decoration</value>
+  </data>
+  <data name="Bookshelf_NoDecorationsAvailable" xml:space="preserve">
+    <value>No decorations available. Visit the shop?</value>
+  </data>
+  <data name="Bookshelf_RemoveFromShelf" xml:space="preserve">
+    <value>Remove from shelf</value>
+  </data>
+  <data name="Bookshelf_DeleteShelf_Title" xml:space="preserve">
+    <value>Delete shelf</value>
+  </data>
+  <data name="Bookshelf_DeleteShelf_Body" xml:space="preserve">
+    <value>Are you sure you want to delete this shelf? All items will be moved to the main shelf.</value>
+  </data>
+  <data name="Bookshelf_Deleting" xml:space="preserve">
+    <value>Deleting…</value>
+  </data>
+  <data name="Bookshelf_Removing" xml:space="preserve">
+    <value>Removing…</value>
+  </data>
+  <data name="Bookshelf_DeletePlant" xml:space="preserve">
+    <value>Delete plant</value>
+  </data>
+  <data name="Bookshelf_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Wishlist_SearchPlaceholder" xml:space="preserve">
+    <value>Search wishlist…</value>
+  </data>
+  <data name="Wishlist_Loading" xml:space="preserve">
+    <value>Loading wishlist…</value>
+  </data>
+  <data name="Wishlist_Empty_Text" xml:space="preserve">
+    <value>Your wishlist is empty</value>
+  </data>
+  <data name="Wishlist_Empty_Hint" xml:space="preserve">
+    <value>Tap + to add books you want to read</value>
+  </data>
+  <data name="Wishlist_RecommendedPrefix" xml:space="preserve">
+    <value>via</value>
+  </data>
+  <data name="Wishlist_EditAndAdd" xml:space="preserve">
+    <value>Edit &amp; add to shelf</value>
+  </data>
+  <data name="Wishlist_AddTitle" xml:space="preserve">
+    <value>Add to wishlist</value>
+  </data>
+  <data name="Wishlist_EnterIsbn" xml:space="preserve">
+    <value>Enter ISBN…</value>
+  </data>
+  <data name="Wishlist_ScanBarcode" xml:space="preserve">
+    <value>Scan barcode</value>
+  </data>
+  <data name="Wishlist_LookupIsbn" xml:space="preserve">
+    <value>Lookup ISBN</value>
+  </data>
+  <data name="Wishlist_TitlePlaceholder" xml:space="preserve">
+    <value>Book title…</value>
+  </data>
+  <data name="Wishlist_AuthorPlaceholder" xml:space="preserve">
+    <value>Author name…</value>
+  </data>
+  <data name="Wishlist_RecommendedPlaceholder" xml:space="preserve">
+    <value>Who recommended this?</value>
+  </data>
+  <data name="Wishlist_NotesPlaceholder" xml:space="preserve">
+    <value>Why do you want to read this?</value>
+  </data>
+  <data name="GoalCard_Until" xml:space="preserve">
+    <value>Until {0}</value>
+  </data>
+  <data name="GoalCard_Unit_Books" xml:space="preserve">
+    <value>books</value>
+  </data>
+  <data name="GoalCard_Unit_Pages" xml:space="preserve">
+    <value>pages</value>
+  </data>
+  <data name="GoalCard_Unit_Minutes" xml:space="preserve">
+    <value>minutes</value>
+  </data>
+  <data name="GoalHeader_Title" xml:space="preserve">
+    <value>{0} reading goal</value>
+  </data>
+  <data name="GoalHeader_Label_Tbr" xml:space="preserve">
+    <value>in TBR</value>
+  </data>
+  <data name="GoalHeader_Label_Goal" xml:space="preserve">
+    <value>in goal</value>
+  </data>
+  <data name="GoalHeader_Label_Read" xml:space="preserve">
+    <value>read</value>
+  </data>
+  <data name="GoalHeader_Remaining" xml:space="preserve">
+    <value>You have &lt;strong&gt;{0} books&lt;/strong&gt; left to complete your yearly reading goal</value>
+  </data>
+  <data name="GoalHeader_Complete" xml:space="preserve">
+    <value>🎉 Congratulations! You've completed your yearly reading goal!</value>
+  </data>
+  <data name="GoalHeader_Exceeded" xml:space="preserve">
+    <value>🌟 Amazing! You've read &lt;strong&gt;{0} more books&lt;/strong&gt; than your goal!</value>
+  </data>
+  <data name="BookCompletion_Header" xml:space="preserve">
+    <value>Book completed!</value>
+  </data>
+  <data name="BookCompletion_YouEarned" xml:space="preserve">
+    <value>You earned</value>
+  </data>
+  <data name="BookCompletion_Awesome" xml:space="preserve">
+    <value>Awesome!</value>
+  </data>
+  <data name="LevelUp_Header" xml:space="preserve">
+    <value>LEVEL UP!</value>
+  </data>
+  <data name="LevelUp_CoinsEarned" xml:space="preserve">
+    <value>{0} coins!</value>
+  </data>
+  <data name="LevelUp_TotalCoins" xml:space="preserve">
+    <value>Total coins: {0}</value>
+  </data>
+  <data name="Session_Header" xml:space="preserve">
+    <value>Session complete!</value>
+  </data>
+  <data name="Session_Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="Session_StreakGuardianSaved" xml:space="preserve">
+    <value>The Chronicle Tree saved your streak!</value>
+  </data>
+  <data name="Session_StoryHeart_Title" xml:space="preserve">
+    <value>Heart of Stories</value>
+  </data>
+  <data name="Session_StoryHeart_Coins" xml:space="preserve">
+    <value>+{0} coins</value>
+  </data>
+  <data name="Session_StoryHeart_FirstOfDayXp" xml:space="preserve">
+    <value>+{0} XP (first session of the day)</value>
+  </data>
+  <data name="Session_Row_Pages" xml:space="preserve">
+    <value>Pages read</value>
+  </data>
+  <data name="Session_Row_Time" xml:space="preserve">
+    <value>Reading time</value>
+  </data>
+  <data name="Session_Row_LongBonus" xml:space="preserve">
+    <value>Long session bonus</value>
+  </data>
+  <data name="Session_Row_BookCompleted" xml:space="preserve">
+    <value>Book completed</value>
+  </data>
+  <data name="Session_Row_StreakBonus" xml:space="preserve">
+    <value>Streak bonus</value>
+  </data>
+  <data name="Session_Row_Subtotal" xml:space="preserve">
+    <value>Subtotal</value>
+  </data>
+  <data name="Session_Row_PlantBoost" xml:space="preserve">
+    <value>Plant boost ({0}%)</value>
+  </data>
+  <data name="Session_Row_Total" xml:space="preserve">
+    <value>Total XP gained</value>
+  </data>
+  <data name="Streak_Days" xml:space="preserve">
+    <value>{0} day streak</value>
+  </data>
+  <data name="Streak_Caption" xml:space="preserve">
+    <value>You kept your reading streak alive.</value>
+  </data>
+  <data name="Streak_RewardLabel" xml:space="preserve">
+    <value>Extra streak XP</value>
+  </data>
+  <data name="Streak_KeepGoing" xml:space="preserve">
+    <value>Keep it going</value>
+  </data>
+  <data name="Review_LikePrompt" xml:space="preserve">
+    <value>Do you like BookHeart?</value>
+  </data>
+  <data name="Review_LikeBody" xml:space="preserve">
+    <value>If you're enjoying the app, we'd love a quick bit of feedback.</value>
+  </data>
+  <data name="Review_StorePrompt" xml:space="preserve">
+    <value>Would you like to rate BookHeart in the Play Store?</value>
+  </data>
+  <data name="Review_StoreBody" xml:space="preserve">
+    <value>We'll open the app's Play Store page.</value>
+  </data>
+  <data name="Review_NeverAsk" xml:space="preserve">
+    <value>Don't ask again</value>
+  </data>
+  <data name="DeleteModal_Title" xml:space="preserve">
+    <value>Delete book?</value>
+  </data>
+  <data name="DeleteModal_Warning_Title" xml:space="preserve">
+    <value>This action cannot be undone!</value>
+  </data>
+  <data name="DeleteModal_Warning_Body" xml:space="preserve">
+    <value>The following data will also be deleted:</value>
+  </data>
+  <data name="DeleteModal_Item_Sessions" xml:space="preserve">
+    <value>All reading sessions</value>
+  </data>
+  <data name="DeleteModal_Item_Quotes" xml:space="preserve">
+    <value>All quotes</value>
+  </data>
+  <data name="DeleteModal_Item_Annotations" xml:space="preserve">
+    <value>All annotations</value>
+  </data>
+  <data name="DeleteModal_Item_Genres" xml:space="preserve">
+    <value>Genre assignments</value>
+  </data>
+  <data name="DeleteModal_Deleting" xml:space="preserve">
+    <value>Deleting…</value>
+  </data>
+  <data name="DeleteModal_Confirm" xml:space="preserve">
+    <value>Delete permanently</value>
+  </data>
+  <data name="PrivacyBanner_AriaLabel" xml:space="preserve">
+    <value>Privacy notice</value>
+  </data>
+  <data name="PrivacyBanner_Title" xml:space="preserve">
+    <value>Privacy &amp; statistics</value>
+  </data>
+  <data name="PrivacyBanner_Body" xml:space="preserve">
+    <value>BookHeart uses Firebase Analytics and Crashlytics to help improve the app. No book titles, authors, notes or personal data are ever transmitted. You can disable both at any time in Settings.</value>
+  </data>
+  <data name="PrivacyBanner_GotIt" xml:space="preserve">
+    <value>Got it</value>
+  </data>
+  <data name="Locked_AriaUnlock" xml:space="preserve">
+    <value>Unlock {0}</value>
+  </data>
+  <data name="Locked_UpgradeTo" xml:space="preserve">
+    <value>Upgrade to {0}</value>
+  </data>
+  <data name="FeatureSuggestion_Title" xml:space="preserve">
+    <value>Suggest a feature</value>
+  </data>
+  <data name="FeatureSuggestion_Hint" xml:space="preserve">
+    <value>Premium members can send ideas directly to the developer.</value>
+  </data>
+  <data name="FeatureSuggestion_Placeholder" xml:space="preserve">
+    <value>What would make BookHeart better for you?</value>
+  </data>
+  <data name="FeatureSuggestion_Send" xml:space="preserve">
+    <value>Send via email</value>
+  </data>
+  <data name="FeatureSuggestion_Success" xml:space="preserve">
+    <value>Thanks! Your email composer has been opened.</value>
+  </data>
+  <data name="FeatureSuggestion_Error" xml:space="preserve">
+    <value>Could not open the email composer.</value>
+  </data>
+  <data name="UpgradeCard_Kicker" xml:space="preserve">
+    <value>Plus · from €2.99/month</value>
+  </data>
+  <data name="UpgradeCard_Title" xml:space="preserve">
+    <value>Unlock unlimited notes, quotes and plants</value>
+  </data>
+  <data name="UpgradeCard_Body" xml:space="preserve">
+    <value>Plus keeps every feature you love and removes the Free tier's soft limits.</value>
+  </data>
+  <data name="Wrapped_Kicker" xml:space="preserve">
+    <value>Reading Wrapped {0}</value>
+  </data>
+  <data name="Wrapped_Title" xml:space="preserve">
+    <value>Your year in books, beautifully wrapped</value>
+  </data>
+  <data name="Wrapped_Body" xml:space="preserve">
+    <value>Unlock Premium to generate your Reading Wrapped card — heatmaps, top genres, authors and more.</value>
+  </data>
+  <data name="GettingStartedCta_Kicker" xml:space="preserve">
+    <value>Getting started</value>
+  </data>
+  <data name="GettingStartedCta_CoreSteps" xml:space="preserve">
+    <value>{0} / {1} core steps completed</value>
+  </data>
+  <data name="GettingStartedCta_NextUp" xml:space="preserve">
+    <value>Next up: {0}</value>
+  </data>
+  <data name="GettingStartedCta_OpenChecklist" xml:space="preserve">
+    <value>Open checklist</value>
+  </data>
+  <data name="PlantCard_UnknownPlant" xml:space="preserve">
+    <value>Unknown plant</value>
+  </data>
+  <data name="PlantCard_RemoveFromBookshelf" xml:space="preserve">
+    <value>Remove from bookshelf</value>
+  </data>
+  <data name="PlantWidget_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="PlantWidget_Level" xml:space="preserve">
+    <value>Level {0} / {1}</value>
+  </data>
+  <data name="PlantWidget_ReadingDays_Max" xml:space="preserve">
+    <value>{0} reading days (max level reached!)</value>
+  </data>
+  <data name="PlantWidget_ReadingDays" xml:space="preserve">
+    <value>{0} reading days ({1} until level {2})</value>
+  </data>
+  <data name="PlantWidget_Watering" xml:space="preserve">
+    <value>Watering…</value>
+  </data>
+  <data name="PlantWidget_WaterPlant" xml:space="preserve">
+    <value>Water plant</value>
+  </data>
+  <data name="PlantWidget_DeadMessage" xml:space="preserve">
+    <value>Your plant has died. It can no longer provide XP boosts.</value>
+  </data>
+  <data name="PlantWidget_DeleteDead" xml:space="preserve">
+    <value>Delete dead plant</value>
+  </data>
+  <data name="PlantWidget_NextWaterIn" xml:space="preserve">
+    <value>Next water in {0} day(s)</value>
+  </data>
+  <data name="PlantWidget_Watered_Healthy" xml:space="preserve">
+    <value>Last watered {0} day(s) ago. Doing great! 🌿</value>
+  </data>
+  <data name="PlantWidget_Watered_Thirsty" xml:space="preserve">
+    <value>⚠️ Needs water soon!</value>
+  </data>
+  <data name="PlantWidget_Watered_Wilting" xml:space="preserve">
+    <value>⚠️⚠️ Needs water urgently!</value>
+  </data>
+  <data name="PlantWidget_Watered_Dead" xml:space="preserve">
+    <value>😢 Plant has died.</value>
+  </data>
+  <data name="PlantDetail_PlantName" xml:space="preserve">
+    <value>Plant name</value>
+  </data>
+  <data name="PlantDetail_Rename" xml:space="preserve">
+    <value>Rename plant</value>
+  </data>
+  <data name="PlantDetail_NextWater" xml:space="preserve">
+    <value>Next water</value>
+  </data>
+  <data name="PlantDetail_DriedOut" xml:space="preserve">
+    <value>This plant has dried out and can no longer be watered.</value>
+  </data>
+  <data name="PlantDetail_AlreadyWatered" xml:space="preserve">
+    <value>Already watered</value>
+  </data>
+  <data name="PlantDetail_CannotWater" xml:space="preserve">
+    <value>Cannot water</value>
+  </data>
+  <data name="PlantDetail_NextWater_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="PlantDetail_NextWater_Missed" xml:space="preserve">
+    <value>Missed watering window</value>
+  </data>
+  <data name="PlantDetail_NextWater_Now" xml:space="preserve">
+    <value>Now</value>
+  </data>
+  <data name="PlantDetail_NextWater_Hours" xml:space="preserve">
+    <value>In {0} hour(s)</value>
+  </data>
+  <data name="PlantDetail_NextWater_Days" xml:space="preserve">
+    <value>In {0} day(s)</value>
+  </data>
+  <data name="PlantDetail_Error_NameEmpty" xml:space="preserve">
+    <value>Plant name cannot be empty</value>
+  </data>
+  <data name="PlantDetail_Error_NameTooLong" xml:space="preserve">
+    <value>Plant name cannot exceed 100 characters</value>
+  </data>
+  <data name="PlantDetail_Error_RenameFailed" xml:space="preserve">
+    <value>Failed to rename plant</value>
+  </data>
+  <data name="ShopCard_Legendary" xml:space="preserve">
+    <value>Legendary</value>
+  </data>
+  <data name="ShopCard_DayUnit" xml:space="preserve">
+    <value>d</value>
+  </data>
+  <data name="ShopCard_UnlocksAt" xml:space="preserve">
+    <value>Unlocks at Lv. {0}</value>
+  </data>
+  <data name="UserProgress_Level" xml:space="preserve">
+    <value>Level {0}</value>
+  </data>
+  <data name="Startup_WhatsNew" xml:space="preserve">
+    <value>What's new?</value>
+  </data>
+  <data name="Startup_HideHistory" xml:space="preserve">
+    <value>Hide history</value>
+  </data>
+  <data name="Startup_ShowHistory" xml:space="preserve">
+    <value>Show history</value>
+  </data>
+  <data name="Startup_UpdateAvailable_Title" xml:space="preserve">
+    <value>Update available</value>
+  </data>
+  <data name="Startup_UpdateAvailable_Subtitle" xml:space="preserve">
+    <value>A newer version of BookHeart is available on the Play Store.</value>
+  </data>
+  <data name="Startup_UpdateAvailable_Body" xml:space="preserve">
+    <value>You can start the update directly in the app. The download continues in the background, and you can finish the installation afterwards.</value>
+  </data>
+  <data name="Startup_Later" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="Startup_Starting" xml:space="preserve">
+    <value>Starting…</value>
+  </data>
+  <data name="Startup_UpdateNow" xml:space="preserve">
+    <value>Update now</value>
+  </data>
+  <data name="Startup_UpdateReady_Title" xml:space="preserve">
+    <value>Update ready</value>
+  </data>
+  <data name="Startup_UpdateReady_Subtitle" xml:space="preserve">
+    <value>The download is complete.</value>
+  </data>
+  <data name="Startup_UpdateReady_Body" xml:space="preserve">
+    <value>Install the update now to switch to the new version.</value>
+  </data>
+  <data name="Startup_InstallNow" xml:space="preserve">
+    <value>Install now</value>
+  </data>
+  <data name="Onboarding_Step" xml:space="preserve">
+    <value>Step {0} / {1}</value>
+  </data>
+  <data name="Onboarding_Skip_Title" xml:space="preserve">
+    <value>Skip the intro?</value>
+  </data>
+  <data name="Onboarding_Skip_Body1" xml:space="preserve">
+    <value>You can come back any time from Settings or the Getting Started hub.</value>
+  </data>
+  <data name="Onboarding_Skip_Body2" xml:space="preserve">
+    <value>Your guided missions will still stay available afterwards.</value>
+  </data>
+  <data name="Onboarding_Step0_Title" xml:space="preserve">
+    <value>Welcome to BookHeart</value>
+  </data>
+  <data name="Onboarding_Step0_Body1" xml:space="preserve">
+    <value>Track your books, build reading habits, and watch your progress grow over time.</value>
+  </data>
+  <data name="Onboarding_Step0_Body2" xml:space="preserve">
+    <value>This short tutorial shows the essentials so you can start quickly.</value>
+  </data>
+  <data name="Onboarding_Step1_Title" xml:space="preserve">
+    <value>Add your first book</value>
+  </data>
+  <data name="Onboarding_Step1_Body1" xml:space="preserve">
+    <value>Start by creating your first entry with title, author, and optional cover image.</value>
+  </data>
+  <data name="Onboarding_Step1_Body2" xml:space="preserve">
+    <value>After adding a book, you can start sessions, track pages, and log progress.</value>
+  </data>
+  <data name="Onboarding_Step1_AddNow" xml:space="preserve">
+    <value>Add first book now</value>
+  </data>
+  <data name="Onboarding_Step2_Title" xml:space="preserve">
+    <value>XP and plant growth</value>
+  </data>
+  <data name="Onboarding_Step2_Body1" xml:space="preserve">
+    <value>You earn XP by reading, finishing books, and completing goals.</value>
+  </data>
+  <data name="Onboarding_Step2_Body2" xml:space="preserve">
+    <value>As you level up, your plants grow and you unlock more rewards in the shop.</value>
+  </data>
+  <data name="Onboarding_Step3_Title" xml:space="preserve">
+    <value>Rating system (6 categories)</value>
+  </data>
+  <data name="Onboarding_Step3_Body" xml:space="preserve">
+    <value>Rate completed books with 1-5 stars across six categories:</value>
+  </data>
+  <data name="Onboarding_Cat_Characters" xml:space="preserve">
+    <value>Characters</value>
+  </data>
+  <data name="Onboarding_Cat_Plot" xml:space="preserve">
+    <value>Plot</value>
+  </data>
+  <data name="Onboarding_Cat_Writing" xml:space="preserve">
+    <value>Writing Style</value>
+  </data>
+  <data name="Onboarding_Cat_Spice" xml:space="preserve">
+    <value>Spice Level</value>
+  </data>
+  <data name="Onboarding_Cat_Pacing" xml:space="preserve">
+    <value>Pacing</value>
+  </data>
+  <data name="Onboarding_Cat_World" xml:space="preserve">
+    <value>World Building</value>
+  </data>
+  <data name="Onboarding_StepN_Title" xml:space="preserve">
+    <value>Main areas</value>
+  </data>
+  <data name="Onboarding_Area_Bookshelf" xml:space="preserve">
+    <value>Bookshelf: organize books and plants</value>
+  </data>
+  <data name="Onboarding_Area_Dashboard" xml:space="preserve">
+    <value>Dashboard: quick overview and activity</value>
+  </data>
+  <data name="Onboarding_Area_Goals" xml:space="preserve">
+    <value>Goals: create and track reading goals</value>
+  </data>
+  <data name="Onboarding_Area_Stats" xml:space="preserve">
+    <value>Stats: view progress and insights</value>
+  </data>
+  <data name="Onboarding_Area_Shop" xml:space="preserve">
+    <value>Shop: buy and manage plants</value>
+  </data>
+  <data name="Onboarding_Area_Settings" xml:space="preserve">
+    <value>Settings: customize your app preferences</value>
+  </data>
+  <data name="Onboarding_ContinueTutorial" xml:space="preserve">
+    <value>Continue tutorial</value>
+  </data>
+  <data name="Onboarding_SkipIntro" xml:space="preserve">
+    <value>Skip intro</value>
+  </data>
+  <data name="Onboarding_Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="Onboarding_Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Onboarding_Finish" xml:space="preserve">
+    <value>Finish</value>
+  </data>
+  <data name="Onboarding_Header_SkipTitle" xml:space="preserve">
+    <value>Skip the intro?</value>
+  </data>
+  <data name="Onboarding_Header_Step0" xml:space="preserve">
+    <value>Welcome to BookHeart</value>
+  </data>
+  <data name="Onboarding_Header_Step1" xml:space="preserve">
+    <value>Your first book</value>
+  </data>
+  <data name="Onboarding_Header_Step2" xml:space="preserve">
+    <value>Level and grow plants</value>
+  </data>
+  <data name="Onboarding_Header_Step3" xml:space="preserve">
+    <value>How ratings work</value>
+  </data>
+  <data name="Onboarding_Header_StepN" xml:space="preserve">
+    <value>Know your navigation</value>
+  </data>
+  <data name="Onboarding_Sub_Skip" xml:space="preserve">
+    <value>You can reopen it any time.</value>
+  </data>
+  <data name="Onboarding_Sub_Step0" xml:space="preserve">
+    <value>Your reading journey starts here.</value>
+  </data>
+  <data name="Onboarding_Sub_Step1" xml:space="preserve">
+    <value>Let's create your first entry.</value>
+  </data>
+  <data name="Onboarding_Sub_Step2" xml:space="preserve">
+    <value>Earn XP while you read.</value>
+  </data>
+  <data name="Onboarding_Sub_Step3" xml:space="preserve">
+    <value>Capture what made a book great.</value>
+  </data>
+  <data name="Onboarding_Sub_StepN" xml:space="preserve">
+    <value>Where to find everything quickly.</value>
+  </data>
+  <data name="QuickTimer_Status_Reading" xml:space="preserve">
+    <value>Reading…</value>
+  </data>
+  <data name="QuickTimer_Status_Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="QuickTimer_Status_Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="QuickTimer_StartReading" xml:space="preserve">
+    <value>Start reading</value>
+  </data>
+  <data name="QuickTimer_SaveSession" xml:space="preserve">
+    <value>Save session</value>
+  </data>
+  <data name="QuickTimer_Time" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="QuickTimer_Pages" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="TimerInline_Title" xml:space="preserve">
+    <value>Reading session</value>
+  </data>
+  <data name="TimerInline_ReadyToRead" xml:space="preserve">
+    <value>Ready to read</value>
+  </data>
+  <data name="TimerInline_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="TimerInline_WasOnPage" xml:space="preserve">
+    <value>Was on page {0}</value>
+  </data>
+  <data name="TimerInline_PagesValue" xml:space="preserve">
+    <value>{0} pages</value>
+  </data>
+  <data name="TimerInline_XpToEarn" xml:space="preserve">
+    <value>XP to earn</value>
+  </data>
+  <data name="TimerInline_Minutes" xml:space="preserve">
+    <value>Minutes</value>
+  </data>
+  <data name="TimerInline_MinutesValue" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="TimerInline_Progress" xml:space="preserve">
+    <value>Progress: {0} → {1} / {2} ({3}%)</value>
+  </data>
+  <data name="StatsAnalyses_YearComparison" xml:space="preserve">
+    <value>Year comparison</value>
+  </data>
+  <data name="StatsAnalyses_GenreRadar" xml:space="preserve">
+    <value>Genre radar</value>
+  </data>
+  <data name="StatsAnalyses_CompletionRate" xml:space="preserve">
+    <value>Completion rate</value>
+  </data>
+  <data name="StatsAnalyses_BookLength" xml:space="preserve">
+    <value>Book length preference</value>
+  </data>
+  <data name="StatsAnalyses_MostReadAuthors" xml:space="preserve">
+    <value>Most read authors</value>
+  </data>
+  <data name="StatsAnalyses_PageCount_Books" xml:space="preserve">
+    <value>{0} books</value>
+  </data>
+  <data name="StatsAnalyses_AuthorDetail" xml:space="preserve">
+    <value>{0} books · {1} pages</value>
+  </data>
+  <data name="StatsAnalyses_Bucket_Short" xml:space="preserve">
+    <value>Short (&lt;200 p.)</value>
+  </data>
+  <data name="StatsAnalyses_Bucket_Medium" xml:space="preserve">
+    <value>Medium (200-400 p.)</value>
+  </data>
+  <data name="StatsAnalyses_Bucket_Long" xml:space="preserve">
+    <value>Long (400-600 p.)</value>
+  </data>
+  <data name="StatsAnalyses_Bucket_Epic" xml:space="preserve">
+    <value>Epic (&gt;600 p.)</value>
+  </data>
+  <data name="StatsAnalyses_Donut_Completed" xml:space="preserve">
+    <value>Completed ({0})</value>
+  </data>
+  <data name="StatsAnalyses_Donut_Abandoned" xml:space="preserve">
+    <value>Abandoned ({0})</value>
+  </data>
+  <data name="StatsAnalyses_Row_Books" xml:space="preserve">
+    <value>Books</value>
+  </data>
+  <data name="StatsAnalyses_Row_Pages" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="StatsAnalyses_Row_Hours" xml:space="preserve">
+    <value>Hours</value>
+  </data>
+  <data name="StatsAnalyses_Row_Rating" xml:space="preserve">
+    <value>Rating</value>
+  </data>
+  <data name="StatsTrends_ReadingCalendar" xml:space="preserve">
+    <value>Reading calendar</value>
+  </data>
+  <data name="StatsTrends_Weekday_Mon" xml:space="preserve">
+    <value>Mon</value>
+  </data>
+  <data name="StatsTrends_Weekday_Tue" xml:space="preserve">
+    <value>Tue</value>
+  </data>
+  <data name="StatsTrends_Weekday_Wed" xml:space="preserve">
+    <value>Wed</value>
+  </data>
+  <data name="StatsTrends_Weekday_Thu" xml:space="preserve">
+    <value>Thu</value>
+  </data>
+  <data name="StatsTrends_Weekday_Fri" xml:space="preserve">
+    <value>Fri</value>
+  </data>
+  <data name="StatsTrends_Weekday_Sat" xml:space="preserve">
+    <value>Sat</value>
+  </data>
+  <data name="StatsTrends_Weekday_Sun" xml:space="preserve">
+    <value>Sun</value>
+  </data>
+  <data name="StatsTrends_Less" xml:space="preserve">
+    <value>Less</value>
+  </data>
+  <data name="StatsTrends_More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="StatsTrends_WeekdayDist" xml:space="preserve">
+    <value>Weekday distribution</value>
+  </data>
+  <data name="StatsTrends_NoData" xml:space="preserve">
+    <value>No data available yet</value>
+  </data>
+  <data name="StatsTrends_TimeOfDay" xml:space="preserve">
+    <value>Time of day</value>
+  </data>
+  <data name="StatsTrends_Morning" xml:space="preserve">
+    <value>Morning</value>
+  </data>
+  <data name="StatsTrends_Afternoon" xml:space="preserve">
+    <value>Afternoon</value>
+  </data>
+  <data name="StatsTrends_Evening" xml:space="preserve">
+    <value>Evening</value>
+  </data>
+  <data name="StatsTrends_Night" xml:space="preserve">
+    <value>Night</value>
+  </data>
+  <data name="StatsTrends_SessionLength" xml:space="preserve">
+    <value>Session length</value>
+  </data>
+  <data name="StatsTrends_AverageMin" xml:space="preserve">
+    <value>Average: {0} min</value>
+  </data>
+  <data name="StatsTrends_MonthlyProgress" xml:space="preserve">
+    <value>Monthly progress</value>
+  </data>
+  <data name="StatsTrends_Speed" xml:space="preserve">
+    <value>Speed</value>
+  </data>
+  <data name="StatsTrends_SpeedValue" xml:space="preserve">
+    <value>{0} p/h</value>
+  </data>
+  <data name="StatsTrends_ReadingTime" xml:space="preserve">
+    <value>Reading time</value>
+  </data>
+  <data name="StatsTrends_FinishDaysValue" xml:space="preserve">
+    <value>{0} days/book</value>
+  </data>
+  <data name="StatsTrends_VsLastMonth" xml:space="preserve">
+    <value>vs. last month</value>
+  </data>
+  <data name="Paywall_DefaultHeadline" xml:space="preserve">
+    <value>Upgrade BookHeart</value>
+  </data>
+  <data name="Paywall_UnlockFeature" xml:space="preserve">
+    <value>Unlock {0}</value>
+  </data>
+  <data name="Paywall_DefaultSubtitle" xml:space="preserve">
+    <value>Unlock more of BookHeart.</value>
+  </data>
+  <data name="Paywall_BillingPeriodAria" xml:space="preserve">
+    <value>Billing period</value>
+  </data>
+  <data name="Paywall_Monthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="Paywall_Yearly" xml:space="preserve">
+    <value>Yearly</value>
+  </data>
+  <data name="Paywall_SaveUpTo30" xml:space="preserve">
+    <value>save up to 30%</value>
+  </data>
+  <data name="Paywall_Tagline_Plus" xml:space="preserve">
+    <value>Comfort + full gamification</value>
+  </data>
+  <data name="Paywall_Tagline_Premium" xml:space="preserve">
+    <value>Analytics, share cards, prestige</value>
+  </data>
+  <data name="Paywall_FirstMonth" xml:space="preserve">
+    <value>1st month €0.99</value>
+  </data>
+  <data name="Paywall_IncludedInPremium" xml:space="preserve">
+    <value>Included in Premium</value>
+  </data>
+  <data name="Paywall_GetPlus" xml:space="preserve">
+    <value>Get Plus</value>
+  </data>
+  <data name="Paywall_MostPopular" xml:space="preserve">
+    <value>Most popular</value>
+  </data>
+  <data name="Paywall_GetPremium" xml:space="preserve">
+    <value>Get Premium</value>
+  </data>
+  <data name="Paywall_LaunchSpecial" xml:space="preserve">
+    <value>Launch special — limited time</value>
+  </data>
+  <data name="Paywall_PremiumLifetime" xml:space="preserve">
+    <value>Premium Lifetime</value>
+  </data>
+  <data name="Paywall_PayOnce" xml:space="preserve">
+    <value>Pay once · own it forever</value>
+  </data>
+  <data name="Paywall_AlreadyPremium" xml:space="preserve">
+    <value>Already Premium</value>
+  </data>
+  <data name="Paywall_GetLifetime" xml:space="preserve">
+    <value>Get Lifetime for €99.99</value>
+  </data>
+  <data name="Paywall_TrustNote" xml:space="preserve">
+    <value>Cancel anytime in Google Play · Auto-renews until cancelled</value>
+  </data>
+  <data name="Paywall_PromoLabel" xml:space="preserve">
+    <value>Have a promo code?</value>
+  </data>
+  <data name="Paywall_Redeem" xml:space="preserve">
+    <value>Redeem</value>
+  </data>
+  <data name="Settings_Loading" xml:space="preserve">
+    <value>Loading settings…</value>
+  </data>
+  <data name="Settings_Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings_Subtitle" xml:space="preserve">
+    <value>Offline-first book tracker</value>
+  </data>
+  <data name="Settings_Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Settings_PlusPremium_Title" xml:space="preserve">
+    <value>Plus &amp; Premium</value>
+  </data>
+  <data name="Settings_PlusPremium_Subtitle" xml:space="preserve">
+    <value>Manage your subscription and unlock more of BookHeart</value>
+  </data>
+  <data name="Settings_PlusPremium_CurrentPlan" xml:space="preserve">
+    <value>Current plan</value>
+  </data>
+  <data name="Settings_PlusPremium_Tier_Free" xml:space="preserve">
+    <value>Free</value>
+  </data>
+  <data name="Settings_PlusPremium_Tier_Plus" xml:space="preserve">
+    <value>Plus</value>
+  </data>
+  <data name="Settings_PlusPremium_Tier_Premium" xml:space="preserve">
+    <value>Premium</value>
+  </data>
+  <data name="Settings_PlusPremium_Lifetime" xml:space="preserve">
+    <value>Lifetime</value>
+  </data>
+  <data name="Settings_PlusPremium_RenewsOn" xml:space="preserve">
+    <value>renews {0}</value>
+  </data>
+  <data name="Settings_PlusPremium_Upgrade" xml:space="preserve">
+    <value>Upgrade to Plus or Premium</value>
+  </data>
+  <data name="Settings_PlusPremium_Restore" xml:space="preserve">
+    <value>Restore purchases</value>
+  </data>
+  <data name="Settings_PlusPremium_ChangePlan" xml:space="preserve">
+    <value>Change plan</value>
+  </data>
+  <data name="Settings_PlusPremium_Manage" xml:space="preserve">
+    <value>Manage subscription</value>
+  </data>
+  <data name="Settings_PlusPremium_SeePlans" xml:space="preserve">
+    <value>See plans</value>
+  </data>
+  <data name="Settings_Notifications_Title" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Settings_Notifications_Subtitle" xml:space="preserve">
+    <value>Reading nudges and reminders</value>
+  </data>
+  <data name="Settings_Notifications_Enable" xml:space="preserve">
+    <value>Enable notifications</value>
+  </data>
+  <data name="Settings_Notifications_EnableDescription" xml:space="preserve">
+    <value>Allow BookHeart to send you notifications</value>
+  </data>
+  <data name="Settings_Notifications_DailyReminder" xml:space="preserve">
+    <value>Daily reading reminder</value>
+  </data>
+  <data name="Settings_Notifications_DailyReminderDescription" xml:space="preserve">
+    <value>Get a daily nudge to read</value>
+  </data>
+  <data name="Settings_Notifications_ReminderTime" xml:space="preserve">
+    <value>Reminder time</value>
+  </data>
+  <data name="Settings_Notifications_ReminderTimeDescription" xml:space="preserve">
+    <value>When should we remind you?</value>
+  </data>
+  <data name="Settings_Shelf_Title" xml:space="preserve">
+    <value>Shelf appearance</value>
+  </data>
+  <data name="Settings_Shelf_LedgeColor" xml:space="preserve">
+    <value>Ledge color</value>
+  </data>
+  <data name="Settings_Shelf_LedgeDescription" xml:space="preserve">
+    <value>The plank under each book</value>
+  </data>
+  <data name="Settings_Shelf_BarColor" xml:space="preserve">
+    <value>Shelf bar color</value>
+  </data>
+  <data name="Settings_Shelf_BarDescription" xml:space="preserve">
+    <value>The bottom bar of each shelf</value>
+  </data>
+  <data name="Settings_Data_Title" xml:space="preserve">
+    <value>Data &amp; backup</value>
+  </data>
+  <data name="Settings_Data_Subtitle" xml:space="preserve">
+    <value>Save, restore, or erase your library</value>
+  </data>
+  <data name="Settings_Data_Backup" xml:space="preserve">
+    <value>Backup to cloud</value>
+  </data>
+  <data name="Settings_Data_Restore" xml:space="preserve">
+    <value>Restore from backup</value>
+  </data>
+  <data name="Settings_Danger_Title" xml:space="preserve">
+    <value>Danger zone</value>
+  </data>
+  <data name="Settings_Danger_Description" xml:space="preserve">
+    <value>Delete all your books, reading sessions, goals, plants, and reset your progress. This action cannot be undone.</value>
+  </data>
+  <data name="Settings_Danger_DeleteAll" xml:space="preserve">
+    <value>Delete all data</value>
+  </data>
+  <data name="Settings_Help_Title" xml:space="preserve">
+    <value>Help &amp; community</value>
+  </data>
+  <data name="Settings_Help_Subtitle" xml:space="preserve">
+    <value>Learn the app, replay the intro, or support development</value>
+  </data>
+  <data name="Settings_Help_GettingStarted" xml:space="preserve">
+    <value>Open Getting Started</value>
+  </data>
+  <data name="Settings_Help_ReplayIntro" xml:space="preserve">
+    <value>Replay intro</value>
+  </data>
+  <data name="Settings_Help_WhatsNew" xml:space="preserve">
+    <value>What's new</value>
+  </data>
+  <data name="Settings_Help_BuyMeCoffee" xml:space="preserve">
+    <value>Buy me a coffee</value>
+  </data>
+  <data name="Settings_Help_HideCta" xml:space="preserve">
+    <value>Hide Getting Started on Bookshelf</value>
+  </data>
+  <data name="Settings_Help_HideCtaDescription" xml:space="preserve">
+    <value>Hide the Bookshelf prompt when checklist steps are still open</value>
+  </data>
+  <data name="Settings_Privacy_Title" xml:space="preserve">
+    <value>Privacy</value>
+  </data>
+  <data name="Settings_Privacy_Subtitle" xml:space="preserve">
+    <value>Control which anonymous data BookHeart collects</value>
+  </data>
+  <data name="Settings_Privacy_UsageStats" xml:space="preserve">
+    <value>Usage statistics</value>
+  </data>
+  <data name="Settings_Privacy_UsageStatsDescription" xml:space="preserve">
+    <value>Helps us understand which features are being used. No book titles, authors or personal notes are transmitted.</value>
+  </data>
+  <data name="Settings_Privacy_CrashReports" xml:space="preserve">
+    <value>Crash reports</value>
+  </data>
+  <data name="Settings_Privacy_CrashReportsDescription" xml:space="preserve">
+    <value>Sends an anonymous error report when the app crashes so the issue can be fixed. No personal data is included.</value>
+  </data>
+  <data name="Settings_Privacy_DisableNote" xml:space="preserve">
+    <value>When disabled, cached events and the anonymous device ID are reset. Data that was already transmitted cannot be recalled.</value>
+  </data>
+  <data name="Settings_MoreInfo_Title" xml:space="preserve">
+    <value>More info</value>
+  </data>
+  <data name="Settings_MoreInfo_Diagnostics" xml:space="preserve">
+    <value>Data recovery diagnostics</value>
+  </data>
+  <data name="Settings_MoreInfo_DiagnosticsHint" xml:space="preserve">
+    <value>If data is missing, screenshot this log and send it to support.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Title" xml:space="preserve">
+    <value>Privacy policy</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_LastUpdated" xml:space="preserve">
+    <value>Last updated: April 2026</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Overview_Title" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Overview_Body" xml:space="preserve">
+    <value>BookHeart is an offline-first book tracking app. Your data is stored locally on your device and is never transmitted to our servers. We do not collect, store, or share any personal information.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Storage_Title" xml:space="preserve">
+    <value>Data storage</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Storage_Body" xml:space="preserve">
+    <value>All your books, reading sessions, goals, plants, and settings are stored in a local database (SQLite) on your device. This data never leaves your device unless you explicitly use the Backup &amp; Restore feature.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Camera_Title" xml:space="preserve">
+    <value>Camera permission</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Camera_Body" xml:space="preserve">
+    <value>BookHeart requests camera access solely for scanning book barcodes (ISBN). No photos or videos are captured, stored, or transmitted. Camera access is optional and can be denied without affecting other app features.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Network_Title" xml:space="preserve">
+    <value>Network usage</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Network_Body" xml:space="preserve">
+    <value>When you look up a book by ISBN, BookHeart sends the ISBN number to the Google Books API to retrieve book metadata (title, author, cover image). No personal data or device identifiers are included in these requests. The app functions fully offline without this feature.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_ThirdParty_Title" xml:space="preserve">
+    <value>Third-party services</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_ThirdParty_Body" xml:space="preserve">
+    <value>BookHeart uses three third-party services: the Google Books API for optional ISBN lookup, Firebase Analytics for anonymous usage statistics (Android only, enabled by default, opt-out under Settings → Privacy), and Firebase Crashlytics for anonymous crash reports (Android only, enabled by default, opt-out under Settings → Privacy). Firebase never receives book titles, authors, ISBNs, quotes, annotations, or personal notes — only coarse bucketed counts. The Android Advertising ID and Android ID are explicitly disabled.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Deletion_Title" xml:space="preserve">
+    <value>Data deletion</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Deletion_Body" xml:space="preserve">
+    <value>You can delete all your data at any time using the "Delete All Data" option in Settings. Uninstalling the app also removes all stored data from your device.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Children_Title" xml:space="preserve">
+    <value>Children's privacy</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Children_Body" xml:space="preserve">
+    <value>BookHeart does not knowingly collect any information from children. The app does not require account creation or any personal information to function.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Changes_Title" xml:space="preserve">
+    <value>Changes to this policy</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Changes_Body" xml:space="preserve">
+    <value>Any changes to this privacy policy will be reflected in app updates. The "Last updated" date at the top indicates the most recent revision.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Contact_Title" xml:space="preserve">
+    <value>Contact</value>
+  </data>
+  <data name="Settings_PrivacyPolicy_Contact_Body" xml:space="preserve">
+    <value>If you have questions about this privacy policy, please open an issue on our GitHub repository or contact us via the Play Store listing.</value>
+  </data>
+  <data name="Settings_Delete_Title" xml:space="preserve">
+    <value>Delete all data?</value>
+  </data>
+  <data name="Settings_Delete_Warning" xml:space="preserve">
+    <value>This will permanently delete:</value>
+  </data>
+  <data name="Settings_Delete_Item_Books" xml:space="preserve">
+    <value>All your books</value>
+  </data>
+  <data name="Settings_Delete_Item_Sessions" xml:space="preserve">
+    <value>All reading sessions</value>
+  </data>
+  <data name="Settings_Delete_Item_Goals" xml:space="preserve">
+    <value>All reading goals</value>
+  </data>
+  <data name="Settings_Delete_Item_Plants" xml:space="preserve">
+    <value>All plants</value>
+  </data>
+  <data name="Settings_Delete_Item_Progress" xml:space="preserve">
+    <value>Your level and XP progress</value>
+  </data>
+  <data name="Settings_Delete_Item_Coins" xml:space="preserve">
+    <value>Your coins</value>
+  </data>
+  <data name="Settings_Delete_TypeConfirm" xml:space="preserve">
+    <value>Type &lt;strong&gt;DELETE&lt;/strong&gt; to confirm:</value>
+  </data>
+  <data name="Settings_Delete_Placeholder" xml:space="preserve">
+    <value>Type DELETE</value>
+  </data>
+  <data name="Settings_Delete_Confirm" xml:space="preserve">
+    <value>Delete everything</value>
+  </data>
+  <data name="Settings_Delete_Success_Title" xml:space="preserve">
+    <value>Data deleted</value>
+  </data>
+  <data name="Settings_Delete_Success_Body" xml:space="preserve">
+    <value>All your data has been deleted. Starting fresh!</value>
+  </data>
+  <data name="Settings_Language_Title" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Settings_Language_Subtitle" xml:space="preserve">
+    <value>Choose the app language</value>
+  </data>
+  <data name="Settings_Language_Label" xml:space="preserve">
+    <value>App language</value>
+  </data>
+  <data name="Settings_Language_Description" xml:space="preserve">
+    <value>BookHeart will restart after changing the language</value>
+  </data>
+  <data name="Settings_Restart_BackupTitle" xml:space="preserve">
+    <value>Backup restored</value>
+  </data>
+  <data name="Settings_Restart_BackupBody" xml:space="preserve">
+    <value>BookHeart is restarting to finish loading your data…</value>
+  </data>
+  <data name="Settings_Restart_LanguageTitle" xml:space="preserve">
+    <value>Language changed</value>
+  </data>
+  <data name="Settings_Restart_LanguageBody" xml:space="preserve">
+    <value>BookHeart is restarting to apply the new language…</value>
+  </data>
+    <data name="Lookup_EnterIsbnFirst" xml:space="preserve">
+    <value>Please enter an ISBN first</value>
+  </data>
+  <data name="Lookup_NoBookFound" xml:space="preserve">
+    <value>No book found with this ISBN</value>
+  </data>
+  <data name="Lookup_NoBookFoundDot" xml:space="preserve">
+    <value>No book found for this ISBN.</value>
+  </data>
+  <data name="Lookup_LoadedSuccess" xml:space="preserve">
+    <value>Book data loaded successfully!</value>
+  </data>
+  <data name="Lookup_BookFound" xml:space="preserve">
+    <value>Book found!</value>
+  </data>
+  <data name="Lookup_NoInternet" xml:space="preserve">
+    <value>No internet connection. Please check your network and try again.</value>
+  </data>
+  <data name="Lookup_QuotaReached" xml:space="preserve">
+    <value>Google Books API quota reached. Please try again later.</value>
+  </data>
+  <data name="Lookup_Timeout" xml:space="preserve">
+    <value>Request timed out. Please try again.</value>
+  </data>
+<data name="Error_Generic" xml:space="preserve">
+    <value>An error occurred</value>
+  </data>
+  <data name="Error_GenericShort" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Error_DbInitializing" xml:space="preserve">
+    <value>Database is still initializing. Please try again.</value>
+  </data>
+  <data name="Error_BookNotFound" xml:space="preserve">
+    <value>Book not found</value>
+  </data>
+  <data name="Error_SessionNotFound" xml:space="preserve">
+    <value>Session not found</value>
+  </data>
+  <data name="Error_PlantNotFound" xml:space="preserve">
+    <value>Plant not found</value>
+  </data>
+  <data name="Error_PlantSpeciesNotFound" xml:space="preserve">
+    <value>Plant species not found</value>
+  </data>
+  <data name="Error_PlantRequiresLevel" xml:space="preserve">
+    <value>This plant requires level {0}. You are currently level {1}.</value>
+  </data>
+  <data name="Error_NotEnoughCoins" xml:space="preserve">
+    <value>Not enough coins. You need {0} coins but only have {1}.</value>
+  </data>
+  <data name="Error_NotEnoughCoinsShort" xml:space="preserve">
+    <value>Not enough coins. You need {0} but only have {1}.</value>
+  </data>
+  <data name="Error_DecorationNotFound" xml:space="preserve">
+    <value>Decoration not found.</value>
+  </data>
+  <data name="Error_DecorationRequiresLevel" xml:space="preserve">
+    <value>This decoration requires level {0}.</value>
+  </data>
+  <data name="Error_PurchaseDecorationFailed" xml:space="preserve">
+    <value>Failed to purchase decoration</value>
+  </data>
+  <data name="Error_GoalTitleRequired" xml:space="preserve">
+    <value>Goal title is required</value>
+  </data>
+  <data name="Error_BookTitleAuthorRequired" xml:space="preserve">
+    <value>Title and Author are required</value>
+  </data>
+  <data name="Error_NotificationPermissionDenied" xml:space="preserve">
+    <value>Notification permission was denied. Please enable it in your device settings.</value>
+  </data>
+  <data name="Error_FilePickCancelled" xml:space="preserve">
+    <value>File selection failed or was cancelled. If you selected a file from Google Drive, try saving it to your device storage first.</value>
+  </data>
+  <data name="Error_RestoreDbInitFailed" xml:space="preserve">
+    <value>Cannot restore: database initialization failed earlier. Please restart BookHeart and try again. ({0}: {1})</value>
+  </data>
+  <data name="Error_RestoreBackupFailed" xml:space="preserve">
+    <value>Failed to restore backup: {0}: {1}{2}</value>
+  </data>
+  <data name="Error_LoadPlantDetailsFailed" xml:space="preserve">
+    <value>Failed to load plant details: {0}</value>
+  </data>
+  <data name="Settings_Restore_PickerTitle" xml:space="preserve">
+    <value>Select Backup File</value>
+  </data>
+  <data name="GoalStatus_UpdateSuccess" xml:space="preserve">
+    <value>Update successful</value>
+  </data>
+  <data name="GoalStatus_Created" xml:space="preserve">
+    <value>Goal created</value>
+  </data>
+  <data name="GoalStatus_Deleted" xml:space="preserve">
+    <value>Successfully deleted</value>
+  </data>
+  <data name="Notification_Reminder_Title" xml:space="preserve">
+    <value>Time to Read!</value>
+  </data>
+  <data name="Notification_Reminder_Body" xml:space="preserve">
+    <value>Don't forget your daily reading session</value>
+  </data>
+  <data name="Notification_Goal_Title" xml:space="preserve">
+    <value>Goal Completed!</value>
+  </data>
+  <data name="Notification_Goal_Body" xml:space="preserve">
+    <value>Congratulations! You've completed your goal: {0}</value>
+  </data>
+  <data name="Notification_Plant_Title" xml:space="preserve">
+    <value>Your Plant Needs Water!</value>
+  </data>
+  <data name="Notification_Plant_Body" xml:space="preserve">
+    <value>{0} is thirsty! Give it some water to keep it healthy.</value>
+  </data>
+  <data name="Validator_Book_TitleRequired" xml:space="preserve">
+    <value>Title is required</value>
+  </data>
+  <data name="Validator_Book_TitleTooLong" xml:space="preserve">
+    <value>Title cannot exceed 500 characters</value>
+  </data>
+  <data name="Validator_Book_AuthorRequired" xml:space="preserve">
+    <value>Author is required</value>
+  </data>
+  <data name="Validator_Book_AuthorTooLong" xml:space="preserve">
+    <value>Author cannot exceed 300 characters</value>
+  </data>
+  <data name="Validator_Book_IsbnTooLong" xml:space="preserve">
+    <value>ISBN cannot exceed 20 characters</value>
+  </data>
+  <data name="Validator_Book_PageCountPositive" xml:space="preserve">
+    <value>Page count must be greater than 0</value>
+  </data>
+  <data name="Validator_Book_PageCountMax" xml:space="preserve">
+    <value>Page count cannot exceed 50,000</value>
+  </data>
+  <data name="Validator_Book_CurrentPageNonNegative" xml:space="preserve">
+    <value>Current page cannot be negative</value>
+  </data>
+  <data name="Validator_Book_CurrentPageMax" xml:space="preserve">
+    <value>Current page cannot exceed total page count</value>
+  </data>
+  <data name="Validator_Book_DateStartedFuture" xml:space="preserve">
+    <value>Start date cannot be in the future</value>
+  </data>
+  <data name="Validator_Book_DateCompletedFuture" xml:space="preserve">
+    <value>Completion date cannot be in the future</value>
+  </data>
+  <data name="Validator_Book_DateCompletedBeforeStart" xml:space="preserve">
+    <value>Completion date must be after start date</value>
+  </data>
+  <data name="Validator_Goal_TitleRequired" xml:space="preserve">
+    <value>Goal title is required</value>
+  </data>
+  <data name="Validator_Goal_TitleTooLong" xml:space="preserve">
+    <value>Goal title cannot exceed 200 characters</value>
+  </data>
+  <data name="Validator_Goal_DescriptionTooLong" xml:space="preserve">
+    <value>Description cannot exceed 1,000 characters</value>
+  </data>
+  <data name="Validator_Goal_TargetPositive" xml:space="preserve">
+    <value>Target value must be greater than 0</value>
+  </data>
+  <data name="Validator_Goal_TargetMax" xml:space="preserve">
+    <value>Target value cannot exceed 100,000</value>
+  </data>
+  <data name="Validator_Goal_CurrentNonNegative" xml:space="preserve">
+    <value>Current value cannot be negative</value>
+  </data>
+  <data name="Validator_Goal_StartDateRequired" xml:space="preserve">
+    <value>Start date is required</value>
+  </data>
+  <data name="Validator_Goal_EndAfterStart" xml:space="preserve">
+    <value>End date must be after start date</value>
+  </data>
+  <data name="Validator_Goal_PeriodTooLong" xml:space="preserve">
+    <value>Goal period cannot exceed 1 year</value>
+  </data>
+  <data name="Validator_Session_BookIdRequired" xml:space="preserve">
+    <value>Book ID is required</value>
+  </data>
+  <data name="Validator_Session_StartedRequired" xml:space="preserve">
+    <value>Start time is required</value>
+  </data>
+  <data name="Validator_Session_StartedFuture" xml:space="preserve">
+    <value>Start time cannot be in the future</value>
+  </data>
+  <data name="Validator_Session_EndAfterStart" xml:space="preserve">
+    <value>End time must be after start time</value>
+  </data>
+  <data name="Validator_Session_EndFuture" xml:space="preserve">
+    <value>End time cannot be in the future</value>
+  </data>
+  <data name="Validator_Session_MinutesPositive" xml:space="preserve">
+    <value>Reading duration must be greater than 0</value>
+  </data>
+  <data name="Validator_Session_MinutesMax" xml:space="preserve">
+    <value>Reading duration cannot exceed 24 hours (1440 minutes)</value>
+  </data>
+  <data name="Validator_Session_PagesNonNegative" xml:space="preserve">
+    <value>Pages read cannot be negative</value>
+  </data>
+  <data name="Validator_Session_PagesMax" xml:space="preserve">
+    <value>Pages read cannot exceed 10,000</value>
+  </data>
+  <data name="Validator_Session_XpNonNegative" xml:space="preserve">
+    <value>XP earned cannot be negative</value>
+  </data>
+  <data name="Validator_Plant_NameRequired" xml:space="preserve">
+    <value>Plant name is required</value>
+  </data>
+  <data name="Validator_Plant_NameTooLong" xml:space="preserve">
+    <value>Plant name cannot exceed 100 characters</value>
+  </data>
+  <data name="Validator_Plant_SpeciesIdRequired" xml:space="preserve">
+    <value>Plant species ID is required</value>
+  </data>
+  <data name="Validator_Plant_LevelMin" xml:space="preserve">
+    <value>Current level must be at least 1</value>
+  </data>
+  <data name="Validator_Plant_LevelMax" xml:space="preserve">
+    <value>Current level cannot exceed 100</value>
+  </data>
+  <data name="Validator_Plant_ExperienceNonNegative" xml:space="preserve">
+    <value>Experience cannot be negative</value>
+  </data>
+  <data name="Validator_Plant_PlantedRequired" xml:space="preserve">
+    <value>Planted date is required</value>
+  </data>
+  <data name="Validator_Plant_PlantedFuture" xml:space="preserve">
+    <value>Planted date cannot be in the future</value>
+  </data>
+  <data name="Validator_Plant_LastWateredRequired" xml:space="preserve">
+    <value>Last watered date is required</value>
+  </data>
+  <data name="Validator_Plant_LastWateredFuture" xml:space="preserve">
+    <value>Last watered date cannot be in the future</value>
+  </data>
+  <data name="Error_FailedTo_LoadShop" xml:space="preserve">
+    <value>Failed to load shop</value>
+  </data>
+  <data name="Error_FailedTo_PurchasePlant" xml:space="preserve">
+    <value>Failed to purchase plant</value>
+  </data>
+  <data name="Error_FailedTo_UpdateNotificationSettings" xml:space="preserve">
+    <value>Failed to update notification settings</value>
+  </data>
+  <data name="Error_FailedTo_UpdateReminderSettings" xml:space="preserve">
+    <value>Failed to update reminder settings</value>
+  </data>
+  <data name="Error_FailedTo_UpdateReminderTime" xml:space="preserve">
+    <value>Failed to update reminder time</value>
+  </data>
+  <data name="Error_FailedTo_UpdateGettingStartedVisibility" xml:space="preserve">
+    <value>Failed to update Getting Started visibility</value>
+  </data>
+  <data name="Error_FailedTo_UpdateShelfLedgeColor" xml:space="preserve">
+    <value>Failed to update shelf ledge color</value>
+  </data>
+  <data name="Error_FailedTo_UpdateShelfBaseColor" xml:space="preserve">
+    <value>Failed to update shelf base color</value>
+  </data>
+  <data name="Error_FailedTo_UpdateAnalyticsSettings" xml:space="preserve">
+    <value>Failed to update analytics settings</value>
+  </data>
+  <data name="Error_FailedTo_UpdateCrashReportingSettings" xml:space="preserve">
+    <value>Failed to update crash reporting settings</value>
+  </data>
+  <data name="Error_FailedTo_LoadSettings" xml:space="preserve">
+    <value>Failed to load settings</value>
+  </data>
+  <data name="Error_FailedTo_ChangeLanguage" xml:space="preserve">
+    <value>Failed to change language</value>
+  </data>
+  <data name="Error_FailedTo_SaveSettings" xml:space="preserve">
+    <value>Failed to save settings</value>
+  </data>
+  <data name="Error_FailedTo_ExportData" xml:space="preserve">
+    <value>Failed to export data</value>
+  </data>
+  <data name="Error_FailedTo_ImportData" xml:space="preserve">
+    <value>Failed to import data</value>
+  </data>
+  <data name="Error_FailedTo_DeleteData" xml:space="preserve">
+    <value>Failed to delete data</value>
+  </data>
+  <data name="Error_FailedTo_BackupData" xml:space="preserve">
+    <value>Failed to backup data</value>
+  </data>
+  <data name="Error_FailedTo_StartPurchase" xml:space="preserve">
+    <value>Failed to start purchase</value>
+  </data>
+  <data name="Error_FailedTo_RestorePurchases" xml:space="preserve">
+    <value>Failed to restore purchases</value>
+  </data>
+  <data name="Error_FailedTo_RedeemPromoCode" xml:space="preserve">
+    <value>Failed to redeem promo code</value>
+  </data>
+  <data name="Error_FailedTo_LoadTrendStatistics" xml:space="preserve">
+    <value>Failed to load trend statistics</value>
+  </data>
+  <data name="Error_FailedTo_LoadWishlist" xml:space="preserve">
+    <value>Failed to load wishlist</value>
+  </data>
+  <data name="Error_FailedTo_AddToWishlist" xml:space="preserve">
+    <value>Failed to add to wishlist</value>
+  </data>
+  <data name="Error_FailedTo_MoveToLibrary" xml:space="preserve">
+    <value>Failed to move to library</value>
+  </data>
+  <data name="Error_FailedTo_RemoveFromWishlist" xml:space="preserve">
+    <value>Failed to remove from wishlist</value>
+  </data>
+  <data name="Error_FailedTo_SearchWishlist" xml:space="preserve">
+    <value>Failed to search wishlist</value>
+  </data>
+  <data name="Error_FailedTo_LoadGoals" xml:space="preserve">
+    <value>Failed to load goals</value>
+  </data>
+  <data name="Error_FailedTo_UpdateGoal" xml:space="preserve">
+    <value>Failed to update goal</value>
+  </data>
+  <data name="Error_FailedTo_CreateGoal" xml:space="preserve">
+    <value>Failed to create goal</value>
+  </data>
+  <data name="Error_FailedTo_DeleteGoal" xml:space="preserve">
+    <value>Failed to delete goal</value>
+  </data>
+  <data name="Error_FailedTo_LoadReadingSession" xml:space="preserve">
+    <value>Failed to load reading session</value>
+  </data>
+  <data name="Error_FailedTo_StartReadingSession" xml:space="preserve">
+    <value>Failed to start reading session</value>
+  </data>
+  <data name="Error_FailedTo_EndSession" xml:space="preserve">
+    <value>Failed to end session</value>
+  </data>
+  <data name="Error_FailedTo_GenerateBookRecommendationCard" xml:space="preserve">
+    <value>Failed to generate book recommendation card</value>
+  </data>
+  <data name="Error_FailedTo_LoadBook" xml:space="preserve">
+    <value>Failed to load book</value>
+  </data>
+  <data name="Error_FailedTo_SaveBook" xml:space="preserve">
+    <value>Failed to save book</value>
+  </data>
+  <data name="Error_FailedTo_GenerateBookShareCard" xml:space="preserve">
+    <value>Failed to generate book share card</value>
+  </data>
+  <data name="Error_FailedTo_UpdateAvailableTropes" xml:space="preserve">
+    <value>Failed to update available tropes</value>
+  </data>
+  <data name="Error_FailedTo_LoadDashboard" xml:space="preserve">
+    <value>Failed to load dashboard</value>
+  </data>
+  <data name="Error_FailedTo_WaterPlant" xml:space="preserve">
+    <value>Failed to water plant</value>
+  </data>
+  <data name="Error_FailedTo_DeletePlant" xml:space="preserve">
+    <value>Failed to delete plant</value>
+  </data>
+  <data name="Error_FailedTo_LoadBookDetails" xml:space="preserve">
+    <value>Failed to load book details</value>
+  </data>
+  <data name="Error_FailedTo_StartReading" xml:space="preserve">
+    <value>Failed to start reading</value>
+  </data>
+  <data name="Error_FailedTo_CompleteBook" xml:space="preserve">
+    <value>Failed to complete book</value>
+  </data>
+  <data name="Error_FailedTo_AddQuote" xml:space="preserve">
+    <value>Failed to add quote</value>
+  </data>
+  <data name="Error_FailedTo_AddSession" xml:space="preserve">
+    <value>Failed to add session</value>
+  </data>
+  <data name="Error_FailedTo_UpdateCategoryRating" xml:space="preserve">
+    <value>Failed to update {category} rating</value>
+  </data>
+  <data name="Error_FailedTo_UpdateNotes" xml:space="preserve">
+    <value>Failed to update notes</value>
+  </data>
+  <data name="Error_FailedTo_LoadStatistics" xml:space="preserve">
+    <value>Failed to load statistics</value>
+  </data>
+  <data name="Error_FailedTo_FilterTopBooks" xml:space="preserve">
+    <value>Failed to filter top books</value>
+  </data>
+  <data name="Error_FailedTo_LoadSharePeriods" xml:space="preserve">
+    <value>Failed to load share periods</value>
+  </data>
+  <data name="Error_FailedTo_GenerateShareCard" xml:space="preserve">
+    <value>Failed to generate share card</value>
+  </data>
+  <data name="Error_FailedTo_InitializeStartupExperience" xml:space="preserve">
+    <value>Failed to initialize startup experience</value>
+  </data>
+  <data name="Error_FailedTo_RefreshAppUpdateState" xml:space="preserve">
+    <value>Failed to refresh app update state</value>
+  </data>
+  <data name="Error_FailedTo_OpenChangelog" xml:space="preserve">
+    <value>Failed to open changelog</value>
+  </data>
+  <data name="Error_FailedTo_SkipOnboardingIntro" xml:space="preserve">
+    <value>Failed to skip onboarding intro</value>
+  </data>
+  <data name="Error_FailedTo_CompleteOnboardingIntro" xml:space="preserve">
+    <value>Failed to complete onboarding intro</value>
+  </data>
+  <data name="Error_FailedTo_StartAppUpdate" xml:space="preserve">
+    <value>Failed to start app update</value>
+  </data>
+  <data name="Error_FailedTo_InstallAppUpdate" xml:space="preserve">
+    <value>Failed to install app update</value>
+  </data>
+  <data name="Error_FailedTo_ApplyGooglePlayPurchase" xml:space="preserve">
+    <value>Failed to apply Google Play purchase</value>
+  </data>
+  <data name="Error_FailedTo_RefreshOnboardingState" xml:space="preserve">
+    <value>Failed to refresh onboarding state</value>
+  </data>
+  <data name="Error_FailedTo_LoadAnalysisStatistics" xml:space="preserve">
+    <value>Failed to load analysis statistics</value>
+  </data>
+  <data name="Error_FailedTo_LoadUserProgress" xml:space="preserve">
+    <value>Failed to load user progress</value>
+  </data>
+  <data name="Error_FailedTo_LoadDecorationShop" xml:space="preserve">
+    <value>Failed to load decoration shop</value>
+  </data>
+  <data name="Error_FailedTo_LoadBooks" xml:space="preserve">
+    <value>Failed to load books</value>
+  </data>
+  <data name="Error_FailedTo_CreateShelf" xml:space="preserve">
+    <value>Failed to create shelf</value>
+  </data>
+  <data name="Error_FailedTo_DeleteShelf" xml:space="preserve">
+    <value>Failed to delete shelf</value>
+  </data>
+  <data name="Error_FailedTo_MoveShelfUp" xml:space="preserve">
+    <value>Failed to move shelf up</value>
+  </data>
+  <data name="Error_FailedTo_MoveShelfDown" xml:space="preserve">
+    <value>Failed to move shelf down</value>
+  </data>
+  <data name="Error_FailedTo_MoveBookToShelf" xml:space="preserve">
+    <value>Failed to move book to shelf</value>
+  </data>
+  <data name="Error_FailedTo_RemoveBookFromShelf" xml:space="preserve">
+    <value>Failed to remove book from shelf</value>
+  </data>
+  <data name="Error_FailedTo_SearchBooks" xml:space="preserve">
+    <value>Failed to search books</value>
+  </data>
+  <data name="Error_FailedTo_DeleteBook" xml:space="preserve">
+    <value>Failed to delete book</value>
+  </data>
+  <data name="Error_FailedTo_PlacePlant" xml:space="preserve">
+    <value>Failed to place plant</value>
+  </data>
+  <data name="Error_FailedTo_RemovePlant" xml:space="preserve">
+    <value>Failed to remove plant</value>
+  </data>
+  <data name="Error_FailedTo_RenamePlant" xml:space="preserve">
+    <value>Failed to rename plant</value>
+  </data>
+  <data name="Error_FailedTo_MovePlant" xml:space="preserve">
+    <value>Failed to move plant</value>
+  </data>
+  <data name="Error_FailedTo_ReorderItems" xml:space="preserve">
+    <value>Failed to reorder items</value>
+  </data>
+  <data name="Error_FailedTo_MoveItemBetweenShelves" xml:space="preserve">
+    <value>Failed to move item between shelves</value>
+  </data>
+  <data name="Error_FailedTo_PersistShelfMove" xml:space="preserve">
+    <value>Failed to persist shelf move</value>
+  </data>
+  <data name="Error_FailedTo_PlaceDecoration" xml:space="preserve">
+    <value>Failed to place decoration</value>
+  </data>
+  <data name="Error_FailedTo_RemoveDecoration" xml:space="preserve">
+    <value>Failed to remove decoration</value>
+  </data>
+  <data name="Error_FailedTo_DeleteDecoration" xml:space="preserve">
+    <value>Failed to delete decoration</value>
+  </data>
+  <data name="Error_FailedTo_RefreshGoalStats" xml:space="preserve">
+    <value>Failed to refresh goal stats</value>
+  </data>
+</root>

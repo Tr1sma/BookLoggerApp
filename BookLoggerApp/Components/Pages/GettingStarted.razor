@@ -1,19 +1,22 @@
 @page "/getting-started"
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject IOnboardingService OnboardingService
 @inject NavigationManager NavigationManager
 @inject IBackButtonService BackButtonService
+@inject IStringLocalizer<AppResources> L
 
-<PageTitle>Getting Started - BookHeart</PageTitle>
+<PageTitle>@L["PageTitle_GettingStarted"] - BookHeart</PageTitle>
 
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.GettingStarted" />
 <div class="getting-started-page">
     @if (_isLoading)
     {
-        <div class="loading">Loading getting started...</div>
+        <div class="loading">@L["GettingStarted_Loading"]</div>
     }
     else if (!string.IsNullOrWhiteSpace(_errorMessage))
     {
@@ -23,30 +26,30 @@
     {
         <section class="getting-started-hero">
             <div class="getting-started-hero-copy">
-                <span class="getting-started-kicker">BookHeart onboarding</span>
-                <h1>Getting Started</h1>
-                <p>Track the real first-run flows, replay the intro, and use the hub to cover the rest of the app.</p>
+                <span class="getting-started-kicker">@L["GettingStarted_Kicker"]</span>
+                <h1>@L["GettingStarted_Title"]</h1>
+                <p>@L["GettingStarted_Subtitle"]</p>
             </div>
 
             <div class="getting-started-summary">
-                <span class="summary-label">Core setup</span>
+                <span class="summary-label">@L["GettingStarted_CoreSetup"]</span>
                 <strong>@_snapshot.CompletedCoreCount / @_snapshot.TotalCoreCount</strong>
             </div>
         </section>
 
         <section class="getting-started-actions">
             <button type="button" class="btn btn-primary" @onclick="ReplayIntroAsync">
-                Replay intro
+                @L["GettingStarted_ReplayIntro"]
             </button>
             <button type="button" class="btn btn-secondary" @onclick="ResetGuidedProgressAsync">
-                Reset guided progress
+                @L["GettingStarted_ResetGuided"]
             </button>
         </section>
 
         <section class="getting-started-section">
             <div class="section-header">
-                <h2>Guided missions</h2>
-                <p>These missions complete only from real app actions.</p>
+                <h2>@L["GettingStarted_Missions_Title"]</h2>
+                <p>@L["GettingStarted_Missions_Subtitle"]</p>
             </div>
 
             <div class="mission-grid">
@@ -68,14 +71,14 @@
 
                         @if (mission.IsCompleted && mission.CompletedAt.HasValue)
                         {
-                            <p class="mission-meta">Completed @mission.CompletedAt.Value.ToLocalTime().ToString("g")</p>
+                            <p class="mission-meta">@L["GettingStarted_CompletedOn", mission.CompletedAt.Value.ToLocalTime().ToString("g")]</p>
                         }
 
                         <button type="button"
                                 class="btn @(mission.IsCompleted ? "btn-secondary" : "btn-primary")"
                                 disabled="@mission.IsLocked"
                                 @onclick="() => OpenMissionAsync(mission)">
-                            @(mission.IsCompleted ? "Open again" : mission.CtaLabel)
+                            @(mission.IsCompleted ? L["GettingStarted_OpenAgain"].Value : mission.CtaLabel)
                         </button>
                     </article>
                 }
@@ -84,8 +87,8 @@
 
         <section class="getting-started-section">
             <div class="section-header">
-                <h2>Feature atlas</h2>
-                <p>Covered here without forcing risky or platform-dependent actions.</p>
+                <h2>@L["GettingStarted_Atlas_Title"]</h2>
+                <p>@L["GettingStarted_Atlas_Subtitle"]</p>
             </div>
 
             <div class="atlas-grid">
@@ -106,7 +109,7 @@
                         @if (!string.IsNullOrWhiteSpace(entry.Route))
                         {
                             <button type="button" class="btn btn-secondary" @onclick="() => NavigationManager.NavigateTo(entry.Route!)">
-                                @(entry.CtaLabel ?? "Open")
+                                @(entry.CtaLabel ?? L["GettingStarted_OpenGeneric"].Value)
                             </button>
                         }
                     </article>
@@ -156,7 +159,7 @@
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Failed to load getting started: {ex.Message}";
+            _errorMessage = L["GettingStarted_LoadError", ex.Message];
         }
         finally
         {
@@ -199,12 +202,12 @@
             _ => "status-locked"
         };
 
-    private static string GetStatusLabel(OnboardingMissionStatus status) =>
+    private string GetStatusLabel(OnboardingMissionStatus status) =>
         status switch
         {
-            OnboardingMissionStatus.Completed => "Completed",
-            OnboardingMissionStatus.Available => "Ready",
-            _ => "Locked"
+            OnboardingMissionStatus.Completed => L["GettingStarted_Status_Completed"],
+            OnboardingMissionStatus.Available => L["GettingStarted_Status_Available"],
+            _ => L["GettingStarted_Status_Locked"]
         };
 }
 

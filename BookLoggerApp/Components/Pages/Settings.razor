@@ -1,7 +1,9 @@
 @page "/settings"
 @using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.ViewModels
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject SettingsViewModel ViewModel
 @inject AppStartupViewModel StartupViewModel
@@ -11,9 +13,11 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IEntitlementService EntitlementService
 @inject BookLoggerApp.Core.Services.Abstractions.IPaywallCoordinator PaywallCoordinator
 @inject BookLoggerApp.Core.Services.Abstractions.IBillingService BillingService
+@inject BookLoggerApp.Core.Services.Abstractions.ILanguageService LanguageService
+@inject IStringLocalizer<AppResources> L
 @inject IJSRuntime JSRuntime
 
-<PageTitle>Settings - BookHeart</PageTitle>
+<PageTitle>@L["Settings_Title"] - BookHeart</PageTitle>
 
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.Settings" />
@@ -22,7 +26,7 @@
 <div class="settings-container">
     @if (ViewModel.IsBusy)
     {
-        <div class="loading">Loading settings...</div>
+        <div class="loading">@L["Settings_Loading"]</div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
@@ -34,11 +38,11 @@
         <section class="settings-hero">
             <div class="settings-hero-copy">
                 <span class="settings-kicker">BookHeart</span>
-                <h1>Einstellungen</h1>
-                <p class="settings-hero-subtitle">Offline-first book tracker</p>
+                <h1>@L["Settings_Title"]</h1>
+                <p class="settings-hero-subtitle">@L["Settings_Subtitle"]</p>
             </div>
             <div class="settings-hero-version">
-                <span class="version-label">Version</span>
+                <span class="version-label">@L["Settings_Version"]</span>
                 <strong>@ViewModel.AppVersion</strong>
             </div>
         </section>
@@ -46,24 +50,24 @@
         <!-- Plus & Premium -->
         <section class="settings-card">
             <div class="section-header">
-                <h2>⭐ Plus & Premium</h2>
-                <p>Manage your subscription and unlock more of BookHeart</p>
+                <h2>⭐ @L["Settings_PlusPremium_Title"]</h2>
+                <p>@L["Settings_PlusPremium_Subtitle"]</p>
             </div>
 
             <div class="setting-row">
                 <div class="setting-info">
-                    <span class="setting-label">Current plan</span>
+                    <span class="setting-label">@L["Settings_PlusPremium_CurrentPlan"]</span>
                     <span class="setting-description">
                         @switch (EntitlementService.CurrentTier)
                         {
                             case SubscriptionTier.Free:
-                                <span>Free</span>
+                                <span>@L["Settings_PlusPremium_Tier_Free"]</span>
                                 break;
                             case SubscriptionTier.Plus:
-                                <span>Plus@(EntitlementService.CurrentEntitlement?.ExpiresAt is { } plusExpiry ? $" — renews {plusExpiry:yyyy-MM-dd}" : string.Empty)</span>
+                                <span>@L["Settings_PlusPremium_Tier_Plus"]@(EntitlementService.CurrentEntitlement?.ExpiresAt is { } plusExpiry ? $" — {L["Settings_PlusPremium_RenewsOn", plusExpiry.ToString("yyyy-MM-dd")]}" : string.Empty)</span>
                                 break;
                             case SubscriptionTier.Premium:
-                                <span>Premium@(EntitlementService.CurrentEntitlement?.BillingPeriod == BillingPeriod.Lifetime ? " Lifetime" : EntitlementService.CurrentEntitlement?.ExpiresAt is { } premExpiry ? $" — renews {premExpiry:yyyy-MM-dd}" : string.Empty)</span>
+                                <span>@L["Settings_PlusPremium_Tier_Premium"]@(EntitlementService.CurrentEntitlement?.BillingPeriod == BillingPeriod.Lifetime ? " " + L["Settings_PlusPremium_Lifetime"] : EntitlementService.CurrentEntitlement?.ExpiresAt is { } premExpiry ? $" — {L["Settings_PlusPremium_RenewsOn", premExpiry.ToString("yyyy-MM-dd")]}" : string.Empty)</span>
                                 break;
                         }
                     </span>
@@ -73,25 +77,25 @@
             @if (EntitlementService.CurrentTier == SubscriptionTier.Free)
             {
                 <div class="setting-row" style="flex-wrap: wrap; gap: 0.5rem;">
-                    <button class="btn btn-primary" @onclick="OpenPaywallAsync">Upgrade to Plus or Premium</button>
-                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">Restore purchases</button>
+                    <button class="btn btn-primary" @onclick="OpenPaywallAsync">@L["Settings_PlusPremium_Upgrade"]</button>
+                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">@L["Settings_PlusPremium_Restore"]</button>
                 </div>
             }
             else if (EntitlementService.CurrentEntitlement?.BillingPeriod != BillingPeriod.Lifetime)
             {
                 <div class="settings-entitlement-actions">
-                    <button class="btn btn-secondary" @onclick="OpenPaywallAsync">Change plan</button>
-                    <button class="btn btn-primary" @onclick="OpenSubscriptionManagementAsync">Manage subscription</button>
+                    <button class="btn btn-secondary" @onclick="OpenPaywallAsync">@L["Settings_PlusPremium_ChangePlan"]</button>
+                    <button class="btn btn-primary" @onclick="OpenSubscriptionManagementAsync">@L["Settings_PlusPremium_Manage"]</button>
                 </div>
                 <div class="setting-row" style="flex-wrap: wrap; gap: 0.5rem;">
-                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">Restore purchases</button>
+                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">@L["Settings_PlusPremium_Restore"]</button>
                 </div>
             }
             else
             {
                 <div class="setting-row" style="flex-wrap: wrap; gap: 0.5rem;">
-                    <button class="btn btn-secondary" @onclick="OpenPaywallAsync">See plans</button>
-                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">Restore purchases</button>
+                    <button class="btn btn-secondary" @onclick="OpenPaywallAsync">@L["Settings_PlusPremium_SeePlans"]</button>
+                    <button class="btn btn-link" @onclick="RestorePurchasesAsync">@L["Settings_PlusPremium_Restore"]</button>
                 </div>
             }
 
@@ -104,14 +108,14 @@
         <!-- Notifications -->
         <section class="settings-card">
             <div class="section-header">
-                <h2>🔔 Notifications</h2>
-                <p>Reading nudges and reminders</p>
+                <h2>🔔 @L["Settings_Notifications_Title"]</h2>
+                <p>@L["Settings_Notifications_Subtitle"]</p>
             </div>
 
             <div class="setting-row">
                 <div class="setting-info">
-                    <span class="setting-label">Enable Notifications</span>
-                    <span class="setting-description">Allow BookHeart to send you notifications</span>
+                    <span class="setting-label">@L["Settings_Notifications_Enable"]</span>
+                    <span class="setting-description">@L["Settings_Notifications_EnableDescription"]</span>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox"
@@ -125,8 +129,8 @@
             {
                 <div class="setting-row">
                     <div class="setting-info">
-                        <span class="setting-label">Daily Reading Reminder</span>
-                        <span class="setting-description">Get a daily nudge to read</span>
+                        <span class="setting-label">@L["Settings_Notifications_DailyReminder"]</span>
+                        <span class="setting-description">@L["Settings_Notifications_DailyReminderDescription"]</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox"
@@ -140,8 +144,8 @@
                 {
                     <div class="setting-row time-picker-row">
                         <div class="setting-info">
-                            <span class="setting-label">Reminder Time</span>
-                            <span class="setting-description">When should we remind you?</span>
+                            <span class="setting-label">@L["Settings_Notifications_ReminderTime"]</span>
+                            <span class="setting-description">@L["Settings_Notifications_ReminderTimeDescription"]</span>
                         </div>
                         <div class="time-picker">
                             <select class="time-select"
@@ -169,10 +173,33 @@
             }
         </section>
 
+        <!-- Language -->
+        <section class="settings-card">
+            <div class="section-header">
+                <h2>🌐 @L["Settings_Language_Title"]</h2>
+                <p>@L["Settings_Language_Subtitle"]</p>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-label">@L["Settings_Language_Label"]</span>
+                    <span class="setting-description">@L["Settings_Language_Description"]</span>
+                </div>
+                <select class="time-select"
+                        value="@ViewModel.SelectedLanguage"
+                        @onchange="@(async (ChangeEventArgs e) => await HandleLanguageChangeAsync(e.Value?.ToString()))">
+                    @foreach (var lang in ViewModel.SupportedLanguages)
+                    {
+                        <option value="@lang.Code">@lang.DisplayName</option>
+                    }
+                </select>
+            </div>
+        </section>
+
         <!-- Shelf Appearance (collapsible) -->
         <section class="settings-card">
             <button class="settings-collapse-toggle" @onclick="ToggleShelfAppearance">
-                <span>🎨 Shelf Appearance</span>
+                <span>🎨 @L["Settings_Shelf_Title"]</span>
                 <span class="toggle-icon">@(_showShelfAppearance ? "▲" : "▼")</span>
             </button>
 
@@ -180,14 +207,14 @@
             {
                 <LockedFeatureButton Feature="FeatureKey.CustomShelfColors">
                     <div class="settings-collapse-content">
-                        <ColorPresetPicker Label="Ledge Color"
-                                           Description="The plank under each book"
+                        <ColorPresetPicker Label="@L["Settings_Shelf_LedgeColor"]"
+                                           Description="@L["Settings_Shelf_LedgeDescription"]"
                                            SelectedColor="@ViewModel.ShelfLedgeColor"
                                            Presets="_shelfLedgeColorPresets"
                                            OnColorChanged="@(hex => ViewModel.UpdateShelfLedgeColorCommand.ExecuteAsync(hex))" />
 
-                        <ColorPresetPicker Label="Shelf Bar Color"
-                                           Description="The bottom bar of each shelf"
+                        <ColorPresetPicker Label="@L["Settings_Shelf_BarColor"]"
+                                           Description="@L["Settings_Shelf_BarDescription"]"
                                            SelectedColor="@ViewModel.ShelfBaseColor"
                                            Presets="_shelfBaseColorPresets"
                                            OnColorChanged="@(hex => ViewModel.UpdateShelfBaseColorCommand.ExecuteAsync(hex))" />
@@ -199,28 +226,27 @@
         <!-- Data & Backup (merged with Danger Zone) -->
         <section class="settings-card">
             <div class="section-header">
-                <h2>💾 Data & Backup</h2>
-                <p>Save, restore, or erase your library</p>
+                <h2>💾 @L["Settings_Data_Title"]</h2>
+                <p>@L["Settings_Data_Subtitle"]</p>
             </div>
             <div class="settings-action-grid data-backup-grid">
                 <button class="btn btn-primary" @onclick="HandleBackupToCloudAsync">
-                    Backup to Cloud
+                    @L["Settings_Data_Backup"]
                 </button>
                 <button class="btn btn-secondary" @onclick="HandleRestoreFromBackupAsync">
-                    Restore from Backup
+                    @L["Settings_Data_Restore"]
                 </button>
             </div>
 
             <hr class="danger-divider" />
 
             <div class="danger-subblock">
-                <h3>⚠️ Danger zone</h3>
+                <h3>⚠️ @L["Settings_Danger_Title"]</h3>
                 <p class="danger-description">
-                    Delete all your books, reading sessions, goals, plants, and reset your progress.
-                    This action cannot be undone.
+                    @L["Settings_Danger_Description"]
                 </p>
                 <button class="btn btn-danger" @onclick="ShowDeleteConfirmation">
-                    Delete All Data
+                    @L["Settings_Danger_DeleteAll"]
                 </button>
             </div>
         </section>
@@ -228,31 +254,31 @@
         <!-- Help & Community (merged Support me + Getting Started) -->
         <section class="settings-card">
             <div class="section-header">
-                <h2>💛 Help & Community</h2>
-                <p>Learn the app, replay the intro, or support development</p>
+                <h2>💛 @L["Settings_Help_Title"]</h2>
+                <p>@L["Settings_Help_Subtitle"]</p>
             </div>
             <div class="settings-action-grid help-action-grid">
                 <button class="btn btn-primary" @onclick="OpenGettingStarted">
-                    Open Getting Started
+                    @L["Settings_Help_GettingStarted"]
                 </button>
                 <button class="btn btn-secondary" @onclick="ReplayIntroFromSettingsAsync">
-                    Replay Intro
+                    @L["Settings_Help_ReplayIntro"]
                 </button>
                 <button class="btn btn-secondary" @onclick="OpenChangelogAsync">
-                    What's New
+                    @L["Settings_Help_WhatsNew"]
                 </button>
                 <button id="buy-me-a-coffee-fallback"
                         class="btn buy-me-a-coffee-fallback"
                         type="button"
                         @onclick="OpenBuyMeACoffee">
-                    Buy me a coffee
+                    @L["Settings_Help_BuyMeCoffee"]
                 </button>
             </div>
 
             <div class="setting-row">
                 <div class="setting-info">
-                    <span class="setting-label">Hide Getting Started on Bookshelf</span>
-                    <span class="setting-description">Hide the Bookshelf prompt when checklist steps are still open</span>
+                    <span class="setting-label">@L["Settings_Help_HideCta"]</span>
+                    <span class="setting-description">@L["Settings_Help_HideCtaDescription"]</span>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox"
@@ -266,15 +292,15 @@
         <!-- Privacy (Firebase Analytics & Crashlytics opt-out) -->
         <section id="privacy" class="settings-card">
             <div class="section-header">
-                <h2>🔒 Privacy</h2>
-                <p>Control which anonymous data BookHeart collects</p>
+                <h2>🔒 @L["Settings_Privacy_Title"]</h2>
+                <p>@L["Settings_Privacy_Subtitle"]</p>
             </div>
 
             <div class="setting-row">
                 <div class="setting-info">
-                    <span class="setting-label">Usage statistics</span>
+                    <span class="setting-label">@L["Settings_Privacy_UsageStats"]</span>
                     <span class="setting-description">
-                        Helps us understand which features are being used. No book titles, authors or personal notes are transmitted.
+                        @L["Settings_Privacy_UsageStatsDescription"]
                     </span>
                 </div>
                 <label class="toggle-switch">
@@ -287,9 +313,9 @@
 
             <div class="setting-row">
                 <div class="setting-info">
-                    <span class="setting-label">Crash reports</span>
+                    <span class="setting-label">@L["Settings_Privacy_CrashReports"]</span>
                     <span class="setting-description">
-                        Sends an anonymous error report when the app crashes so the issue can be fixed. No personal data is included.
+                        @L["Settings_Privacy_CrashReportsDescription"]
                     </span>
                 </div>
                 <label class="toggle-switch">
@@ -301,15 +327,14 @@
             </div>
 
             <p class="privacy-note">
-                When disabled, cached events and the anonymous device ID are reset.
-                Data that was already transmitted cannot be recalled.
+                @L["Settings_Privacy_DisableNote"]
             </p>
         </section>
 
         <!-- More Info (Diagnostics + Privacy Policy) -->
         <section class="settings-card">
             <button class="settings-collapse-toggle" @onclick="ToggleMoreInfo">
-                <span>ⓘ More Info</span>
+                <span>ⓘ @L["Settings_MoreInfo_Title"]</span>
                 <span class="toggle-icon">@(_showMoreInfo ? "▲" : "▼")</span>
             </button>
 
@@ -317,7 +342,7 @@
             {
                 <div class="settings-collapse-content more-info-content">
                     <button class="settings-collapse-toggle nested" @onclick="ToggleMigrationLog">
-                        <span>Data Recovery Diagnostics</span>
+                        <span>@L["Settings_MoreInfo_Diagnostics"]</span>
                         <span class="toggle-icon">@(_showMigrationLog ? "▲" : "▼")</span>
                     </button>
                     @if (_showMigrationLog)
@@ -325,86 +350,46 @@
                         <div class="migration-log-container">
                             <textarea class="migration-log" readonly>@ViewModel.MigrationLog</textarea>
                             <p class="migration-hint">
-                                If data is missing, screenshot this log and send it to support.
+                                @L["Settings_MoreInfo_DiagnosticsHint"]
                             </p>
                         </div>
                     }
 
                     <button class="settings-collapse-toggle nested" @onclick="TogglePrivacyPolicy">
-                        <span>Privacy Policy</span>
+                        <span>@L["Settings_PrivacyPolicy_Title"]</span>
                         <span class="toggle-icon">@(_showPrivacyPolicy ? "▲" : "▼")</span>
                     </button>
                     @if (_showPrivacyPolicy)
                     {
                         <div class="privacy-content">
-                            <p class="privacy-updated">Last updated: April 2026</p>
+                            <p class="privacy-updated">@L["Settings_PrivacyPolicy_LastUpdated"]</p>
 
-                            <h3>Overview</h3>
-                            <p>
-                                BookHeart is an offline-first book tracking app. Your data is stored
-                                locally on your device and is never transmitted to our servers. We do not
-                                collect, store, or share any personal information.
-                            </p>
+                            <h3>@L["Settings_PrivacyPolicy_Overview_Title"]</h3>
+                            <p>@L["Settings_PrivacyPolicy_Overview_Body"]</p>
 
-                            <h3>Data Storage</h3>
-                            <p>
-                                All your books, reading sessions, goals, plants, and settings are stored
-                                in a local database (SQLite) on your device. This data never leaves your
-                                device unless you explicitly use the Backup & Restore feature.
-                            </p>
+                            <h3>@L["Settings_PrivacyPolicy_Storage_Title"]</h3>
+                            <p>@L["Settings_PrivacyPolicy_Storage_Body"]</p>
 
-                            <h3>Camera Permission</h3>
-                            <p>
-                                BookHeart requests camera access solely for scanning book barcodes (ISBN).
-                                No photos or videos are captured, stored, or transmitted. Camera access
-                                is optional and can be denied without affecting other app features.
-                            </p>
+                            <h3>@L["Settings_PrivacyPolicy_Camera_Title"]</h3>
+                            <p>@L["Settings_PrivacyPolicy_Camera_Body"]</p>
 
-                            <h3>Network Usage</h3>
-                            <p>
-                                When you look up a book by ISBN, BookHeart sends the ISBN number to the
-                                Google Books API to retrieve book metadata (title, author, cover image).
-                                No personal data or device identifiers are included in these requests.
-                                The app functions fully offline without this feature.
-                            </p>
+                            <h3>@L["Settings_PrivacyPolicy_Network_Title"]</h3>
+                            <p>@L["Settings_PrivacyPolicy_Network_Body"]</p>
 
-                            <h3>Third-Party Services</h3>
-                            <p>
-                                BookHeart uses three third-party services: the Google Books API for
-                                optional ISBN lookup, Firebase Analytics for anonymous usage statistics
-                                (Android only, enabled by default, opt-out under Settings → Privacy),
-                                and Firebase Crashlytics for anonymous crash reports (Android only,
-                                enabled by default, opt-out under Settings → Privacy). Firebase never
-                                receives book titles, authors, ISBNs, quotes, annotations, or personal
-                                notes — only coarse bucketed counts. The Android Advertising ID and
-                                Android ID are explicitly disabled.
-                            </p>
+                            <h3>@L["Settings_PrivacyPolicy_ThirdParty_Title"]</h3>
+                            <p>@L["Settings_PrivacyPolicy_ThirdParty_Body"]</p>
 
-                            <h3>Data Deletion</h3>
-                            <p>
-                                You can delete all your data at any time using the "Delete All Data"
-                                option in Settings. Uninstalling the app also removes all stored data
-                                from your device.
-                            </p>
+                            <h3>@L["Settings_PrivacyPolicy_Deletion_Title"]</h3>
+                            <p>@L["Settings_PrivacyPolicy_Deletion_Body"]</p>
 
-                            <h3>Children's Privacy</h3>
-                            <p>
-                                BookHeart does not knowingly collect any information from children.
-                                The app does not require account creation or any personal information
-                                to function.
-                            </p>
+                            <h3>@L["Settings_PrivacyPolicy_Children_Title"]</h3>
+                            <p>@L["Settings_PrivacyPolicy_Children_Body"]</p>
 
-                            <h3>Changes to This Policy</h3>
-                            <p>
-                                Any changes to this privacy policy will be reflected in app updates.
-                                The "Last updated" date at the top indicates the most recent revision.
-                            </p>
+                            <h3>@L["Settings_PrivacyPolicy_Changes_Title"]</h3>
+                            <p>@L["Settings_PrivacyPolicy_Changes_Body"]</p>
 
-                            <h3>Contact</h3>
-                            <p>
-                                If you have questions about this privacy policy, please open an issue
-                                on our GitHub repository or contact us via the Play Store listing.
-                            </p>
+                            <h3>@L["Settings_PrivacyPolicy_Contact_Title"]</h3>
+                            <p>@L["Settings_PrivacyPolicy_Contact_Body"]</p>
                         </div>
                     }
                 </div>
@@ -419,35 +404,35 @@
     <div class="modal-overlay" @onclick="HideDeleteConfirmation">
         <div class="modal-content delete-modal" @onclick:stopPropagation="true">
             <div class="modal-header">
-                <h3>Delete All Data?</h3>
+                <h3>@L["Settings_Delete_Title"]</h3>
             </div>
             <div class="modal-body">
                 <p class="warning-text">
-                    This will permanently delete:
+                    @L["Settings_Delete_Warning"]
                 </p>
                 <ul class="delete-list">
-                    <li>All your books</li>
-                    <li>All reading sessions</li>
-                    <li>All reading goals</li>
-                    <li>All plants</li>
-                    <li>Your level and XP progress</li>
-                    <li>Your coins</li>
+                    <li>@L["Settings_Delete_Item_Books"]</li>
+                    <li>@L["Settings_Delete_Item_Sessions"]</li>
+                    <li>@L["Settings_Delete_Item_Goals"]</li>
+                    <li>@L["Settings_Delete_Item_Plants"]</li>
+                    <li>@L["Settings_Delete_Item_Progress"]</li>
+                    <li>@L["Settings_Delete_Item_Coins"]</li>
                 </ul>
                 <p class="confirm-text">
-                    Type <strong>DELETE</strong> to confirm:
+                    @((MarkupString)L["Settings_Delete_TypeConfirm"].Value)
                 </p>
                 <input type="text"
                        class="confirm-input"
                        @bind="_deleteConfirmText"
                        @bind:event="oninput"
-                       placeholder="Type DELETE" />
+                       placeholder="@L["Settings_Delete_Placeholder"]" />
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" @onclick="HideDeleteConfirmation">Cancel</button>
+                <button class="btn btn-secondary" @onclick="HideDeleteConfirmation">@L["Common_Cancel"]</button>
                 <button class="btn btn-danger"
                         @onclick="ConfirmDeleteAllData"
                         disabled="@(!IsDeleteConfirmed)">
-                    Delete Everything
+                    @L["Settings_Delete_Confirm"]
                 </button>
             </div>
         </div>
@@ -461,11 +446,11 @@
         <div class="modal-content success-modal" @onclick:stopPropagation="true">
             <div class="modal-body">
                 <div class="success-icon">&#10003;</div>
-                <h3>Data Deleted</h3>
-                <p>All your data has been deleted. Starting fresh!</p>
+                <h3>@L["Settings_Delete_Success_Title"]</h3>
+                <p>@L["Settings_Delete_Success_Body"]</p>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary" @onclick="CloseSuccessAndNavigate">OK</button>
+                <button class="btn btn-primary" @onclick="CloseSuccessAndNavigate">@L["Common_Ok"]</button>
             </div>
         </div>
     </div>
@@ -478,8 +463,22 @@
         <div class="modal-content success-modal" @onclick:stopPropagation="true">
             <div class="modal-body">
                 <div class="success-icon">&#10003;</div>
-                <h3>Backup restored</h3>
-                <p>BookHeart is restarting to finish loading your data...</p>
+                <h3>@L["Settings_Restart_BackupTitle"]</h3>
+                <p>@L["Settings_Restart_BackupBody"]</p>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Restart Notice (after language change) -->
+@if (_showLanguageRestartNotice)
+{
+    <div class="modal-overlay">
+        <div class="modal-content success-modal" @onclick:stopPropagation="true">
+            <div class="modal-body">
+                <div class="success-icon">🌐</div>
+                <h3>@L["Settings_Restart_LanguageTitle"]</h3>
+                <p>@L["Settings_Restart_LanguageBody"]</p>
             </div>
         </div>
     </div>
@@ -489,11 +488,30 @@
     private bool _showDeleteConfirmation = false;
     private bool _showSuccessModal = false;
     private bool _showRestartNotice = false;
+    private bool _showLanguageRestartNotice = false;
     private bool _showPrivacyPolicy = false;
     private bool _showMigrationLog = false;
     private bool _showShelfAppearance = false;
     private bool _showMoreInfo = false;
     private string _deleteConfirmText = string.Empty;
+
+    private async Task HandleLanguageChangeAsync(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return;
+        }
+
+        await ViewModel.ChangeLanguageCommand.ExecuteAsync(code);
+
+        if (string.IsNullOrEmpty(ViewModel.ErrorMessage) && ViewModel.LanguageChangedPendingRestart)
+        {
+            _showLanguageRestartNotice = true;
+            StateHasChanged();
+            await Task.Delay(1500);
+            AppRestartService.RestartApp();
+        }
+    }
 
     private bool IsDeleteConfirmed => _deleteConfirmText.Equals("DELETE", StringComparison.Ordinal);
 
@@ -647,6 +665,10 @@
         // mask a successful restore.
         if (ViewModel.BackupRestoreSucceeded)
         {
+            // Re-seed the Preferences language mirror from the restored AppSettings so
+            // the first render after restart already uses the restored language.
+            try { await LanguageService.SyncFromSettingsAsync(); } catch { }
+
             _showRestartNotice = true;
             StateHasChanged();
             await Task.Delay(1500);

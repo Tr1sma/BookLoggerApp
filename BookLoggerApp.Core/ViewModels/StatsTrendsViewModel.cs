@@ -106,7 +106,7 @@ public partial class StatsTrendsViewModel : ViewModelBase
             var (currentFinish, previousFinish) = finishTask.Result;
             CurrentFinishDays = currentFinish;
             FinishDaysDifference = Math.Round(currentFinish - previousFinish, 1);
-        }, "Failed to load trend statistics");
+        }, Tr("Error_FailedTo_LoadTrendStatistics"));
     }
 
     [RelayCommand]

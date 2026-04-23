@@ -1,4 +1,7 @@
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
 
 <div class="plant-card @(IsInBookshelf ? "in-bookshelf" : "")"
      @onclick="HandleClick">
@@ -17,7 +20,7 @@
             <button class="btn-icon"
                     @onclick:stopPropagation="true"
                     @onclick="HandleRemove"
-                    title="Remove from Shelf">
+                    title="@L["Bookshelf_RemoveFromShelf"]">
                 🗑️
             </button>
         </div>

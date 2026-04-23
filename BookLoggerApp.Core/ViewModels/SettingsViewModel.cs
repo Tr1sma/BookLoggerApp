@@ -16,6 +16,7 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IMigrationService _migrationService;
     private readonly INotificationService _notificationService;
     private readonly IAppVersionService _appVersionService;
+    private readonly ILanguageService _languageService;
     private readonly IAnalyticsService? _analytics;
 
 
@@ -28,6 +29,7 @@ public partial class SettingsViewModel : ViewModelBase
         IMigrationService migrationService,
         INotificationService notificationService,
         IAppVersionService appVersionService,
+        ILanguageService languageService,
         IAnalyticsService? analytics = null)
     {
         _importExportService = importExportService;
@@ -38,11 +40,23 @@ public partial class SettingsViewModel : ViewModelBase
         _migrationService = migrationService;
         _notificationService = notificationService;
         _appVersionService = appVersionService;
+        _languageService = languageService;
         _analytics = analytics;
 
         MigrationLog = _migrationService.GetMigrationLog();
         AppVersion = _appVersionService.CurrentVersion;
+        SelectedLanguage = _languageService.CurrentLanguage;
+        SupportedLanguages = _languageService.SupportedLanguages;
     }
+
+    [ObservableProperty]
+    private string _selectedLanguage = "en";
+
+    [ObservableProperty]
+    private IReadOnlyList<SupportedLanguage> _supportedLanguages = Array.Empty<SupportedLanguage>();
+
+    [ObservableProperty]
+    private bool _languageChangedPendingRestart;
 
     [ObservableProperty]
     private AppSettings _settings = new();
@@ -81,7 +95,7 @@ public partial class SettingsViewModel : ViewModelBase
                 {
                     Settings.NotificationsEnabled = false;
                     OnPropertyChanged(nameof(Settings));
-                    SetError("Notification permission was denied. Please enable it in your device settings.");
+                    SetError(Tr("Error_NotificationPermissionDenied"));
                     return;
                 }
             }
@@ -93,7 +107,7 @@ public partial class SettingsViewModel : ViewModelBase
                 await _notificationService.CancelReadingReminderAsync();
             }
             await SaveSettingsInternalAsync();
-        }, "Failed to update notification settings");
+        }, Tr("Error_FailedTo_UpdateNotificationSettings"));
     }
 
     [RelayCommand]
@@ -110,7 +124,7 @@ public partial class SettingsViewModel : ViewModelBase
                     Settings.NotificationsEnabled = false;
                     Settings.ReadingRemindersEnabled = false;
                     OnPropertyChanged(nameof(Settings));
-                    SetError("Notification permission was denied. Please enable it in your device settings.");
+                    SetError(Tr("Error_NotificationPermissionDenied"));
                     await SaveSettingsInternalAsync();
                     return;
                 }
@@ -128,7 +142,7 @@ public partial class SettingsViewModel : ViewModelBase
                 await _notificationService.CancelReadingReminderAsync();
             }
             await SaveSettingsInternalAsync();
-        }, "Failed to update reminder settings");
+        }, Tr("Error_FailedTo_UpdateReminderSettings"));
     }
 
     [RelayCommand]
@@ -143,7 +157,7 @@ public partial class SettingsViewModel : ViewModelBase
                 await _notificationService.ScheduleReadingReminderAsync(time);
             }
             await SaveSettingsInternalAsync();
-        }, "Failed to update reminder time");
+        }, Tr("Error_FailedTo_UpdateReminderTime"));
     }
 
     [RelayCommand]
@@ -153,7 +167,7 @@ public partial class SettingsViewModel : ViewModelBase
         {
             Settings.HideGettingStartedCta = hide;
             await SaveSettingsInternalAsync();
-        }, "Failed to update Getting Started visibility");
+        }, Tr("Error_FailedTo_UpdateGettingStartedVisibility"));
     }
 
     [RelayCommand]
@@ -164,7 +178,7 @@ public partial class SettingsViewModel : ViewModelBase
             ShelfLedgeColor = color;
             Settings.ShelfLedgeColor = color;
             await SaveSettingsInternalAsync();
-        }, "Failed to update shelf ledge color");
+        }, Tr("Error_FailedTo_UpdateShelfLedgeColor"));
     }
 
     [RelayCommand]
@@ -175,7 +189,7 @@ public partial class SettingsViewModel : ViewModelBase
             ShelfBaseColor = color;
             Settings.ShelfBaseColor = color;
             await SaveSettingsInternalAsync();
-        }, "Failed to update shelf base color");
+        }, Tr("Error_FailedTo_UpdateShelfBaseColor"));
     }
 
     private async Task SaveSettingsInternalAsync()
@@ -193,7 +207,7 @@ public partial class SettingsViewModel : ViewModelBase
             OnPropertyChanged(nameof(Settings));
             await SaveSettingsInternalAsync();
             LogSettingChanged("analytics");
-        }, "Failed to update analytics settings");
+        }, Tr("Error_FailedTo_UpdateAnalyticsSettings"));
     }
 
     [RelayCommand]
@@ -205,7 +219,7 @@ public partial class SettingsViewModel : ViewModelBase
             OnPropertyChanged(nameof(Settings));
             await SaveSettingsInternalAsync();
             LogSettingChanged("crash_reporting");
-        }, "Failed to update crash reporting settings");
+        }, Tr("Error_FailedTo_UpdateCrashReportingSettings"));
     }
 
     private void LogSettingChanged(string settingKey)
@@ -235,13 +249,32 @@ public partial class SettingsViewModel : ViewModelBase
 
             ShelfLedgeColor = Settings.ShelfLedgeColor;
             ShelfBaseColor = Settings.ShelfBaseColor;
+            SelectedLanguage = _languageService.CurrentLanguage;
+            SupportedLanguages = _languageService.SupportedLanguages;
 
             if (Settings.ReminderTime.HasValue)
             {
                 ReminderHour = Settings.ReminderTime.Value.Hours;
                 ReminderMinute = Settings.ReminderTime.Value.Minutes;
             }
-        }, "Failed to load settings");
+        }, Tr("Error_FailedTo_LoadSettings"));
+    }
+
+    [RelayCommand]
+    public async Task ChangeLanguageAsync(string code)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            if (string.IsNullOrWhiteSpace(code) || string.Equals(code, _languageService.CurrentLanguage, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            await _languageService.SetLanguageAsync(code);
+            SelectedLanguage = _languageService.CurrentLanguage;
+            LanguageChangedPendingRestart = true;
+            LogSettingChanged("language");
+        }, Tr("Error_FailedTo_ChangeLanguage"));
     }
 
     [RelayCommand]
@@ -251,7 +284,7 @@ public partial class SettingsViewModel : ViewModelBase
         {
             Settings.UpdatedAt = DateTime.UtcNow;
             await _settingsProvider.UpdateSettingsAsync(Settings);
-        }, "Failed to save settings");
+        }, Tr("Error_FailedTo_SaveSettings"));
     }
 
     [RelayCommand]
@@ -262,7 +295,7 @@ public partial class SettingsViewModel : ViewModelBase
             var json = await _importExportService.ExportToJsonAsync();
             var fileName = $"BookLoggerExport_{DateTime.Now:yyyyMMdd_HHmmss}.json";
             await _fileSaverService.SaveFileAsync(fileName, json);
-        }, "Failed to export data");
+        }, Tr("Error_FailedTo_ExportData"));
     }
 
     [RelayCommand]
@@ -271,7 +304,7 @@ public partial class SettingsViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             await _importExportService.ImportFromJsonAsync(json);
-        }, "Failed to import data");
+        }, Tr("Error_FailedTo_ImportData"));
     }
 
     [RelayCommand]
@@ -280,7 +313,7 @@ public partial class SettingsViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             await _importExportService.DeleteAllDataAsync();
-        }, "Failed to delete data");
+        }, Tr("Error_FailedTo_DeleteData"));
     }
 
     [RelayCommand]
@@ -293,7 +326,7 @@ public partial class SettingsViewModel : ViewModelBase
 
             // 2. Share File
             await _shareService.ShareFileAsync("BookLogger Backup", backupPath, "application/zip");
-        }, "Failed to backup data");
+        }, Tr("Error_FailedTo_BackupData"));
     }
 
     [RelayCommand]
@@ -322,17 +355,17 @@ public partial class SettingsViewModel : ViewModelBase
             catch (Exception initEx)
             {
                 AppendLog($"DB initialization failed earlier: {initEx.GetType().Name}: {initEx.Message}");
-                SetError($"Cannot restore: database initialization failed earlier. Please restart BookHeart and try again. ({initEx.GetType().Name}: {initEx.Message})");
+                SetError(Tr("Error_RestoreDbInitFailed", initEx.GetType().Name, initEx.Message));
                 return;
             }
 
-            var filePath = await _filePickerService.PickFileAsync("Select Backup File", ".zip");
+            var filePath = await _filePickerService.PickFileAsync(Tr("Settings_Restore_PickerTitle", "Select Backup File"), ".zip");
             AppendLog($"Picker returned: {filePath ?? "NULL"}");
 
             if (string.IsNullOrEmpty(filePath))
             {
                 AppendLog("Restore cancelled (no file selected).");
-                SetError("File selection failed or was cancelled. If you selected a file from Google Drive, try saving it to your device storage first.");
+                SetError(Tr("Error_FilePickCancelled"));
                 return;
             }
 
@@ -357,7 +390,7 @@ public partial class SettingsViewModel : ViewModelBase
             var detail = ex.InnerException is not null
                 ? $" ({ex.InnerException.Message})"
                 : string.Empty;
-            SetError($"Failed to restore backup: {ex.GetType().Name}: {ex.Message}{detail}");
+            SetError(Tr("Error_RestoreBackupFailed", ex.GetType().Name, ex.Message, detail));
             System.Diagnostics.Debug.WriteLine($"ERROR: {ex}");
         }
         finally

@@ -2,10 +2,12 @@
 @page "/books/new"
 @using BookLoggerApp.Core.ViewModels
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Components.Shared
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Core.Helpers
 @using BookLoggerApp.Core.Entitlements
+@using Microsoft.Extensions.Localization
 @inject BookEditViewModel ViewModel
 @inject NavigationManager Navigation
 @inject IImageService ImageService
@@ -17,21 +19,22 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
 @inject BookLoggerApp.Core.Services.Abstractions.IBackButtonService BackButtonService
 @inject IOnboardingService OnboardingService
+@inject IStringLocalizer<AppResources> L
 @implements IDisposable
 
-<PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? "Add Book" : "Edit Book") - BookHeart</PageTitle>
+<PageTitle>@(ViewModel.Book?.Id == Guid.Empty ? L["BookEdit_AddTitle"].Value : L["BookEdit_EditTitle"].Value) - BookHeart</PageTitle>
 
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.BookEdit" />
 <div class="book-edit-container">
     <div class="book-edit-header">
-        <h1>@(ViewModel.Book?.Id == Guid.Empty ? "Add New Book" : "Edit Book")</h1>
-        <button class="btn btn-secondary" @onclick="NavigateBack">← Back</button>
+        <h1>@(ViewModel.Book?.Id == Guid.Empty ? L["BookEdit_AddNewBook"].Value : L["BookEdit_EditTitle"].Value)</h1>
+        <button class="btn btn-secondary" @onclick="NavigateBack">← @L["Common_Back"]</button>
     </div>
 
     @if (ViewModel.IsBusy)
     {
-        <div class="loading">Loading...</div>
+        <div class="loading">@L["Common_Loading"]</div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
@@ -42,26 +45,26 @@
         <form class="book-edit-form" @onsubmit="HandleSave" @onsubmit:preventDefault="true">
             <!-- Basic Information -->
             <section class="form-section">
-                <h2>Basic Information</h2>
-                
+                <h2>@L["BookEdit_BasicInfo"]</h2>
+
                 <div class="form-group">
-                    <label for="title">Title *</label>
+                    <label for="title">@L["BookEdit_Title"] *</label>
                     <input id="title" type="text" @bind="ViewModel.Book.Title" required maxlength="500" />
                 </div>
 
                 <div class="form-group">
-                    <label for="author">Author *</label>
+                    <label for="author">@L["BookEdit_Author"] *</label>
                     <input id="author" type="text" @bind="ViewModel.Book.Author" required maxlength="300" />
                 </div>
 
                 <div class="form-group">
                     <label for="isbn">ISBN</label>
                     <div class="isbn-input-group">
-                        <input id="isbn" type="text" @bind="ViewModel.Book.ISBN" maxlength="20" placeholder="Enter ISBN-10 or ISBN-13" />
+                        <input id="isbn" type="text" @bind="ViewModel.Book.ISBN" maxlength="20" placeholder="@L["BookEdit_IsbnPlaceholder"]" />
                         <button type="button"
                                 class="btn btn-success"
                                 @onclick="ScanIsbnAsync">
-                            📷 Scan
+                            📷 @L["BookEdit_Scan"]
                         </button>
                         <button type="button"
                                 class="btn btn-info"
@@ -69,11 +72,11 @@
                                 disabled="@(ViewModel.IsLookingUpIsbn || string.IsNullOrWhiteSpace(ViewModel.Book?.ISBN))">
                             @if (ViewModel.IsLookingUpIsbn)
                             {
-                                <span>Loading...</span>
+                                <span>@L["Common_Loading"]</span>
                             }
                             else
                             {
-                                <span>🔍 Auto-Fill</span>
+                                <span>🔍 @L["BookEdit_AutoFill"]</span>
                             }
                         </button>
                     </div>
@@ -87,39 +90,39 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="publisher">Publisher</label>
+                        <label for="publisher">@L["BookDetail_Publisher"]</label>
                         <input id="publisher" type="text" @bind="ViewModel.Book!.Publisher" maxlength="200" />
                     </div>
 
                     <div class="form-group">
-                        <label for="publicationYear">Publication Year</label>
+                        <label for="publicationYear">@L["BookEdit_PublicationYear"]</label>
                         <input id="publicationYear" type="number" @bind="ViewModel.Book!.PublicationYear" min="1000" max="@DateTime.Now.Year" />
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="language">Language</label>
-                    <input id="language" type="text" @bind="ViewModel.Book.Language" maxlength="50" placeholder="e.g., en, de" />
+                    <label for="language">@L["BookEdit_BookLanguage"]</label>
+                    <input id="language" type="text" @bind="ViewModel.Book.Language" maxlength="50" placeholder="@L["BookEdit_BookLanguagePlaceholder"]" />
                 </div>
             </section>
 
             <!-- Content -->
             <section class="form-section">
-                <h2>Content</h2>
-                
+                <h2>@L["BookEdit_Content"]</h2>
+
                 <div class="form-group">
-                    <label for="description">Description</label>
+                    <label for="description">@L["BookDetail_Description"]</label>
                     <textarea id="description" @bind="ViewModel.Book.Description" maxlength="2000" rows="4"></textarea>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="pageCount">Total Pages</label>
+                        <label for="pageCount">@L["BookEdit_TotalPages"]</label>
                         <input id="pageCount" type="number" @bind="ViewModel.Book.PageCount" min="1" />
                     </div>
 
                     <div class="form-group">
-                        <label for="currentPage">Current Page</label>
+                        <label for="currentPage">@L["Reading_CurrentPage"]</label>
                         <input id="currentPage" type="number" @bind="ViewModel.Book.CurrentPage" min="0" />
                     </div>
                 </div>
@@ -127,28 +130,28 @@
 
             <!-- Status -->
             <section class="form-section">
-                <h2>Status</h2>
+                <h2>@L["BookDetail_Status"]</h2>
 
                 <div class="form-group">
-                    <label for="status">Reading Status</label>
+                    <label for="status">@L["BookEdit_ReadingStatus"]</label>
                     <select id="status" @bind="ViewModel.SelectedStatusForDisplay">
-                        <option value="@ReadingStatus.Planned">Planned</option>
-                        <option value="@ReadingStatus.Reading">Reading</option>
-                        <option value="@ReadingStatus.Completed">Completed</option>
-                        <option value="@ReadingStatus.Abandoned">Abandoned</option>
+                        <option value="@ReadingStatus.Planned">@L["Status_Planned"]</option>
+                        <option value="@ReadingStatus.Reading">@L["Status_Reading"]</option>
+                        <option value="@ReadingStatus.Completed">@L["Status_Completed"]</option>
+                        <option value="@ReadingStatus.Abandoned">@L["Status_Abandoned"]</option>
                     </select>
                 </div>
             </section>
 
             <!-- Genres -->
             <section class="form-section">
-                <h2>Genres</h2>
-                
+                <h2>@L["BookEdit_Genres"]</h2>
+
                 <div class="genres-selection">
                     @foreach (var genre in ViewModel.AvailableGenres)
                     {
                         <label class="genre-checkbox">
-                            <input type="checkbox" 
+                            <input type="checkbox"
                                    checked="@ViewModel.SelectedGenreIds.Contains(genre.Id)"
                                    @onchange="@((ChangeEventArgs e) => ToggleGenre(genre.Id, e.Value as bool? ?? false))" />
                             <span>@genre.Icon @genre.Name</span>
@@ -162,8 +165,8 @@
             {
                 <LockedFeatureButton Feature="FeatureKey.Tropes">
                     <section class="form-section">
-                        <h2>Tropes & Tags</h2>
-                        <div class="form-hint">Select matching tropes based on your selected genres.</div>
+                        <h2>@L["BookEdit_TropesTags"]</h2>
+                        <div class="form-hint">@L["BookEdit_TropesHint"]</div>
 
                         <div class="genres-selection">
                             @foreach (var trope in ViewModel.AvailableTropes)
@@ -182,16 +185,16 @@
 
             <!-- Shelves -->
             <section class="form-section">
-                <h2>Shelves</h2>
-                <div class="form-hint">Assign this book to manual shelves. Auto-sort shelves are populated automatically.</div>
-                
+                <h2>@L["BookDetail_Shelves"]</h2>
+                <div class="form-hint">@L["BookEdit_ShelvesHint"]</div>
+
                 <div class="genres-selection"> <!-- Reusing genres style for grid layout -->
                     @if (ViewModel.AvailableShelves.Any())
                     {
                         @foreach (var shelf in ViewModel.AvailableShelves)
                         {
                             <label class="genre-checkbox">
-                                <input type="checkbox" 
+                                <input type="checkbox"
                                        checked="@ViewModel.SelectedShelfIds.Contains(shelf.Id)"
                                        @onchange="@((ChangeEventArgs e) => ToggleShelf(shelf.Id, e.Value as bool? ?? false))" />
                                 <span>@shelf.Icon @shelf.Name</span>
@@ -200,17 +203,17 @@
                     }
                     else
                     {
-                        <p>No manual shelves available. Create them on the Bookshelf page.</p>
+                        <p>@L["BookEdit_NoManualShelves"]</p>
                     }
                 </div>
             </section>
 
             <!-- Cover Image -->
             <section class="form-section">
-                <h2>Cover Image</h2>
+                <h2>@L["BookEdit_CoverImage"]</h2>
 
                 <div class="form-group">
-                    <label for="coverImagePath">Cover Image URL/Path</label>
+                    <label for="coverImagePath">@L["BookEdit_CoverUrl"]</label>
                     <input id="coverImagePath" type="text" @bind="ViewModel.Book.CoverImagePath" maxlength="500" placeholder="/images/covers/book.jpg" />
 
                     @if (DeviceInfo.Platform == DevicePlatform.Android)
@@ -221,11 +224,11 @@
                                 disabled="@_isPickingFromGallery">
                             @if (_isPickingFromGallery)
                             {
-                                <span>Loading...</span>
+                                <span>@L["Common_Loading"]</span>
                             }
                             else
                             {
-                                <span>Pick from Gallery</span>
+                                <span>@L["BookEdit_PickFromGallery"]</span>
                             }
                         </button>
                     }
@@ -233,40 +236,40 @@
                     @if (!string.IsNullOrEmpty(_coverPreviewUrl))
                     {
                         <div class="cover-preview">
-                            <img src="@_coverPreviewUrl" alt="Cover preview" onerror="this.style.display='none'" />
+                            <img src="@_coverPreviewUrl" alt="@L["BookEdit_CoverPreviewAlt"]" onerror="this.style.display='none'" />
                         </div>
                     }
                 </div>
 
                 <div class="form-group">
-                    <label>Book Spine Display</label>
-                    <p class="form-hint">Choose how the book spine should be displayed in the bookshelf</p>
+                    <label>@L["BookEdit_SpineDisplay"]</label>
+                    <p class="form-hint">@L["BookEdit_SpineDisplayHint"]</p>
 
                     <div class="spine-mode-selector">
                         <button type="button"
                                 class="spine-mode-option @(!ViewModel.Book.UsesCoverAsSpine ? "selected" : "")"
                                 @onclick="() => SetSpineMode(false)">
                             <span class="spine-mode-icon">🎨</span>
-                            <span class="spine-mode-label">Color</span>
+                            <span class="spine-mode-label">@L["BookEdit_SpineMode_Color"]</span>
                         </button>
                         <button type="button"
                                 class="spine-mode-option @(ViewModel.Book.UsesCoverAsSpine ? "selected" : "") @(string.IsNullOrEmpty(_coverPreviewUrl) ? "disabled" : "")"
                                 @onclick="() => SetSpineMode(true)"
                                 disabled="@string.IsNullOrEmpty(_coverPreviewUrl)">
                             <span class="spine-mode-icon">🖼️</span>
-                            <span class="spine-mode-label">Cover</span>
+                            <span class="spine-mode-label">@L["BookEdit_SpineMode_Cover"]</span>
                         </button>
                     </div>
                     @if (string.IsNullOrEmpty(_coverPreviewUrl))
                     {
-                        <p class="form-hint-warning">Cover mode requires a cover image</p>
+                        <p class="form-hint-warning">@L["BookEdit_CoverModeRequires"]</p>
                     }
                 </div>
 
                 @if (!ViewModel.Book.UsesCoverAsSpine)
                 {
                     <div class="form-group">
-                        <label>Spine Color</label>
+                        <label>@L["BookEdit_SpineColor"]</label>
                         <div class="spine-color-picker">
                             @foreach (var color in GetSpineColors())
                             {
@@ -277,15 +280,15 @@
                                         title="@color.Key">
                                 </button>
                             }
-                            
+
                             <!-- Custom Color Picker -->
                             <div class="custom-color-picker-container">
-                                <label class="custom-color-label" title="Custom Color">
+                                <label class="custom-color-label" title="@L["BookEdit_CustomColor"]">
                                     <span class="spine-mode-icon">🎨</span>
-                                    <span class="custom-text">Custom</span>
-                                    <input type="color" 
+                                    <span class="custom-text">@L["BookEdit_Custom"]</span>
+                                    <input type="color"
                                            style="position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; padding: 0; margin: 0; border: none; cursor: pointer;"
-                                           value="@GetCustomColorValue()" 
+                                           value="@GetCustomColorValue()"
                                            @onchange="@(e => SetCustomSpineColor(e.Value?.ToString()))" />
                                 </label>
                             </div>
@@ -299,13 +302,13 @@
                 @if (ViewModel.Book.Id != Guid.Empty)
                 {
                     <button type="button" class="btn btn-danger" @onclick="ShowDeleteModal">
-                        Löschen
+                        @L["Common_Delete"]
                     </button>
                 }
                 <button type="submit" class="btn btn-primary" disabled="@ViewModel.IsBusy">
-                    @(ViewModel.Book.Id == Guid.Empty ? "Add Book" : "Save Changes")
+                    @(ViewModel.Book.Id == Guid.Empty ? L["BookEdit_AddBook"].Value : L["BookEdit_SaveChanges"].Value)
                 </button>
-                <button type="button" class="btn btn-secondary" @onclick="NavigateBack">Cancel</button>
+                <button type="button" class="btn btn-secondary" @onclick="NavigateBack">@L["Common_Cancel"]</button>
             </div>
         </form>
     }
@@ -378,7 +381,7 @@
                 var fileName = $"share_book_{DateTime.UtcNow:yyyyMMddHHmmss}.png";
                 var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
                 await File.WriteAllBytesAsync(filePath, cardBytes);
-                await ShareService.ShareFileAsync("My Book Recommendation", filePath, "image/png");
+                await ShareService.ShareFileAsync(L["Reading_ShareFileName"], filePath, "image/png");
 
                 if (ViewModel.Book?.Status == ReadingStatus.Completed)
                 {

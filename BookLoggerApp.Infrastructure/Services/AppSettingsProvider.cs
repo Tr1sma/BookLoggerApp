@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using BookLoggerApp.Core.Exceptions;
@@ -113,7 +114,7 @@ public class AppSettingsProvider : IAppSettingsProvider
             settings = new AppSettings
             {
                 Theme = "Light",
-                Language = "en",
+                Language = DetectSystemLanguage(),
                 UserLevel = 1,
                 TotalXp = 0,
                 Coins = 100, // Start with 100 coins
@@ -339,6 +340,24 @@ public class AppSettingsProvider : IAppSettingsProvider
             _lastLoad = DateTime.UtcNow;
 
             OnProgressionChanged();
+        }
+    }
+
+    /// <summary>
+    /// Picks the initial UI language on first launch. Returns <c>"de"</c> when the
+    /// system UI culture is German-speaking, otherwise <c>"en"</c>. Any exceptions
+    /// fall back to English so startup cannot fail on this check.
+    /// </summary>
+    private static string DetectSystemLanguage()
+    {
+        try
+        {
+            string iso = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            return string.Equals(iso, "de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
+        }
+        catch
+        {
+            return "en";
         }
     }
 }

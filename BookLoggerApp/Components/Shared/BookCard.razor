@@ -1,4 +1,7 @@
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
 @inject BookLoggerApp.Core.Services.Abstractions.IImageService ImageService
+@inject IStringLocalizer<AppResources> L
 
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
@@ -42,7 +45,7 @@
                     <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
                     @GetStatusIcon()
                     </div>
-                    <button class="btn-icon-compact" @onclick:stopPropagation="true" @onclick="HandleDelete" title="Delete">
+                    <button class="btn-icon-compact" @onclick:stopPropagation="true" @onclick="HandleDelete" title="@L["Common_Delete"]">
                         🗑️
                     </button>
                 </div>

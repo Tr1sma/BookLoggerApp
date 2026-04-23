@@ -1,26 +1,27 @@
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Core.Services.Analytics
+@using Microsoft.Extensions.Localization
 @inject BookLoggerApp.Core.ViewModels.AppStartupViewModel ViewModel
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IAnalyticsService Analytics
+@inject IStringLocalizer<AppResources> L
 
 @if (ViewModel.IsPrivacyBannerVisible)
 {
-    <div class="privacy-banner" role="region" aria-label="Privacy notice">
+    <div class="privacy-banner" role="region" aria-label="@L["PrivacyBanner_AriaLabel"]">
         <div class="privacy-banner-content">
-            <strong class="privacy-banner-title">Privacy &amp; Statistics</strong>
+            <strong class="privacy-banner-title">@L["PrivacyBanner_Title"]</strong>
             <p class="privacy-banner-text">
-                BookHeart uses Firebase Analytics and Crashlytics to help improve the app.
-                No book titles, authors, notes or personal data are ever transmitted.
-                You can disable both at any time in Settings.
+                @L["PrivacyBanner_Body"]
             </p>
         </div>
         <div class="privacy-banner-actions">
             <button type="button" class="privacy-banner-btn privacy-banner-btn-secondary" @onclick="OpenSettingsAsync">
-                Settings
+                @L["Nav_Settings"]
             </button>
             <button type="button" class="privacy-banner-btn privacy-banner-btn-primary" @onclick="DismissAsync">
-                Got it
+                @L["PrivacyBanner_GotIt"]
             </button>
         </div>
     </div>

@@ -1,5 +1,7 @@
 using FluentValidation;
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Resources;
+using Microsoft.Extensions.Localization;
 
 namespace BookLoggerApp.Core.Validators;
 
@@ -9,30 +11,32 @@ namespace BookLoggerApp.Core.Validators;
 /// </summary>
 public class ReadingSessionValidator : AbstractValidator<ReadingSession>
 {
-    public ReadingSessionValidator()
+    public ReadingSessionValidator(IStringLocalizer<AppResources>? localizer = null)
     {
+        string Tr(string key) => localizer?[key].Value ?? key;
+
         RuleFor(s => s.BookId)
-            .NotEmpty().WithMessage("Book ID is required");
+            .NotEmpty().WithMessage(_ => Tr("Validator_Session_BookIdRequired"));
 
         RuleFor(s => s.StartedAt)
-            .NotEmpty().WithMessage("Start time is required")
-            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Start time cannot be in the future");
+            .NotEmpty().WithMessage(_ => Tr("Validator_Session_StartedRequired"))
+            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage(_ => Tr("Validator_Session_StartedFuture"));
 
         RuleFor(s => s.EndedAt)
-            .GreaterThan(s => s.StartedAt).WithMessage("End time must be after start time")
-            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("End time cannot be in the future")
+            .GreaterThan(s => s.StartedAt).WithMessage(_ => Tr("Validator_Session_EndAfterStart"))
+            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage(_ => Tr("Validator_Session_EndFuture"))
             .When(s => s.EndedAt.HasValue);
 
         RuleFor(s => s.Minutes)
-            .GreaterThan(0).WithMessage("Reading duration must be greater than 0")
-            .LessThanOrEqualTo(1440).WithMessage("Reading duration cannot exceed 24 hours (1440 minutes)");
+            .GreaterThan(0).WithMessage(_ => Tr("Validator_Session_MinutesPositive"))
+            .LessThanOrEqualTo(1440).WithMessage(_ => Tr("Validator_Session_MinutesMax"));
 
         RuleFor(s => s.PagesRead)
-            .GreaterThanOrEqualTo(0).WithMessage("Pages read cannot be negative")
-            .LessThanOrEqualTo(10000).WithMessage("Pages read cannot exceed 10,000")
+            .GreaterThanOrEqualTo(0).WithMessage(_ => Tr("Validator_Session_PagesNonNegative"))
+            .LessThanOrEqualTo(10000).WithMessage(_ => Tr("Validator_Session_PagesMax"))
             .When(s => s.PagesRead.HasValue);
 
         RuleFor(s => s.XpEarned)
-            .GreaterThanOrEqualTo(0).WithMessage("XP earned cannot be negative");
+            .GreaterThanOrEqualTo(0).WithMessage(_ => Tr("Validator_Session_XpNonNegative"));
     }
 }

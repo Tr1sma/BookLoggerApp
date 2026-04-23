@@ -60,7 +60,7 @@ public partial class PlantShopViewModel : ViewModelBase
                 var price = await _plantService.GetPlantCostAsync(sp.Id);
                 _dynamicPrices[sp.Id] = price;
             }
-        }, "Failed to load shop");
+        }, Tr("Error_FailedTo_LoadShop"));
     }
 
     /// <summary>
@@ -80,14 +80,14 @@ public partial class PlantShopViewModel : ViewModelBase
             var species = AvailableSpecies.FirstOrDefault(s => s.Id == speciesId);
             if (species == null)
             {
-                SetError("Plant species not found");
+                SetError(Tr("Error_PlantSpeciesNotFound"));
                 return;
             }
 
             // Check if plant is unlocked
             if (UserLevel < species.UnlockLevel)
             {
-                SetError($"This plant requires level {species.UnlockLevel}. You are currently level {UserLevel}.");
+                SetError(Tr("Error_PlantRequiresLevel", species.UnlockLevel, UserLevel));
                 return;
             }
 
@@ -96,7 +96,7 @@ public partial class PlantShopViewModel : ViewModelBase
 
             if (UserCoins < dynamicPrice)
             {
-                SetError($"Not enough coins. You need {dynamicPrice} coins but only have {UserCoins}.");
+                SetError(Tr("Error_NotEnoughCoins", dynamicPrice, UserCoins));
                 return;
             }
 
@@ -112,7 +112,7 @@ public partial class PlantShopViewModel : ViewModelBase
             NewPlantName = "";
             SelectedSpecies = null;
             await LoadAsync();
-        }, "Failed to purchase plant");
+        }, Tr("Error_FailedTo_PurchasePlant"));
     }
 
     [RelayCommand]

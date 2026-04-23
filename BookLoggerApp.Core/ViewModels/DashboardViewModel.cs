@@ -89,7 +89,7 @@ public partial class DashboardViewModel : ViewModelBase
             // Recent Activity
             var recentSessions = await _progressService.GetRecentSessionsAsync(5);
             RecentActivity = recentSessions.ToList();
-        }, "Failed to load dashboard");
+        }, Tr("Error_FailedTo_LoadDashboard"));
     }
 
     [RelayCommand]
@@ -102,7 +102,7 @@ public partial class DashboardViewModel : ViewModelBase
             await _plantService.WaterPlantAsync(ActivePlant.Id);
             // Reload plant after watering
             ActivePlant = await _plantService.GetActivePlantAsync();
-        }, "Failed to water plant");
+        }, Tr("Error_FailedTo_WaterPlant"));
     }
 
     [RelayCommand]
@@ -116,7 +116,7 @@ public partial class DashboardViewModel : ViewModelBase
         {
             await _plantService.DeleteAsync(plantId);
             ActivePlant = await _plantService.GetActivePlantAsync();
-        }, "Failed to delete plant");
+        }, Tr("Error_FailedTo_DeletePlant"));
     }
 }
 
