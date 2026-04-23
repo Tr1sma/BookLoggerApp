@@ -28,6 +28,29 @@ public static class DatabaseInitializationHelper
     private static readonly object _lock = new();
 
     /// <summary>
+    /// In-memory log buffer that captures DB initialization timings and errors.
+    /// Exposed through <c>IMigrationService.GetMigrationLog()</c> so users can
+    /// read and share the log from the Settings page when reporting issues.
+    /// Kept as a single static buffer so it's accessible from the Infrastructure
+    /// layer (DbInitializer) without introducing a new abstraction.
+    /// </summary>
+    public static System.Text.StringBuilder InitLog { get; } = new();
+
+    /// <summary>
+    /// Appends a timestamped line to <see cref="InitLog"/>. Safe to call from
+    /// any thread.
+    /// </summary>
+    public static void AppendInitLog(string message)
+    {
+        var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
+        lock (InitLog)
+        {
+            InitLog.AppendLine(line);
+        }
+        System.Diagnostics.Debug.WriteLine(line);
+    }
+
+    /// <summary>
     /// Checks if the database has been initialized.
     /// </summary>
     public static bool IsInitialized

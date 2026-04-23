@@ -335,8 +335,12 @@ public static class MauiProgram
         // EF migrations past the UI timeout. A dedicated thread starts immediately
         // and doesn't compete for a ThreadPool slot.
         System.Diagnostics.Debug.WriteLine("Starting database initialization...");
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.AppendInitLog(
+            "MauiProgram.InitializeDatabase: spawning dedicated DbInit thread");
         var thread = new Thread(() =>
         {
+            BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.AppendInitLog(
+                $"DbInit thread running (managed thread id={Environment.CurrentManagedThreadId})");
             try
             {
                 var logger = app.Services.GetService<ILogger<AppDbContext>>();

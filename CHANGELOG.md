@@ -18,6 +18,7 @@ Versionsschema:
 
 ### Hinzugefügt
 - Telemetrie für Datenbank-Initialisierung (Gesamt- und Teilschritt-Dauern) — hilft bei der Analyse von langsamen Geräten
+- DB-Init-Log in "Data Recovery Diagnostics" (Einstellungen) sichtbar — zeigt pro Schritt (CanConnect, MigrateAsync, SchemaDriftGuard, Deferred-Steps) Dauer und Fehler. Wird beim Aufklappen automatisch aktualisiert, damit Nutzer den Log zum Support weitergeben können
 
 ### Geändert
 - Datenbank-Initialisierung läuft jetzt auf einem dedizierten Hintergrund-Thread statt über den ThreadPool. Auf bestimmten Geräten (u.a. Samsung Galaxy A16) wurde der Start dadurch nicht mehr rechtzeitig fertig.

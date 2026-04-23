@@ -523,7 +523,16 @@
 
     private void TogglePrivacyPolicy() => _showPrivacyPolicy = !_showPrivacyPolicy;
 
-    private void ToggleMigrationLog() => _showMigrationLog = !_showMigrationLog;
+    private void ToggleMigrationLog()
+    {
+        _showMigrationLog = !_showMigrationLog;
+        if (_showMigrationLog)
+        {
+            // Pull the latest DB init log on demand — the ctor's snapshot can be
+            // stale if init is still running in the background.
+            ViewModel.RefreshMigrationLog();
+        }
+    }
 
     private Task OpenPaywallAsync() => PaywallCoordinator.ShowAsync(trigger: null);
 

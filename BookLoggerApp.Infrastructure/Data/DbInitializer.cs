@@ -31,6 +31,7 @@ public static class DbInitializer
             if (_isInitialized)
             {
                 logger?.LogWarning("Database initialization already completed");
+                DatabaseInitializationHelper.AppendInitLog("InitializeAsync: already initialized, re-signalling gate");
                 // Re-signal the gate in case ResetForRetry replaced the TCS after a
                 // previous successful init — otherwise Retry() would leave awaiters hanging.
                 DatabaseInitializationHelper.MarkAsInitialized();
@@ -46,6 +47,7 @@ public static class DbInitializer
         try
         {
             logger?.LogInformation("Starting database initialization...");
+            DatabaseInitializationHelper.AppendInitLog("InitializeAsync: starting");
 
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             crashReporting = scope.ServiceProvider.GetService<ICrashReportingService>();
@@ -57,6 +59,8 @@ public static class DbInitializer
             // code already handles when absent (e.g. EntitlementStore.GetOrCreateAsync).
             timings = await MigrateDatabaseAsync(dbContext, crashReporting, logger);
             logger?.LogInformation("Migrations finished in {Ms} ms", timings.TotalMs);
+            DatabaseInitializationHelper.AppendInitLog(
+                $"MigrateDatabaseAsync OK total={timings.TotalMs}ms canConnect={timings.CanConnectMs}ms migrate={timings.MigrateMs}ms schemaDrift={timings.SchemaDriftMs}ms");
 
             lock (_lock)
             {
@@ -66,6 +70,8 @@ public static class DbInitializer
             // Unblock awaiting ViewModels. Every page can start loading real data now.
             DatabaseInitializationHelper.MarkAsInitialized();
             logger?.LogInformation("UI unblocked after {Ms} ms; running deferred maintenance in background...", totalStopwatch.ElapsedMilliseconds);
+            DatabaseInitializationHelper.AppendInitLog(
+                $"UI unblocked after {totalStopwatch.ElapsedMilliseconds}ms — running deferred maintenance in background");
 
             ReportInitSuccess(crashReporting, totalStopwatch.ElapsedMilliseconds, timings, logger);
 
@@ -87,6 +93,13 @@ public static class DbInitializer
         catch (Exception ex)
         {
             logger?.LogError(ex, "Database initialization failed");
+            DatabaseInitializationHelper.AppendInitLog(
+                $"InitializeAsync FAILED after {totalStopwatch.ElapsedMilliseconds}ms — {ex.GetType().Name}: {ex.Message}");
+            if (ex.InnerException is not null)
+            {
+                DatabaseInitializationHelper.AppendInitLog(
+                    $"  inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+            }
             ReportInitFailure(crashReporting, ex, totalStopwatch.ElapsedMilliseconds, timings, logger);
             DatabaseInitializationHelper.MarkAsFailed(ex);
             throw;
@@ -190,11 +203,14 @@ public static class DbInitializer
             await step();
             stepStopwatch.Stop();
             logger?.LogInformation("Deferred step '{Step}' completed in {Ms} ms", stepName, stepStopwatch.ElapsedMilliseconds);
+            DatabaseInitializationHelper.AppendInitLog($"Deferred step '{stepName}' OK ({stepStopwatch.ElapsedMilliseconds}ms)");
         }
         catch (Exception ex)
         {
             stepStopwatch.Stop();
             logger?.LogError(ex, "Deferred step '{Step}' failed after {Ms} ms (non-fatal)", stepName, stepStopwatch.ElapsedMilliseconds);
+            DatabaseInitializationHelper.AppendInitLog(
+                $"Deferred step '{stepName}' FAILED after {stepStopwatch.ElapsedMilliseconds}ms — {ex.GetType().Name}: {ex.Message}");
         }
     }
 
@@ -203,24 +219,30 @@ public static class DbInitializer
         ICrashReportingService? crashReporting,
         ILogger? logger)
     {
+        DatabaseInitializationHelper.AppendInitLog("MigrateDatabaseAsync: CanConnectAsync...");
         var canConnectSw = System.Diagnostics.Stopwatch.StartNew();
         logger?.LogInformation("Checking database connection...");
         var canConnect = await context.Database.CanConnectAsync();
         canConnectSw.Stop();
         logger?.LogInformation("Can connect to database: {CanConnect} ({Ms} ms)", canConnect, canConnectSw.ElapsedMilliseconds);
+        DatabaseInitializationHelper.AppendInitLog($"  CanConnect={canConnect} ({canConnectSw.ElapsedMilliseconds}ms)");
 
+        DatabaseInitializationHelper.AppendInitLog("MigrateDatabaseAsync: MigrateAsync...");
         var migrateSw = System.Diagnostics.Stopwatch.StartNew();
         logger?.LogInformation("Applying migrations...");
         await context.Database.MigrateAsync();
         migrateSw.Stop();
         logger?.LogInformation("Database migrations applied successfully ({Ms} ms)", migrateSw.ElapsedMilliseconds);
+        DatabaseInitializationHelper.AppendInitLog($"  MigrateAsync OK ({migrateSw.ElapsedMilliseconds}ms)");
 
         // Repair any schema drift where __EFMigrationsHistory claims a migration is applied
         // but the expected columns are missing (observed in the field on V10 upgrades).
+        DatabaseInitializationHelper.AppendInitLog("MigrateDatabaseAsync: SchemaDriftGuard...");
         var schemaDriftSw = System.Diagnostics.Stopwatch.StartNew();
         await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting, logger);
         schemaDriftSw.Stop();
         logger?.LogInformation("SchemaDriftGuard finished ({Ms} ms)", schemaDriftSw.ElapsedMilliseconds);
+        DatabaseInitializationHelper.AppendInitLog($"  SchemaDriftGuard OK ({schemaDriftSw.ElapsedMilliseconds}ms)");
 
         return new MigrationTimings(
             canConnectSw.ElapsedMilliseconds,

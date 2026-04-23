@@ -44,6 +44,17 @@ public partial class SettingsViewModel : ViewModelBase
         AppVersion = _appVersionService.CurrentVersion;
     }
 
+    /// <summary>
+    /// Re-reads the migration log from the MigrationService. Useful when the DB
+    /// initialization is still running in the background and the user wants the
+    /// latest log contents (e.g. when opening the "Data Recovery Diagnostics"
+    /// section on the Settings page).
+    /// </summary>
+    public void RefreshMigrationLog()
+    {
+        MigrationLog = _migrationService.GetMigrationLog();
+    }
+
     [ObservableProperty]
     private AppSettings _settings = new();
 
