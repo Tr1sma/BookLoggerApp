@@ -50,6 +50,15 @@ public partial class PaywallViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isPurchaseInProgress;
 
+    [ObservableProperty]
+    private bool _showCelebration;
+
+    [ObservableProperty]
+    private string _celebrationHeadline = string.Empty;
+
+    [ObservableProperty]
+    private string? _celebrationDetail;
+
     public SubscriptionTier CurrentTier => _entitlementService.CurrentTier;
 
     public bool IsTierUnlocked(SubscriptionTier tier) => _entitlementService.CurrentTier >= tier;
@@ -98,15 +107,26 @@ public partial class PaywallViewModel : ViewModelBase
                 .Add(AnalyticsParamNames.Outcome, outcome.ToString())
                 .BuildMutable());
 
-            Banner = outcome switch
+            if (outcome == BillingPurchaseOutcome.Success)
             {
-                BillingPurchaseOutcome.Success => "Thank you! Your purchase is being processed.",
-                BillingPurchaseOutcome.UserCancelled => null,
-                BillingPurchaseOutcome.AlreadyOwned => "You already own this subscription.",
-                BillingPurchaseOutcome.BillingUnavailable => "Google Play Billing is not available right now.",
-                BillingPurchaseOutcome.NotAvailable => "This product is not available in your region.",
-                _ => "Purchase failed. Please try again."
-            };
+                CelebrationHeadline = $"{tier} unlocked!";
+                CelebrationDetail = period == BillingPeriod.Lifetime
+                    ? "Thanks for going Lifetime — enjoy forever."
+                    : "Thanks! Your subscription is active.";
+                ShowCelebration = true;
+                Banner = null;
+            }
+            else
+            {
+                Banner = outcome switch
+                {
+                    BillingPurchaseOutcome.UserCancelled => null,
+                    BillingPurchaseOutcome.AlreadyOwned => "You already own this subscription.",
+                    BillingPurchaseOutcome.BillingUnavailable => "Google Play Billing is not available right now.",
+                    BillingPurchaseOutcome.NotAvailable => "This product is not available in your region.",
+                    _ => "Purchase failed. Please try again."
+                };
+            }
         }, "Failed to start purchase");
 
         IsPurchaseInProgress = false;
@@ -132,7 +152,6 @@ public partial class PaywallViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             PromoCodeRedemptionResult result = await _promoCodeService.RedeemAsync(PromoCodeInput);
-            Banner = result.Message;
 
             if (result.Success)
             {
@@ -141,9 +160,14 @@ public partial class PaywallViewModel : ViewModelBase
                     .Add(AnalyticsParamNames.GrantedTier, result.Activation?.GrantedTier.ToString() ?? "unknown")
                     .BuildMutable());
                 PromoCodeInput = string.Empty;
+                CelebrationHeadline = "Successfully redeemed code";
+                CelebrationDetail = result.Message;
+                ShowCelebration = true;
+                Banner = null;
             }
             else
             {
+                Banner = result.Message;
                 _analytics.LogEvent(AnalyticsEventNames.PromoCodeFailed, AnalyticsParamBuilder.Create()
                     .Add(AnalyticsParamNames.Reason, result.Message)
                     .BuildMutable());
@@ -155,5 +179,10 @@ public partial class PaywallViewModel : ViewModelBase
     public async Task DismissAsync()
     {
         await _coordinator.HideAsync();
+    }
+
+    public void DismissCelebration()
+    {
+        ShowCelebration = false;
     }
 }
