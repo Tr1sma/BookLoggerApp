@@ -6,7 +6,7 @@
 <div class="plant-shop-card @(IsSelected ? "selected" : "") @(IsLockedByLevel ? "locked" : "") @(IsLegendary ? "legendary" : "")" @onclick="OnSelect" style="display: flex; flex-direction: column;">
     <!-- Plant Image -->
     <div class="plant-card-image">
-        <img src="@Species.ImagePath" alt="@Species.Name" />
+        <img src="@Species.ImagePath" alt="@Species.LocalizedName(L)" />
     </div>
 
     <!-- Plant Info -->
@@ -15,8 +15,8 @@
         {
             <div class="legendary-badge">✨ @L["ShopCard_Legendary"]</div>
         }
-        <h3 class="plant-card-title">@Species.Name</h3>
-        <p class="plant-card-description">@Species.Description</p>
+        <h3 class="plant-card-title">@Species.LocalizedName(L)</h3>
+        <p class="plant-card-description">@Species.LocalizedDescription(L)</p>
 
         <!-- Stats -->
         <div class="plant-card-stats">

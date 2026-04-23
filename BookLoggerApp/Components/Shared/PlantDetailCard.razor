@@ -10,7 +10,7 @@
 <div class="plant-detail-card">
     <div class="plant-detail-visual">
         <img src="@(Plant.Species?.ImagePath ?? "/images/unknown_plant.png")"
-             alt="@Plant.Name"
+             alt="@Plant.LocalizedDisplayName(L)"
              class="plant-detail-image" />
         <div class="plant-detail-status status-@Plant.Status.ToString().ToLowerInvariant()">
             @GetStatusIcon()
@@ -34,7 +34,7 @@
             }
             else
             {
-                <h3 class="plant-detail-name">@Plant.Name</h3>
+                <h3 class="plant-detail-name">@Plant.LocalizedDisplayName(L)</h3>
                 <button type="button"
                         class="plant-detail-edit-btn"
                         @onclick="BeginRename"
@@ -51,7 +51,7 @@
             <p class="plant-detail-name-error">@_renameError</p>
         }
 
-        <p class="plant-detail-species">@(Plant.Species?.Name ?? L["PlantCard_UnknownPlant"].Value)</p>
+        <p class="plant-detail-species">@(Plant.Species?.LocalizedName(L) ?? L["PlantCard_UnknownPlant"].Value)</p>
 
         <div class="plant-detail-stats">
             <div class="plant-detail-stat">

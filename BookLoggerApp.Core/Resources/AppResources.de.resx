@@ -2560,4 +2560,229 @@
   <data name="Error_FailedTo_RefreshGoalStats" xml:space="preserve">
     <value>Ziel-Statistik konnte nicht aktualisiert werden</value>
   </data>
+  <data name="PlantSpecies_StarterSprout_Name" xml:space="preserve">
+    <value>Einsteiger-Spross</value>
+  </data>
+  <data name="PlantSpecies_StarterSprout_Description" xml:space="preserve">
+    <value>Eine einfache Pflanze für Einsteiger. Wächst schnell!</value>
+  </data>
+  <data name="PlantSpecies_StorySeedling_Name" xml:space="preserve">
+    <value>Geschichten-Sämling</value>
+  </data>
+  <data name="PlantSpecies_StorySeedling_Description" xml:space="preserve">
+    <value>Ein wachsender Sämling, genährt von Geschichten.</value>
+  </data>
+  <data name="PlantSpecies_BookwormFern_Name" xml:space="preserve">
+    <value>Bücherwurm-Farn</value>
+  </data>
+  <data name="PlantSpecies_BookwormFern_Description" xml:space="preserve">
+    <value>Ein üppiger Farn für eifrige Leser.</value>
+  </data>
+  <data name="PlantSpecies_LiteraryLily_Name" xml:space="preserve">
+    <value>Literatur-Lilie</value>
+  </data>
+  <data name="PlantSpecies_LiteraryLily_Description" xml:space="preserve">
+    <value>Eine wunderschöne Lilie, die mit jedem Kapitel erblüht.</value>
+  </data>
+  <data name="PlantSpecies_ReadingCactus_Name" xml:space="preserve">
+    <value>Lese-Kaktus</value>
+  </data>
+  <data name="PlantSpecies_ReadingCactus_Description" xml:space="preserve">
+    <value>Pflegeleicht, mit großer Belohnung.</value>
+  </data>
+  <data name="PlantSpecies_WisdomWillow_Name" xml:space="preserve">
+    <value>Weise Weide</value>
+  </data>
+  <data name="PlantSpecies_WisdomWillow_Description" xml:space="preserve">
+    <value>Ein kluger Baum, der der Zeit standhält.</value>
+  </data>
+  <data name="PlantSpecies_AncientKnowledgeBonsai_Name" xml:space="preserve">
+    <value>Bonsai des alten Wissens</value>
+  </data>
+  <data name="PlantSpecies_AncientKnowledgeBonsai_Description" xml:space="preserve">
+    <value>Ein uralter Bonsai, der Wissen ausstrahlt.</value>
+  </data>
+  <data name="PlantSpecies_MysticTomeTree_Name" xml:space="preserve">
+    <value>Mystischer Tomen-Baum</value>
+  </data>
+  <data name="PlantSpecies_MysticTomeTree_Description" xml:space="preserve">
+    <value>Ein legendärer Baum mit Blättern wie Pergament.</value>
+  </data>
+  <data name="PlantSpecies_ChronicleTree_Name" xml:space="preserve">
+    <value>Chronik-Baum</value>
+  </data>
+  <data name="PlantSpecies_ChronicleTree_Description" xml:space="preserve">
+    <value>Ein uralter Chronik-Baum, dessen Blätter wie Pergament vergangener Epochen wirken. Wenn deine Lese-Streak zu reißen droht, bewahrt er die Geschichte deiner Reise.</value>
+  </data>
+  <data name="PlantSpecies_EternalPhoenixBonsai_Name" xml:space="preserve">
+    <value>Ewiger Phönix-Bonsai</value>
+  </data>
+  <data name="PlantSpecies_EternalPhoenixBonsai_Description" xml:space="preserve">
+    <value>Ein heiliger Bonsai, dessen goldene Blätter vor Weisheit unzähliger Bücher leuchten. Solange er über deinen Garten wacht, soll keine Pflanze sterben — und er erhebt sich immer wieder aus seiner eigenen Asche.</value>
+  </data>
+  <data name="ShopItem_ReadingCandle_Name" xml:space="preserve">
+    <value>Lesekerze</value>
+  </data>
+  <data name="ShopItem_ReadingCandle_Description" xml:space="preserve">
+    <value>Eine warm flackernde Kerze — der perfekte Lesebegleiter.</value>
+  </data>
+  <data name="ShopItem_CosyBookMug_Name" xml:space="preserve">
+    <value>Gemütliche Bücher-Tasse</value>
+  </data>
+  <data name="ShopItem_CosyBookMug_Description" xml:space="preserve">
+    <value>Eine Keramiktasse mit Buchrücken-Muster. Immer voll.</value>
+  </data>
+  <data name="ShopItem_WoodenBookend_Name" xml:space="preserve">
+    <value>Holz-Buchstütze</value>
+  </data>
+  <data name="ShopItem_WoodenBookend_Description" xml:space="preserve">
+    <value>Eine handgeschnitzte Eichen-Buchstütze. Deine Bücher verdienen einen festen Halt.</value>
+  </data>
+  <data name="ShopItem_BrassHourglass_Name" xml:space="preserve">
+    <value>Messing-Sanduhr</value>
+  </data>
+  <data name="ShopItem_BrassHourglass_Description" xml:space="preserve">
+    <value>Miss deine Lesesitzungen mit Stil.</value>
+  </data>
+  <data name="ShopItem_ScholarSSpectacles_Name" xml:space="preserve">
+    <value>Gelehrtenbrille</value>
+  </data>
+  <data name="ShopItem_ScholarSSpectacles_Description" xml:space="preserve">
+    <value>Runde Brille mit Messingrand. Jedes Regal gewinnt +10 Würde.</value>
+  </data>
+  <data name="ShopItem_InkwellQuill_Name" xml:space="preserve">
+    <value>Tintenfass &amp; Rabenfeder</value>
+  </data>
+  <data name="ShopItem_InkwellQuill_Description" xml:space="preserve">
+    <value>Ein Glas-Tintenfass mit Rabenfederkiel. Zeitlos.</value>
+  </data>
+  <data name="ShopItem_OwlFigurine_Name" xml:space="preserve">
+    <value>Eulen-Figur</value>
+  </data>
+  <data name="ShopItem_OwlFigurine_Description" xml:space="preserve">
+    <value>Eine Keramik-Eule. Weise Beobachterin deiner Lesegewohnheiten.</value>
+  </data>
+  <data name="ShopItem_LibraryGlobe_Name" xml:space="preserve">
+    <value>Bibliotheks-Globus</value>
+  </data>
+  <data name="ShopItem_LibraryGlobe_Description" xml:space="preserve">
+    <value>Ein antiker Messing-Globus. Erkunde Welten zwischen den Regalen.</value>
+  </data>
+  <data name="ShopItem_MarbleBookend_Name" xml:space="preserve">
+    <value>Marmor-Buchstütze</value>
+  </data>
+  <data name="ShopItem_MarbleBookend_Description" xml:space="preserve">
+    <value>Geschliffene Marmor-Buchstützen — schwer, elegant, für die Ewigkeit.</value>
+  </data>
+  <data name="ShopItem_BrassTelescope_Name" xml:space="preserve">
+    <value>Messing-Teleskop</value>
+  </data>
+  <data name="ShopItem_BrassTelescope_Description" xml:space="preserve">
+    <value>Ein Miniatur-Messing-Teleskop. Zum Lesen zwischen den Sternen.</value>
+  </data>
+  <data name="ShopItem_MagicReadingLamp_Name" xml:space="preserve">
+    <value>Magische Leselampe</value>
+  </data>
+  <data name="ShopItem_MagicReadingLamp_Description" xml:space="preserve">
+    <value>Eine verzauberte Schreibtischlampe, der niemals das Öl ausgeht.</value>
+  </data>
+  <data name="ShopItem_DragonFigurine_Name" xml:space="preserve">
+    <value>Drachen-Figur</value>
+  </data>
+  <data name="ShopItem_DragonFigurine_Description" xml:space="preserve">
+    <value>Ein winziger Drache thront auf deinem Regal. Er hat alles gelesen.</value>
+  </data>
+  <data name="ShopItem_AlchemyFlask_Name" xml:space="preserve">
+    <value>Alchemie-Phiole</value>
+  </data>
+  <data name="ShopItem_AlchemyFlask_Description" xml:space="preserve">
+    <value>Eine grün leuchtende Phiole unbekannten Zwecks. Nicht trinken.</value>
+  </data>
+  <data name="ShopItem_AncientScroll_Name" xml:space="preserve">
+    <value>Alte Schriftrolle</value>
+  </data>
+  <data name="ShopItem_AncientScroll_Description" xml:space="preserve">
+    <value>Eine versiegelte Schriftrolle voller gewaltiger Weisheit. Oder eine Einkaufsliste. Wer weiß.</value>
+  </data>
+  <data name="ShopItem_HeartOfStories_Name" xml:space="preserve">
+    <value>Herz der Geschichten</value>
+  </data>
+  <data name="ShopItem_HeartOfStories_Description" xml:space="preserve">
+    <value>Das Herz der Bibliothek — ein pulsierendes Relikt in warmem Beige. Die ultimative Belohnung für jeden Leser, der niemals aufgibt. Seine Magie durchdringt jeden Aspekt deiner Reise.</value>
+  </data>
+  <data name="Paywall_Feature_Books" xml:space="preserve">
+    <value>Bücher</value>
+  </data>
+  <data name="Paywall_Feature_BasicStats" xml:space="preserve">
+    <value>Basis-Statistiken</value>
+  </data>
+  <data name="Paywall_Feature_IsbnScanner" xml:space="preserve">
+    <value>ISBN- / Barcode-Scanner</value>
+  </data>
+  <data name="Paywall_Feature_BackupExport" xml:space="preserve">
+    <value>Backup &amp; Export (CSV, ZIP)</value>
+  </data>
+  <data name="Paywall_Feature_HomeWidgets" xml:space="preserve">
+    <value>Home-Widgets</value>
+  </data>
+  <data name="Paywall_Feature_NotesQuotes" xml:space="preserve">
+    <value>Notizen &amp; Zitate</value>
+  </data>
+  <data name="Paywall_Feature_ReadingGoals" xml:space="preserve">
+    <value>Leseziele</value>
+  </data>
+  <data name="Paywall_Feature_Shelves" xml:space="preserve">
+    <value>Regale</value>
+  </data>
+  <data name="Paywall_Feature_Plants" xml:space="preserve">
+    <value>Pflanzen</value>
+  </data>
+  <data name="Paywall_Feature_Decorations" xml:space="preserve">
+    <value>Dekorationen</value>
+  </data>
+  <data name="Paywall_Feature_Themes" xml:space="preserve">
+    <value>Designs</value>
+  </data>
+  <data name="Paywall_Feature_Wishlist" xml:space="preserve">
+    <value>Wunschliste</value>
+  </data>
+  <data name="Paywall_Feature_Tropes" xml:space="preserve">
+    <value>Tropes</value>
+  </data>
+  <data name="Paywall_Feature_ShelfColors" xml:space="preserve">
+    <value>Regalfarben</value>
+  </data>
+  <data name="Paywall_Feature_Trends" xml:space="preserve">
+    <value>Trends (Heatmap, Radar)</value>
+  </data>
+  <data name="Paywall_Feature_Insights" xml:space="preserve">
+    <value>Einblicke (Jahr, Top-Autoren)</value>
+  </data>
+  <data name="Paywall_Feature_ShareCards" xml:space="preserve">
+    <value>Share-Cards (Wrapped, Bücher)</value>
+  </data>
+  <data name="Paywall_Feature_PrestigePlants" xml:space="preserve">
+    <value>Prestige-Pflanzen</value>
+  </data>
+  <data name="Paywall_Feature_HeartOfStories" xml:space="preserve">
+    <value>Herz der Geschichten</value>
+  </data>
+  <data name="Paywall_Feature_GenreTropeFilter" xml:space="preserve">
+    <value>Genre- / Trope-Filter</value>
+  </data>
+  <data name="Paywall_Feature_FamilySharing" xml:space="preserve">
+    <value>Familienfreigabe</value>
+  </data>
+  <data name="Paywall_Feature_FeatureSuggestions" xml:space="preserve">
+    <value>Feature-Vorschläge</value>
+  </data>
+  <data name="Paywall_Category_AllPlans" xml:space="preserve">
+    <value>Alle Pläne</value>
+  </data>
+  <data name="Paywall_Category_PlusAndPremium" xml:space="preserve">
+    <value>Plus &amp; Premium</value>
+  </data>
+  <data name="Paywall_Category_PremiumOnly" xml:space="preserve">
+    <value>Nur Premium</value>
+  </data>
 </root>

@@ -110,17 +110,17 @@
             <div class="purchase-modal-overlay" @onclick="ClearSelection">
                 <div class="purchase-modal" @onclick:stopPropagation="true">
                     <div class="modal-header">
-                        <h2>@L["Shop_Purchase_Prefix"] <span class="purchase-plant-name">@ViewModel.SelectedSpecies.Name</span></h2>
+                        <h2>@L["Shop_Purchase_Prefix"] <span class="purchase-plant-name">@ViewModel.SelectedSpecies.LocalizedName(L)</span></h2>
                         <button class="btn-close" @onclick="ClearSelection">×</button>
                     </div>
 
                     <div class="modal-body">
                         <div class="plant-preview">
-                            <img src="@ViewModel.SelectedSpecies.ImagePath" alt="@ViewModel.SelectedSpecies.Name" />
+                            <img src="@ViewModel.SelectedSpecies.ImagePath" alt="@ViewModel.SelectedSpecies.LocalizedName(L)" />
                         </div>
 
                         <div class="plant-details">
-                            <p class="plant-description">@ViewModel.SelectedSpecies.Description</p>
+                            <p class="plant-description">@ViewModel.SelectedSpecies.LocalizedDescription(L)</p>
 
                             <div class="plant-stats-grid">
                                 <div class="stat-item">
@@ -152,7 +152,7 @@
                                 <label>@L["Shop_Plants_NameLabel"]</label>
                                 <input type="text"
                                        class="plant-name-input"
-                                       placeholder="@(L["Shop_Plants_NamePlaceholder", ViewModel.SelectedSpecies.Name].Value)"
+                                       placeholder="@(L["Shop_Plants_NamePlaceholder", ViewModel.SelectedSpecies.LocalizedName(L)].Value)"
                                        @bind="ViewModel.NewPlantName"
                                        @bind:event="oninput"
                                        maxlength="100" />
@@ -257,17 +257,17 @@
             <div class="purchase-modal-overlay" @onclick="ClearDecorationSelection">
                 <div class="purchase-modal" @onclick:stopPropagation="true">
                     <div class="modal-header">
-                        <h2>@L["Shop_Purchase_Prefix"] <span class="purchase-plant-name">@DecorationVM.SelectedDecoration.Name</span></h2>
+                        <h2>@L["Shop_Purchase_Prefix"] <span class="purchase-plant-name">@DecorationVM.SelectedDecoration.LocalizedName(L)</span></h2>
                         <button class="btn-close" @onclick="ClearDecorationSelection">×</button>
                     </div>
 
                     <div class="modal-body">
                         <div class="plant-preview">
-                            <img src="@DecorationVM.SelectedDecoration.ImagePath" alt="@DecorationVM.SelectedDecoration.Name" />
+                            <img src="@DecorationVM.SelectedDecoration.ImagePath" alt="@DecorationVM.SelectedDecoration.LocalizedName(L)" />
                         </div>
 
                         <div class="plant-details">
-                            <p class="plant-description">@DecorationVM.SelectedDecoration.Description</p>
+                            <p class="plant-description">@DecorationVM.SelectedDecoration.LocalizedDescription(L)</p>
 
                             <div class="plant-stats-grid">
                                 <div class="stat-item">

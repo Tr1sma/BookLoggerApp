@@ -10,14 +10,14 @@
 <div class="plant-widget @GetStatusClass()">
     <!-- Plant Visual -->
     <div class="plant-visual">
-        <img src="@GetPlantImage()" alt="@Plant.Name" class="plant-image-large" />
+        <img src="@GetPlantImage()" alt="@Plant.LocalizedDisplayName(L)" class="plant-image-large" />
         <div class="plant-status-indicator">@GetStatusEmoji()</div>
     </div>
 
     <!-- Plant Info -->
     <div class="plant-info">
-        <h3 class="plant-name">@Plant.Name</h3>
-        <p class="plant-species">@(Plant.Species?.Name ?? L["PlantWidget_Unknown"].Value)</p>
+        <h3 class="plant-name">@Plant.LocalizedDisplayName(L)</h3>
+        <p class="plant-species">@(Plant.Species?.LocalizedName(L) ?? L["PlantWidget_Unknown"].Value)</p>
 
         <!-- Level Badge -->
         <div class="plant-level">

@@ -4,6 +4,7 @@ using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Enums;
+using BookLoggerApp.Core.Resources;
 using System.Collections.ObjectModel;
 
 namespace BookLoggerApp.Core.ViewModels;
@@ -261,7 +262,7 @@ public partial class StatsViewModel : ViewModelBase
             plantBoostList.Add(new PlantBoostInfo
             {
                 PlantId = plant.Id,
-                PlantName = plant.Species.Name,
+                PlantName = Localizer is null ? plant.Species.Name : plant.Species.LocalizedName(Localizer),
                 PlantLevel = plant.CurrentLevel,
                 BoostPercentage = totalBoost
             });

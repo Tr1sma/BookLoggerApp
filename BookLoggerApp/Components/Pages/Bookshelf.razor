@@ -459,15 +459,15 @@
 {
     <div class="modal-overlay" @onclick="CloseDecorationDetail">
         <div class="modal-content" @onclick:stopPropagation="true">
-            <h3>@selectedDecoration.Name</h3>
+            <h3>@selectedDecoration.LocalizedDisplayName(L)</h3>
             <div style="text-align: center; padding: 1rem 0;">
                 <img src="@(selectedDecoration.ShopItem?.ImagePath ?? "images/decorations/placeholder.svg")"
-                     alt="@selectedDecoration.Name"
+                     alt="@selectedDecoration.LocalizedDisplayName(L)"
                      style="max-width: 120px; max-height: 120px;" />
             </div>
-            @if (selectedDecoration.ShopItem?.Description != null)
+            @if (selectedDecoration.ShopItem != null)
             {
-                <p style="color: var(--text-secondary); text-align: center; margin-bottom: 1rem;">@selectedDecoration.ShopItem.Description</p>
+                <p style="color: var(--text-secondary); text-align: center; margin-bottom: 1rem;">@selectedDecoration.ShopItem.LocalizedDescription(L)</p>
             }
             <div class="modal-actions">
                 <button class="btn btn-secondary" @onclick="CloseDecorationDetail">@L["Common_Close"]</button>

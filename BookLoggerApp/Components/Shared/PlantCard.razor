@@ -9,14 +9,14 @@
     <div class="plant-pot-wrapper">
         <!-- Plant Image -->
         <img src="@(Plant.Species?.ImagePath ?? "/images/unknown_plant.png")"
-            alt="@(Plant.Species?.Name ?? L["PlantCard_UnknownPlant"].Value)" class="plant-card-image" draggable="false" />
+            alt="@(Plant.Species?.LocalizedName(L) ?? L["PlantCard_UnknownPlant"].Value)" class="plant-card-image" draggable="false" />
 
         <div class="plant-status-badge status-@Plant.Status.ToString().ToLower()">
             @GetStatusIcon()
         </div>
     </div>
     <div class="plant-card-name">
-        <span class="plant-name-small">@Plant.Name</span>
+        <span class="plant-name-small">@Plant.LocalizedDisplayName(L)</span>
     </div>
     @if (ShowActions && OnRemove.HasDelegate)
     {

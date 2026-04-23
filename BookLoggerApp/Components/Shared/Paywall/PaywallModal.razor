@@ -53,12 +53,12 @@
                         if (lastCategory != row.Category)
                         {
                             <tr class="paywall-category-header">
-                                <td colspan="4">@PaywallComparisonCatalog.GetCategoryLabel(row.Category)</td>
+                                <td colspan="4">@PaywallComparisonCatalog.GetLocalizedCategoryLabel(row.Category, L)</td>
                             </tr>
                             lastCategory = row.Category;
                         }
                         <tr class="@(TriggerFeature is not null && row.MappedFeature == TriggerFeature ? "paywall-row-highlight" : string.Empty)">
-                            <th scope="row">@row.Label</th>
+                            <th scope="row">@PaywallComparisonCatalog.GetLocalizedLabel(row, L)</th>
                             <td>@row.FreeValue</td>
                             <td>@row.PlusValue</td>
                             <td>@row.PremiumValue</td>

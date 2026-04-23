@@ -8,7 +8,7 @@
      style="display: flex; flex-direction: column;">
     <!-- Decoration Image -->
     <div class="plant-card-image">
-        <img src="@Item.ImagePath" alt="@Item.Name" />
+        <img src="@Item.ImagePath" alt="@Item.LocalizedName(L)" />
     </div>
 
     <!-- Decoration Info -->
@@ -17,8 +17,8 @@
         {
             <div class="legendary-badge">✨ @L["ShopCard_Legendary"]</div>
         }
-        <h3 class="plant-card-title">@Item.Name</h3>
-        <p class="plant-card-description">@Item.Description</p>
+        <h3 class="plant-card-title">@Item.LocalizedName(L)</h3>
+        <p class="plant-card-description">@Item.LocalizedDescription(L)</p>
 
         <!-- Price -->
         <div class="plant-card-footer">

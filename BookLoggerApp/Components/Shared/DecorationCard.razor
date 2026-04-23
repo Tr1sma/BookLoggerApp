@@ -7,12 +7,12 @@
      @onclick="HandleClick">
     <div class="plant-pot-wrapper">
         <img src="@(Decoration.ShopItem?.ImagePath ?? "images/decorations/placeholder.svg")"
-             alt="@(Decoration.ShopItem?.Name ?? Decoration.Name)"
+             alt="@(Decoration.ShopItem?.LocalizedName(L) ?? Decoration.Name)"
              class="plant-card-image"
              draggable="false" />
     </div>
     <div class="plant-card-name">
-        <span class="plant-name-small">@Decoration.Name</span>
+        <span class="plant-name-small">@Decoration.LocalizedDisplayName(L)</span>
     </div>
     @if (ShowActions && OnRemove.HasDelegate)
     {
