@@ -1,4 +1,7 @@
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
 
 @if (Result != null)
 {
@@ -12,7 +15,7 @@
 
             <!-- Header -->
             <div class="levelup-header">
-                <h1>🏆 LEVEL UP!</h1>
+                <h1>🏆 @L["LevelUp_Header"]</h1>
             </div>
 
             <!-- Level Transition -->
@@ -31,23 +34,23 @@
             <!-- Coins Reward -->
             <div class="coins-reward">
                 <p style="color: #e0e0e0; margin-bottom: 0.5rem; font-size: 1.1rem;">
-                    You earned
+                    @L["BookCompletion_YouEarned"]
                 </p>
                 <div class="coins-amount">
-                    💰 @Result.CoinsAwarded Coins!
+                    💰 @L["LevelUp_CoinsEarned", Result.CoinsAwarded]
                 </div>
             </div>
 
             <!-- New Total -->
             <div style="text-align: center; margin: 1rem 0;">
                 <p style="color: #999; font-size: 0.9rem;">
-                    Total Coins: @Result.NewTotalCoins
+                    @L["LevelUp_TotalCoins", Result.NewTotalCoins]
                 </p>
             </div>
 
             <!-- Continue Button -->
             <button class="celebration-button" @onclick="HandleClose">
-                Awesome!
+                @L["BookCompletion_Awesome"]
             </button>
         </div>
     </div>

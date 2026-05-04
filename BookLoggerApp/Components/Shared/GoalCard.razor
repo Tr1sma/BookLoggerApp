@@ -1,3 +1,7 @@
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
+
 <div class="goal-card">
     <h4>@Goal.Title</h4>
     @if (Goal.GoalGenres.Any())
@@ -21,7 +25,7 @@
     <p class="goal-progress-text">@Math.Min(Goal.Current, Goal.Target) / @Goal.Target @GetGoalTypeUnit(Goal.Type) (@Math.Min(Goal.ProgressPercentage, 100)%)</p>
     @if (Goal.EndDate != default)
     {
-        <p class="goal-date">Until @Goal.EndDate.ToString("yyyy-MM-dd")</p>
+        <p class="goal-date">@L["GoalCard_Until", Goal.EndDate.ToString("yyyy-MM-dd")]</p>
     }
 </div>
 
@@ -52,10 +56,10 @@
     {
         return type switch
         {
-            BookLoggerApp.Core.Enums.GoalType.Books => "books",
-            BookLoggerApp.Core.Enums.GoalType.Pages => "pages",
-            BookLoggerApp.Core.Enums.GoalType.Minutes => "minutes",
-            _ => ""
+            BookLoggerApp.Core.Enums.GoalType.Books => L["GoalCard_Unit_Books"],
+            BookLoggerApp.Core.Enums.GoalType.Pages => L["GoalCard_Unit_Pages"],
+            BookLoggerApp.Core.Enums.GoalType.Minutes => L["GoalCard_Unit_Minutes"],
+            _ => string.Empty
         };
     }
 }

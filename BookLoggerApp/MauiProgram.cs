@@ -1,3 +1,4 @@
+using System.Globalization;
 using BookLoggerApp;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Infrastructure;
@@ -10,6 +11,7 @@ using BookLoggerApp.Infrastructure.Repositories;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Storage;
 using Plugin.LocalNotification;
 using ZXing.Net.Maui.Controls;
 
@@ -18,6 +20,10 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Started ===");
+
+        // Must run before any string resource is resolved so the very first render
+        // (AppStartupOverlay) already picks the correct culture.
+        InitializeCulture();
 
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>()
@@ -28,6 +34,11 @@ public static class MauiProgram
                .UseBarcodeReader()
                .UseLocalNotification();
         builder.Services.AddMauiBlazorWebView();
+        // ResourcesPath stays empty: the AppResources marker type lives in the
+        // BookLoggerApp.Core.Resources namespace already, and ResourceManagerStringLocalizer
+        // derives the base name from the type's namespace. Setting ResourcesPath = "Resources"
+        // would produce BookLoggerApp.Core.Resources.Resources.AppResources.
+        builder.Services.AddLocalization();
 
         // Configure platform-specific handlers
         ConfigurePlatformHandlers(builder);
@@ -47,6 +58,11 @@ public static class MauiProgram
         // forward non-fatals to Crashlytics (no-op outside Android).
         AnalyticsBootstrapper.Install(app.Services.GetRequiredService<ICrashReportingService>());
 
+        // Wire the ambient localizer on ViewModelBase for the generic fallbacks used
+        // by ExecuteSafely*Async when a caller didn't pass an explicit errorPrefix.
+        BookLoggerApp.Core.ViewModels.ViewModelBase.Localizer =
+            app.Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<BookLoggerApp.Core.Resources.AppResources>>();
+
         // Setup global exception handler
         SetupGlobalExceptionHandler(app);
 
@@ -54,6 +70,37 @@ public static class MauiProgram
 
         System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Completed ===");
         return app;
+    }
+
+    /// <summary>
+    /// Reads the UI language from <see cref="Preferences"/> and sets the thread culture
+    /// before any Blazor render happens. On first launch the <see cref="Preferences"/>
+    /// key is absent; in that case the system culture is detected and persisted so the
+    /// very first frame already renders in the correct language.
+    /// </summary>
+    private static void InitializeCulture()
+    {
+        try
+        {
+            string lang = Preferences.Default.Get(BookLoggerApp.Services.LanguageService.PrefKey, string.Empty);
+            if (string.IsNullOrWhiteSpace(lang))
+            {
+                string iso = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+                lang = string.Equals(iso, "de", StringComparison.OrdinalIgnoreCase) ? "de" : "en";
+                Preferences.Default.Set(BookLoggerApp.Services.LanguageService.PrefKey, lang);
+            }
+
+            var culture = new CultureInfo(lang);
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            CultureInfo.CurrentCulture = culture;
+            CultureInfo.CurrentUICulture = culture;
+        }
+        catch (Exception ex)
+        {
+            // Never fail startup on culture setup — fall back to the system default.
+            System.Diagnostics.Debug.WriteLine($"InitializeCulture failed: {ex}");
+        }
     }
 
     private static void ConfigurePlatformHandlers(MauiAppBuilder builder)
@@ -191,6 +238,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFilePickerService, BookLoggerApp.Services.FilePickerService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IMigrationService, BookLoggerApp.Services.MigrationService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppRestartService, BookLoggerApp.Services.AppRestartService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.ILanguageService, BookLoggerApp.Services.LanguageService>();
 
         // Register Widget Update Service as Singleton (triggers Android widget refresh on data changes)
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService, BookLoggerApp.Services.WidgetUpdateService>();
@@ -328,15 +376,23 @@ public static class MauiProgram
 
     private static void InitializeDatabase(MauiApp app)
     {
-        // Initialize database using DbInitializer
-        // This runs asynchronously but provides EnsureInitializedAsync() for ViewModels to await
+        // Runs DbInitializer on a dedicated background thread rather than Task.Run.
+        // On budget Android devices (reported on Samsung Galaxy A16) the ThreadPool
+        // during cold start is busy with BlazorWebView, MAUI handlers and Android
+        // activity setup, which can delay a Task.Run worker far enough to push
+        // EF migrations past the UI timeout. A dedicated thread starts immediately
+        // and doesn't compete for a ThreadPool slot.
         System.Diagnostics.Debug.WriteLine("Starting database initialization...");
-        _ = Task.Run(async () =>
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.AppendInitLog(
+            "MauiProgram.InitializeDatabase: spawning dedicated DbInit thread");
+        var thread = new Thread(() =>
         {
+            BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.AppendInitLog(
+                $"DbInit thread running (managed thread id={Environment.CurrentManagedThreadId})");
             try
             {
                 var logger = app.Services.GetService<ILogger<AppDbContext>>();
-                await DbInitializer.InitializeAsync(app.Services, logger);
+                DbInitializer.InitializeAsync(app.Services, logger).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
@@ -358,6 +414,11 @@ public static class MauiProgram
                 // MarkAsFailed is idempotent, so calling it here is always safe.
                 BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsFailed(ex);
             }
-        });
+        })
+        {
+            IsBackground = true,
+            Name = "DbInit"
+        };
+        thread.Start();
     }
 }

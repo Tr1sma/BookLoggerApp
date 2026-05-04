@@ -1,4 +1,7 @@
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
 
 @if (Result != null)
 {
@@ -12,23 +15,23 @@
 
             <!-- Header -->
             <div class="session-complete-header">
-                <h1>🎉 Session Complete!</h1>
+                <h1>🎉 @L["Session_Header"]</h1>
             </div>
 
             @if (StreakRescuedByGuardian)
             {
                 <div class="ability-callout">
-                    ✨ <strong>The Chronicle Tree saved your streak!</strong>
+                    ✨ <strong>@L["Session_StreakGuardianSaved"]</strong>
                 </div>
             }
 
             @if (StoryHeartCoinBonus > 0 || StoryHeartFirstOfDayBonusXp > 0)
             {
                 <div class="ability-callout">
-                    💖 <strong>Heart of Stories:</strong>
+                    💖 <strong>@L["Session_StoryHeart_Title"]:</strong>
                     @if (StoryHeartCoinBonus > 0)
                     {
-                        <span>+@StoryHeartCoinBonus coins</span>
+                        <span>@L["Session_StoryHeart_Coins", StoryHeartCoinBonus]</span>
                     }
                     @if (StoryHeartCoinBonus > 0 && StoryHeartFirstOfDayBonusXp > 0)
                     {
@@ -36,18 +39,18 @@
                     }
                     @if (StoryHeartFirstOfDayBonusXp > 0)
                     {
-                        <span>+@StoryHeartFirstOfDayBonusXp XP (first session of the day)</span>
+                        <span>@L["Session_StoryHeart_FirstOfDayXp", StoryHeartFirstOfDayBonusXp]</span>
                     }
                 </div>
             }
 
             <!-- XP Breakdown -->
             <div class="xp-breakdown">
-                
+
                 @if (Result.PagesXp > 0)
                 {
                     <div class="xp-row">
-                        <span class="xp-label">Pages Read</span>
+                        <span class="xp-label">@L["Session_Row_Pages"]</span>
                         <span class="xp-value">+@Result.PagesXp XP</span>
                     </div>
                 }
@@ -55,7 +58,7 @@
                 @if (Result.MinutesXp > 0)
                 {
                     <div class="xp-row">
-                        <span class="xp-label">Reading Time</span>
+                        <span class="xp-label">@L["Session_Row_Time"]</span>
                         <span class="xp-value">+@Result.MinutesXp XP</span>
                     </div>
                 }
@@ -63,7 +66,7 @@
                 @if (Result.LongSessionBonusXp > 0)
                 {
                     <div class="xp-row">
-                        <span class="xp-label">Long Session Bonus</span>
+                        <span class="xp-label">@L["Session_Row_LongBonus"]</span>
                         <span class="xp-value">+@Result.LongSessionBonusXp XP</span>
                     </div>
                 }
@@ -71,7 +74,7 @@
                 @if (Result.BookCompletionXp > 0)
                 {
                     <div class="xp-row">
-                        <span class="xp-label">Book Completed</span>
+                        <span class="xp-label">@L["Session_Row_BookCompleted"]</span>
                         <span class="xp-value">+@Result.BookCompletionXp XP</span>
                     </div>
                 }
@@ -79,7 +82,7 @@
                 @if (Result.StreakBonusXp > 0)
                 {
                     <div class="xp-row">
-                        <span class="xp-label">Streak Bonus</span>
+                        <span class="xp-label">@L["Session_Row_StreakBonus"]</span>
                         <span class="xp-value">+@Result.StreakBonusXp XP</span>
                     </div>
                 }
@@ -87,14 +90,14 @@
                 <div class="xp-divider"></div>
 
                 <div class="xp-row subtotal">
-                    <span class="xp-label">Subtotal</span>
+                    <span class="xp-label">@L["Session_Row_Subtotal"]</span>
                     <span class="xp-value">@Result.BaseXp XP</span>
                 </div>
 
                 @if (Result.PlantBoostPercentage > 0)
                 {
                     <div class="xp-row">
-                        <span class="xp-label">🌱 Plant Boost (@(Math.Round(Result.PlantBoostPercentage * 100))%)</span>
+                        <span class="xp-label">🌱 @L["Session_Row_PlantBoost", Math.Round(Result.PlantBoostPercentage * 100)]</span>
                         <span class="xp-value">+@Result.BoostedXp XP</span>
                     </div>
                 }
@@ -102,7 +105,7 @@
                 <div class="xp-divider"></div>
 
                 <div class="xp-row total-row">
-                    <span class="xp-label">Total XP Gained</span>
+                    <span class="xp-label">@L["Session_Row_Total"]</span>
                     <span class="xp-value total">@Result.XpEarned XP</span>
                 </div>
             </div>
@@ -112,7 +115,7 @@
 
             <!-- Continue Button -->
             <button class="celebration-button" @onclick="HandleClose">
-                Continue
+                @L["Session_Continue"]
             </button>
         </div>
     </div>

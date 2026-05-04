@@ -1,11 +1,14 @@
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Core.ViewModels
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject AppStartupViewModel ViewModel
 @inject ITimerStateService TimerStateService
 @inject IBackButtonService BackButtonService
 @inject NavigationManager NavigationManager
+@inject IStringLocalizer<AppResources> L
 
 @if (ViewModel.HasVisibleOverlay)
 {
@@ -32,11 +35,11 @@
             <div class="startup-modal" role="dialog" aria-modal="true" aria-labelledby="startupChangelogTitle">
                 <div class="startup-modal-header">
                     <div>
-                        <h2 id="startupChangelogTitle">What's new?</h2>
+                        <h2 id="startupChangelogTitle">@L["Startup_WhatsNew"]</h2>
                         @if (ViewModel.CurrentRelease != null)
                         {
                             <p class="startup-subtitle">
-                                Version @ViewModel.CurrentRelease.DisplayVersion
+                                @L["Settings_Version"] @ViewModel.CurrentRelease.DisplayVersion
                                 @if (!string.IsNullOrWhiteSpace(ViewModel.CurrentRelease.ReleaseDate))
                                 {
                                     <span>- @ViewModel.CurrentRelease.ReleaseDate</span>
@@ -48,7 +51,7 @@
                     {
                         <button type="button" class="history-toggle" @onclick="ViewModel.ToggleHistoryAsync">
                             <span aria-hidden="true">@(ViewModel.ShowFullHistory ? "▲" : "▼")</span>
-                            <span>@(ViewModel.ShowFullHistory ? "Hide history" : "Show history")</span>
+                            <span>@(ViewModel.ShowFullHistory ? L["Startup_HideHistory"].Value : L["Startup_ShowHistory"].Value)</span>
                         </button>
                     }
                 </div>
@@ -58,7 +61,7 @@
                     {
                         <section class="release-card">
                             <div class="release-card-header">
-                                <h3>Version @release.DisplayVersion</h3>
+                                <h3>@L["Settings_Version"] @release.DisplayVersion</h3>
                                 @if (!string.IsNullOrWhiteSpace(release.ReleaseDate))
                                 {
                                     <span>@release.ReleaseDate</span>
@@ -83,7 +86,7 @@
 
                 <div class="startup-modal-actions">
                     <button type="button" class="btn btn-primary" @onclick="ViewModel.CloseChangelogAsync">
-                        Continue
+                        @L["Session_Continue"]
                     </button>
                 </div>
             </div>
@@ -94,23 +97,23 @@
             <div class="startup-modal startup-modal-compact" role="dialog" aria-modal="true" aria-labelledby="startupUpdateTitle">
                 <div class="startup-modal-header">
                     <div>
-                        <h2 id="startupUpdateTitle">Update available</h2>
-                        <p class="startup-subtitle">A newer version of BookHeart is available on the Play Store.</p>
+                        <h2 id="startupUpdateTitle">@L["Startup_UpdateAvailable_Title"]</h2>
+                        <p class="startup-subtitle">@L["Startup_UpdateAvailable_Subtitle"]</p>
                     </div>
                 </div>
 
                 <div class="startup-modal-body">
                     <p>
-                        You can start the update directly in the app. The download continues in the background, and you can finish the installation afterwards.
+                        @L["Startup_UpdateAvailable_Body"]
                     </p>
                 </div>
 
                 <div class="startup-modal-actions">
                     <button type="button" class="btn btn-secondary" @onclick="ViewModel.DismissUpdateAvailableAsync" disabled="@ViewModel.IsStartingUpdate">
-                        Later
+                        @L["Startup_Later"]
                     </button>
                     <button type="button" class="btn btn-primary" @onclick="async () => await ViewModel.StartFlexibleUpdateAsync()" disabled="@ViewModel.IsStartingUpdate">
-                        @(ViewModel.IsStartingUpdate ? "Starting..." : "Update now")
+                        @(ViewModel.IsStartingUpdate ? L["Startup_Starting"].Value : L["Startup_UpdateNow"].Value)
                     </button>
                 </div>
             </div>
@@ -121,23 +124,23 @@
             <div class="startup-modal startup-modal-compact" role="dialog" aria-modal="true" aria-labelledby="startupInstallTitle">
                 <div class="startup-modal-header">
                     <div>
-                        <h2 id="startupInstallTitle">Update ready</h2>
-                        <p class="startup-subtitle">The download is complete.</p>
+                        <h2 id="startupInstallTitle">@L["Startup_UpdateReady_Title"]</h2>
+                        <p class="startup-subtitle">@L["Startup_UpdateReady_Subtitle"]</p>
                     </div>
                 </div>
 
                 <div class="startup-modal-body">
                     <p>
-                        Install the update now to switch to the new version.
+                        @L["Startup_UpdateReady_Body"]
                     </p>
                 </div>
 
                 <div class="startup-modal-actions">
                     <button type="button" class="btn btn-secondary" @onclick="ViewModel.DismissUpdateReadyAsync">
-                        Later
+                        @L["Startup_Later"]
                     </button>
                     <button type="button" class="btn btn-primary" @onclick="async () => await ViewModel.CompleteUpdateAsync()">
-                        Install now
+                        @L["Startup_InstallNow"]
                     </button>
                 </div>
             </div>
