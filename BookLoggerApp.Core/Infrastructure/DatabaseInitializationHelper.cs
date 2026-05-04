@@ -8,18 +8,47 @@ namespace BookLoggerApp.Core.Infrastructure;
 public static class DatabaseInitializationHelper
 {
     /// <summary>
-    /// Default timeout applied by <see cref="EnsureInitializedAsync()"/>. On slow
-    /// budget Android devices, first-install EF migrations plus seed synchronisation
-    /// can legitimately take ~10-15 seconds; 45s buys enough headroom while still
-    /// surfacing a real hang within a minute.
+    /// Default timeout applied by <see cref="EnsureInitializedAsync()"/>. With the
+    /// fire-and-forget init moved onto a dedicated high-priority thread and the
+    /// SchemaDriftGuard work measured, 20s is plenty of headroom even on slow
+    /// budget Android devices while dramatically improving the worst-case UX
+    /// when something genuinely hangs (shorter wait → working retry surfaces faster).
     /// </summary>
-    public static TimeSpan DefaultTimeout { get; } = TimeSpan.FromSeconds(45);
+    public static TimeSpan DefaultTimeout { get; } = TimeSpan.FromSeconds(20);
 
-    private static TaskCompletionSource<bool> _initializationTcs = new();
+    // RunContinuationsAsynchronously prevents every awaiting ViewModel from
+    // resuming synchronously on the DB-init thread when MarkAsInitialized fires.
+    // Important for Blazor Hybrid: continuations that ultimately touch UI state
+    // should not hijack the worker thread that just finished the migration.
+    private static TaskCompletionSource<bool> _initializationTcs =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
     private static bool _isInitialized;
     private static bool _initializationFailed;
     private static Exception? _initializationException;
     private static readonly object _lock = new();
+
+    /// <summary>
+    /// In-memory log buffer that captures DB initialization timings and errors.
+    /// Exposed through <c>IMigrationService.GetMigrationLog()</c> so users can
+    /// read and share the log from the Settings page when reporting issues.
+    /// Kept as a single static buffer so it's accessible from the Infrastructure
+    /// layer (DbInitializer) without introducing a new abstraction.
+    /// </summary>
+    public static System.Text.StringBuilder InitLog { get; } = new();
+
+    /// <summary>
+    /// Appends a timestamped line to <see cref="InitLog"/>. Safe to call from
+    /// any thread.
+    /// </summary>
+    public static void AppendInitLog(string message)
+    {
+        var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
+        lock (InitLog)
+        {
+            InitLog.AppendLine(line);
+        }
+        System.Diagnostics.Debug.WriteLine(line);
+    }
 
     /// <summary>
     /// Checks if the database has been initialized.
@@ -174,7 +203,7 @@ public static class DatabaseInitializationHelper
 
             _initializationFailed = false;
             _initializationException = null;
-            _initializationTcs = new TaskCompletionSource<bool>();
+            _initializationTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
     }
 
@@ -189,7 +218,7 @@ public static class DatabaseInitializationHelper
             _isInitialized = false;
             _initializationFailed = false;
             _initializationException = null;
-            _initializationTcs = new TaskCompletionSource<bool>();
+            _initializationTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
     }
 }

@@ -12,17 +12,36 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
+## [Unveröffentlicht]
 
+### Hinzugefügt
+- Deutsche Sprachunterstützung inkl. Sprachauswahl in den Einstellungen (Englisch + Deutsch). Beim allerersten Start wird die System-Sprache automatisch erkannt; ein späterer Sprachwechsel startet die App neu, damit die neue Sprache überall greift.
+- Neue Sektion "🌐 Sprache" in den Einstellungen mit Dropdown, das zwischen allen unterstützten Sprachen umschalten lässt.
+- Komplette UI übersetzt: Navigation, alle Pages (Regal, Dashboard, Statistik, Ziele, Lesen, Buchdetails, Buch bearbeiten, Shop, Getting Started, Einstellungen), alle Shared-Components (Karten, Modals, Celebrations, Widgets, Paywall, Onboarding), ViewModel-Fehlermeldungen, FluentValidation-Meldungen und Android-Widget-Beschreibungen.
+- Android-Widget-Strings jetzt zweisprachig (`values/strings.xml` EN, `values-de/strings.xml` DE) — das System wählt automatisch die richtige Datei basierend auf der Geräte-Sprache.
+- Notifications (Lese-Erinnerung, Ziel-Abschluss, Pflanzen-Wasserbedarf) werden in der aktiven UI-Sprache angezeigt.
+
+### Geändert
+- `AppSettings.Language` wird beim ersten App-Start automatisch aus der System-Sprache abgeleitet (statt immer `en`).
+- Backup-Restore synchronisiert die Sprach-Preference nach einem Restore mit dem wiederhergestellten `AppSettings.Language`, damit die App nach Neustart in der korrekten Sprache läuft.
 
 ## [0.10.6]
 
 ### Hinzugefügt
 - Celebration-Modal mit Konfetti nach erfolgreichem Einlösen eines Promo-Codes ("Successfully redeemed code") und nach Abschluss einer Subscription in der Paywall.
+- Telemetrie für Datenbank-Initialisierung (Gesamt- und Teilschritt-Dauern) — hilft bei der Analyse von langsamen Geräten
+- DB-Init-Log in "Data Recovery Diagnostics" (Einstellungen) sichtbar — zeigt pro Schritt (CanConnect, MigrateAsync, SchemaDriftGuard, Deferred-Steps) Dauer und Fehler. Wird beim Aufklappen automatisch aktualisiert, damit Nutzer den Log zum Support weitergeben können
 
 ### Geändert
+- Datenbank-Initialisierung läuft jetzt auf einem dedizierten Hintergrund-Thread statt über den ThreadPool. Auf bestimmten Geräten (u.a. Samsung Galaxy A16) wurde der Start dadurch nicht mehr rechtzeitig fertig.
+- Timeout für DB-Initialisierung von 45 s auf 20 s reduziert — schnellerer Zugriff auf den Retry-Button, wenn wirklich etwas hängt
+- Retry-Button für die Datenbank-Initialisierung startet jetzt immer einen frischen Versuch (vorher nur, wenn das Failure-Flag gesetzt war — bei reinen Timeouts blieb die App dadurch hängen)
+- Retry ist idempotent: mehrfaches Tippen spawnt keine parallelen Initialisierungs-Tasks mehr
 
 ### Behoben
  - Goals können jetzt nicht mehr zu mehr als 100% abegschlossen werden
+ - "Loading..."-Zustand auf allen Seiten löste sich nach Property-Änderungen im ViewModel nicht automatisch auf — Blazor-Komponenten beobachten jetzt `INotifyPropertyChanged` über eine zentrale Base-Klasse
+ - Retry-Button nach DB-Timeout hing in einer Schleife, weil der Helper-Zustand nicht zum UI-Zustand passte (TimeoutException im ViewModel markiert jetzt auch den Helper als gescheitert)
 
 ## [0.10.5]
 
