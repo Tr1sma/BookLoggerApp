@@ -1,8 +1,10 @@
 @page "/books"
 @using BookLoggerApp.Core.Resources
+@using BookLoggerApp.Core.Services.Abstractions
 @using Microsoft.Extensions.Localization
 @inherits BookLoggerApp.Components.ObservableComponentBase
 @inject BookLoggerApp.Core.ViewModels.BookListViewModel Vm
+@inject IDatabaseInitializer DatabaseInitializer
 @inject IStringLocalizer<AppResources> L
 
 <PageTitle>@L["PageTitle_Books"] - BookHeart</PageTitle>
@@ -14,6 +16,13 @@
 @if (Vm.IsBusy)
 {
     <p>@L["Common_Loading"]</p>
+}
+else if (!string.IsNullOrEmpty(Vm.ErrorMessage))
+{
+    <div class="alert alert-danger">
+        <p>@Vm.ErrorMessage</p>
+        <button class="btn btn-primary" @onclick="RetryLoadAsync">@L["Common_Retry"]</button>
+    </div>
 }
 else
 {
@@ -37,6 +46,16 @@ else
     protected override async Task OnInitializedAsync()
     {
         Observe(Vm);
+        await Vm.LoadAsync();
+    }
+
+    private async Task RetryLoadAsync()
+    {
+        // Clear the failed-init flag and re-run DbInitializer in the background;
+        // mirrors Dashboard.razor's pattern. Without Retry() the helper's
+        // InitializationFailed flag would leave the original pending TCS in place
+        // and the retry would just wait for it again (visible bug: "Retry lädt ewig").
+        DatabaseInitializer.Retry();
         await Vm.LoadAsync();
     }
 }

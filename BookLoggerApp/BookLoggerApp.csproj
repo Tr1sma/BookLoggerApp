@@ -84,18 +84,19 @@
 
     <ItemGroup>
         <PackageReference Include="Blazor-ApexCharts" Version="6.1.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" Condition="'$(Configuration)' == 'Debug'">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7" Condition="'$(Configuration)' == 'Debug'">
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.3" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.0" />
-        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
-        <PackageReference Include="Plugin.InAppBilling" Version="8.0.5" />
-        <PackageReference Include="Plugin.LocalNotification" Version="13.0.0" />
-        <PackageReference Include="Xamarin.Google.Android.Play.App.Update" Version="2.1.0.10" Condition="$(TargetFramework.Contains('-android'))" />
-        <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.7.2" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.7" />
+        <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.51" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.7" />
+        <PackageReference Include="Plugin.InAppBilling" Version="10.0.0" />
+        <PackageReference Include="Plugin.LocalNotification" Version="14.1.0" />
+        <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.7" />
+        <PackageReference Include="Xamarin.Google.Android.Play.App.Update" Version="2.1.0.18" Condition="$(TargetFramework.Contains('-android'))" />
+        <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.7.4" />
 
 
     </ItemGroup>

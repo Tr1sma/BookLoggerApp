@@ -146,11 +146,19 @@ public static class MauiProgram
         // Perform migration check (XP-based recovery)
         DatabaseMigrationHelper.MigrateIfNecessary(dbPath);
 
+        // Shared interceptor that logs SQL commands to InitLog while migrations run.
+        // Static-toggle gated so it doesn't spam during normal operation. Registered
+        // ONLY on the factory's options (not on AddDbContext) so each command fires
+        // the interceptor exactly once. DbInitializer resolves its DbContext via the
+        // factory so it still gets the migration-time logging.
+        var migrationInterceptor = new BookLoggerApp.Infrastructure.Data.MigrationLoggingInterceptor();
+
         // Register DbContextFactory for creating DbContext instances on demand
         // This is the recommended approach for Blazor to avoid concurrency issues
         builder.Services.AddDbContextFactory<AppDbContext>(options =>
         {
             options.UseSqlite($"Data Source={dbPath}");
+            options.AddInterceptors(migrationInterceptor);
         });
 
         // Also register DbContext as Transient for compatibility with existing code

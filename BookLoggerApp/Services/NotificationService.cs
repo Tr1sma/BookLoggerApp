@@ -3,6 +3,10 @@ using BookLoggerApp.Core.Services.Abstractions;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Plugin.LocalNotification;
+using Plugin.LocalNotification.Core.Models;
+using Plugin.LocalNotification.Core.Models.AndroidOption;
+
+
 #if ANDROID
 using Android.App;
 using Android.Content;
@@ -124,10 +128,10 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
                 Title = _localizer["Notification_Reminder_Title"],
                 Description = _localizer["Notification_Reminder_Body"],
                 CategoryType = NotificationCategoryType.Reminder,
-                Android = new Plugin.LocalNotification.AndroidOption.AndroidOptions
+                Android = new AndroidOptions
                 {
                     ChannelId = ReminderChannelId,
-                    Priority = Plugin.LocalNotification.AndroidOption.AndroidPriority.High,
+                    Priority = AndroidPriority.High,
                     AutoCancel = true,
                 },
                 Schedule = new NotificationRequestSchedule
@@ -178,7 +182,7 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
                 NotificationId = GoalCompletedId,
                 Title = _localizer["Notification_Goal_Title"],
                 Description = _localizer["Notification_Goal_Body", goalTitle],
-                Android = new Plugin.LocalNotification.AndroidOption.AndroidOptions
+                Android = new AndroidOptions
                 {
                     ChannelId = GeneralChannelId,
                 }
@@ -207,7 +211,7 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
                 NotificationId = PlantWaterId,
                 Title = _localizer["Notification_Plant_Title"],
                 Description = _localizer["Notification_Plant_Body", plantName],
-                Android = new Plugin.LocalNotification.AndroidOption.AndroidOptions
+                Android = new AndroidOptions
                 {
                     ChannelId = GeneralChannelId,
                 }
@@ -232,7 +236,7 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
                 NotificationId = Interlocked.Increment(ref _nextNotificationId),
                 Title = title,
                 Description = message,
-                Android = new Plugin.LocalNotification.AndroidOption.AndroidOptions
+                Android = new AndroidOptions
                 {
                     ChannelId = GeneralChannelId,
                 }
