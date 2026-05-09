@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -44,12 +46,18 @@ public static class DbInitializer
         var disposeScope = true;
         MigrationTimings timings = default;
         ICrashReportingService? crashReporting = null;
+        AppDbContext? dbContext = null;
         try
         {
             logger?.LogInformation("Starting database initialization...");
             DatabaseInitializationHelper.AppendInitLog("InitializeAsync: starting");
 
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            // Resolve DbContext via the factory so its options include the
+            // MigrationLoggingInterceptor (registered only on the factory's options
+            // to avoid double-firing per SQL command). The injected AppDbContext
+            // service uses a different options instance without the interceptor.
+            var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+            dbContext = await contextFactory.CreateDbContextAsync();
             crashReporting = scope.ServiceProvider.GetService<ICrashReportingService>();
 
             // Critical path: only migrations block the UI. Pages and ViewModels need
@@ -76,6 +84,8 @@ public static class DbInitializer
             ReportInitSuccess(crashReporting, totalStopwatch.ElapsedMilliseconds, timings, logger);
 
             // Hand the scope off to the deferred worker and don't dispose it here.
+            // The migration DbContext is disposed eagerly — deferred maintenance
+            // resolves its own scoped AppDbContext from the captured scope.
             disposeScope = false;
             var capturedScope = scope;
             _ = Task.Run(async () =>
@@ -106,6 +116,10 @@ public static class DbInitializer
         }
         finally
         {
+            if (dbContext is not null)
+            {
+                await dbContext.DisposeAsync();
+            }
             if (disposeScope)
             {
                 scope.Dispose();
@@ -116,6 +130,67 @@ public static class DbInitializer
     private readonly record struct MigrationTimings(long CanConnectMs, long MigrateMs, long SchemaDriftMs)
     {
         public long TotalMs => CanConnectMs + MigrateMs + SchemaDriftMs;
+    }
+
+    /// <summary>
+    /// Times a few trivial SQL operations to characterize how fast (or slow) the
+    /// underlying eMMC/flash storage is responding. On a healthy phone these all
+    /// finish in <50ms; on a congested budget Android (Galaxy A16, etc.) they can
+    /// run into seconds — which means a multi-statement migration is going to take
+    /// minutes through no fault of EF Core. The numbers go straight into the InitLog
+    /// so the diagnostic from Settings is self-explanatory.
+    /// </summary>
+    private static async Task ProbeStorageAsync(AppDbContext context)
+    {
+        try
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            await context.Database.ExecuteSqlRawAsync("SELECT 1");
+            sw.Stop();
+            DatabaseInitializationHelper.AppendInitLog(
+                $"  [storage] SELECT 1 = {sw.ElapsedMilliseconds}ms");
+
+            sw.Restart();
+            await context.Database.ExecuteSqlRawAsync(
+                "CREATE TEMP TABLE _bookheart_probe (x INTEGER); " +
+                "INSERT INTO _bookheart_probe VALUES (1); " +
+                "DROP TABLE _bookheart_probe;");
+            sw.Stop();
+            DatabaseInitializationHelper.AppendInitLog(
+                $"  [storage] temp write/drop = {sw.ElapsedMilliseconds}ms");
+        }
+        catch (Exception ex)
+        {
+            DatabaseInitializationHelper.AppendInitLog(
+                $"  [storage] probe failed: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Sets per-connection PRAGMAs that significantly speed up migrations on slow
+    /// Android storage without compromising data safety:
+    /// - <c>synchronous=NORMAL</c>: with journal_mode=WAL this is the recommended
+    ///   setting and survives power loss with at most rolling back the last
+    ///   uncommitted transaction.
+    /// - <c>temp_store=MEMORY</c>: keeps EF Core's intermediate tables in RAM
+    ///   instead of round-tripping through disk.
+    /// </summary>
+    private static async Task ApplyMigrationPragmasAsync(AppDbContext context)
+    {
+        try
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL;");
+            await context.Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY;");
+            sw.Stop();
+            DatabaseInitializationHelper.AppendInitLog(
+                $"  [pragma] synchronous=NORMAL, temp_store=MEMORY ({sw.ElapsedMilliseconds}ms)");
+        }
+        catch (Exception ex)
+        {
+            DatabaseInitializationHelper.AppendInitLog(
+                $"  [pragma] failed: {ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     private static void ReportInitSuccess(
@@ -230,10 +305,111 @@ public static class DbInitializer
         DatabaseInitializationHelper.AppendInitLog("MigrateDatabaseAsync: MigrateAsync...");
         var migrateSw = System.Diagnostics.Stopwatch.StartNew();
         logger?.LogInformation("Applying migrations...");
-        await context.Database.MigrateAsync();
+
+        // Storage characterization — surfaces whether the device's filesystem is the
+        // bottleneck. On a healthy phone these are all <50ms. On a Galaxy A16 with
+        // congested eMMC they routinely run into the seconds. Knowing this up front
+        // lets us interpret slow migrations correctly.
+        await ProbeStorageAsync(context);
+
+        // Speed up migrations on slow eMMC. NORMAL is safe with WAL: it still survives
+        // power loss without DB corruption (just may roll back the last commit).
+        // temp_store=MEMORY keeps EF Core's temp tables out of the SD-card backed FS.
+        await ApplyMigrationPragmasAsync(context);
+
+        // Clear any stale __EFMigrationsLock row from a previous app run that crashed
+        // or was force-closed mid-migration. EF Core 9's SqliteHistoryRepository polls
+        // INSERT OR IGNORE on this table forever if the row is already there; for a
+        // single-process Android app any pre-existing row is by definition stale.
+        await MigrationRecovery.ClearStaleMigrationLockAsync(context);
+
+        // Apply migrations one at a time so a hung migration is identifiable in the
+        // diagnostic log instead of disappearing inside an opaque Database.MigrateAsync()
+        // call. 180s per-migration timeout (vs original 60s) accounts for slow eMMC
+        // + per-statement fsync overhead — a single migration with ~30 SQL ops can
+        // genuinely take 60s+ on budget Android even with NORMAL synchronous mode.
+        var applied = (await context.Database.GetAppliedMigrationsAsync()).ToList();
+        var pending = (await context.Database.GetPendingMigrationsAsync()).ToList();
+        DatabaseInitializationHelper.AppendInitLog(
+            $"  applied={applied.Count} pending={pending.Count}");
+        if (applied.Count > 0)
+        {
+            DatabaseInitializationHelper.AppendInitLog($"  last applied: {applied[^1]}");
+        }
+        foreach (var p in pending)
+        {
+            DatabaseInitializationHelper.AppendInitLog($"  pending: {p}");
+        }
+
+        if (pending.Count == 0)
+        {
+            DatabaseInitializationHelper.AppendInitLog("  no pending migrations");
+        }
+        else
+        {
+            var migrator = context.Database.GetInfrastructure().GetRequiredService<IMigrator>();
+            // Turn on per-SQL logging only for the migration loop. The interceptor
+            // appends every command + duration to the InitLog so a hung statement is
+            // identifiable down to the exact SQL.
+            MigrationLoggingInterceptor.Enabled = true;
+            try
+            {
+                for (int i = 0; i < pending.Count; i++)
+                {
+                    var name = pending[i];
+                    var stepSw = System.Diagnostics.Stopwatch.StartNew();
+                    DatabaseInitializationHelper.AppendInitLog(
+                        $"  > [{i + 1}/{pending.Count}] {name} ...");
+                    try
+                    {
+                        await migrator.MigrateAsync(name).WaitAsync(TimeSpan.FromSeconds(180));
+                        stepSw.Stop();
+                        DatabaseInitializationHelper.AppendInitLog(
+                            $"  + [{i + 1}/{pending.Count}] {name} OK ({stepSw.ElapsedMilliseconds}ms)");
+                    }
+                    catch (TimeoutException)
+                    {
+                        stepSw.Stop();
+                        DatabaseInitializationHelper.AppendInitLog(
+                            $"  ! [{i + 1}/{pending.Count}] {name} TIMEOUT after {stepSw.ElapsedMilliseconds}ms");
+                        throw new TimeoutException(
+                            $"Migration '{name}' did not finish within 180 seconds. " +
+                            "See Settings → More Info → Diagnostics for the full migration log.");
+                    }
+                    catch (Exception ex) when (MigrationRecovery.IsSchemaAlreadyAppliedError(ex))
+                    {
+                        // The migration's ALTER TABLE / CREATE TABLE found that the
+                        // schema element already exists. This happens when a previous
+                        // run partially applied the schema via SchemaDriftGuard recovery
+                        // without updating __EFMigrationsHistory, or when a DB was
+                        // upgraded out-of-band. Mark the migration as applied and move
+                        // on; SchemaDriftGuard runs after this loop and will fill in
+                        // any missing critical columns it knows about.
+                        stepSw.Stop();
+                        DatabaseInitializationHelper.AppendInitLog(
+                            $"  ~ [{i + 1}/{pending.Count}] {name} schema already present " +
+                            $"({ex.GetType().Name}: {ex.Message}); recording as applied");
+                        await MigrationRecovery.ForceMarkMigrationAppliedAsync(context, name);
+                    }
+                    catch (Exception ex)
+                    {
+                        stepSw.Stop();
+                        DatabaseInitializationHelper.AppendInitLog(
+                            $"  ! [{i + 1}/{pending.Count}] {name} FAILED after {stepSw.ElapsedMilliseconds}ms — {ex.GetType().Name}: {ex.Message}");
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                MigrationLoggingInterceptor.Enabled = false;
+            }
+        }
+
         migrateSw.Stop();
         logger?.LogInformation("Database migrations applied successfully ({Ms} ms)", migrateSw.ElapsedMilliseconds);
-        DatabaseInitializationHelper.AppendInitLog($"  MigrateAsync OK ({migrateSw.ElapsedMilliseconds}ms)");
+        DatabaseInitializationHelper.AppendInitLog(
+            $"  MigrateAsync OK ({migrateSw.ElapsedMilliseconds}ms total, {pending.Count} migration(s) applied)");
 
         // Repair any schema drift where __EFMigrationsHistory claims a migration is applied
         // but the expected columns are missing (observed in the field on V10 upgrades).
