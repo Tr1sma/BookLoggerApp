@@ -24,6 +24,11 @@ Versionsschema:
 ### Geändert
 - `AppSettings.Language` wird beim ersten App-Start automatisch aus der System-Sprache abgeleitet (statt immer `en`).
 - Backup-Restore synchronisiert die Sprach-Preference nach einem Restore mit dem wiederhergestellten `AppSettings.Language`, damit die App nach Neustart in der korrekten Sprache läuft.
+- `SchemaDriftGuard` repariert jetzt nicht nur `AppSettings`-Spalten, sondern auch alle Spalten und die `UserEntitlements`-Tabelle aus der `AddPremiumSubscriptionSystem`-Migration. Drift-Reparaturen werden weiterhin als Crashlytics-Non-Fatals mit `table`/`column`-Keys gemeldet.
+
+### Behoben
+- SQLite-Fehler "no such column: u.IsHiddenByEntitlement" auf Geräten, deren `AddPremiumSubscriptionSystem`-Migration nach dem ersten `ALTER TABLE` durch `MigrationRecovery.IsSchemaAlreadyAppliedError` als applied markiert wurde, bevor die übrigen 8 ALTER TABLEs / die `UserEntitlements`-Tabelle / die Seed-Rows liefen. `SchemaDriftGuard` legt fehlende Spalten und die Tabelle jetzt beim nächsten Start nach.
+- Books-Seite zeigte nach einem Lade-Fehler einen leeren Listen-View statt einer Fehlermeldung — jetzt erscheint der gleiche `alert-danger`-Block mit Retry-Button wie auf dem Dashboard.
 
 ## [0.10.6]
 
