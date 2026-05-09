@@ -47,7 +47,7 @@ public partial class UserProgressViewModel : ViewModelBase
 
             // Calculate XP for current level progress
             CalculateProgress();
-        }, "Failed to load user progress");
+        }, Tr("Error_FailedTo_LoadUserProgress"));
     }
 
     private void CalculateProgress()

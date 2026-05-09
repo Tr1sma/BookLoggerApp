@@ -12,27 +12,75 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
----
 ## [Unveröffentlicht]
 
-### Behoben
-- App blieb auf Low-End-Geräten (z.B. Samsung Galaxy A16) auf allen Seiten dauerhaft auf „Loading…" stehen. Ursache: `DbInitializer` führte sieben DB-Operationen hintereinander aus (Migrationen + 6 Seed-/Maintenance-Schritte) und signalisierte erst am Ende, dass die DB nutzbar ist. Auf langsamen Geräten konnte das den 45-Sekunden-Timeout der ViewModels übersteigen. Fix: Sobald die EF-Core-Migrationen durch sind, werden Pages entsperrt; Pflanzen-/Dekorations-Sync, XP-Recalc, Entitlement-Row, Image-Path-Fix und Seed-Validierung laufen danach im Hintergrund und blockieren das UI nicht mehr.
-- SQLite-Fehler „Failed to load settings: SQLite Error 1: 'no such column: a.AnalyticsEnabled'." auf Bestands-Installationen, bei denen die V10-Migrationen zwar in `__EFMigrationsHistory` als angewendet eingetragen wurden, aber die neuen Spalten (`AnalyticsEnabled`, `CrashReportingEnabled`, `PrivacyBannerDismissed`, `PrivacyPolicyAcceptedAt`, `CurrentTier`, `EntitlementExpiresAt`) nicht anlagen. Alle Seiten blieben dadurch auf „Loading" stehen. Fix: Ein neuer Schema-Drift-Guard (`SchemaDriftGuard`) prüft nach jedem `MigrateAsync()` die tatsächlich vorhandenen Spalten via `PRAGMA table_info` und zieht fehlende Einträge per `ALTER TABLE` idempotent nach — ohne Datenverlust und ohne App-Neuinstallation. Ein defensiver zweiter Versuch im `AppSettingsProvider` fängt zusätzliche Drift-Fälle ab, die der Startup-Guard nicht kennt.
+### Hinzugefügt
+- Deutsche Sprachunterstützung inkl. Sprachauswahl in den Einstellungen (Englisch + Deutsch). Beim allerersten Start wird die System-Sprache automatisch erkannt; ein späterer Sprachwechsel startet die App neu, damit die neue Sprache überall greift.
+- Neue Sektion "🌐 Sprache" in den Einstellungen mit Dropdown, das zwischen allen unterstützten Sprachen umschalten lässt.
+- Komplette UI übersetzt: Navigation, alle Pages (Regal, Dashboard, Statistik, Ziele, Lesen, Buchdetails, Buch bearbeiten, Shop, Getting Started, Einstellungen), alle Shared-Components (Karten, Modals, Celebrations, Widgets, Paywall, Onboarding), ViewModel-Fehlermeldungen, FluentValidation-Meldungen und Android-Widget-Beschreibungen.
+- Android-Widget-Strings jetzt zweisprachig (`values/strings.xml` EN, `values-de/strings.xml` DE) — das System wählt automatisch die richtige Datei basierend auf der Geräte-Sprache.
+- Notifications (Lese-Erinnerung, Ziel-Abschluss, Pflanzen-Wasserbedarf) werden in der aktiven UI-Sprache angezeigt.
 
+### Geändert
+- `AppSettings.Language` wird beim ersten App-Start automatisch aus der System-Sprache abgeleitet (statt immer `en`).
+- Backup-Restore synchronisiert die Sprach-Preference nach einem Restore mit dem wiederhergestellten `AppSettings.Language`, damit die App nach Neustart in der korrekten Sprache läuft.
+- `SchemaDriftGuard` repariert jetzt nicht nur `AppSettings`-Spalten, sondern auch alle Spalten und die `UserEntitlements`-Tabelle aus der `AddPremiumSubscriptionSystem`-Migration. Drift-Reparaturen werden weiterhin als Crashlytics-Non-Fatals mit `table`/`column`-Keys gemeldet.
+
+### Behoben
+- SQLite-Fehler "no such column: u.IsHiddenByEntitlement" auf Geräten, deren `AddPremiumSubscriptionSystem`-Migration nach dem ersten `ALTER TABLE` durch `MigrationRecovery.IsSchemaAlreadyAppliedError` als applied markiert wurde, bevor die übrigen 8 ALTER TABLEs / die `UserEntitlements`-Tabelle / die Seed-Rows liefen. `SchemaDriftGuard` legt fehlende Spalten und die Tabelle jetzt beim nächsten Start nach.
+- Books-Seite zeigte nach einem Lade-Fehler einen leeren Listen-View statt einer Fehlermeldung — jetzt erscheint der gleiche `alert-danger`-Block mit Retry-Button wie auf dem Dashboard.
+
+## [0.10.6]
+
+### Hinzugefügt
+- Celebration-Modal mit Konfetti nach erfolgreichem Einlösen eines Promo-Codes ("Successfully redeemed code") und nach Abschluss einer Subscription in der Paywall.
+- Telemetrie für Datenbank-Initialisierung (Gesamt- und Teilschritt-Dauern) — hilft bei der Analyse von langsamen Geräten
+- DB-Init-Log in "Data Recovery Diagnostics" (Einstellungen) sichtbar — zeigt pro Schritt (CanConnect, MigrateAsync, SchemaDriftGuard, Deferred-Steps) Dauer und Fehler. Wird beim Aufklappen automatisch aktualisiert, damit Nutzer den Log zum Support weitergeben können
+
+### Geändert
+- Datenbank-Initialisierung läuft jetzt auf einem dedizierten Hintergrund-Thread statt über den ThreadPool. Auf bestimmten Geräten (u.a. Samsung Galaxy A16) wurde der Start dadurch nicht mehr rechtzeitig fertig.
+- Timeout für DB-Initialisierung von 45 s auf 20 s reduziert — schnellerer Zugriff auf den Retry-Button, wenn wirklich etwas hängt
+- Retry-Button für die Datenbank-Initialisierung startet jetzt immer einen frischen Versuch (vorher nur, wenn das Failure-Flag gesetzt war — bei reinen Timeouts blieb die App dadurch hängen)
+- Retry ist idempotent: mehrfaches Tippen spawnt keine parallelen Initialisierungs-Tasks mehr
+
+### Behoben
+ - Goals können jetzt nicht mehr zu mehr als 100% abegschlossen werden
+ - "Loading..."-Zustand auf allen Seiten löste sich nach Property-Änderungen im ViewModel nicht automatisch auf — Blazor-Komponenten beobachten jetzt `INotifyPropertyChanged` über eine zentrale Base-Klasse
+ - Retry-Button nach DB-Timeout hing in einer Schleife, weil der Helper-Zustand nicht zum UI-Zustand passte (TimeoutException im ViewModel markiert jetzt auch den Helper als gescheitert)
+
+## [0.10.5]
+
+### Hinzugefügt
+- Beim ersten Start nach dem Onboarding erscheint ein dezenter, nicht-blockierender Datenschutz-Banner
+- Datenschutzerklärung (DE + EN) um einen ausführlichen Firebase-Abschnitt erweitert
+- Changelogs vollständig überarbeitet/verbessert
+- Beim Deaktivieren der Nutzungsstatistiken wird die anonyme Geräte-ID zurückgesetzt (`ResetAnalyticsData`), sodass künftige Ereignisse — falls wieder aktiviert — als neuer anonymer Nutzer erscheinen
+
+
+### Geändert
+
+### Behoben
+
+## [0.10.4]
+
+### Hinzugefügt
+- Promo-Code-Eingabefeld in der Paywall mit Prefix `BH-` für interne Codes (z. B. `BH-BETA2026` für 30 Tage Plus). Hochwertige Einmal-Belohnungen wie Lifetime Premium laufen über Google-Play-native Promo-Codes, die im Play Store eingelöst werden.
+- Firebase Analytics und Crashlytics für Android integriert — anonyme Nutzungsstatistiken und Absturzberichte helfen, die App zu verbessern (Buchtitel, Autoren, Notizen, Zitate und andere persönliche Daten werden **nicht** übertragen)
+- Neuer Bereich „🔒 Datenschutz" in den Einstellungen: separate Toggles für Nutzungsstatistiken und Absturzberichte, jederzeit deaktivierbar
+
+### Geändert
+
+### Behoben
+
+
+---
 ## [0.10.3]
 
 ### Hinzugefügt
 - Premium-Subscription-System mit zwei Tiers: **Plus** (2,99 €/Monat · 29,99 €/Jahr) und **Premium** (11,99 €/Monat · 99,99 €/Jahr · 99,99 € Lifetime als Launch-Special, danach 249,99 €). Free-Stufe bleibt vollständig nutzbar: unbegrenzt Bücher, Lese-Timer, Basis-Statistiken, XP/Coins, 4 Starter-Pflanzen, 3 Starter-Dekorationen, alle Widgets und komplettes Backup/Export/Import. Plus schaltet unbegrenzte Regale, Notizen & Zitate, Wishlist, Tropes und den vollen Shop frei. Premium ergänzt die Trends- und Insights-Statistik-Tabs, Share-Cards, Prestige-Pflanzen, das Herz der Geschichten, gefilterte Reading-Goals und Google Play Family Sharing.
 - Neue Paywall-Modal mit Feature-Vergleichstabelle, kontextuellem Titel beim Tippen auf ein gesperrtes Feature und Preisbuttons für Monat/Jahr/Lifetime — aufrufbar über jede `LockedFeatureButton`-Hülle oder manuell via Settings.
-- Promo-Code-Eingabefeld in der Paywall mit Prefix `BH-` für interne Codes (z. B. `BH-BETA2026` für 30 Tage Plus). Hochwertige Einmal-Belohnungen wie Lifetime Premium laufen über Google-Play-native Promo-Codes, die im Play Store eingelöst werden.
-- Firebase Analytics und Crashlytics für Android integriert — anonyme Nutzungsstatistiken und Absturzberichte helfen, die App zu verbessern (Buchtitel, Autoren, Notizen, Zitate und andere persönliche Daten werden **nicht** übertragen)
-- Neuer Bereich „🔒 Datenschutz" in den Einstellungen: separate Toggles für Nutzungsstatistiken und Absturzberichte, jederzeit deaktivierbar
-- Beim ersten Start nach dem Onboarding erscheint ein dezenter, nicht-blockierender Datenschutz-Banner
-- Datenschutzerklärung (DE + EN) um einen ausführlichen Firebase-Abschnitt erweitert
 
 ### Geändert
-- Changelogs vollständig überarbeitet/verbessert
-- Beim Deaktivieren der Nutzungsstatistiken wird die anonyme Geräte-ID zurückgesetzt (`ResetAnalyticsData`), sodass künftige Ereignisse — falls wieder aktiviert — als neuer anonymer Nutzer erscheinen
 
 ### Behoben
 - Release-Builds crashten direkt beim Start mit `IllegalStateException: The Crashlytics build ID is missing` aus `FirebaseInitProvider.onCreate`. Ursache: die Firebase-Crashlytics-Gradle-Plugin-Integration existiert in .NET MAUI nicht, entsprechend wird die erwartete String-Resource `com.crashlytics.android.build_id` nie generiert und Crashlytics wirft beim Auto-Init. Fix: Platzhalter-Build-ID in `Platforms/Android/Resources/values/crashlytics-build-id.xml` bereitgestellt (GUID per Release manuell neu generieren).

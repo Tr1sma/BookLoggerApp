@@ -1,11 +1,15 @@
 using System.Globalization;
 using System.Text.Json;
+using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.IO.Compression;
 
@@ -586,11 +590,112 @@ public class ImportExportService : IImportExportService
                 if (File.Exists(shmPath)) File.Delete(shmPath);
 
                 progress?.Report("Applying migrations to restored DB");
-                // Start Modification: Run migrations on a FRESH context after file copy
+                // Run migrations on a FRESH context after file copy. Per-migration
+                // logging mirrors DbInitializer.MigrateDatabaseAsync so a hung migration
+                // is identifiable from Settings → More Info → Diagnostics. A backup may
+                // come from an older schema version, so the pending list can be long
+                // here even when nothing is wrong.
                 _logger?.LogInformation("Applying migrations to restored database...");
                 await using var freshContext = await _contextFactory.CreateDbContextAsync(ct);
-                await freshContext.Database.MigrateAsync(ct);
-                // End Modification
+
+                // Mirror DbInitializer's slow-storage tweaks for the restore path.
+                // synchronous=NORMAL with WAL is safe and dramatically speeds up
+                // multi-statement migrations on slow Android eMMC.
+                try
+                {
+                    await freshContext.Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL;", ct);
+                    await freshContext.Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY;", ct);
+                    DatabaseInitializationHelper.AppendInitLog(
+                        "[Restore] [pragma] synchronous=NORMAL, temp_store=MEMORY");
+                }
+                catch (Exception pragmaEx)
+                {
+                    DatabaseInitializationHelper.AppendInitLog(
+                        $"[Restore] [pragma] failed: {pragmaEx.GetType().Name}: {pragmaEx.Message}");
+                }
+
+                // The backup we just restored may itself contain a stale
+                // __EFMigrationsLock row from the source device. Clear it before
+                // calling MigrateAsync so EF Core's lock acquisition succeeds on
+                // first try instead of polling.
+                await MigrationRecovery.ClearStaleMigrationLockAsync(freshContext, ct);
+
+                var restoreApplied = (await freshContext.Database.GetAppliedMigrationsAsync(ct)).ToList();
+                var restorePending = (await freshContext.Database.GetPendingMigrationsAsync(ct)).ToList();
+                DatabaseInitializationHelper.AppendInitLog(
+                    $"[Restore] applied={restoreApplied.Count} pending={restorePending.Count}");
+                if (restoreApplied.Count > 0)
+                {
+                    DatabaseInitializationHelper.AppendInitLog(
+                        $"[Restore] last applied: {restoreApplied[^1]}");
+                }
+                foreach (var p in restorePending)
+                {
+                    DatabaseInitializationHelper.AppendInitLog($"[Restore] pending: {p}");
+                }
+
+                if (restorePending.Count > 0)
+                {
+                    var restoreMigrator = freshContext.Database.GetInfrastructure()
+                        .GetRequiredService<IMigrator>();
+                    // Surface every SQL command issued by EF Core during these migrations
+                    // to the InitLog. Toggle is reset in finally even if a migration throws.
+                    MigrationLoggingInterceptor.Enabled = true;
+                    try
+                    {
+                        for (int i = 0; i < restorePending.Count; i++)
+                        {
+                            var name = restorePending[i];
+                            var stepSw = System.Diagnostics.Stopwatch.StartNew();
+                            DatabaseInitializationHelper.AppendInitLog(
+                                $"[Restore] > [{i + 1}/{restorePending.Count}] {name} ...");
+                            progress?.Report($"Migration {i + 1}/{restorePending.Count}: {name}");
+                            try
+                            {
+                                await restoreMigrator.MigrateAsync(name, ct)
+                                    .WaitAsync(TimeSpan.FromSeconds(180), ct);
+                                stepSw.Stop();
+                                DatabaseInitializationHelper.AppendInitLog(
+                                    $"[Restore] + [{i + 1}/{restorePending.Count}] {name} OK ({stepSw.ElapsedMilliseconds}ms)");
+                            }
+                            catch (TimeoutException)
+                            {
+                                stepSw.Stop();
+                                DatabaseInitializationHelper.AppendInitLog(
+                                    $"[Restore] ! [{i + 1}/{restorePending.Count}] {name} TIMEOUT after {stepSw.ElapsedMilliseconds}ms");
+                                throw new TimeoutException(
+                                    $"Migration '{name}' did not finish within 180 seconds during restore. " +
+                                    "See Settings → More Info → Diagnostics for the full migration log.");
+                            }
+                            catch (Exception ex) when (MigrationRecovery.IsSchemaAlreadyAppliedError(ex))
+                            {
+                                // Same recovery path as DbInitializer: the migration's
+                                // ALTER TABLE / CREATE TABLE found pre-existing schema.
+                                // Mark applied and continue so the user isn't blocked.
+                                stepSw.Stop();
+                                DatabaseInitializationHelper.AppendInitLog(
+                                    $"[Restore] ~ [{i + 1}/{restorePending.Count}] {name} schema already present " +
+                                    $"({ex.GetType().Name}: {ex.Message}); recording as applied");
+                                await MigrationRecovery.ForceMarkMigrationAppliedAsync(freshContext, name, ct);
+                            }
+                            catch (Exception ex)
+                            {
+                                stepSw.Stop();
+                                DatabaseInitializationHelper.AppendInitLog(
+                                    $"[Restore] ! [{i + 1}/{restorePending.Count}] {name} FAILED after {stepSw.ElapsedMilliseconds}ms — {ex.GetType().Name}: {ex.Message}");
+                                throw;
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        MigrationLoggingInterceptor.Enabled = false;
+                    }
+                }
+                else
+                {
+                    DatabaseInitializationHelper.AppendInitLog("[Restore] no pending migrations");
+                }
 
                 // Entitlement state is device-bound: it reflects what Google Play says
                 // THIS device owns, not what the backup source had. Wipe the UserEntitlement

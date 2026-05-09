@@ -117,7 +117,7 @@ public class GoalsViewModelTests
 
         await _goalService.Received(1).AddAsync(Arg.Any<ReadingGoal>(), Arg.Any<CancellationToken>());
         _vm.ShowCreateForm.Should().BeFalse();
-        _vm.StatusMessage.Should().Be("Ziel erstellt");
+        _vm.StatusMessage.Should().Be("Goal created");
     }
 
     [Fact]
@@ -174,7 +174,7 @@ public class GoalsViewModelTests
         await _vm.SaveGoalCommand.ExecuteAsync(null);
 
         await _goalService.Received(1).UpdateAsync(Arg.Is<ReadingGoal>(g => g.Title == "Edited"), Arg.Any<CancellationToken>());
-        _vm.StatusMessage.Should().Be("Update erfolgreich");
+        _vm.StatusMessage.Should().Be("Update successful");
     }
 
     [Fact]
@@ -208,7 +208,7 @@ public class GoalsViewModelTests
         await _vm.DeleteGoalCommand.ExecuteAsync(id);
 
         await _goalService.Received(1).DeleteAsync(id, Arg.Any<CancellationToken>());
-        _vm.StatusMessage.Should().Be("Erfolgreich gelöscht");
+        _vm.StatusMessage.Should().Be("Successfully deleted");
     }
 
     [Fact]

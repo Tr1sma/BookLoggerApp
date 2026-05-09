@@ -49,7 +49,9 @@
       "Read(//c/tmp/**)",
       "Bash(csc test_xp.cs)",
       "Bash(./test_xp.exe)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(git fetch *)",
+      "Bash(xargs git *)"
     ],
     "deny": [],
     "ask": []

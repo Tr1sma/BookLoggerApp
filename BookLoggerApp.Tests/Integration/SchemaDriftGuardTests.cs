@@ -121,6 +121,107 @@ public sealed class SchemaDriftGuardTests : IDisposable
         settings.TotalXp.Should().Be(42);
     }
 
+    [Fact]
+    public async Task EnsureCriticalColumnsAsync_AddsMissingShelvesIsHiddenColumn_WhenForceMarkedMidMigration()
+    {
+        // Arrange — DB with a Shelves table that lacks IsHiddenByEntitlement, plus
+        // __EFMigrationsHistory claiming the migration applied. Mirrors the field
+        // scenario where MigrationRecovery.ForceMarkMigrationAppliedAsync ran after
+        // the first ALTER TABLE in AddPremiumSubscriptionSystem failed but before
+        // the Shelves ALTER could execute.
+        CreateDriftedPremiumDb(_dbPath, includeUserEntitlementsTable: true);
+        await using var context = CreateContext(_dbPath);
+
+        // Act
+        await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null);
+
+        // Assert — column now exists and a query against it succeeds.
+        var columns = await ReadColumnsAsync(_dbPath, "Shelves");
+        columns.Should().Contain("IsHiddenByEntitlement");
+
+        await using var verifyConn = new SqliteConnection($"Data Source={_dbPath}");
+        await verifyConn.OpenAsync();
+        await using var cmd = verifyConn.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM Shelves WHERE IsHiddenByEntitlement = 0;";
+        var count = (long)(await cmd.ExecuteScalarAsync())!;
+        count.Should().Be(0, "no rows were seeded; query just needs to not throw");
+    }
+
+    [Fact]
+    public async Task EnsureCriticalColumnsAsync_AddsAllMissingColumnsAcrossSixTables()
+    {
+        // Arrange — drift every table the AddPremiumSubscriptionSystem migration touches.
+        CreateDriftedPremiumDb(_dbPath, includeUserEntitlementsTable: true);
+        await using var context = CreateContext(_dbPath);
+
+        // Act
+        await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null);
+
+        // Assert — all nine column repairs land.
+        (await ReadColumnsAsync(_dbPath, "UserPlants")).Should().Contain("IsHiddenByEntitlement");
+        (await ReadColumnsAsync(_dbPath, "UserDecorations")).Should().Contain("IsHiddenByEntitlement");
+        (await ReadColumnsAsync(_dbPath, "Shelves")).Should().Contain("IsHiddenByEntitlement");
+
+        var shopItemsCols = await ReadColumnsAsync(_dbPath, "ShopItems");
+        shopItemsCols.Should().Contain("IsFreeTier");
+        shopItemsCols.Should().Contain("IsUltimateTier");
+
+        var plantSpeciesCols = await ReadColumnsAsync(_dbPath, "PlantSpecies");
+        plantSpeciesCols.Should().Contain("IsFreeTier");
+        plantSpeciesCols.Should().Contain("IsPrestigeTier");
+    }
+
+    [Fact]
+    public async Task EnsureCriticalColumnsAsync_CreatesUserEntitlementsTable_WhenForceMarkedBeforeCreate()
+    {
+        // Arrange — every column ALTER ran but the CREATE TABLE for UserEntitlements
+        // was skipped (force-mark fired earlier in the migration than that statement).
+        CreateDriftedPremiumDb(_dbPath, includeUserEntitlementsTable: false);
+        await using var context = CreateContext(_dbPath);
+
+        // Act
+        await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null);
+
+        // Assert — table created with the schema migration produces, plus default Free row.
+        var entitlementCols = await ReadColumnsAsync(_dbPath, "UserEntitlements");
+        entitlementCols.Should().Contain("Id");
+        entitlementCols.Should().Contain("Tier");
+        entitlementCols.Should().Contain("CreatedAt");
+        entitlementCols.Should().Contain("RowVersion");
+        entitlementCols.Should().Contain("AutoRenewing");
+
+        await using var verifyConn = new SqliteConnection($"Data Source={_dbPath}");
+        await verifyConn.OpenAsync();
+        await using var cmd = verifyConn.CreateCommand();
+        cmd.CommandText = """
+            SELECT "Tier" FROM "UserEntitlements"
+            WHERE "Id" = '99999999-0000-0000-0000-000000000002';
+            """;
+        var tier = await cmd.ExecuteScalarAsync();
+        tier.Should().NotBeNull("default Free entitlement row must be inserted on table creation");
+        Convert.ToInt64(tier).Should().Be(0, "default Tier is SubscriptionTier.Free (0)");
+    }
+
+    [Fact]
+    public async Task EnsureCriticalColumnsAsync_DoesNotReseedUserEntitlements_WhenTableAlreadyExists()
+    {
+        // Arrange — UserEntitlements table exists with no rows; guard must not insert
+        // the seed row in this case (caller wants to control row-level seeding).
+        CreateDriftedPremiumDb(_dbPath, includeUserEntitlementsTable: true);
+        await using var context = CreateContext(_dbPath);
+
+        // Act
+        await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null);
+
+        // Assert — table is empty.
+        await using var verifyConn = new SqliteConnection($"Data Source={_dbPath}");
+        await verifyConn.OpenAsync();
+        await using var cmd = verifyConn.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM \"UserEntitlements\";";
+        var count = (long)(await cmd.ExecuteScalarAsync())!;
+        count.Should().Be(0, "seed row only inserted when guard had to create the table");
+    }
+
     /// <summary>
     /// Creates a SQLite file with an <c>AppSettings</c> table that has every pre-V10
     /// column the model requires, one row of real data, and <c>__EFMigrationsHistory</c>
@@ -203,6 +304,112 @@ public sealed class SchemaDriftGuardTests : IDisposable
                 INSERT INTO "__EFMigrationsHistory" ("MigrationId","ProductVersion") VALUES
                 ('20260422065259_AddAnalyticsConsentFields','10.0.6'),
                 ('20260422123532_AddPremiumSubscriptionSystem','10.0.6');
+                """;
+            cmd.ExecuteNonQuery();
+        }
+    }
+
+    /// <summary>
+    /// Creates a SQLite file with the six tables that
+    /// <c>20260422123532_AddPremiumSubscriptionSystem</c> alters, deliberately
+    /// missing the V10 columns that migration would add. Mirrors a drifted DB on
+    /// a device where <c>MigrationRecovery.ForceMarkMigrationAppliedAsync</c>
+    /// fired after the first ALTER TABLE failed and the rest of the migration
+    /// was silently skipped. Pass <paramref name="includeUserEntitlementsTable"/>
+    /// = false to also drop the brand-new table the migration creates.
+    /// </summary>
+    private static void CreateDriftedPremiumDb(string path, bool includeUserEntitlementsTable)
+    {
+        using var connection = new SqliteConnection($"Data Source={path}");
+        connection.Open();
+
+        using (var cmd = connection.CreateCommand())
+        {
+            // Minimal schemas — we only need the tables to exist with their primary keys
+            // and a sample of the pre-V10 columns. The guard's job is to add the missing
+            // V10 columns; nothing else here matters for that assertion.
+            cmd.CommandText = """
+                CREATE TABLE "__EFMigrationsHistory" (
+                    "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+                    "ProductVersion" TEXT NOT NULL
+                );
+
+                CREATE TABLE "UserPlants" (
+                    "Id" TEXT NOT NULL CONSTRAINT "PK_UserPlants" PRIMARY KEY,
+                    "Name" TEXT NOT NULL,
+                    "PlantSpeciesId" TEXT NOT NULL,
+                    "PurchasedAt" TEXT NOT NULL
+                );
+
+                CREATE TABLE "UserDecorations" (
+                    "Id" TEXT NOT NULL CONSTRAINT "PK_UserDecorations" PRIMARY KEY,
+                    "ShopItemId" TEXT NOT NULL,
+                    "PurchasedAt" TEXT NOT NULL
+                );
+
+                CREATE TABLE "Shelves" (
+                    "Id" TEXT NOT NULL CONSTRAINT "PK_Shelves" PRIMARY KEY,
+                    "Name" TEXT NOT NULL,
+                    "AutoSortRule" INTEGER NOT NULL DEFAULT 0,
+                    "SortOrder" INTEGER NOT NULL DEFAULT 0,
+                    "Icon" TEXT NOT NULL DEFAULT ''
+                );
+
+                CREATE TABLE "ShopItems" (
+                    "Id" TEXT NOT NULL CONSTRAINT "PK_ShopItems" PRIMARY KEY,
+                    "Name" TEXT NOT NULL,
+                    "Cost" INTEGER NOT NULL,
+                    "ItemType" INTEGER NOT NULL
+                );
+
+                CREATE TABLE "PlantSpecies" (
+                    "Id" TEXT NOT NULL CONSTRAINT "PK_PlantSpecies" PRIMARY KEY,
+                    "Name" TEXT NOT NULL,
+                    "BaseCost" INTEGER NOT NULL,
+                    "UnlockLevel" INTEGER NOT NULL
+                );
+                """;
+            cmd.ExecuteNonQuery();
+        }
+
+        if (includeUserEntitlementsTable)
+        {
+            using var cmd = connection.CreateCommand();
+            // Same schema as the migration produces, so the guard's CREATE TABLE
+            // IF NOT EXISTS becomes a no-op and tableJustCreated stays false.
+            cmd.CommandText = """
+                CREATE TABLE "UserEntitlements" (
+                    "Id" TEXT NOT NULL CONSTRAINT "PK_UserEntitlements" PRIMARY KEY,
+                    "Tier" INTEGER NOT NULL DEFAULT 0,
+                    "BillingPeriod" INTEGER NULL,
+                    "ProductId" TEXT NULL,
+                    "PurchaseToken" TEXT NULL,
+                    "OrderId" TEXT NULL,
+                    "PurchasedAt" TEXT NULL,
+                    "ExpiresAt" TEXT NULL,
+                    "LastVerifiedAt" TEXT NULL,
+                    "AutoRenewing" INTEGER NOT NULL DEFAULT 0,
+                    "InGracePeriod" INTEGER NOT NULL DEFAULT 0,
+                    "IsInIntroductoryPrice" INTEGER NOT NULL DEFAULT 0,
+                    "IsFamilyShared" INTEGER NOT NULL DEFAULT 0,
+                    "LapseReason" TEXT NULL,
+                    "LapsedAt" TEXT NULL,
+                    "PromoCodeRedeemed" TEXT NULL,
+                    "PromoExpiresAt" TEXT NULL,
+                    "CreatedAt" TEXT NOT NULL,
+                    "UpdatedAt" TEXT NULL,
+                    "RowVersion" BLOB NULL
+                );
+                """;
+            cmd.ExecuteNonQuery();
+        }
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = """
+                INSERT INTO "__EFMigrationsHistory" ("MigrationId","ProductVersion") VALUES
+                ('20260422065259_AddAnalyticsConsentFields','10.0.6'),
+                ('20260422123532_AddPremiumSubscriptionSystem','force-mark');
                 """;
             cmd.ExecuteNonQuery();
         }
