@@ -114,7 +114,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
 
             if (Session == null)
             {
-                SetError("Session not found");
+                SetError(Tr("Error_SessionNotFound"));
                 return;
             }
 
@@ -134,7 +134,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
                 ElapsedTime = DateTime.UtcNow - Session.StartedAt;
                 StartTimer();
             }
-        }, "Failed to load reading session");
+        }, Tr("Error_FailedTo_LoadReadingSession"));
     }
 
     [RelayCommand]
@@ -162,7 +162,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             await _progressService.UpdateSessionAsync(Session);
 
             StartTimer();
-        }, "Failed to start reading session");
+        }, Tr("Error_FailedTo_StartReadingSession"));
     }
 
     [RelayCommand]
@@ -257,7 +257,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
             {
                 LevelUpResult = SessionProgressionResult.LevelUp;
             }
-        }, "Failed to end session");
+        }, Tr("Error_FailedTo_EndSession"));
     }
 
     private static LevelUpResult? MergeLevelUpResults(LevelUpResult? primary, LevelUpResult? secondary)
@@ -560,7 +560,7 @@ public partial class ReadingViewModel : ViewModelBase, IDisposable
 
             byte[] cardBytes = await _shareCardService.GenerateBookCardAsync(data);
             BookShareCardReady?.Invoke(cardBytes);
-        }, "Failed to generate book recommendation card");
+        }, Tr("Error_FailedTo_GenerateBookRecommendationCard"));
 
         IsGeneratingBookCard = false;
     }

@@ -1,20 +1,35 @@
 @page "/books"
+@using BookLoggerApp.Core.Resources
+@using BookLoggerApp.Core.Services.Abstractions
+@using Microsoft.Extensions.Localization
+@inherits BookLoggerApp.Components.ObservableComponentBase
 @inject BookLoggerApp.Core.ViewModels.BookListViewModel Vm
+@inject IDatabaseInitializer DatabaseInitializer
+@inject IStringLocalizer<AppResources> L
+
+<PageTitle>@L["PageTitle_Books"] - BookHeart</PageTitle>
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.BookList" />
 
-<h1>Books</h1>
+<h1>@L["Books_Title"]</h1>
 
 @if (Vm.IsBusy)
 {
-    <p>Loading…</p>
+    <p>@L["Common_Loading"]</p>
+}
+else if (!string.IsNullOrEmpty(Vm.ErrorMessage))
+{
+    <div class="alert alert-danger">
+        <p>@Vm.ErrorMessage</p>
+        <button class="btn btn-primary" @onclick="RetryLoadAsync">@L["Common_Retry"]</button>
+    </div>
 }
 else
 {
     <div>
-        <input placeholder="Title" @bind="Vm.NewTitle" />
-        <input placeholder="Author" @bind="Vm.NewAuthor" />
-        <button @onclick="Vm.AddAsync" disabled="@(!Vm.AddAsyncCommand.CanExecute(null))">Add</button>
+        <input placeholder="@L["Books_Title_Placeholder"]" @bind="Vm.NewTitle" />
+        <input placeholder="@L["Books_Author_Placeholder"]" @bind="Vm.NewAuthor" />
+        <button @onclick="Vm.AddAsync" disabled="@(!Vm.AddAsyncCommand.CanExecute(null))">@L["Books_Add"]</button>
     </div>
 
     <ul>
@@ -28,5 +43,19 @@ else
 }
 
 @code {
-    protected override async Task OnInitializedAsync() => await Vm.LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        Observe(Vm);
+        await Vm.LoadAsync();
+    }
+
+    private async Task RetryLoadAsync()
+    {
+        // Clear the failed-init flag and re-run DbInitializer in the background;
+        // mirrors Dashboard.razor's pattern. Without Retry() the helper's
+        // InitializationFailed flag would leave the original pending TCS in place
+        // and the retry would just wait for it again (visible bug: "Retry lädt ewig").
+        DatabaseInitializer.Retry();
+        await Vm.LoadAsync();
+    }
 }

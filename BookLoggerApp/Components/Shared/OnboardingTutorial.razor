@@ -1,75 +1,78 @@
 @using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
 
 <div class="onboarding-header">
     <div>
         <h2 id="startupOnboardingTitle">@GetTitle()</h2>
         <p class="startup-subtitle">@GetSubtitle()</p>
     </div>
-    <span class="onboarding-step-chip">Step @(CurrentStep + 1) / @TotalSteps</span>
+    <span class="onboarding-step-chip">@L["Onboarding_Step", CurrentStep + 1, TotalSteps]</span>
 </div>
 
 <div class="startup-modal-body onboarding-body">
     @if (ShowSkipConfirmation)
     {
         <section class="onboarding-card">
-            <h3>Skip the intro?</h3>
-            <p>You can come back any time from Settings or the Getting Started hub.</p>
-            <p>Your guided missions will still stay available afterwards.</p>
+            <h3>@L["Onboarding_Skip_Title"]</h3>
+            <p>@L["Onboarding_Skip_Body1"]</p>
+            <p>@L["Onboarding_Skip_Body2"]</p>
         </section>
     }
     else if (CurrentStep == 0)
     {
         <section class="onboarding-card">
-            <h3>Welcome to BookHeart</h3>
-            <p>Track your books, build reading habits, and watch your progress grow over time.</p>
-            <p>This short tutorial shows the essentials so you can start quickly.</p>
+            <h3>@L["Onboarding_Step0_Title"]</h3>
+            <p>@L["Onboarding_Step0_Body1"]</p>
+            <p>@L["Onboarding_Step0_Body2"]</p>
         </section>
     }
     else if (CurrentStep == 1)
     {
         <section class="onboarding-card">
-            <h3>Add your first book</h3>
-            <p>Start by creating your first entry with title, author, and optional cover image.</p>
-            <p>After adding a book, you can start sessions, track pages, and log progress.</p>
+            <h3>@L["Onboarding_Step1_Title"]</h3>
+            <p>@L["Onboarding_Step1_Body1"]</p>
+            <p>@L["Onboarding_Step1_Body2"]</p>
             <button type="button" class="btn btn-primary" @onclick="OnAddFirstBookClicked">
-                Add first book now
+                @L["Onboarding_Step1_AddNow"]
             </button>
         </section>
     }
     else if (CurrentStep == 2)
     {
         <section class="onboarding-card">
-            <h3>XP and plant growth</h3>
-            <p>You earn XP by reading, finishing books, and completing goals.</p>
-            <p>As you level up, your plants grow and you unlock more rewards in the shop.</p>
+            <h3>@L["Onboarding_Step2_Title"]</h3>
+            <p>@L["Onboarding_Step2_Body1"]</p>
+            <p>@L["Onboarding_Step2_Body2"]</p>
         </section>
     }
     else if (CurrentStep == 3)
     {
         <section class="onboarding-card">
-            <h3>Rating system (6 categories)</h3>
-            <p>Rate completed books with 1-5 stars across six categories:</p>
+            <h3>@L["Onboarding_Step3_Title"]</h3>
+            <p>@L["Onboarding_Step3_Body"]</p>
             <ul class="onboarding-list">
-                <li>Characters</li>
-                <li>Plot</li>
-                <li>Writing Style</li>
-                <li>Spice Level</li>
-                <li>Pacing</li>
-                <li>World Building</li>
+                <li>@L["Onboarding_Cat_Characters"]</li>
+                <li>@L["Onboarding_Cat_Plot"]</li>
+                <li>@L["Onboarding_Cat_Writing"]</li>
+                <li>@L["Onboarding_Cat_Spice"]</li>
+                <li>@L["Onboarding_Cat_Pacing"]</li>
+                <li>@L["Onboarding_Cat_World"]</li>
             </ul>
         </section>
     }
     else
     {
         <section class="onboarding-card">
-            <h3>Main areas</h3>
+            <h3>@L["Onboarding_StepN_Title"]</h3>
             <ul class="onboarding-list">
-                <li>Bookshelf: organize books and plants</li>
-                <li>Dashboard: quick overview and activity</li>
-                <li>Goals: create and track reading goals</li>
-                <li>Stats: view progress and insights</li>
-                <li>Shop: buy and manage plants</li>
-                <li>Settings: customize your app preferences</li>
+                <li>@L["Onboarding_Area_Bookshelf"]</li>
+                <li>@L["Onboarding_Area_Dashboard"]</li>
+                <li>@L["Onboarding_Area_Goals"]</li>
+                <li>@L["Onboarding_Area_Stats"]</li>
+                <li>@L["Onboarding_Area_Shop"]</li>
+                <li>@L["Onboarding_Area_Settings"]</li>
             </ul>
         </section>
     }
@@ -79,33 +82,33 @@
     @if (ShowSkipConfirmation)
     {
         <button type="button" class="btn btn-secondary" @onclick="OnSkipCancelledClicked">
-            Continue tutorial
+            @L["Onboarding_ContinueTutorial"]
         </button>
 
         <button type="button" class="btn btn-primary" @onclick="OnSkipConfirmedClicked">
-            Skip intro
+            @L["Onboarding_SkipIntro"]
         </button>
     }
     else
     {
         <button type="button" class="btn btn-secondary" @onclick="OnSkipRequestedClicked">
-            Skip
+            @L["Onboarding_Skip"]
         </button>
 
         <button type="button" class="btn btn-secondary" @onclick="OnBackClicked">
-            Back
+            @L["Common_Back"]
         </button>
 
         @if (CurrentStep < TotalSteps - 1)
         {
             <button type="button" class="btn btn-primary" @onclick="OnNextClicked">
-                Next
+                @L["Onboarding_Next"]
             </button>
         }
         else
         {
             <button type="button" class="btn btn-primary" @onclick="OnCompleteClicked">
-                Finish
+                @L["Onboarding_Finish"]
             </button>
         }
     }
@@ -144,22 +147,22 @@
 
     private string GetTitle() => CurrentStep switch
     {
-        _ when ShowSkipConfirmation => "Skip the intro?",
-        0 => "Welcome to BookHeart",
-        1 => "Your first book",
-        2 => "Level and grow plants",
-        3 => "How ratings work",
-        _ => "Know your navigation"
+        _ when ShowSkipConfirmation => L["Onboarding_Header_SkipTitle"],
+        0 => L["Onboarding_Header_Step0"],
+        1 => L["Onboarding_Header_Step1"],
+        2 => L["Onboarding_Header_Step2"],
+        3 => L["Onboarding_Header_Step3"],
+        _ => L["Onboarding_Header_StepN"]
     };
 
     private string GetSubtitle() => CurrentStep switch
     {
-        _ when ShowSkipConfirmation => "You can reopen it any time.",
-        0 => "Your reading journey starts here.",
-        1 => "Let's create your first entry.",
-        2 => "Earn XP while you read.",
-        3 => "Capture what made a book great.",
-        _ => "Where to find everything quickly."
+        _ when ShowSkipConfirmation => L["Onboarding_Sub_Skip"],
+        0 => L["Onboarding_Sub_Step0"],
+        1 => L["Onboarding_Sub_Step1"],
+        2 => L["Onboarding_Sub_Step2"],
+        3 => L["Onboarding_Sub_Step3"],
+        _ => L["Onboarding_Sub_StepN"]
     };
 
     private async Task OnNextClicked()

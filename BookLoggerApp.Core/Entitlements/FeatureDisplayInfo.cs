@@ -1,3 +1,6 @@
+using BookLoggerApp.Core.Resources;
+using Microsoft.Extensions.Localization;
+
 namespace BookLoggerApp.Core.Entitlements;
 
 /// <summary>
@@ -91,5 +94,38 @@ public static class FeatureDisplay
         }
 
         throw new InvalidOperationException($"No FeatureDisplayInfo defined for {feature}.");
+    }
+
+    /// <summary>
+    /// Returns the label for <paramref name="feature"/>, translated via the supplied
+    /// localizer. Keys follow the pattern <c>Feature_{FeatureKeyEnumName}_Label</c>.
+    /// Falls back to the English string from <see cref="Info"/> when the resource
+    /// key is missing or the localizer is null.
+    /// </summary>
+    public static string GetLocalizedLabel(FeatureKey feature, IStringLocalizer<AppResources>? l)
+    {
+        FeatureDisplayInfo info = Get(feature);
+        if (l is null)
+        {
+            return info.Label;
+        }
+        LocalizedString value = l[$"Feature_{feature}_Label"];
+        return value.ResourceNotFound ? info.Label : value.Value;
+    }
+
+    /// <summary>
+    /// Returns the description for <paramref name="feature"/>, translated via the
+    /// supplied localizer. Keys follow the pattern
+    /// <c>Feature_{FeatureKeyEnumName}_Description</c>.
+    /// </summary>
+    public static string GetLocalizedDescription(FeatureKey feature, IStringLocalizer<AppResources>? l)
+    {
+        FeatureDisplayInfo info = Get(feature);
+        if (l is null)
+        {
+            return info.Description;
+        }
+        LocalizedString value = l[$"Feature_{feature}_Description"];
+        return value.ResourceNotFound ? info.Description : value.Value;
     }
 }

@@ -1,39 +1,43 @@
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
+
 <nav class="navbar">
     <ul class="nav-menu">
         <li class="nav-item">
             <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
                 <span class="nav-icon">📚</span>
-                <span class="nav-text">Bookshelf</span>
+                <span class="nav-text">@L["Nav_Bookshelf"]</span>
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="/dashboard">
                 <span class="nav-icon">🏠</span>
-                <span class="nav-text">Dashboard</span>
+                <span class="nav-text">@L["Nav_Dashboard"]</span>
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="/goals">
                 <span class="nav-icon">🎯</span>
-                <span class="nav-text">Goals</span>
+                <span class="nav-text">@L["Nav_Goals"]</span>
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="/stats">
                 <span class="nav-icon">📊</span>
-                <span class="nav-text">Stats</span>
+                <span class="nav-text">@L["Nav_Stats"]</span>
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="/shop">
                 <span class="nav-icon">🌱</span>
-                <span class="nav-text">Plant Shop</span>
+                <span class="nav-text">@L["Nav_PlantShop"]</span>
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="/settings">
                 <span class="nav-icon">⚙️</span>
-                <span class="nav-text">Settings</span>
+                <span class="nav-text">@L["Nav_Settings"]</span>
             </NavLink>
         </li>
     </ul>

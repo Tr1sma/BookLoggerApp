@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget descriptions shown in the widget picker -->
+    <string name="widget_current_book_description">Zeigt dein aktuelles Buch und den Lesefortschritt</string>
+    <string name="widget_reading_streak_description">Zeigt deine aktuelle Lese-Streak</string>
+    <string name="widget_daily_goal_description">Zeigt den Fortschritt deines Leseziels</string>
+</resources>
