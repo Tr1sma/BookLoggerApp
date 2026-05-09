@@ -1,11 +1,14 @@
 @using ApexCharts
 @using System.Globalization
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
 @inject BookLoggerApp.Core.ViewModels.StatsAnalysesViewModel ViewModel
+@inject IStringLocalizer<AppResources> L
 
 <div class="stats-tab-content">
     @if (ViewModel.IsBusy)
     {
-        <div class="loading">Loading statistics...</div>
+        <div class="loading">@L["Stats_Loading"]</div>
     }
     else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
@@ -16,7 +19,7 @@
         <!-- 1. Jahresvergleich -->
         <section class="advanced-stats-section">
             <div class="advanced-stats-card">
-                <h3>Year Comparison</h3>
+                <h3>@L["StatsAnalyses_YearComparison"]</h3>
 
                 @if (ViewModel.AvailableYears.Count > 0)
                 {
@@ -59,7 +62,7 @@
         {
             <section class="advanced-stats-section">
                 <div class="advanced-stats-card">
-                    <h3>Genre Radar</h3>
+                    <h3>@L["StatsAnalyses_GenreRadar"]</h3>
                     <ApexChart TItem="ChartDataPoint"
                                Options="_radarChartOptions"
                                Height="300">
@@ -79,7 +82,7 @@
         {
             <section class="advanced-stats-section">
                 <div class="advanced-stats-card">
-                    <h3>Completion Rate</h3>
+                    <h3>@L["StatsAnalyses_CompletionRate"]</h3>
                     <div class="completion-rate-container">
                         <ApexChart TItem="ChartDataPoint"
                                    Options="_donutChartOptions"
@@ -101,7 +104,7 @@
         {
             <section class="advanced-stats-section">
                 <div class="advanced-stats-card">
-                    <h3>Book Length Preference</h3>
+                    <h3>@L["StatsAnalyses_BookLength"]</h3>
                     <div class="page-count-bars">
                         @{ int maxPageCount = ViewModel.PageCountData.Values.DefaultIfEmpty(0).Max(); }
                         @foreach (var bucket in _pageCountBuckets)
@@ -111,7 +114,7 @@
                             <div class="page-count-row">
                                 <div class="page-count-row-header">
                                     <span class="page-count-label">@bucket.DisplayLabel</span>
-                                    <span class="page-count-count">@count books</span>
+                                    <span class="page-count-count">@L["StatsAnalyses_PageCount_Books", count]</span>
                                 </div>
                                 <div class="page-count-bar-bg">
                                     <div class="page-count-bar-fill" style="width: @fillPercent.ToString("F1", CultureInfo.InvariantCulture)%;"></div>
@@ -128,7 +131,7 @@
         {
             <section class="advanced-stats-section">
                 <div class="advanced-stats-card">
-                    <h3>Most Read Authors</h3>
+                    <h3>@L["StatsAnalyses_MostReadAuthors"]</h3>
                     <div class="top-authors-list">
                         @for (int i = 0; i < ViewModel.TopAuthors.Count; i++)
                         {
@@ -138,7 +141,7 @@
                                 <span class="author-rank @(rank == 1 ? "rank-first" : "")">@rank</span>
                                 <div class="author-info">
                                     <span class="author-name">@author.Author</span>
-                                    <span class="author-detail">@author.BookCount books · @author.TotalPages.ToString("N0") pages</span>
+                                    <span class="author-detail">@L["StatsAnalyses_AuthorDetail", author.BookCount, author.TotalPages.ToString("N0")]</span>
                                 </div>
                                 <span class="author-count">@author.BookCount</span>
                             </div>
@@ -165,12 +168,12 @@
 
     private record PageCountBucket(string Key, string DisplayLabel);
 
-    private static readonly PageCountBucket[] _pageCountBuckets =
+    private PageCountBucket[] _pageCountBuckets => new PageCountBucket[]
     {
-        new("<200", "Short (<200 p.)"),
-        new("200-400", "Medium (200-400 p.)"),
-        new("400-600", "Long (400-600 p.)"),
-        new(">600", "Epic (>600 p.)")
+        new("<200", L["StatsAnalyses_Bucket_Short"]),
+        new("200-400", L["StatsAnalyses_Bucket_Medium"]),
+        new("400-600", L["StatsAnalyses_Bucket_Long"]),
+        new(">600", L["StatsAnalyses_Bucket_Epic"])
     };
 
     private List<ChartDataPoint> _radarChartData = new();
@@ -300,8 +303,8 @@
         // Donut chart data
         _donutChartData = new List<ChartDataPoint>
         {
-            new() { Label = $"Completed ({ViewModel.CompletedCount})", Value = ViewModel.CompletedCount },
-            new() { Label = $"Abandoned ({ViewModel.AbandonedCount})", Value = ViewModel.AbandonedCount }
+            new() { Label = L["StatsAnalyses_Donut_Completed", ViewModel.CompletedCount], Value = ViewModel.CompletedCount },
+            new() { Label = L["StatsAnalyses_Donut_Abandoned", ViewModel.AbandonedCount], Value = ViewModel.AbandonedCount }
         };
     }
 
@@ -312,19 +315,19 @@
 
         return new List<ComparisonRow>
         {
-            new("Books",
+            new(L["StatsAnalyses_Row_Books"],
                 y1.BooksCompleted, y2.BooksCompleted,
                 Math.Max(y1.BooksCompleted, y2.BooksCompleted),
                 y1.BooksCompleted.ToString(), y2.BooksCompleted.ToString()),
-            new("Pages",
+            new(L["StatsAnalyses_Row_Pages"],
                 y1.PagesRead, y2.PagesRead,
                 Math.Max(y1.PagesRead, y2.PagesRead),
                 FormatLargeNumber(y1.PagesRead), FormatLargeNumber(y2.PagesRead)),
-            new("Hours",
+            new(L["StatsAnalyses_Row_Hours"],
                 y1.MinutesRead / 60.0, y2.MinutesRead / 60.0,
                 Math.Max(y1.MinutesRead / 60.0, y2.MinutesRead / 60.0),
                 $"{(y1.MinutesRead / 60):F0}h", $"{(y2.MinutesRead / 60):F0}h"),
-            new("Rating",
+            new(L["StatsAnalyses_Row_Rating"],
                 y1.AverageRating, y2.AverageRating,
                 Math.Max(y1.AverageRating, y2.AverageRating),
                 y1.AverageRating.ToString("F1", CultureInfo.InvariantCulture),

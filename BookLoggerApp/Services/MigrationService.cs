@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
 using System.IO;
@@ -16,11 +17,19 @@ public class MigrationService : IMigrationService
 
     public string GetMigrationLog()
     {
-        // Combine memory log (from startup helper) and persistent log
+        // Combine memory log (from startup helper), DB-init log and persistent log
         var memoryLog = DatabaseMigrationHelper.Log.ToString();
+        string initLog;
+        lock (DatabaseInitializationHelper.InitLog)
+        {
+            initLog = DatabaseInitializationHelper.InitLog.ToString();
+        }
         var fileLog = File.Exists(_logFilePath) ? File.ReadAllText(_logFilePath) : string.Empty;
-        
-        return $"--- Memory Log (Current Session) ---\n{memoryLog}\n\n--- Persistent Log (History) ---\n{fileLog}";
+
+        return
+            "--- DB Init Log (Current Session) ---\n" + initLog + "\n\n" +
+            "--- Memory Log (Legacy Path Migration) ---\n" + memoryLog + "\n\n" +
+            "--- Persistent Log (History) ---\n" + fileLog;
     }
 
     public void Log(string message)
