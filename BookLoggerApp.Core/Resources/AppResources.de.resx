@@ -767,7 +767,7 @@
     <value>🐢 &lt;strong&gt;Wachstumsrate 0,8&lt;/strong&gt; = 20% langsamer (~3,75 Tage/Level)</value>
   </data>
   <data name="Shop_HowPlantsGrow_Bullet5" xml:space="preserve">
-    <value>✨ Höheres Level = höherer XP-Boost beim Lesen</value>
+    <value>✨ &lt;strong&gt;Höheres Level&lt;/strong&gt; = höherer XP-Boost beim Lesen</value>
   </data>
   <data name="Shop_Decorations_Description" xml:space="preserve">
     <value>Dekoriere deine Regale! Kosmetische Items, die dein Bücherregal gemütlich und einzigartig machen.</value>
