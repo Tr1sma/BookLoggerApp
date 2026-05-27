@@ -826,7 +826,7 @@
     <value>🐢 &lt;strong&gt;Growth rate 0.8&lt;/strong&gt; = 20% slower (~3.75 days/level)</value>
   </data>
   <data name="Shop_HowPlantsGrow_Bullet5" xml:space="preserve">
-    <value>✨ Higher level = higher XP boost while reading</value>
+    <value>✨ &lt;strong&gt;Higher level&lt;/strong&gt; = higher XP boost while reading</value>
   </data>
   <data name="Shop_Decorations_Description" xml:space="preserve">
     <value>Decorate your shelves! Cosmetic items to make your bookshelf cosy and unique.</value>
