@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
@@ -412,14 +413,13 @@ public class OnboardingService : IOnboardingService
             completed.Add(OnboardingMissionId.LogFirstSession);
         }
 
-        if (await context.Books.AnyAsync(book =>
-            book.Status == ReadingStatus.Completed &&
-            book.CharactersRating.HasValue &&
-            book.PlotRating.HasValue &&
-            book.WritingStyleRating.HasValue &&
-            book.SpiceLevelRating.HasValue &&
-            book.PacingRating.HasValue &&
-            book.WorldBuildingRating.HasValue, ct))
+        var completedBooks = await context.Books
+            .AsNoTracking()
+            .Where(b => b.Status == ReadingStatus.Completed)
+            .Include(b => b.BookGenres)
+            .ToListAsync(ct);
+
+        if (completedBooks.Any(b => GenreRatingMapping.IsFullyRated(b, b.BookGenres.Select(bg => bg.GenreId))))
         {
             completed.Add(OnboardingMissionId.RateCompletedBookAll6);
         }
@@ -551,6 +551,8 @@ public class OnboardingService : IOnboardingService
                     Icon = definition.Icon,
                     Title = definition.Title,
                     Description = definition.Description,
+                    TitleKey = definition.TitleKey,
+                    DescriptionKey = definition.DescriptionKey,
                     CtaLabel = definition.CtaLabel,
                     Route = definition.DefaultRoute,
                     Status = status,

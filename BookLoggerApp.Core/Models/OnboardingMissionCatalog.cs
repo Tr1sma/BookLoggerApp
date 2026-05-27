@@ -33,8 +33,10 @@ public static class OnboardingMissionCatalog
             {
                 Id = OnboardingMissionId.RateCompletedBookAll6,
                 Icon = "⭐",
-                Title = "Rate a completed book in all 6 categories",
-                Description = "Use the real rating system: Characters, Plot, Writing Style, Spice Level, Pacing, and World Building.",
+                Title = "Rate a completed book in all its categories",
+                Description = "Open a finished book and rate it in every category shown for its genre.",
+                TitleKey = "GettingStarted_Mission_RateBook_Title",
+                DescriptionKey = "GettingStarted_Mission_RateBook_Description",
                 CtaLabel = "Open book",
                 DefaultRoute = "/bookshelf",
                 IsCore = true,

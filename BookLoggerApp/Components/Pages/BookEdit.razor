@@ -567,7 +567,8 @@
                 await OnboardingService.TrackEventAsync(OnboardingEvent.BookCreated, ViewModel.Book.Id);
             }
 
-            if (IsFullyRatedCompletedBook(ViewModel.Book))
+            if (ViewModel.Book.Status == ReadingStatus.Completed &&
+                GenreRatingMapping.IsFullyRated(ViewModel.Book, ViewModel.SelectedGenreIds))
             {
                 await OnboardingService.TrackEventAsync(OnboardingEvent.BookRated, ViewModel.Book.Id);
             }
@@ -760,16 +761,6 @@
             await OnboardingService.TrackEventAsync(OnboardingEvent.IsbnScanned);
         }
     }
-
-    private static bool IsFullyRatedCompletedBook(Book? book) =>
-        book?.Status == ReadingStatus.Completed &&
-        book.CharactersRating.HasValue &&
-        book.PlotRating.HasValue &&
-        book.WritingStyleRating.HasValue &&
-        book.SpiceLevelRating.HasValue &&
-        book.PacingRating.HasValue &&
-        book.WorldBuildingRating.HasValue;
-
 
     private IReadOnlyDictionary<string, (string dark, string light)> GetSpineColors()
     {
