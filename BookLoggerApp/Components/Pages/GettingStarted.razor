@@ -61,8 +61,8 @@
                             <span class="mission-status @GetStatusClass(mission.Status)">@GetStatusLabel(mission.Status)</span>
                         </div>
 
-                        <h3>@mission.Title</h3>
-                        <p>@mission.Description</p>
+                        <h3>@Localized(mission.TitleKey, mission.Title)</h3>
+                        <p>@Localized(mission.DescriptionKey, mission.Description)</p>
 
                         @if (!string.IsNullOrWhiteSpace(mission.Note))
                         {
@@ -209,6 +209,17 @@
             OnboardingMissionStatus.Available => L["GettingStarted_Status_Available"],
             _ => L["GettingStarted_Status_Locked"]
         };
+
+    private string Localized(string? key, string fallback)
+    {
+        if (string.IsNullOrEmpty(key))
+        {
+            return fallback;
+        }
+
+        var localized = L[key];
+        return localized.ResourceNotFound ? fallback : localized.Value;
+    }
 }
 
 <style>

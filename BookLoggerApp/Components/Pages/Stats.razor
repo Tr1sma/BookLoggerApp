@@ -187,7 +187,7 @@
             <section class="rating-averages-section">
                 <h2>📊 @L["Stats_AvgByCategory"]</h2>
                 <div class="rating-averages-grid">
-                    @foreach (var category in RatingCategoryInfo.GetAllCategories())
+                    @foreach (var category in RatingCategoryInfo.GetAllCategories(L))
                     {
                         var average = ViewModel.CategoryAverages.GetValueOrDefault(category.Category, 0);
                         @if (average > 0)
@@ -221,7 +221,7 @@
                         @onclick="() => FilterByCategory(null)">
                     @L["Stats_Filter_All"]
                 </button>
-                @foreach (var category in RatingCategoryInfo.GetAllCategories())
+                @foreach (var category in RatingCategoryInfo.GetAllCategories(L))
                 {
                     <button class="btn category-filter-btn @(selectedCategory == category.Category ? "active" : "")"
                             @onclick="() => FilterByCategory(category.Category)">
@@ -247,7 +247,7 @@
                                 @if (selectedCategory.HasValue)
                                 {
                                     var categoryRating = bookRating.Ratings.GetValueOrDefault(selectedCategory.Value);
-                                    var categoryInfo = RatingCategoryInfo.GetAllCategories()
+                                    var categoryInfo = RatingCategoryInfo.GetAllCategories(L)
                                         .FirstOrDefault(c => c.Category == selectedCategory.Value);
                                     <div class="average-rating">@(categoryRating?.ToString() ?? "-") @(categoryInfo?.Emoji ?? "⭐")</div>
                                 }

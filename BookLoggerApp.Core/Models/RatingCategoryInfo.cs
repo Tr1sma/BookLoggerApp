@@ -1,3 +1,6 @@
+using BookLoggerApp.Core.Resources;
+using Microsoft.Extensions.Localization;
+
 namespace BookLoggerApp.Core.Models;
 
 /// <summary>
@@ -13,95 +16,63 @@ public class RatingCategoryInfo
     /// <summary>
     /// Returns all available rating categories with their metadata.
     /// </summary>
-    public static List<RatingCategoryInfo> GetAllCategories()
+    public static List<RatingCategoryInfo> GetAllCategories(IStringLocalizer<AppResources>? localizer = null)
     {
         return new List<RatingCategoryInfo>
         {
-            new()
-            {
-                Category = RatingCategory.Characters,
-                Emoji = "👥",
-                DisplayName = "Characters",
-                Description = "Character quality and development"
-            },
-            new()
-            {
-                Category = RatingCategory.Plot,
-                Emoji = "📖",
-                DisplayName = "Plot",
-                Description = "Story and storyline"
-            },
-            new()
-            {
-                Category = RatingCategory.WritingStyle,
-                Emoji = "✍️",
-                DisplayName = "Writing Style",
-                Description = "Author's writing style"
-            },
-            new()
-            {
-                Category = RatingCategory.SpiceLevel,
-                Emoji = "🌶️",
-                DisplayName = "Spice Level",
-                Description = "Romance/Spice level"
-            },
-            new()
-            {
-                Category = RatingCategory.Pacing,
-                Emoji = "⚡",
-                DisplayName = "Pacing",
-                Description = "Story tempo"
-            },
-            new()
-            {
-                Category = RatingCategory.WorldBuilding,
-                Emoji = "🌍",
-                DisplayName = "World Building",
-                Description = "World building quality"
-            },
-            new()
-            {
-                Category = RatingCategory.Spannung,
-                Emoji = "😰",
-                DisplayName = "Spannung",
-                Description = "Spannung und Nervenkitzel"
-            },
-            new()
-            {
-                Category = RatingCategory.Humor,
-                Emoji = "😂",
-                DisplayName = "Humor",
-                Description = "Humor und Unterhaltung"
-            },
-            new()
-            {
-                Category = RatingCategory.Informationsgehalt,
-                Emoji = "💡",
-                DisplayName = "Informationsgehalt",
-                Description = "Informationsgehalt und Tiefe"
-            },
-            new()
-            {
-                Category = RatingCategory.EmotionaleTiefe,
-                Emoji = "💖",
-                DisplayName = "Emotionale Tiefe",
-                Description = "Emotionale Tiefe und Berührung"
-            },
-            new()
-            {
-                Category = RatingCategory.Atmosphaere,
-                Emoji = "🌙",
-                DisplayName = "Atmosphäre",
-                Description = "Atmosphäre und Stimmung"
-            },
+            Create(RatingCategory.Characters, "👥", "Characters", "Character quality and development", localizer),
+            Create(RatingCategory.Plot, "📖", "Plot", "Story and storyline", localizer),
+            Create(RatingCategory.WritingStyle, "✍️", "Writing Style", "Author's writing style", localizer),
+            Create(RatingCategory.SpiceLevel, "🌶️", "Spice Level", "Romance/Spice level", localizer),
+            Create(RatingCategory.Pacing, "⚡", "Pacing", "Story tempo", localizer),
+            Create(RatingCategory.WorldBuilding, "🌍", "World Building", "World building quality", localizer),
+            Create(RatingCategory.Spannung, "😰", "Tension", "Tension and suspense", localizer),
+            Create(RatingCategory.Humor, "😂", "Humor", "Humor and entertainment", localizer),
+            Create(RatingCategory.Informationsgehalt, "💡", "Information Content", "Information content and depth", localizer),
+            Create(RatingCategory.EmotionaleTiefe, "💖", "Emotional Depth", "Emotional depth and resonance", localizer),
+            Create(RatingCategory.Atmosphaere, "🌙", "Atmosphere", "Atmosphere and mood", localizer),
         };
     }
 
     /// <summary>
     /// Gets the rating category info for a specific category.
     /// </summary>
-    public static RatingCategoryInfo? GetCategoryInfo(RatingCategory category)
+    public static RatingCategoryInfo? GetCategoryInfo(
+        RatingCategory category,
+        IStringLocalizer<AppResources>? localizer = null)
     {
-        return GetAllCategories().FirstOrDefault(c => c.Category == category);
+        return GetAllCategories(localizer).FirstOrDefault(c => c.Category == category);
+    }
+
+    private static RatingCategoryInfo Create(
+        RatingCategory category,
+        string emoji,
+        string fallbackDisplayName,
+        string fallbackDescription,
+        IStringLocalizer<AppResources>? localizer)
+    {
+        string keyPrefix = $"RatingCategory_{category}";
+
+        return new RatingCategoryInfo
+        {
+            Category = category,
+            Emoji = emoji,
+            DisplayName = GetLocalized(localizer, $"{keyPrefix}_DisplayName", fallbackDisplayName),
+            Description = GetLocalized(localizer, $"{keyPrefix}_Description", fallbackDescription)
+        };
+    }
+
+    private static string GetLocalized(
+        IStringLocalizer<AppResources>? localizer,
+        string key,
+        string fallback)
+    {
+        if (localizer is null)
+        {
+            return fallback;
+        }
+
+        var localized = localizer[key];
+        return localized.ResourceNotFound ? fallback : localized.Value;
     }
 }

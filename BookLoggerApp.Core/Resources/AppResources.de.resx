@@ -472,6 +472,12 @@
   <data name="GettingStarted_Missions_Subtitle" xml:space="preserve">
     <value>Diese Missionen werden nur durch echte App-Aktionen abgeschlossen.</value>
   </data>
+  <data name="GettingStarted_Mission_RateBook_Title" xml:space="preserve">
+    <value>Bewerte ein abgeschlossenes Buch in allen Kategorien</value>
+  </data>
+  <data name="GettingStarted_Mission_RateBook_Description" xml:space="preserve">
+    <value>Öffne ein fertig gelesenes Buch und bewerte es in jeder für sein Genre angezeigten Kategorie.</value>
+  </data>
   <data name="GettingStarted_CompletedOn" xml:space="preserve">
     <value>Abgeschlossen am {0}</value>
   </data>
@@ -1563,6 +1569,72 @@
   </data>
   <data name="QuickTimer_Pages" xml:space="preserve">
     <value>Seiten</value>
+  </data>
+  <data name="RatingCategory_Characters_DisplayName" xml:space="preserve">
+    <value>Figuren</value>
+  </data>
+  <data name="RatingCategory_Characters_Description" xml:space="preserve">
+    <value>Qualität und Entwicklung der Figuren</value>
+  </data>
+  <data name="RatingCategory_Plot_DisplayName" xml:space="preserve">
+    <value>Handlung</value>
+  </data>
+  <data name="RatingCategory_Plot_Description" xml:space="preserve">
+    <value>Geschichte und Handlungsverlauf</value>
+  </data>
+  <data name="RatingCategory_WritingStyle_DisplayName" xml:space="preserve">
+    <value>Schreibstil</value>
+  </data>
+  <data name="RatingCategory_WritingStyle_Description" xml:space="preserve">
+    <value>Schreibstil der Autorin oder des Autors</value>
+  </data>
+  <data name="RatingCategory_SpiceLevel_DisplayName" xml:space="preserve">
+    <value>Spice-Level</value>
+  </data>
+  <data name="RatingCategory_SpiceLevel_Description" xml:space="preserve">
+    <value>Romance-/Spice-Level</value>
+  </data>
+  <data name="RatingCategory_Pacing_DisplayName" xml:space="preserve">
+    <value>Pacing</value>
+  </data>
+  <data name="RatingCategory_Pacing_Description" xml:space="preserve">
+    <value>Erzähltempo der Geschichte</value>
+  </data>
+  <data name="RatingCategory_WorldBuilding_DisplayName" xml:space="preserve">
+    <value>Worldbuilding</value>
+  </data>
+  <data name="RatingCategory_WorldBuilding_Description" xml:space="preserve">
+    <value>Qualität des Worldbuildings</value>
+  </data>
+  <data name="RatingCategory_Spannung_DisplayName" xml:space="preserve">
+    <value>Spannung</value>
+  </data>
+  <data name="RatingCategory_Spannung_Description" xml:space="preserve">
+    <value>Spannung und Nervenkitzel</value>
+  </data>
+  <data name="RatingCategory_Humor_DisplayName" xml:space="preserve">
+    <value>Humor</value>
+  </data>
+  <data name="RatingCategory_Humor_Description" xml:space="preserve">
+    <value>Humor und Unterhaltung</value>
+  </data>
+  <data name="RatingCategory_Informationsgehalt_DisplayName" xml:space="preserve">
+    <value>Informationsgehalt</value>
+  </data>
+  <data name="RatingCategory_Informationsgehalt_Description" xml:space="preserve">
+    <value>Informationsgehalt und Tiefe</value>
+  </data>
+  <data name="RatingCategory_EmotionaleTiefe_DisplayName" xml:space="preserve">
+    <value>Emotionale Tiefe</value>
+  </data>
+  <data name="RatingCategory_EmotionaleTiefe_Description" xml:space="preserve">
+    <value>Emotionale Tiefe und Berührung</value>
+  </data>
+  <data name="RatingCategory_Atmosphaere_DisplayName" xml:space="preserve">
+    <value>Atmosphäre</value>
+  </data>
+  <data name="RatingCategory_Atmosphaere_Description" xml:space="preserve">
+    <value>Atmosphäre und Stimmung</value>
   </data>
   <data name="TimerInline_Title" xml:space="preserve">
     <value>Lesesitzung</value>

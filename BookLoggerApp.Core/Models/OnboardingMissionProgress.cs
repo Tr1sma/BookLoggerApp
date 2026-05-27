@@ -6,6 +6,8 @@ public sealed class OnboardingMissionProgress
     public required string Icon { get; init; }
     public required string Title { get; init; }
     public required string Description { get; init; }
+    public string? TitleKey { get; init; }
+    public string? DescriptionKey { get; init; }
     public required string CtaLabel { get; init; }
     public required string Route { get; init; }
     public OnboardingMissionStatus Status { get; init; }

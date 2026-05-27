@@ -12,7 +12,17 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
-## [Unveröffentlicht]
+## [0.11.2]
+
+### Hinzugefügt
+
+### Geändert
+- Bewertungskategorien werden in Buchdetails und Statistiken jetzt über die aktive App-Sprache lokalisiert.
+
+### Behoben
+- Onboarding-Mission "Buch vollständig bewerten" wurde nach dem Umstieg auf genre-abhängige Bewertungskategorien nicht mehr abgeschlossen, weil sie weiterhin die alten 6 festen Felder (inkl. Spice Level) prüfte. Sie gilt jetzt als erfüllt, sobald ein abgeschlossenes Buch in allen für sein Genre angezeigten Kategorien bewertet ist.
+
+## [0.11.1]
 
 ### Hinzugefügt
 - Deutsche Sprachunterstützung inkl. Sprachauswahl in den Einstellungen (Englisch + Deutsch). Beim allerersten Start wird die System-Sprache automatisch erkannt; ein späterer Sprachwechsel startet die App neu, damit die neue Sprache überall greift.
