@@ -9,6 +9,7 @@ public sealed class OnboardingMissionDefinition
     public string? TitleKey { get; init; }
     public string? DescriptionKey { get; init; }
     public required string CtaLabel { get; init; }
+    public string? CtaLabelKey { get; init; }
     public required string DefaultRoute { get; init; }
     public bool IsCore { get; init; }
     public bool IsTimeGated { get; init; }

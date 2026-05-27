@@ -15,6 +15,7 @@ Versionsschema:
 ## [0.11.2]
 
 ### Hinzugefügt
+- Alle Missions- und Feature-Atlas-Texte auf der "Einstieg"-Seite vollständig lokalisiert (Titel, Beschreibungen, CTA-Labels, Badges, Notizen).
 
 ### Geändert
 - Bewertungskategorien werden in Buchdetails und Statistiken jetzt über die aktive App-Sprache lokalisiert.
