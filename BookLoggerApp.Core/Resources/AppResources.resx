@@ -531,6 +531,198 @@
   <data name="GettingStarted_Missions_Subtitle" xml:space="preserve">
     <value>These missions complete only from real app actions.</value>
   </data>
+  <data name="GettingStarted_Mission_RateBook_Title" xml:space="preserve">
+    <value>Rate a completed book in all its categories</value>
+  </data>
+  <data name="GettingStarted_Mission_RateBook_Description" xml:space="preserve">
+    <value>Open a finished book and rate it in every category shown for its genre.</value>
+  </data>
+  <data name="GettingStarted_Mission_RateCompletedBookAll6_Cta" xml:space="preserve">
+    <value>Open book</value>
+  </data>
+  <data name="GettingStarted_Mission_AddFirstBook_Title" xml:space="preserve">
+    <value>Add your first book</value>
+  </data>
+  <data name="GettingStarted_Mission_AddFirstBook_Description" xml:space="preserve">
+    <value>Create your first real library entry with title and author.</value>
+  </data>
+  <data name="GettingStarted_Mission_AddFirstBook_Cta" xml:space="preserve">
+    <value>Add book</value>
+  </data>
+  <data name="GettingStarted_Mission_LogFirstSession_Title" xml:space="preserve">
+    <value>Log your first reading session</value>
+  </data>
+  <data name="GettingStarted_Mission_LogFirstSession_Description" xml:space="preserve">
+    <value>Start or finish a real reading session so BookHeart can track time, pages, XP, and streaks.</value>
+  </data>
+  <data name="GettingStarted_Mission_LogFirstSession_Cta" xml:space="preserve">
+    <value>Open bookshelf</value>
+  </data>
+  <data name="GettingStarted_Mission_CreateFirstGoal_Title" xml:space="preserve">
+    <value>Create your first goal</value>
+  </data>
+  <data name="GettingStarted_Mission_CreateFirstGoal_Description" xml:space="preserve">
+    <value>Set up a books, pages, or minutes goal to track reading progress.</value>
+  </data>
+  <data name="GettingStarted_Mission_CreateFirstGoal_Cta" xml:space="preserve">
+    <value>Create goal</value>
+  </data>
+  <data name="GettingStarted_Mission_BuyFirstPlant_Title" xml:space="preserve">
+    <value>Buy your first plant</value>
+  </data>
+  <data name="GettingStarted_Mission_BuyFirstPlant_Description" xml:space="preserve">
+    <value>Open the plant shop and purchase a real plant that can grow with your reading.</value>
+  </data>
+  <data name="GettingStarted_Mission_BuyFirstPlant_Cta" xml:space="preserve">
+    <value>Visit shop</value>
+  </data>
+  <data name="GettingStarted_Mission_PlaceFirstPlantOnShelf_Title" xml:space="preserve">
+    <value>Place a plant on your shelf</value>
+  </data>
+  <data name="GettingStarted_Mission_PlaceFirstPlantOnShelf_Description" xml:space="preserve">
+    <value>Decorate your bookshelf by placing an owned plant onto a shelf slot.</value>
+  </data>
+  <data name="GettingStarted_Mission_PlaceFirstPlantOnShelf_Cta" xml:space="preserve">
+    <value>Open bookshelf</value>
+  </data>
+  <data name="GettingStarted_Mission_WaterFirstPlant_Title" xml:space="preserve">
+    <value>Water your first plant</value>
+  </data>
+  <data name="GettingStarted_Mission_WaterFirstPlant_Description" xml:space="preserve">
+    <value>Use the real watering action after your plant has been placed on the shelf.</value>
+  </data>
+  <data name="GettingStarted_Mission_WaterFirstPlant_Cta" xml:space="preserve">
+    <value>Open dashboard</value>
+  </data>
+  <data name="GettingStarted_Mission_ShareStatsCard_Title" xml:space="preserve">
+    <value>Share a stats card</value>
+  </data>
+  <data name="GettingStarted_Mission_ShareStatsCard_Description" xml:space="preserve">
+    <value>Generate and share a real reading stats card from the Stats page.</value>
+  </data>
+  <data name="GettingStarted_Mission_ShareStatsCard_Cta" xml:space="preserve">
+    <value>Open stats</value>
+  </data>
+  <data name="GettingStarted_Mission_ShareCompletedBook_Title" xml:space="preserve">
+    <value>Share a completed book</value>
+  </data>
+  <data name="GettingStarted_Mission_ShareCompletedBook_Description" xml:space="preserve">
+    <value>Create and share a real recommendation card for a completed book.</value>
+  </data>
+  <data name="GettingStarted_Mission_ShareCompletedBook_Cta" xml:space="preserve">
+    <value>Open completed book</value>
+  </data>
+  <data name="GettingStarted_Mission_ScanIsbn_Title" xml:space="preserve">
+    <value>Scan an ISBN</value>
+  </data>
+  <data name="GettingStarted_Mission_ScanIsbn_Description" xml:space="preserve">
+    <value>Use the barcode scanner to capture an ISBN from the add-book or wishlist flow.</value>
+  </data>
+  <data name="GettingStarted_Mission_ScanIsbn_Cta" xml:space="preserve">
+    <value>Open scanner</value>
+  </data>
+  <data name="GettingStarted_Mission_AddToWishlist_Title" xml:space="preserve">
+    <value>Add something to your wishlist</value>
+  </data>
+  <data name="GettingStarted_Mission_AddToWishlist_Description" xml:space="preserve">
+    <value>Save a future read with priority and optional recommendation notes.</value>
+  </data>
+  <data name="GettingStarted_Mission_AddToWishlist_Cta" xml:space="preserve">
+    <value>Open wishlist</value>
+  </data>
+  <data name="GettingStarted_Mission_CreateBackup_Title" xml:space="preserve">
+    <value>Create your first backup</value>
+  </data>
+  <data name="GettingStarted_Mission_CreateBackup_Description" xml:space="preserve">
+    <value>Create a real cloud/share backup from Settings.</value>
+  </data>
+  <data name="GettingStarted_Mission_CreateBackup_Cta" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="GettingStarted_LockedNote" xml:space="preserve">
+    <value>Complete &quot;{0}&quot; first.</value>
+  </data>
+  <data name="GettingStarted_TutorialPlantNote" xml:space="preserve">
+    <value>Your tutorial plant was prepared so you can water it right away.</value>
+  </data>
+  <data name="GettingStarted_Atlas_Notifications_Title" xml:space="preserve">
+    <value>Notifications and reminders</value>
+  </data>
+  <data name="GettingStarted_Atlas_Notifications_Description" xml:space="preserve">
+    <value>Configure reading reminders and notification permissions in Settings.</value>
+  </data>
+  <data name="GettingStarted_Atlas_Notifications_Cta" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="GettingStarted_Atlas_RestoreBackup_Title" xml:space="preserve">
+    <value>Restore from backup</value>
+  </data>
+  <data name="GettingStarted_Atlas_RestoreBackup_Description" xml:space="preserve">
+    <value>Restore is intentionally not a mission because it can overwrite data. Use it from Settings when you really need it.</value>
+  </data>
+  <data name="GettingStarted_Atlas_RestoreBackup_Cta" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="GettingStarted_Atlas_RestoreBackup_Badge" xml:space="preserve">
+    <value>Careful</value>
+  </data>
+  <data name="GettingStarted_Atlas_DeleteData_Title" xml:space="preserve">
+    <value>Delete all data</value>
+  </data>
+  <data name="GettingStarted_Atlas_DeleteData_Description" xml:space="preserve">
+    <value>The destructive reset flow is documented here but never required for onboarding.</value>
+  </data>
+  <data name="GettingStarted_Atlas_DeleteData_Cta" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="GettingStarted_Atlas_DeleteData_Badge" xml:space="preserve">
+    <value>Risky</value>
+  </data>
+  <data name="GettingStarted_Atlas_AndroidWidgets_Title" xml:space="preserve">
+    <value>Android widgets</value>
+  </data>
+  <data name="GettingStarted_Atlas_AndroidWidgets_Description" xml:space="preserve">
+    <value>Widgets are configured on the home screen, so this stays informational inside onboarding.</value>
+  </data>
+  <data name="GettingStarted_Atlas_AndroidWidgets_Badge" xml:space="preserve">
+    <value>Android</value>
+  </data>
+  <data name="GettingStarted_Atlas_Changelog_Title" xml:space="preserve">
+    <value>Updates and changelog</value>
+  </data>
+  <data name="GettingStarted_Atlas_Changelog_Description" xml:space="preserve">
+    <value>BookHeart can show update prompts and changelog entries automatically when relevant.</value>
+  </data>
+  <data name="GettingStarted_Atlas_Changelog_Badge" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="GettingStarted_Atlas_Privacy_Title" xml:space="preserve">
+    <value>Privacy policy</value>
+  </data>
+  <data name="GettingStarted_Atlas_Privacy_Description" xml:space="preserve">
+    <value>Review the privacy policy directly in Settings.</value>
+  </data>
+  <data name="GettingStarted_Atlas_Privacy_Cta" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="GettingStarted_Atlas_Support_Title" xml:space="preserve">
+    <value>Support and diagnostics</value>
+  </data>
+  <data name="GettingStarted_Atlas_Support_Description" xml:space="preserve">
+    <value>Access support links and migration diagnostics from Settings.</value>
+  </data>
+  <data name="GettingStarted_Atlas_Support_Cta" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="GettingStarted_Atlas_ReviewPrompts_Title" xml:space="preserve">
+    <value>Review prompts</value>
+  </data>
+  <data name="GettingStarted_Atlas_ReviewPrompts_Description" xml:space="preserve">
+    <value>The review prompt appears at appropriate in-app moments and is intentionally not forced.</value>
+  </data>
+  <data name="GettingStarted_Atlas_ReviewPrompts_Badge" xml:space="preserve">
+    <value>Contextual</value>
+  </data>
   <data name="GettingStarted_CompletedOn" xml:space="preserve">
     <value>Completed {0}</value>
   </data>
@@ -634,7 +826,7 @@
     <value>🐢 &lt;strong&gt;Growth rate 0.8&lt;/strong&gt; = 20% slower (~3.75 days/level)</value>
   </data>
   <data name="Shop_HowPlantsGrow_Bullet5" xml:space="preserve">
-    <value>✨ Higher level = higher XP boost while reading</value>
+    <value>✨ &lt;strong&gt;Higher level&lt;/strong&gt; = higher XP boost while reading</value>
   </data>
   <data name="Shop_Decorations_Description" xml:space="preserve">
     <value>Decorate your shelves! Cosmetic items to make your bookshelf cosy and unique.</value>
@@ -1622,6 +1814,72 @@
   </data>
   <data name="QuickTimer_Pages" xml:space="preserve">
     <value>Pages</value>
+  </data>
+  <data name="RatingCategory_Characters_DisplayName" xml:space="preserve">
+    <value>Characters</value>
+  </data>
+  <data name="RatingCategory_Characters_Description" xml:space="preserve">
+    <value>Character quality and development</value>
+  </data>
+  <data name="RatingCategory_Plot_DisplayName" xml:space="preserve">
+    <value>Plot</value>
+  </data>
+  <data name="RatingCategory_Plot_Description" xml:space="preserve">
+    <value>Story and storyline</value>
+  </data>
+  <data name="RatingCategory_WritingStyle_DisplayName" xml:space="preserve">
+    <value>Writing Style</value>
+  </data>
+  <data name="RatingCategory_WritingStyle_Description" xml:space="preserve">
+    <value>Author's writing style</value>
+  </data>
+  <data name="RatingCategory_SpiceLevel_DisplayName" xml:space="preserve">
+    <value>Spice Level</value>
+  </data>
+  <data name="RatingCategory_SpiceLevel_Description" xml:space="preserve">
+    <value>Romance/Spice level</value>
+  </data>
+  <data name="RatingCategory_Pacing_DisplayName" xml:space="preserve">
+    <value>Pacing</value>
+  </data>
+  <data name="RatingCategory_Pacing_Description" xml:space="preserve">
+    <value>Story tempo</value>
+  </data>
+  <data name="RatingCategory_WorldBuilding_DisplayName" xml:space="preserve">
+    <value>World Building</value>
+  </data>
+  <data name="RatingCategory_WorldBuilding_Description" xml:space="preserve">
+    <value>World building quality</value>
+  </data>
+  <data name="RatingCategory_Spannung_DisplayName" xml:space="preserve">
+    <value>Tension</value>
+  </data>
+  <data name="RatingCategory_Spannung_Description" xml:space="preserve">
+    <value>Tension and suspense</value>
+  </data>
+  <data name="RatingCategory_Humor_DisplayName" xml:space="preserve">
+    <value>Humor</value>
+  </data>
+  <data name="RatingCategory_Humor_Description" xml:space="preserve">
+    <value>Humor and entertainment</value>
+  </data>
+  <data name="RatingCategory_Informationsgehalt_DisplayName" xml:space="preserve">
+    <value>Information Content</value>
+  </data>
+  <data name="RatingCategory_Informationsgehalt_Description" xml:space="preserve">
+    <value>Information content and depth</value>
+  </data>
+  <data name="RatingCategory_EmotionaleTiefe_DisplayName" xml:space="preserve">
+    <value>Emotional Depth</value>
+  </data>
+  <data name="RatingCategory_EmotionaleTiefe_Description" xml:space="preserve">
+    <value>Emotional depth and resonance</value>
+  </data>
+  <data name="RatingCategory_Atmosphaere_DisplayName" xml:space="preserve">
+    <value>Atmosphere</value>
+  </data>
+  <data name="RatingCategory_Atmosphaere_Description" xml:space="preserve">
+    <value>Atmosphere and mood</value>
   </data>
   <data name="TimerInline_Title" xml:space="preserve">
     <value>Reading session</value>

@@ -61,10 +61,19 @@
                             <span class="mission-status @GetStatusClass(mission.Status)">@GetStatusLabel(mission.Status)</span>
                         </div>
 
-                        <h3>@mission.Title</h3>
-                        <p>@mission.Description</p>
+                        <h3>@Localized(mission.TitleKey, mission.Title)</h3>
+                        <p>@Localized(mission.DescriptionKey, mission.Description)</p>
 
-                        @if (!string.IsNullOrWhiteSpace(mission.Note))
+                        @if (mission.NotePrereqId.HasValue)
+                        {
+                            var prereqDef = OnboardingMissionCatalog.GetDefinition(mission.NotePrereqId.Value);
+                            <p class="mission-note">@L["GettingStarted_LockedNote", Localized(prereqDef.TitleKey, prereqDef.Title)]</p>
+                        }
+                        else if (mission.NoteKey != null)
+                        {
+                            <p class="mission-note">@L[mission.NoteKey]</p>
+                        }
+                        else if (!string.IsNullOrWhiteSpace(mission.Note))
                         {
                             <p class="mission-note">@mission.Note</p>
                         }
@@ -78,7 +87,7 @@
                                 class="btn @(mission.IsCompleted ? "btn-secondary" : "btn-primary")"
                                 disabled="@mission.IsLocked"
                                 @onclick="() => OpenMissionAsync(mission)">
-                            @(mission.IsCompleted ? L["GettingStarted_OpenAgain"].Value : mission.CtaLabel)
+                            @(mission.IsCompleted ? L["GettingStarted_OpenAgain"].Value : Localized(mission.CtaLabelKey, mission.CtaLabel))
                         </button>
                     </article>
                 }
@@ -99,17 +108,17 @@
                             <span class="atlas-icon">@entry.Icon</span>
                             @if (!string.IsNullOrWhiteSpace(entry.Badge))
                             {
-                                <span class="atlas-badge">@entry.Badge</span>
+                                <span class="atlas-badge">@Localized(entry.BadgeKey, entry.Badge!)</span>
                             }
                         </div>
 
-                        <h3>@entry.Title</h3>
-                        <p>@entry.Description</p>
+                        <h3>@Localized(entry.TitleKey, entry.Title)</h3>
+                        <p>@Localized(entry.DescriptionKey, entry.Description)</p>
 
                         @if (!string.IsNullOrWhiteSpace(entry.Route))
                         {
                             <button type="button" class="btn btn-secondary" @onclick="() => NavigationManager.NavigateTo(entry.Route!)">
-                                @(entry.CtaLabel ?? L["GettingStarted_OpenGeneric"].Value)
+                                @Localized(entry.CtaLabelKey, entry.CtaLabel ?? L["GettingStarted_OpenGeneric"].Value)
                             </button>
                         }
                     </article>
@@ -209,6 +218,17 @@
             OnboardingMissionStatus.Available => L["GettingStarted_Status_Available"],
             _ => L["GettingStarted_Status_Locked"]
         };
+
+    private string Localized(string? key, string fallback)
+    {
+        if (string.IsNullOrEmpty(key))
+        {
+            return fallback;
+        }
+
+        var localized = L[key];
+        return localized.ResourceNotFound ? fallback : localized.Value;
+    }
 }
 
 <style>

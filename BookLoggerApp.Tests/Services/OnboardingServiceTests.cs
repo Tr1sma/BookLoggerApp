@@ -130,6 +130,79 @@ public class OnboardingServiceTests
         snapshot.Missions.Single(m => m.Id == OnboardingMissionId.ScanIsbn).IsCompleted.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task GetSnapshotAsync_CompletesRatingMission_WhenGenreRelevantCategoriesRated_WithoutSpiceLevel()
+    {
+        // Fantasy genre id (seeded). Its relevant categories per GenreRatingMapping are
+        // Characters, Plot, WritingStyle, Pacing, WorldBuilding, Atmosphaere — no SpiceLevel.
+        var fantasyGenreId = Guid.Parse("00000000-0000-0000-0000-000000000003");
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using (var context = TestDbContext.Create(databaseName))
+        {
+            var book = new Book
+            {
+                Title = "The Name of the Wind",
+                Author = "Patrick Rothfuss",
+                DateAdded = DateTime.UtcNow,
+                Status = ReadingStatus.Completed,
+                CharactersRating = 5,
+                PlotRating = 5,
+                WritingStyleRating = 5,
+                PacingRating = 4,
+                WorldBuildingRating = 5,
+                AtmosphaereRating = 5
+                // SpiceLevelRating intentionally left null
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+
+            context.BookGenres.Add(new BookGenre { BookId = book.Id, GenreId = fantasyGenreId });
+            await context.SaveChangesAsync();
+        }
+
+        var service = CreateService(databaseName);
+        var snapshot = await service.GetSnapshotAsync();
+
+        snapshot.Missions.Single(m => m.Id == OnboardingMissionId.RateCompletedBookAll6)
+            .IsCompleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetSnapshotAsync_DoesNotCompleteRatingMission_WhenAGenreRelevantCategoryIsMissing()
+    {
+        var fantasyGenreId = Guid.Parse("00000000-0000-0000-0000-000000000003");
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using (var context = TestDbContext.Create(databaseName))
+        {
+            var book = new Book
+            {
+                Title = "Partial",
+                Author = "Someone",
+                DateAdded = DateTime.UtcNow,
+                Status = ReadingStatus.Completed,
+                CharactersRating = 5,
+                PlotRating = 5,
+                WritingStyleRating = 5,
+                PacingRating = 4,
+                WorldBuildingRating = 5
+                // AtmosphaereRating (genre-relevant for Fantasy) intentionally left null
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+
+            context.BookGenres.Add(new BookGenre { BookId = book.Id, GenreId = fantasyGenreId });
+            await context.SaveChangesAsync();
+        }
+
+        var service = CreateService(databaseName);
+        var snapshot = await service.GetSnapshotAsync();
+
+        snapshot.Missions.Single(m => m.Id == OnboardingMissionId.RateCompletedBookAll6)
+            .IsCompleted.Should().BeFalse();
+    }
+
     private static OnboardingService CreateService(string databaseName)
     {
         var contextFactory = new TestDbContextFactory(databaseName);

@@ -119,4 +119,33 @@ public static class GenreRatingMapping
 
         return AllCategories.Where(c => !relevant.Contains(c)).ToList();
     }
+
+    /// <summary>
+    /// Reads the rating value stored on the book for a given category.
+    /// </summary>
+    public static int? GetRatingValue(Book book, RatingCategory category) => category switch
+    {
+        RatingCategory.Characters => book.CharactersRating,
+        RatingCategory.Plot => book.PlotRating,
+        RatingCategory.WritingStyle => book.WritingStyleRating,
+        RatingCategory.SpiceLevel => book.SpiceLevelRating,
+        RatingCategory.Pacing => book.PacingRating,
+        RatingCategory.WorldBuilding => book.WorldBuildingRating,
+        RatingCategory.Spannung => book.SpannungRating,
+        RatingCategory.Humor => book.HumorRating,
+        RatingCategory.Informationsgehalt => book.InformationsgehaltRating,
+        RatingCategory.EmotionaleTiefe => book.EmotionaleTiefeRating,
+        RatingCategory.Atmosphaere => book.AtmosphaereRating,
+        _ => null
+    };
+
+    /// <summary>
+    /// True when every rating category relevant to the book's genres has a value.
+    /// Mirrors the categories shown as "primary" in the rating UI.
+    /// </summary>
+    public static bool IsFullyRated(Book book, IEnumerable<Guid>? genreIds)
+    {
+        IReadOnlySet<RatingCategory> relevant = GetRelevantCategories(genreIds);
+        return relevant.All(c => GetRatingValue(book, c).HasValue);
+    }
 }

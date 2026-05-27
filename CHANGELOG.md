@@ -14,6 +14,22 @@ Versionsschema:
 
 ## [Unveröffentlicht]
 
+### Geändert
+- Startgeschwindigkeit verbessert: die veraltete Legacy-Datenbank-Migration (Pfad `Personal` → `LocalApplicationData`) wurde vom Startpfad entfernt. Sie lief bei jedem Kaltstart synchron und durchsuchte das Dateisystem, obwohl alle Bestandsdaten längst am aktuellen Speicherort liegen. Bestehende Daten sind nicht betroffen.
+
+## [0.11.2]
+
+### Hinzugefügt
+- Alle Missions- und Feature-Atlas-Texte auf der "Einstieg"-Seite vollständig lokalisiert (Titel, Beschreibungen, CTA-Labels, Badges, Notizen).
+
+### Geändert
+- Bewertungskategorien werden in Buchdetails und Statistiken jetzt über die aktive App-Sprache lokalisiert.
+
+### Behoben
+- Onboarding-Mission "Buch vollständig bewerten" wurde nach dem Umstieg auf genre-abhängige Bewertungskategorien nicht mehr abgeschlossen, weil sie weiterhin die alten 6 festen Felder (inkl. Spice Level) prüfte. Sie gilt jetzt als erfüllt, sobald ein abgeschlossenes Buch in allen für sein Genre angezeigten Kategorien bewertet ist.
+
+## [0.11.1]
+
 ### Hinzugefügt
 - Deutsche Sprachunterstützung inkl. Sprachauswahl in den Einstellungen (Englisch + Deutsch). Beim allerersten Start wird die System-Sprache automatisch erkannt; ein späterer Sprachwechsel startet die App neu, damit die neue Sprache überall greift.
 - Neue Sektion "🌐 Sprache" in den Einstellungen mit Dropdown, das zwischen allen unterstützten Sprachen umschalten lässt.

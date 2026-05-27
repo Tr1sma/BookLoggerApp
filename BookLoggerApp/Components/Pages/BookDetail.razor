@@ -559,7 +559,7 @@
     {
         var genreIds = ViewModel.BookGenres.Select(g => g.Id);
         var relevant = GenreRatingMapping.GetRelevantCategories(genreIds);
-        return RatingCategoryInfo.GetAllCategories()
+        return RatingCategoryInfo.GetAllCategories(L)
             .Where(c => relevant.Contains(c.Category))
             .ToList();
     }
@@ -568,7 +568,7 @@
     {
         var genreIds = ViewModel.BookGenres.Select(g => g.Id);
         var additional = GenreRatingMapping.GetAdditionalCategories(genreIds);
-        return RatingCategoryInfo.GetAllCategories()
+        return RatingCategoryInfo.GetAllCategories(L)
             .Where(c => additional.Contains(c.Category))
             .ToList();
     }
