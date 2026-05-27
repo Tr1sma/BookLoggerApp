@@ -353,7 +353,6 @@ The solution follows a layered architecture with four main projects:
    - Entry point: `MauiProgram.cs` for DI configuration
    - MAUI-specific services in `Services/` (permissions, scanner, file picker, migration, timer state)
    - Platform-specific: `CustomWebChromeClient` (Android) for camera/WebView permissions
-   - `DatabaseMigrationHelper` — handles legacy database path migration (from `Personal` to `LocalApplicationData`)
    - JavaScript interop files in `wwwroot/js/` (see JS Interop section)
 
 4. **BookLoggerApp.Tests** - Test project (net10.0)
@@ -387,7 +386,6 @@ The solution follows a layered architecture with four main projects:
 - ViewModels: **transient**
 - Validators: **transient**
 - Registration methods: `RegisterDatabase()`, `RegisterRepositories()`, `RegisterBusinessServices()`, `RegisterViewModels()`, `RegisterValidators()`
-- `DatabaseMigrationHelper.MigrateIfNecessary()` runs synchronously inside `RegisterDatabase()` before DbContext registration
 
 **Service Layer:**
 - Service interfaces in `BookLoggerApp.Core/Services/Abstractions/`
