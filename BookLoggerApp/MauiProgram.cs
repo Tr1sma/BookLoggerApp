@@ -143,9 +143,6 @@ public static class MauiProgram
     {
         var dbPath = PlatformsDbPath.GetDatabasePath();
 
-        // Perform migration check (XP-based recovery)
-        DatabaseMigrationHelper.MigrateIfNecessary(dbPath);
-
         // Shared interceptor that logs SQL commands to InitLog while migrations run.
         // Static-toggle gated so it doesn't spam during normal operation. Registered
         // ONLY on the factory's options (not on AddDbContext) so each command fires

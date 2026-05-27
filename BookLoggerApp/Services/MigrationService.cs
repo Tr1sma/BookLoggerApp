@@ -1,13 +1,14 @@
 using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Services.Abstractions;
-using BookLoggerApp.Infrastructure.Data;
 using System.IO;
+using System.Text;
 using Microsoft.Maui.Storage;
 
 namespace BookLoggerApp.Services;
 
 public class MigrationService : IMigrationService
 {
+    private static readonly StringBuilder MemoryLog = new();
     private readonly string _logFilePath;
 
     public MigrationService()
@@ -17,8 +18,8 @@ public class MigrationService : IMigrationService
 
     public string GetMigrationLog()
     {
-        // Combine memory log (from startup helper), DB-init log and persistent log
-        var memoryLog = DatabaseMigrationHelper.Log.ToString();
+        // Combine in-memory service log, DB-init log and persistent log
+        var memoryLog = MemoryLog.ToString();
         string initLog;
         lock (DatabaseInitializationHelper.InitLog)
         {
@@ -28,7 +29,7 @@ public class MigrationService : IMigrationService
 
         return
             "--- DB Init Log (Current Session) ---\n" + initLog + "\n\n" +
-            "--- Memory Log (Legacy Path Migration) ---\n" + memoryLog + "\n\n" +
+            "--- Migration Service Log ---\n" + memoryLog + "\n\n" +
             "--- Persistent Log (History) ---\n" + fileLog;
     }
 
@@ -38,7 +39,7 @@ public class MigrationService : IMigrationService
         System.Diagnostics.Debug.WriteLine(logMsg);
         
         // Update memory log
-        DatabaseMigrationHelper.Log.AppendLine(logMsg);
+        MemoryLog.AppendLine(logMsg);
         
         // Update persistent log
         try

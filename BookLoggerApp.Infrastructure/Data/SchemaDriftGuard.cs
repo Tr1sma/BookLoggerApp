@@ -10,9 +10,8 @@ namespace BookLoggerApp.Infrastructure.Data;
 /// but the corresponding columns or tables are absent from the SQLite DB. This was
 /// originally observed on V10 upgrades where <c>AnalyticsEnabled</c> and other
 /// AppSettings columns were missing even after <c>MigrateAsync()</c> ran without
-/// throwing — most likely caused by a crashed prior migration or the
-/// <c>DatabaseMigrationHelper</c> swapping in an older DB file whose history table was
-/// out of sync with its actual schema.
+/// throwing — most likely caused by a crashed prior migration that left the history
+/// table out of sync with the actual schema.
 ///
 /// In V10.0.6 the same failure mode was observed for the entire
 /// <c>20260422123532_AddPremiumSubscriptionSystem</c> migration. When that migration's

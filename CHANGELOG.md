@@ -12,6 +12,11 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
+## [Unveröffentlicht]
+
+### Geändert
+- Startgeschwindigkeit verbessert: die veraltete Legacy-Datenbank-Migration (Pfad `Personal` → `LocalApplicationData`) wurde vom Startpfad entfernt. Sie lief bei jedem Kaltstart synchron und durchsuchte das Dateisystem, obwohl alle Bestandsdaten längst am aktuellen Speicherort liegen. Bestehende Daten sind nicht betroffen.
+
 ## [0.11.2]
 
 ### Hinzugefügt
