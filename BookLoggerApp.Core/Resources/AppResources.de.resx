@@ -491,10 +491,10 @@
     <value>Buch hinzufügen</value>
   </data>
   <data name="GettingStarted_Mission_LogFirstSession_Title" xml:space="preserve">
-    <value>Erfasse deine erste Lesesession</value>
+    <value>Erfasse deine erste Lesesitzung</value>
   </data>
   <data name="GettingStarted_Mission_LogFirstSession_Description" xml:space="preserve">
-    <value>Starte oder beende eine Lesesession, damit BookHeart Zeit, Seiten, XP und Streaks verfolgen kann.</value>
+    <value>Starte oder beende eine Lesesitzung, damit BookHeart Zeit, Seiten, XP und Streaks verfolgen kann.</value>
   </data>
   <data name="GettingStarted_Mission_LogFirstSession_Cta" xml:space="preserve">
     <value>Bücherregal öffnen</value>
