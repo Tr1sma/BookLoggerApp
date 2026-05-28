@@ -1,10 +1,10 @@
 # BookHeart – Privacy Policy
 
-**Last updated:** April 2026
+**Last updated:** May 2026
 
 ## Overview
 
-BookHeart is an offline-first book management app. Your data is stored exclusively locally on your device and is never transmitted to our servers at any time. We do not collect, store, or share any personal data.
+BookHeart is an offline-first book management app. Your data is stored exclusively locally on your device and is never transmitted to my servers at any time. I do not collect, store, or share any personal data.
 
 ## Data Storage
 
@@ -48,11 +48,11 @@ If you have any questions about this privacy policy, you can open an issue in ou
 
 # BookHeart – Datenschutzerklärung
 
-**Zuletzt aktualisiert:** April 2026
+**Zuletzt aktualisiert:** May 2026
 
 ## Überblick
 
-BookHeart ist eine Offline-first-App zur Buchverwaltung. Ihre Daten werden ausschließlich lokal auf Ihrem Gerät gespeichert und zu keinem Zeitpunkt an unsere Server übermittelt. Wir erheben, speichern oder teilen keinerlei personenbezogene Daten.
+BookHeart ist eine Offline-first-App zur Buchverwaltung. Ihre Daten werden ausschließlich lokal auf Ihrem Gerät gespeichert und zu keinem Zeitpunkt an meine Server übermittelt. Ich erheben, speichern oder teilen keinerlei personenbezogene Daten.
 
 ## Datenspeicherung
 
