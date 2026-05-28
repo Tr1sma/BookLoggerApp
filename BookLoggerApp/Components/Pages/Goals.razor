@@ -147,10 +147,10 @@
 
 @if (showDeleteConfirmation)
 {
-    <div class="modal-overlay" @onclick="CancelDelete">
+    <div class="modal-overlay delete-confirm-overlay" @onclick="CancelDelete">
         <div class="modal-content" @onclick:stopPropagation="true">
             <h3>@L["Goals_Delete_Title"]</h3>
-            <p>@L["Goals_Delete_Confirm", ViewModel.NewGoal?.Title ?? string.Empty]</p>
+            <p>@L["Goals_Delete_Confirm", _pendingDeleteGoalTitle]</p>
             <div class="modal-actions">
                 <button class="btn btn-danger" @onclick="ConfirmDelete">@L["Common_Delete"]</button>
                 <button class="btn btn-secondary" @onclick="CancelDelete">@L["Common_Cancel"]</button>
@@ -325,6 +325,9 @@
         align-items: center;
         z-index: 1000;
     }
+    .delete-confirm-overlay {
+        z-index: 2000;
+    }
     .modal-content {
         background: var(--card-bg, #fff);
         padding: 2rem;
@@ -488,6 +491,8 @@
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 
     private bool showDeleteConfirmation = false;
+    private Guid _pendingDeleteGoalId = Guid.Empty;
+    private string _pendingDeleteGoalTitle = "";
     private Func<Task<bool>>? _navBackHandler;
     private Func<Task<bool>>? _modalBackHandler;
     private Func<Task<bool>>? _excludeModalBackHandler;
@@ -628,6 +633,9 @@
 
     private void RequestDelete()
     {
+        if (ViewModel.NewGoal == null) return;
+        _pendingDeleteGoalId = ViewModel.NewGoal.Id;
+        _pendingDeleteGoalTitle = ViewModel.NewGoal.Title ?? "";
         RegisterDeleteModalHandler();
         showDeleteConfirmation = true;
         StateHasChanged();
@@ -647,10 +655,12 @@
 
     private async Task ConfirmDelete()
     {
-        if (ViewModel.NewGoal != null)
+        if (_pendingDeleteGoalId != Guid.Empty)
         {
-            await ViewModel.DeleteGoalCommand.ExecuteAsync(ViewModel.NewGoal.Id);
+            await ViewModel.DeleteGoalCommand.ExecuteAsync(_pendingDeleteGoalId);
             WidgetUpdateService.NotifyDataChanged();
+            _pendingDeleteGoalId = Guid.Empty;
+            _pendingDeleteGoalTitle = "";
         }
 
         if (_deleteModalBackHandler != null)
@@ -689,6 +699,8 @@
             _deleteModalBackHandler = null;
         }
         showDeleteConfirmation = false;
+        _pendingDeleteGoalId = Guid.Empty;
+        _pendingDeleteGoalTitle = "";
         StateHasChanged();
     }
 

@@ -11,6 +11,11 @@ Versionsschema:
 - `V1.0.0` – Erster öffentlicher Play-Store-Release
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
+## [0.11.5]
+
+### Behoben
+- Ziel-Löschen aus dem Bearbeitungs-Modal: Bestätigungsdialog wurde hinter dem Modal verdeckt (gleicher z-index), Zielname fehlte im Dialog, und das Ziel wurde nach Bestätigung nicht gelöscht. Bestätigungsdialog hat nun z-index 2000 und speichert ID/Name vor Modal-Reset.
+
 ## [0.11.4]
 
 ### Behoben
