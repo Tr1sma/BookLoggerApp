@@ -15,6 +15,7 @@ Versionsschema:
 
 ### Behoben
 - Ziel-Löschen aus dem Bearbeitungs-Modal: Bestätigungsdialog wurde hinter dem Modal verdeckt (gleicher z-index), Zielname fehlte im Dialog, und das Ziel wurde nach Bestätigung nicht gelöscht. Bestätigungsdialog hat nun z-index 2000 und speichert ID/Name vor Modal-Reset.
+- Die Onboarding-Mission für die erste geloggte Lesezeit verwendet in der deutschen UI jetzt konsistent den Begriff „Lesesitzung“ statt „Lesesession“.
 
 ## [0.11.4]
 
