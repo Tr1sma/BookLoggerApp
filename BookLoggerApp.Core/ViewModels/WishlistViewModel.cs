@@ -89,6 +89,12 @@ public partial class WishlistViewModel : ViewModelBase
     {
         await ExecuteSafelyAsync(async () =>
         {
+            if (string.IsNullOrWhiteSpace(NewTitle) || string.IsNullOrWhiteSpace(NewAuthor))
+            {
+                SetError(Tr("Error_BookTitleAuthorRequired"));
+                return;
+            }
+
             var book = new Book
             {
                 Title = NewTitle.Trim(),
@@ -244,6 +250,7 @@ public partial class WishlistViewModel : ViewModelBase
         _lookupCoverUrl = null;
         _lookupDescription = null;
         LookupMessage = null;
+        ErrorMessage = null;
     }
 
     private static bool IsQuotaExceeded(HttpRequestException ex)

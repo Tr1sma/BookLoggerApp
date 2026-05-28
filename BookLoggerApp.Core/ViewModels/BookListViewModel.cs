@@ -40,6 +40,13 @@ public partial class BookListViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanAdd))]
     public async Task AddAsync()
     {
+        ClearError();
+        if (!CanAdd())
+        {
+            SetError(Tr("Error_BookTitleAuthorRequired"));
+            return;
+        }
+
         var book = new Book
         {
             Title = NewTitle.Trim(),
@@ -54,12 +61,24 @@ public partial class BookListViewModel : ViewModelBase
         NotifyCanExecuteChanged();
     }
 
-    private bool CanAdd() => !string.IsNullOrWhiteSpace(NewTitle);
+    private bool CanAdd() =>
+        !string.IsNullOrWhiteSpace(NewTitle) &&
+        !string.IsNullOrWhiteSpace(NewAuthor);
 
     private void NotifyCanExecuteChanged()
     {
         // Re-evaluate CanExecute for AddAsync
         AddAsyncCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnNewTitleChanged(string value)
+    {
+        NotifyCanExecuteChanged();
+    }
+
+    partial void OnNewAuthorChanged(string value)
+    {
+        NotifyCanExecuteChanged();
     }
 
     // Add this property to expose the RelayCommand instance for AddAsync

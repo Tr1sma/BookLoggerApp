@@ -78,9 +78,23 @@ public class BookListViewModelTests
     }
 
     [Fact]
+    public async Task AddAsync_MissingAuthor_SetsErrorAndDoesNotAdd()
+    {
+        _vm.NewTitle = "Brand New";
+        _vm.NewAuthor = "   ";
+
+        await _vm.AddAsync();
+
+        _vm.ErrorMessage.Should().NotBeNullOrEmpty();
+        _vm.Items.Should().BeEmpty();
+        await _bookService.DidNotReceive().AddAsync(Arg.Any<Book>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void AddCommand_EmptyTitle_CannotExecute()
     {
         _vm.NewTitle = "";
+        _vm.NewAuthor = "Somebody";
 
         _vm.AddAsyncCommand.CanExecute(null).Should().BeFalse();
     }
@@ -89,6 +103,16 @@ public class BookListViewModelTests
     public void AddCommand_WhitespaceTitle_CannotExecute()
     {
         _vm.NewTitle = "   ";
+        _vm.NewAuthor = "Somebody";
+
+        _vm.AddAsyncCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void AddCommand_EmptyAuthor_CannotExecute()
+    {
+        _vm.NewTitle = "Brand New";
+        _vm.NewAuthor = "";
 
         _vm.AddAsyncCommand.CanExecute(null).Should().BeFalse();
     }
