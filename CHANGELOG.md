@@ -11,15 +11,16 @@ Versionsschema:
 - `V1.0.0` – Erster öffentlicher Play-Store-Release
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
-
-## [Unveröffentlicht]
-
-### Geändert
-- Startgeschwindigkeit verbessert: die veraltete Legacy-Datenbank-Migration (Pfad `Personal` → `LocalApplicationData`) wurde vom Startpfad entfernt. Sie lief bei jedem Kaltstart synchron und durchsuchte das Dateisystem, obwohl alle Bestandsdaten längst am aktuellen Speicherort liegen. Bestehende Daten sind nicht betroffen.
+## [0.11.4]
 
 ### Behoben
 - „Als Nächstes"-Missionstext im Erste-Schritte-Banner jetzt lokalisiert – statt dem englischen Rohtext erscheint der übersetzte Missionstitel.
 - Navbar-Eintrag für Dashboard zeigte auf Deutsch „Übersicht" statt dem korrekten englischen Begriff „Dashboard".
+
+## [0.11.3]
+
+### Geändert
+- Startgeschwindigkeit verbessert: die veraltete Legacy-Datenbank-Migration (Pfad `Personal` → `LocalApplicationData`) wurde vom Startpfad entfernt. Sie lief bei jedem Kaltstart synchron und durchsuchte das Dateisystem, obwohl alle Bestandsdaten längst am aktuellen Speicherort liegen. Bestehende Daten sind nicht betroffen.
 
 ## [0.11.2]
 
