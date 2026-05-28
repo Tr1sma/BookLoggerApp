@@ -90,6 +90,22 @@ public class WishlistViewModelTests
     }
 
     [Fact]
+    public async Task AddToWishlistAsync_MissingAuthor_SetsErrorAndDoesNotCallService()
+    {
+        _vm.NewTitle = "Dune";
+        _vm.NewAuthor = "   ";
+
+        await _vm.AddToWishlistCommand.ExecuteAsync(null);
+
+        _vm.ErrorMessage.Should().NotBeNullOrEmpty();
+        _vm.WishlistBooks.Should().BeEmpty();
+        await _wishlistService.DidNotReceive().AddToWishlistAsync(
+            Arg.Any<Book>(),
+            Arg.Any<WishlistInfo>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task LookupByIsbnAsync_EmptyIsbn_DoesNothing()
     {
         _vm.NewIsbn = "";
