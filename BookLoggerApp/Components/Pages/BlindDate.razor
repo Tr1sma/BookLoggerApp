@@ -43,7 +43,7 @@
     }
     else if (ViewModel.HasRevealed && ViewModel.RevealedBook is not null)
     {
-        <div class="blinddate-reveal">
+        <div class="blinddate-reveal reveal-@(ViewModel.RevealAnimation.ToString().ToLowerInvariant())">
             <div class="blinddate-reveal-card">
                 @for (int i = 0; i < 12; i++)
                 {
@@ -59,6 +59,13 @@
                     {
                         <span class="blinddate-no-cover">📖</span>
                     }
+                    @* Gift-wrap overlay — animates away (unwrap or burst) to reveal the cover *@
+                    <div class="blinddate-wrap-overlay">
+                        <div class="wrap-half wrap-left"></div>
+                        <div class="wrap-half wrap-right"></div>
+                        <div class="wrap-ribbon"></div>
+                        <div class="wrap-bow">🎀</div>
+                    </div>
                 </div>
                 <h2 class="blinddate-reveal-title">@ViewModel.RevealedBook.Title</h2>
                 <p class="blinddate-reveal-author">@ViewModel.RevealedBook.Author</p>
