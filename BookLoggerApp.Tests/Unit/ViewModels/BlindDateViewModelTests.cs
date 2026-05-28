@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -177,5 +178,34 @@ public class BlindDateViewModelTests
 
         _vm.HasRevealed.Should().BeFalse();
         _vm.RevealedBook.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Reveal_SetsAValidRevealAnimation()
+    {
+        SetupCandidates(BookWith("A"));
+        await _vm.LoadCommand.ExecuteAsync(null);
+
+        _vm.Reveal(_vm.ShownCards.Single());
+
+        _vm.RevealAnimation.Should().BeOneOf(BlindDateRevealAnimation.Unwrap, BlindDateRevealAnimation.Burst);
+    }
+
+    [Fact]
+    public async Task Reveal_RandomlyUsesBothAnimationVariants()
+    {
+        SetupCandidates(BookWith("A"));
+        await _vm.LoadCommand.ExecuteAsync(null);
+        var card = _vm.ShownCards.Single();
+
+        var seen = new HashSet<BlindDateRevealAnimation>();
+        for (int i = 0; i < 60; i++)
+        {
+            _vm.Reveal(card);
+            seen.Add(_vm.RevealAnimation);
+        }
+
+        // Over 60 draws both variants are essentially certain to appear.
+        seen.Should().Contain(new[] { BlindDateRevealAnimation.Unwrap, BlindDateRevealAnimation.Burst });
     }
 }

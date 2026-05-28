@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 
@@ -33,6 +34,10 @@ public partial class BlindDateViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _hasRevealed;
+
+    /// <summary>The animation variant for the current reveal (chosen at random per reveal).</summary>
+    [ObservableProperty]
+    private BlindDateRevealAnimation _revealAnimation;
 
     public BlindDateViewModel(IBlindDateService blindDateService)
     {
@@ -69,6 +74,10 @@ public partial class BlindDateViewModel : ViewModelBase
             return;
         }
 
+        // Pick one of the two reveal animations at random for variety.
+        RevealAnimation = Random.Shared.Next(2) == 0
+            ? BlindDateRevealAnimation.Unwrap
+            : BlindDateRevealAnimation.Burst;
         RevealedBook = card.Book;
         HasRevealed = true;
     }
