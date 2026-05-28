@@ -3198,4 +3198,49 @@
   <data name="Feature_FamilySharing_Description" xml:space="preserve">
     <value>Share your Premium subscription with up to 5 family members.</value>
   </data>
+  <data name="PageTitle_BlindDate" xml:space="preserve">
+    <value>Blind Date</value>
+  </data>
+  <data name="BlindDate_EntryButton" xml:space="preserve">
+    <value>Blind Date</value>
+  </data>
+  <data name="BlindDate_Title" xml:space="preserve">
+    <value>Blind Date with a Book</value>
+  </data>
+  <data name="BlindDate_Subtitle" xml:space="preserve">
+    <value>Pick by the vibes — the cover stays secret until you unwrap it.</value>
+  </data>
+  <data name="BlindDate_PickPrompt" xml:space="preserve">
+    <value>Which vibe speaks to you?</value>
+  </data>
+  <data name="BlindDate_Shuffle" xml:space="preserve">
+    <value>Shuffle</value>
+  </data>
+  <data name="BlindDate_CardHint" xml:space="preserve">
+    <value>Tap to unwrap</value>
+  </data>
+  <data name="BlindDate_RevealHeader" xml:space="preserve">
+    <value>Your blind date is…</value>
+  </data>
+  <data name="BlindDate_ViewBook" xml:space="preserve">
+    <value>View book</value>
+  </data>
+  <data name="BlindDate_PickAnother" xml:space="preserve">
+    <value>Pick another</value>
+  </data>
+  <data name="BlindDate_MysteryVibe" xml:space="preserve">
+    <value>A total mystery</value>
+  </data>
+  <data name="BlindDate_Empty_Title" xml:space="preserve">
+    <value>Nothing to unwrap yet</value>
+  </data>
+  <data name="BlindDate_Empty_Body" xml:space="preserve">
+    <value>Add books to your TBR or wishlist to start a blind date.</value>
+  </data>
+  <data name="BlindDate_Empty_Cta" xml:space="preserve">
+    <value>Go to bookshelf</value>
+  </data>
+  <data name="Error_FailedTo_LoadBlindDate" xml:space="preserve">
+    <value>Failed to load blind date</value>
+  </data>
 </root>

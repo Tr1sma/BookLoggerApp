@@ -11,6 +11,12 @@ Versionsschema:
 - `V1.0.0` – Erster öffentlicher Play-Store-Release
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
+
+## [Unveröffentlicht]
+
+### Hinzugefügt
+- „Blind Date mit einem Buch" (Sub-TBR Roulette): Ein neuer Button auf dem Bücherregal öffnet eine Roulette-Ansicht, die Cover und Titel ungelesener Bücher (TBR + Wishlist) verbirgt und stattdessen nur 3–4 Vibes (Tropes, ersatzweise das Genre) auf „verpackten" Karten zeigt. Man wählt nach den Vibes und packt das Buch per Animation aus. Alle UI-Texte sind in Deutsch und Englisch lokalisiert.
+
 ## [0.11.5]
 
 ### Behoben

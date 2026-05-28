@@ -1,0 +1,175 @@
+@page "/blind-date"
+@using BookLoggerApp.Core.ViewModels
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
+@using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Components.Shared
+@using Microsoft.Extensions.Localization
+@inject BlindDateViewModel ViewModel
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject IImageService ImageService
+@inject IStringLocalizer<AppResources> L
+@inherits BookLoggerApp.Components.ObservableComponentBase
+
+<PageTitle>@L["PageTitle_BlindDate"] - BookHeart</PageTitle>
+
+<div class="blinddate-container">
+    <div class="blinddate-hero">
+        <h1>🎁 @L["BlindDate_Title"]</h1>
+        <p class="blinddate-subtitle">@L["BlindDate_Subtitle"]</p>
+    </div>
+
+    @if (ViewModel.IsBusy)
+    {
+        <div class="loading-state">
+            <div class="loading-spinner"></div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+    {
+        <div class="error-state">
+            <p>@ViewModel.ErrorMessage</p>
+            <button class="btn btn-primary" @onclick="ReloadAsync">@L["Common_Retry"]</button>
+        </div>
+    }
+    else if (!ViewModel.HasCandidates)
+    {
+        <div class="blinddate-empty">
+            <div class="blinddate-empty-icon">📚</div>
+            <h2>@L["BlindDate_Empty_Title"]</h2>
+            <p>@L["BlindDate_Empty_Body"]</p>
+            <button class="btn btn-primary" @onclick="GoToBookshelf">@L["BlindDate_Empty_Cta"]</button>
+        </div>
+    }
+    else if (ViewModel.HasRevealed && ViewModel.RevealedBook is not null)
+    {
+        <div class="blinddate-reveal">
+            <div class="blinddate-reveal-card">
+                @for (int i = 0; i < 12; i++)
+                {
+                    <div class="confetti"></div>
+                }
+                <p class="blinddate-reveal-header">@L["BlindDate_RevealHeader"]</p>
+                <div class="blinddate-reveal-cover">
+                    @if (!string.IsNullOrEmpty(_revealCoverUrl))
+                    {
+                        <img src="@_revealCoverUrl" alt="@ViewModel.RevealedBook.Title" />
+                    }
+                    else
+                    {
+                        <span class="blinddate-no-cover">📖</span>
+                    }
+                </div>
+                <h2 class="blinddate-reveal-title">@ViewModel.RevealedBook.Title</h2>
+                <p class="blinddate-reveal-author">@ViewModel.RevealedBook.Author</p>
+                <div class="blinddate-reveal-actions">
+                    <button class="btn btn-primary" @onclick="ViewBook">@L["BlindDate_ViewBook"]</button>
+                    <button class="btn btn-secondary" @onclick="PickAnother">@L["BlindDate_PickAnother"]</button>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p class="blinddate-prompt">@L["BlindDate_PickPrompt"]</p>
+        <div class="blinddate-card-grid">
+            @foreach (var card in ViewModel.ShownCards)
+            {
+                <BlindDateCard Vibes="card.Vibes"
+                               IsGenreFallback="card.IsGenreFallback"
+                               OnPick="() => HandlePickAsync(card)" />
+            }
+        </div>
+        <div class="blinddate-shuffle">
+            <button class="btn btn-secondary" @onclick="Shuffle">🔀 @L["BlindDate_Shuffle"]</button>
+        </div>
+    }
+</div>
+
+@code {
+    private string? _revealCoverUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Observe(ViewModel);
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private async Task ReloadAsync()
+    {
+        _revealCoverUrl = null;
+        await ViewModel.LoadCommand.ExecuteAsync(null);
+    }
+
+    private async Task HandlePickAsync(BlindDateCandidate card)
+    {
+        ViewModel.Reveal(card);
+        await LoadRevealCoverAsync();
+    }
+
+    private void Shuffle()
+    {
+        _revealCoverUrl = null;
+        ViewModel.Shuffle();
+    }
+
+    private void PickAnother()
+    {
+        _revealCoverUrl = null;
+        ViewModel.PickAnother();
+    }
+
+    private void ViewBook()
+    {
+        if (ViewModel.RevealedBook is not null)
+        {
+            Navigation.NavigateTo($"/books/{ViewModel.RevealedBook.Id}");
+        }
+    }
+
+    private void GoToBookshelf()
+    {
+        Navigation.NavigateTo("/bookshelf");
+    }
+
+    private async Task LoadRevealCoverAsync()
+    {
+        _revealCoverUrl = null;
+        var book = ViewModel.RevealedBook;
+        if (book is null || string.IsNullOrEmpty(book.CoverImagePath))
+        {
+            return;
+        }
+
+        try
+        {
+            var coverPath = book.CoverImagePath;
+
+            // Remote URLs can be used directly.
+            if (coverPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                coverPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                _revealCoverUrl = coverPath;
+                return;
+            }
+
+            var fullPath = await ImageService.GetCoverImagePathAsync(book.Id);
+            if (string.IsNullOrEmpty(fullPath) || !System.IO.File.Exists(fullPath))
+            {
+                return;
+            }
+
+            var imageBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+            var base64 = Convert.ToBase64String(imageBytes);
+            var mimeType = fullPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                ? "image/png"
+                : "image/jpeg";
+            _revealCoverUrl = $"data:{mimeType};base64,{base64}";
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load blind date cover: {ex.Message}");
+            _revealCoverUrl = null;
+        }
+    }
+}
