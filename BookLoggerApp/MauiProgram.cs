@@ -229,6 +229,7 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IShelfService, BookLoggerApp.Infrastructure.Services.ShelfService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IDecorationService, BookLoggerApp.Infrastructure.Services.DecorationService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IWishlistService, BookLoggerApp.Infrastructure.Services.WishlistService>();
+        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IBlindDateService, BookLoggerApp.Infrastructure.Services.BlindDateService>();
 
         // Database initializer service — used by the UI to retry a failed DB init
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IDatabaseInitializer, BookLoggerApp.Infrastructure.Services.DatabaseInitializer>();
@@ -286,6 +287,7 @@ public static class MauiProgram
         builder.Services.AddTransient<DecorationShopViewModel>();
         builder.Services.AddTransient<UserProgressViewModel>();
         builder.Services.AddTransient<WishlistViewModel>();
+        builder.Services.AddTransient<BlindDateViewModel>();
         builder.Services.AddTransient<PaywallViewModel>();
         builder.Services.AddSingleton<AppStartupViewModel>();
     }

@@ -1,0 +1,31 @@
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
+
+<div class="blinddate-card" @onclick="HandlePick">
+    <div class="blinddate-card-wrap">
+        <div class="blinddate-card-ribbon-v"></div>
+        <div class="blinddate-card-ribbon-h"></div>
+        <div class="blinddate-card-bow">🎀</div>
+    </div>
+    <div class="blinddate-card-body">
+        <div class="blinddate-vibes @(IsGenreFallback ? "genre-fallback" : "")">
+            @foreach (var vibe in Vibes)
+            {
+                <span class="blinddate-vibe">@vibe</span>
+            }
+        </div>
+        <span class="blinddate-card-hint">@L["BlindDate_CardHint"]</span>
+    </div>
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<string> Vibes { get; set; } = new List<string>();
+    [Parameter] public bool IsGenreFallback { get; set; }
+    [Parameter] public EventCallback OnPick { get; set; }
+
+    private async Task HandlePick()
+    {
+        await OnPick.InvokeAsync();
+    }
+}

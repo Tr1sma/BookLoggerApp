@@ -1,0 +1,334 @@
+/* Blind Date with a Book (Sub-TBR Roulette) */
+
+/* Entry button on the bookshelf page */
+.blinddate-entry {
+    display: flex;
+    justify-content: center;
+    margin: 0.25rem 0 1rem;
+}
+
+.blinddate-entry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--gradient-warm);
+    color: var(--bg-primary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.blinddate-entry-btn:hover,
+.blinddate-entry-btn:active {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover), var(--glow);
+}
+
+.blinddate-container {
+    padding: 1.25rem 1rem 6rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.blinddate-hero {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.blinddate-hero h1 {
+    color: var(--text-primary);
+    margin: 0 0 0.4rem;
+}
+
+.blinddate-subtitle {
+    color: var(--text-secondary);
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.blinddate-prompt {
+    text-align: center;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* ---- Wrapped card grid ---- */
+
+.blinddate-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.blinddate-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 240px;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    animation: blindPop 0.4s ease both;
+    will-change: transform;
+}
+
+.blinddate-card:nth-child(2) {
+    animation-delay: 0.08s;
+}
+
+.blinddate-card:nth-child(3) {
+    animation-delay: 0.16s;
+}
+
+.blinddate-card:hover,
+.blinddate-card:active {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: var(--shadow-hover), var(--glow);
+}
+
+.blinddate-card-wrap {
+    position: relative;
+    height: 120px;
+    background-image:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0 12px, transparent 12px 24px),
+        var(--gradient-warm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.blinddate-card-ribbon-v {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 18px;
+    transform: translateX(-50%);
+    background: rgba(26, 20, 16, 0.55);
+}
+
+.blinddate-card-ribbon-h {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 18px;
+    transform: translateY(-50%);
+    background: rgba(26, 20, 16, 0.55);
+}
+
+.blinddate-card-bow {
+    position: relative;
+    z-index: 1;
+    font-size: 2.4rem;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+}
+
+.blinddate-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.blinddate-vibes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+}
+
+.blinddate-vibe {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.blinddate-vibes.genre-fallback .blinddate-vibe {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.blinddate-card-hint {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.blinddate-shuffle {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+/* ---- Reveal ---- */
+
+.blinddate-reveal {
+    display: flex;
+    justify-content: center;
+    animation: blindFadeIn 0.3s ease;
+}
+
+.blinddate-reveal-card {
+    position: relative;
+    overflow: visible;
+    width: 100%;
+    max-width: 360px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    background: var(--gradient-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-hover), var(--glow);
+    animation: blindUnwrap 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+}
+
+.blinddate-reveal-header {
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.blinddate-reveal-cover {
+    width: 150px;
+    height: 225px;
+    margin: 0 auto 1rem;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    animation: blindCoverIn 0.7s ease 0.25s both;
+}
+
+.blinddate-reveal-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.blinddate-no-cover {
+    font-size: 3rem;
+}
+
+.blinddate-reveal-title {
+    color: var(--text-primary);
+    margin: 0 0 0.25rem;
+}
+
+.blinddate-reveal-author {
+    color: var(--text-secondary);
+    margin: 0 0 1.5rem;
+}
+
+.blinddate-reveal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+/* ---- Empty / loading / error ---- */
+
+.blinddate-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+.blinddate-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+}
+
+.blinddate-empty h2 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.blinddate-empty p {
+    max-width: 360px;
+    margin: 0 auto 1.25rem;
+}
+
+.blinddate-container .loading-state,
+.blinddate-container .error-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+/* ---- Animations ---- */
+
+@keyframes blindPop {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes blindFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes blindUnwrap {
+    0% {
+        opacity: 0;
+        transform: scale(0.6) rotate(-4deg);
+    }
+
+    60% {
+        transform: scale(1.04) rotate(1deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0);
+    }
+}
+
+@keyframes blindCoverIn {
+    0% {
+        opacity: 0;
+        transform: rotateY(90deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: rotateY(0);
+    }
+}
