@@ -301,7 +301,7 @@
                             @if (book.WishlistInfo != null)
                             {
                                 <span class="wishlist-priority priority-@book.WishlistInfo.Priority.ToString().ToLower()">
-                                    @book.WishlistInfo.Priority
+                                    @book.WishlistInfo.Priority.LocalizedLabel(L)
                                 </span>
                                 @if (!string.IsNullOrEmpty(book.WishlistInfo.RecommendedBy))
                                 {

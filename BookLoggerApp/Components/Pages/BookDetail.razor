@@ -193,7 +193,7 @@
                     <div class="wishlist-meta-item">
                         <span class="book-meta-label">@L["BookDetail_Priority"]</span>
                         <span class="wishlist-priority priority-@ViewModel.Book.WishlistInfo.Priority.ToString().ToLower()">
-                            @GetPriorityLabel(ViewModel.Book.WishlistInfo.Priority)
+                            @ViewModel.Book.WishlistInfo.Priority.LocalizedLabel(L)
                         </span>
                     </div>
                     @if (!string.IsNullOrEmpty(ViewModel.Book.WishlistInfo.RecommendedBy))
@@ -580,14 +580,6 @@
         await ViewModel.UpdateRatingAsync(category, rating);
         await InvokeAsync(StateHasChanged);
     }
-    private string GetPriorityLabel(BookLoggerApp.Core.Enums.WishlistPriority priority) => priority switch
-    {
-        BookLoggerApp.Core.Enums.WishlistPriority.High => L["Priority_High"],
-        BookLoggerApp.Core.Enums.WishlistPriority.Medium => L["Priority_Medium"],
-        BookLoggerApp.Core.Enums.WishlistPriority.Low => L["Priority_Low"],
-        _ => L["Priority_Medium"]
-    };
-
     private async Task HandleMoveToLibrary()
     {
         if (ViewModel.Book == null) return;
