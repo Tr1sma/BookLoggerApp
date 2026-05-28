@@ -17,6 +17,9 @@ Versionsschema:
 ### Geändert
 - Startgeschwindigkeit verbessert: die veraltete Legacy-Datenbank-Migration (Pfad `Personal` → `LocalApplicationData`) wurde vom Startpfad entfernt. Sie lief bei jedem Kaltstart synchron und durchsuchte das Dateisystem, obwohl alle Bestandsdaten längst am aktuellen Speicherort liegen. Bestehende Daten sind nicht betroffen.
 
+### Behoben
+- Wunschlisten-Prioritäten werden in der Bücherregal-/Wunschlistenansicht jetzt korrekt in der aktiven App-Sprache angezeigt statt als englische Enum-Werte.
+
 ## [0.11.2]
 
 ### Hinzugefügt
