@@ -11,8 +11,19 @@ Versionsschema:
 - `V1.0.0` – Erster öffentlicher Play-Store-Release
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
+## [0.11.5]
 
-## [Unveröffentlicht]
+### Behoben
+- Ziel-Löschen aus dem Bearbeitungs-Modal: Bestätigungsdialog wurde hinter dem Modal verdeckt (gleicher z-index), Zielname fehlte im Dialog, und das Ziel wurde nach Bestätigung nicht gelöscht. Bestätigungsdialog hat nun z-index 2000 und speichert ID/Name vor Modal-Reset.
+- Die Onboarding-Mission für die erste geloggte Lesezeit verwendet in der deutschen UI jetzt konsistent den Begriff „Lesesitzung“ statt „Lesesession“.
+
+## [0.11.4]
+
+### Behoben
+- „Als Nächstes"-Missionstext im Erste-Schritte-Banner jetzt lokalisiert – statt dem englischen Rohtext erscheint der übersetzte Missionstitel.
+- Navbar-Eintrag für Dashboard zeigte auf Deutsch „Übersicht" statt dem korrekten englischen Begriff „Dashboard".
+
+## [0.11.3]
 
 ### Geändert
 - Startgeschwindigkeit verbessert: die veraltete Legacy-Datenbank-Migration (Pfad `Personal` → `LocalApplicationData`) wurde vom Startpfad entfernt. Sie lief bei jedem Kaltstart synchron und durchsuchte das Dateisystem, obwohl alle Bestandsdaten längst am aktuellen Speicherort liegen. Bestehende Daten sind nicht betroffen.
@@ -20,7 +31,6 @@ Versionsschema:
 ### Behoben
 - Wunschlisten-Prioritäten werden in der Bücherregal-/Wunschlistenansicht jetzt korrekt in der aktiven App-Sprache angezeigt statt als englische Enum-Werte.
 - Bücher/Wishlist-Einträge lassen sich über die Schnell-Hinzufügen- und Wishlist-Modal-Flows nicht mehr ohne Autor anlegen; der Pflichtfeld-Hinweis wird jetzt in beiden Wegen korrekt erzwungen.
-- Die Onboarding-Mission für die erste geloggte Lesezeit verwendet in der deutschen UI jetzt konsistent den Begriff „Lesesitzung“ statt „Lesesession“.
 
 ## [0.11.2]
 
