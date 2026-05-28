@@ -19,6 +19,7 @@ Versionsschema:
 
 ### Behoben
 - Wunschlisten-Prioritäten werden in der Bücherregal-/Wunschlistenansicht jetzt korrekt in der aktiven App-Sprache angezeigt statt als englische Enum-Werte.
+- Bücher/Wishlist-Einträge lassen sich über die Schnell-Hinzufügen- und Wishlist-Modal-Flows nicht mehr ohne Autor anlegen; der Pflichtfeld-Hinweis wird jetzt in beiden Wegen korrekt erzwungen.
 
 ## [0.11.2]
 
