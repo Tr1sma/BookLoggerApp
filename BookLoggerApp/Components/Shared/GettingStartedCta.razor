@@ -17,7 +17,7 @@
             <h2>@L["GettingStartedCta_CoreSteps", _snapshot.CompletedCoreCount, _snapshot.TotalCoreCount]</h2>
             @if (_snapshot.NextRecommendedMission != null)
             {
-                <p>@L["GettingStartedCta_NextUp", _snapshot.NextRecommendedMission.Title]</p>
+                <p>@L["GettingStartedCta_NextUp", _snapshot.NextRecommendedMission.TitleKey is not null ? L[_snapshot.NextRecommendedMission.TitleKey].Value : _snapshot.NextRecommendedMission.Title]</p>
             }
         </div>
 

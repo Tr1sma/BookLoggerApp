@@ -17,6 +17,10 @@ Versionsschema:
 ### Geändert
 - Startgeschwindigkeit verbessert: die veraltete Legacy-Datenbank-Migration (Pfad `Personal` → `LocalApplicationData`) wurde vom Startpfad entfernt. Sie lief bei jedem Kaltstart synchron und durchsuchte das Dateisystem, obwohl alle Bestandsdaten längst am aktuellen Speicherort liegen. Bestehende Daten sind nicht betroffen.
 
+### Behoben
+- „Als Nächstes"-Missionstext im Erste-Schritte-Banner jetzt lokalisiert – statt dem englischen Rohtext erscheint der übersetzte Missionstitel.
+- Navbar-Eintrag für Dashboard zeigte auf Deutsch „Übersicht" statt dem korrekten englischen Begriff „Dashboard".
+
 ## [0.11.2]
 
 ### Hinzugefügt
