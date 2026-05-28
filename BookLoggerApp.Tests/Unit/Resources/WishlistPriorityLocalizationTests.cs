@@ -3,6 +3,7 @@ using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Resources;
 using BookLoggerApp.Tests.TestHelpers;
 using FluentAssertions;
+using Xunit;
 
 namespace BookLoggerApp.Tests.Unit.Resources;
 
