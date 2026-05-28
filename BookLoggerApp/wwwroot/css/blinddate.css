@@ -231,8 +231,20 @@
     border-radius: var(--border-radius);
 }
 
-.blinddate-no-cover {
-    font-size: 3rem;
+/* No cover image → the book title is written into the cover box. */
+.blinddate-cover-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 7;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    padding: 0.85rem;
+    color: var(--text-primary);
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    line-height: 1.3;
+    text-align: center;
+    overflow-wrap: anywhere;
 }
 
 /* Gift-wrap overlay sitting on top of the cover; animated away on reveal. */
