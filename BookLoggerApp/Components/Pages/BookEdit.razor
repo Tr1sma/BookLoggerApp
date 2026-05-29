@@ -50,7 +50,51 @@
 
                 <div class="form-group">
                     <label for="title">@L["BookEdit_Title"] *</label>
-                    <input id="title" type="text" @bind="ViewModel.Book.Title" required maxlength="500" />
+                    <div class="title-input-group">
+                        <input id="title" type="text" @bind="ViewModel.Book.Title" required maxlength="500" />
+                        <button type="button"
+                                class="btn btn-info"
+                                title="@L["BookEdit_SearchByTitle"]"
+                                @onclick="HandleTitleSearch"
+                                disabled="@(ViewModel.IsSearchingTitle || string.IsNullOrWhiteSpace(ViewModel.Book?.Title))">
+                            @if (ViewModel.IsSearchingTitle)
+                            {
+                                <span>@L["Common_Loading"]</span>
+                            }
+                            else
+                            {
+                                <span>🔍 @L["BookEdit_SearchByTitle"]</span>
+                            }
+                        </button>
+                    </div>
+                    @if (ViewModel.TitleSearchResults.Count > 0)
+                    {
+                        <div class="title-search-results">
+                            <div class="title-search-results-header">
+                                <span>@L["Lookup_SelectResult"]</span>
+                                <button type="button" class="title-search-close"
+                                        @onclick="() => ViewModel.CloseTitleResultsCommand.Execute(null)"
+                                        aria-label="@L["Common_Close"]">✕</button>
+                            </div>
+                            @foreach (var result in ViewModel.TitleSearchResults)
+                            {
+                                <button type="button" class="title-search-result" @onclick="() => HandleSelectResult(result)">
+                                    @if (!string.IsNullOrEmpty(result.CoverImageUrl))
+                                    {
+                                        <img class="title-search-cover" src="@result.CoverImageUrl" alt="" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <div class="title-search-cover title-search-cover-empty">📖</div>
+                                    }
+                                    <div class="title-search-info">
+                                        <span class="title-search-title">@result.Title</span>
+                                        <span class="title-search-meta">@result.Author@(result.PublicationYear.HasValue ? $" · {result.PublicationYear}" : "")</span>
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                    }
                 </div>
 
                 <div class="form-group">
@@ -83,7 +127,7 @@
                     </div>
                     @if (!string.IsNullOrEmpty(ViewModel.LookupMessage))
                     {
-                        <div class="lookup-message @(ViewModel.LookupMessage.Contains("Error") || ViewModel.LookupMessage.Contains("No book") ? "error" : "success")">
+                        <div class="lookup-message @(ViewModel.LookupMessageIsError ? "error" : "success")">
                             @ViewModel.LookupMessage
                         </div>
                     }
@@ -747,6 +791,20 @@
     {
         await ViewModel.LookupByIsbnCommand.ExecuteAsync(null);
         // Reload cover preview after lookup (might have set a new cover URL)
+        await LoadCoverPreviewAsync();
+        StateHasChanged();
+    }
+
+    private async Task HandleTitleSearch()
+    {
+        await ViewModel.SearchByTitleCommand.ExecuteAsync(null);
+        StateHasChanged();
+    }
+
+    private async Task HandleSelectResult(BookMetadata result)
+    {
+        await ViewModel.SelectSearchResultCommand.ExecuteAsync(result);
+        // Reload cover preview after applying the picked result (might have set a new cover URL)
         await LoadCoverPreviewAsync();
         StateHasChanged();
     }

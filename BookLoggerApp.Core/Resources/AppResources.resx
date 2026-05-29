@@ -1059,6 +1059,9 @@
   <data name="BookEdit_AutoFill" xml:space="preserve">
     <value>Auto-fill</value>
   </data>
+  <data name="BookEdit_SearchByTitle" xml:space="preserve">
+    <value>Search by title</value>
+  </data>
   <data name="BookEdit_PublicationYear" xml:space="preserve">
     <value>Publication year</value>
   </data>
@@ -2417,6 +2420,15 @@
   </data>
   <data name="Lookup_Timeout" xml:space="preserve">
     <value>Request timed out. Please try again.</value>
+  </data>
+  <data name="Lookup_EnterTitleFirst" xml:space="preserve">
+    <value>Please enter a title first</value>
+  </data>
+  <data name="Lookup_NoResults" xml:space="preserve">
+    <value>No books found for this title</value>
+  </data>
+  <data name="Lookup_SelectResult" xml:space="preserve">
+    <value>Select the matching book</value>
   </data>
 <data name="Error_Generic" xml:space="preserve">
     <value>An error occurred</value>
