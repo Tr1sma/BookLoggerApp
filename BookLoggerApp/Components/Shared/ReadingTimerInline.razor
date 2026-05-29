@@ -7,6 +7,7 @@
 @inject IProgressService ProgressService
 @inject IBookService BookService
 @inject ITimerStateService TimerStateService
+@inject IReadingTimerNotificationService TimerNotification
 @inject IShareCardService ShareCardService
 @inject IImageService CoverImageService
 @inject IShareService ShareService
@@ -211,6 +212,7 @@
     protected override void OnInitialized()
     {
         TimerStateService.AppResumed += OnAppResumed;
+        TimerStateService.ExternalCommandReceived += OnExternalCommand;
     }
 
     protected override void OnParametersSet()
@@ -278,6 +280,8 @@
             ElapsedTime = state.PausedElapsed;
             IsRunning = false;
         }
+
+        UpdateTimerNotification();
     }
 
     private void OnAppResumed()
@@ -306,6 +310,51 @@
         });
     }
 
+    private void UpdateTimerNotification()
+    {
+        if (Book == null || !CurrentSessionId.HasValue || !StartTime.HasValue) return;
+
+        var data = new ReadingTimerNotificationData(
+            SessionId: CurrentSessionId.Value,
+            BookId: Book.Id,
+            BookTitle: Book.Title,
+            StartTimeUtc: StartTime.Value,
+            Elapsed: ElapsedTime,
+            IsRunning: IsRunning);
+
+        if (IsRunning)
+            TimerNotification.ShowRunning(data);
+        else
+            TimerNotification.ShowPaused(data);
+    }
+
+    /// <summary>
+    /// Applies a timer command relayed from the lock-screen notification.
+    /// Stop only pauses — finalizing needs the end page entered in this component.
+    /// </summary>
+    private void OnExternalCommand(ExternalTimerCommand command)
+    {
+        InvokeAsync(() =>
+        {
+            if (Book == null || !CurrentSessionId.HasValue) return;
+
+            switch (command)
+            {
+                case ExternalTimerCommand.Pause:
+                    if (IsRunning) HandlePause();
+                    break;
+                case ExternalTimerCommand.Resume:
+                    if (!IsRunning && ElapsedTime > TimeSpan.Zero) HandleResume();
+                    break;
+                case ExternalTimerCommand.Stop:
+                    if (IsRunning) HandlePause();
+                    break;
+            }
+
+            StateHasChanged();
+        });
+    }
+
     private async Task HandleStart()
     {
         if (Book == null) return;
@@ -322,6 +371,7 @@
             ElapsedTime = TimeSpan.Zero;
             StartTimer();
             PersistTimerState();
+            UpdateTimerNotification();
         }
         catch (Exception ex)
         {
@@ -335,6 +385,7 @@
         PausedTime = ElapsedTime;
         StopTimer();
         PersistTimerState();
+        UpdateTimerNotification();
     }
 
     private void HandleResume()
@@ -343,6 +394,7 @@
         IsRunning = true;
         StartTimer();
         PersistTimerState();
+        UpdateTimerNotification();
     }
 
     private async Task HandleSave()
@@ -351,6 +403,7 @@
 
         StopTimer();
         TimerStateService.ClearState();
+        TimerNotification.Hide();
 
         try
         {
@@ -413,6 +466,7 @@
     {
         StopTimer();
         TimerStateService.ClearState();
+        TimerNotification.Hide();
         var sessionId = CurrentSessionId;
         ResetTimer();
 
@@ -710,6 +764,7 @@
     public void Dispose()
     {
         TimerStateService.AppResumed -= OnAppResumed;
+        TimerStateService.ExternalCommandReceived -= OnExternalCommand;
         StopTimer();
     }
 }

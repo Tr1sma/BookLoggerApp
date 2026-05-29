@@ -2110,6 +2110,12 @@
   <data name="Settings_Notifications_DailyReminderDescription" xml:space="preserve">
     <value>Täglichen Anstoß zum Lesen erhalten</value>
   </data>
+  <data name="Settings_Notifications_LiveTimer" xml:space="preserve">
+    <value>Live-Lese-Timer</value>
+  </data>
+  <data name="Settings_Notifications_LiveTimerDescription" xml:space="preserve">
+    <value>Beim Lesen eine Sperrbildschirm-Benachrichtigung mit dem laufenden Timer anzeigen</value>
+  </data>
   <data name="Settings_Notifications_ReminderTime" xml:space="preserve">
     <value>Erinnerungszeit</value>
   </data>
@@ -2427,6 +2433,21 @@
   </data>
   <data name="Notification_Reminder_Title" xml:space="preserve">
     <value>Zeit zu lesen!</value>
+  </data>
+  <data name="Notification_Timer_Reading" xml:space="preserve">
+    <value>Liest</value>
+  </data>
+  <data name="Notification_Timer_Paused" xml:space="preserve">
+    <value>Pausiert</value>
+  </data>
+  <data name="Notification_Timer_Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Notification_Timer_Resume" xml:space="preserve">
+    <value>Fortsetzen</value>
+  </data>
+  <data name="Notification_Timer_Stop" xml:space="preserve">
+    <value>Stopp</value>
   </data>
   <data name="Notification_Reminder_Body" xml:space="preserve">
     <value>Vergiss nicht deine tägliche Lesesitzung</value>

@@ -31,6 +31,28 @@ public interface ITimerStateService
     /// Called by lifecycle hooks to notify that the app has resumed.
     /// </summary>
     void NotifyAppResumed();
+
+    /// <summary>
+    /// Raised when a timer command arrives from outside the in-app UI
+    /// (e.g. the user tapped Pause/Resume/Stop on the lock-screen notification).
+    /// The active timer component should apply it to its in-memory state.
+    /// </summary>
+    event Action<ExternalTimerCommand>? ExternalCommandReceived;
+
+    /// <summary>
+    /// Called by the platform notification layer to relay a timer command into the app.
+    /// </summary>
+    void NotifyExternalCommand(ExternalTimerCommand command);
+}
+
+/// <summary>
+/// A timer command originating from outside the in-app UI (the lock-screen notification).
+/// </summary>
+public enum ExternalTimerCommand
+{
+    Pause,
+    Resume,
+    Stop
 }
 
 /// <summary>

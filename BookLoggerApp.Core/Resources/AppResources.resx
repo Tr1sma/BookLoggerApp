@@ -2169,6 +2169,12 @@
   <data name="Settings_Notifications_DailyReminderDescription" xml:space="preserve">
     <value>Get a daily nudge to read</value>
   </data>
+  <data name="Settings_Notifications_LiveTimer" xml:space="preserve">
+    <value>Live reading timer</value>
+  </data>
+  <data name="Settings_Notifications_LiveTimerDescription" xml:space="preserve">
+    <value>Show a lock-screen notification with the running timer while you read</value>
+  </data>
   <data name="Settings_Notifications_ReminderTime" xml:space="preserve">
     <value>Reminder time</value>
   </data>
@@ -2486,6 +2492,21 @@
   </data>
   <data name="Notification_Reminder_Title" xml:space="preserve">
     <value>Time to Read!</value>
+  </data>
+  <data name="Notification_Timer_Reading" xml:space="preserve">
+    <value>Reading</value>
+  </data>
+  <data name="Notification_Timer_Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="Notification_Timer_Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Notification_Timer_Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="Notification_Timer_Stop" xml:space="preserve">
+    <value>Stop</value>
   </data>
   <data name="Notification_Reminder_Body" xml:space="preserve">
     <value>Don't forget your daily reading session</value>

@@ -249,6 +249,10 @@ public static class MauiProgram
         // Register Widget Update Service as Singleton (triggers Android widget refresh on data changes)
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService, BookLoggerApp.Services.WidgetUpdateService>();
 
+        // Live reading-timer lock-screen notification (Android foreground service) + deep-link bridge.
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IReadingTimerNotificationService, BookLoggerApp.Services.ReadingTimerNotificationService>();
+        builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IDeepLinkService, BookLoggerApp.Services.DeepLinkService>();
+
         RegisterAnalyticsServices(builder);
     }
 
@@ -277,7 +281,6 @@ public static class MauiProgram
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddTransient<BookshelfViewModel>();
         builder.Services.AddTransient<BookEditViewModel>();
-        builder.Services.AddTransient<ReadingViewModel>();
         builder.Services.AddTransient<GoalsViewModel>();
         builder.Services.AddTransient<StatsViewModel>();
         builder.Services.AddTransient<StatsTrendsViewModel>();

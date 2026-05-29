@@ -171,6 +171,19 @@
                         </div>
                     </div>
                 }
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <span class="setting-label">@L["Settings_Notifications_LiveTimer"]</span>
+                        <span class="setting-description">@L["Settings_Notifications_LiveTimerDescription"]</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox"
+                               checked="@ViewModel.Settings.LiveTimerNotificationEnabled"
+                               @onchange="@(async (ChangeEventArgs e) => await ViewModel.ToggleLiveTimerNotificationCommand.ExecuteAsync((bool)(e.Value ?? false)))" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
             }
         </section>
 
