@@ -426,7 +426,7 @@ The solution follows a layered architecture with four main projects:
 **ViewModels:**
 - Located in `BookLoggerApp.Core/ViewModels/`, all inherit `ViewModelBase`
 - Content: `BookListViewModel`, `BookDetailViewModel`, `BookEditViewModel`, `BookshelfViewModel`, `WishlistViewModel`, `ShelfItemViewModel`
-- Activity: `ReadingViewModel`, `DashboardViewModel`, `GoalsViewModel`, `StatsViewModel`, `StatsTrendsViewModel`, `StatsAnalysesViewModel`
+- Activity: `DashboardViewModel`, `GoalsViewModel`, `StatsViewModel`, `StatsTrendsViewModel`, `StatsAnalysesViewModel` (the reading-session timer lives in the `ReadingTimerInline` Blazor component, not a ViewModel)
 - Gamification: `PlantShopViewModel`, `DecorationShopViewModel`, `UserProgressViewModel`
 - App shell: `AppStartupViewModel`, `SettingsViewModel`
 
@@ -441,7 +441,7 @@ The solution follows a layered architecture with four main projects:
 ### Blazor UI Structure
 
 - Components in `BookLoggerApp/Components/`
-- Pages: `Books.razor`, `BookDetail.razor`, `BookEdit.razor`, `Bookshelf.razor` (includes Wishlist), `Dashboard.razor`, `Reading.razor`, `Goals.razor`, `Stats.razor`, `Settings.razor`, `PlantShop.razor`, `GettingStarted.razor`
+- Pages: `Books.razor`, `BookDetail.razor`, `BookEdit.razor`, `Bookshelf.razor` (includes Wishlist), `Dashboard.razor`, `Goals.razor`, `Stats.razor`, `Settings.razor`, `PlantShop.razor`, `GettingStarted.razor`
 - Layout: `MainLayout.razor`, `NavMenu.razor`, `BottomNavBar.razor`
 - Shared components in `Components/Shared/` — reusable across pages:
   - Timer: `ReadingTimerInline.razor`, `QuickReadingTimer.razor` (share state via singleton `ITimerStateService`)

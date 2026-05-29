@@ -8,7 +8,6 @@
 @using BookLoggerApp.Components.Shared
 @using Microsoft.Extensions.Localization
 @inject BookDetailViewModel ViewModel
-@inject IProgressService ProgressService
 @inject IImageService ImageService
 @inject IWishlistService WishlistService
 @inject IShareService ShareService
@@ -463,33 +462,6 @@
         ReadingStatus.Wishlist => L["Status_Wishlist"],
         _ => string.Empty
     };
-
-    private async Task StartReadingSession()
-    {
-        if (ViewModel.Book == null) return;
-
-        try
-        {
-            // Create a new reading session
-            var session = await ProgressService.StartSessionAsync(ViewModel.Book.Id);
-
-            // Navigate to the reading page with the new session ID
-            Navigation.NavigateTo($"/reading/{session.Id}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to start reading session: {ex.Message}");
-            // Fallback: just add a quick session
-            await QuickAddProgress();
-        }
-    }
-
-    private async Task QuickAddProgress()
-    {
-        await ViewModel.AddSessionAsync(15);
-        await LoadBookDataAsync(); // Refresh
-        await InvokeAsync(StateHasChanged); // Force UI update
-    }
 
     private void NavigateToEdit()
     {
