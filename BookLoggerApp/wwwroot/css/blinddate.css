@@ -1,32 +1,22 @@
 /* Blind Date with a Book (Sub-TBR Roulette) */
 
-/* Entry button on the bookshelf page */
-.blinddate-entry {
-    display: flex;
-    justify-content: center;
-    margin: 0.25rem 0 1rem;
-}
-
-.blinddate-entry-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1.4rem;
+/* Compact entry button that lives at the right end of the bookshelf tab bar */
+.blinddate-tab-btn {
+    flex: 0 0 auto;
+    padding: 0.5rem 0.85rem;
+    background: transparent;
     border: none;
-    border-radius: 999px;
-    background: var(--gradient-warm);
-    color: var(--bg-primary);
-    font-weight: 700;
-    font-size: 0.95rem;
+    border-bottom: 3px solid transparent;
+    font-size: 1.25rem;
+    line-height: 1;
     cursor: pointer;
-    box-shadow: var(--shadow);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
-.blinddate-entry-btn:hover,
-.blinddate-entry-btn:active {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover), var(--glow);
+.blinddate-tab-btn:hover,
+.blinddate-tab-btn:active {
+    transform: scale(1.12);
+    background: rgba(212, 165, 116, 0.05);
 }
 
 .blinddate-container {
@@ -80,16 +70,31 @@
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
-    animation: blindPop 0.4s ease both;
+    animation: blindDeal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     will-change: transform;
 }
 
 .blinddate-card:nth-child(2) {
-    animation-delay: 0.08s;
+    animation-delay: 0.1s;
 }
 
 .blinddate-card:nth-child(3) {
-    animation-delay: 0.16s;
+    animation-delay: 0.2s;
+}
+
+/* Shuffle: gather the current cards out before the fresh set is dealt in. */
+.blinddate-card-grid.shuffling .blinddate-card {
+    animation: shuffleOut 0.4s ease both;
+    animation-delay: 0s;
+    pointer-events: none;
+}
+
+.blinddate-card-grid.shuffling .blinddate-card:nth-child(2) {
+    animation-delay: 0.07s;
+}
+
+.blinddate-card-grid.shuffling .blinddate-card:nth-child(3) {
+    animation-delay: 0.14s;
 }
 
 .blinddate-card:hover,
@@ -316,42 +321,67 @@
     gap: 0.6rem;
 }
 
-/* Book text + buttons fade in after the wrapping is gone (both variants). */
+/* Book text + buttons fade in only after the (longer) unwrap finishes. */
 .blinddate-reveal-title,
 .blinddate-reveal-author,
 .blinddate-reveal-actions {
-    animation: blindContentIn 0.4s ease 0.55s both;
+    animation: blindContentIn 0.5s ease 1.7s both;
 }
 
-/* === Variant 1: Geschenk auspacken (paper peels open, bow pops) === */
+/* Burst of light at the moment the cover is revealed. */
+.blinddate-reveal-cover::after {
+    content: "";
+    position: absolute;
+    inset: -35%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 238, 205, 0.85), rgba(255, 238, 205, 0) 70%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.reveal-unwrap .blinddate-reveal-cover::after {
+    animation: revealFlash 0.8s ease 1.25s both;
+}
+
+.reveal-burst .blinddate-reveal-cover::after {
+    animation: revealFlash 0.8s ease 1.05s both;
+}
+
+/* === Variant 1: Geschenk auspacken — anticipation, then slow 3D peel (~2.2s) === */
 .reveal-unwrap .blinddate-reveal-card {
-    animation: blindCardIn 0.4s ease both;
+    animation: blindCardIn 0.5s ease both;
+}
+
+/* 0–0.6s: the wrapped cover "breathes" to build anticipation before opening. */
+.reveal-unwrap .blinddate-wrap-overlay {
+    animation: wrapBreathe 0.6s ease both;
 }
 
 .reveal-unwrap .wrap-left {
-    animation: wrapOpenLeft 0.6s ease 0.15s both;
+    animation: wrapOpenLeft 1s cubic-bezier(0.5, 0, 0.3, 1) 0.6s both;
 }
 
 .reveal-unwrap .wrap-right {
-    animation: wrapOpenRight 0.6s ease 0.15s both;
+    animation: wrapOpenRight 1s cubic-bezier(0.5, 0, 0.3, 1) 0.6s both;
 }
 
 .reveal-unwrap .wrap-ribbon {
-    animation: blindFadeOut 0.3s ease 0.15s both;
+    animation: blindFadeOut 0.4s ease 0.65s both;
 }
 
 .reveal-unwrap .wrap-bow {
-    animation: bowPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.1s both;
+    animation: bowPop 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
 }
 
-/* === Variant 2: Shake & Burst (card shakes, wrapping bursts away) === */
+/* === Variant 2: Shake & Burst — long crescendo shake, then explosion (~1.6s) === */
 .reveal-burst .blinddate-reveal-card {
-    animation: blindShakeBurst 0.8s ease both;
+    animation: blindShakeBurst 1.6s ease both;
 }
 
 /* The whole wrapping (halves, ribbon, bow as children) bursts outward together. */
 .reveal-burst .blinddate-wrap-overlay {
-    animation: blindBurstAway 0.32s ease 0.4s both;
+    animation: blindBurstAway 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 1.05s both;
 }
 
 /* ---- Empty / loading / error ---- */
@@ -386,15 +416,34 @@
 
 /* ---- Animations ---- */
 
-@keyframes blindPop {
-    from {
+/* Cards are "dealt" in (used on load and after a shuffle). */
+@keyframes blindDeal {
+    0% {
         opacity: 0;
-        transform: translateY(12px) scale(0.96);
+        transform: translateY(-36px) rotate(-10deg) scale(0.8);
     }
 
-    to {
+    60% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0) rotate(3deg) scale(1.04);
+    }
+
+    100% {
+        opacity: 1;
+        transform: rotate(0) scale(1);
+    }
+}
+
+/* Cards spin/gather away when the shuffle button is pressed. */
+@keyframes shuffleOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-26px) rotate(16deg) scale(0.55);
     }
 }
 
@@ -442,71 +491,71 @@
     }
 }
 
-/* Variant 1 — paper flaps swing open in 3D */
-@keyframes wrapOpenLeft {
-    0% {
-        opacity: 1;
-        transform: rotateY(0deg);
-    }
+/* Variant 1 — gentle "breathe" to build anticipation before opening */
+@keyframes wrapBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
 
-    100% {
-        opacity: 0;
-        transform: rotateY(-118deg) translateX(-8%);
-    }
+/* Variant 1 — paper flaps swing wide open in 3D */
+@keyframes wrapOpenLeft {
+    0% { opacity: 1; transform: rotateY(0deg); }
+    70% { opacity: 1; }
+    100% { opacity: 0; transform: rotateY(-135deg) translateX(-10%); }
 }
 
 @keyframes wrapOpenRight {
-    0% {
-        opacity: 1;
-        transform: rotateY(0deg);
-    }
-
-    100% {
-        opacity: 0;
-        transform: rotateY(118deg) translateX(8%);
-    }
+    0% { opacity: 1; transform: rotateY(0deg); }
+    70% { opacity: 1; }
+    100% { opacity: 0; transform: rotateY(135deg) translateX(10%); }
 }
 
-/* Variant 1 — the bow pops up and away */
+/* Variant 1 — the bow wobbles with suspense, then flies up, spins and shrinks away */
 @keyframes bowPop {
-    0% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    35% {
-        opacity: 1;
-        transform: translate(-50%, -70%) scale(1.35);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -260%) scale(0.5);
-    }
+    0% { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
+    10% { transform: translate(-50%, -50%) rotate(-9deg) scale(1.06); }
+    20% { transform: translate(-50%, -50%) rotate(9deg) scale(1.06); }
+    30% { transform: translate(-50%, -50%) rotate(-7deg) scale(1.1); }
+    40% { transform: translate(-50%, -54%) rotate(0deg) scale(1.18); }
+    60% { opacity: 1; transform: translate(-50%, -110%) rotate(180deg) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -340%) rotate(430deg) scale(0.25); }
 }
 
-/* Variant 2 — tension shake, then a confident pop */
+/* Variant 2 — a long crescendo shake (subtle → violent), a beat, then a punch */
 @keyframes blindShakeBurst {
     0% { transform: translateX(0) scale(1); }
-    8% { transform: translateX(-7px) scale(1); }
-    16% { transform: translateX(7px) scale(1); }
-    24% { transform: translateX(-6px) scale(1); }
-    32% { transform: translateX(6px) scale(1); }
-    40% { transform: translateX(-3px) scale(1); }
-    48% { transform: translateX(0) scale(1); }
-    70% { transform: translateX(0) scale(1.07); }
+    6% { transform: translateX(-2px); }
+    12% { transform: translateX(2px); }
+    18% { transform: translateX(-3px); }
+    24% { transform: translateX(3px); }
+    30% { transform: translateX(-5px); }
+    36% { transform: translateX(5px); }
+    42% { transform: translateX(-7px); }
+    48% { transform: translateX(7px); }
+    54% { transform: translateX(-9px) scale(1.02); }
+    60% { transform: translateX(9px) scale(1.02); }
+    63% { transform: translateX(0) scale(1.03); }
+    67% { transform: translateX(0) scale(0.96); }
+    76% { transform: translateX(0) scale(1.13); }
     100% { transform: translateX(0) scale(1); }
 }
 
-/* Variant 2 — the wrapping bursts outward */
+/* Variant 2 — the wrapping explodes outward */
 @keyframes blindBurstAway {
     0% {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) rotate(0deg);
     }
 
     100% {
         opacity: 0;
-        transform: scale(1.7);
+        transform: scale(2.3) rotate(12deg);
     }
+}
+
+/* Burst of light when the cover is revealed (both variants) */
+@keyframes revealFlash {
+    0% { opacity: 0; transform: scale(0.4); }
+    25% { opacity: 0.9; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.6); }
 }

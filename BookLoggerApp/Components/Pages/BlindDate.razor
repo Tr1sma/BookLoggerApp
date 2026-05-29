@@ -45,7 +45,7 @@
     {
         <div class="blinddate-reveal reveal-@(ViewModel.RevealAnimation.ToString().ToLowerInvariant())">
             <div class="blinddate-reveal-card">
-                @for (int i = 0; i < 12; i++)
+                @for (int i = 0; i < 18; i++)
                 {
                     <div class="confetti"></div>
                 }
@@ -84,22 +84,25 @@
     else
     {
         <p class="blinddate-prompt">@L["BlindDate_PickPrompt"]</p>
-        <div class="blinddate-card-grid">
+        <div class="blinddate-card-grid @(_isShuffling ? "shuffling" : "")">
             @foreach (var card in ViewModel.ShownCards)
             {
-                <BlindDateCard Vibes="card.Vibes"
+                <BlindDateCard @key="(_shuffleNonce, card.Book.Id)"
+                               Vibes="card.Vibes"
                                IsGenreFallback="card.IsGenreFallback"
                                OnPick="() => HandlePickAsync(card)" />
             }
         </div>
         <div class="blinddate-shuffle">
-            <button class="btn btn-secondary" @onclick="Shuffle">🔀 @L["BlindDate_Shuffle"]</button>
+            <button class="btn btn-secondary" @onclick="Shuffle" disabled="@_isShuffling">🔀 @L["BlindDate_Shuffle"]</button>
         </div>
     }
 </div>
 
 @code {
     private string? _revealCoverUrl;
+    private bool _isShuffling;
+    private int _shuffleNonce;
 
     protected override async Task OnInitializedAsync()
     {
@@ -119,10 +122,25 @@
         await LoadRevealCoverAsync();
     }
 
-    private void Shuffle()
+    private async Task Shuffle()
     {
+        if (_isShuffling)
+        {
+            return;
+        }
+
+        // Play the "gather out" animation on the current cards…
+        _isShuffling = true;
+        StateHasChanged();
+        await Task.Delay(450);
+
+        // …then swap in a fresh set. Bumping the nonce changes each card's @key,
+        // so Blazor re-creates the DOM and the "deal in" animation replays.
         _revealCoverUrl = null;
         ViewModel.Shuffle();
+        _shuffleNonce++;
+        _isShuffling = false;
+        StateHasChanged();
     }
 
     private void PickAnother()
