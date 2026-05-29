@@ -1,10 +1,11 @@
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 
 namespace BookLoggerApp
 {
-    [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+    [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
     public class MainActivity : MauiAppCompatActivity
     {
         protected override void OnCreate(Bundle? savedInstanceState)
@@ -22,6 +23,72 @@ namespace BookLoggerApp
             System.Diagnostics.Debug.WriteLine("=== MainActivity: Registered AndroidX BackPressCallback ===");
 
             InitializeFirebase();
+
+            // Cold-start deep link (e.g. launched by tapping the reading-timer notification).
+            HandleTimerDeepLink(Intent);
+        }
+
+        protected override void OnNewIntent(Intent? intent)
+        {
+            base.OnNewIntent(intent);
+            // Keep getIntent() current and route the deep link while the app is already running.
+            Intent = intent;
+            HandleTimerDeepLink(intent);
+        }
+
+        private void HandleTimerDeepLink(Intent? intent)
+        {
+            var bookId = intent?.GetStringExtra(
+                BookLoggerApp.Platforms.Android.Services.ReadingTimerForegroundService.ExtraBookId);
+            if (string.IsNullOrEmpty(bookId))
+                return;
+
+            var services = Microsoft.Maui.IPlatformApplication.Current?.Services;
+
+            // Stop button: pause the running session first so the user lands on the book page
+            // with the timer stopped and the save UI ready (they confirm the page and save).
+            bool stopRequested = intent!.GetBooleanExtra(
+                BookLoggerApp.Platforms.Android.Services.ReadingTimerForegroundService.ExtraStopRequested, false);
+            if (stopRequested)
+            {
+                var timerState = services?.GetService<BookLoggerApp.Core.Services.Abstractions.ITimerStateService>();
+                PauseTimerForStop(timerState);
+                // Pause a currently-mounted inline timer immediately (no-op on cold start —
+                // the persisted paused state above drives the restore instead).
+                timerState?.NotifyExternalCommand(BookLoggerApp.Core.Services.Abstractions.ExternalTimerCommand.Pause);
+            }
+
+            var deepLink = services?.GetService<BookLoggerApp.Core.Services.Abstractions.IDeepLinkService>();
+            // Open the book's detail page (the inline reading timer lives there). DeepLinkService
+            // buffers the route until Routes.razor subscribes (cold start).
+            deepLink?.RequestNavigation($"/books/{bookId}");
+        }
+
+        /// <summary>
+        /// Converts a running persisted timer state to paused so the inline timer restores in
+        /// its stopped/save-ready state. No-op if nothing is running (already paused or none).
+        /// </summary>
+        private static void PauseTimerForStop(BookLoggerApp.Core.Services.Abstractions.ITimerStateService? timerState)
+        {
+            if (timerState is null)
+                return;
+
+            var state = timerState.LoadState();
+            if (state is null || !state.IsRunning)
+                return;
+
+            var elapsed = System.DateTime.UtcNow - state.StartTimeUtc;
+            if (elapsed < System.TimeSpan.Zero)
+                elapsed = System.TimeSpan.Zero;
+
+            timerState.SaveState(new BookLoggerApp.Core.Services.Abstractions.TimerStateData
+            {
+                SessionId = state.SessionId,
+                BookId = state.BookId,
+                StartTimeTicks = state.StartTimeTicks,
+                IsRunning = false,
+                PausedElapsedTicks = elapsed.Ticks
+            });
         }
 
         private void InitializeFirebase()
@@ -107,6 +174,19 @@ namespace BookLoggerApp
                 Description = "Goal completions, plant notifications"
             };
             notificationManager.CreateNotificationChannel(generalChannel);
+
+            // Reading timer: LOW importance (silent, no heads-up) but persistent and shown
+            // on the lock screen — the live reading-timer foreground-service notification.
+            var timerChannel = new Android.App.NotificationChannel(
+                "bookheart_timer",
+                GetString(Resource.String.timer_notif_channel_name),
+                Android.App.NotificationImportance.Low)
+            {
+                Description = GetString(Resource.String.timer_notif_channel_desc),
+                LockscreenVisibility = Android.App.NotificationVisibility.Public
+            };
+            timerChannel.SetShowBadge(false);
+            notificationManager.CreateNotificationChannel(timerChannel);
 
             System.Diagnostics.Debug.WriteLine("=== MainActivity: Notification channels created ===");
         }

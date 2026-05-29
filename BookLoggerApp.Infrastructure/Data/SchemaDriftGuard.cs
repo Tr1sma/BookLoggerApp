@@ -56,6 +56,8 @@ public static class SchemaDriftGuard
                 // V10 — AddPremiumSubscriptionSystem
                 new ExpectedColumn("CurrentTier",             "INTEGER NOT NULL DEFAULT 0"),
                 new ExpectedColumn("EntitlementExpiresAt",    "TEXT NULL"),
+                // AddLiveTimerNotificationSetting
+                new ExpectedColumn("LiveTimerNotificationEnabled", "INTEGER NOT NULL DEFAULT 1"),
             },
             SeedRowSqlIfJustCreated: null),
 

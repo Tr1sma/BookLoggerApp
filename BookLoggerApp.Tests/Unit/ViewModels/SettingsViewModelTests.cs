@@ -17,6 +17,7 @@ public class SettingsViewModelTests
     private readonly IFilePickerService _filePicker;
     private readonly IMigrationService _migration;
     private readonly INotificationService _notifications;
+    private readonly IReadingTimerNotificationService _timerNotification;
     private readonly IAppVersionService _appVersion;
     private readonly ILanguageService _language;
 
@@ -30,6 +31,7 @@ public class SettingsViewModelTests
         _filePicker = Substitute.For<IFilePickerService>();
         _migration = Substitute.For<IMigrationService>();
         _notifications = Substitute.For<INotificationService>();
+        _timerNotification = Substitute.For<IReadingTimerNotificationService>();
         _appVersion = Substitute.For<IAppVersionService>();
         _language = Substitute.For<ILanguageService>();
 
@@ -46,7 +48,7 @@ public class SettingsViewModelTests
 
     private SettingsViewModel CreateVm() => new(
         _importExport, _settingsProvider, _fileSaver, _share, _filePicker,
-        _migration, _notifications, _appVersion, _language);
+        _migration, _notifications, _timerNotification, _appVersion, _language);
 
     [Fact]
     public async Task LoadAsync_ReadsAppVersionFromService()
@@ -126,6 +128,57 @@ public class SettingsViewModelTests
         vm.Settings.NotificationsEnabled.Should().BeFalse();
         vm.Settings.ReadingRemindersEnabled.Should().BeFalse();
         await _notifications.Received(1).CancelReadingReminderAsync();
+    }
+
+    [Fact]
+    public async Task ToggleNotificationsAsync_Disabled_HidesLiveTimerNotification()
+    {
+        var vm = CreateVm();
+
+        await vm.ToggleNotificationsCommand.ExecuteAsync(false);
+
+        _timerNotification.Received().Hide();
+    }
+
+    [Fact]
+    public async Task ToggleLiveTimerNotificationAsync_Disabled_PersistsAndHides()
+    {
+        var vm = CreateVm();
+        vm.Settings.LiveTimerNotificationEnabled = true;
+
+        await vm.ToggleLiveTimerNotificationCommand.ExecuteAsync(false);
+
+        vm.Settings.LiveTimerNotificationEnabled.Should().BeFalse();
+        _timerNotification.Received().Hide();
+        await _settingsProvider.Received().UpdateSettingsAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ToggleLiveTimerNotificationAsync_Enabled_PermissionGranted_PersistsWithoutHiding()
+    {
+        _notifications.RequestNotificationPermissionAsync().Returns(Task.FromResult(true));
+        var vm = CreateVm();
+        vm.Settings.LiveTimerNotificationEnabled = false;
+
+        await vm.ToggleLiveTimerNotificationCommand.ExecuteAsync(true);
+
+        vm.Settings.LiveTimerNotificationEnabled.Should().BeTrue();
+        _timerNotification.DidNotReceive().Hide();
+        await _settingsProvider.Received().UpdateSettingsAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ToggleLiveTimerNotificationAsync_Enabled_PermissionDenied_SetsErrorAndStaysOff()
+    {
+        _notifications.RequestNotificationPermissionAsync().Returns(Task.FromResult(false));
+        var vm = CreateVm();
+        vm.Settings.LiveTimerNotificationEnabled = false;
+
+        await vm.ToggleLiveTimerNotificationCommand.ExecuteAsync(true);
+
+        vm.Settings.LiveTimerNotificationEnabled.Should().BeFalse();
+        vm.ErrorMessage.Should().NotBeNull();
+        await _notifications.Received().RequestNotificationPermissionAsync();
     }
 
     [Fact]

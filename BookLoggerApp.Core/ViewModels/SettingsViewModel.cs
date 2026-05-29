@@ -15,6 +15,7 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IFilePickerService _filePickerService;
     private readonly IMigrationService _migrationService;
     private readonly INotificationService _notificationService;
+    private readonly IReadingTimerNotificationService _timerNotification;
     private readonly IAppVersionService _appVersionService;
     private readonly ILanguageService _languageService;
     private readonly IAnalyticsService? _analytics;
@@ -28,6 +29,7 @@ public partial class SettingsViewModel : ViewModelBase
         IFilePickerService filePickerService,
         IMigrationService migrationService,
         INotificationService notificationService,
+        IReadingTimerNotificationService timerNotification,
         IAppVersionService appVersionService,
         ILanguageService languageService,
         IAnalyticsService? analytics = null)
@@ -39,6 +41,7 @@ public partial class SettingsViewModel : ViewModelBase
         _filePickerService = filePickerService;
         _migrationService = migrationService;
         _notificationService = notificationService;
+        _timerNotification = timerNotification;
         _appVersionService = appVersionService;
         _languageService = languageService;
         _analytics = analytics;
@@ -116,6 +119,39 @@ public partial class SettingsViewModel : ViewModelBase
             {
                 Settings.ReadingRemindersEnabled = false;
                 await _notificationService.CancelReadingReminderAsync();
+                // Master switch off → also remove any active live-timer notification.
+                _timerNotification.Hide();
+            }
+            await SaveSettingsInternalAsync();
+        }, Tr("Error_FailedTo_UpdateNotificationSettings"));
+    }
+
+    [RelayCommand]
+    public async Task ToggleLiveTimerNotificationAsync(bool enabled)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            if (enabled)
+            {
+                // Re-verify the OS notification permission — it may have been revoked in the
+                // system settings since the master toggle was enabled. Without it the
+                // lock-screen timer notification cannot be shown.
+                bool granted = await _notificationService.RequestNotificationPermissionAsync();
+                if (!granted)
+                {
+                    Settings.LiveTimerNotificationEnabled = false;
+                    OnPropertyChanged(nameof(Settings));
+                    SetError(Tr("Error_NotificationPermissionDenied"));
+                    await SaveSettingsInternalAsync();
+                    return;
+                }
+            }
+
+            Settings.LiveTimerNotificationEnabled = enabled;
+            if (!enabled)
+            {
+                // Remove the notification immediately if a session is currently running.
+                _timerNotification.Hide();
             }
             await SaveSettingsInternalAsync();
         }, Tr("Error_FailedTo_UpdateNotificationSettings"));
