@@ -3139,4 +3139,49 @@
   <data name="Feature_FamilySharing_Description" xml:space="preserve">
     <value>Teile dein Premium-Abo mit bis zu 5 Familienmitgliedern.</value>
   </data>
+  <data name="PageTitle_BlindDate" xml:space="preserve">
+    <value>Blind Date</value>
+  </data>
+  <data name="BlindDate_EntryButton" xml:space="preserve">
+    <value>Blind Date</value>
+  </data>
+  <data name="BlindDate_Title" xml:space="preserve">
+    <value>Blind Date mit einem Buch</value>
+  </data>
+  <data name="BlindDate_Subtitle" xml:space="preserve">
+    <value>Wähle nach den Vibes — das Cover bleibt geheim, bis du es auspackst.</value>
+  </data>
+  <data name="BlindDate_PickPrompt" xml:space="preserve">
+    <value>Welcher Vibe spricht dich an?</value>
+  </data>
+  <data name="BlindDate_Shuffle" xml:space="preserve">
+    <value>Neu mischen</value>
+  </data>
+  <data name="BlindDate_CardHint" xml:space="preserve">
+    <value>Zum Auspacken tippen</value>
+  </data>
+  <data name="BlindDate_RevealHeader" xml:space="preserve">
+    <value>Dein Blind Date ist…</value>
+  </data>
+  <data name="BlindDate_ViewBook" xml:space="preserve">
+    <value>Buch ansehen</value>
+  </data>
+  <data name="BlindDate_PickAnother" xml:space="preserve">
+    <value>Nochmal</value>
+  </data>
+  <data name="BlindDate_MysteryVibe" xml:space="preserve">
+    <value>Ein völliges Geheimnis</value>
+  </data>
+  <data name="BlindDate_Empty_Title" xml:space="preserve">
+    <value>Noch nichts zum Auspacken</value>
+  </data>
+  <data name="BlindDate_Empty_Body" xml:space="preserve">
+    <value>Füge Bücher zu deinem TBR oder deiner Wishlist hinzu, um ein Blind Date zu starten.</value>
+  </data>
+  <data name="BlindDate_Empty_Cta" xml:space="preserve">
+    <value>Zum Regal</value>
+  </data>
+  <data name="Error_FailedTo_LoadBlindDate" xml:space="preserve">
+    <value>Blind Date konnte nicht geladen werden</value>
+  </data>
 </root>
