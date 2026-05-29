@@ -1,0 +1,561 @@
+/* Blind Date with a Book (Sub-TBR Roulette) */
+
+/* Compact entry button that lives at the right end of the bookshelf tab bar */
+.blinddate-tab-btn {
+    flex: 0 0 auto;
+    padding: 0.5rem 0.85rem;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.blinddate-tab-btn:hover,
+.blinddate-tab-btn:active {
+    transform: scale(1.12);
+    background: rgba(212, 165, 116, 0.05);
+}
+
+.blinddate-container {
+    padding: 1.25rem 1rem 6rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.blinddate-hero {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.blinddate-hero h1 {
+    color: var(--text-primary);
+    margin: 0 0 0.4rem;
+}
+
+.blinddate-subtitle {
+    color: var(--text-secondary);
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.blinddate-prompt {
+    text-align: center;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* ---- Wrapped card grid ---- */
+
+.blinddate-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.blinddate-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 240px;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    animation: blindDeal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    will-change: transform;
+}
+
+.blinddate-card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.blinddate-card:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+/* Shuffle: gather the current cards out before the fresh set is dealt in. */
+.blinddate-card-grid.shuffling .blinddate-card {
+    animation: shuffleOut 0.4s ease both;
+    animation-delay: 0s;
+    pointer-events: none;
+}
+
+.blinddate-card-grid.shuffling .blinddate-card:nth-child(2) {
+    animation-delay: 0.07s;
+}
+
+.blinddate-card-grid.shuffling .blinddate-card:nth-child(3) {
+    animation-delay: 0.14s;
+}
+
+.blinddate-card:hover,
+.blinddate-card:active {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: var(--shadow-hover), var(--glow);
+}
+
+.blinddate-card-wrap {
+    position: relative;
+    height: 120px;
+    background-image:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0 12px, transparent 12px 24px),
+        var(--gradient-warm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.blinddate-card-ribbon-v {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 18px;
+    transform: translateX(-50%);
+    background: rgba(26, 20, 16, 0.55);
+}
+
+.blinddate-card-ribbon-h {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 18px;
+    transform: translateY(-50%);
+    background: rgba(26, 20, 16, 0.55);
+}
+
+.blinddate-card-bow {
+    position: relative;
+    z-index: 1;
+    font-size: 2.4rem;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+}
+
+.blinddate-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.blinddate-vibes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+}
+
+.blinddate-vibe {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.blinddate-vibes.genre-fallback .blinddate-vibe {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.blinddate-card-hint {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.blinddate-shuffle {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+/* ---- Reveal ---- */
+
+.blinddate-reveal {
+    display: flex;
+    justify-content: center;
+    animation: blindFadeIn 0.3s ease;
+}
+
+.blinddate-reveal-card {
+    position: relative;
+    overflow: visible;
+    width: 100%;
+    max-width: 360px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    background: var(--gradient-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-hover), var(--glow);
+}
+
+.blinddate-reveal-header {
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.blinddate-reveal-cover {
+    position: relative;
+    width: 150px;
+    height: 225px;
+    margin: 0 auto 1rem;
+    border-radius: var(--border-radius);
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    perspective: 900px;
+}
+
+.blinddate-reveal-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+}
+
+/* No cover image → the book title is written into the cover box. */
+.blinddate-cover-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 7;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    padding: 0.85rem;
+    color: var(--text-primary);
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    line-height: 1.3;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* Gift-wrap overlay sitting on top of the cover; animated away on reveal. */
+.blinddate-wrap-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--border-radius);
+    transform-style: preserve-3d;
+    perspective: 700px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.blinddate-wrap-overlay .wrap-half {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    background-image:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0 12px, transparent 12px 24px),
+        var(--gradient-warm);
+    backface-visibility: hidden;
+}
+
+.blinddate-wrap-overlay .wrap-left {
+    left: 0;
+    transform-origin: left center;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+}
+
+.blinddate-wrap-overlay .wrap-right {
+    right: 0;
+    transform-origin: right center;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.blinddate-wrap-overlay .wrap-ribbon {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 16px;
+    transform: translateX(-50%);
+    background: rgba(26, 20, 16, 0.55);
+}
+
+.blinddate-wrap-overlay .wrap-bow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 2.6rem;
+    transform: translate(-50%, -50%);
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+}
+
+.blinddate-reveal-title {
+    color: var(--text-primary);
+    margin: 0 0 0.25rem;
+}
+
+.blinddate-reveal-author {
+    color: var(--text-secondary);
+    margin: 0 0 1.5rem;
+}
+
+.blinddate-reveal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+/* Book text + buttons fade in only after the (longer) unwrap finishes. */
+.blinddate-reveal-title,
+.blinddate-reveal-author,
+.blinddate-reveal-actions {
+    animation: blindContentIn 0.5s ease 1.7s both;
+}
+
+/* Burst of light at the moment the cover is revealed. */
+.blinddate-reveal-cover::after {
+    content: "";
+    position: absolute;
+    inset: -35%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 238, 205, 0.85), rgba(255, 238, 205, 0) 70%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.reveal-unwrap .blinddate-reveal-cover::after {
+    animation: revealFlash 0.8s ease 1.25s both;
+}
+
+.reveal-burst .blinddate-reveal-cover::after {
+    animation: revealFlash 0.8s ease 1.05s both;
+}
+
+/* === Variant 1: Geschenk auspacken — anticipation, then slow 3D peel (~2.2s) === */
+.reveal-unwrap .blinddate-reveal-card {
+    animation: blindCardIn 0.5s ease both;
+}
+
+/* 0–0.6s: the wrapped cover "breathes" to build anticipation before opening. */
+.reveal-unwrap .blinddate-wrap-overlay {
+    animation: wrapBreathe 0.6s ease both;
+}
+
+.reveal-unwrap .wrap-left {
+    animation: wrapOpenLeft 1s cubic-bezier(0.5, 0, 0.3, 1) 0.6s both;
+}
+
+.reveal-unwrap .wrap-right {
+    animation: wrapOpenRight 1s cubic-bezier(0.5, 0, 0.3, 1) 0.6s both;
+}
+
+.reveal-unwrap .wrap-ribbon {
+    animation: blindFadeOut 0.4s ease 0.65s both;
+}
+
+.reveal-unwrap .wrap-bow {
+    animation: bowPop 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
+}
+
+/* === Variant 2: Shake & Burst — long crescendo shake, then explosion (~1.6s) === */
+.reveal-burst .blinddate-reveal-card {
+    animation: blindShakeBurst 1.6s ease both;
+}
+
+/* The whole wrapping (halves, ribbon, bow as children) bursts outward together. */
+.reveal-burst .blinddate-wrap-overlay {
+    animation: blindBurstAway 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 1.05s both;
+}
+
+/* ---- Empty / loading / error ---- */
+
+.blinddate-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+.blinddate-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+}
+
+.blinddate-empty h2 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.blinddate-empty p {
+    max-width: 360px;
+    margin: 0 auto 1.25rem;
+}
+
+.blinddate-container .loading-state,
+.blinddate-container .error-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+/* ---- Animations ---- */
+
+/* Cards are "dealt" in (used on load and after a shuffle). */
+@keyframes blindDeal {
+    0% {
+        opacity: 0;
+        transform: translateY(-36px) rotate(-10deg) scale(0.8);
+    }
+
+    60% {
+        opacity: 1;
+        transform: translateY(0) rotate(3deg) scale(1.04);
+    }
+
+    100% {
+        opacity: 1;
+        transform: rotate(0) scale(1);
+    }
+}
+
+/* Cards spin/gather away when the shuffle button is pressed. */
+@keyframes shuffleOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-26px) rotate(16deg) scale(0.55);
+    }
+}
+
+@keyframes blindFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes blindCardIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes blindContentIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes blindFadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+/* Variant 1 — gentle "breathe" to build anticipation before opening */
+@keyframes wrapBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Variant 1 — paper flaps swing wide open in 3D */
+@keyframes wrapOpenLeft {
+    0% { opacity: 1; transform: rotateY(0deg); }
+    70% { opacity: 1; }
+    100% { opacity: 0; transform: rotateY(-135deg) translateX(-10%); }
+}
+
+@keyframes wrapOpenRight {
+    0% { opacity: 1; transform: rotateY(0deg); }
+    70% { opacity: 1; }
+    100% { opacity: 0; transform: rotateY(135deg) translateX(10%); }
+}
+
+/* Variant 1 — the bow wobbles with suspense, then flies up, spins and shrinks away */
+@keyframes bowPop {
+    0% { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
+    10% { transform: translate(-50%, -50%) rotate(-9deg) scale(1.06); }
+    20% { transform: translate(-50%, -50%) rotate(9deg) scale(1.06); }
+    30% { transform: translate(-50%, -50%) rotate(-7deg) scale(1.1); }
+    40% { transform: translate(-50%, -54%) rotate(0deg) scale(1.18); }
+    60% { opacity: 1; transform: translate(-50%, -110%) rotate(180deg) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -340%) rotate(430deg) scale(0.25); }
+}
+
+/* Variant 2 — a long crescendo shake (subtle → violent), a beat, then a punch */
+@keyframes blindShakeBurst {
+    0% { transform: translateX(0) scale(1); }
+    6% { transform: translateX(-2px); }
+    12% { transform: translateX(2px); }
+    18% { transform: translateX(-3px); }
+    24% { transform: translateX(3px); }
+    30% { transform: translateX(-5px); }
+    36% { transform: translateX(5px); }
+    42% { transform: translateX(-7px); }
+    48% { transform: translateX(7px); }
+    54% { transform: translateX(-9px) scale(1.02); }
+    60% { transform: translateX(9px) scale(1.02); }
+    63% { transform: translateX(0) scale(1.03); }
+    67% { transform: translateX(0) scale(0.96); }
+    76% { transform: translateX(0) scale(1.13); }
+    100% { transform: translateX(0) scale(1); }
+}
+
+/* Variant 2 — the wrapping explodes outward */
+@keyframes blindBurstAway {
+    0% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(2.3) rotate(12deg);
+    }
+}
+
+/* Burst of light when the cover is revealed (both variants) */
+@keyframes revealFlash {
+    0% { opacity: 0; transform: scale(0.4); }
+    25% { opacity: 0.9; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.6); }
+}
