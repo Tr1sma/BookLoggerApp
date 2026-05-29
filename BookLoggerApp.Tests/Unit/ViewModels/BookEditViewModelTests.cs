@@ -212,6 +212,113 @@ public class BookEditViewModelTests
         _viewModel.Book.Author.Should().Be("Lookup Author");
         _viewModel.Book.Description.Should().Be("Lookup Desc");
         _viewModel.LookupMessage.Should().Contain("successfully");
+        _viewModel.LookupMessageIsError.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SearchByTitleAsync_Should_Populate_Results()
+    {
+        // Arrange
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+        _viewModel.Book!.Title = "The Hobbit";
+
+        var results = new List<BookMetadata>
+        {
+            new() { Title = "The Hobbit", Author = "J.R.R. Tolkien", PublicationYear = 1937 },
+            new() { Title = "The Hobbit (Illustrated)", Author = "J.R.R. Tolkien", PublicationYear = 2020 }
+        };
+        _lookupService.SearchBooksAsync(Arg.Any<string>()).Returns(results);
+
+        // Act
+        await _viewModel.SearchByTitleCommand.ExecuteAsync(null);
+
+        // Assert
+        _viewModel.TitleSearchResults.Should().HaveCount(2);
+        _viewModel.LookupMessageIsError.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SearchByTitleAsync_Should_Include_Author_In_Query()
+    {
+        // Arrange
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+        _viewModel.Book!.Title = "The Hobbit";
+        _viewModel.Book.Author = "Tolkien";
+        _lookupService.SearchBooksAsync(Arg.Any<string>()).Returns(new List<BookMetadata>());
+
+        // Act
+        await _viewModel.SearchByTitleCommand.ExecuteAsync(null);
+
+        // Assert
+        await _lookupService.Received(1).SearchBooksAsync(
+            Arg.Is<string>(q => q.Contains("The Hobbit") && q.Contains("Tolkien")),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SearchByTitleAsync_Should_Warn_When_Title_Empty()
+    {
+        // Arrange
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+        _viewModel.Book!.Title = "";
+
+        // Act
+        await _viewModel.SearchByTitleCommand.ExecuteAsync(null);
+
+        // Assert
+        _viewModel.LookupMessageIsError.Should().BeTrue();
+        _viewModel.TitleSearchResults.Should().BeEmpty();
+        await _lookupService.DidNotReceive().SearchBooksAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SearchByTitleAsync_Should_Report_No_Results()
+    {
+        // Arrange
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+        _viewModel.Book!.Title = "asldkfjaslkdfj";
+        _lookupService.SearchBooksAsync(Arg.Any<string>()).Returns(new List<BookMetadata>());
+
+        // Act
+        await _viewModel.SearchByTitleCommand.ExecuteAsync(null);
+
+        // Assert
+        _viewModel.TitleSearchResults.Should().BeEmpty();
+        _viewModel.LookupMessage.Should().Contain("No book");
+        _viewModel.LookupMessageIsError.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SelectSearchResultAsync_Should_Populate_Book_And_Clear_Results()
+    {
+        // Arrange
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+        _viewModel.Book!.Title = "The Hobbit";
+
+        var results = new List<BookMetadata>
+        {
+            new() { Title = "The Hobbit", Author = "J.R.R. Tolkien", PublicationYear = 1937 }
+        };
+        _lookupService.SearchBooksAsync(Arg.Any<string>()).Returns(results);
+        await _viewModel.SearchByTitleCommand.ExecuteAsync(null);
+
+        var chosen = new BookMetadata
+        {
+            Title = "Chosen Title",
+            Author = "Chosen Author",
+            Description = "Chosen Desc"
+        };
+
+        // Act
+        await _viewModel.SelectSearchResultCommand.ExecuteAsync(chosen);
+
+        // Assert
+        _viewModel.Book.Title.Should().Be("Chosen Title");
+        _viewModel.Book.Author.Should().Be("Chosen Author");
+        _viewModel.Book.Description.Should().Be("Chosen Desc");
+        _viewModel.TitleSearchResults.Should().BeEmpty();
+        _viewModel.LookupMessage.Should().Contain("successfully");
+        _viewModel.LookupMessageIsError.Should().BeFalse();
     }
 
     [Fact]

@@ -28,6 +28,13 @@ public class AppSettings
     public bool ReadingRemindersEnabled { get; set; } = false;
     public TimeSpan? ReminderTime { get; set; } // e.g., 20:00 daily
 
+    /// <summary>
+    /// Whether the live reading-timer lock-screen notification (Android foreground service)
+    /// is shown during a reading session. Gated by <see cref="NotificationsEnabled"/>.
+    /// Defaults to true so existing users with notifications on get it without opting in.
+    /// </summary>
+    public bool LiveTimerNotificationEnabled { get; set; } = true;
+
     // Backup
     public bool AutoBackupEnabled { get; set; } = false;
     public DateTime? LastBackupDate { get; set; }

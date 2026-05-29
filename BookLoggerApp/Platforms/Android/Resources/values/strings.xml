@@ -4,4 +4,10 @@
     <string name="widget_current_book_description">Shows your current book and reading progress</string>
     <string name="widget_reading_streak_description">Shows your current reading streak</string>
     <string name="widget_daily_goal_description">Shows your reading goal progress</string>
+
+    <!-- Live reading-timer notification channel. The channel name/description shown in the
+         Android system notification settings follow the device locale (like the widgets);
+         the notification body/actions use the in-app language passed from managed code. -->
+    <string name="timer_notif_channel_name">Reading Timer</string>
+    <string name="timer_notif_channel_desc">Live reading session timer</string>
 </resources>

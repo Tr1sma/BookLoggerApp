@@ -273,7 +273,7 @@ Der Streak-Bonus skaliert progressiv mit der Länge (siehe "Streak Bonus Formula
 
 ---
 
-## 🎮 Live XP Preview (ReadingViewModel)
+## 🎮 Live XP Preview (ReadingTimerInline)
 
 During an active reading session, users see an **estimated XP** that updates as they read:
 
@@ -421,7 +421,7 @@ Total Coins:                        = 425
 - **XpCalculator**: `BookLoggerApp.Core/Helpers/XpCalculator.cs`
 - **ProgressionService**: `BookLoggerApp.Infrastructure/Services/ProgressionService.cs`
 - **ProgressService**: `BookLoggerApp.Infrastructure/Services/ProgressService.cs`
-- **ReadingViewModel**: `BookLoggerApp.Core/ViewModels/ReadingViewModel.cs`
+- **ReadingTimerInline** (live XP preview during a session): `BookLoggerApp/Components/Shared/ReadingTimerInline.razor`
 - **StatsViewModel**: `BookLoggerApp.Core/ViewModels/StatsViewModel.cs` (Level overview calculations)
 
 ---
