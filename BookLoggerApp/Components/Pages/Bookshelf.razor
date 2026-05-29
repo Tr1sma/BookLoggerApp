@@ -46,13 +46,9 @@
                 <span class="wishlist-count-badge">@WishlistVM.WishlistCount</span>
             }
         </button>
-    </div>
-
-    <!-- Blind Date with a Book (Sub-TBR Roulette) entry -->
-    <div class="blinddate-entry">
-        <button class="blinddate-entry-btn" @onclick='() => Navigation.NavigateTo("/blind-date")'>
-            🎁 @L["BlindDate_EntryButton"]
-        </button>
+        <!-- Blind Date with a Book (Sub-TBR Roulette) — compact entry in the tab bar -->
+        <button class="blinddate-tab-btn" title="@L["BlindDate_EntryButton"]" aria-label="@L["BlindDate_EntryButton"]"
+                @onclick='() => Navigation.NavigateTo("/blind-date")'>🎁</button>
     </div>
 
     @if (activeTab == "shelves")
