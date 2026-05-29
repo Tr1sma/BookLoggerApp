@@ -1000,6 +1000,9 @@
   <data name="BookEdit_AutoFill" xml:space="preserve">
     <value>Automatisch ausfüllen</value>
   </data>
+  <data name="BookEdit_SearchByTitle" xml:space="preserve">
+    <value>Nach Titel suchen</value>
+  </data>
   <data name="BookEdit_PublicationYear" xml:space="preserve">
     <value>Erscheinungsjahr</value>
   </data>
@@ -2110,6 +2113,12 @@
   <data name="Settings_Notifications_DailyReminderDescription" xml:space="preserve">
     <value>Täglichen Anstoß zum Lesen erhalten</value>
   </data>
+  <data name="Settings_Notifications_LiveTimer" xml:space="preserve">
+    <value>Live-Lese-Timer</value>
+  </data>
+  <data name="Settings_Notifications_LiveTimerDescription" xml:space="preserve">
+    <value>Beim Lesen eine Sperrbildschirm-Benachrichtigung mit dem laufenden Timer anzeigen</value>
+  </data>
   <data name="Settings_Notifications_ReminderTime" xml:space="preserve">
     <value>Erinnerungszeit</value>
   </data>
@@ -2353,6 +2362,15 @@
   <data name="Lookup_Timeout" xml:space="preserve">
     <value>Zeitüberschreitung der Anfrage. Bitte erneut versuchen.</value>
   </data>
+  <data name="Lookup_EnterTitleFirst" xml:space="preserve">
+    <value>Bitte zuerst einen Titel eingeben</value>
+  </data>
+  <data name="Lookup_NoResults" xml:space="preserve">
+    <value>Keine Bücher für diesen Titel gefunden</value>
+  </data>
+  <data name="Lookup_SelectResult" xml:space="preserve">
+    <value>Wähle das passende Buch</value>
+  </data>
 <data name="Error_Generic" xml:space="preserve">
     <value>Ein Fehler ist aufgetreten</value>
   </data>
@@ -2427,6 +2445,21 @@
   </data>
   <data name="Notification_Reminder_Title" xml:space="preserve">
     <value>Zeit zu lesen!</value>
+  </data>
+  <data name="Notification_Timer_Reading" xml:space="preserve">
+    <value>Liest</value>
+  </data>
+  <data name="Notification_Timer_Paused" xml:space="preserve">
+    <value>Pausiert</value>
+  </data>
+  <data name="Notification_Timer_Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Notification_Timer_Resume" xml:space="preserve">
+    <value>Fortsetzen</value>
+  </data>
+  <data name="Notification_Timer_Stop" xml:space="preserve">
+    <value>Stopp</value>
   </data>
   <data name="Notification_Reminder_Body" xml:space="preserve">
     <value>Vergiss nicht deine tägliche Lesesitzung</value>
@@ -3138,5 +3171,50 @@
   </data>
   <data name="Feature_FamilySharing_Description" xml:space="preserve">
     <value>Teile dein Premium-Abo mit bis zu 5 Familienmitgliedern.</value>
+  </data>
+  <data name="PageTitle_BlindDate" xml:space="preserve">
+    <value>Blind Date</value>
+  </data>
+  <data name="BlindDate_EntryButton" xml:space="preserve">
+    <value>Blind Date</value>
+  </data>
+  <data name="BlindDate_Title" xml:space="preserve">
+    <value>Blind Date mit einem Buch</value>
+  </data>
+  <data name="BlindDate_Subtitle" xml:space="preserve">
+    <value>Wähle nach den Vibes — das Cover bleibt geheim, bis du es auspackst.</value>
+  </data>
+  <data name="BlindDate_PickPrompt" xml:space="preserve">
+    <value>Welcher Vibe spricht dich an?</value>
+  </data>
+  <data name="BlindDate_Shuffle" xml:space="preserve">
+    <value>Neu mischen</value>
+  </data>
+  <data name="BlindDate_CardHint" xml:space="preserve">
+    <value>Zum Auspacken tippen</value>
+  </data>
+  <data name="BlindDate_RevealHeader" xml:space="preserve">
+    <value>Dein Blind Date ist…</value>
+  </data>
+  <data name="BlindDate_ViewBook" xml:space="preserve">
+    <value>Buch ansehen</value>
+  </data>
+  <data name="BlindDate_PickAnother" xml:space="preserve">
+    <value>Nochmal</value>
+  </data>
+  <data name="BlindDate_MysteryVibe" xml:space="preserve">
+    <value>Ein völliges Geheimnis</value>
+  </data>
+  <data name="BlindDate_Empty_Title" xml:space="preserve">
+    <value>Noch nichts zum Auspacken</value>
+  </data>
+  <data name="BlindDate_Empty_Body" xml:space="preserve">
+    <value>Füge Bücher zu deinem TBR oder deiner Wishlist hinzu, um ein Blind Date zu starten.</value>
+  </data>
+  <data name="BlindDate_Empty_Cta" xml:space="preserve">
+    <value>Zum Regal</value>
+  </data>
+  <data name="Error_FailedTo_LoadBlindDate" xml:space="preserve">
+    <value>Blind Date konnte nicht geladen werden</value>
   </data>
 </root>

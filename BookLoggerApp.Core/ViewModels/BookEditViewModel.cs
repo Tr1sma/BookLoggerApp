@@ -69,6 +69,23 @@ public partial class BookEditViewModel : ViewModelBase
     [ObservableProperty]
     private string? _lookupMessage;
 
+    /// <summary>
+    /// Drives the lookup-message styling (error vs. success). Set alongside every
+    /// <see cref="LookupMessage"/> assignment so the UI doesn't have to sniff the text.
+    /// </summary>
+    [ObservableProperty]
+    private bool _lookupMessageIsError;
+
+    [ObservableProperty]
+    private bool _isSearchingTitle;
+
+    /// <summary>
+    /// Candidate books from the title search; non-empty shows the picker. A title search
+    /// is inherently ambiguous (editions/similar titles), so the user picks the match.
+    /// </summary>
+    [ObservableProperty]
+    private List<BookMetadata> _titleSearchResults = new();
+
     [ObservableProperty]
     private bool _showBookCompletionCelebration;
 
@@ -311,6 +328,7 @@ public partial class BookEditViewModel : ViewModelBase
         if (Book == null || string.IsNullOrWhiteSpace(Book.ISBN))
         {
             LookupMessage = Tr("Lookup_EnterIsbnFirst");
+            LookupMessageIsError = true;
             return;
         }
 
@@ -324,85 +342,183 @@ public partial class BookEditViewModel : ViewModelBase
             if (metadata == null)
             {
                 LookupMessage = Tr("Lookup_NoBookFound");
+                LookupMessageIsError = true;
                 return;
             }
 
-            // Fill in the book data
-            if (!string.IsNullOrWhiteSpace(metadata.Title))
-                Book.Title = metadata.Title;
-
-            if (!string.IsNullOrWhiteSpace(metadata.Author))
-                Book.Author = metadata.Author;
-
-            if (!string.IsNullOrWhiteSpace(metadata.Publisher))
-                Book.Publisher = metadata.Publisher;
-
-            if (metadata.PublicationYear.HasValue)
-                Book.PublicationYear = metadata.PublicationYear;
-
-            if (!string.IsNullOrWhiteSpace(metadata.Language))
-                Book.Language = metadata.Language;
-
-            if (!string.IsNullOrWhiteSpace(metadata.Description))
-                Book.Description = metadata.Description;
-
-            if (metadata.PageCount.HasValue)
-                Book.PageCount = metadata.PageCount;
-
-            // Handle cover image
-            if (!string.IsNullOrWhiteSpace(metadata.CoverImageUrl))
-            {
-                // For new books (Id == Guid.Empty), we'll store the URL temporarily
-                // and download it when the book is saved
-                if (Book.Id == Guid.Empty)
-                {
-                    // Store the URL temporarily for display
-                    Book.CoverImagePath = metadata.CoverImageUrl;
-                }
-                else
-                {
-                    // For existing books, download and save the cover immediately
-                    var coverPath = await _imageService.SaveCoverImageFromUrlAsync(metadata.CoverImageUrl, Book.Id);
-                    if (coverPath != null)
-                    {
-                        Book.CoverImagePath = coverPath;
-                    }
-                }
-            }
-
-            // Handle genres/categories
-            if (metadata.Categories != null && metadata.Categories.Count > 0)
-            {
-                await MapCategoriesToGenresAsync(metadata.Categories);
-            }
+            await ApplyMetadataToBookAsync(metadata);
 
             LookupMessage = Tr("Lookup_LoadedSuccess");
-        }
-        catch (HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
-        {
-            LookupMessage = Tr("Lookup_NoInternet");
-        }
-        catch (HttpRequestException ex) when (IsQuotaExceeded(ex))
-        {
-            LookupMessage = Tr("Lookup_QuotaReached");
-        }
-        catch (HttpRequestException ex)
-        {
-            LookupMessage = ex.StatusCode.HasValue
-                ? $"Lookup failed (HTTP {(int)ex.StatusCode.Value}). Please try again."
-                : "Lookup failed. Please try again.";
-        }
-        catch (TaskCanceledException)
-        {
-            LookupMessage = Tr("Lookup_Timeout");
+            LookupMessageIsError = false;
         }
         catch (Exception ex)
         {
-            LookupMessage = $"Error: {ex.Message}";
+            ApplyLookupException(ex);
         }
         finally
         {
             IsLookingUpIsbn = false;
+        }
+    }
+
+    /// <summary>
+    /// Searches Google Books by the entered title (plus author, if any) and shows the
+    /// candidate results for the user to pick from. Unlike ISBN lookup it does not fill
+    /// the form directly, because a title query usually returns several matches.
+    /// </summary>
+    [RelayCommand]
+    public async Task SearchByTitleAsync()
+    {
+        if (Book == null || string.IsNullOrWhiteSpace(Book.Title))
+        {
+            LookupMessage = Tr("Lookup_EnterTitleFirst");
+            LookupMessageIsError = true;
+            return;
+        }
+
+        IsSearchingTitle = true;
+        LookupMessage = null;
+        TitleSearchResults = new();
+
+        try
+        {
+            var query = Book.Title.Trim();
+            if (!string.IsNullOrWhiteSpace(Book.Author))
+                query += " " + Book.Author.Trim();
+
+            var results = await _lookupService.SearchBooksAsync(query);
+
+            if (results == null || results.Count == 0)
+            {
+                LookupMessage = Tr("Lookup_NoResults");
+                LookupMessageIsError = true;
+                return;
+            }
+
+            TitleSearchResults = results.Take(5).ToList();
+        }
+        catch (Exception ex)
+        {
+            ApplyLookupException(ex);
+        }
+        finally
+        {
+            IsSearchingTitle = false;
+        }
+    }
+
+    /// <summary>
+    /// Applies a chosen title-search result to the form (same fill path as ISBN lookup)
+    /// and dismisses the picker.
+    /// </summary>
+    [RelayCommand]
+    public async Task SelectSearchResultAsync(BookMetadata metadata)
+    {
+        if (metadata == null || Book == null)
+            return;
+
+        await ApplyMetadataToBookAsync(metadata);
+
+        TitleSearchResults = new();
+        LookupMessage = Tr("Lookup_LoadedSuccess");
+        LookupMessageIsError = false;
+    }
+
+    [RelayCommand]
+    public void CloseTitleResults()
+    {
+        TitleSearchResults = new();
+    }
+
+    /// <summary>
+    /// Maps fetched <see cref="BookMetadata"/> onto the current <see cref="Book"/>. Shared by
+    /// ISBN lookup and title-search selection. Only non-empty fields overwrite existing values.
+    /// </summary>
+    private async Task ApplyMetadataToBookAsync(BookMetadata metadata)
+    {
+        if (Book == null)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(metadata.Title))
+            Book.Title = metadata.Title;
+
+        if (!string.IsNullOrWhiteSpace(metadata.Author))
+            Book.Author = metadata.Author;
+
+        // A title-search result also carries the ISBN, so fill it in (harmless for the
+        // ISBN-lookup path, where it equals the value the user already typed).
+        if (!string.IsNullOrWhiteSpace(metadata.ISBN))
+            Book.ISBN = metadata.ISBN;
+
+        if (!string.IsNullOrWhiteSpace(metadata.Publisher))
+            Book.Publisher = metadata.Publisher;
+
+        if (metadata.PublicationYear.HasValue)
+            Book.PublicationYear = metadata.PublicationYear;
+
+        if (!string.IsNullOrWhiteSpace(metadata.Language))
+            Book.Language = metadata.Language;
+
+        if (!string.IsNullOrWhiteSpace(metadata.Description))
+            Book.Description = metadata.Description;
+
+        if (metadata.PageCount.HasValue)
+            Book.PageCount = metadata.PageCount;
+
+        // Handle cover image
+        if (!string.IsNullOrWhiteSpace(metadata.CoverImageUrl))
+        {
+            // For new books (Id == Guid.Empty), we'll store the URL temporarily
+            // and download it when the book is saved
+            if (Book.Id == Guid.Empty)
+            {
+                // Store the URL temporarily for display
+                Book.CoverImagePath = metadata.CoverImageUrl;
+            }
+            else
+            {
+                // For existing books, download and save the cover immediately
+                var coverPath = await _imageService.SaveCoverImageFromUrlAsync(metadata.CoverImageUrl, Book.Id);
+                if (coverPath != null)
+                {
+                    Book.CoverImagePath = coverPath;
+                }
+            }
+        }
+
+        // Handle genres/categories
+        if (metadata.Categories != null && metadata.Categories.Count > 0)
+        {
+            await MapCategoriesToGenresAsync(metadata.Categories);
+        }
+    }
+
+    /// <summary>
+    /// Maps a lookup/search exception to a localized <see cref="LookupMessage"/>. Shared by
+    /// ISBN lookup and title search so both report network/quota/timeout errors identically.
+    /// </summary>
+    private void ApplyLookupException(Exception ex)
+    {
+        LookupMessageIsError = true;
+        switch (ex)
+        {
+            case HttpRequestException http when http.InnerException is System.Net.Sockets.SocketException:
+                LookupMessage = Tr("Lookup_NoInternet");
+                break;
+            case HttpRequestException http when IsQuotaExceeded(http):
+                LookupMessage = Tr("Lookup_QuotaReached");
+                break;
+            case HttpRequestException http:
+                LookupMessage = http.StatusCode.HasValue
+                    ? $"Lookup failed (HTTP {(int)http.StatusCode.Value}). Please try again."
+                    : "Lookup failed. Please try again.";
+                break;
+            case TaskCanceledException:
+                LookupMessage = Tr("Lookup_Timeout");
+                break;
+            default:
+                LookupMessage = $"Error: {ex.Message}";
+                break;
         }
     }
 
