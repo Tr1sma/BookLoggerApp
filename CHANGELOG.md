@@ -16,6 +16,7 @@ Versionsschema:
 
 ### Hinzugefügt
 - „Blind Date mit einem Buch" (Sub-TBR Roulette): Ein neuer Button auf dem Bücherregal öffnet eine Roulette-Ansicht, die Cover und Titel ungelesener Bücher (TBR + Wishlist) verbirgt und stattdessen nur 3–4 Vibes (Tropes, ersatzweise das Genre) auf „verpackten" Karten zeigt. Man wählt nach den Vibes und packt das Buch per Animation aus. Alle UI-Texte sind in Deutsch und Englisch lokalisiert.
+- Live-Lese-Timer als dauerhafte Benachrichtigung (Android-Vordergrunddienst): Während einer aktiven Lesesitzung erscheint auf dem Sperrbildschirm und in der Statusleiste eine Benachrichtigung mit Buchtitel und mitlaufender Zeit. Über die Schaltflächen lässt sich der Timer pausieren/fortsetzen oder stoppen; „Stopp" pausiert und öffnet die Buchdetailseite (mit dem dort pausierten Lese-Timer), damit die Seite bestätigt und normal gespeichert werden kann. Ein Tippen auf die Benachrichtigung öffnet ebenfalls die Buchdetailseite. Die Benachrichtigungstexte folgen der in der App gewählten Sprache (Deutsch/Englisch). Lässt sich in den Einstellungen unter „Benachrichtigungen → Live-Lese-Timer" abschalten.
 
 ## [0.11.5]
 

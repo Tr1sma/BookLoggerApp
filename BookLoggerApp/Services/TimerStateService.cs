@@ -16,6 +16,8 @@ public class TimerStateService : ITimerStateService
 
     public event Action? AppResumed;
 
+    public event Action<ExternalTimerCommand>? ExternalCommandReceived;
+
     public void SaveState(TimerStateData state)
     {
         Preferences.Set(PrefKeySessionId, state.SessionId.ToString());
@@ -57,5 +59,10 @@ public class TimerStateService : ITimerStateService
     public void NotifyAppResumed()
     {
         AppResumed?.Invoke();
+    }
+
+    public void NotifyExternalCommand(ExternalTimerCommand command)
+    {
+        ExternalCommandReceived?.Invoke(command);
     }
 }

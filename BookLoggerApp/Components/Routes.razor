@@ -1,4 +1,5 @@
 ﻿@inject NavigationManager NavigationManager
+@inject BookLoggerApp.Core.Services.Abstractions.IDeepLinkService DeepLink
 @implements IDisposable
 
 <ErrorBoundary @ref="_errorBoundary">
@@ -33,6 +34,9 @@
     {
         System.Diagnostics.Debug.WriteLine("=== Routes.razor OnInitialized ===");
         NavigationManager.LocationChanged += OnLocationChanged;
+        // Subscribe last so any route buffered during cold start (e.g. tapping the
+        // reading-timer notification before the router was ready) replays immediately.
+        DeepLink.NavigationRequested += OnDeepLinkRequested;
         base.OnInitialized();
     }
 
@@ -41,8 +45,14 @@
         _ = InvokeAsync(() => _errorBoundary?.Recover());
     }
 
+    private void OnDeepLinkRequested(string route)
+    {
+        _ = InvokeAsync(() => NavigationManager.NavigateTo(route));
+    }
+
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
+        DeepLink.NavigationRequested -= OnDeepLinkRequested;
     }
 }

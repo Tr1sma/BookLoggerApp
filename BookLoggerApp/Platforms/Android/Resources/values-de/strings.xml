@@ -4,4 +4,10 @@
     <string name="widget_current_book_description">Zeigt dein aktuelles Buch und den Lesefortschritt</string>
     <string name="widget_reading_streak_description">Zeigt deine aktuelle Lese-Streak</string>
     <string name="widget_daily_goal_description">Zeigt den Fortschritt deines Leseziels</string>
+
+    <!-- Live-Lese-Timer Benachrichtigungskanal. Kanal-Name/-Beschreibung in den Android-
+         Systemeinstellungen folgen der Gerätesprache (wie die Widgets); Inhalt/Aktionen der
+         Benachrichtigung nutzen die aus dem Managed-Code übergebene App-Sprache. -->
+    <string name="timer_notif_channel_name">Lese-Timer</string>
+    <string name="timer_notif_channel_desc">Live-Timer für Lesesitzungen</string>
 </resources>
