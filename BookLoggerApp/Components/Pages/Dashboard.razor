@@ -3,6 +3,7 @@
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Core.Entitlements
 @using BookLoggerApp.Components.Shared
 @using Microsoft.Extensions.Localization
 @inject DashboardViewModel ViewModel
@@ -12,6 +13,7 @@
 @inject IBackButtonService BackButtonService
 @inject IOnboardingService OnboardingService
 @inject IDatabaseInitializer DatabaseInitializer
+@inject IEntitlementService Entitlements
 @inject IStringLocalizer<AppResources> L
 @inherits BookLoggerApp.Components.ObservableComponentBase
 @implements IDisposable
@@ -93,6 +95,29 @@
                 </span>
             </div>
         </section>
+
+        <!-- Upcoming finishes (premium forecast) -->
+        @if (Entitlements.HasAccess(FeatureKey.ReadingForecast))
+        {
+            @if (ViewModel.UpcomingFinishes.Count > 0)
+            {
+                <section class="upcoming-finishes-section">
+                    <h2>@L["Dashboard_UpcomingFinishes"]</h2>
+                    <UpcomingFinishesWidget Items="ViewModel.UpcomingFinishes" />
+                </section>
+            }
+        }
+        else if (ViewModel.CurrentlyReading is not null)
+        {
+            <section class="upcoming-finishes-section">
+                <h2>@L["Dashboard_UpcomingFinishes"]</h2>
+                <LockedFeatureButton Feature="FeatureKey.ReadingForecast">
+                    <div class="upcoming-finishes-teaser">
+                        <p>@L["Dashboard_UpcomingFinishes_TeaserBody"]</p>
+                    </div>
+                </LockedFeatureButton>
+            </section>
+        }
 
         <!-- Active Goals -->
         <section class="goals-section">
