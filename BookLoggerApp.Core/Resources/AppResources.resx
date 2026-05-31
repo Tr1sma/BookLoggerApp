@@ -282,6 +282,12 @@
   <data name="Dashboard_RecentActivity" xml:space="preserve">
     <value>Recent activity</value>
   </data>
+  <data name="Dashboard_UpcomingFinishes" xml:space="preserve">
+    <value>Upcoming finishes</value>
+  </data>
+  <data name="Dashboard_UpcomingFinishes_TeaserBody" xml:space="preserve">
+    <value>Unlock to see when you'll finish the books you're reading.</value>
+  </data>
   <data name="Dashboard_ActivityReading" xml:space="preserve">
     <value>{0} reading</value>
   </data>
@@ -998,6 +1004,48 @@
   </data>
   <data name="BookDetail_ReadingProgress" xml:space="preserve">
     <value>Reading progress</value>
+  </data>
+  <data name="BookDetail_Forecast_Title" xml:space="preserve">
+    <value>Finish forecast</value>
+  </data>
+  <data name="BookDetail_Forecast_Headline" xml:space="preserve">
+    <value>At your current pace, you'll finish this book around {0}.</value>
+  </data>
+  <data name="BookDetail_Forecast_Range" xml:space="preserve">
+    <value>Somewhere between {0} (optimistic) and {1} (pessimistic).</value>
+  </data>
+  <data name="BookDetail_Forecast_PagesRemaining" xml:space="preserve">
+    <value>Pages left</value>
+  </data>
+  <data name="BookDetail_Forecast_PagesPerDay" xml:space="preserve">
+    <value>Pages / day</value>
+  </data>
+  <data name="BookDetail_Forecast_AvgSession" xml:space="preserve">
+    <value>Avg. session</value>
+  </data>
+  <data name="BookDetail_Forecast_SeriesActual" xml:space="preserve">
+    <value>Read so far</value>
+  </data>
+  <data name="BookDetail_Forecast_SeriesProjected" xml:space="preserve">
+    <value>Projection</value>
+  </data>
+  <data name="BookDetail_Forecast_AxisPages" xml:space="preserve">
+    <value>Pages remaining</value>
+  </data>
+  <data name="BookDetail_Forecast_NotEnoughData" xml:space="preserve">
+    <value>Log a few reading sessions and we'll predict when you'll finish.</value>
+  </data>
+  <data name="BookDetail_Forecast_Confidence_Low" xml:space="preserve">
+    <value>Rough estimate</value>
+  </data>
+  <data name="BookDetail_Forecast_Confidence_Medium" xml:space="preserve">
+    <value>Solid estimate</value>
+  </data>
+  <data name="BookDetail_Forecast_Confidence_High" xml:space="preserve">
+    <value>Confident estimate</value>
+  </data>
+  <data name="BookDetail_Forecast_TeaserBody" xml:space="preserve">
+    <value>See exactly when you'll finish this book — unlock the finish forecast.</value>
   </data>
   <data name="BookDetail_TotalTime" xml:space="preserve">
     <value>Total time</value>
@@ -3123,6 +3171,9 @@
   <data name="Paywall_Feature_FamilySharing" xml:space="preserve">
     <value>Family sharing</value>
   </data>
+  <data name="Paywall_Feature_ReadingForecast" xml:space="preserve">
+    <value>Finish forecast</value>
+  </data>
   <data name="Paywall_Feature_FeatureSuggestions" xml:space="preserve">
     <value>Feature suggestions</value>
   </data>
@@ -3275,5 +3326,11 @@
   </data>
   <data name="Error_FailedTo_LoadBlindDate" xml:space="preserve">
     <value>Failed to load blind date</value>
+  </data>
+  <data name="Feature_ReadingForecast_Label" xml:space="preserve">
+    <value>Finish forecast</value>
+  </data>
+  <data name="Feature_ReadingForecast_Description" xml:space="preserve">
+    <value>Predict when you'll finish your current book from your own reading pace, with a burn-down chart.</value>
   </data>
 </root>

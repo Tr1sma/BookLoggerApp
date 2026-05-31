@@ -127,6 +127,100 @@ public class BookDetailViewModelTests
         _viewModel.BookGenres.Should().HaveCount(1);
     }
 
+    private static ReadingSession[] PagedSessions(Guid bookId) => new[]
+    {
+        new ReadingSession { BookId = bookId, StartedAt = DateTime.UtcNow.AddDays(-8), Minutes = 30, PagesRead = 25 },
+        new ReadingSession { BookId = bookId, StartedAt = DateTime.UtcNow.AddDays(-4), Minutes = 30, PagesRead = 25 },
+        new ReadingSession { BookId = bookId, StartedAt = DateTime.UtcNow.AddDays(-1), Minutes = 30, PagesRead = 25 },
+    };
+
+    [Fact]
+    public async Task LoadAsync_Reading_WithSessions_PopulatesForecast()
+    {
+        var book = new Book
+        {
+            Id = Guid.NewGuid(),
+            Title = "T",
+            Author = "A",
+            PageCount = 300,
+            CurrentPage = 100,
+            Status = ReadingStatus.Reading,
+            DateStarted = DateTime.UtcNow.AddDays(-10)
+        };
+        StubReload(book);
+        _progressService.GetSessionsByBookAsync(book.Id, Arg.Any<CancellationToken>())
+            .Returns(PagedSessions(book.Id));
+
+        await _viewModel.LoadCommand.ExecuteAsync(book.Id);
+
+        _viewModel.Forecast.Should().NotBeNull();
+        _viewModel.Forecast!.PagesRemaining.Should().Be(200);
+    }
+
+    [Fact]
+    public async Task LoadAsync_NotReading_LeavesForecastNull()
+    {
+        var book = new Book
+        {
+            Id = Guid.NewGuid(),
+            Title = "T",
+            Author = "A",
+            PageCount = 300,
+            CurrentPage = 100,
+            Status = ReadingStatus.Completed,
+            DateStarted = DateTime.UtcNow.AddDays(-10)
+        };
+        StubReload(book);
+        _progressService.GetSessionsByBookAsync(book.Id, Arg.Any<CancellationToken>())
+            .Returns(PagedSessions(book.Id));
+
+        await _viewModel.LoadCommand.ExecuteAsync(book.Id);
+
+        _viewModel.Forecast.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task LoadAsync_Reading_NoSessions_ForecastNull()
+    {
+        var book = new Book
+        {
+            Id = Guid.NewGuid(),
+            Title = "T",
+            Author = "A",
+            PageCount = 300,
+            CurrentPage = 0,
+            Status = ReadingStatus.Reading,
+            DateStarted = DateTime.UtcNow.AddDays(-5)
+        };
+        StubReload(book); // GetSessionsByBookAsync returns empty
+
+        await _viewModel.LoadCommand.ExecuteAsync(book.Id);
+
+        _viewModel.Forecast.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task LoadAsync_Reading_NullPageCount_ForecastNull()
+    {
+        var book = new Book
+        {
+            Id = Guid.NewGuid(),
+            Title = "T",
+            Author = "A",
+            PageCount = null,
+            CurrentPage = 50,
+            Status = ReadingStatus.Reading,
+            DateStarted = DateTime.UtcNow.AddDays(-10)
+        };
+        StubReload(book);
+        _progressService.GetSessionsByBookAsync(book.Id, Arg.Any<CancellationToken>())
+            .Returns(PagedSessions(book.Id));
+
+        await _viewModel.LoadCommand.ExecuteAsync(book.Id);
+
+        _viewModel.Forecast.Should().BeNull();
+    }
+
     [Fact]
     public async Task StartReadingAsync_BookNull_IsNoOp()
     {
