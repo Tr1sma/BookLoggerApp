@@ -18,6 +18,19 @@
                 android:value="live_reading_session_timer" />
         </service>
     </application>
+    <!-- Android 11+ package visibility: declare email intents so Email.ComposeAsync /
+         Launcher.OpenAsync(mailto:) can resolve an installed email client (used by the
+         "Suggest a feature" Premium form). Without this, the launch fails silently. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="mailto" />
+        </intent>
+    </queries>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />

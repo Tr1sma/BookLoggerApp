@@ -47,7 +47,16 @@
             string uri = BuildMailtoUri(RecipientEmail, subject, body);
 
 #if ANDROID
-            await Microsoft.Maui.ApplicationModel.Launcher.OpenAsync(new Uri(uri));
+            if (Microsoft.Maui.ApplicationModel.Communication.Email.Default.IsComposeSupported)
+            {
+                Microsoft.Maui.ApplicationModel.Communication.EmailMessage message =
+                    new(subject, body, RecipientEmail);
+                await Microsoft.Maui.ApplicationModel.Communication.Email.Default.ComposeAsync(message);
+            }
+            else
+            {
+                await Microsoft.Maui.ApplicationModel.Launcher.OpenAsync(new Uri(uri));
+            }
 #else
             Navigation.NavigateTo(uri);
             await Task.CompletedTask;
