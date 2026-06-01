@@ -18,6 +18,9 @@ Versionsschema:
 - Inline-Lese-Timer: Lesezeit vor dem Start oder in der Pause per Tippen auf die Anzeige manuell eingeben (z. B. `45:30` oder `45` Minuten). Danach erscheinen dieselben Optionen wie nach einer normalen Pause (Fortsetzen, Speichern, Seiten/XP). Gespeicherte Minuten entsprechen der angezeigten Zeit.
 - Einen Predictive Burndown-Chart auf der BookDetail seite der Anzeigt wann das aktuelle Buch vorrausichtlich beendet sein wird. Auserdem eine Übersicht auf der Dashboard seite die zeigt Welche bücher vorrausichtlich als nächses beendet sein werden
 
+### Behoben
+- Feature-Vorschlag per E-Mail (Premium): „E-Mail-Programm konnte nicht geöffnet werden" auf Android 11+ behoben — fehlende `<queries>`-Deklaration für `mailto`-Intents im Android-Manifest ergänzt und auf die native `Email.ComposeAsync`-API umgestellt.
+
 ## [0.11.6]
 
 ### Hinzugefügt
