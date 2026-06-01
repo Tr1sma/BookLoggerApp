@@ -1,0 +1,125 @@
+/* Predictive finish-forecast card (Book Detail) + premium teaser. */
+
+.burndown-forecast-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+}
+
+.burndown-forecast-section .forecast-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.burndown-forecast-section .forecast-header h3 {
+    color: var(--text-primary);
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.forecast-confidence-badge {
+    flex-shrink: 0;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    white-space: nowrap;
+}
+
+.forecast-confidence-badge.confidence-high {
+    color: var(--status-completed);
+    border-color: var(--status-completed);
+}
+
+.forecast-confidence-badge.confidence-medium {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.forecast-confidence-badge.confidence-low {
+    color: var(--text-muted);
+    border-color: var(--border-color);
+}
+
+.forecast-headline {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0 0 0.35rem 0;
+}
+
+.forecast-range {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    margin: 0 0 1.5rem 0;
+}
+
+.forecast-stats {
+    margin-bottom: 1.5rem;
+}
+
+.forecast-chart-wrapper {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    padding: 1rem 1rem 0.5rem;
+}
+
+.forecast-chart-caption {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.25rem 0.25rem;
+}
+
+/* Premium lock teaser variant (shown to non-entitled users). */
+.burndown-forecast-section.forecast-teaser {
+    text-align: center;
+}
+
+.burndown-forecast-section.forecast-teaser h3 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.burndown-forecast-section.forecast-teaser p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .burndown-forecast-section {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .burndown-forecast-section .forecast-header h3 {
+        font-size: 1rem;
+    }
+
+    .forecast-headline {
+        font-size: 1rem;
+    }
+
+    .forecast-chart-wrapper {
+        padding: 0.5rem 0.25rem 0.25rem;
+    }
+}

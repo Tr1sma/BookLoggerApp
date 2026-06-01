@@ -12,19 +12,22 @@ public partial class DashboardViewModel : ViewModelBase
     private readonly IGoalService _goalService;
     private readonly IPlantService _plantService;
     private readonly IStatsService _statsService;
+    private readonly IReadingForecastService _readingForecastService;
 
     public DashboardViewModel(
         IBookService bookService,
         IProgressService progressService,
         IGoalService goalService,
         IPlantService plantService,
-        IStatsService statsService)
+        IStatsService statsService,
+        IReadingForecastService readingForecastService)
     {
         _bookService = bookService;
         _progressService = progressService;
         _goalService = goalService;
         _plantService = plantService;
         _statsService = statsService;
+        _readingForecastService = readingForecastService;
     }
 
     [ObservableProperty]
@@ -50,6 +53,13 @@ public partial class DashboardViewModel : ViewModelBase
 
     [ObservableProperty]
     private List<ReadingSession> _recentActivity = new();
+
+    /// <summary>
+    /// Currently-reading books with a finish forecast, soonest first.
+    /// Empty when no book can be forecast (rendered as a premium teaser by the page).
+    /// </summary>
+    [ObservableProperty]
+    private List<UpcomingFinish> _upcomingFinishes = new();
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -89,6 +99,9 @@ public partial class DashboardViewModel : ViewModelBase
             // Recent Activity
             var recentSessions = await _progressService.GetRecentSessionsAsync(5);
             RecentActivity = recentSessions.ToList();
+
+            // Upcoming finishes (forecast across all currently-reading books)
+            UpcomingFinishes = (await _readingForecastService.GetUpcomingFinishesAsync()).ToList();
         }, Tr("Error_FailedTo_LoadDashboard"));
     }
 

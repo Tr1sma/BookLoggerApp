@@ -1,0 +1,32 @@
+@using System.Globalization
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+@inject IStringLocalizer<AppResources> L
+
+<div class="upcoming-finishes-widget">
+    @foreach (UpcomingFinish item in Items)
+    {
+        <button type="button" class="finish-item" @onclick="() => NavigateToBook(item.BookId)">
+            <div class="finish-book-info">
+                <span class="finish-title">@item.Title</span>
+                <span class="finish-author">@item.Author</span>
+            </div>
+            <div class="finish-prediction">
+                <span class="finish-date">@FormatDate(item.Forecast.ProjectedCompletionUtc)</span>
+                <span class="finish-pages">@L["BookDetail_Forecast_PagesRemaining"]: @item.Forecast.PagesRemaining</span>
+            </div>
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<UpcomingFinish> Items { get; set; } = new();
+
+    private void NavigateToBook(Guid bookId) => Navigation.NavigateTo($"/books/{bookId}");
+
+    private string FormatDate(DateTime utc)
+        => utc.ToLocalTime().ToString("ddd, dd MMM", CultureInfo.CurrentCulture);
+}

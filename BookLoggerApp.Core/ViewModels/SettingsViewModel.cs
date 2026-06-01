@@ -76,7 +76,7 @@ public partial class SettingsViewModel : ViewModelBase
     private AppSettings _settings = new();
 
     [ObservableProperty]
-    private string _appVersion = "0.11.5";
+    private string _appVersion = "0.11.7";
 
     [ObservableProperty]
     private string _migrationLog;

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 
@@ -63,6 +64,13 @@ public partial class BookDetailViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isGeneratingBookCard;
 
+    /// <summary>
+    /// Data-driven finish prediction for the currently-loaded book, or <c>null</c> when
+    /// the book is not being read or there is not enough session data to forecast.
+    /// </summary>
+    [ObservableProperty]
+    private ReadingForecast? _forecast;
+
     [RelayCommand]
     public async Task LoadAsync(Guid bookId)
     {
@@ -88,6 +96,11 @@ public partial class BookDetailViewModel : ViewModelBase
             Annotations = new ObservableCollection<Annotation>(annotations);
 
             BookGenres = (await _genreService.GetGenresForBookAsync(bookId)).ToList();
+
+            // Build the finish forecast from the freshly-loaded sessions (no extra DB call).
+            Forecast = Book is { Status: ReadingStatus.Reading, PageCount: > 0 }
+                ? ReadingForecastCalculator.TryBuildForecast(Book, Sessions, DateTime.UtcNow)
+                : null;
         }, Tr("Error_FailedTo_LoadBookDetails"));
     }
 

@@ -83,7 +83,11 @@ public static class FeatureDisplay
             [FeatureKey.FamilySharing] = new(
                 "Google Play Family Sharing",
                 "Share your Premium subscription with up to 5 family members.",
-                "family")
+                "family"),
+            [FeatureKey.ReadingForecast] = new(
+                "Finish forecast",
+                "Predict when you'll finish your current book from your own reading pace, with a burn-down chart.",
+                "forecast")
         };
 
     public static FeatureDisplayInfo Get(FeatureKey feature)

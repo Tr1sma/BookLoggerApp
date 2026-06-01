@@ -519,11 +519,14 @@ public class AdvancedStatsServiceTests : IDisposable
         var now = DateTime.UtcNow;
         var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        // Current month: 60 pages in 60 minutes = 60 pages/hour
+        // Current month: 60 pages in 60 minutes = 60 pages/hour.
+        // Use `now` (not a fixed day-of-month) so the session is never dated in the
+        // future when the test runs on the 1st of a month — the service only counts
+        // sessions with StartedAt <= now.
         await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
         {
             BookId = book.Id,
-            StartedAt = currentMonthStart.AddDays(1),
+            StartedAt = now,
             Minutes = 60,
             PagesRead = 60
         });
@@ -565,12 +568,11 @@ public class AdvancedStatsServiceTests : IDisposable
         await _context.SaveChangesAsync();
 
         var now = DateTime.UtcNow;
-        var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
         await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
         {
             BookId = book.Id,
-            StartedAt = currentMonthStart.AddDays(1),
+            StartedAt = now,
             Minutes = 0,
             PagesRead = 50
         });
@@ -591,19 +593,18 @@ public class AdvancedStatsServiceTests : IDisposable
         await _context.SaveChangesAsync();
 
         var now = DateTime.UtcNow;
-        var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
         await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
         {
             BookId = book.Id,
-            StartedAt = currentMonthStart.AddDays(1),
+            StartedAt = now,
             Minutes = 30,
             PagesRead = null
         });
         await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
         {
             BookId = book.Id,
-            StartedAt = currentMonthStart.AddDays(1),
+            StartedAt = now,
             Minutes = 30,
             PagesRead = 0
         });

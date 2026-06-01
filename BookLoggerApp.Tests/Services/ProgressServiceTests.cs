@@ -347,6 +347,23 @@ public class ProgressServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task EndSessionAsync_WithExplicitDuration_UsesProvidedMinutes()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var session = await _service.StartSessionAsync(book.Id);
+        session.StartedAt = DateTime.UtcNow.AddHours(-2);
+        await _unitOfWork.ReadingSessions.UpdateAsync(session);
+        await _context.SaveChangesAsync();
+
+        var result = await _service.EndSessionAsync(session.Id, 5, durationMinutes: 30);
+
+        result.Session.Minutes.Should().Be(30);
+        result.Session.EndedAt.Should().NotBeNull();
+        result.Session.StartedAt.Should().Be(result.Session.EndedAt!.Value.AddMinutes(-30));
+    }
+
+    [Fact]
     public async Task EndSessionAsync_ShouldReturnGoalCompletedFlagFromGoalService()
     {
         // Arrange
