@@ -31,8 +31,8 @@
         <ApplicationId>com.bookheart.app</ApplicationId>
 
         <!-- Versions (werden beim CI-Release-Build durch den Tag überschrieben) -->
-        <ApplicationDisplayVersion>0.11.5</ApplicationDisplayVersion>
-        <ApplicationVersion>1105</ApplicationVersion>
+        <ApplicationDisplayVersion>0.11.7</ApplicationDisplayVersion>
+        <ApplicationVersion>1107</ApplicationVersion>
 
         <!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
         <WindowsPackageType>None</WindowsPackageType>

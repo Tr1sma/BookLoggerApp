@@ -1941,6 +1941,12 @@
   <data name="TimerInline_Active" xml:space="preserve">
     <value>Active</value>
   </data>
+  <data name="TimerInline_EditTimeHint" xml:space="preserve">
+    <value>Tap to enter reading time</value>
+  </data>
+  <data name="TimerInline_InvalidDuration" xml:space="preserve">
+    <value>Enter a time between 1 second and 24 hours (e.g. 45:30).</value>
+  </data>
   <data name="TimerInline_WasOnPage" xml:space="preserve">
     <value>Was on page {0}</value>
   </data>

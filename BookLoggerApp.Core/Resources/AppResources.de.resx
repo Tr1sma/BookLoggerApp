@@ -1882,6 +1882,12 @@
   <data name="TimerInline_Active" xml:space="preserve">
     <value>Aktiv</value>
   </data>
+  <data name="TimerInline_EditTimeHint" xml:space="preserve">
+    <value>Tippe, um die Lesezeit einzugeben</value>
+  </data>
+  <data name="TimerInline_InvalidDuration" xml:space="preserve">
+    <value>Gib eine Zeit zwischen 1 Sekunde und 24 Stunden ein (z. B. 45:30).</value>
+  </data>
   <data name="TimerInline_WasOnPage" xml:space="preserve">
     <value>Warst auf Seite {0}</value>
   </data>
