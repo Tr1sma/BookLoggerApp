@@ -223,6 +223,12 @@
   <data name="Dashboard_RecentActivity" xml:space="preserve">
     <value>Letzte Aktivität</value>
   </data>
+  <data name="Dashboard_UpcomingFinishes" xml:space="preserve">
+    <value>Demnächst fertig</value>
+  </data>
+  <data name="Dashboard_UpcomingFinishes_TeaserBody" xml:space="preserve">
+    <value>Schalte frei, um zu sehen, wann du deine aktuellen Bücher beendest.</value>
+  </data>
   <data name="Dashboard_ActivityReading" xml:space="preserve">
     <value>{0} gelesen</value>
   </data>
@@ -939,6 +945,48 @@
   </data>
   <data name="BookDetail_ReadingProgress" xml:space="preserve">
     <value>Lesefortschritt</value>
+  </data>
+  <data name="BookDetail_Forecast_Title" xml:space="preserve">
+    <value>Fertig-Prognose</value>
+  </data>
+  <data name="BookDetail_Forecast_Headline" xml:space="preserve">
+    <value>Bei deiner aktuellen Performance ist dieses Buch voraussichtlich am {0} beendet.</value>
+  </data>
+  <data name="BookDetail_Forecast_Range" xml:space="preserve">
+    <value>Irgendwann zwischen {0} (optimistisch) und {1} (pessimistisch).</value>
+  </data>
+  <data name="BookDetail_Forecast_PagesRemaining" xml:space="preserve">
+    <value>Seiten übrig</value>
+  </data>
+  <data name="BookDetail_Forecast_PagesPerDay" xml:space="preserve">
+    <value>Seiten / Tag</value>
+  </data>
+  <data name="BookDetail_Forecast_AvgSession" xml:space="preserve">
+    <value>Ø Session</value>
+  </data>
+  <data name="BookDetail_Forecast_SeriesActual" xml:space="preserve">
+    <value>Bisher gelesen</value>
+  </data>
+  <data name="BookDetail_Forecast_SeriesProjected" xml:space="preserve">
+    <value>Prognose</value>
+  </data>
+  <data name="BookDetail_Forecast_AxisPages" xml:space="preserve">
+    <value>Verbleibende Seiten</value>
+  </data>
+  <data name="BookDetail_Forecast_NotEnoughData" xml:space="preserve">
+    <value>Trag ein paar Lese-Sessions ein, dann sagen wir dir, wann du fertig bist.</value>
+  </data>
+  <data name="BookDetail_Forecast_Confidence_Low" xml:space="preserve">
+    <value>Grobe Schätzung</value>
+  </data>
+  <data name="BookDetail_Forecast_Confidence_Medium" xml:space="preserve">
+    <value>Solide Schätzung</value>
+  </data>
+  <data name="BookDetail_Forecast_Confidence_High" xml:space="preserve">
+    <value>Sichere Schätzung</value>
+  </data>
+  <data name="BookDetail_Forecast_TeaserBody" xml:space="preserve">
+    <value>Sieh genau, wann du dieses Buch beendest – schalte die Fertig-Prognose frei.</value>
   </data>
   <data name="BookDetail_TotalTime" xml:space="preserve">
     <value>Gesamtzeit</value>
@@ -1833,6 +1881,12 @@
   </data>
   <data name="TimerInline_Active" xml:space="preserve">
     <value>Aktiv</value>
+  </data>
+  <data name="TimerInline_EditTimeHint" xml:space="preserve">
+    <value>Tippe, um die Lesezeit einzugeben</value>
+  </data>
+  <data name="TimerInline_InvalidDuration" xml:space="preserve">
+    <value>Gib eine Zeit zwischen 1 Sekunde und 24 Stunden ein (z. B. 45:30).</value>
   </data>
   <data name="TimerInline_WasOnPage" xml:space="preserve">
     <value>Warst auf Seite {0}</value>
@@ -3064,6 +3118,9 @@
   <data name="Paywall_Feature_FamilySharing" xml:space="preserve">
     <value>Familienfreigabe</value>
   </data>
+  <data name="Paywall_Feature_ReadingForecast" xml:space="preserve">
+    <value>Fertig-Prognose</value>
+  </data>
   <data name="Paywall_Feature_FeatureSuggestions" xml:space="preserve">
     <value>Feature-Vorschläge</value>
   </data>
@@ -3216,5 +3273,11 @@
   </data>
   <data name="Error_FailedTo_LoadBlindDate" xml:space="preserve">
     <value>Blind Date konnte nicht geladen werden</value>
+  </data>
+  <data name="Feature_ReadingForecast_Label" xml:space="preserve">
+    <value>Fertig-Prognose</value>
+  </data>
+  <data name="Feature_ReadingForecast_Description" xml:space="preserve">
+    <value>Sieh anhand deiner eigenen Lesegeschwindigkeit voraus, wann du dein aktuelles Buch beendest – inklusive Burn-Down-Chart.</value>
   </data>
 </root>

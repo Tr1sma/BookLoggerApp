@@ -62,6 +62,7 @@ public static class PaywallComparisonCatalog
         new Row(Category.PlusAndPremium, "Wishlist", "—", "✓", "✓", FeatureKey.Wishlist, "Paywall_Feature_Wishlist"),
         new Row(Category.PlusAndPremium, "Tropes", "—", "✓", "✓", FeatureKey.Tropes, "Paywall_Feature_Tropes"),
         new Row(Category.PlusAndPremium, "Shelf colors", "—", "✓", "✓", FeatureKey.CustomShelfColors, "Paywall_Feature_ShelfColors"),
+        new Row(Category.PlusAndPremium, "Finish forecast", "—", "✓", "✓", FeatureKey.ReadingForecast, "Paywall_Feature_ReadingForecast"),
 
         // Premium only — exclusive to Premium
         new Row(Category.PremiumOnly, "Trends (heatmap, radar)", "—", "—", "✓", FeatureKey.StatsTrendsTab, "Paywall_Feature_Trends"),

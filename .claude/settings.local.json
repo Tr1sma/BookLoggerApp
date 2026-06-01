@@ -51,7 +51,9 @@
       "Bash(./test_xp.exe)",
       "Bash(python3 *)",
       "Bash(git fetch *)",
-      "Bash(xargs git *)"
+      "Bash(xargs git *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh api *)"
     ],
     "deny": [],
     "ask": []

@@ -10,7 +10,7 @@ public interface IProgressService
     // Session Management
     Task<SessionSaveResult> AddSessionAsync(ReadingSession session, CancellationToken ct = default);
     Task<ReadingSession> StartSessionAsync(Guid bookId, CancellationToken ct = default);
-    Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, CancellationToken ct = default);
+    Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, int? durationMinutes = null, CancellationToken ct = default);
     Task UpdateSessionAsync(ReadingSession session, CancellationToken ct = default);
     Task DeleteSessionAsync(Guid sessionId, CancellationToken ct = default);
 
