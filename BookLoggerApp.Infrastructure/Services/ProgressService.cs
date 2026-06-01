@@ -133,7 +133,7 @@ public class ProgressService : IProgressService
         return result;
     }
 
-    public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, CancellationToken ct = default)
+    public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, int? durationMinutes = null, CancellationToken ct = default)
     {
         // Validate input
         if (pagesRead < 0)
@@ -154,7 +154,15 @@ public class ProgressService : IProgressService
 
         session.EndedAt = DateTime.UtcNow;
         session.PagesRead = pagesRead;
-        session.Minutes = Math.Max(0, (int)(session.EndedAt.Value - session.StartedAt).TotalMinutes);
+        if (durationMinutes.HasValue)
+        {
+            session.Minutes = Math.Clamp(durationMinutes.Value, 0, 1440);
+            session.StartedAt = session.EndedAt.Value.AddMinutes(-session.Minutes);
+        }
+        else
+        {
+            session.Minutes = Math.Max(0, (int)(session.EndedAt.Value - session.StartedAt).TotalMinutes);
+        }
 
         // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
