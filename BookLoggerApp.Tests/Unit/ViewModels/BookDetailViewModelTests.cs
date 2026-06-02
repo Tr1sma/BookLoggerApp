@@ -16,6 +16,7 @@ public class BookDetailViewModelTests
     private readonly IGenreService _genreService;
     private readonly IShareCardService _shareCardService;
     private readonly IImageService _imageService;
+    private readonly IAppSettingsProvider _settingsProvider;
     private readonly BookDetailViewModel _viewModel;
 
     public BookDetailViewModelTests()
@@ -29,6 +30,8 @@ public class BookDetailViewModelTests
         _genreService = Substitute.For<IGenreService>();
         _shareCardService = Substitute.For<IShareCardService>();
         _imageService = Substitute.For<IImageService>();
+        _settingsProvider = Substitute.For<IAppSettingsProvider>();
+        _settingsProvider.GetSettingsAsync().Returns(new AppSettings { MoodTrackingEnabled = true });
 
         _viewModel = new BookDetailViewModel(
             _bookService,
@@ -37,7 +40,8 @@ public class BookDetailViewModelTests
             _annotationService,
             _genreService,
             _shareCardService,
-            _imageService);
+            _imageService,
+            _settingsProvider);
     }
 
     [Fact]

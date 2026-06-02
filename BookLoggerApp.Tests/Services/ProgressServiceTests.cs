@@ -1,4 +1,5 @@
 using FluentAssertions;
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -344,6 +345,68 @@ public class ProgressServiceTests : IDisposable
         result.Session.Minutes.Should().BeGreaterThanOrEqualTo(0);
         result.Session.PagesRead.Should().Be(10);
         result.Session.XpEarned.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_WithMoods_PersistsMoods()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var session = await _service.StartSessionAsync(book.Id);
+
+        // Act
+        await _service.EndSessionAsync(session.Id, 10, durationMinutes: 20,
+            moods: new[] { SessionMood.Crying, SessionMood.Spice });
+
+        // Assert — reload fresh to prove the child rows round-trip.
+        _context.ChangeTracker.Clear();
+        var reloaded = (await _unitOfWork.ReadingSessions.GetSessionsByBookAsync(book.Id)).Single();
+        reloaded.MoodList.Should().BeEquivalentTo(new[] { SessionMood.Crying, SessionMood.Spice });
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_WithoutMoods_LeavesMoodsEmpty()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var session = await _service.StartSessionAsync(book.Id);
+
+        // Act — the existing 3-arg call path (backward compatibility).
+        await _service.EndSessionAsync(session.Id, 10);
+
+        // Assert
+        _context.ChangeTracker.Clear();
+        var reloaded = (await _unitOfWork.ReadingSessions.GetSessionsByBookAsync(book.Id)).Single();
+        reloaded.MoodList.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_WithMoods_PersistsMoods()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var session = new ReadingSession
+        {
+            BookId = book.Id,
+            Minutes = 15,
+            PagesRead = 10,
+            Moods = new List<ReadingSessionMood>
+            {
+                new() { Mood = SessionMood.Anger },
+                new() { Mood = SessionMood.Butterflies }
+            }
+        };
+
+        // Act
+        await _service.AddSessionAsync(session);
+
+        // Assert
+        _context.ChangeTracker.Clear();
+        var reloaded = (await _unitOfWork.ReadingSessions.GetSessionsByBookAsync(book.Id)).Single();
+        reloaded.MoodList.Should().BeEquivalentTo(new[] { SessionMood.Anger, SessionMood.Butterflies });
     }
 
     [Fact]

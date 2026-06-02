@@ -3339,4 +3339,55 @@
   <data name="Feature_ReadingForecast_Description" xml:space="preserve">
     <value>Predict when you'll finish your current book from your own reading pace, with a burn-down chart.</value>
   </data>
+  <data name="Session_Mood_Crying_Label" xml:space="preserve">
+    <value>Crying</value>
+  </data>
+  <data name="Session_Mood_Butterflies_Label" xml:space="preserve">
+    <value>Butterflies</value>
+  </data>
+  <data name="Session_Mood_Spice_Label" xml:space="preserve">
+    <value>Spice</value>
+  </data>
+  <data name="Session_Mood_Anger_Label" xml:space="preserve">
+    <value>Anger</value>
+  </data>
+  <data name="Session_Mood_Laughing_Label" xml:space="preserve">
+    <value>Laughing</value>
+  </data>
+  <data name="Session_Mood_MindBlown_Label" xml:space="preserve">
+    <value>Mind-blown</value>
+  </data>
+  <data name="Session_Mood_PickerTitle" xml:space="preserve">
+    <value>How did this session feel?</value>
+  </data>
+  <data name="Session_Mood_PickerHint" xml:space="preserve">
+    <value>Pick up to 3</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_Title" xml:space="preserve">
+    <value>Emotional Journey</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_Subtitle" xml:space="preserve">
+    <value>Your mood across this book's sessions</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_Empty" xml:space="preserve">
+    <value>Tag moods on your sessions to see your emotional arc.</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_AxisSession" xml:space="preserve">
+    <value>Session</value>
+  </data>
+  <data name="Settings_Features_Title" xml:space="preserve">
+    <value>Reading features</value>
+  </data>
+  <data name="Settings_Features_Subtitle" xml:space="preserve">
+    <value>Turn optional reading features on or off</value>
+  </data>
+  <data name="Settings_MoodTracking_Label" xml:space="preserve">
+    <value>Mood &amp; trigger tracking</value>
+  </data>
+  <data name="Settings_MoodTracking_Description" xml:space="preserve">
+    <value>Tag 1–3 emojis per session and see your emotional journey per book.</value>
+  </data>
+  <data name="Error_FailedTo_UpdateMoodTrackingSettings" xml:space="preserve">
+    <value>Failed to update mood tracking settings</value>
+  </data>
 </root>

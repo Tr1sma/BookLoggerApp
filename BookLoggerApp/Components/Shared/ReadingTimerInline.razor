@@ -1,3 +1,4 @@
+@using BookLoggerApp.Core.Enums
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
@@ -12,6 +13,7 @@
 @inject IShareCardService ShareCardService
 @inject IImageService CoverImageService
 @inject IShareService ShareService
+@inject IAppSettingsProvider AppSettings
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IReviewPromptService ReviewPromptService
 @inject IStringLocalizer<AppResources> L
@@ -146,6 +148,11 @@
                         </div>
                     </div>
                 </div>
+
+                @if (_moodTrackingEnabled)
+                {
+                    <SessionMoodPicker @bind-Value="_selectedMoods" />
+                }
             </div>
         }
 
@@ -238,6 +245,10 @@
     private bool ShowReviewPrompt { get; set; }
     private bool ReviewPromptPending { get; set; }
 
+    // Mood/Trigger tracking
+    private IReadOnlyList<SessionMood> _selectedMoods = Array.Empty<SessionMood>();
+    private bool _moodTrackingEnabled = true;
+
     // State restoration tracking
     private bool _stateRestoreAttempted;
 
@@ -254,6 +265,11 @@
     {
         TimerStateService.AppResumed += OnAppResumed;
         TimerStateService.ExternalCommandReceived += OnExternalCommand;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _moodTrackingEnabled = (await AppSettings.GetSettingsAsync()).MoodTrackingEnabled;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -616,7 +632,7 @@
 
             // End session using ProgressService which handles XP, streak, plant boost, level-ups
             int minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes);
-            var result = await ProgressService.EndSessionAsync(CurrentSessionId.Value, pagesRead, minutes);
+            var result = await ProgressService.EndSessionAsync(CurrentSessionId.Value, pagesRead, minutes, _selectedMoods);
 
             // Update book progress if pages were read
             if (pagesRead > 0)
@@ -721,6 +737,7 @@
         IsRunning = false;
         CurrentPageInput = 0; // Reset to 0, will be re-initialized in OnParametersSet
         CurrentSessionId = null;
+        _selectedMoods = Array.Empty<SessionMood>();
         GoalCompletedDuringSession = false;
         BookCompletedDuringSession = false;
         StreakCelebrationPending = false;

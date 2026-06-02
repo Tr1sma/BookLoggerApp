@@ -35,6 +35,13 @@ public class AppSettings
     /// </summary>
     public bool LiveTimerNotificationEnabled { get; set; } = true;
 
+    /// <summary>
+    /// Whether mood/trigger tracking is shown: the per-session emoji picker when ending a
+    /// reading session, and the "Emotional Journey" chart on the book detail page.
+    /// Defaults to true so existing users see the feature without opting in.
+    /// </summary>
+    public bool MoodTrackingEnabled { get; set; } = true;
+
     // Backup
     public bool AutoBackupEnabled { get; set; } = false;
     public DateTime? LastBackupDate { get; set; }

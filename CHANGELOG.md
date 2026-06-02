@@ -12,14 +12,21 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
+## [0.12.0]
+
+### Hinzugefügt
+- Stimmungen & Trigger pro Lesesitzung: Beim Beenden einer Lesesitzung (Inline- und Schnell-Timer) kannst du nach der Seiteneingabe 1–3 Emojis wählen — 😭 Tränen, 🦋 Schmetterlinge, 🌶️ Spice, 😡 Wut, 😂 Lachen, 🤯 Umgehauen. Auf der Buchdetailseite entsteht daraus eine „Emotionale Reise" — ein Verlaufsdiagramm deiner Stimmung über die Sitzungen des Buches hinweg. In den Einstellungen unter „Lese-Features" abschaltbar. Alle UI-Texte in Deutsch und Englisch lokalisiert.
+
+## [0.11.8]
+
+### Behoben
+- Feature-Vorschlag per E-Mail (Premium): „E-Mail-Programm konnte nicht geöffnet werden" auf Android 11+ behoben — fehlende `<queries>`-Deklaration für `mailto`-Intents im Android-Manifest ergänzt und auf die native `Email.ComposeAsync`-API umgestellt.
+
 ## [0.11.7]
 
 ### Hinzugefügt
 - Inline-Lese-Timer: Lesezeit vor dem Start oder in der Pause per Tippen auf die Anzeige manuell eingeben (z. B. `45:30` oder `45` Minuten). Danach erscheinen dieselben Optionen wie nach einer normalen Pause (Fortsetzen, Speichern, Seiten/XP). Gespeicherte Minuten entsprechen der angezeigten Zeit.
 - Einen Predictive Burndown-Chart auf der BookDetail seite der Anzeigt wann das aktuelle Buch vorrausichtlich beendet sein wird. Auserdem eine Übersicht auf der Dashboard seite die zeigt Welche bücher vorrausichtlich als nächses beendet sein werden
-
-### Behoben
-- Feature-Vorschlag per E-Mail (Premium): „E-Mail-Programm konnte nicht geöffnet werden" auf Android 11+ behoben — fehlende `<queries>`-Deklaration für `mailto`-Intents im Android-Manifest ergänzt und auf die native `Email.ComposeAsync`-API umgestellt.
 
 ## [0.11.6]
 

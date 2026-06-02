@@ -149,6 +149,54 @@ public class ImportExportServiceTests
     }
 
     [Fact]
+    public async Task JsonRoundTrip_ShouldPreserveSessionMoods()
+    {
+        // Arrange — a book with one session tagged with two moods.
+        var exportDbName = Guid.NewGuid().ToString();
+        var bookId = Guid.NewGuid();
+        using var exportContext = TestDbContext.Create(exportDbName);
+        exportContext.Books.Add(new Book
+        {
+            Id = bookId,
+            Title = "Mood Book",
+            Author = "Mood Author",
+            ISBN = "9990001112",
+            ReadingSessions = new List<ReadingSession>
+            {
+                new()
+                {
+                    BookId = bookId,
+                    Minutes = 25,
+                    Moods = new List<ReadingSessionMood>
+                    {
+                        new() { Mood = SessionMood.Crying },
+                        new() { Mood = SessionMood.MindBlown }
+                    }
+                }
+            }
+        });
+        await exportContext.SaveChangesAsync();
+
+        var exportService = new ImportExportService(
+            new TestDbContextFactory(exportDbName), CreateFileSystem(), CreateMockSettingsProvider());
+        var json = await exportService.ExportToJsonAsync();
+
+        var importDbName = Guid.NewGuid().ToString();
+        using var importContext = TestDbContext.Create(importDbName);
+        var importService = new ImportExportService(
+            new TestDbContextFactory(importDbName), CreateFileSystem(), CreateMockSettingsProvider());
+
+        // Act
+        var importedCount = await importService.ImportFromJsonAsync(json);
+
+        // Assert — the moods survived export -> import.
+        importedCount.Should().Be(1);
+        using var verifyContext = TestDbContext.Create(importDbName);
+        var moods = verifyContext.ReadingSessionMoods.Select(m => m.Mood).ToList();
+        moods.Should().BeEquivalentTo(new[] { SessionMood.Crying, SessionMood.MindBlown });
+    }
+
+    [Fact]
     public async Task ImportFromCsvAsync_ShouldImportBooks()
     {
         // Arrange

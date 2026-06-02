@@ -788,3 +788,13 @@
         font-size: 8px;
     }
 }
+
+/* Emotional Journey chart (book detail) — mood arc across reading sessions. */
+.emotional-journey .advanced-stats-subtitle {
+    margin-top: -0.25rem;
+}
+
+.emotional-journey.completed {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color), 0 4px 16px rgba(212, 165, 116, 0.18);
+}
