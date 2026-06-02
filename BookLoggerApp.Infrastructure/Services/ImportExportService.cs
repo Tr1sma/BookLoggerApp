@@ -63,6 +63,7 @@ public class ImportExportService : IImportExportService
                 .Include(b => b.BookGenres)
                     .ThenInclude(bg => bg.Genre)
                 .Include(b => b.ReadingSessions)
+                    .ThenInclude(rs => rs.Moods)
                 .Include(b => b.Quotes)
                 .Include(b => b.Annotations)
                 .Include(b => b.WishlistInfo)

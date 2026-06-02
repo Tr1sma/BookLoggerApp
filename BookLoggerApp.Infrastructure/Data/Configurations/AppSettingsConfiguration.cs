@@ -85,6 +85,10 @@ public class AppSettingsConfiguration : IEntityTypeConfiguration<AppSettings>
 
         builder.Property(a => a.PrivacyPolicyAcceptedAt);
 
+        builder.Property(a => a.MoodTrackingEnabled)
+            .IsRequired()
+            .HasDefaultValue(true);
+
         builder.Property(a => a.CurrentTier)
             .IsRequired()
             .HasConversion<int>()
