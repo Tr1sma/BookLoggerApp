@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using BookLoggerApp.Core.Enums;
 
 namespace BookLoggerApp.Core.Models;
 
@@ -32,6 +34,13 @@ public class ReadingSession
     // Notes
     [MaxLength(1000)]
     public string? Notes { get; set; }
+
+    // Mood/Trigger-Tags (1-3) als Kind-Entities; Cascade-Delete mit der Sitzung.
+    public ICollection<ReadingSessionMood> Moods { get; set; } = new List<ReadingSessionMood>();
+
+    /// <summary>Bequemer Zugriff auf die getaggten Stimmungen (nicht gemappt).</summary>
+    [NotMapped]
+    public IReadOnlyList<SessionMood> MoodList => Moods.Select(m => m.Mood).Distinct().ToList();
 
     // Concurrency Control
     [Timestamp]

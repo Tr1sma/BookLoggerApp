@@ -158,6 +158,16 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public async Task ToggleMoodTrackingAsync(bool enabled)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            Settings.MoodTrackingEnabled = enabled;
+            await SaveSettingsInternalAsync();
+        }, Tr("Error_FailedTo_UpdateMoodTrackingSettings"));
+    }
+
+    [RelayCommand]
     public async Task ToggleReadingRemindersAsync(bool enabled)
     {
         await ExecuteSafelyAsync(async () =>

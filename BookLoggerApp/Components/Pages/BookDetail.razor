@@ -361,6 +361,15 @@
                 }
             </div>
         }
+
+        <!-- Emotional Journey -->
+        @if (ViewModel.MoodTrackingEnabled && ViewModel.Sessions?.Any() == true)
+        {
+            <section class="advanced-stats-section emotional-journey-section">
+                <EmotionalJourneyChart Sessions="ViewModel.Sessions"
+                                       IsCompleted="ViewModel.Book.Status == ReadingStatus.Completed" />
+            </section>
+        }
         <!-- Notes Section -->
         <div class="book-notes-section" style="margin-top: 2rem; padding: 1.5rem; background: var(--card-bg, #fff); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
             <h3 style="margin-bottom: 1rem; color: var(--text-primary, #333);">📝 @L["BookDetail_BookNotes"]</h3>

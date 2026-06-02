@@ -133,7 +133,7 @@ public class ProgressService : IProgressService
         return result;
     }
 
-    public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, int? durationMinutes = null, CancellationToken ct = default)
+    public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, int? durationMinutes = null, IReadOnlyList<SessionMood>? moods = null, CancellationToken ct = default)
     {
         // Validate input
         if (pagesRead < 0)
@@ -186,6 +186,13 @@ public class ProgressService : IProgressService
 
         // Store the XP earned in the session
         session.XpEarned = progressionResult.XpEarned;
+
+        // Persist mood/trigger tags (1-3); the session was just started, so the
+        // navigation is empty and we simply add the new child rows.
+        foreach (var mood in SessionMoodHelper.Clamp(moods))
+        {
+            session.Moods.Add(new ReadingSessionMood { ReadingSessionId = session.Id, Mood = mood });
+        }
 
         // Record reading day for active plant (for plant leveling)
         // Plants level up based on reading days (15+ min sessions), not XP

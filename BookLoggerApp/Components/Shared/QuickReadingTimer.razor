@@ -1,11 +1,15 @@
+@using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Core.Helpers
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
+@using BookLoggerApp.Components.Shared
 @using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject IProgressService ProgressService
 @inject IBookService BookService
 @inject ITimerStateService TimerStateService
+@inject IAppSettingsProvider AppSettings
 @inject IStringLocalizer<AppResources> L
 
 @if (Book != null && IsVisible)
@@ -84,6 +88,12 @@
                     </div>
                 </div>
             }
+
+            <!-- Mood / Trigger Picker (shown when paused, before saving) -->
+            @if (_moodTrackingEnabled && !IsRunning && ElapsedTime.TotalSeconds > 0)
+            {
+                <SessionMoodPicker @bind-Value="_selectedMoods" />
+            }
         </div>
     </div>
 }
@@ -102,9 +112,18 @@
     private System.Threading.Timer? _timer;
     private Guid? _currentBookId;
 
+    // Mood/Trigger tracking
+    private IReadOnlyList<SessionMood> _selectedMoods = Array.Empty<SessionMood>();
+    private bool _moodTrackingEnabled = true;
+
     protected override void OnInitialized()
     {
         TimerStateService.AppResumed += OnAppResumed;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _moodTrackingEnabled = (await AppSettings.GetSettingsAsync()).MoodTrackingEnabled;
     }
 
     protected override void OnParametersSet()
@@ -169,7 +188,9 @@
                 EndedAt = DateTime.UtcNow,
                 Minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes),
                 PagesRead = PagesRead > 0 ? PagesRead : null,
-                XpEarned = CalculateXP()
+                XpEarned = CalculateXP(),
+                Moods = SessionMoodHelper.Clamp(_selectedMoods)
+                    .Select(m => new ReadingSessionMood { Mood = m }).ToList()
             });
 
             // Update book progress if pages were read
@@ -227,6 +248,7 @@
         StartTime = null;
         IsRunning = false;
         PagesRead = 0;
+        _selectedMoods = Array.Empty<SessionMood>();
     }
 
     private int CalculateXP()

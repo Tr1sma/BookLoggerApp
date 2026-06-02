@@ -3280,4 +3280,55 @@
   <data name="Feature_ReadingForecast_Description" xml:space="preserve">
     <value>Sieh anhand deiner eigenen Lesegeschwindigkeit voraus, wann du dein aktuelles Buch beendest – inklusive Burn-Down-Chart.</value>
   </data>
+  <data name="Session_Mood_Crying_Label" xml:space="preserve">
+    <value>Tränen</value>
+  </data>
+  <data name="Session_Mood_Butterflies_Label" xml:space="preserve">
+    <value>Schmetterlinge</value>
+  </data>
+  <data name="Session_Mood_Spice_Label" xml:space="preserve">
+    <value>Spice</value>
+  </data>
+  <data name="Session_Mood_Anger_Label" xml:space="preserve">
+    <value>Wut</value>
+  </data>
+  <data name="Session_Mood_Laughing_Label" xml:space="preserve">
+    <value>Lachen</value>
+  </data>
+  <data name="Session_Mood_MindBlown_Label" xml:space="preserve">
+    <value>Umgehauen</value>
+  </data>
+  <data name="Session_Mood_PickerTitle" xml:space="preserve">
+    <value>Wie war diese Sitzung für dich?</value>
+  </data>
+  <data name="Session_Mood_PickerHint" xml:space="preserve">
+    <value>Wähle bis zu 3</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_Title" xml:space="preserve">
+    <value>Emotionale Reise</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_Subtitle" xml:space="preserve">
+    <value>Deine Stimmung über die Sitzungen dieses Buches</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_Empty" xml:space="preserve">
+    <value>Markiere Stimmungen in deinen Sitzungen, um deinen emotionalen Verlauf zu sehen.</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_AxisSession" xml:space="preserve">
+    <value>Sitzung</value>
+  </data>
+  <data name="Settings_Features_Title" xml:space="preserve">
+    <value>Lese-Features</value>
+  </data>
+  <data name="Settings_Features_Subtitle" xml:space="preserve">
+    <value>Optionale Lese-Features an- oder ausschalten</value>
+  </data>
+  <data name="Settings_MoodTracking_Label" xml:space="preserve">
+    <value>Stimmungs- &amp; Trigger-Tracking</value>
+  </data>
+  <data name="Settings_MoodTracking_Description" xml:space="preserve">
+    <value>Tagge 1–3 Emojis pro Sitzung und sieh deine emotionale Reise pro Buch.</value>
+  </data>
+  <data name="Error_FailedTo_UpdateMoodTrackingSettings" xml:space="preserve">
+    <value>Stimmungs-Tracking-Einstellungen konnten nicht aktualisiert werden</value>
+  </data>
 </root>

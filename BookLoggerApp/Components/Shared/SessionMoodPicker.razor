@@ -1,0 +1,55 @@
+@using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
+@using BookLoggerApp.Core.Helpers
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
+
+<div class="session-mood-picker">
+    <label class="mood-picker-title">@L["Session_Mood_PickerTitle"]</label>
+    <small class="mood-picker-hint">@L["Session_Mood_PickerHint"]</small>
+    <div class="mood-picker-buttons">
+        @foreach (var info in SessionMoodInfo.GetAll(L))
+        {
+            bool selected = _selected.Contains(info.Mood);
+            <button type="button"
+                    class="mood-chip @(selected ? "selected" : "")"
+                    disabled="@(!selected && _selected.Count >= SessionMoodHelper.MaxMoodsPerSession)"
+                    title="@info.Label"
+                    @onclick="() => Toggle(info.Mood)">
+                <span class="mood-emoji">@info.Emoji</span>
+                <span class="mood-label">@info.Label</span>
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    private List<SessionMood> _selected = new();
+
+    [Parameter] public IReadOnlyList<SessionMood> Value { get; set; } = Array.Empty<SessionMood>();
+    [Parameter] public EventCallback<IReadOnlyList<SessionMood>> ValueChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        // Sync internal selection when the bound value changes externally (e.g. reset on save).
+        if (!_selected.SequenceEqual(Value))
+        {
+            _selected = Value.ToList();
+        }
+    }
+
+    private async Task Toggle(SessionMood mood)
+    {
+        if (_selected.Contains(mood))
+        {
+            _selected.Remove(mood);
+        }
+        else if (_selected.Count < SessionMoodHelper.MaxMoodsPerSession)
+        {
+            _selected.Add(mood);
+        }
+
+        await ValueChanged.InvokeAsync(_selected.ToList());
+    }
+}
