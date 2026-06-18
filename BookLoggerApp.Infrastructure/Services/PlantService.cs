@@ -14,6 +14,15 @@ namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
 /// Service implementation for managing user plants with caching support.
+///
+/// <para><b>Concurrency model (CODE_REVIEW BUG-10 / INK-07):</b> only
+/// <c>AppSettings</c> and <c>UserEntitlement</c> carry a working, app-stamped RowVersion
+/// concurrency token (see <c>AppDbContext.StampRowVersions</c>). <c>UserPlant</c> is
+/// deliberately <i>last-writer-wins</i> (its RowVersion is configured as a non-token), so
+/// the <see cref="DbUpdateConcurrencyException"/> handlers below do NOT detect optimistic
+/// write conflicts — they translate EF's missing-row signal (the plant row was deleted
+/// concurrently, which still surfaces as <see cref="DbUpdateConcurrencyException"/> even
+/// without a token) into a friendly <see cref="ConcurrencyException"/>.</para>
 /// </summary>
 public class PlantService : IPlantService
 {

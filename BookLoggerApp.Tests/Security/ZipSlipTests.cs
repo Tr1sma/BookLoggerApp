@@ -185,6 +185,13 @@ public class MockAppSettingsProvider : IAppSettingsProvider
     {
         return Task.FromResult(_plantsPurchased);
     }
+
+    public Task UpdateEntitlementMirrorAsync(BookLoggerApp.Core.Entitlements.SubscriptionTier tier, DateTime? expiresAt, CancellationToken ct = default)
+    {
+        _settings.CurrentTier = tier;
+        _settings.EntitlementExpiresAt = expiresAt;
+        return Task.CompletedTask;
+    }
 }
 
 public class ZipSlipTests

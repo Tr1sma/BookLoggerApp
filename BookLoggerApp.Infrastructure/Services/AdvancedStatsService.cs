@@ -1,29 +1,39 @@
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
+using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
 /// Service implementation for advanced reading statistics (trends and analyses).
+///
+/// <para>The Stats Trends/Analyses ViewModels fan these methods out concurrently via
+/// <c>Task.WhenAll</c>. EF Core forbids concurrent operations on one DbContext, so each
+/// method opens its OWN context from an <see cref="IDbContextFactory{AppDbContext}"/>
+/// (CODE_REVIEW BUG-06) rather than sharing a single injected UnitOfWork.</para>
 /// </summary>
 public class AdvancedStatsService : IAdvancedStatsService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IDbContextFactory<AppDbContext> _contextFactory;
 
-    public AdvancedStatsService(IUnitOfWork unitOfWork)
+    public AdvancedStatsService(IDbContextFactory<AppDbContext> contextFactory)
     {
-        _unitOfWork = unitOfWork;
+        _contextFactory = contextFactory;
     }
 
     // ===== Trends tab =====
 
     public async Task<Dictionary<DateTime, int>> GetReadingHeatmapAsync(int year, CancellationToken ct = default)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
         var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
 
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate);
+        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate);
 
         return sessions
             .Where(s => s.Minutes > 0)
@@ -36,7 +46,10 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     public async Task<Dictionary<DayOfWeek, int>> GetWeekdayDistributionAsync(CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
+        var sessions = await unitOfWork.ReadingSessions.GetAllAsync(ct);
 
         return sessions
             .Where(s => s.Minutes > 0)
@@ -49,7 +62,10 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     public async Task<Dictionary<string, int>> GetTimeOfDayDistributionAsync(CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
+        var sessions = await unitOfWork.ReadingSessions.GetAllAsync(ct);
 
         var result = new Dictionary<string, int>
         {
@@ -77,7 +93,10 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     public async Task<Dictionary<string, int>> GetSessionLengthDistributionAsync(CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
+        var sessions = await unitOfWork.ReadingSessions.GetAllAsync(ct);
 
         var result = new Dictionary<string, int>
         {
@@ -106,7 +125,10 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     public async Task<Dictionary<int, int>> GetMonthlyVolumeAsync(int year, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
+        var books = await unitOfWork.Books.GetAllAsync(ct);
 
         return books
             .Where(b => b.Status == ReadingStatus.Completed
@@ -121,11 +143,14 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     public async Task<(double Current, double Previous)> GetReadingSpeedTrendAsync(CancellationToken ct = default)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
         var now = DateTime.UtcNow;
         var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var previousMonthStart = currentMonthStart.AddMonths(-1);
 
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(previousMonthStart, now);
+        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(previousMonthStart, now);
 
         var currentMonthSessions = sessions
             .Where(s => s.StartedAt >= currentMonthStart && s.Minutes > 0 && s.PagesRead.HasValue && s.PagesRead > 0)
@@ -143,11 +168,14 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     public async Task<(double CurrentAvg, double PreviousAvg)> GetAverageFinishTimeTrendAsync(CancellationToken ct = default)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
         var now = DateTime.UtcNow;
         var thirtyDaysAgo = now.AddDays(-30);
         var sixtyDaysAgo = now.AddDays(-60);
 
-        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        var books = await unitOfWork.Books.GetAllAsync(ct);
 
         var completedBooks = books
             .Where(b => b.Status == ReadingStatus.Completed
@@ -178,21 +206,28 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     public async Task<(YearStats Year1, YearStats Year2)> GetYearComparisonAsync(int year1, int year2, CancellationToken ct = default)
     {
-        var stats1 = await BuildYearStatsAsync(year1, ct);
-        var stats2 = await BuildYearStatsAsync(year2, ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
+        // Both years run sequentially on this one context — no concurrent operations.
+        var stats1 = await BuildYearStatsAsync(unitOfWork, year1, ct);
+        var stats2 = await BuildYearStatsAsync(unitOfWork, year2, ct);
         return (stats1, stats2);
     }
 
     public async Task<Dictionary<string, int>> GetGenreRadarDataAsync(int maxGenres = 8, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
+        var books = await unitOfWork.Books.GetAllAsync(ct);
         var completedBookIds = books
             .Where(b => b.Status == ReadingStatus.Completed)
             .Select(b => b.Id)
             .ToHashSet();
 
-        var bookGenres = await _unitOfWork.BookGenres.GetAllAsync(ct);
-        var genres = await _unitOfWork.Genres.GetAllAsync(ct);
+        var bookGenres = await unitOfWork.BookGenres.GetAllAsync(ct);
+        var genres = await unitOfWork.Genres.GetAllAsync(ct);
         var genreLookup = genres.ToDictionary(g => g.Id, g => g.Name);
 
         var result = bookGenres
@@ -212,7 +247,10 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     public async Task<(int Completed, int Abandoned)> GetCompletionRateAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
+        var books = await unitOfWork.Books.GetAllAsync(ct);
 
         var completed = books.Count(b => b.Status == ReadingStatus.Completed);
         var abandoned = books.Count(b => b.Status == ReadingStatus.Abandoned);
@@ -222,7 +260,10 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     public async Task<Dictionary<string, int>> GetPageCountDistributionAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
+        var books = await unitOfWork.Books.GetAllAsync(ct);
 
         var result = new Dictionary<string, int>
         {
@@ -249,7 +290,10 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     public async Task<List<AuthorStats>> GetTopAuthorsAsync(int count = 5, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        var unitOfWork = new UnitOfWork(context);
+
+        var books = await unitOfWork.Books.GetAllAsync(ct);
 
         var result = books
             .Where(b => b.Status == ReadingStatus.Completed && !string.IsNullOrWhiteSpace(b.Author))
@@ -269,9 +313,9 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     // ===== Private helpers =====
 
-    private async Task<YearStats> BuildYearStatsAsync(int year, CancellationToken ct = default)
+    private static async Task<YearStats> BuildYearStatsAsync(IUnitOfWork unitOfWork, int year, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        var books = await unitOfWork.Books.GetAllAsync(ct);
         var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
 
@@ -282,7 +326,7 @@ public class AdvancedStatsService : IAdvancedStatsService
         int booksCompleted = completedBooks.Count;
         int pagesRead = completedBooks.Sum(b => b.PageCount ?? 0);
 
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate);
+        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate);
         int minutesRead = sessions.Sum(s => s.Minutes);
 
         double averageRating = completedBooks

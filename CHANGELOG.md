@@ -12,6 +12,15 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
+## [Unveröffentlicht]
+
+### Behoben
+- Optimistische Nebenläufigkeitssicherung (RowVersion) wirkt jetzt tatsächlich auf SQLite: Für App-Einstellungen und Abo-Status (Münzen, XP, Level, Tier) wird der Versions-Token bei jeder Speicherung neu gesetzt, sodass zwei gleichzeitige Schreibzugriffe erkannt werden, statt sich still gegenseitig zu überschreiben (verlorene Münzen/XP). Zuvor generierte SQLite den Token nie automatisch, wodurch die Konflikt-Erkennung wirkungslos und der zugehörige Schutzcode toter Code war.
+- Schreibzugriffe auf die App-Einstellungen (Münzen, XP, Level) werden jetzt serialisiert, sodass z. B. eine Münz-Ausgabe beim Kauf und eine gleichzeitige XP-Gutschrift sich nicht mehr gegenseitig überschreiben können. Die Spiegelung des Abo-Status in die Einstellungen aktualisiert außerdem nur noch die Abo-Spalten und kann keine zwischenzeitlichen XP-/Münz-Änderungen mehr zurücksetzen.
+- Statistik-Tabs „Trends" und „Analysen" können nicht mehr sporadisch mit leeren Diagrammen oder einem Fehler laden: Die parallel ausgeführten Statistik-Abfragen nutzen jetzt je einen eigenen Datenbank-Kontext, statt sich einen zu teilen (Entity Framework erlaubt keine gleichzeitigen Abfragen auf demselben Kontext).
+- Buch speichern ist jetzt atomar: Buch-Datensatz samt Genres, Regalen, Tropes und Wishlist-Bereinigung werden in einer einzigen Transaktion gespeichert. Bricht ein Schritt ab, bleibt kein halb gespeichertes Buch (z. B. ohne Genres/Cover oder als „abgeschlossen" markiert ohne XP-/Ziel-Neuberechnung) zurück.
+- Buchdetailseite wartet beim Laden jetzt — wie alle anderen Inhaltsseiten — auf die Hintergrund-Initialisierung der Datenbank, statt direkt loszulegen.
+
 ## [0.12.0]
 
 ### Hinzugefügt

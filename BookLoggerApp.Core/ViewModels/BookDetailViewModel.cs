@@ -83,7 +83,10 @@ public partial class BookDetailViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync(Guid bookId)
     {
-        await ExecuteSafelyAsync(async () =>
+        // Initial load gates on the background DB-init like every other content VM
+        // (BookList/BookEdit/Bookshelf/Dashboard/...) — CODE_REVIEW INK-13. Follow-up
+        // actions (StartReading/Complete/AddSession) stay on ExecuteSafelyAsync.
+        await ExecuteSafelyWithDbAsync(async () =>
         {
             Book = await _bookService.GetWithDetailsAsync(bookId);
             if (Book == null)

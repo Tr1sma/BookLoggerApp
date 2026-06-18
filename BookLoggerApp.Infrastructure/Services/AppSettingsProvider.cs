@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -18,6 +19,12 @@ public class AppSettingsProvider : IAppSettingsProvider
     private AppSettings? _cachedSettings;
     private DateTime _lastLoad = DateTime.MinValue;
     private readonly TimeSpan _cacheLifetime = TimeSpan.FromMinutes(5);
+    // Serialises every read-modify-write against the singleton AppSettings cache so two
+    // mutators (XP award vs. coin spend/add vs. entitlement mirror) cannot interleave and
+    // lose an update (CODE_REVIEW BUG-08 / INK-03 / SEC-12). NOT reentrant — never call a
+    // gated method (or GetSettingsAsync's slow path) while already holding the gate, and
+    // raise change events only AFTER releasing it (a handler may call back in).
+    private readonly SemaphoreSlim _writeGate = new(1, 1);
     // Guards against infinite recovery loops: if the schema guard repair didn't fix
     // the "no such column" error, we rethrow on the next hit instead of looping forever.
     private int _repairAttempted;
@@ -90,9 +97,11 @@ public class AppSettingsProvider : IAppSettingsProvider
     /// single save. If you need an isolated snapshot, call <see cref="InvalidateCache"/>
     /// first to force a fresh load.</para>
     ///
-    /// <para><b>Thread safety:</b> not guarded. The single-user app serialises all
-    /// progression writes through ProgressionService; no other call path mutates fields
-    /// concurrently.</para>
+    /// <para><b>Thread safety:</b> all write paths (UpdateSettingsAsync, SpendCoins,
+    /// AddCoins, IncrementPlantsPurchased, RecalculateUserLevel, UpdateEntitlementMirror)
+    /// plus the cache-miss load are serialised behind a single <see cref="_writeGate"/>
+    /// (CODE_REVIEW BUG-08 / INK-03), so interleaved read-modify-write operations on the
+    /// shared cached instance can no longer lose updates.</para>
     /// </summary>
     public async Task<AppSettings> GetSettingsAsync(CancellationToken ct = default)
     {
@@ -100,37 +109,51 @@ public class AppSettingsProvider : IAppSettingsProvider
         if (_cachedSettings != null && DateTime.UtcNow - _lastLoad < _cacheLifetime)
             return _cachedSettings;
 
-        // Create a new context for this operation
-        await using var context = await _contextFactory.CreateDbContextAsync(ct);
-
-        // Load from database, with a last-chance schema-drift repair if the primary
-        // startup guard in DbInitializer missed a missing column (e.g. a future release
-        // adds a new column the hard-coded guard list doesn't know about yet).
-        var settings = await LoadSettingsWithRecoveryAsync(context, ct);
-
-        if (settings == null)
+        // Slow path: serialise with the write gate so two callers can't both miss the cache
+        // and each insert a default AppSettings row.
+        await _writeGate.WaitAsync(ct);
+        try
         {
-            // Create default settings if none exist
-            settings = new AppSettings
+            // Double-check: another caller may have filled the cache while we waited.
+            if (_cachedSettings != null && DateTime.UtcNow - _lastLoad < _cacheLifetime)
+                return _cachedSettings;
+
+            // Create a new context for this operation
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
+            // Load from database, with a last-chance schema-drift repair if the primary
+            // startup guard in DbInitializer missed a missing column (e.g. a future release
+            // adds a new column the hard-coded guard list doesn't know about yet).
+            var settings = await LoadSettingsWithRecoveryAsync(context, ct);
+
+            if (settings == null)
             {
-                Theme = "Light",
-                Language = DetectSystemLanguage(),
-                UserLevel = 1,
-                TotalXp = 0,
-                Coins = 100, // Start with 100 coins
-                OnboardingFlowVersion = OnboardingMissionCatalog.CurrentFlowVersion,
-                OnboardingIntroStatus = OnboardingIntroStatus.NotStarted
-            };
+                // Create default settings if none exist
+                settings = new AppSettings
+                {
+                    Theme = "Light",
+                    Language = DetectSystemLanguage(),
+                    UserLevel = 1,
+                    TotalXp = 0,
+                    Coins = 100, // Start with 100 coins
+                    OnboardingFlowVersion = OnboardingMissionCatalog.CurrentFlowVersion,
+                    OnboardingIntroStatus = OnboardingIntroStatus.NotStarted
+                };
 
-            context.AppSettings.Add(settings);
-            await context.SaveChangesAsync(ct);
+                context.AppSettings.Add(settings);
+                await context.SaveChangesAsync(ct);
+            }
+
+            // Update cache
+            _cachedSettings = settings;
+            _lastLoad = DateTime.UtcNow;
+
+            return settings;
         }
-
-        // Update cache
-        _cachedSettings = settings;
-        _lastLoad = DateTime.UtcNow;
-
-        return settings;
+        finally
+        {
+            _writeGate.Release();
+        }
     }
 
     /// <summary>
@@ -143,31 +166,96 @@ public class AppSettingsProvider : IAppSettingsProvider
     /// </summary>
     public async Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default)
     {
-        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        bool progressionChanged;
 
-        // Track original values to detect progression changes
-        var originalEntry = await context.AppSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == settings.Id, ct);
-        bool progressionChanged = originalEntry != null &&
-                                  (originalEntry.TotalXp != settings.TotalXp ||
-                                   originalEntry.UserLevel != settings.UserLevel ||
-                                   originalEntry.Coins != settings.Coins);
+        await _writeGate.WaitAsync(ct);
+        try
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-        settings.UpdatedAt = DateTime.UtcNow;
-        context.AppSettings.Update(settings);
-        await context.SaveChangesAsync(ct);
+            // Track original values to detect progression changes
+            var originalEntry = await context.AppSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == settings.Id, ct);
+            progressionChanged = originalEntry != null &&
+                                      (originalEntry.TotalXp != settings.TotalXp ||
+                                       originalEntry.UserLevel != settings.UserLevel ||
+                                       originalEntry.Coins != settings.Coins);
 
-        // Refresh the cached reference so subsequent GetSettingsAsync calls see the saved state
-        _cachedSettings = settings;
-        _lastLoad = DateTime.UtcNow;
+            settings.UpdatedAt = DateTime.UtcNow;
+            context.AppSettings.Update(settings);
+            await context.SaveChangesAsync(ct);
 
-        // Notify subscribers if progression data changed
+            // Refresh the cached reference so subsequent GetSettingsAsync calls see the saved state
+            _cachedSettings = settings;
+            _lastLoad = DateTime.UtcNow;
+        }
+        finally
+        {
+            _writeGate.Release();
+        }
+
+        // Notify subscribers OUTSIDE the gate (a handler may call back into the provider).
         if (progressionChanged)
         {
             OnProgressionChanged();
         }
 
-        // Notify subscribers that settings changed
         OnSettingsChanged();
+    }
+
+    /// <summary>
+    /// Narrowly mirrors the entitlement tier/expiry into AppSettings. Loads a FRESH tracked
+    /// row and modifies only CurrentTier + EntitlementExpiresAt, so EF emits an UPDATE that
+    /// touches only those columns — it can never overwrite a concurrent XP/coin/level award
+    /// carried on the shared cached instance (CODE_REVIEW SEC-12). The shared cache (if any)
+    /// is patched in place — only the two mirror columns plus the now-bumped RowVersion — so
+    /// a held reference stays valid for a subsequent full <see cref="UpdateSettingsAsync"/>.
+    /// </summary>
+    public async Task UpdateEntitlementMirrorAsync(SubscriptionTier tier, DateTime? expiresAt, CancellationToken ct = default)
+    {
+        bool changed = false;
+
+        await _writeGate.WaitAsync(ct);
+        try
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
+            var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+            if (settings is null)
+            {
+                return;
+            }
+
+            if (settings.CurrentTier == tier && Nullable.Equals(settings.EntitlementExpiresAt, expiresAt))
+            {
+                return;
+            }
+
+            settings.CurrentTier = tier;
+            settings.EntitlementExpiresAt = expiresAt;
+            settings.UpdatedAt = DateTime.UtcNow;
+            // settings is tracked and only these columns changed → narrow UPDATE (RowVersion
+            // is bumped by AppDbContext.StampRowVersions; TotalXp/Coins/UserLevel untouched).
+            await context.SaveChangesAsync(ct);
+            changed = true;
+
+            // Keep a held shared-cache reference coherent without clobbering progression
+            // columns: mirror the two columns and adopt the freshly-bumped RowVersion.
+            if (_cachedSettings is not null)
+            {
+                _cachedSettings.CurrentTier = settings.CurrentTier;
+                _cachedSettings.EntitlementExpiresAt = settings.EntitlementExpiresAt;
+                _cachedSettings.RowVersion = settings.RowVersion;
+            }
+        }
+        finally
+        {
+            _writeGate.Release();
+        }
+
+        if (changed)
+        {
+            OnSettingsChanged();
+        }
     }
 
     public async Task<int> GetUserCoinsAsync(CancellationToken ct = default)
@@ -186,22 +274,30 @@ public class AppSettingsProvider : IAppSettingsProvider
     {
         ValidateAmount(amount);
 
-        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        await _writeGate.WaitAsync(ct);
+        try
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-        var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
-        if (settings == null)
-            throw new InvalidOperationException("AppSettings not found");
+            var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+            if (settings == null)
+                throw new InvalidOperationException("AppSettings not found");
 
-        if (settings.Coins < amount)
-            throw new InsufficientFundsException(amount, settings.Coins);
+            if (settings.Coins < amount)
+                throw new InsufficientFundsException(amount, settings.Coins);
 
-        settings.Coins -= amount;
-        settings.UpdatedAt = DateTime.UtcNow;
-        await context.SaveChangesAsync(ct);
+            settings.Coins -= amount;
+            settings.UpdatedAt = DateTime.UtcNow;
+            await context.SaveChangesAsync(ct);
 
-        // Invalidate cache
-        _cachedSettings = settings;
-        _lastLoad = DateTime.UtcNow;
+            // Refresh cache with the freshly-saved instance
+            _cachedSettings = settings;
+            _lastLoad = DateTime.UtcNow;
+        }
+        finally
+        {
+            _writeGate.Release();
+        }
 
         OnProgressionChanged();
     }
@@ -210,19 +306,27 @@ public class AppSettingsProvider : IAppSettingsProvider
     {
         ValidateAmount(amount);
 
-        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        await _writeGate.WaitAsync(ct);
+        try
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-        var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
-        if (settings == null)
-            throw new InvalidOperationException("AppSettings not found");
+            var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+            if (settings == null)
+                throw new InvalidOperationException("AppSettings not found");
 
-        settings.Coins += amount;
-        settings.UpdatedAt = DateTime.UtcNow;
-        await context.SaveChangesAsync(ct);
+            settings.Coins += amount;
+            settings.UpdatedAt = DateTime.UtcNow;
+            await context.SaveChangesAsync(ct);
 
-        // Invalidate cache
-        _cachedSettings = settings;
-        _lastLoad = DateTime.UtcNow;
+            // Refresh cache with the freshly-saved instance
+            _cachedSettings = settings;
+            _lastLoad = DateTime.UtcNow;
+        }
+        finally
+        {
+            _writeGate.Release();
+        }
 
         OnProgressionChanged();
     }
@@ -237,19 +341,27 @@ public class AppSettingsProvider : IAppSettingsProvider
 
     public async Task IncrementPlantsPurchasedAsync(CancellationToken ct = default)
     {
-        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        await _writeGate.WaitAsync(ct);
+        try
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-        var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
-        if (settings == null)
-            throw new InvalidOperationException("AppSettings not found");
+            var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+            if (settings == null)
+                throw new InvalidOperationException("AppSettings not found");
 
-        settings.PlantsPurchased++;
-        settings.UpdatedAt = DateTime.UtcNow;
-        await context.SaveChangesAsync(ct);
+            settings.PlantsPurchased++;
+            settings.UpdatedAt = DateTime.UtcNow;
+            await context.SaveChangesAsync(ct);
 
-        // Invalidate cache
-        _cachedSettings = settings;
-        _lastLoad = DateTime.UtcNow;
+            // Refresh cache with the freshly-saved instance
+            _cachedSettings = settings;
+            _lastLoad = DateTime.UtcNow;
+        }
+        finally
+        {
+            _writeGate.Release();
+        }
     }
 
     public async Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default)
@@ -319,26 +431,40 @@ public class AppSettingsProvider : IAppSettingsProvider
     /// </summary>
     public async Task RecalculateUserLevelAsync(CancellationToken ct = default)
     {
-        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        bool changed = false;
 
-        var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
-        if (settings == null)
-            throw new InvalidOperationException("AppSettings not found");
-
-        // Calculate correct level from total XP
-        int correctLevel = XpCalculator.CalculateLevelFromXp(settings.TotalXp);
-
-        // Update if different
-        if (settings.UserLevel != correctLevel)
+        await _writeGate.WaitAsync(ct);
+        try
         {
-            settings.UserLevel = correctLevel;
-            settings.UpdatedAt = DateTime.UtcNow;
-            await context.SaveChangesAsync(ct);
+            await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-            // Invalidate cache
-            _cachedSettings = settings;
-            _lastLoad = DateTime.UtcNow;
+            var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
+            if (settings == null)
+                throw new InvalidOperationException("AppSettings not found");
 
+            // Calculate correct level from total XP
+            int correctLevel = XpCalculator.CalculateLevelFromXp(settings.TotalXp);
+
+            // Update if different
+            if (settings.UserLevel != correctLevel)
+            {
+                settings.UserLevel = correctLevel;
+                settings.UpdatedAt = DateTime.UtcNow;
+                await context.SaveChangesAsync(ct);
+
+                // Refresh cache with the freshly-saved instance
+                _cachedSettings = settings;
+                _lastLoad = DateTime.UtcNow;
+                changed = true;
+            }
+        }
+        finally
+        {
+            _writeGate.Release();
+        }
+
+        if (changed)
+        {
             OnProgressionChanged();
         }
     }
