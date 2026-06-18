@@ -378,3 +378,4 @@ gha-creds-*.json
 google-services.json
 **/google-services.json
 BookLoggerApp/Platforms/Android/google-services.json
+.claude/worktrees/
