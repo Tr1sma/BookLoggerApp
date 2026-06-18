@@ -215,6 +215,144 @@ public class BookService : IBookService
         }
     }
 
+    public async Task<BookSaveResult> SaveBookWithRelationsAsync(
+        Book book,
+        IReadOnlyList<Guid> genreIds,
+        IReadOnlyList<Guid> shelfIds,
+        IReadOnlyList<Guid> tropeIds,
+        IReadOnlyList<Guid> manualShelfIds,
+        CancellationToken ct = default)
+    {
+        // Derive the new/existing + completion/wishlist decisions from PERSISTED state
+        // before touching anything, so they reflect the DB, not the in-memory edit.
+        var persisted = book.Id == Guid.Empty
+            ? null
+            : await _unitOfWork.Books.GetByIdAsync(book.Id);
+        bool isNew = persisted == null;
+        var persistedStatus = persisted?.Status;
+
+        bool isBeingCompleted = book.Status == ReadingStatus.Completed
+                                && persistedStatus.HasValue
+                                && persistedStatus.Value != ReadingStatus.Completed;
+        bool isLeavingWishlist = persistedStatus == ReadingStatus.Wishlist
+                                 && book.Status != ReadingStatus.Wishlist;
+        bool createdAsCompleted = isNew && book.Status == ReadingStatus.Completed;
+
+        if (book.DateAdded == default)
+            book.DateAdded = DateTime.UtcNow;
+
+        await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            // ---- Book record ----
+            if (isNew)
+            {
+                await _unitOfWork.Books.AddAsync(book);
+            }
+            else
+            {
+                await _unitOfWork.Books.UpdateAsync(book);
+
+                if (isLeavingWishlist)
+                {
+                    var wishlistInfo = await _unitOfWork.Context.WishlistInfos
+                        .FindAsync(new object[] { book.Id }, ct);
+                    if (wishlistInfo != null)
+                    {
+                        _unitOfWork.Context.WishlistInfos.Remove(wishlistInfo);
+                    }
+                }
+            }
+
+            // Persist the book row first so child FKs resolve (esp. for a brand-new book).
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            // ---- Genres (add/remove diff) ----
+            var currentGenres = await _unitOfWork.Context.BookGenres
+                .Where(bg => bg.BookId == book.Id)
+                .ToListAsync(ct);
+            var currentGenreIds = currentGenres.Select(bg => bg.GenreId).ToHashSet();
+
+            foreach (var stale in currentGenres.Where(bg => !genreIds.Contains(bg.GenreId)))
+            {
+                _unitOfWork.Context.BookGenres.Remove(stale);
+            }
+            foreach (var genreId in genreIds.Where(id => !currentGenreIds.Contains(id)))
+            {
+                await _unitOfWork.Context.BookGenres.AddAsync(
+                    new BookGenre { BookId = book.Id, GenreId = genreId, AddedAt = DateTime.UtcNow }, ct);
+            }
+
+            // ---- Shelves (only manual shelves may be removed; new entries go to position 0) ----
+            var currentShelfRows = await _unitOfWork.Context.BookShelves
+                .Where(bs => bs.BookId == book.Id)
+                .ToListAsync(ct);
+            var currentShelfIds = currentShelfRows.Select(bs => bs.ShelfId).ToHashSet();
+
+            foreach (var stale in currentShelfRows.Where(bs =>
+                         !shelfIds.Contains(bs.ShelfId) && manualShelfIds.Contains(bs.ShelfId)))
+            {
+                _unitOfWork.Context.BookShelves.Remove(stale);
+            }
+            foreach (var shelfId in shelfIds.Where(id => !currentShelfIds.Contains(id)))
+            {
+                // Shift existing items forward so the new book lands first (position 0),
+                // matching ShelfService.AddBookToShelfAsync.
+                var siblings = await _unitOfWork.Context.BookShelves
+                    .Where(bs => bs.ShelfId == shelfId)
+                    .ToListAsync(ct);
+                foreach (var sibling in siblings)
+                {
+                    sibling.Position += 1;
+                }
+                _unitOfWork.Context.BookShelves.Add(
+                    new BookShelf { ShelfId = shelfId, BookId = book.Id, Position = 0 });
+            }
+
+            // ---- Tropes (add/remove diff) ----
+            var currentTropes = await _unitOfWork.Context.BookTropes
+                .Where(bt => bt.BookId == book.Id)
+                .ToListAsync(ct);
+            var currentTropeIds = currentTropes.Select(bt => bt.TropeId).ToHashSet();
+
+            foreach (var stale in currentTropes.Where(bt => !tropeIds.Contains(bt.TropeId)))
+            {
+                _unitOfWork.Context.BookTropes.Remove(stale);
+            }
+            foreach (var tropeId in tropeIds.Where(id => !currentTropeIds.Contains(id)))
+            {
+                await _unitOfWork.Context.BookTropes.AddAsync(
+                    new BookTrope { BookId = book.Id, TropeId = tropeId, AddedAt = DateTime.UtcNow }, ct);
+            }
+
+            await _unitOfWork.SaveChangesAsync(ct);
+            await _unitOfWork.CommitAsync(ct);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync(ct);
+            throw;
+        }
+
+        // Completion side-effects run AFTER the commit ("Status→Completed zuletzt"):
+        // CompleteBookAsync is cross-service (XP/goal-recalc) and idempotent.
+        bool showCelebration = false;
+        bool completedFromExisting = false;
+        if (createdAsCompleted)
+        {
+            await CompleteBookAsync(book.Id, ct);
+            showCelebration = true;
+        }
+        else if (isBeingCompleted)
+        {
+            await CompleteBookAsync(book.Id, ct);
+            showCelebration = true;
+            completedFromExisting = true;
+        }
+
+        return new BookSaveResult(book, showCelebration, completedFromExisting);
+    }
+
     public async Task<ProgressionResult?> UpdateProgressAsync(Guid bookId, int currentPage, CancellationToken ct = default)
     {
         var book = await _unitOfWork.Books.GetByIdAsync(bookId);

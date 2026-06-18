@@ -48,6 +48,7 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         public Task AddCoinsAsync(int amount, CancellationToken ct = default) => Task.CompletedTask;
         public Task IncrementPlantsPurchasedAsync(CancellationToken ct = default) => Task.CompletedTask;
         public Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default) => Task.FromResult(0);
+        public Task UpdateEntitlementMirrorAsync(BookLoggerApp.Core.Entitlements.SubscriptionTier tier, DateTime? expiresAt, CancellationToken ct = default) => Task.CompletedTask;
         public void InvalidateCache() { }
         public void InvalidateCache(bool notifyProgressionChanged) { }
     }

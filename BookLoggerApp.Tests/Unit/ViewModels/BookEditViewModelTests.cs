@@ -93,11 +93,13 @@ public class BookEditViewModelTests
 
         // Assert
         _viewModel.ErrorMessage.Should().NotBeNullOrEmpty();
-        await _bookService.DidNotReceive().AddAsync(Arg.Any<Book>());
+        await _bookService.DidNotReceive().SaveBookWithRelationsAsync(
+            Arg.Any<Book>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(),
+            Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveAsync_Should_Add_New_Book()
+    public async Task SaveAsync_Should_Save_New_Book_Through_The_Atomic_Method()
     {
         // Arrange
         await _viewModel.LoadCommand.ExecuteAsync(null);
@@ -105,18 +107,24 @@ public class BookEditViewModelTests
         _viewModel.Book.Author = "Author";
 
         var savedBook = new Book { Id = Guid.NewGuid(), Title = "New Book" };
-        _bookService.AddAsync(Arg.Any<Book>()).Returns(savedBook);
+        _bookService.SaveBookWithRelationsAsync(
+            Arg.Any<Book>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(),
+            Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new BookSaveResult(savedBook, false, false));
 
         // Act
         await _viewModel.SaveCommand.ExecuteAsync(null);
 
         // Assert
-        await _bookService.Received(1).AddAsync(Arg.Is<Book>(b => b.Title == "New Book"));
+        await _bookService.Received(1).SaveBookWithRelationsAsync(
+            Arg.Is<Book>(b => b.Title == "New Book"), Arg.Any<IReadOnlyList<Guid>>(),
+            Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(),
+            Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<CancellationToken>());
         _viewModel.Book.Should().Be(savedBook);
     }
 
     [Fact]
-    public async Task SaveAsync_Should_Update_Existing_Book()
+    public async Task SaveAsync_Should_Save_Existing_Book_Through_The_Atomic_Method()
     {
         // Arrange
         var bookId = Guid.NewGuid();
@@ -125,7 +133,10 @@ public class BookEditViewModelTests
         _genreService.GetAllAsync().Returns(new List<Genre>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
         _bookService.GetWithDetailsAsync(bookId).Returns(book);
-        _bookService.GetByIdAsync(bookId).Returns(book);
+        _bookService.SaveBookWithRelationsAsync(
+            Arg.Any<Book>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(),
+            Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(ci => new BookSaveResult(ci.Arg<Book>(), false, false));
 
         await _viewModel.LoadCommand.ExecuteAsync(bookId);
         _viewModel.Book!.Title = "Updated Title";
@@ -134,59 +145,52 @@ public class BookEditViewModelTests
         await _viewModel.SaveCommand.ExecuteAsync(null);
 
         // Assert
-        await _bookService.Received(1).UpdateAsync(Arg.Is<Book>(b => b.Title == "Updated Title"));
+        await _bookService.Received(1).SaveBookWithRelationsAsync(
+            Arg.Is<Book>(b => b.Id == bookId && b.Title == "Updated Title"),
+            Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(),
+            Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveAsync_Should_Complete_Book_Only_Once_When_Saved_Twice_Without_Status_Change()
+    public async Task SaveAsync_Maps_CompletionResult_To_Celebration_Flags()
     {
         // Arrange
-        var bookId = Guid.NewGuid();
-        var dbBookPlanned = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Planned };
-        var dbBookCompleted = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Completed };
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+        _viewModel.Book!.Title = "Done";
+        _viewModel.Book.Author = "Author";
 
-        _bookService.GetWithDetailsAsync(bookId).Returns(new Book
-        {
-            Id = bookId,
-            Title = "Existing Book",
-            Author = "Author",
-            Status = ReadingStatus.Planned
-        });
-        _bookService.GetByIdAsync(bookId).Returns(dbBookPlanned, dbBookCompleted);
-
-        await _viewModel.LoadCommand.ExecuteAsync(bookId);
-        _viewModel.Book!.Status = ReadingStatus.Completed;
-
-        // Act
-        await _viewModel.SaveCommand.ExecuteAsync(null);
-        await _viewModel.SaveCommand.ExecuteAsync(null);
-
-        // Assert
-        await _bookService.Received(2).UpdateAsync(Arg.Any<Book>());
-        await _bookService.Received(1).CompleteBookAsync(bookId);
-    }
-
-    [Fact]
-    public async Task SaveAsync_Should_Not_Complete_Book_When_Db_Status_Already_Completed()
-    {
-        // Arrange
-        var bookId = Guid.NewGuid();
-        var loadedBook = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Planned };
-        var dbBookCompleted = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Completed };
-
-        _bookService.GetWithDetailsAsync(bookId).Returns(loadedBook);
-        _bookService.GetByIdAsync(bookId).Returns(dbBookCompleted);
-
-        await _viewModel.LoadCommand.ExecuteAsync(bookId);
-        _viewModel.Book!.Status = ReadingStatus.Completed;
+        _bookService.SaveBookWithRelationsAsync(
+            Arg.Any<Book>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(),
+            Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(ci => new BookSaveResult(ci.Arg<Book>(), ShowCompletionCelebration: true, CompletedFromExisting: true));
 
         // Act
         await _viewModel.SaveCommand.ExecuteAsync(null);
 
         // Assert
-        await _bookService.Received(1).UpdateAsync(Arg.Any<Book>());
-        await _bookService.DidNotReceive().CompleteBookAsync(bookId);
-        _viewModel.Book.Status.Should().Be(ReadingStatus.Completed);
+        _viewModel.ShowBookCompletionCelebration.Should().BeTrue();
+        _viewModel.BookCompletedFromSession.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SaveAsync_NoCompletion_LeavesCelebrationFlagsUnset()
+    {
+        // Arrange
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+        _viewModel.Book!.Title = "Plain";
+        _viewModel.Book.Author = "Author";
+
+        _bookService.SaveBookWithRelationsAsync(
+            Arg.Any<Book>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(),
+            Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(ci => new BookSaveResult(ci.Arg<Book>(), false, false));
+
+        // Act
+        await _viewModel.SaveCommand.ExecuteAsync(null);
+
+        // Assert
+        _viewModel.ShowBookCompletionCelebration.Should().BeFalse();
+        _viewModel.BookCompletedFromSession.Should().BeFalse();
     }
 
     [Fact]

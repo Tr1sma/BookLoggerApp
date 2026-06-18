@@ -16,9 +16,13 @@ public class AdvancedStatsServiceTests : IDisposable
 
     public AdvancedStatsServiceTests()
     {
-        _context = TestDbContext.Create();
+        // Share one named in-memory store between the arrange-context (_unitOfWork) and the
+        // service's per-query factory, since AdvancedStatsService now opens its own context
+        // per call (CODE_REVIEW BUG-06).
+        var databaseName = Guid.NewGuid().ToString();
+        _context = TestDbContext.Create(databaseName);
         _unitOfWork = new UnitOfWork(_context);
-        _service = new AdvancedStatsService(_unitOfWork);
+        _service = new AdvancedStatsService(new TestDbContextFactory(databaseName));
     }
 
     public void Dispose()

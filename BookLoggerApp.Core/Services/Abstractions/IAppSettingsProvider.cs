@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Models;
 
 namespace BookLoggerApp.Core.Services.Abstractions;
@@ -25,6 +26,15 @@ public interface IAppSettingsProvider
     Task AddCoinsAsync(int amount, CancellationToken ct = default);
     Task IncrementPlantsPurchasedAsync(CancellationToken ct = default);
     Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Mirrors the current entitlement <paramref name="tier"/> and <paramref name="expiresAt"/>
+    /// into <see cref="AppSettings.CurrentTier"/>/<see cref="AppSettings.EntitlementExpiresAt"/>
+    /// using a <b>narrow</b> update that touches ONLY those two columns. Unlike a full-entity
+    /// <see cref="UpdateSettingsAsync"/>, this can never clobber concurrent XP/coin/level writes
+    /// from a stale cached instance (CODE_REVIEW SEC-12). Serialised with the other write paths.
+    /// </summary>
+    Task UpdateEntitlementMirrorAsync(SubscriptionTier tier, DateTime? expiresAt, CancellationToken ct = default);
 
     /// <summary>
     /// Invalidates the cached settings, forcing a fresh load from the database on next access.

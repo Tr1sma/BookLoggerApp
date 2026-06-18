@@ -273,16 +273,10 @@ public class EntitlementService : IEntitlementService
     {
         try
         {
-            AppSettings settings = await _settingsProvider.GetSettingsAsync(ct);
-            if (settings.CurrentTier == entitlement.Tier
-                && Nullable.Equals(settings.EntitlementExpiresAt, entitlement.ExpiresAt))
-            {
-                return;
-            }
-
-            settings.CurrentTier = entitlement.Tier;
-            settings.EntitlementExpiresAt = entitlement.ExpiresAt;
-            await _settingsProvider.UpdateSettingsAsync(settings, ct);
+            // Narrow update: touches only CurrentTier/EntitlementExpiresAt so it can never
+            // clobber a concurrent XP/coin/level award (CODE_REVIEW SEC-12). The provider
+            // serialises this against all other AppSettings writes.
+            await _settingsProvider.UpdateEntitlementMirrorAsync(entitlement.Tier, entitlement.ExpiresAt, ct);
         }
         catch (Exception ex)
         {
