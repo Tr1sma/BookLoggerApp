@@ -1,0 +1,139 @@
+@using ApexCharts
+@using System.Globalization
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
+
+<div class="burndown-forecast-section">
+    <div class="forecast-header">
+        <h3>🔮 @L["BookDetail_Forecast_Title"]</h3>
+        <span class="forecast-confidence-badge confidence-@Forecast.Confidence.ToString().ToLowerInvariant()">
+            @ConfidenceLabel()
+        </span>
+    </div>
+
+    <p class="forecast-headline">@L["BookDetail_Forecast_Headline", FormatDate(Forecast.ProjectedCompletionUtc)]</p>
+
+    @if (Forecast.HasRange)
+    {
+        <p class="forecast-range">
+            @L["BookDetail_Forecast_Range", FormatDate(Forecast.OptimisticCompletionUtc), FormatDate(Forecast.PessimisticCompletionUtc)]
+        </p>
+    }
+
+    <div class="progress-stats forecast-stats">
+        <div class="progress-stat-item">
+            <label>@L["BookDetail_Forecast_PagesRemaining"]</label>
+            <p>@Forecast.PagesRemaining</p>
+        </div>
+        <div class="progress-stat-item">
+            <label>@L["BookDetail_Forecast_PagesPerDay"]</label>
+            <p>@Forecast.AveragePagesPerDay.ToString("0.#", CultureInfo.CurrentCulture)</p>
+        </div>
+        <div class="progress-stat-item">
+            <label>@L["BookDetail_Forecast_AvgSession"]</label>
+            <p>@FormatSession()</p>
+        </div>
+    </div>
+
+    @if (_options is not null && Forecast.ActualSeries.Count > 0)
+    {
+        <div class="forecast-chart-wrapper">
+            <p class="forecast-chart-caption">@L["BookDetail_Forecast_AxisPages"]</p>
+            <ApexChart TItem="BurnDownPoint" Options="_options" Height="260">
+                <ApexPointSeries TItem="BurnDownPoint"
+                                 Items="Forecast.ActualSeries"
+                                 Name="@L["BookDetail_Forecast_SeriesActual"].Value"
+                                 SeriesType="SeriesType.Area"
+                                 XValue="p => p.Date"
+                                 YValue="p => (decimal)p.PagesRemaining" />
+                <ApexPointSeries TItem="BurnDownPoint"
+                                 Items="Forecast.ProjectedSeries"
+                                 Name="@L["BookDetail_Forecast_SeriesProjected"].Value"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="p => p.Date"
+                                 YValue="p => (decimal)p.PagesRemaining" />
+            </ApexChart>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public ReadingForecast Forecast { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Book Book { get; set; } = default!;
+
+    private ApexChartOptions<BurnDownPoint>? _options;
+
+    protected override void OnParametersSet()
+    {
+        _options = CreateForecastChartOptions();
+    }
+
+    private string FormatDate(DateTime utc)
+        => utc.ToLocalTime().ToString("ddd, dd MMM", CultureInfo.CurrentCulture);
+
+    private string FormatSession()
+    {
+        int minutes = (int)Math.Round(Forecast.AverageSessionMinutes);
+        return minutes <= 0 ? "—" : L["Common_Time_Minutes", minutes].Value;
+    }
+
+    private string ConfidenceLabel() => Forecast.Confidence switch
+    {
+        ForecastConfidence.High => L["BookDetail_Forecast_Confidence_High"].Value,
+        ForecastConfidence.Medium => L["BookDetail_Forecast_Confidence_Medium"].Value,
+        _ => L["BookDetail_Forecast_Confidence_Low"].Value
+    };
+
+    private static ApexChartOptions<BurnDownPoint> CreateForecastChartOptions()
+    {
+        return new ApexChartOptions<BurnDownPoint>
+        {
+            Chart = new Chart
+            {
+                Background = "transparent",
+                ForeColor = "#C9B5A0",
+                Toolbar = new Toolbar { Show = false },
+                Animations = new Animations { Enabled = true, Speed = 400 }
+            },
+            Colors = new List<string> { "#D4A574", "#8B7355" },
+            Stroke = new Stroke
+            {
+                Curve = Curve.Straight,
+                Width = 2.0,
+                DashArray = new List<double> { 0, 6 } // series 0 solid, series 1 dashed
+            },
+            DataLabels = new DataLabels { Enabled = false },
+            Grid = new Grid
+            {
+                BorderColor = "#3D3126",
+                StrokeDashArray = 4
+            },
+            Xaxis = new XAxis
+            {
+                Type = XAxisType.Datetime,
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = "#C9B5A0", FontSize = "11px" }
+                },
+                AxisTicks = new AxisTicks { Color = "#3D3126" }
+            },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Min = 0,
+                    Labels = new YAxisLabels
+                    {
+                        Style = new AxisLabelStyle { Colors = "#C9B5A0", FontSize = "11px" }
+                    }
+                }
+            },
+            Tooltip = new Tooltip { Theme = Mode.Dark }
+        };
+    }
+}

@@ -1,7 +1,9 @@
+@using BookLoggerApp.Core.Enums
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
 @using BookLoggerApp.Components.Shared
+@using Microsoft.AspNetCore.Components.Web
 @using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject IProgressService ProgressService
@@ -11,6 +13,7 @@
 @inject IShareCardService ShareCardService
 @inject IImageService CoverImageService
 @inject IShareService ShareService
+@inject IAppSettingsProvider AppSettings
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 @inject IReviewPromptService ReviewPromptService
 @inject IStringLocalizer<AppResources> L
@@ -37,9 +40,40 @@
 
         <!-- Main Timer Display -->
         <div class="timer-inline-main">
-            <div class="timer-display-large">
-                <div class="timer-icon">⏱️</div>
-                <div class="timer-value-large">@FormatTime(ElapsedTime)</div>
+            <div class="timer-display-column">
+                <div class="timer-display-large">
+                    <div class="timer-icon">⏱️</div>
+                    @if (_isEditingTime)
+                    {
+                        <input type="text"
+                               class="timer-value-input"
+                               @bind="_timeInputText"
+                               @bind:event="oninput"
+                               placeholder="00:00"
+                               @onkeydown="HandleTimeInputKeyDown"
+                               @onblur="HandleTimeBlur"
+                               @onclick:stopPropagation="true"
+                               @ref="_timeInputRef" />
+                    }
+                    else if (CanEditTime)
+                    {
+                        <button type="button" class="timer-value-large timer-value-button" @onclick="BeginTimeEdit">
+                            @FormatTime(ElapsedTime)
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="timer-value-large">@FormatTime(ElapsedTime)</div>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(_timeInputError))
+                {
+                    <p class="timer-time-error">@_timeInputError</p>
+                }
+                @if (CanEditTime && !_isEditingTime)
+                {
+                    <p class="timer-edit-hint">@L["TimerInline_EditTimeHint"]</p>
+                }
             </div>
 
             <!-- Controls -->
@@ -114,6 +148,11 @@
                         </div>
                     </div>
                 </div>
+
+                @if (_moodTrackingEnabled)
+                {
+                    <SessionMoodPicker @bind-Value="_selectedMoods" />
+                }
             </div>
         }
 
@@ -206,13 +245,40 @@
     private bool ShowReviewPrompt { get; set; }
     private bool ReviewPromptPending { get; set; }
 
+    // Mood/Trigger tracking
+    private IReadOnlyList<SessionMood> _selectedMoods = Array.Empty<SessionMood>();
+    private bool _moodTrackingEnabled = true;
+
     // State restoration tracking
     private bool _stateRestoreAttempted;
+
+    // Manual time entry
+    private bool _isEditingTime;
+    private string _timeInputText = "";
+    private string? _timeInputError;
+    private ElementReference _timeInputRef;
+    private bool _focusTimeInputOnNextRender;
+
+    private bool CanEditTime => !IsRunning;
 
     protected override void OnInitialized()
     {
         TimerStateService.AppResumed += OnAppResumed;
         TimerStateService.ExternalCommandReceived += OnExternalCommand;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _moodTrackingEnabled = (await AppSettings.GetSettingsAsync()).MoodTrackingEnabled;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusTimeInputOnNextRender)
+        {
+            _focusTimeInputOnNextRender = false;
+            await _timeInputRef.FocusAsync();
+        }
     }
 
     protected override void OnParametersSet()
@@ -388,6 +454,157 @@
         UpdateTimerNotification();
     }
 
+    private void BeginTimeEdit()
+    {
+        if (!CanEditTime || _isEditingTime)
+        {
+            return;
+        }
+
+        _timeInputError = null;
+        _timeInputText = ElapsedTime.TotalSeconds > 0 ? FormatTime(ElapsedTime) : "";
+        _isEditingTime = true;
+        _focusTimeInputOnNextRender = true;
+    }
+
+    private void CancelTimeEdit()
+    {
+        _isEditingTime = false;
+        _timeInputText = "";
+        _timeInputError = null;
+    }
+
+    private async Task HandleTimeBlur()
+    {
+        await CommitTimeEdit();
+    }
+
+    private async Task HandleTimeInputKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            CancelTimeEdit();
+            return;
+        }
+
+        if (e.Key == "Enter")
+        {
+            await CommitTimeEdit();
+        }
+    }
+
+    private async Task CommitTimeEdit()
+    {
+        if (!_isEditingTime)
+        {
+            return;
+        }
+
+        if (!TryParseDuration(_timeInputText.Trim(), out TimeSpan duration))
+        {
+            _timeInputError = L["TimerInline_InvalidDuration"].Value;
+            _isEditingTime = false;
+            _timeInputText = "";
+            return;
+        }
+
+        _isEditingTime = false;
+        _timeInputText = "";
+        _timeInputError = null;
+        await ApplyPausedElapsedAsync(duration);
+    }
+
+    private async Task ApplyPausedElapsedAsync(TimeSpan elapsed)
+    {
+        if (Book == null || elapsed.TotalSeconds <= 0 || elapsed.TotalHours > 24)
+        {
+            return;
+        }
+
+        try
+        {
+            if (!CurrentSessionId.HasValue)
+            {
+                ReadingSession session = await ProgressService.StartSessionAsync(Book.Id);
+                CurrentSessionId = session.Id;
+            }
+
+            ElapsedTime = elapsed;
+            PausedTime = elapsed;
+            IsRunning = false;
+            StartTime = DateTime.UtcNow - elapsed;
+            StopTimer();
+            if (CurrentPageInput == 0)
+            {
+                CurrentPageInput = Book.CurrentPage;
+            }
+
+            PersistTimerState();
+            UpdateTimerNotification();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to apply manual time: {ex.Message}");
+        }
+    }
+
+    private static bool TryParseDuration(string input, out TimeSpan duration)
+    {
+        duration = TimeSpan.Zero;
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return false;
+        }
+
+        input = input.Trim();
+        if (!input.Contains(':'))
+        {
+            if (!int.TryParse(input, out int minutesOnly) || minutesOnly <= 0)
+            {
+                return false;
+            }
+
+            duration = TimeSpan.FromMinutes(minutesOnly);
+            return duration.TotalSeconds > 0 && duration.TotalHours <= 24;
+        }
+
+        string[] parts = input.Split(':');
+        if (parts.Length == 2)
+        {
+            if (!int.TryParse(parts[0], out int mm) || !int.TryParse(parts[1], out int ss))
+            {
+                return false;
+            }
+
+            if (mm < 0 || ss < 0 || ss >= 60)
+            {
+                return false;
+            }
+
+            duration = new TimeSpan(0, mm, ss);
+        }
+        else if (parts.Length == 3)
+        {
+            if (!int.TryParse(parts[0], out int hh) || !int.TryParse(parts[1], out int mm) || !int.TryParse(parts[2], out int ss))
+            {
+                return false;
+            }
+
+            if (hh < 0 || mm < 0 || ss < 0 || mm >= 60 || ss >= 60)
+            {
+                return false;
+            }
+
+            duration = new TimeSpan(hh, mm, ss);
+        }
+        else
+        {
+            return false;
+        }
+
+        return duration.TotalSeconds > 0 && duration.TotalHours <= 24;
+    }
+
     private void HandleResume()
     {
         StartTime = DateTime.UtcNow - PausedTime;
@@ -414,7 +631,8 @@
                 CurrentPageInput >= Book.PageCount.Value;
 
             // End session using ProgressService which handles XP, streak, plant boost, level-ups
-            var result = await ProgressService.EndSessionAsync(CurrentSessionId.Value, pagesRead);
+            int minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes);
+            var result = await ProgressService.EndSessionAsync(CurrentSessionId.Value, pagesRead, minutes, _selectedMoods);
 
             // Update book progress if pages were read
             if (pagesRead > 0)
@@ -519,6 +737,7 @@
         IsRunning = false;
         CurrentPageInput = 0; // Reset to 0, will be re-initialized in OnParametersSet
         CurrentSessionId = null;
+        _selectedMoods = Array.Empty<SessionMood>();
         GoalCompletedDuringSession = false;
         BookCompletedDuringSession = false;
         StreakCelebrationPending = false;

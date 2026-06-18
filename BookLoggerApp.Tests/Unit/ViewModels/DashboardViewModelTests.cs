@@ -15,6 +15,7 @@ public class DashboardViewModelTests
     private readonly IGoalService _goalService;
     private readonly IPlantService _plantService;
     private readonly IStatsService _statsService;
+    private readonly IReadingForecastService _readingForecastService;
     private readonly DashboardViewModel _viewModel;
 
     public DashboardViewModelTests()
@@ -25,13 +26,15 @@ public class DashboardViewModelTests
         _goalService = Substitute.For<IGoalService>();
         _plantService = Substitute.For<IPlantService>();
         _statsService = Substitute.For<IStatsService>();
+        _readingForecastService = Substitute.For<IReadingForecastService>();
 
         _viewModel = new DashboardViewModel(
             _bookService,
             _progressService,
             _goalService,
             _plantService,
-            _statsService
+            _statsService,
+            _readingForecastService
         );
     }
 
@@ -80,6 +83,26 @@ public class DashboardViewModelTests
         _viewModel.ActiveGoals.Should().HaveCount(1);
         _viewModel.ActivePlant.Should().Be(plant);
         _viewModel.RecentActivity.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task LoadAsync_Should_Populate_UpcomingFinishes_FromForecastService()
+    {
+        var forecast = new ReadingForecast
+        {
+            PagesRemaining = 100,
+            ProjectedCompletionUtc = DateTime.UtcNow.AddDays(5)
+        };
+        var items = new List<UpcomingFinish>
+        {
+            new(Guid.NewGuid(), "Forecast Book", "Author", null, forecast)
+        };
+        _readingForecastService.GetUpcomingFinishesAsync(Arg.Any<CancellationToken>()).Returns(items);
+
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+
+        _viewModel.UpcomingFinishes.Should().HaveCount(1);
+        _viewModel.UpcomingFinishes[0].Title.Should().Be("Forecast Book");
     }
 
     [Fact]

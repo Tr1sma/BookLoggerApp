@@ -16,6 +16,7 @@ public class BookDetailViewModelTests
     private readonly IGenreService _genreService;
     private readonly IShareCardService _shareCardService;
     private readonly IImageService _imageService;
+    private readonly IAppSettingsProvider _settingsProvider;
     private readonly BookDetailViewModel _viewModel;
 
     public BookDetailViewModelTests()
@@ -29,6 +30,8 @@ public class BookDetailViewModelTests
         _genreService = Substitute.For<IGenreService>();
         _shareCardService = Substitute.For<IShareCardService>();
         _imageService = Substitute.For<IImageService>();
+        _settingsProvider = Substitute.For<IAppSettingsProvider>();
+        _settingsProvider.GetSettingsAsync().Returns(new AppSettings { MoodTrackingEnabled = true });
 
         _viewModel = new BookDetailViewModel(
             _bookService,
@@ -37,7 +40,8 @@ public class BookDetailViewModelTests
             _annotationService,
             _genreService,
             _shareCardService,
-            _imageService);
+            _imageService,
+            _settingsProvider);
     }
 
     [Fact]
@@ -125,6 +129,100 @@ public class BookDetailViewModelTests
         _viewModel.Quotes.Should().HaveCount(1);
         _viewModel.Annotations.Should().HaveCount(1);
         _viewModel.BookGenres.Should().HaveCount(1);
+    }
+
+    private static ReadingSession[] PagedSessions(Guid bookId) => new[]
+    {
+        new ReadingSession { BookId = bookId, StartedAt = DateTime.UtcNow.AddDays(-8), Minutes = 30, PagesRead = 25 },
+        new ReadingSession { BookId = bookId, StartedAt = DateTime.UtcNow.AddDays(-4), Minutes = 30, PagesRead = 25 },
+        new ReadingSession { BookId = bookId, StartedAt = DateTime.UtcNow.AddDays(-1), Minutes = 30, PagesRead = 25 },
+    };
+
+    [Fact]
+    public async Task LoadAsync_Reading_WithSessions_PopulatesForecast()
+    {
+        var book = new Book
+        {
+            Id = Guid.NewGuid(),
+            Title = "T",
+            Author = "A",
+            PageCount = 300,
+            CurrentPage = 100,
+            Status = ReadingStatus.Reading,
+            DateStarted = DateTime.UtcNow.AddDays(-10)
+        };
+        StubReload(book);
+        _progressService.GetSessionsByBookAsync(book.Id, Arg.Any<CancellationToken>())
+            .Returns(PagedSessions(book.Id));
+
+        await _viewModel.LoadCommand.ExecuteAsync(book.Id);
+
+        _viewModel.Forecast.Should().NotBeNull();
+        _viewModel.Forecast!.PagesRemaining.Should().Be(200);
+    }
+
+    [Fact]
+    public async Task LoadAsync_NotReading_LeavesForecastNull()
+    {
+        var book = new Book
+        {
+            Id = Guid.NewGuid(),
+            Title = "T",
+            Author = "A",
+            PageCount = 300,
+            CurrentPage = 100,
+            Status = ReadingStatus.Completed,
+            DateStarted = DateTime.UtcNow.AddDays(-10)
+        };
+        StubReload(book);
+        _progressService.GetSessionsByBookAsync(book.Id, Arg.Any<CancellationToken>())
+            .Returns(PagedSessions(book.Id));
+
+        await _viewModel.LoadCommand.ExecuteAsync(book.Id);
+
+        _viewModel.Forecast.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task LoadAsync_Reading_NoSessions_ForecastNull()
+    {
+        var book = new Book
+        {
+            Id = Guid.NewGuid(),
+            Title = "T",
+            Author = "A",
+            PageCount = 300,
+            CurrentPage = 0,
+            Status = ReadingStatus.Reading,
+            DateStarted = DateTime.UtcNow.AddDays(-5)
+        };
+        StubReload(book); // GetSessionsByBookAsync returns empty
+
+        await _viewModel.LoadCommand.ExecuteAsync(book.Id);
+
+        _viewModel.Forecast.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task LoadAsync_Reading_NullPageCount_ForecastNull()
+    {
+        var book = new Book
+        {
+            Id = Guid.NewGuid(),
+            Title = "T",
+            Author = "A",
+            PageCount = null,
+            CurrentPage = 50,
+            Status = ReadingStatus.Reading,
+            DateStarted = DateTime.UtcNow.AddDays(-10)
+        };
+        StubReload(book);
+        _progressService.GetSessionsByBookAsync(book.Id, Arg.Any<CancellationToken>())
+            .Returns(PagedSessions(book.Id));
+
+        await _viewModel.LoadCommand.ExecuteAsync(book.Id);
+
+        _viewModel.Forecast.Should().BeNull();
     }
 
     [Fact]

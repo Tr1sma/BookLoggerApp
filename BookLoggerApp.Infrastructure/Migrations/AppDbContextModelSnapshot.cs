@@ -119,6 +119,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<bool>("LiveTimerNotificationEnabled")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("MoodTrackingEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("NotificationsEnabled")
                         .HasColumnType("INTEGER");
 
@@ -226,6 +231,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             HideGettingStartedCta = false,
                             Language = "en",
                             LiveTimerNotificationEnabled = true,
+                            MoodTrackingEnabled = true,
                             NotificationsEnabled = false,
                             OnboardingAutoCompletedForExistingUser = false,
                             OnboardingCurrentStep = 0,
@@ -1022,6 +1028,19 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.HasIndex("StartedAt");
 
                     b.ToTable("ReadingSessions");
+                });
+
+            modelBuilder.Entity("BookLoggerApp.Core.Models.ReadingSessionMood", b =>
+                {
+                    b.Property<Guid>("ReadingSessionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Mood")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ReadingSessionId", "Mood");
+
+                    b.ToTable("ReadingSessionMoods");
                 });
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Shelf", b =>
@@ -2037,6 +2056,17 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Navigation("Book");
                 });
 
+            modelBuilder.Entity("BookLoggerApp.Core.Models.ReadingSessionMood", b =>
+                {
+                    b.HasOne("BookLoggerApp.Core.Models.ReadingSession", "ReadingSession")
+                        .WithMany("Moods")
+                        .HasForeignKey("ReadingSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReadingSession");
+                });
+
             modelBuilder.Entity("BookLoggerApp.Core.Models.ShopItem", b =>
                 {
                     b.HasOne("BookLoggerApp.Core.Models.PlantSpecies", "PlantSpecies")
@@ -2125,6 +2155,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Navigation("ExcludedBooks");
 
                     b.Navigation("GoalGenres");
+                });
+
+            modelBuilder.Entity("BookLoggerApp.Core.Models.ReadingSession", b =>
+                {
+                    b.Navigation("Moods");
                 });
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Shelf", b =>

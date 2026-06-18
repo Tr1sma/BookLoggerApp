@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Repositories.Specific;
@@ -43,6 +44,32 @@ public class ReadingSessionRepositoryTests : IDisposable
         // Assert
         sessions.Should().HaveCount(2);
         sessions.Should().OnlyContain(s => s.BookId == book1.Id);
+    }
+
+    [Fact]
+    public async Task GetSessionsByBookAsync_ShouldEagerLoadMoods()
+    {
+        // Arrange
+        var book = await _bookRepository.AddAsync(new Book { Title = "Book", Author = "Author" });
+        await _repository.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            Minutes = 30,
+            Moods = new List<ReadingSessionMood>
+            {
+                new() { Mood = SessionMood.Crying },
+                new() { Mood = SessionMood.Spice }
+            }
+        });
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var sessions = (await _repository.GetSessionsByBookAsync(book.Id)).ToList();
+
+        // Assert — moods come back without a separate query (proves the .Include).
+        sessions.Should().HaveCount(1);
+        sessions[0].MoodList.Should().BeEquivalentTo(new[] { SessionMood.Crying, SessionMood.Spice });
     }
 
     [Fact]

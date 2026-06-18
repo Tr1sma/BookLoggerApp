@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Genre> Genres => Set<Genre>();
     public DbSet<BookGenre> BookGenres => Set<BookGenre>();
     public DbSet<ReadingSession> ReadingSessions => Set<ReadingSession>();
+    public DbSet<ReadingSessionMood> ReadingSessionMoods => Set<ReadingSessionMood>();
     public DbSet<Quote> Quotes => Set<Quote>();
     public DbSet<Annotation> Annotations => Set<Annotation>();
     public DbSet<ReadingGoal> ReadingGoals => Set<ReadingGoal>();

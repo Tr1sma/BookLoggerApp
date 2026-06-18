@@ -25,7 +25,8 @@ public static class FeaturePolicy
             [FeatureKey.Tropes] = SubscriptionTier.Plus,
             [FeatureKey.PremiumThemes] = SubscriptionTier.Plus,
             [FeatureKey.FeatureSuggestionForm] = SubscriptionTier.Premium,
-            [FeatureKey.FamilySharing] = SubscriptionTier.Premium
+            [FeatureKey.FamilySharing] = SubscriptionTier.Premium,
+            [FeatureKey.ReadingForecast] = SubscriptionTier.Plus
         };
 
     public static SubscriptionTier GetMinimumTier(FeatureKey feature)

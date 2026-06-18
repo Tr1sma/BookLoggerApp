@@ -76,7 +76,7 @@ public partial class SettingsViewModel : ViewModelBase
     private AppSettings _settings = new();
 
     [ObservableProperty]
-    private string _appVersion = "0.11.5";
+    private string _appVersion = "0.12.0";
 
     [ObservableProperty]
     private string _migrationLog;
@@ -155,6 +155,16 @@ public partial class SettingsViewModel : ViewModelBase
             }
             await SaveSettingsInternalAsync();
         }, Tr("Error_FailedTo_UpdateNotificationSettings"));
+    }
+
+    [RelayCommand]
+    public async Task ToggleMoodTrackingAsync(bool enabled)
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            Settings.MoodTrackingEnabled = enabled;
+            await SaveSettingsInternalAsync();
+        }, Tr("Error_FailedTo_UpdateMoodTrackingSettings"));
     }
 
     [RelayCommand]

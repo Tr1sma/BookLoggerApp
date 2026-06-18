@@ -34,5 +34,8 @@ public enum FeatureKey
 
     // Premium-exclusive extras
     FeatureSuggestionForm = 15,
-    FamilySharing = 16
+    FamilySharing = 16,
+
+    // Predictive analytics
+    ReadingForecast = 17
 }

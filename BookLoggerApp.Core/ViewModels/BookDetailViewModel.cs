@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 
@@ -15,6 +16,7 @@ public partial class BookDetailViewModel : ViewModelBase
     private readonly IGenreService _genreService;
     private readonly IShareCardService _shareCardService;
     private readonly IImageService _imageService;
+    private readonly IAppSettingsProvider _settingsProvider;
 
     /// <summary>
     /// Raised when a book recommendation share card PNG is ready.
@@ -28,7 +30,8 @@ public partial class BookDetailViewModel : ViewModelBase
         IAnnotationService annotationService,
         IGenreService genreService,
         IShareCardService shareCardService,
-        IImageService imageService)
+        IImageService imageService,
+        IAppSettingsProvider settingsProvider)
     {
         _bookService = bookService;
         _progressService = progressService;
@@ -37,6 +40,7 @@ public partial class BookDetailViewModel : ViewModelBase
         _genreService = genreService;
         _shareCardService = shareCardService;
         _imageService = imageService;
+        _settingsProvider = settingsProvider;
     }
 
     [ObservableProperty]
@@ -63,6 +67,19 @@ public partial class BookDetailViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isGeneratingBookCard;
 
+    /// <summary>
+    /// Whether mood/trigger tracking is enabled (gates the "Emotional Journey" chart).
+    /// </summary>
+    [ObservableProperty]
+    private bool _moodTrackingEnabled = true;
+
+    /// <summary>
+    /// Data-driven finish prediction for the currently-loaded book, or <c>null</c> when
+    /// the book is not being read or there is not enough session data to forecast.
+    /// </summary>
+    [ObservableProperty]
+    private ReadingForecast? _forecast;
+
     [RelayCommand]
     public async Task LoadAsync(Guid bookId)
     {
@@ -81,6 +98,8 @@ public partial class BookDetailViewModel : ViewModelBase
             var sessions = await _progressService.GetSessionsByBookAsync(bookId);
             Sessions = new ObservableCollection<ReadingSession>(sessions);
 
+            MoodTrackingEnabled = (await _settingsProvider.GetSettingsAsync()).MoodTrackingEnabled;
+
             var quotes = await _quoteService.GetQuotesByBookAsync(bookId);
             Quotes = new ObservableCollection<Quote>(quotes);
 
@@ -88,6 +107,11 @@ public partial class BookDetailViewModel : ViewModelBase
             Annotations = new ObservableCollection<Annotation>(annotations);
 
             BookGenres = (await _genreService.GetGenresForBookAsync(bookId)).ToList();
+
+            // Build the finish forecast from the freshly-loaded sessions (no extra DB call).
+            Forecast = Book is { Status: ReadingStatus.Reading, PageCount: > 0 }
+                ? ReadingForecastCalculator.TryBuildForecast(Book, Sessions, DateTime.UtcNow)
+                : null;
         }, Tr("Error_FailedTo_LoadBookDetails"));
     }
 
