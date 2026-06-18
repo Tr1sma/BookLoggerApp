@@ -21,6 +21,13 @@ Versionsschema:
 - Buch speichern ist jetzt atomar: Buch-Datensatz samt Genres, Regalen, Tropes und Wishlist-Bereinigung werden in einer einzigen Transaktion gespeichert. Bricht ein Schritt ab, bleibt kein halb gespeichertes Buch (z. B. ohne Genres/Cover oder als „abgeschlossen" markiert ohne XP-/Ziel-Neuberechnung) zurück.
 - Buchdetailseite wartet beim Laden jetzt — wie alle anderen Inhaltsseiten — auf die Hintergrund-Initialisierung der Datenbank, statt direkt loszulegen.
 
+### Sicherheit
+- Abo-Features werden jetzt im Service-Layer durchgesetzt, nicht mehr nur über die Sperr-Overlays in der UI. Damit lassen sich kostenpflichtige Funktionen nicht mehr über Umwege (veraltete UI nach Tarif-Ablauf, programmatische Aufrufe) freischalten:
+  - Pflanzen- und Dekorations-Käufe prüfen den jeweiligen Tarif (Plus/Premium) bevor Münzen abgebucht werden — Prestige-Pflanzen und Ultimate-Dekorationen bleiben Premium vorbehalten.
+  - Genre-Filter und Buch-Ausschlüsse auf Lesezielen (Premium) werden beim Hinzufügen geprüft — der Umweg über das Bearbeiten-/Ausschluss-Modal ist geschlossen. Das Entfernen bleibt offen, damit herabgestufte Nutzer ihre Filter weiterhin bereinigen können.
+  - Wishlist-Schreibzugriffe (Plus), Tropes-Verschlagwortung (Plus) und individuelle Regal-Farben (Plus) sind ebenfalls serverseitig abgesichert.
+- Nach einer Herabstufung (z. B. Premium → Free) ausgeblendete Bezahl-Inhalte bleiben jetzt konsequent verborgen: versteckte Prestige-Pflanzen und die Ultimate-Dekoration erscheinen nicht mehr im Garten/Regal und fließen nicht mehr in Boost-Berechnungen ein (zuvor wurden nur Regale gefiltert).
+
 ## [0.12.0]
 
 ### Hinzugefügt

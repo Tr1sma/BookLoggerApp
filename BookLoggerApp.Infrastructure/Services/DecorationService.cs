@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
@@ -17,15 +18,18 @@ public class DecorationService : IDecorationService
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
     private readonly IAppSettingsProvider _settingsProvider;
     private readonly ILogger<DecorationService> _logger;
+    private readonly IFeatureGuard? _featureGuard;
 
     public DecorationService(
         IDbContextFactory<AppDbContext> contextFactory,
         IAppSettingsProvider settingsProvider,
-        ILogger<DecorationService> logger)
+        ILogger<DecorationService> logger,
+        IFeatureGuard? featureGuard = null)
     {
         _contextFactory = contextFactory;
         _settingsProvider = settingsProvider;
         _logger = logger;
+        _featureGuard = featureGuard;
     }
 
     public async Task<IReadOnlyList<ShopItem>> GetAllDecorationShopItemsAsync(CancellationToken ct = default)
@@ -41,8 +45,11 @@ public class DecorationService : IDecorationService
     public async Task<IReadOnlyList<UserDecoration>> GetAllAsync(CancellationToken ct = default)
     {
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        // Hide entitlement-locked decorations (e.g. the Heart of Stories after a Premium→Free
+        // downgrade) so they neither render nor contribute their boost (CODE_REVIEW SEC-11).
         return await context.UserDecorations
             .Include(d => d.ShopItem)
+            .Where(d => !d.IsHiddenByEntitlement)
             .ToListAsync(ct);
     }
 
@@ -66,6 +73,18 @@ public class DecorationService : IDecorationService
                 .AnyAsync(d => d.ShopItemId == shopItemId, ct);
             if (alreadyOwned)
                 throw new InvalidOperationException("Dieses Relikt kannst du nur einmal besitzen.");
+        }
+
+        // Entitlement gate (CODE_REVIEW SEC-06): the PlantShop.razor LockedFeatureButton is a
+        // UI hint only — enforce the decoration's tier here so no caller can buy a Plus/Premium
+        // decoration (incl. ability relics) without the subscription. Mirror ShopTierFeatures.
+        if (_featureGuard is not null)
+        {
+            FeatureKey? tierFeature = ShopTierFeatures.For(shopItem);
+            if (tierFeature is not null)
+            {
+                _featureGuard.RequireAccess(tierFeature.Value, "This decoration requires a higher subscription tier.");
+            }
         }
 
         // Static pricing — use ShopItem.Cost directly (no dynamic multiplier)
@@ -131,7 +150,9 @@ public class DecorationService : IDecorationService
             return false;
 
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
+        // A decoration hidden by an entitlement lapse must not grant its special-ability boost
+        // (e.g. a downgraded user keeps the Heart of Stories row but loses the growth boost) — SEC-11.
         return await context.UserDecorations
-            .AnyAsync(d => d.ShopItem != null && d.ShopItem.SpecialAbilityKey == abilityKey, ct);
+            .AnyAsync(d => !d.IsHiddenByEntitlement && d.ShopItem != null && d.ShopItem.SpecialAbilityKey == abilityKey, ct);
     }
 }

@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -19,6 +20,7 @@ public class BookService : IBookService
     private readonly IGoalService _goalService;
     private readonly ILogger<BookService> _logger;
     private readonly IAnalyticsService _analytics;
+    private readonly IFeatureGuard? _featureGuard;
 
     public BookService(
         IUnitOfWork unitOfWork,
@@ -26,7 +28,8 @@ public class BookService : IBookService
         IPlantService plantService,
         IGoalService goalService,
         ILogger<BookService> logger,
-        IAnalyticsService? analytics = null)
+        IAnalyticsService? analytics = null,
+        IFeatureGuard? featureGuard = null)
     {
         _unitOfWork = unitOfWork;
         _progressionService = progressionService;
@@ -34,6 +37,7 @@ public class BookService : IBookService
         _goalService = goalService;
         _logger = logger;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
+        _featureGuard = featureGuard;
     }
 
     public async Task<IReadOnlyList<Book>> GetAllAsync(CancellationToken ct = default)
@@ -319,7 +323,16 @@ public class BookService : IBookService
             {
                 _unitOfWork.Context.BookTropes.Remove(stale);
             }
-            foreach (var tropeId in tropeIds.Where(id => !currentTropeIds.Contains(id)))
+            var newTropeIds = tropeIds.Where(id => !currentTropeIds.Contains(id)).ToList();
+            if (newTropeIds.Count > 0)
+            {
+                // CODE_REVIEW SEC-17: this is the load-bearing trope-tagging path (BookEdit saves
+                // via SaveBookWithRelationsAsync, not GenreService.AddTropeToBookAsync). Adding NEW
+                // trope tags requires Plus; removals above stay open so downgraded users can clean
+                // up. The throw rolls back the whole transaction, so no partial save persists.
+                _featureGuard?.RequireAccess(FeatureKey.Tropes, "Tropes require Plus.");
+            }
+            foreach (var tropeId in newTropeIds)
             {
                 await _unitOfWork.Context.BookTropes.AddAsync(
                     new BookTrope { BookId = book.Id, TropeId = tropeId, AddedAt = DateTime.UtcNow }, ct);

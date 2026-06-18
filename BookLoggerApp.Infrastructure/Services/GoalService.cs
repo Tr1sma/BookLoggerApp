@@ -314,6 +314,13 @@ public class GoalService : IGoalService
 
     public async Task ExcludeBookFromGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default)
     {
+        // CODE_REVIEW SEC-03/SEC-07/SEC-10: AddAsync only guards filters present at creation, but
+        // the exclude modal attaches exclusions afterwards via this method. Enforce the Premium
+        // filter feature here so the gate covers every caller, not just the Goals.razor overlay.
+        _featureGuard?.RequireAccess(
+            FeatureKey.ReadingGoalsWithGenreTropeFilter,
+            "Filtered goals (by genre or excluded books) require Premium.");
+
         var exists = await _unitOfWork.GoalExcludedBooks.ExistsAsync(
             e => e.ReadingGoalId == goalId && e.BookId == bookId);
 
@@ -350,6 +357,14 @@ public class GoalService : IGoalService
 
     public async Task AddGenreToGoalAsync(Guid goalId, Guid genreId, CancellationToken ct = default)
     {
+        // CODE_REVIEW SEC-03/SEC-07/SEC-10: the load-bearing gate for the Premium genre filter.
+        // The create form locks the genre picker, but the edit/exclude modal calls this directly,
+        // so enforcing here closes the bypass for all callers (RemoveGenreFromGoalAsync stays open
+        // so downgraded users can still clear filters).
+        _featureGuard?.RequireAccess(
+            FeatureKey.ReadingGoalsWithGenreTropeFilter,
+            "Filtered goals (by genre or excluded books) require Premium.");
+
         var exists = await _unitOfWork.GoalGenres.ExistsAsync(
             gg => gg.ReadingGoalId == goalId && gg.GenreId == genreId);
 
