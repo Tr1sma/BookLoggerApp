@@ -34,6 +34,7 @@ public class PlantService : IPlantService
     private readonly ILogger<PlantService> _logger;
     private readonly IAnalyticsService _analytics;
     private readonly IFeatureGuard? _featureGuard;
+    private readonly IValidationService? _validationService;
     private const string SpeciesCacheKey = "AllPlantSpecies";
 
     public PlantService(
@@ -43,7 +44,8 @@ public class PlantService : IPlantService
         IMemoryCache cache,
         ILogger<PlantService> logger,
         IAnalyticsService? analytics = null,
-        IFeatureGuard? featureGuard = null)
+        IFeatureGuard? featureGuard = null,
+        IValidationService? validationService = null)
     {
         _unitOfWork = unitOfWork;
         _settingsProvider = settingsProvider;
@@ -52,18 +54,19 @@ public class PlantService : IPlantService
         _logger = logger;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
         _featureGuard = featureGuard;
+        _validationService = validationService;
     }
 
     public async Task<IReadOnlyList<UserPlant>> GetAllAsync(CancellationToken ct = default)
     {
-        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
         await RefreshPlantStatusesAsync(plants, ct);
         return plants.ToList();
     }
 
     public async Task<UserPlant?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(id);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(id, ct);
         if (plant != null)
         {
             await RefreshPlantStatusAsync(plant, ct);
@@ -80,7 +83,12 @@ public class PlantService : IPlantService
         if (plant.LastWatered == default)
             plant.LastWatered = DateTime.UtcNow;
 
-        var result = await _unitOfWork.UserPlants.AddAsync(plant);
+        // CODE_REVIEW BUG-05: validate the plant (name, species, level/experience ranges,
+        // planted/watered timestamps) after defaulting timestamps but before persistence.
+        if (_validationService is not null)
+            await _validationService.ValidateAndThrowAsync(plant, ct);
+
+        var result = await _unitOfWork.UserPlants.AddAsync(plant, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         return result;
     }
@@ -89,7 +97,7 @@ public class PlantService : IPlantService
     {
         try
         {
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (DbUpdateConcurrencyException ex)
@@ -101,7 +109,7 @@ public class PlantService : IPlantService
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetByIdAsync(id);
+        var plant = await _unitOfWork.UserPlants.GetByIdAsync(id, ct);
         if (plant != null)
         {
             var plantShelves = await _unitOfWork.Context.PlantShelves
@@ -113,14 +121,14 @@ public class PlantService : IPlantService
                 _unitOfWork.Context.PlantShelves.RemoveRange(plantShelves);
             }
 
-            await _unitOfWork.UserPlants.DeleteAsync(plant);
+            await _unitOfWork.UserPlants.DeleteAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
     }
 
     public async Task<UserPlant?> GetActivePlantAsync(CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetActivePlantAsync();
+        var plant = await _unitOfWork.UserPlants.GetActivePlantAsync(ct);
         if (plant != null)
         {
             await RefreshPlantStatusAsync(plant, ct);
@@ -138,12 +146,12 @@ public class PlantService : IPlantService
 
         // Get all plants and update their active status
         // Note: Using Load-Update-Save pattern instead of ExecuteUpdateAsync for compatibility with InMemory provider in tests
-        var allPlants = await _unitOfWork.UserPlants.GetAllAsync();
+        var allPlants = await _unitOfWork.UserPlants.GetAllAsync(ct);
 
         foreach (var plant in allPlants)
         {
             plant.IsActive = plant.Id == plantId;
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
         }
 
         await _unitOfWork.SaveChangesAsync(ct);
@@ -166,12 +174,12 @@ public class PlantService : IPlantService
 
     public async Task<PlantSpecies?> GetSpeciesByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _unitOfWork.PlantSpecies.GetByIdAsync(id);
+        return await _unitOfWork.PlantSpecies.GetByIdAsync(id, ct);
     }
 
     public async Task WaterPlantAsync(Guid plantId, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
 
@@ -189,7 +197,7 @@ public class PlantService : IPlantService
 
         try
         {
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (DbUpdateConcurrencyException ex)
@@ -201,7 +209,7 @@ public class PlantService : IPlantService
 
     public async Task AddExperienceAsync(Guid plantId, int xp, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
 
@@ -232,7 +240,7 @@ public class PlantService : IPlantService
 
         try
         {
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (DbUpdateConcurrencyException ex)
@@ -262,7 +270,7 @@ public class PlantService : IPlantService
         if (sessionMinutes < 15)
             return;
 
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
         if (plant == null)
             return;
 
@@ -304,7 +312,7 @@ public class PlantService : IPlantService
 
         try
         {
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (DbUpdateConcurrencyException ex)
@@ -323,7 +331,7 @@ public class PlantService : IPlantService
 
     public async Task<bool> CanLevelUpAsync(Guid plantId, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
         if (plant == null)
             return false;
 
@@ -342,7 +350,7 @@ public class PlantService : IPlantService
 
     public async Task LevelUpAsync(Guid plantId, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
 
@@ -358,7 +366,7 @@ public class PlantService : IPlantService
 
         try
         {
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (DbUpdateConcurrencyException ex)
@@ -370,7 +378,7 @@ public class PlantService : IPlantService
 
     public async Task PurchaseLevelAsync(Guid plantId, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
 
@@ -395,7 +403,7 @@ public class PlantService : IPlantService
         try
         {
             plant.CurrentLevel++;
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (Exception ex)
@@ -415,7 +423,7 @@ public class PlantService : IPlantService
 
     public async Task<UserPlant> PurchasePlantAsync(Guid speciesId, string name, CancellationToken ct = default)
     {
-        var species = await _unitOfWork.PlantSpecies.GetByIdAsync(speciesId);
+        var species = await _unitOfWork.PlantSpecies.GetByIdAsync(speciesId, ct);
         if (species == null)
             throw new EntityNotFoundException(typeof(PlantSpecies), speciesId);
 
@@ -437,6 +445,22 @@ public class PlantService : IPlantService
         // Calculate dynamic cost
         int cost = await GetPlantCostAsync(speciesId, ct);
 
+        // CODE_REVIEW BUG-05 (review follow-up): PurchasePlantAsync — not the test-only AddAsync — is the
+        // real production plant-creation path, so the UserPlantValidator must run here. Validate BEFORE
+        // spending coins so a validation failure (e.g. an over-long custom name) never deducts the balance.
+        var plant = new UserPlant
+        {
+            SpeciesId = speciesId,
+            Name = name,
+            CurrentLevel = 1,
+            Experience = 0,
+            PlantedAt = DateTime.UtcNow,
+            LastWatered = DateTime.UtcNow,
+            IsActive = false
+        };
+        if (_validationService is not null)
+            await _validationService.ValidateAndThrowAsync(plant, ct);
+
         // Spend coins (will throw if not enough)
         await _settingsProvider.SpendCoinsAsync(cost, ct);
 
@@ -447,18 +471,7 @@ public class PlantService : IPlantService
         UserPlant result;
         try
         {
-            var plant = new UserPlant
-            {
-                SpeciesId = speciesId,
-                Name = name,
-                CurrentLevel = 1,
-                Experience = 0,
-                PlantedAt = DateTime.UtcNow,
-                LastWatered = DateTime.UtcNow,
-                IsActive = false
-            };
-
-            result = await _unitOfWork.UserPlants.AddAsync(plant);
+            result = await _unitOfWork.UserPlants.AddAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (Exception ex)
@@ -519,7 +532,7 @@ public class PlantService : IPlantService
     /// </summary>
     public async Task UpdatePlantStatusesAsync(CancellationToken ct = default)
     {
-        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
         await RefreshPlantStatusesAsync(plants, ct);
     }
 
@@ -530,7 +543,7 @@ public class PlantService : IPlantService
     /// </summary>
     public async Task<IReadOnlyList<UserPlant>> GetPlantsNeedingWaterAsync(CancellationToken ct = default)
     {
-        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
         await RefreshPlantStatusesAsync(plants, ct);
 
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
@@ -558,7 +571,7 @@ public class PlantService : IPlantService
     /// </summary>
     public async Task<decimal> CalculateTotalXpBoostAsync(CancellationToken ct = default)
     {
-        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
         await RefreshPlantStatusesAsync(allPlants, ct);
         bool hasStoryHeart = await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct);
         return SpecialAbilityResolver.CalculateAggregatedPlantBoost(allPlants, hasStoryHeart);
@@ -571,7 +584,7 @@ public class PlantService : IPlantService
     /// </summary>
     public async Task<int> GetPlantCostAsync(Guid speciesId, CancellationToken ct = default)
     {
-        var species = await _unitOfWork.PlantSpecies.GetByIdAsync(speciesId);
+        var species = await _unitOfWork.PlantSpecies.GetByIdAsync(speciesId, ct);
         if (species == null)
             throw new EntityNotFoundException(typeof(PlantSpecies), speciesId);
 
@@ -598,7 +611,7 @@ public class PlantService : IPlantService
                 continue;
 
             hasChanges = true;
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
         }
 
         if (hasChanges)
@@ -611,14 +624,14 @@ public class PlantService : IPlantService
     {
         // Phoenix ownership gates a protection rule that applies across all plants, so we
         // load the full set to determine it even when only one plant is being refreshed.
-        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
         bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(allPlants, SpecialAbilityKeys.EternalPhoenix);
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
 
         if (!TryApplyCurrentPlantStatus(plant, userOwnsPhoenix, growthMultiplier))
             return;
 
-        await _unitOfWork.UserPlants.UpdateAsync(plant);
+        await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 

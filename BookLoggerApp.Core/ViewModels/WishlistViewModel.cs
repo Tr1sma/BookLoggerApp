@@ -72,10 +72,10 @@ public partial class WishlistViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
             WishlistBooks.Clear();
-            var books = await _wishlistService.GetWishlistBooksAsync();
+            var books = await _wishlistService.GetWishlistBooksAsync(ct);
 
             foreach (var b in ApplySort(books))
                 WishlistBooks.Add(b);

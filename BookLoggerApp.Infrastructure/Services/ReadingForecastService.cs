@@ -21,7 +21,7 @@ public class ReadingForecastService : IReadingForecastService
 
     public async Task<IReadOnlyList<UpcomingFinish>> GetUpcomingFinishesAsync(CancellationToken ct = default)
     {
-        List<Book> readingBooks = (await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Reading)).ToList();
+        List<Book> readingBooks = (await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Reading, ct)).ToList();
         if (readingBooks.Count == 0)
         {
             return Array.Empty<UpcomingFinish>();
@@ -40,7 +40,7 @@ public class ReadingForecastService : IReadingForecastService
             }
         }
 
-        var sessionsByBook = (await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(earliest, now))
+        var sessionsByBook = (await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(earliest, now, ct))
             .GroupBy(s => s.BookId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<ReadingSession>)g.ToList());
 

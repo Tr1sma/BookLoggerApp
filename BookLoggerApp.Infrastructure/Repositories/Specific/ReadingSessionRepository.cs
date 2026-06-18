@@ -13,45 +13,45 @@ public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSess
     {
     }
 
-    public async Task<IEnumerable<ReadingSession>> GetSessionsByBookAsync(Guid bookId)
+    public async Task<IEnumerable<ReadingSession>> GetSessionsByBookAsync(Guid bookId, CancellationToken ct = default)
     {
         return await _dbSet
             .Include(rs => rs.Moods)
             .Where(rs => rs.BookId == bookId)
             .OrderByDescending(rs => rs.StartedAt)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<ReadingSession>> GetSessionsInRangeAsync(DateTime startDate, DateTime endDate)
+    public async Task<IEnumerable<ReadingSession>> GetSessionsInRangeAsync(DateTime startDate, DateTime endDate, CancellationToken ct = default)
     {
         return await _dbSet
             .Where(rs => rs.StartedAt >= startDate && rs.StartedAt <= endDate)
             .OrderBy(rs => rs.StartedAt)
             .Include(rs => rs.Book)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<int> GetTotalMinutesReadAsync(Guid bookId)
+    public async Task<int> GetTotalMinutesReadAsync(Guid bookId, CancellationToken ct = default)
     {
         return await _dbSet
             .Where(rs => rs.BookId == bookId)
-            .SumAsync(rs => rs.Minutes);
+            .SumAsync(rs => rs.Minutes, ct);
     }
 
-    public async Task<int> GetTotalPagesReadAsync(Guid bookId)
+    public async Task<int> GetTotalPagesReadAsync(Guid bookId, CancellationToken ct = default)
     {
         return await _dbSet
             .Where(rs => rs.BookId == bookId && rs.PagesRead.HasValue)
-            .SumAsync(rs => rs.PagesRead!.Value);
+            .SumAsync(rs => rs.PagesRead!.Value, ct);
     }
 
-    public async Task<IEnumerable<ReadingSession>> GetRecentSessionsAsync(int count = 10)
+    public async Task<IEnumerable<ReadingSession>> GetRecentSessionsAsync(int count = 10, CancellationToken ct = default)
     {
         return await _dbSet
             .OrderByDescending(rs => rs.StartedAt)
             .Take(count)
             .Include(rs => rs.Book)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
     public async Task<int> GetTotalMinutesAsync(CancellationToken ct = default)
