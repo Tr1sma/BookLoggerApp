@@ -29,7 +29,7 @@ public class ReadingSessionRepositoryTests : IDisposable
     [Fact]
     public async Task GetSessionsByBookAsync_ShouldReturnOnlySessionsForBook()
     {
-        // Arrange
+
         var book1 = await _bookRepository.AddAsync(new Book { Title = "Book 1", Author = "Author" });
         var book2 = await _bookRepository.AddAsync(new Book { Title = "Book 2", Author = "Author" });
 
@@ -38,10 +38,10 @@ public class ReadingSessionRepositoryTests : IDisposable
         await _repository.AddAsync(new ReadingSession { BookId = book2.Id, Minutes = 60 });
         await _context.SaveChangesAsync();
 
-        // Act
+
         var sessions = await _repository.GetSessionsByBookAsync(book1.Id);
 
-        // Assert
+
         sessions.Should().HaveCount(2);
         sessions.Should().OnlyContain(s => s.BookId == book1.Id);
     }
@@ -49,7 +49,7 @@ public class ReadingSessionRepositoryTests : IDisposable
     [Fact]
     public async Task GetSessionsByBookAsync_ShouldEagerLoadMoods()
     {
-        // Arrange
+
         var book = await _bookRepository.AddAsync(new Book { Title = "Book", Author = "Author" });
         await _repository.AddAsync(new ReadingSession
         {
@@ -64,10 +64,10 @@ public class ReadingSessionRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
         _context.ChangeTracker.Clear();
 
-        // Act
+
         var sessions = (await _repository.GetSessionsByBookAsync(book.Id)).ToList();
 
-        // Assert — moods come back without a separate query (proves the .Include).
+        // proves eager .Include
         sessions.Should().HaveCount(1);
         sessions[0].MoodList.Should().BeEquivalentTo(new[] { SessionMood.Crying, SessionMood.Spice });
     }
@@ -75,41 +75,41 @@ public class ReadingSessionRepositoryTests : IDisposable
     [Fact]
     public async Task GetTotalMinutesReadAsync_ShouldSumMinutesCorrectly()
     {
-        // Arrange
+
         var book = await _bookRepository.AddAsync(new Book { Title = "Test Book", Author = "Author" });
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, Minutes = 30 });
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, Minutes = 45 });
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, Minutes = 15 });
         await _context.SaveChangesAsync();
 
-        // Act
+
         var totalMinutes = await _repository.GetTotalMinutesReadAsync(book.Id);
 
-        // Assert
+
         totalMinutes.Should().Be(90);
     }
 
     [Fact]
     public async Task GetTotalPagesReadAsync_ShouldSumPagesCorrectly()
     {
-        // Arrange
+
         var book = await _bookRepository.AddAsync(new Book { Title = "Test Book", Author = "Author" });
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, PagesRead = 20 });
         await _repository.AddAsync(new ReadingSession { BookId = book.Id, PagesRead = 30 });
-        await _repository.AddAsync(new ReadingSession { BookId = book.Id, PagesRead = null }); // Should be ignored
+        await _repository.AddAsync(new ReadingSession { BookId = book.Id, PagesRead = null }); // null ignored
         await _context.SaveChangesAsync();
 
-        // Act
+
         var totalPages = await _repository.GetTotalPagesReadAsync(book.Id);
 
-        // Assert
+
         totalPages.Should().Be(50);
     }
 
     [Fact]
     public async Task GetSessionsInRangeAsync_ShouldReturnSessionsWithinDateRange()
     {
-        // Arrange
+
         var book = await _bookRepository.AddAsync(new Book { Title = "Test Book", Author = "Author" });
         var today = DateTime.UtcNow.Date;
 
@@ -133,10 +133,10 @@ public class ReadingSessionRepositoryTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
+
         var sessions = await _repository.GetSessionsInRangeAsync(today.AddDays(-3), today);
 
-        // Assert
+
         sessions.Should().HaveCount(1);
         sessions.First().Minutes.Should().Be(45);
     }
@@ -144,7 +144,7 @@ public class ReadingSessionRepositoryTests : IDisposable
     [Fact]
     public async Task GetRecentSessionsAsync_ShouldReturnMostRecentSessions()
     {
-        // Arrange
+
         var book = await _bookRepository.AddAsync(new Book { Title = "Test Book", Author = "Author" });
 
         await _repository.AddAsync(new ReadingSession
@@ -169,10 +169,10 @@ public class ReadingSessionRepositoryTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
+
         var recentSessions = await _repository.GetRecentSessionsAsync(2);
 
-        // Assert
+
         recentSessions.Should().HaveCount(2);
         recentSessions.First().Minutes.Should().Be(60);
     }

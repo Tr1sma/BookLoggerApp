@@ -4,9 +4,6 @@ using BookLoggerApp.Core.Models;
 
 namespace BookLoggerApp.Infrastructure.Data.Configurations;
 
-/// <summary>
-/// EF Core configuration for Book entity.
-/// </summary>
 public class BookConfiguration : IEntityTypeConfiguration<Book>
 {
     public void Configure(EntityTypeBuilder<Book> builder)
@@ -36,13 +33,11 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
         builder.Property(b => b.Description)
             .HasMaxLength(2000);
 
-        // Indexes for performance
         builder.HasIndex(b => b.Title);
         builder.HasIndex(b => b.ISBN);
         builder.HasIndex(b => b.Status);
         builder.HasIndex(b => b.DateAdded);
 
-        // Relationships
         builder.HasMany(b => b.BookGenres)
             .WithOne(bg => bg.Book)
             .HasForeignKey(bg => bg.BookId)
@@ -63,7 +58,6 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
             .HasForeignKey(a => a.BookId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Ignore computed property
-        builder.Ignore(b => b.ProgressPercentage);
+        builder.Ignore(b => b.ProgressPercentage); // computed, not mapped
     }
 }

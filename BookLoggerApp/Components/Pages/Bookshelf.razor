@@ -28,11 +28,9 @@
 <div class="bookshelf-container" style="--shelf-ledge-color: @ViewModel.ShelfLedgeColor; --shelf-base-color: @ViewModel.ShelfBaseColor">
     <GettingStartedCta />
 
-    <!-- Reading Goal Header -->
     <GoalHeader TbrCount="@ViewModel.TbrCount" GoalTarget="@ViewModel.GoalTarget"
         BooksRead="@ViewModel.BooksReadThisYear" BooksRemaining="@ViewModel.BooksRemainingToGoal" />
 
-    <!-- Tab Bar -->
     <div class="bookshelf-tabs">
         <button class="tab-btn @(activeTab == "shelves" ? "active" : "")"
                 @onclick='() => SwitchTab("shelves")'>
@@ -46,14 +44,12 @@
                 <span class="wishlist-count-badge">@WishlistVM.WishlistCount</span>
             }
         </button>
-        <!-- Blind Date with a Book (Sub-TBR Roulette) — compact entry in the tab bar -->
         <button class="blinddate-tab-btn" title="@L["BlindDate_EntryButton"]" aria-label="@L["BlindDate_EntryButton"]"
                 @onclick='() => Navigation.NavigateTo("/blind-date")'>🎁</button>
     </div>
 
     @if (activeTab == "shelves")
     {
-    <!-- Header & Controls -->
     <div class="bookshelf-header">
         <h1>@L["Bookshelf_Title"]</h1>
         <div class="bookshelf-controls">
@@ -63,7 +59,6 @@
         </div>
     </div>
 
-    <!-- Filters & Sort (Collapsible) -->
     <div class="bookshelf-filters-wrapper">
         <button class="filter-toggle-btn" @onclick="ToggleFilters">
             <span>@(filtersExpanded ? "▼" : "▶") @L["Bookshelf_FiltersSort"]</span>
@@ -74,7 +69,6 @@
         </button>
 
         <div class="bookshelf-filters @(filtersExpanded ? "expanded" : "collapsed")">
-            <!-- Existing filters... -->
             <div class="filter-group">
                 <label>@L["Bookshelf_SortBy"]</label>
                 <select value="@ViewModel.SortBy"
@@ -85,14 +79,12 @@
                     <option value="Status">@L["BookDetail_Status"]</option>
                 </select>
             </div>
-            <!-- ... (Keeping filters simple for now, as search clears shelves) -->
             <div class="filter-group">
                 <button class="btn btn-secondary" @onclick="HandleClearFilters">@L["Bookshelf_ClearFilters"]</button>
             </div>
         </div>
     </div>
 
-    <!-- Book Grid / Shelves -->
     @if (ViewModel.IsBusy)
     {
         <div class="loading">@L["Bookshelf_Loading"]</div>
@@ -107,7 +99,6 @@
     else if (!string.IsNullOrEmpty(ViewModel.SearchQuery) || ViewModel.FilterStatus.HasValue ||
     ViewModel.FilterGenreId.HasValue)
     {
-        <!-- Search Results View (Flat Grid) -->
         <div class="search-results-label">@L["Bookshelf_SearchResults", ViewModel.Books.Count]</div>
         <div class="book-grid">
             <div class="shelf-row">
@@ -122,7 +113,6 @@
     }
     else
     {
-        <!-- Shelves View -->
         <div class="shelves-container">
             @{ var hasAvailablePlants = ViewModel.AvailablePlants.Any(); }
             @for (var shelfIndex = 0; shelfIndex < ViewModel.Shelves.Count; shelfIndex++)
@@ -143,7 +133,6 @@
                                 ▼
                             </button>
                             <h3>@shelfVM.Shelf.Name</h3>
-                            <!-- Reordering Controls -->
                             <div class="shelf-reorder-controls" style="display: flex; gap: 2px; margin-left: 10px;">
                                 <button class="btn-icon small"
                                 @onclick="() => ViewModel.MoveShelfUpCommand.ExecuteAsync(shelfVM.Shelf.Id)"
@@ -170,7 +159,6 @@
                     @if (shelfVM.IsExpanded)
                     {
                         <div class="shelf-books">
-                            <!-- Mixed Items Loop -->
                             @foreach (var item in shelfVM.Items)
                             {
                                 @if (item.Type == ShelfItemType.Book && item.Book != null)
@@ -214,7 +202,6 @@
                                 }
                             }
 
-                            <!-- Add Plant Button -->
                             @if (hasAvailablePlants)
                             {
                                 <div class="empty-slot" @onclick="() => HandleAddPlant(shelfVM.Shelf.Id)">
@@ -223,7 +210,6 @@
                                 </div>
                             }
 
-                            <!-- Add Decoration Button -->
                             @if (ViewModel.AvailableDecorations.Any())
                             {
                                 <div class="empty-slot" @onclick="() => HandleAddDecoration(shelfVM.Shelf.Id)">
@@ -238,7 +224,6 @@
             }
         </div>
     }
-    <!-- Floating Action Buttons (Shelves Tab) -->
     <div class="fab-container">
         <LockedFeatureButton Feature="FeatureKey.UnlimitedShelves"
                              ForceLock="@(ViewModel.Shelves.Count >= 3)">
@@ -255,7 +240,6 @@
     @if (activeTab == "wishlist")
     {
     <LockedFeatureButton Feature="FeatureKey.Wishlist">
-    <!-- Wishlist Content -->
     <div class="wishlist-controls">
         <input type="text" class="search-input" placeholder="@L["Wishlist_SearchPlaceholder"]"
                value="@WishlistVM.SearchQuery"
@@ -328,7 +312,6 @@
         </div>
     }
 
-    <!-- Floating Action Button (Wishlist Tab) -->
     <div class="fab-container">
         <button class="fab-button" @onclick="OpenAddToWishlistModal" title="@L["Wishlist_AddTitle"]">
             +
@@ -338,7 +321,6 @@
     } @* end activeTab == "wishlist" *@
 </div>
 
-<!-- Add Shelf Modal -->
 @if (showAddShelfModal)
 {
     <div class="modal-overlay" @onclick="CloseAddShelfModal">
@@ -367,8 +349,6 @@
     </div>
 }
 
-<!-- ... Plant/Book Modals (Keep existing ones) ... -->
-<!-- Plant Detail Modal -->
 @if (showPlantDetail && selectedPlant != null)
 {
     <div class="modal-overlay" @onclick="ClosePlantDetail">
@@ -399,7 +379,6 @@
     </div>
 }
 
-<!-- Plant Selector Modal -->
 @if (showPlantSelector)
 {
     <div class="modal-overlay" @onclick="ClosePlantSelector">
@@ -428,7 +407,6 @@
         </div>
     </div>
 }
-<!-- Decoration Selector Modal -->
 @if (showDecorationSelector)
 {
     <div class="modal-overlay" @onclick="CloseDecorationSelector">
@@ -458,7 +436,6 @@
     </div>
 }
 
-<!-- Decoration Detail Modal -->
 @if (showDecorationDetail && selectedDecoration != null)
 {
     <div class="modal-overlay" @onclick="CloseDecorationDetail">
@@ -486,7 +463,6 @@
     </div>
 }
 
-<!-- Delete Shelf Confirmation Modal -->
 @if (showDeleteShelfModal)
 {
     <div class="modal-overlay" @onclick="CloseDeleteShelfModal">
@@ -501,7 +477,6 @@
     </div>
 }
 
-<!-- Add to Wishlist Modal -->
 @if (showAddToWishlistModal)
 {
     <div class="modal-overlay" @onclick="CloseAddToWishlistModal">
@@ -583,7 +558,6 @@
     private ShelfAutoSortRule newShelfRule = ShelfAutoSortRule.None;
     private bool showAddToWishlistModal = false;
 
-    // Plant state
     private bool showPlantDetail;
     private UserPlant? selectedPlant;
     private Guid? selectedPlantShelfId;
@@ -592,11 +566,8 @@
     private bool isRemovingPlant;
     private bool IsSelectedPlantDead => selectedPlant?.Status == PlantStatus.Dead;
 
-    // JS Drag & Drop interop
     private DotNetObjectReference<Bookshelf>? _dotNetHelper;
     private bool _jsInitialized = false;
-
-    // Back handler
     private Func<Task<bool>>? _activeBackHandler;
 
     protected override async Task OnInitializedAsync()
@@ -609,10 +580,7 @@
 
     private async Task RetryLoadAsync()
     {
-        // Always trigger a fresh DB init: after a ViewModel-level TimeoutException
-        // the helper's InitializationFailed flag is false, so gating on it would
-        // leave the original pending TCS in place and the retry would just wait
-        // for it again.
+        // Force fresh DB init: gating on InitializationFailed would re-wait the stale TCS.
         DatabaseInitializer.Retry();
         await ViewModel.LoadCommand.ExecuteAsync(null);
     }
@@ -634,7 +602,6 @@
         {
             await InvokeAsync(async () =>
             {
-                // Only refresh goal header stats — shelves are unchanged
                 await ViewModel.RefreshGoalStatsAsync();
                 StateHasChanged();
             });
@@ -661,7 +628,7 @@
         {
             await JSRuntime.InvokeVoidAsync("bookshelfDragDrop.dispose");
         }
-        catch { /* Ignore if JS runtime already gone */ }
+        catch { /* JS runtime gone */ }
         _dotNetHelper?.Dispose();
         Dispose();
     }
@@ -710,13 +677,11 @@
     private void NavigateToAddBook() => Navigation.NavigateTo("/books/new");
     private void HandleBookClick(Book book) => Navigation.NavigateTo($"/books/{book.Id}");
 
-    // Shelf Logic
     private void OpenAddShelfModal()
     {
         newShelfName = "";
         newShelfRule = ShelfAutoSortRule.None;
 
-        // Register back handler
         _activeBackHandler = async () =>
         {
             await InvokeAsync(() =>
@@ -755,7 +720,6 @@
     {
         shelfToDeleteId = shelfId;
 
-        // Register back handler
         _activeBackHandler = async () =>
         {
             await InvokeAsync(() =>
@@ -790,8 +754,6 @@
         }
     }
 
-    // ─── JS Drag & Drop Callbacks ───
-
     [JSInvokable]
     public async Task OnReorderItem(string sourceShelfId, string itemId, string itemType, string targetItemId)
     {
@@ -800,7 +762,6 @@
         var targetGuid = Guid.Parse(targetItemId);
         await ViewModel.ReorderShelfItemsAsync((shelfGuid, sourceGuid, targetGuid));
         StateHasChanged();
-        // JS drag-drop stays initialized — Blazor diffs the DOM, no re-init needed
     }
 
     [JSInvokable]
@@ -817,38 +778,27 @@
             _ => ShelfItemType.Book
         };
 
-        // Optimistic in-memory move for instant visual feedback
+        // Optimistic move; persist in background
         ViewModel.MoveItemBetweenShelvesInMemory(sourceGuid, targetGuid, itemGuid, type, position);
         StateHasChanged();
-
-        // Persist to database in background (no full reload)
         await ViewModel.PersistCrossShelfMoveAsync(sourceGuid, targetGuid, itemGuid, type, position);
     }
 
     private async Task HandleRemoveBookFromShelf(Guid bookId, Guid shelfId)
     {
-        // On the shelf view, the 'delete' type action removes it from the shelf, not the library
-        // Unless it's the AutoSort shelf?
-        // For manual shelves: Remove from shelf.
-        // For AutoSort shelves: Can't really remove unless changing status.
-        // Let's assume standard behavior is Remove from Shelf.
-
         await ViewModel.RemoveBookFromShelfCommand.ExecuteAsync((bookId, shelfId));
     }
 
     private async Task HandleDeleteBook(Guid bookId)
     {
-        // For search results view, delete permanently
         await ViewModel.DeleteBookCommand.ExecuteAsync(bookId);
     }
 
-    // Plant stubs
     private async Task HandlePlantClick(UserPlant plant, Guid shelfId)
     {
         selectedPlant = plant;
         selectedPlantShelfId = shelfId;
 
-        // Register back handler
         _activeBackHandler = async () =>
         {
             await InvokeAsync(() =>
@@ -1028,7 +978,6 @@
     {
         targetShelfForPlant = shelfId;
 
-        // Register back handler
         _activeBackHandler = async () =>
         {
             await InvokeAsync(() =>
@@ -1069,8 +1018,6 @@
     }
 
     private void NavigateToEditBook(Guid bookId) => Navigation.NavigateTo($"/books/{bookId}/edit");
-
-    // ===== Decoration State & Methods =====
 
     private bool showDecorationSelector;
     private Guid? targetShelfForDecoration;
@@ -1156,8 +1103,6 @@
             CloseDecorationDetail();
         }
     }
-
-    // ===== Wishlist Tab Methods =====
 
     private async Task SwitchTab(string tab)
     {

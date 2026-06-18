@@ -8,12 +8,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// End-to-end regression for the field-reported "no such column: u.IsHiddenByEntitlement"
-/// error. Drifts a SQLite DB into the exact state observed when
-/// <c>20260422123532_AddPremiumSubscriptionSystem</c> was force-marked applied without
-/// running its <c>ALTER TABLE Shelves ADD COLUMN IsHiddenByEntitlement</c> statement,
-/// then runs <see cref="SchemaDriftGuard"/> and verifies <see cref="ShelfService"/>
-/// queries succeed.
+/// Regression for "no such column: IsHiddenByEntitlement" — migration force-marked
+/// without running the ALTER TABLE, then SchemaDriftGuard repairs it.
 /// </summary>
 public sealed class ShelfServiceDriftRecoveryTests : IDisposable
 {
@@ -36,32 +32,29 @@ public sealed class ShelfServiceDriftRecoveryTests : IDisposable
         }
         catch
         {
-            // Best-effort temp cleanup.
+            // best-effort cleanup
         }
     }
 
     [Fact]
     public async Task GetAllShelvesAsync_Succeeds_AfterSchemaDriftGuardRepair()
     {
-        // Arrange — drifted Shelves table missing IsHiddenByEntitlement.
         CreateDriftedShelvesDb(_dbPath);
 
         var factory = new FileBackedDbContextFactory(_dbPath);
 
-        // Sanity check: querying ShelfService BEFORE the guard runs would throw
-        // "no such column: s.IsHiddenByEntitlement" (the bug we're regressing).
+        // Confirm the bug reproduces before repair
         var service = new ShelfService(factory);
         Func<Task> beforeRepair = async () => await service.GetAllShelvesAsync();
         await beforeRepair.Should().ThrowAsync<SqliteException>(
             "the bug is that the column doesn't exist before SchemaDriftGuard runs");
 
-        // Act — run the guard, which is what DbInitializer does on every boot.
+        // SchemaDriftGuard runs on every boot via DbInitializer
         await using (var context = factory.CreateDbContext())
         {
             await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null);
         }
 
-        // Assert — ShelfService now reads cleanly.
         var shelves = await service.GetAllShelvesAsync();
         shelves.Should().NotBeNull();
         shelves.Should().HaveCount(2, "two shelves were inserted in the drifted DB");

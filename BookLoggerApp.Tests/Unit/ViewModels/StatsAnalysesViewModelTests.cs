@@ -19,7 +19,6 @@ public class StatsAnalysesViewModelTests
         _service = Substitute.For<IAdvancedStatsService>();
         _statsService = Substitute.For<IStatsService>();
 
-        // Default returns
         _service.GetYearComparisonAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns((new YearStats(2025, 0, 0, 0, 0), new YearStats(2026, 0, 0, 0, 0)));
         _service.GetGenreRadarDataAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(new Dictionary<string, int>());

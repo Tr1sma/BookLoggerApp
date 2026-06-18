@@ -141,7 +141,7 @@ public class BlindDateViewModelTests
 
         var card = _vm.ShownCards.Single();
         card.IsGenreFallback.Should().BeTrue();
-        // No tropes and no genres → exactly one localized fallback "mystery" vibe.
+        // No tropes/genres → one localized fallback vibe.
         card.Vibes.Should().ContainSingle().Which.Should().NotBeNullOrWhiteSpace();
     }
 
@@ -205,7 +205,7 @@ public class BlindDateViewModelTests
             seen.Add(_vm.RevealAnimation);
         }
 
-        // Over 60 draws both variants are essentially certain to appear.
+        // Both variants essentially certain over 60 draws.
         seen.Should().Contain(new[] { BlindDateRevealAnimation.Unwrap, BlindDateRevealAnimation.Burst });
     }
 }

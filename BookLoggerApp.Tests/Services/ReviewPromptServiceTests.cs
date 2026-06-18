@@ -31,13 +31,10 @@ public class ReviewPromptServiceTests
     [Fact]
     public async Task TryStartPromptAsync_ShouldReturnFalse_WhenUserLevelIsSixOrLower()
     {
-        // Arrange
         _settings.UserLevel = 6;
 
-        // Act
         var result = await _service.TryStartPromptAsync();
 
-        // Assert
         result.Should().BeFalse();
         await _settingsProvider.DidNotReceive().UpdateSettingsAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
     }
@@ -45,13 +42,10 @@ public class ReviewPromptServiceTests
     [Fact]
     public async Task TryStartPromptAsync_ShouldReturnFalse_WhenPromptWasDisabled()
     {
-        // Arrange
         _settings.ReviewPromptDisabled = true;
 
-        // Act
         var result = await _service.TryStartPromptAsync();
 
-        // Assert
         result.Should().BeFalse();
         await _settingsProvider.DidNotReceive().UpdateSettingsAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
     }
@@ -59,14 +53,11 @@ public class ReviewPromptServiceTests
     [Fact]
     public async Task TryStartPromptAsync_ShouldReturnFalse_WhenMonthlyLimitWasReached()
     {
-        // Arrange
         _settings.LastReviewPromptDate = DateTime.UtcNow;
         _settings.ReviewPromptMonthCount = 2;
 
-        // Act
         var result = await _service.TryStartPromptAsync();
 
-        // Assert
         result.Should().BeFalse();
         await _settingsProvider.DidNotReceive().UpdateSettingsAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
     }
@@ -74,14 +65,11 @@ public class ReviewPromptServiceTests
     [Fact]
     public async Task TryStartPromptAsync_ShouldResetMonthlyCounter_WhenLastPromptWasInPreviousMonth()
     {
-        // Arrange
         _settings.LastReviewPromptDate = DateTime.UtcNow.AddMonths(-1);
         _settings.ReviewPromptMonthCount = 2;
 
-        // Act
         var result = await _service.TryStartPromptAsync();
 
-        // Assert
         result.Should().BeTrue();
         _settings.ReviewPromptMonthCount.Should().Be(1);
         _settings.LastReviewPromptDate.Should().BeAfter(DateTime.UtcNow.AddMinutes(-1));
@@ -91,10 +79,8 @@ public class ReviewPromptServiceTests
     [Fact]
     public async Task DisablePromptAsync_ShouldPersistDisabledFlag()
     {
-        // Act
         await _service.DisablePromptAsync();
 
-        // Assert
         _settings.ReviewPromptDisabled.Should().BeTrue();
         await _settingsProvider.Received(1).UpdateSettingsAsync(_settings, Arg.Any<CancellationToken>());
     }

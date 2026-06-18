@@ -57,10 +57,9 @@
                     }
                     else
                     {
-                        @* No cover image: write the title into the cover box itself. *@
                         <span class="blinddate-cover-title">@ViewModel.RevealedBook.Title</span>
                     }
-                    @* Gift-wrap overlay — animates away (unwrap or burst) to reveal the cover *@
+                    @* Animates away to reveal cover *@
                     <div class="blinddate-wrap-overlay">
                         <div class="wrap-half wrap-left"></div>
                         <div class="wrap-half wrap-right"></div>
@@ -70,7 +69,6 @@
                 </div>
                 @if (!string.IsNullOrEmpty(_revealCoverUrl))
                 {
-                    @* Title shown below only when a cover image stands in the box above. *@
                     <h2 class="blinddate-reveal-title">@ViewModel.RevealedBook.Title</h2>
                 }
                 <p class="blinddate-reveal-author">@ViewModel.RevealedBook.Author</p>
@@ -129,13 +127,11 @@
             return;
         }
 
-        // Play the "gather out" animation on the current cards…
         _isShuffling = true;
         StateHasChanged();
         await Task.Delay(450);
 
-        // …then swap in a fresh set. Bumping the nonce changes each card's @key,
-        // so Blazor re-creates the DOM and the "deal in" animation replays.
+        // Nonce change forces new @key → Blazor recreates DOM → "deal in" replays.
         _revealCoverUrl = null;
         ViewModel.Shuffle();
         _shuffleNonce++;
@@ -175,7 +171,6 @@
         {
             var coverPath = book.CoverImagePath;
 
-            // Remote URLs can be used directly.
             if (coverPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                 coverPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             {

@@ -14,8 +14,7 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
 
     public FirebaseAnalyticsService(IAnalyticsConsentGate gate)
     {
-        // Do NOT resolve FirebaseAnalytics.GetInstance here — FirebaseApp may not be
-        // initialized yet when DI constructs this service. See GetAnalytics() below.
+        // lazy init: FirebaseApp may not be ready at DI construction time
         _gate = gate;
         _gate.ConsentChanged += OnConsentChanged;
     }

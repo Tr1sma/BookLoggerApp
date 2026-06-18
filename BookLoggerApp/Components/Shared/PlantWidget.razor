@@ -8,23 +8,19 @@
 @inject IStringLocalizer<AppResources> L
 
 <div class="plant-widget @GetStatusClass()">
-    <!-- Plant Visual -->
     <div class="plant-visual">
         <img src="@GetPlantImage()" alt="@Plant.LocalizedDisplayName(L)" class="plant-image-large" />
         <div class="plant-status-indicator">@GetStatusEmoji()</div>
     </div>
 
-    <!-- Plant Info -->
     <div class="plant-info">
         <h3 class="plant-name">@Plant.LocalizedDisplayName(L)</h3>
         <p class="plant-species">@(Plant.Species?.LocalizedName(L) ?? L["PlantWidget_Unknown"].Value)</p>
 
-        <!-- Level Badge -->
         <div class="plant-level">
             <span class="level-badge">@L["PlantWidget_Level", Plant.CurrentLevel, Plant.Species?.MaxLevel ?? 0]</span>
         </div>
 
-        <!-- Reading Days Progress -->
         <div class="plant-progress">
             <div class="progress-bar">
                 <div class="progress-fill" style="width: @GetProgressPercentage()%"></div>
@@ -41,7 +37,6 @@
             </p>
         </div>
 
-        <!-- Watering Status -->
         <div class="plant-watering">
             <p class="watering-status">@GetWateringStatus()</p>
             @if (Plant.Status != PlantStatus.Dead)
@@ -71,7 +66,6 @@
             }
         </div>
 
-        <!-- Days Until Water Needed -->
         @if (Plant.Status == PlantStatus.Healthy)
         {
             <p class="water-timer">
@@ -87,9 +81,7 @@
     [Parameter] public EventCallback OnDelete { get; set; }
     [Parameter] public bool IsWatering { get; set; }
 
-    // Mirrors PlantService.GetGlobalGrowthMultiplierAsync: Herz der Geschichten halves the
-    // reading-days needed per level. The widget's display helpers must use the same multiplier
-    // as the authoritative level formula, otherwise "days to next level" is ~2× the actual value.
+    // must mirror PlantService.GetGlobalGrowthMultiplierAsync
     private double _growthMultiplier = 1.0;
 
     protected override async Task OnParametersSetAsync()
@@ -102,7 +94,6 @@
 
     private string GetPlantImage()
     {
-        // In the future, could be level-dependent (different sprites for different levels)
         return Plant.Species?.ImagePath ?? "images/plants/placeholder.svg";
     }
 
@@ -140,7 +131,7 @@
     {
         if (Plant.Species == null) return 0;
         if (Plant.CurrentLevel >= Plant.Species.MaxLevel)
-            return 100; // Max level reached
+            return 100;
 
         return PlantGrowthCalculator.GetReadingDaysPercentage(
             Plant.CurrentLevel,

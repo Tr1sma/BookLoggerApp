@@ -4,9 +4,6 @@ using BookLoggerApp.Infrastructure.Data;
 
 namespace BookLoggerApp.Infrastructure.Repositories.Specific;
 
-/// <summary>
-/// Repository implementation for UserPlant entity.
-/// </summary>
 public class UserPlantRepository : Repository<UserPlant>, IUserPlantRepository
 {
     public UserPlantRepository(AppDbContext context) : base(context)

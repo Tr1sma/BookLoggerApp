@@ -4,9 +4,6 @@ using BookLoggerApp.Infrastructure.Repositories;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service implementation for advanced reading statistics (trends and analyses).
-/// </summary>
 public class AdvancedStatsService : IAdvancedStatsService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -15,8 +12,6 @@ public class AdvancedStatsService : IAdvancedStatsService
     {
         _unitOfWork = unitOfWork;
     }
-
-    // ===== Trends tab =====
 
     public async Task<Dictionary<DateTime, int>> GetReadingHeatmapAsync(int year, CancellationToken ct = default)
     {
@@ -67,7 +62,7 @@ public class AdvancedStatsService : IAdvancedStatsService
                 >= 5 and <= 11 => "Morning",
                 >= 12 and <= 16 => "Afternoon",
                 >= 17 and <= 21 => "Evening",
-                _ => "Night" // 22-4
+                _ => "Night"
             };
             result[bucket] += session.Minutes;
         }
@@ -174,8 +169,6 @@ public class AdvancedStatsService : IAdvancedStatsService
         return (Math.Round(currentAvg, 1), Math.Round(previousAvg, 1));
     }
 
-    // ===== Analysen tab =====
-
     public async Task<(YearStats Year1, YearStats Year2)> GetYearComparisonAsync(int year1, int year2, CancellationToken ct = default)
     {
         var stats1 = await BuildYearStatsAsync(year1, ct);
@@ -266,8 +259,6 @@ public class AdvancedStatsService : IAdvancedStatsService
 
         return result;
     }
-
-    // ===== Private helpers =====
 
     private async Task<YearStats> BuildYearStatsAsync(int year, CancellationToken ct = default)
     {

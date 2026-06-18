@@ -209,9 +209,7 @@
 
     private record PriceDisplay(string Amount, string PeriodSuffix, string PerMonth, string Savings);
 
-    // Hardcoded prices mirror the Play Console SKU configuration for plus_monthly / plus_yearly
-    // / premium_monthly / premium_yearly. Swap to BillingProduct.FormattedPrice once
-    // IBillingService.QueryProductsAsync is wired into the Paywall (regional pricing story).
+    // hardcoded; swap to BillingProduct.FormattedPrice once QueryProductsAsync is wired in
     private static PriceDisplay GetPrice(SubscriptionTier tier, BillingPeriod period)
     {
         if (tier == SubscriptionTier.Plus && period == BillingPeriod.Monthly)
@@ -220,7 +218,6 @@
         }
         if (tier == SubscriptionTier.Plus && period == BillingPeriod.Yearly)
         {
-            // €29.99 / 12 ≈ €2.50
             return new PriceDisplay("€29.99", "year", "just €2.50/mo", "Save 16%");
         }
         if (tier == SubscriptionTier.Premium && period == BillingPeriod.Monthly)
@@ -229,10 +226,8 @@
         }
         if (tier == SubscriptionTier.Premium && period == BillingPeriod.Yearly)
         {
-            // €99.99 / 12 ≈ €8.33
             return new PriceDisplay("€99.99", "year", "just €8.33/mo", "Save 30%");
         }
-        // Lifetime isn't rendered via this helper — the lifetime card has its own hard-coded layout.
         return new PriceDisplay("—", string.Empty, string.Empty, string.Empty);
     }
 

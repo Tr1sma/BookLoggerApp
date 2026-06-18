@@ -17,9 +17,8 @@ public class LookupServiceTests
     [Fact]
     public async Task LookupByISBNAsync_WithValidISBN_ShouldReturnBookMetadata()
     {
-        // Arrange
         var isbn = "9780140449136"; // The Odyssey by Homer
-        
+
         var jsonResponse = @"{
           ""items"": [
             {
@@ -46,10 +45,8 @@ public class LookupServiceTests
         var httpClient = new HttpClient(mockHandler);
         var service = new LookupService(httpClient);
 
-        // Act
         var result = await service.LookupByISBNAsync(isbn);
 
-        // Assert
         result.Should().NotBeNull();
         result!.Title.Should().Be("The Odyssey");
         result.Author.Should().Be("Homer");
@@ -59,7 +56,6 @@ public class LookupServiceTests
     [Fact]
     public async Task LookupByISBNAsync_WithInvalidISBN_ShouldReturnNull()
     {
-        // Arrange
         var isbn = "0000000000000";
         var emptyResponse = @"{ ""totalItems"": 0 }";
 
@@ -71,34 +67,27 @@ public class LookupServiceTests
 
         var service = new LookupService(new HttpClient(mockHandler));
 
-        // Act
         var result = await service.LookupByISBNAsync(isbn);
 
-        // Assert
         result.Should().BeNull();
     }
 
     [Fact]
     public async Task LookupByISBNAsync_WithEmptyISBN_ShouldReturnNull()
     {
-        // Arrange
         var isbn = "";
 
-        // Act
         var result = await _service.LookupByISBNAsync(isbn);
 
-        // Assert
         result.Should().BeNull();
     }
 
     [Fact]
     public async Task LookupByISBNAsync_WithISBNContainingDashes_ShouldReturnBookMetadata()
     {
-        // Arrange
         var dashedIsbn = "978-0-14-044913-6";
         var cleanIsbn = "9780140449136";
-        
-        // Mock response
+
         var jsonResponse = @"{
           ""items"": [
             {
@@ -112,7 +101,6 @@ public class LookupServiceTests
 
         var mockHandler = new MockHttpMessageHandler((request) =>
         {
-            // Verify that the service STRIPPED the dashes before calling the API
             var query = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query);
             var isbnQuery = query["q"];
             isbnQuery.Should().NotBeNull();
@@ -128,10 +116,8 @@ public class LookupServiceTests
         var httpClient = new HttpClient(mockHandler);
         var service = new LookupService(httpClient);
 
-        // Act
         var result = await service.LookupByISBNAsync(dashedIsbn);
 
-        // Assert
         result.Should().NotBeNull();
         result!.Title.Should().Be("The Odyssey");
     }
@@ -139,7 +125,6 @@ public class LookupServiceTests
     [Fact]
     public async Task LookupByISBNAsync_WithQuotaErrorOnApiKey_ShouldRetryWithoutApiKey()
     {
-        // Arrange
         var isbn = "9780140449136";
         var requestCount = 0;
 
@@ -178,10 +163,8 @@ public class LookupServiceTests
 
         var service = new LookupService(new HttpClient(mockHandler), googleBooksApiKey: "test-api-key");
 
-        // Act
         var result = await service.LookupByISBNAsync(isbn);
 
-        // Assert
         result.Should().NotBeNull();
         result!.Title.Should().Be("The Odyssey");
         requestCount.Should().Be(2);
@@ -190,7 +173,6 @@ public class LookupServiceTests
     [Fact]
     public async Task LookupByISBNAsync_AfterQuotaError_ShouldKeepUsingAnonymousRequests()
     {
-        // Arrange
         var callKeys = new List<string?>();
         var requestCount = 0;
 
@@ -227,11 +209,9 @@ public class LookupServiceTests
 
         var service = new LookupService(new HttpClient(mockHandler), googleBooksApiKey: "test-api-key");
 
-        // Act
         var firstLookup = await service.LookupByISBNAsync("9780140449136");
         var secondLookup = await service.LookupByISBNAsync("9780743273565");
 
-        // Assert
         firstLookup.Should().NotBeNull();
         secondLookup.Should().NotBeNull();
         requestCount.Should().Be(3);
@@ -241,7 +221,6 @@ public class LookupServiceTests
     [Fact]
     public async Task LookupByISBNAsync_WithNonQuotaApiKeyError_ShouldNotRetryWithoutApiKey()
     {
-        // Arrange
         var requestCount = 0;
         var mockHandler = new MockHttpMessageHandler((request) =>
         {
@@ -257,15 +236,13 @@ public class LookupServiceTests
 
         var service = new LookupService(new HttpClient(mockHandler), googleBooksApiKey: "test-api-key");
 
-        // Act
         var action = async () => await service.LookupByISBNAsync("9780140449136");
 
-        // Assert
         await action.Should().ThrowAsync<HttpRequestException>();
         requestCount.Should().Be(1);
     }
 
-    // Helper for mocking HttpClient
+    // HttpClient mock helper
     private class MockHttpMessageHandler : HttpMessageHandler
     {
         private readonly Func<HttpRequestMessage, HttpResponseMessage> _sendAsync;
@@ -284,9 +261,8 @@ public class LookupServiceTests
     [Fact]
     public async Task SearchBooksAsync_WithValidQuery_ShouldReturnResults()
     {
-        // Arrange
         var query = "The Great Gatsby";
-        
+
         var jsonResponse = @"{
           ""items"": [
             {
@@ -314,14 +290,12 @@ public class LookupServiceTests
         var httpClient = new HttpClient(mockHandler);
         var service = new LookupService(httpClient);
 
-        // Act
         var result = await service.SearchBooksAsync(query);
 
-        // Assert
         result.Should().NotBeEmpty();
         result.Should().HaveCountGreaterThan(0);
         result.First().Title.Should().Be("The Great Gatsby");
-        
+
         capturedUrl.Should().NotBeNull();
         capturedUrl.Should().Contain("The%20Great%20Gatsby");
     }
@@ -329,20 +303,12 @@ public class LookupServiceTests
     [Fact]
     public async Task SearchBooksAsync_WithEmptyQuery_ShouldReturnEmptyList()
     {
-        // Arrange
         var query = "";
 
-        // Act
         var result = await _service.SearchBooksAsync(query);
 
-        // Assert
         result.Should().BeEmpty();
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Coverage-ergänzende Tests (whitespace/null inputs, quota fallback,
-    // ISBN_10, image URL normalization, PrintedPageCount fallback, 500 error)
-    // ─────────────────────────────────────────────────────────────────────────
 
     [Fact]
     public async Task LookupByISBNAsync_NullIsbn_ReturnsNull()
@@ -510,13 +476,13 @@ public class LookupServiceTests
             callCount++;
             if (callCount == 1)
             {
-                // First call with API key → quota exceeded
+                // First call: quota exceeded
                 return new HttpResponseMessage(HttpStatusCode.Forbidden)
                 {
                     Content = new StringContent("{\"error\": {\"status\": \"RESOURCE_EXHAUSTED\"}}")
                 };
             }
-            // Retry without key succeeds
+            // Retry without key
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(successJson)

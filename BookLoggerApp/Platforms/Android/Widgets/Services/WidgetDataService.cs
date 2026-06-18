@@ -8,12 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookLoggerApp.Platforms.Android.Widgets.Services;
 
-/// <summary>
-/// Standalone data access for Android widgets.
-/// Creates its own DbContext directly (no DI) because AppWidgetProvider
-/// runs as a BroadcastReceiver and MAUI's service container may not be available.
-/// All queries use AsNoTracking() for read-only, minimal overhead access.
-/// </summary>
+// No DI: AppWidgetProvider is a BroadcastReceiver; MAUI container may be unavailable
 public static class WidgetDataService
 {
     private static AppDbContext CreateDbContext()
@@ -30,10 +25,6 @@ public static class WidgetDataService
         return new AppDbContext(options);
     }
 
-    /// <summary>
-    /// Gets the most recently started book with Status = Reading.
-    /// Returns null if no book is currently being read.
-    /// </summary>
     public static async Task<CurrentBookWidgetData?> GetCurrentBookDataAsync()
     {
         try
@@ -49,7 +40,6 @@ public static class WidgetDataService
             if (book is null)
                 return null;
 
-            // Resolve full cover image path
             string? fullCoverPath = null;
             if (!string.IsNullOrEmpty(book.CoverImagePath))
             {
@@ -82,10 +72,6 @@ public static class WidgetDataService
         }
     }
 
-    /// <summary>
-    /// Calculates the current reading streak (consecutive days with qualifying sessions).
-    /// Mirrors the logic in ProgressService.GetCurrentStreakAsync().
-    /// </summary>
     public static async Task<StreakWidgetData> GetStreakDataAsync()
     {
         try
@@ -116,12 +102,6 @@ public static class WidgetDataService
         }
     }
 
-    /// <summary>
-    /// Gets all active reading goals with dynamically calculated progress.
-    /// Mirrors the calculation logic from GoalService.CalculateGoalProgressAsync()
-    /// because ReadingGoal.Current in the DB is rarely persisted — the app
-    /// recalculates it on every display.
-    /// </summary>
     public static async Task<List<GoalWidgetData>> GetActiveGoalDataAsync()
     {
         try
@@ -139,7 +119,6 @@ public static class WidgetDataService
             if (goals.Count == 0)
                 return new List<GoalWidgetData>();
 
-            // Load data needed for progress calculation
             var books = await context.Books.AsNoTracking().ToListAsync();
             var sessions = await context.ReadingSessions.AsNoTracking().ToListAsync();
             var exclusions = await context.GoalExcludedBooks.AsNoTracking().ToListAsync();
@@ -155,7 +134,6 @@ public static class WidgetDataService
                     .Select(e => e.BookId)
                     .ToHashSet();
 
-                // Genre filter: null means no filter (all books count)
                 HashSet<Guid>? genreMatchingBookIds = null;
                 var goalGenreIds = goalGenres
                     .Where(gg => gg.ReadingGoalId == goal.Id)
@@ -164,18 +142,13 @@ public static class WidgetDataService
 
                 if (goalGenreIds.Count > 0)
                 {
-                    // OR-logic: book matches if it has ANY of the goal's genres
                     genreMatchingBookIds = bookGenres
                         .Where(bg => goalGenreIds.Contains(bg.GenreId))
                         .Select(bg => bg.BookId)
                         .ToHashSet();
                 }
 
-                // Use the shared helper so the widget's goal window matches the app's
-                // (ToUniversalTime() is essential — goal dates come from the UI as
-                // Kind=Unspecified local dates, and the DateCompleted/EndedAt values
-                // are stored as UTC. Skipping the conversion was showing different
-                // progress in the widget vs. the main Goals page for non-UTC users.)
+                // shared helper ensures UTC conversion matches the Goals page
                 var (startDate, endDate) = BookLoggerApp.Core.Helpers.GoalDateRangeHelper.GetGoalRangeUtc(goal);
 
                 int current = goal.Type switch
@@ -225,10 +198,6 @@ public static class WidgetDataService
         }
     }
 
-    /// <summary>
-    /// Gets a specific goal by ID, falling back to the first active goal if not found.
-    /// Used by the goal widget when a specific goal was configured.
-    /// </summary>
     public static async Task<GoalWidgetData?> GetGoalDataByIdAsync(Guid? goalId)
     {
         var goals = await GetActiveGoalDataAsync();
@@ -243,7 +212,6 @@ public static class WidgetDataService
                 return specific;
         }
 
-        // Fall back to first active goal
         return goals[0];
     }
 }

@@ -5,9 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service for looking up book metadata from Google Books API.
-/// </summary>
+/// <summary>Queries Google Books API for book metadata.</summary>
 public class LookupService : ILookupService
 {
     private const string GoogleBooksApiBaseUrl = "https://www.googleapis.com/books/v1/volumes";
@@ -40,7 +38,6 @@ public class LookupService : ILookupService
         if (string.IsNullOrWhiteSpace(isbn))
             return null;
 
-        // Clean ISBN (remove dashes and spaces)
         isbn = isbn.Replace("-", "").Replace(" ", "");
 
         _logger?.LogInformation("Looking up book by ISBN: {ISBN}", isbn);
@@ -176,14 +173,12 @@ public class LookupService : ILookupService
 
     private BookMetadata MapToBookMetadata(GoogleBooksVolumeInfo volumeInfo, string? isbn)
     {
-        // Extract ISBN if not provided
         if (string.IsNullOrWhiteSpace(isbn))
         {
             isbn = volumeInfo.IndustryIdentifiers?
                 .FirstOrDefault(id => id.Type == "ISBN_13" || id.Type == "ISBN_10")?.Identifier;
         }
 
-        // Extract publication year
         int? publicationYear = null;
         if (!string.IsNullOrWhiteSpace(volumeInfo.PublishedDate) &&
             volumeInfo.PublishedDate.Length >= 4 &&

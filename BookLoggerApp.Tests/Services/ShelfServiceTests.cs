@@ -11,10 +11,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// Unit-tests for ShelfService covering shelf CRUD, add/remove/move operations.
-/// Uses InMemoryDatabase with transaction warnings suppressed so the transactional
-/// DeleteShelfAsync / UpdateShelfPositionsAsync / MoveXxxBetweenShelvesAsync paths
-/// can be exercised.
+/// ShelfService CRUD and move operations. InMemory with transaction warnings suppressed
+/// so transactional paths can be exercised.
 /// </summary>
 public class ShelfServiceTests : IDisposable
 {
@@ -160,7 +158,7 @@ public class ShelfServiceTests : IDisposable
         await using var verify = _factory.CreateDbContext();
         var entries = await verify.BookShelves.Where(bs => bs.ShelfId == shelf.Id).OrderBy(bs => bs.Position).ToListAsync();
         entries.Should().HaveCount(2);
-        entries[0].BookId.Should().Be(b2.Id); // Last-added is first
+        entries[0].BookId.Should().Be(b2.Id); // last-added first
         entries[1].BookId.Should().Be(b1.Id);
     }
 
@@ -462,9 +460,7 @@ public class ShelfServiceTests : IDisposable
             ctx.Books.AddRange(b1, b2);
             await ctx.SaveChangesAsync();
         }
-        // Add b1 at position 0 and b2 at position 1
         await _service.AddBookToShelfAsync(tgt.Id, b1.Id);
-        // Now insert b2 at position 0
         var src = await _service.CreateShelfAsync(new Shelf { Name = "Src" });
         await _service.AddBookToShelfAsync(src.Id, b2.Id);
 

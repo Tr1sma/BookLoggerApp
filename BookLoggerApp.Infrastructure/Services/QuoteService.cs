@@ -6,10 +6,7 @@ using BookLoggerApp.Infrastructure.Repositories;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service implementation for managing quotes.
-/// Free tier is capped at 3 quotes per book via <see cref="IFeatureGuard"/>.
-/// </summary>
+/// <summary>Free tier capped at 3 quotes per book via <see cref="IFeatureGuard"/>.</summary>
 public class QuoteService : IQuoteService
 {
     private const int FreeTierPerBookCap = 3;

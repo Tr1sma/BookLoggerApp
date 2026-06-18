@@ -5,10 +5,6 @@ using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
 
-/// <summary>
-/// Smoke-level tests for ShareCardService. Private drawing helpers are
-/// marked [ExcludeFromCodeCoverage] as pixel-perfect tests would be brittle.
-/// </summary>
 public class ShareCardServiceTests
 {
     private readonly ShareCardService _service = new();
@@ -181,7 +177,7 @@ public class ShareCardServiceTests
         {
             PeriodLabel = "Jahr",
             BooksCompleted = 10,
-            MinutesRead = 12000 // 200 hours
+            MinutesRead = 12000 // 200h
         };
 
         var result = await _service.GenerateStatsCardAsync(data);
@@ -205,7 +201,6 @@ public class ShareCardServiceTests
 
     private static byte[] CreateDummyPng()
     {
-        // Minimal 1x1 PNG
         using var bitmap = new SkiaSharp.SKBitmap(1, 1);
         using var image = SkiaSharp.SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);

@@ -32,7 +32,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task UpdateGoalProgressAsync_ShouldUpdateProgress()
     {
-        // Arrange
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read 100 pages",
@@ -43,10 +42,8 @@ public class GoalServiceTests : IDisposable
             EndDate = DateTime.UtcNow.AddDays(30)
         });
 
-        // Act
         await _service.UpdateGoalProgressAsync(goal.Id, 50);
 
-        // Assert
         var updated = await _service.GetByIdAsync(goal.Id);
         updated!.Current.Should().Be(50);
         updated.IsCompleted.Should().BeFalse();
@@ -55,7 +52,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task UpdateGoalProgressAsync_ShouldAutoCompleteWhenTargetReached()
     {
-        // Arrange
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read 100 pages",
@@ -66,10 +62,8 @@ public class GoalServiceTests : IDisposable
             EndDate = DateTime.UtcNow.AddDays(30)
         });
 
-        // Act
         await _service.UpdateGoalProgressAsync(goal.Id, 100);
 
-        // Assert
         var updated = await _service.GetByIdAsync(goal.Id);
         updated!.Current.Should().Be(100);
         updated.IsCompleted.Should().BeTrue();
@@ -78,7 +72,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task GetActiveGoalsAsync_ShouldReturnOnlyActiveGoals()
     {
-        // Arrange
         await _service.AddAsync(new ReadingGoal
         {
             Title = "Active Goal",
@@ -108,10 +101,8 @@ public class GoalServiceTests : IDisposable
             IsCompleted = false
         });
 
-        // Act
         var activeGoals = await _service.GetActiveGoalsAsync();
 
-        // Assert
         activeGoals.Should().HaveCount(1);
         activeGoals.First().Title.Should().Be("Active Goal");
     }
@@ -134,13 +125,12 @@ public class GoalServiceTests : IDisposable
             Title = "UI-Picker Goal",
             Type = GoalType.Books,
             Target = 5,
-            // Exactly what <input type="date" @bind="...StartDate" /> produces
+            // UI date-picker format
             StartDate = new DateTime(nowYear - 1, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
             EndDate = new DateTime(nowYear + 1, 12, 31, 0, 0, 0, DateTimeKind.Unspecified)
         });
 
-        // Completed book stamped with the real runtime UtcNow (Kind=Utc); this lies
-        // inside the multi-year range regardless of the test runner's local timezone
+        // Kind=Utc, inside range
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "In-range book",
@@ -150,10 +140,8 @@ public class GoalServiceTests : IDisposable
         });
         await _unitOfWork.SaveChangesAsync();
 
-        // Act — GetActiveGoalsAsync populates Current in memory via CalculateGoalProgressAsync
         var activeGoals = await _service.GetActiveGoalsAsync();
 
-        // Assert
         activeGoals.Should().ContainSingle(g => g.Id == goal.Id)
             .Which.Current.Should().Be(1, "the UTC-stamped book must match a Kind=Unspecified goal range");
     }
@@ -176,23 +164,18 @@ public class GoalServiceTests : IDisposable
             Type = GoalType.Books,
             Target = 1,
             StartDate = new DateTime(localToday.Year - 1, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
-            // EndDate = today's local date, as the UI date picker would produce
+            // UI date-picker format
             EndDate = new DateTime(localToday.Year, localToday.Month, localToday.Day, 0, 0, 0, DateTimeKind.Unspecified)
         });
 
-        // Act
         var activeGoals = await _service.GetActiveGoalsAsync();
 
-        // Assert — goal ending "today" in the user's local calendar must remain active
-        // throughout the entire local day, not disappear when UtcNow crosses some earlier
-        // UTC threshold
         activeGoals.Should().ContainSingle(g => g.Id == goal.Id);
     }
 
     [Fact]
     public async Task RecalculateGoalProgressAsync_ShouldMarkNewlyCompletedGoalsAndReturnTrue()
     {
-        // Arrange
         await _service.AddAsync(new ReadingGoal
         {
             Title = "Read 30 minutes",
@@ -213,10 +196,8 @@ public class GoalServiceTests : IDisposable
         });
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
         var result = await _service.RecalculateGoalProgressAsync();
 
-        // Assert
         result.Should().BeTrue();
 
         var completedGoals = await _service.GetCompletedGoalsAsync();
@@ -228,13 +209,12 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task CheckAndCompleteGoalsAsync_ShouldCompleteReachedGoals()
     {
-        // Arrange
         var goal1 = await _service.AddAsync(new ReadingGoal
         {
             Title = "Goal 1",
             Type = GoalType.Pages,
             Target = 100,
-            Current = 100, // Reached target
+            Current = 100,
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
             IsCompleted = false
@@ -244,16 +224,14 @@ public class GoalServiceTests : IDisposable
             Title = "Goal 2",
             Type = GoalType.Pages,
             Target = 100,
-            Current = 50, // Not reached yet
+            Current = 50,
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
             IsCompleted = false
         });
 
-        // Act
         await _service.CheckAndCompleteGoalsAsync();
 
-        // Assert
         var updated1 = await _service.GetByIdAsync(goal1.Id);
         var updated2 = await _service.GetByIdAsync(goal2.Id);
 
@@ -264,7 +242,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task ExcludeBookFromGoalAsync_ShouldExcludeBook()
     {
-        // Arrange
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read 5 books",
@@ -284,10 +261,8 @@ public class GoalServiceTests : IDisposable
         await _unitOfWork.Books.AddAsync(book);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
         await _service.ExcludeBookFromGoalAsync(goal.Id, book.Id);
 
-        // Assert
         var exclusions = await _service.GetExcludedBooksAsync(goal.Id);
         exclusions.Should().HaveCount(1);
         exclusions.First().BookId.Should().Be(book.Id);
@@ -296,7 +271,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task IncludeBookInGoalAsync_ShouldRemoveExclusion()
     {
-        // Arrange
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read 5 books",
@@ -318,10 +292,8 @@ public class GoalServiceTests : IDisposable
 
         await _service.ExcludeBookFromGoalAsync(goal.Id, book.Id);
 
-        // Act
         await _service.IncludeBookInGoalAsync(goal.Id, book.Id);
 
-        // Assert
         var exclusions = await _service.GetExcludedBooksAsync(goal.Id);
         exclusions.Should().BeEmpty();
     }
@@ -329,7 +301,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task GetActiveGoalsAsync_ShouldNotCountExcludedBooks()
     {
-        // Arrange: Create a goal and two completed books within the goal's date range
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read 3 books",
@@ -347,11 +318,9 @@ public class GoalServiceTests : IDisposable
         await _unitOfWork.Books.AddAsync(book3);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act: Exclude book2 from the goal
         await _service.ExcludeBookFromGoalAsync(goal.Id, book2.Id);
         var activeGoals = await _service.GetActiveGoalsAsync();
 
-        // Assert: Only 2 of 3 completed books should count
         var loadedGoal = activeGoals.First();
         loadedGoal.Current.Should().Be(2);
         loadedGoal.IsCompleted.Should().BeFalse();
@@ -360,7 +329,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task ExcludeBookFromGoalAsync_ShouldBeIdempotent()
     {
-        // Arrange
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read 5 books",
@@ -374,11 +342,9 @@ public class GoalServiceTests : IDisposable
         await _unitOfWork.Books.AddAsync(book);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act: Exclude same book twice
         await _service.ExcludeBookFromGoalAsync(goal.Id, book.Id);
         await _service.ExcludeBookFromGoalAsync(goal.Id, book.Id);
 
-        // Assert: Should still only have one exclusion
         var exclusions = await _service.GetExcludedBooksAsync(goal.Id);
         exclusions.Should().HaveCount(1);
     }
@@ -386,7 +352,7 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task GetActiveGoalsAsync_ExcludedBookShouldNotPreventCompletion()
     {
-        // Arrange: Goal target=2, 3 completed books, exclude 1 -> current=2 -> should auto-complete
+        // target=2, 3 books, exclude 1 → auto-complete
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read 2 books",
@@ -404,12 +370,9 @@ public class GoalServiceTests : IDisposable
         await _unitOfWork.Books.AddAsync(book3);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act: Exclude one book -> 2 remaining still meets target
         await _service.ExcludeBookFromGoalAsync(goal.Id, book3.Id);
         var activeGoals = await _service.GetActiveGoalsAsync();
 
-        // Assert: Goal should auto-complete (2 counted >= target 2)
-        // After auto-completion it moves to completed goals
         var completedGoals = await _service.GetCompletedGoalsAsync();
         var completedGoal = completedGoals.FirstOrDefault(g => g.Id == goal.Id);
         completedGoal.Should().NotBeNull();
@@ -420,7 +383,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task IncludeBookInGoalAsync_ShouldBeNoOpIfNotExcluded()
     {
-        // Arrange
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read 5 books",
@@ -434,10 +396,8 @@ public class GoalServiceTests : IDisposable
         await _unitOfWork.Books.AddAsync(book);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act: Include a book that was never excluded
         await _service.IncludeBookInGoalAsync(goal.Id, book.Id);
 
-        // Assert: Should not throw, no exclusions exist
         var exclusions = await _service.GetExcludedBooksAsync(goal.Id);
         exclusions.Should().BeEmpty();
     }
@@ -447,7 +407,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task AddGenreToGoalAsync_ShouldAddGenre()
     {
-        // Arrange
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read Fantasy books",
@@ -459,10 +418,8 @@ public class GoalServiceTests : IDisposable
 
         var genre = (await _unitOfWork.Genres.GetAllAsync()).First();
 
-        // Act
         await _service.AddGenreToGoalAsync(goal.Id, genre.Id);
 
-        // Assert
         var goalGenres = await _service.GetGoalGenresAsync(goal.Id);
         goalGenres.Should().HaveCount(1);
         goalGenres.First().GenreId.Should().Be(genre.Id);
@@ -471,7 +428,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task AddGenreToGoalAsync_ShouldBeIdempotent()
     {
-        // Arrange
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read Fantasy books",
@@ -483,11 +439,9 @@ public class GoalServiceTests : IDisposable
 
         var genre = (await _unitOfWork.Genres.GetAllAsync()).First();
 
-        // Act: Add same genre twice
         await _service.AddGenreToGoalAsync(goal.Id, genre.Id);
         await _service.AddGenreToGoalAsync(goal.Id, genre.Id);
 
-        // Assert: Should still only have one entry
         var goalGenres = await _service.GetGoalGenresAsync(goal.Id);
         goalGenres.Should().HaveCount(1);
     }
@@ -495,7 +449,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task RemoveGenreFromGoalAsync_ShouldRemoveGenre()
     {
-        // Arrange
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read Fantasy books",
@@ -508,10 +461,8 @@ public class GoalServiceTests : IDisposable
         var genre = (await _unitOfWork.Genres.GetAllAsync()).First();
         await _service.AddGenreToGoalAsync(goal.Id, genre.Id);
 
-        // Act
         await _service.RemoveGenreFromGoalAsync(goal.Id, genre.Id);
 
-        // Assert
         var goalGenres = await _service.GetGoalGenresAsync(goal.Id);
         goalGenres.Should().BeEmpty();
     }
@@ -519,7 +470,6 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task GetActiveGoalsAsync_WithGenreFilter_ShouldOnlyCountMatchingBooks()
     {
-        // Arrange: Use seeded genres (Fantasy and Romance)
         var allGenres = (await _unitOfWork.Genres.GetAllAsync()).ToList();
         var fantasy = allGenres.First(g => g.Name == "Fantasy");
         var romance = allGenres.First(g => g.Name == "Romance");
@@ -533,10 +483,9 @@ public class GoalServiceTests : IDisposable
             EndDate = DateTime.UtcNow.AddDays(30)
         });
 
-        // Add Fantasy genre filter to goal
         await _service.AddGenreToGoalAsync(goal.Id, fantasy.Id);
 
-        // Create books: 2 Fantasy, 1 Romance (no Fantasy)
+        // 2 Fantasy, 1 Romance
         var book1 = new Book { Title = "Fantasy Book 1", Author = "A", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
         var book2 = new Book { Title = "Fantasy Book 2", Author = "B", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
         var book3 = new Book { Title = "Romance Book", Author = "C", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
@@ -545,16 +494,13 @@ public class GoalServiceTests : IDisposable
         await _unitOfWork.Books.AddAsync(book3);
         await _unitOfWork.SaveChangesAsync();
 
-        // Assign genres via BookGenre
         await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book1.Id, GenreId = fantasy.Id });
         await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book2.Id, GenreId = fantasy.Id });
         await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book3.Id, GenreId = romance.Id });
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
         var activeGoals = await _service.GetActiveGoalsAsync();
 
-        // Assert: Only 2 Fantasy books should count (Romance book excluded by genre filter)
         var loadedGoal = activeGoals.First();
         loadedGoal.Current.Should().Be(2);
     }
@@ -562,7 +508,7 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task GetActiveGoalsAsync_WithoutGenreFilter_ShouldCountAllBooks()
     {
-        // Arrange: Goal without any genre filter (backward-compatible)
+        // no genre filter
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Read 3 books",
@@ -578,10 +524,8 @@ public class GoalServiceTests : IDisposable
         await _unitOfWork.Books.AddAsync(book2);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
         var activeGoals = await _service.GetActiveGoalsAsync();
 
-        // Assert: All books should count (no genre filter)
         var loadedGoal = activeGoals.First();
         loadedGoal.Current.Should().Be(2);
     }
@@ -589,7 +533,7 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task GetActiveGoalsAsync_WithMultipleGenres_ShouldUseOrLogic()
     {
-        // Arrange: Goal with Fantasy OR Romance genre filter
+        // Fantasy OR Romance
         var allGenres = (await _unitOfWork.Genres.GetAllAsync()).ToList();
         var fantasy = allGenres.First(g => g.Name == "Fantasy");
         var romance = allGenres.First(g => g.Name == "Romance");
@@ -607,7 +551,6 @@ public class GoalServiceTests : IDisposable
         await _service.AddGenreToGoalAsync(goal.Id, fantasy.Id);
         await _service.AddGenreToGoalAsync(goal.Id, romance.Id);
 
-        // Create books: 1 Fantasy, 1 Romance, 1 Mystery
         var book1 = new Book { Title = "Fantasy Book", Author = "A", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
         var book2 = new Book { Title = "Romance Book", Author = "B", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
         var book3 = new Book { Title = "Mystery Book", Author = "C", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
@@ -621,19 +564,11 @@ public class GoalServiceTests : IDisposable
         await _unitOfWork.BookGenres.AddAsync(new BookGenre { BookId = book3.Id, GenreId = mystery.Id });
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
         var activeGoals = await _service.GetActiveGoalsAsync();
 
-        // Assert: Fantasy + Romance = 2 books (Mystery excluded by genre filter)
         var loadedGoal = activeGoals.First();
         loadedGoal.Current.Should().Be(2);
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Coverage-ergänzende Tests (GetAllAsync, GetByIdAsync, DeleteAsync,
-    // UpdateAsync, GetCompletedGoalsAsync, GetGoalsByTypeAsync, Minutes,
-    // NotifyGoalsChanged, Exceptions, GetExcludedBooks/GoalGenres)
-    // ─────────────────────────────────────────────────────────────────────────
 
     [Fact]
     public async Task GetAllAsync_ReturnsAllGoals()

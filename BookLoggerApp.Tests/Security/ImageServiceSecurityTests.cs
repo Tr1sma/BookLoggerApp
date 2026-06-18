@@ -22,7 +22,6 @@ public class ImageServiceSecurityTests
     [Fact]
     public async Task DownloadImageFromUrlAsync_ShouldRejectNonImageContentType()
     {
-        // Arrange
         var mockHandler = new MockHttpMessageHandler((request, cancellationToken) =>
         {
             var response = new HttpResponseMessage(HttpStatusCode.OK)
@@ -33,63 +32,49 @@ public class ImageServiceSecurityTests
             return Task.FromResult(response);
         });
 
-        var httpClient = new HttpClient(mockHandler);
-        var service = new ImageService(_fileSystem, _logger, httpClient);
+        var result = await new ImageService(_fileSystem, _logger, new HttpClient(mockHandler))
+            .DownloadImageFromUrlAsync("http://example.com/malicious.html");
 
-        // Act
-        var result = await service.DownloadImageFromUrlAsync("http://example.com/malicious.html");
-
-        // Assert
         result.Should().BeNull();
     }
 
     [Fact]
     public async Task DownloadImageFromUrlAsync_ShouldRejectLargeFiles()
     {
-        // Arrange
         var mockHandler = new MockHttpMessageHandler((request, cancellationToken) =>
         {
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new ByteArrayContent(new byte[0]) // Empty content, but header says it's big
+                Content = new ByteArrayContent(new byte[0])
             };
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
             response.Content.Headers.ContentLength = 11 * 1024 * 1024; // 11MB
             return Task.FromResult(response);
         });
 
-        var httpClient = new HttpClient(mockHandler);
-        var service = new ImageService(_fileSystem, _logger, httpClient);
+        var result = await new ImageService(_fileSystem, _logger, new HttpClient(mockHandler))
+            .DownloadImageFromUrlAsync("http://example.com/huge_image.jpg");
 
-        // Act
-        var result = await service.DownloadImageFromUrlAsync("http://example.com/huge_image.jpg");
-
-        // Assert
         result.Should().BeNull();
     }
 
-     [Fact]
+    [Fact]
     public async Task DownloadImageFromUrlAsync_ShouldAcceptValidImage()
     {
-        // Arrange
         var mockHandler = new MockHttpMessageHandler((request, cancellationToken) =>
         {
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new ByteArrayContent(new byte[] { 0xFF, 0xD8, 0xFF }) // Fake JPEG header
+                Content = new ByteArrayContent(new byte[] { 0xFF, 0xD8, 0xFF }) // JPEG magic
             };
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
             response.Content.Headers.ContentLength = 1024;
             return Task.FromResult(response);
         });
 
-        var httpClient = new HttpClient(mockHandler);
-        var service = new ImageService(_fileSystem, _logger, httpClient);
+        var result = await new ImageService(_fileSystem, _logger, new HttpClient(mockHandler))
+            .DownloadImageFromUrlAsync("http://example.com/valid.jpg");
 
-        // Act
-        var result = await service.DownloadImageFromUrlAsync("http://example.com/valid.jpg");
-
-        // Assert
         result.Should().NotBeNull();
     }
 }

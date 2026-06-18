@@ -16,7 +16,6 @@
 {
     <div class="quick-timer-overlay" @onclick="HandleOverlayClick">
         <div class="quick-timer-widget" @onclick:stopPropagation="true">
-            <!-- Book Info -->
             <div class="quick-timer-header">
                 <div class="quick-timer-book-info">
                     <h3>@Book.Title</h3>
@@ -25,13 +24,11 @@
                 <button class="btn-close" @onclick="HandleClose">✕</button>
             </div>
 
-            <!-- Timer Display -->
             <div class="quick-timer-display">
                 <div class="timer-value">@FormatTime(ElapsedTime)</div>
                 <div class="timer-status">@(IsRunning ? L["QuickTimer_Status_Reading"].Value : (ElapsedTime.TotalSeconds > 0 ? L["QuickTimer_Status_Paused"].Value : L["QuickTimer_Status_Ready"].Value))</div>
             </div>
 
-            <!-- Pages Input -->
             <div class="quick-timer-pages">
                 <label>@L["Reading_PagesRead"]</label>
                 <div class="pages-input-group">
@@ -45,7 +42,6 @@
                 </div>
             </div>
 
-            <!-- Controls -->
             <div class="quick-timer-controls">
                 @if (!IsRunning && ElapsedTime.TotalSeconds == 0)
                 {
@@ -70,7 +66,6 @@
                 }
             </div>
 
-            <!-- Session Info -->
             @if (ElapsedTime.TotalSeconds > 0)
             {
                 <div class="quick-timer-info">
@@ -89,7 +84,6 @@
                 </div>
             }
 
-            <!-- Mood / Trigger Picker (shown when paused, before saving) -->
             @if (_moodTrackingEnabled && !IsRunning && ElapsedTime.TotalSeconds > 0)
             {
                 <SessionMoodPicker @bind-Value="_selectedMoods" />
@@ -112,7 +106,6 @@
     private System.Threading.Timer? _timer;
     private Guid? _currentBookId;
 
-    // Mood/Trigger tracking
     private IReadOnlyList<SessionMood> _selectedMoods = Array.Empty<SessionMood>();
     private bool _moodTrackingEnabled = true;
 
@@ -128,9 +121,7 @@
 
     protected override void OnParametersSet()
     {
-        // Only reset when the book actually changes, not on every parent re-render.
-        // Without this check, pausing the timer (IsRunning=false) and having
-        // the parent re-render would wipe the user's elapsed time and pages.
+        // guard: parent re-renders must not reset elapsed time
         if (Book != null && Book.Id != _currentBookId)
         {
             _currentBookId = Book.Id;
@@ -180,7 +171,6 @@
         try
         {
 
-            // Save session
             await ProgressService.AddSessionAsync(new ReadingSession
             {
                 BookId = Book.Id,
@@ -193,7 +183,6 @@
                     .Select(m => new ReadingSessionMood { Mood = m }).ToList()
             });
 
-            // Update book progress if pages were read
             if (PagesRead > 0)
             {
                 var currentPage = Book.CurrentPage + PagesRead;
@@ -201,11 +190,8 @@
             }
 
 
-            // Notify parent and close
             await OnSessionSaved.InvokeAsync();
             await HandleClose();
-
-            // Reset
             ResetTimer();
         }
         catch (Exception ex)
@@ -222,11 +208,7 @@
         await OnClose.InvokeAsync();
     }
 
-    private async Task HandleOverlayClick()
-    {
-        // Close when clicking outside the widget
-        await HandleClose();
-    }
+    private async Task HandleOverlayClick() => await HandleClose();
 
     private void IncrementPages()
     {
@@ -253,18 +235,10 @@
 
     private int CalculateXP()
     {
-        // Use correct XP formula: 5 XP per minute, 20 XP per page (matches XpCalculator)
         int minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes);
-        int pagesXp = PagesRead * 20;
-        int baseXp = (minutes * 5) + pagesXp;
-
-        // Add long session bonus (50 XP for 60+ minutes)
-        if (minutes >= 60)
-        {
-            baseXp += 50;
-        }
-
-        // Note: Streak bonus and plant boost are applied on save by ProgressService
+        int baseXp = (minutes * 5) + (PagesRead * 20);
+        if (minutes >= 60) baseXp += 50;
+        // streak bonus and plant boost applied by ProgressService on save
         return baseXp;
     }
 

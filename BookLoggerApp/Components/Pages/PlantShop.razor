@@ -19,7 +19,6 @@
 
 <AnalyticsScreenTracker Screen="@BookLoggerApp.Core.Services.Analytics.ScreenNames.PlantShop" />
 <div class="plant-shop-container">
-    <!-- Header -->
     <div class="shop-header">
         <h1>🛍️ @L["Shop_Title"]</h1>
         <div class="user-stats">
@@ -33,7 +32,6 @@
         </div>
     </div>
 
-    <!-- Tab Bar -->
     <div class="shop-tabs">
         <button class="shop-tab-btn @(activeTab == "plants" ? "active" : "")"
                 @onclick='() => SwitchTab("plants")'>
@@ -45,10 +43,8 @@
         </button>
     </div>
 
-    @* ===== PLANTS TAB ===== *@
     @if (activeTab == "plants")
     {
-        <!-- Description -->
         <div class="shop-description">
             <p>🌿 @L["Shop_Plants_Description"]</p>
         </div>
@@ -66,7 +62,6 @@
         }
         else
         {
-            <!-- Shop Grid -->
             <div class="shop-grid">
                 @foreach (var species in ViewModel.AvailableSpecies)
                 {
@@ -105,7 +100,6 @@
             }
         }
 
-        <!-- Plant Purchase Modal -->
         @if (ViewModel.SelectedSpecies != null)
         {
             <div class="purchase-modal-overlay" @onclick="ClearSelection">
@@ -194,10 +188,8 @@
         </div>
     }
 
-    @* ===== DECORATIONS TAB ===== *@
     @if (activeTab == "decorations")
     {
-        <!-- Description -->
         <div class="shop-description">
             <p>🕯️ @L["Shop_Decorations_Description"]</p>
         </div>
@@ -215,7 +207,6 @@
         }
         else
         {
-            <!-- Decoration Grid -->
             <div class="shop-grid">
                 @foreach (var item in DecorationVM.AllDecorations)
                 {
@@ -252,7 +243,6 @@
             }
         }
 
-        <!-- Decoration Purchase Modal -->
         @if (DecorationVM.SelectedDecoration != null)
         {
             <div class="purchase-modal-overlay" @onclick="ClearDecorationSelection">
@@ -359,8 +349,6 @@
             await ViewModel.LoadCommand.ExecuteAsync(null);
     }
 
-    // ===== Plant handlers =====
-
     private async Task HandlePlantPurchaseAsync()
     {
         if (ViewModel.SelectedSpecies != null)
@@ -397,8 +385,6 @@
         UnregisterModalBack();
     }
 
-    // ===== Decoration handlers =====
-
     private async Task HandleDecorationPurchaseAsync()
     {
         if (DecorationVM.SelectedDecoration != null)
@@ -433,8 +419,6 @@
         DecorationVM.ClearSelectionCommand.Execute(null);
         UnregisterModalBack();
     }
-
-    // ===== Common =====
 
     private void UnregisterModalBack()
     {

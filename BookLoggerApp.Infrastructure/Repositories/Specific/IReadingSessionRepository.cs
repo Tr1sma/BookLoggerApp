@@ -2,9 +2,6 @@ using BookLoggerApp.Core.Models;
 
 namespace BookLoggerApp.Infrastructure.Repositories.Specific;
 
-/// <summary>
-/// Repository interface for ReadingSession entity with specific operations.
-/// </summary>
 public interface IReadingSessionRepository : IRepository<ReadingSession>
 {
     Task<IEnumerable<ReadingSession>> GetSessionsByBookAsync(Guid bookId);

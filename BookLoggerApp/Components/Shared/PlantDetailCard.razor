@@ -105,9 +105,7 @@
     private string _editedName = string.Empty;
     private string? _renameError;
 
-    // Mirrors PlantService.GetGlobalGrowthMultiplierAsync: Herz der Geschichten halves the
-    // effective water interval. Without this the "Next Water" countdown would disagree with
-    // the plant's actual Thirsty/Wilting transitions.
+    // must mirror PlantService.GetGlobalGrowthMultiplierAsync
     private double _growthMultiplier = 1.0;
 
     private bool IsWaterButtonDisabled => IsWatering || Plant.Status is PlantStatus.Healthy or PlantStatus.Dead;

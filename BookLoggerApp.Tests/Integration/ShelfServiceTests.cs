@@ -31,7 +31,7 @@ public class ShelfServiceTests : IDisposable
     [Fact]
     public async Task GetBooksForShelfAsync_ShouldIncludeUsesCoverAsSpine_WhenTrue()
     {
-        // Arrange
+
         using (var context = _contextFactory.CreateDbContext())
         {
             var shelf = new Shelf { Name = "Test Shelf" };
@@ -52,12 +52,12 @@ public class ShelfServiceTests : IDisposable
             await context.SaveChangesAsync();
         }
 
-        // Act
+
         var shelves = await _shelfService.GetAllShelvesAsync();
         var shelfId = shelves.First().Id;
         var books = await _shelfService.GetBooksForShelfAsync(shelfId);
 
-        // Assert
+
         books.Should().HaveCount(1);
         books.First().UsesCoverAsSpine.Should().BeTrue();
     }
@@ -65,7 +65,7 @@ public class ShelfServiceTests : IDisposable
     [Fact]
     public async Task GetBooksForShelfAsync_ShouldIncludeUsesCoverAsSpine_WhenFalse()
     {
-        // Arrange
+
         using (var context = _contextFactory.CreateDbContext())
         {
             var shelf = new Shelf { Name = "Test Shelf 2" };
@@ -73,7 +73,7 @@ public class ShelfServiceTests : IDisposable
             {
                 Title = "Color Mode Book",
                 Author = "A",
-                UsesCoverAsSpine = false, // Explicitly false
+                UsesCoverAsSpine = false,
                 SpineColor = "red"
             };
 
@@ -84,12 +84,12 @@ public class ShelfServiceTests : IDisposable
             await context.SaveChangesAsync();
         }
 
-        // Act
+
         var shelves = await _shelfService.GetAllShelvesAsync();
         var shelfId = shelves.First().Id;
         var books = await _shelfService.GetBooksForShelfAsync(shelfId);
 
-        // Assert
+
         books.Should().HaveCount(1);
         books.First().UsesCoverAsSpine.Should().BeFalse();
         books.First().SpineColor.Should().Be("red");

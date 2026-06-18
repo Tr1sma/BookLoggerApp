@@ -44,7 +44,6 @@
     else if (ViewModel.Book != null)
     {
         <form class="book-edit-form" @onsubmit="HandleSave" @onsubmit:preventDefault="true">
-            <!-- Basic Information -->
             <section class="form-section">
                 <h2>@L["BookEdit_BasicInfo"]</h2>
 
@@ -151,7 +150,6 @@
                 </div>
             </section>
 
-            <!-- Content -->
             <section class="form-section">
                 <h2>@L["BookEdit_Content"]</h2>
 
@@ -173,7 +171,6 @@
                 </div>
             </section>
 
-            <!-- Status -->
             <section class="form-section">
                 <h2>@L["BookDetail_Status"]</h2>
 
@@ -188,7 +185,6 @@
                 </div>
             </section>
 
-            <!-- Genres -->
             <section class="form-section">
                 <h2>@L["BookEdit_Genres"]</h2>
 
@@ -228,12 +224,11 @@
                 </LockedFeatureButton>
             }
 
-            <!-- Shelves -->
             <section class="form-section">
                 <h2>@L["BookDetail_Shelves"]</h2>
                 <div class="form-hint">@L["BookEdit_ShelvesHint"]</div>
 
-                <div class="genres-selection"> <!-- Reusing genres style for grid layout -->
+                <div class="genres-selection">
                     @if (ViewModel.AvailableShelves.Any())
                     {
                         @foreach (var shelf in ViewModel.AvailableShelves)

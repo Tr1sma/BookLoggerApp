@@ -35,7 +35,6 @@
     }
     else
     {
-        <!-- Hero -->
         <section class="settings-hero">
             <div class="settings-hero-copy">
                 <span class="settings-kicker">BookHeart</span>
@@ -48,7 +47,6 @@
             </div>
         </section>
 
-        <!-- Plus & Premium -->
         <section class="settings-card">
             <div class="section-header">
                 <h2>⭐ @L["Settings_PlusPremium_Title"]</h2>
@@ -106,7 +104,6 @@
             }
         </section>
 
-        <!-- Notifications -->
         <section class="settings-card">
             <div class="section-header">
                 <h2>🔔 @L["Settings_Notifications_Title"]</h2>
@@ -187,7 +184,6 @@
             }
         </section>
 
-        <!-- Language -->
         <section class="settings-card">
             <div class="section-header">
                 <h2>🌐 @L["Settings_Language_Title"]</h2>
@@ -210,7 +206,6 @@
             </div>
         </section>
 
-        <!-- Shelf Appearance (collapsible) -->
         <section class="settings-card">
             <button class="settings-collapse-toggle" @onclick="ToggleShelfAppearance">
                 <span>🎨 @L["Settings_Shelf_Title"]</span>
@@ -237,28 +232,6 @@
             }
         </section>
 
-        <!-- Reading Features -->
-        <section class="settings-card">
-            <div class="section-header">
-                <h2>📖 @L["Settings_Features_Title"]</h2>
-                <p>@L["Settings_Features_Subtitle"]</p>
-            </div>
-
-            <div class="setting-row">
-                <div class="setting-info">
-                    <span class="setting-label">@L["Settings_MoodTracking_Label"]</span>
-                    <span class="setting-description">@L["Settings_MoodTracking_Description"]</span>
-                </div>
-                <label class="toggle-switch">
-                    <input type="checkbox"
-                           checked="@ViewModel.Settings.MoodTrackingEnabled"
-                           @onchange="@(async (ChangeEventArgs e) => await ViewModel.ToggleMoodTrackingCommand.ExecuteAsync((bool)(e.Value ?? false)))" />
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-        </section>
-
-        <!-- Data & Backup (merged with Danger Zone) -->
         <section class="settings-card">
             <div class="section-header">
                 <h2>💾 @L["Settings_Data_Title"]</h2>
@@ -286,7 +259,6 @@
             </div>
         </section>
 
-        <!-- Help & Community (merged Support me + Getting Started) -->
         <section class="settings-card">
             <div class="section-header">
                 <h2>💛 @L["Settings_Help_Title"]</h2>
@@ -324,7 +296,6 @@
             </div>
         </section>
 
-        <!-- Privacy (Firebase Analytics & Crashlytics opt-out) -->
         <section id="privacy" class="settings-card">
             <div class="section-header">
                 <h2>🔒 @L["Settings_Privacy_Title"]</h2>
@@ -366,7 +337,6 @@
             </p>
         </section>
 
-        <!-- More Info (Diagnostics + Privacy Policy) -->
         <section class="settings-card">
             <button class="settings-collapse-toggle" @onclick="ToggleMoreInfo">
                 <span>ⓘ @L["Settings_MoreInfo_Title"]</span>
@@ -433,7 +403,6 @@
     }
 </div>
 
-<!-- Delete Confirmation Modal -->
 @if (_showDeleteConfirmation)
 {
     <div class="modal-overlay" @onclick="HideDeleteConfirmation">
@@ -474,7 +443,6 @@
     </div>
 }
 
-<!-- Success Modal -->
 @if (_showSuccessModal)
 {
     <div class="modal-overlay" @onclick="CloseSuccessAndNavigate">
@@ -491,7 +459,6 @@
     </div>
 }
 
-<!-- Restart Notice (after successful backup restore) -->
 @if (_showRestartNotice)
 {
     <div class="modal-overlay">
@@ -505,7 +472,6 @@
     </div>
 }
 
-<!-- Restart Notice (after language change) -->
 @if (_showLanguageRestartNotice)
 {
     <div class="modal-overlay">
@@ -581,8 +547,7 @@
         _showMigrationLog = !_showMigrationLog;
         if (_showMigrationLog)
         {
-            // Pull the latest DB init log on demand — the ctor's snapshot can be
-            // stale if init is still running in the background.
+            // Refresh on demand; ctor snapshot may be stale during background init.
             ViewModel.RefreshMigrationLog();
         }
     }
@@ -639,7 +604,6 @@
     {
         Observe(ViewModel);
 
-        // Register navigation back handler (Settings -> Bookshelf)
         _navBackHandler = async () =>
         {
             Navigation.NavigateTo("/");
@@ -647,9 +611,7 @@
         };
         BackButtonService.Register(_navBackHandler);
 
-        // Re-render when a purchase, lapse, promo, or debug-tier-switch changes the
-        // active entitlement so "Current plan" updates immediately without requiring
-        // a page reload or back-and-forth navigation.
+        // Re-render on entitlement change so "Current plan" updates without reload.
         EntitlementService.EntitlementChanged += OnEntitlementChanged;
 
         await ViewModel.LoadCommand.ExecuteAsync(null);
@@ -703,16 +665,11 @@
     {
         await ViewModel.RestoreFromBackupCommand.ExecuteAsync(null);
 
-        // SQLite keeps stale file handles on the old database even after
-        // ClearAllPools + WAL/SHM cleanup, so the only reliable way to guarantee
-        // the restored data is usable is a full process restart. We check
-        // BackupRestoreSucceeded instead of ErrorMessage so that a post-restore
-        // read failure (from a pre-restore DbContext still in memory) can't
-        // mask a successful restore.
+        // BackupRestoreSucceeded (not ErrorMessage): post-restore DbContext reads can
+        // fail, masking a successful restore; process restart is the only safe path.
         if (ViewModel.BackupRestoreSucceeded)
         {
-            // Re-seed the Preferences language mirror from the restored AppSettings so
-            // the first render after restart already uses the restored language.
+            // Sync language mirror before restart so first render uses restored locale.
             try { await LanguageService.SyncFromSettingsAsync(); } catch { }
 
             _showRestartNotice = true;
@@ -726,7 +683,6 @@
     {
         _deleteConfirmText = string.Empty;
 
-         // Register modal back handler
         _modalBackHandler = async () =>
         {
             HideDeleteConfirmation();
@@ -764,8 +720,7 @@
         if (string.IsNullOrEmpty(ViewModel.ErrorMessage))
         {
             _showSuccessModal = true;
-            // Register success modal handler (just close/navigate)
-             _modalBackHandler = async () =>
+            _modalBackHandler = async () =>
             {
                 CloseSuccessAndNavigate();
                 return true;
@@ -782,7 +737,6 @@
             _modalBackHandler = null;
         }
         _showSuccessModal = false;
-        // Force page refresh to reflect reset state
         Navigation.NavigateTo("/", forceLoad: true);
     }
 

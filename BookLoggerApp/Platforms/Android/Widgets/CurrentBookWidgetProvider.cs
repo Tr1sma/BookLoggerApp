@@ -29,7 +29,6 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
 
         try
         {
-            // Run async query synchronously — widget updates have limited time
             var bookData = Task.Run(() => WidgetDataService.GetCurrentBookDataAsync()).GetAwaiter().GetResult();
 
             if (bookData is not null)
@@ -40,7 +39,6 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
                 views.SetTextViewText(Resource.Id.widget_page_info,
                     $"Page {bookData.CurrentPage}/{bookData.TotalPages} — {bookData.ProgressPercentage}%");
 
-                // Load cover image
                 if (bookData.CoverImagePath is not null && File.Exists(bookData.CoverImagePath))
                 {
                     var bitmap = LoadScaledBitmap(bookData.CoverImagePath, 168, 252);
@@ -56,7 +54,6 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
             }
             else
             {
-                // No book currently being read
                 views.SetTextViewText(Resource.Id.widget_book_title, "No active book");
                 views.SetTextViewText(Resource.Id.widget_book_author, "");
                 views.SetProgressBar(Resource.Id.widget_progress_bar, 100, 0, false);
@@ -66,13 +63,11 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
         }
         catch
         {
-            // Fallback on any error
             views.SetTextViewText(Resource.Id.widget_book_title, "BookHeart");
             views.SetTextViewText(Resource.Id.widget_book_author, "");
             views.SetTextViewText(Resource.Id.widget_page_info, "Tap to open");
         }
 
-        // Click opens the app
         var intent = new Intent(context, typeof(MainActivity));
         intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);
         var pendingIntent = PendingIntent.GetActivity(
@@ -82,20 +77,14 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
         appWidgetManager.UpdateAppWidget(widgetId, views);
     }
 
-    /// <summary>
-    /// Loads a bitmap scaled down to fit within maxWidth x maxHeight.
-    /// Uses InSampleSize for memory-efficient decoding — critical for RemoteViews
-    /// where large bitmaps cause TransactionTooLargeException.
-    /// </summary>
+    // InSampleSize avoids TransactionTooLargeException in RemoteViews
     private static Bitmap? LoadScaledBitmap(string path, int maxWidth, int maxHeight)
     {
         try
         {
-            // First pass: decode bounds only
             var boundsOptions = new BitmapFactory.Options { InJustDecodeBounds = true };
             BitmapFactory.DecodeFile(path, boundsOptions);
 
-            // Calculate sample size
             int sampleSize = 1;
             if (boundsOptions.OutHeight > maxHeight || boundsOptions.OutWidth > maxWidth)
             {
@@ -108,7 +97,6 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
                 }
             }
 
-            // Second pass: decode with sample size
             var decodeOptions = new BitmapFactory.Options { InSampleSize = sampleSize };
             return BitmapFactory.DecodeFile(path, decodeOptions);
         }

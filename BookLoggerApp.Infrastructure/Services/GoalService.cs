@@ -11,8 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Service implementation for managing reading goals.
-/// Free tier is capped at 3 active goals; goals with genre/trope filters require Premium.
+/// Free tier: 3 active goals max; genre/trope filter goals require Premium.
 /// </summary>
 public class GoalService : IGoalService
 {
@@ -29,10 +28,8 @@ public class GoalService : IGoalService
         _featureGuard = featureGuard;
     }
 
-    /// <inheritdoc />
     public event EventHandler? GoalsChanged;
 
-    /// <inheritdoc />
     public void NotifyGoalsChanged()
     {
         GoalsChanged?.Invoke(this, EventArgs.Empty);
@@ -104,7 +101,6 @@ public class GoalService : IGoalService
         var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
         var goalsList = goals.ToList();
 
-        // Calculate current progress for each goal dynamically
         await CalculateGoalProgressAsync(goalsList, persistNewlyCompleted: false, ct);
 
         return goalsList;
@@ -115,7 +111,6 @@ public class GoalService : IGoalService
         var goals = await _unitOfWork.ReadingGoals.GetCompletedGoalsAsync();
         var goalsList = goals.ToList();
 
-        // Also calculate progress for completed goals to show final values
         await CalculateGoalProgressAsync(goalsList, persistNewlyCompleted: false, ct);
 
         return goalsList;
@@ -131,25 +126,19 @@ public class GoalService : IGoalService
     {
         if (!goals.Any()) return false;
 
-        // Get all books and sessions for calculation
         var books = await _unitOfWork.Books.GetAllAsync(ct);
         var sessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
-
-        // Load all exclusions in one query
         var allExclusions = await _unitOfWork.GoalExcludedBooks.GetAllAsync(ct);
-
-        // Load all goal-genre associations in one query
         var allGoalGenres = await _unitOfWork.GoalGenres.GetAllAsync(ct);
         var anyGoalHasGenres = allGoalGenres.Any();
 
-        // Load book-genre associations only if at least one goal uses genre filtering
+        // Lazy-load book-genres and genre lookup only if needed.
         IEnumerable<BookGenre>? allBookGenres = null;
         if (anyGoalHasGenres)
         {
             allBookGenres = await _unitOfWork.BookGenres.GetAllAsync(ct);
         }
 
-        // Build genre lookup for populating GoalGenres on each goal (for UI display)
         Dictionary<Guid, Genre>? genreLookup = null;
         if (anyGoalHasGenres)
         {
@@ -166,8 +155,7 @@ public class GoalService : IGoalService
                 .Select(e => e.BookId)
                 .ToHashSet();
 
-            // Build genre-matching book IDs (null = no genre filter)
-            HashSet<Guid>? genreMatchingBookIds = null;
+            HashSet<Guid>? genreMatchingBookIds = null; // null = no genre filter
             var goalGenreIds = allGoalGenres
                 .Where(gg => gg.ReadingGoalId == goal.Id)
                 .Select(gg => gg.GenreId)
@@ -175,13 +163,12 @@ public class GoalService : IGoalService
 
             if (goalGenreIds.Count > 0 && allBookGenres != null)
             {
-                // OR-logic: book matches if it has ANY of the goal's genres
+                // OR-logic: any matching genre qualifies.
                 genreMatchingBookIds = allBookGenres
                     .Where(bg => goalGenreIds.Contains(bg.GenreId))
                     .Select(bg => bg.BookId)
                     .ToHashSet();
 
-                // Populate GoalGenres navigation for UI display
                 if (genreLookup != null)
                 {
                     goal.GoalGenres = goalGenreIds
@@ -204,7 +191,6 @@ public class GoalService : IGoalService
                 _ => goal.Current
             };
 
-            // Auto-mark as completed if target is reached
             if (goal.Current >= goal.Target && !goal.IsCompleted)
             {
                 anyGoalNewlyCompleted = true;
@@ -218,8 +204,7 @@ public class GoalService : IGoalService
             }
         }
 
-        // Only persist changes when a goal was actually newly completed,
-        // not on every read. Current is computed dynamically each time.
+        // Current is computed dynamically; only persist on completion.
         if (persistNewlyCompleted && anyGoalNewlyCompleted)
         {
             await _unitOfWork.SaveChangesAsync(ct);
@@ -277,7 +262,6 @@ public class GoalService : IGoalService
 
         goal.Current = progress;
 
-        // Auto-complete if target reached
         if (goal.Current >= goal.Target)
         {
             goal.IsCompleted = true;
@@ -302,7 +286,6 @@ public class GoalService : IGoalService
             }
         }
 
-        // Single SaveChanges for all updates
         await _unitOfWork.SaveChangesAsync(ct);
     }
 

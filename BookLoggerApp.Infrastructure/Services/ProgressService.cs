@@ -9,9 +9,6 @@ using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service implementation for tracking reading progress.
-/// </summary>
 public class ProgressService : IProgressService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -45,20 +42,16 @@ public class ProgressService : IProgressService
 
     public async Task<SessionSaveResult> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
     {
-        // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 
-        // Snapshot the user level BEFORE the session XP is awarded. The Story-Heart
-        // first-of-day bonus must be calculated against the pre-session level even if
-        // the session itself triggers a level-up.
+        // Snapshot level BEFORE XP award: Story-Heart first-of-day bonus must use pre-session level
+        // even if the session itself triggers a level-up.
         var settingsBeforeSession = await _settingsProvider.GetSettingsAsync(ct);
         int levelAtSessionStart = settingsBeforeSession.UserLevel;
 
-        // Award the streak bonus only on the first qualifying session of the day
-        // so all save paths use the same reward logic.
+        // Award streak bonus only on first qualifying session of the day
         var streak = await ResolveStreakForSessionAsync(session, ct);
 
-        // Award XP using the progression system (with plant boost and streak bonus)
         var progressionResult = await _progressionService.AwardSessionXpAsync(
             session.Minutes,
             session.PagesRead,
@@ -77,8 +70,7 @@ public class ProgressService : IProgressService
             await PersistGuardianCooldownAsync(streak.GuardianToUpdate.Value, ct);
         }
 
-        // Record reading day for active plant (for plant leveling)
-        // Plants level up based on reading days (15+ min sessions), not XP
+        // Plants level via reading days (15+ min), not XP
         if (activePlant != null)
         {
             await _plantService.RecordReadingDayAsync(
@@ -93,7 +85,6 @@ public class ProgressService : IProgressService
 
         bool goalCompleted = await _goalService.RecalculateGoalProgressAsync(ct);
 
-        // Notify that goals may have changed
         _goalService.NotifyGoalsChanged();
 
         return new SessionSaveResult
@@ -110,7 +101,6 @@ public class ProgressService : IProgressService
 
     public async Task<ReadingSession> StartSessionAsync(Guid bookId, CancellationToken ct = default)
     {
-        // Start reading the book if it's in Planned status
         var book = await _bookService.GetByIdAsync(bookId, ct);
         if (book?.Status == ReadingStatus.Planned)
         {
@@ -133,9 +123,8 @@ public class ProgressService : IProgressService
         return result;
     }
 
-    public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, int? durationMinutes = null, IReadOnlyList<SessionMood>? moods = null, CancellationToken ct = default)
+    public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, int? durationMinutes = null, CancellationToken ct = default)
     {
-        // Validate input
         if (pagesRead < 0)
             throw new ArgumentOutOfRangeException(nameof(pagesRead), "Pages read cannot be negative");
 
@@ -146,7 +135,6 @@ public class ProgressService : IProgressService
         var startPage = session.StartPage ?? 0;
         var absoluteEndPage = startPage + pagesRead;
 
-        // Validate pages read against book page count
         var book = await _bookService.GetByIdAsync(session.BookId, ct);
         if (book?.PageCount.HasValue == true && absoluteEndPage > book.PageCount.Value)
             throw new ArgumentOutOfRangeException(nameof(pagesRead),
@@ -164,18 +152,15 @@ public class ProgressService : IProgressService
             session.Minutes = Math.Max(0, (int)(session.EndedAt.Value - session.StartedAt).TotalMinutes);
         }
 
-        // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 
-        // Snapshot the user level BEFORE the session XP is awarded (see AddSessionAsync).
+        // Snapshot level BEFORE XP award (see AddSessionAsync)
         var settingsBeforeSession = await _settingsProvider.GetSettingsAsync(ct);
         int levelAtSessionStart = settingsBeforeSession.UserLevel;
 
-        // Award the streak bonus only on the first qualifying session of the day
-        // so active timer sessions and direct session saves use the same logic.
+        // Award streak bonus only on first qualifying session of the day
         var streak = await ResolveStreakForSessionAsync(session, ct);
 
-        // Award XP using the new progression system (with streak bonus)
         var progressionResult = await _progressionService.AwardSessionXpAsync(
             session.Minutes,
             pagesRead,
@@ -184,18 +169,9 @@ public class ProgressService : IProgressService
             ct
         );
 
-        // Store the XP earned in the session
         session.XpEarned = progressionResult.XpEarned;
 
-        // Persist mood/trigger tags (1-3); the session was just started, so the
-        // navigation is empty and we simply add the new child rows.
-        foreach (var mood in SessionMoodHelper.Clamp(moods))
-        {
-            session.Moods.Add(new ReadingSessionMood { ReadingSessionId = session.Id, Mood = mood });
-        }
-
-        // Record reading day for active plant (for plant leveling)
-        // Plants level up based on reading days (15+ min sessions), not XP
+        // Plants level via reading days (15+ min), not XP
         if (activePlant != null)
         {
             await _plantService.RecordReadingDayAsync(
@@ -218,7 +194,6 @@ public class ProgressService : IProgressService
 
         bool goalCompleted = await _goalService.RecalculateGoalProgressAsync(ct);
 
-        // Notify that goals may have changed (pages/minutes progress)
         _goalService.NotifyGoalsChanged();
 
         _analytics.LogEvent(AnalyticsEventNames.SessionEnded, AnalyticsParamBuilder.Create()
@@ -228,7 +203,6 @@ public class ProgressService : IProgressService
             .Add(AnalyticsParamNames.TriggeredLevelUp, progressionResult.LevelUp is not null)
             .BuildMutable());
 
-        // Return both session and progression result for UI celebrations
         return new SessionEndResult
         {
             Session = session,
@@ -311,8 +285,7 @@ public class ProgressService : IProgressService
     {
         var today = DateTime.UtcNow.Date;
 
-        // Only load sessions from the last year instead of ALL sessions.
-        // A streak longer than 365 days is unrealistic, and this avoids
+        // Cap at 1 year: streaks longer than 365 days are unrealistic, avoids
         // loading thousands of records for long-time users.
         var recentSessions = await _unitOfWork.ReadingSessions
             .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow);
@@ -350,9 +323,8 @@ public class ProgressService : IProgressService
         var priorSessions = recentSessions.Where(s => s.Id != session.Id).ToList();
         var regularStreak = ReadingStreakHelper.CalculateInclusiveStreak(priorSessions, sessionDate);
 
-        // Streak-Wächter: fires only when the regular streak would be 1 (yesterday missed),
-        // there was a qualifying session day-before-yesterday (so a prior streak existed),
-        // and an alive Chronikbaum is off cooldown.
+        // Streak-Wächter: fires only when regular streak would be 1 (yesterday missed),
+        // a prior streak day existed day-before-yesterday, and an alive Chronikbaum is off cooldown.
         if (regularStreak != 1)
         {
             return new ResolvedStreak(regularStreak, false, null);
@@ -380,7 +352,6 @@ public class ProgressService : IProgressService
             return new ResolvedStreak(regularStreak, false, null);
         }
 
-        // Fill the missing yesterday and recompute.
         var rescuedDates = priorSessions
             .Where(ReadingStreakHelper.CountsTowardStreak)
             .Select(s => s.StartedAt.Date)
@@ -388,8 +359,7 @@ public class ProgressService : IProgressService
         rescuedDates.Add(sessionDate.AddDays(-1));
         var rescuedStreak = ReadingStreakHelper.CalculateInclusiveStreak(rescuedDates, sessionDate);
 
-        // Defer the guardian cooldown persistence to after the session save so that
-        // a failed session save does not burn the cooldown.
+        // Defer guardian cooldown persistence until after session save to avoid burning it on failure
         return new ResolvedStreak(rescuedStreak, true, guardian.Id);
     }
 
@@ -438,9 +408,8 @@ public class ProgressService : IProgressService
 
             if (bonusXp > 0)
             {
-                // Capture the LevelUp so the caller can surface a celebration — the
-                // bonus XP is awarded AFTER the main session save, so any level-up it
-                // triggers never showed up in ProgressionResult.LevelUp before.
+                // Capture LevelUp here: bonus XP is awarded after main session save,
+                // so any level-up it triggers won't appear in ProgressionResult.LevelUp.
                 bonusLevelUp = await _progressionService.AwardBonusXpAsync(bonusXp, ct);
             }
         }

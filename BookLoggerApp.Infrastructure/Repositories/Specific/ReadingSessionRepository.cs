@@ -4,9 +4,6 @@ using BookLoggerApp.Infrastructure.Data;
 
 namespace BookLoggerApp.Infrastructure.Repositories.Specific;
 
-/// <summary>
-/// Repository implementation for ReadingSession entity.
-/// </summary>
 public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSessionRepository
 {
     public ReadingSessionRepository(AppDbContext context) : base(context)
@@ -16,7 +13,6 @@ public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSess
     public async Task<IEnumerable<ReadingSession>> GetSessionsByBookAsync(Guid bookId)
     {
         return await _dbSet
-            .Include(rs => rs.Moods)
             .Where(rs => rs.BookId == bookId)
             .OrderByDescending(rs => rs.StartedAt)
             .ToListAsync();
