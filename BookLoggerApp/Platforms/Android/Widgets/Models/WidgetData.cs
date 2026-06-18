@@ -1,8 +1,5 @@
 namespace BookLoggerApp.Platforms.Android.Widgets.Models;
 
-/// <summary>
-/// Lightweight DTOs for widget display — avoids passing EF entities to RemoteViews code.
-/// </summary>
 public record CurrentBookWidgetData(
     Guid BookId,
     string Title,

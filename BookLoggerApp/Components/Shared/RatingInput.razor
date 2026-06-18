@@ -1,5 +1,3 @@
-@* RatingInput - Reusable component for single rating category input *@
-
 <div class="rating-input">
     <div class="rating-header">
         <span class="rating-emoji">@Emoji</span>
@@ -51,7 +49,6 @@
     {
         if (ReadOnly) return;
 
-        // If clicking the same star, clear the rating
         if (Rating == starValue)
         {
             await ClearRating();

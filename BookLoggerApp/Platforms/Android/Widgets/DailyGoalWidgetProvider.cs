@@ -28,7 +28,6 @@ public class DailyGoalWidgetProvider : AppWidgetProvider
 
     public override void OnDeleted(Context? context, int[]? appWidgetIds)
     {
-        // Clean up SharedPreferences when widget is removed
         if (context is null || appWidgetIds is null)
             return;
 
@@ -51,7 +50,6 @@ public class DailyGoalWidgetProvider : AppWidgetProvider
 
         try
         {
-            // Read configured goal ID from SharedPreferences
             var prefs = context.GetSharedPreferences(PrefsName, FileCreationMode.Private);
             var goalIdStr = prefs?.GetString($"{PrefKeyGoalIdPrefix}{widgetId}", null);
             Guid? goalId = Guid.TryParse(goalIdStr, out var parsed) ? parsed : null;
@@ -65,7 +63,6 @@ public class DailyGoalWidgetProvider : AppWidgetProvider
                     Math.Min(goalData.ProgressPercentage, 100), false);
                 views.SetTextViewText(Resource.Id.widget_goal_percent, $"{goalData.ProgressPercentage}%");
 
-                // Goal type icon and detail text
                 var (icon, unit) = goalData.GoalType switch
                 {
                     "Books" => ("\U0001F4DA", "Books"),
@@ -92,7 +89,6 @@ public class DailyGoalWidgetProvider : AppWidgetProvider
             views.SetTextViewText(Resource.Id.widget_goal_detail, "Tap to open");
         }
 
-        // Click opens the app
         var intent = new Intent(context, typeof(MainActivity));
         intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);
         var pendingIntent = PendingIntent.GetActivity(

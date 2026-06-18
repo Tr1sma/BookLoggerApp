@@ -40,10 +40,8 @@
     }
     else
     {
-        <!-- Hero Section: Level Badge, XP Progress, Coins -->
         <section class="hero-section">
             <div class="level-hero-card">
-                <!-- Large Level Badge -->
                 <div class="level-badge-hero">
                     <div class="badge-inner">
                         <div class="level-number">@ViewModel.CurrentLevel</div>
@@ -51,7 +49,6 @@
                     </div>
                 </div>
 
-                <!-- XP Progress -->
                 <div class="xp-progress-section">
                     <h2 class="hero-title">🏆 @L["Stats_YourProgress"]</h2>
                     <div class="xp-text">@ViewModel.CurrentLevelXp / @ViewModel.NextLevelXp XP</div>
@@ -63,7 +60,6 @@
                     <div class="xp-percentage-text">@L["Stats_ProgressToLevel", ViewModel.ProgressPercentage.ToString("F1"), ViewModel.CurrentLevel + 1]</div>
                 </div>
 
-                <!-- Coins -->
                 <div class="coins-display">
                     <span class="coins-icon">💰</span>
                     <span class="coins-amount">@ViewModel.TotalCoins</span>
@@ -72,7 +68,6 @@
             </div>
         </section>
 
-        <!-- Stats - Compact Chips -->
         <section class="stats-chips-section">
             <div class="stats-section-header">
                 <h2>📊 @L["Stats_YourStats"]</h2>
@@ -125,7 +120,6 @@
             </div>
         </section>
 
-        <!-- Plant Boost Section -->
         @if (ViewModel.PlantBoosts.Any() && ViewModel.TotalPlantBoost > 0m)
         {
             <section class="plant-boost-section">
@@ -153,7 +147,6 @@
             </section>
         }
 
-        <!-- Favorite Genre -->
         @if (!string.IsNullOrEmpty(ViewModel.FavoriteGenre))
         {
             <section class="favorite-genre-section">
@@ -164,7 +157,6 @@
             </section>
         }
 
-        <!-- Genre Breakdown -->
         @if (ViewModel.BooksByGenre.Any())
         {
             <section class="genre-breakdown-section">
@@ -181,7 +173,6 @@
             </section>
         }
 
-        <!-- Rating Category Averages -->
         @if (ViewModel.CategoryAverages.Any(x => x.Value > 0))
         {
             <section class="rating-averages-section">
@@ -211,11 +202,9 @@
             </section>
         }
 
-        <!-- Top Rated Books -->
         <section class="top-rated-books-section compact">
             <h2>🏆 @L["Stats_TopRated"]</h2>
 
-            <!-- Category Filter Chips (horizontally scrollable) -->
             <div class="category-filter-buttons" role="tablist" aria-label="@L["Stats_CategoryFilter"]">
                 <button class="btn category-filter-btn @(selectedCategory == null ? "active" : "")"
                         @onclick="() => FilterByCategory(null)">
@@ -275,7 +264,6 @@
             }
         </section>
 
-        <!-- Level Milestones (moved to bottom) -->
         @if (ViewModel.LevelMilestones.Any())
         {
             <section class="level-milestones-section">
@@ -425,10 +413,8 @@ else if (activeTab == 2)
         NavigationManager.LocationChanged += OnLocationChanged;
         ViewModel.ShareCardReady += OnShareCardReady;
 
-        // Register back handler to valid custom routing
         _backHandler = async () =>
         {
-            // Navigate to bookshelf (root)
             NavigationManager.NavigateTo("/");
             return true;
         };
@@ -441,7 +427,6 @@ else if (activeTab == 2)
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Exception in Stats OnInitializedAsync: {ex}");
-            // Don't rethrow — let the UI render with the ViewModel's ErrorMessage
         }
     }
 
@@ -466,7 +451,6 @@ else if (activeTab == 2)
 
     protected override async Task OnParametersSetAsync()
     {
-        // Check if we navigated to this page
         var newUrl = NavigationManager.Uri;
         if (_currentUrl != newUrl)
         {
@@ -483,7 +467,6 @@ else if (activeTab == 2)
 
     private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
-        // Reload when navigating to this page
         if (e.Location.Contains("/stats") || e.Location.Contains("/level-overview"))
         {
             await InvokeAsync(async () =>

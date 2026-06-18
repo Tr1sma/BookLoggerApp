@@ -5,14 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BookLoggerApp.Platforms.Android.Services;
 
-/// <summary>
-/// Handles the reading-timer notification's background action buttons (Pause / Resume).
-/// It relays the command to the live in-app timer (via <see cref="ITimerStateService"/>) and
-/// rebuilds the notification from the intent extras, so it stays correct even when no timer
-/// component is currently mounted. The Stop button is NOT handled here — it opens the app
-/// directly (a background receiver can't launch an activity on Android 10+); see
-/// <c>ReadingTimerForegroundService.BuildStopAction</c> and <c>MainActivity</c>.
-/// </summary>
 [BroadcastReceiver(Exported = false)]
 public class ReadingTimerActionReceiver : BroadcastReceiver
 {
@@ -33,8 +25,6 @@ public class ReadingTimerActionReceiver : BroadcastReceiver
         Guid.TryParse(sessionIdStr, out var sessionId);
         Guid.TryParse(bookIdStr, out var bookId);
 
-        // The in-app-localized labels were carried forward on the action intent so the
-        // rebuilt notification keeps the user's language even with no component mounted.
         var labels = new ReadingTimerNotificationLabels(
             Reading: intent.GetStringExtra(ReadingTimerForegroundService.ExtraLabelReading) ?? "Reading",
             Paused: intent.GetStringExtra(ReadingTimerForegroundService.ExtraLabelPaused) ?? "Paused",
@@ -61,15 +51,8 @@ public class ReadingTimerActionReceiver : BroadcastReceiver
         var elapsed = DateTime.UtcNow - startUtc;
         if (elapsed < TimeSpan.Zero) elapsed = TimeSpan.Zero;
 
-        // Persist the paused state so the inline timer restores as paused when the book page
-        // (re)mounts — critical when no component is currently subscribed (app backgrounded or
-        // process killed), where NotifyExternalCommand below is a no-op.
         PersistState(timerState, sessionId, bookId, startUtc, elapsed, isRunning: false);
-
-        // Relay to the in-app timer (no-op if no component is mounted).
         timerState?.NotifyExternalCommand(ExternalTimerCommand.Pause);
-
-        // Rebuild the notification in paused form (fallback when nothing is mounted).
         var data = new ReadingTimerNotificationData(sessionId, bookId, title, startUtc, elapsed, IsRunning: false);
         ReadingTimerForegroundService.Start(context, data, isRunning: false, labels);
     }
@@ -87,11 +70,6 @@ public class ReadingTimerActionReceiver : BroadcastReceiver
         ReadingTimerForegroundService.Start(context, data, isRunning: true, labels);
     }
 
-    /// <summary>
-    /// Mirrors the running/paused state into the persisted timer state (MAUI Preferences) so
-    /// <c>ReadingTimerInline.TryRestoreTimerState</c> shows the correct state on the next mount,
-    /// matching what a mounted component's Pause/Resume would have written.
-    /// </summary>
     private static void PersistState(ITimerStateService? timerState, Guid sessionId, Guid bookId, DateTime startUtc, TimeSpan elapsed, bool isRunning)
     {
         if (timerState is null || sessionId == Guid.Empty || bookId == Guid.Empty)

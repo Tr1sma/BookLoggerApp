@@ -44,7 +44,6 @@
 
     private void Refresh()
     {
-        // Only non-Premium users, only in the last six weeks of the year.
         DateTime now = DateTime.UtcNow;
         bool isWrappedSeason = now.Month == 12 || (now.Month == 11 && now.Day >= 15);
         _isVisible = isWrappedSeason && EntitlementService.CurrentTier < SubscriptionTier.Premium;

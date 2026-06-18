@@ -46,10 +46,7 @@
         {
             await DatabaseInitializationHelper.EnsureInitializedAsync();
         }
-        catch
-        {
-            // Continue and try both sources individually to avoid getting stuck hidden.
-        }
+        catch { }
 
         await RefreshSnapshotAsync();
         await CheckSettingsAsync();

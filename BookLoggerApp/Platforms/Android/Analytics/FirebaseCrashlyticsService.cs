@@ -13,10 +13,7 @@ public sealed class FirebaseCrashlyticsService : ICrashReportingService, IDispos
 
     public FirebaseCrashlyticsService(IAnalyticsConsentGate gate)
     {
-        // Do NOT resolve FirebaseCrashlytics.Instance here — FirebaseApp may not be
-        // initialized yet when DI constructs this service (runs during MainApplication.OnCreate,
-        // which precedes MainActivity.OnCreate where explicit FirebaseApp.InitializeApp happens).
-        // We resolve lazily on first use; see GetCrashlytics().
+        // lazy init: FirebaseApp may not be ready at DI construction time
         _gate = gate;
         _gate.ConsentChanged += OnConsentChanged;
     }

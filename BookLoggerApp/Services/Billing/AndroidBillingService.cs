@@ -6,24 +6,6 @@ using BookLoggerApp.Infrastructure.Services;
 
 namespace BookLoggerApp.Services.Billing;
 
-/// <summary>
-/// Android implementation of <see cref="IBillingService"/> wrapping
-/// <c>Plugin.InAppBilling</c> (Google Play Billing Library v7+).
-///
-/// <para><b>Connection lifecycle:</b> the underlying plugin holds a single
-/// connection to Google Play. We connect lazily, keep the connection open for
-/// the app's lifetime, and disconnect on app shutdown. Re-connects are allowed
-/// after transient disconnects.</para>
-///
-/// <para><b>Subscriptions vs one-shot:</b> <c>premium_lifetime</c> is a
-/// Managed Product (ItemType.InAppPurchase); every other SKU is a Subscription.
-/// Both branches are queried in parallel and merged so the paywall sees the
-/// full catalog.</para>
-///
-/// <para><b>Acknowledgement:</b> Play auto-refunds subscription purchases that
-/// aren't acknowledged within 3 days; we always call
-/// <see cref="IInAppBilling.FinalizePurchaseAsync"/> inside the purchase flow.</para>
-/// </summary>
 public class AndroidBillingService : IBillingService
 {
     private readonly IProductCatalog _productCatalog;
@@ -173,7 +155,6 @@ public class AndroidBillingService : IBillingService
                 return BillingPurchaseOutcome.UserCancelled;
             }
 
-            // Acknowledge so Play doesn't auto-refund the purchase after 3 days.
             try
             {
                 await _billing.FinalizePurchaseAsync(new[] { purchase.TransactionIdentifier ?? purchase.PurchaseToken });
@@ -231,9 +212,7 @@ public class AndroidBillingService : IBillingService
     {
         try
         {
-            // Google Play supports in-app redemption via the redeem URL; the Play Store
-            // app intercepts it and opens its redemption screen.
-            return await Microsoft.Maui.ApplicationModel.Launcher.OpenAsync(new Uri("https://play.google.com/redeem"));
+                return await Microsoft.Maui.ApplicationModel.Launcher.OpenAsync(new Uri("https://play.google.com/redeem"));
         }
         catch (Exception ex)
         {
@@ -312,9 +291,7 @@ public class AndroidBillingService : IBillingService
 
     private static DateTime? InferExpiryDate(BillingPeriod period, InAppBillingPurchase purchase)
     {
-        // Play Billing exposes the authoritative expiry on the subscription response
-        // but the plugin's InAppBillingPurchase does not always surface it as a field.
-        // Estimate from the transaction date until the server-verification layer lands.
+        // estimated; plugin doesn't always surface authoritative expiry
         DateTime baseDate = purchase.TransactionDateUtc;
         return period switch
         {
