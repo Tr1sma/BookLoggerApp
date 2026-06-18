@@ -5,17 +5,9 @@ using Microsoft.Extensions.Localization;
 namespace BookLoggerApp.Services;
 
 /// <summary>
-/// Drives the live reading-timer notification. On Android this is an ongoing
-/// foreground-service notification (lock screen + status bar). No-op elsewhere.
-///
-/// Showing is gated by the user's settings (master notifications + the dedicated
-/// live-timer toggle). The effective flag is cached and refreshed on
-/// <see cref="IAppSettingsProvider.SettingsChanged"/>, because <see cref="ShowRunning"/>
-/// is called from synchronous timer-transition code paths.
-///
-/// Display strings are resolved here via <see cref="IStringLocalizer{T}"/> so the
-/// notification matches the in-app language (not just the device locale) and passed
-/// down to the native layer.
+/// Drives the live reading-timer foreground notification (Android lock screen/status bar).
+/// Enabled flag is cached and refreshed via SettingsChanged because ShowRunning is called
+/// from synchronous timer-transition paths. Strings use in-app locale, not device locale.
 /// </summary>
 public class ReadingTimerNotificationService : IReadingTimerNotificationService, IDisposable
 {
@@ -44,8 +36,7 @@ public class ReadingTimerNotificationService : IReadingTimerNotificationService,
         }
         catch
         {
-            // Settings unavailable (e.g. DB still initializing) — leave the last known
-            // value; SettingsChanged will refresh once the user touches settings.
+            // DB still initializing — keep last known value; SettingsChanged will retry.
         }
     }
 
@@ -67,7 +58,7 @@ public class ReadingTimerNotificationService : IReadingTimerNotificationService,
         }
         catch
         {
-            // The notification is best-effort — never crash the timer.
+            // Best-effort — never crash the timer.
         }
 #endif
     }
@@ -90,7 +81,6 @@ public class ReadingTimerNotificationService : IReadingTimerNotificationService,
 
     public void Hide()
     {
-        // Always allowed — used both on session end and when the user disables the feature.
 #if ANDROID
         try
         {

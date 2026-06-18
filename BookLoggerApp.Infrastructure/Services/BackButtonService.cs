@@ -40,7 +40,6 @@ namespace BookLoggerApp.Infrastructure.Services
                 System.Diagnostics.Debug.WriteLine($"[BackButtonService] HandleBackAsync called. Handler count snapshot: {handlersSnapshot.Count}");
             }
 
-            // Iterate backwards (LIFO)
             for (int i = handlersSnapshot.Count - 1; i >= 0; i--)
             {
                 var handler = handlersSnapshot[i];

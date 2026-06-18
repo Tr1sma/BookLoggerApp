@@ -119,9 +119,6 @@ public class ViewModelBaseTimeoutTests : IDisposable
 
         await vm.RunWithDbAsync(() => Task.CompletedTask, "Fehler beim Laden");
 
-        // Prefix is caller-supplied and left verbatim; body is now pulled via the
-        // ambient Localizer from Error_DbInitializing (English under invariant culture
-        // in tests).
         vm.ErrorMessage.Should().NotBeNull();
         vm.ErrorMessage!.Should().StartWith("Fehler beim Laden:");
         vm.ErrorMessage.Should().Contain("Database is still initializing");

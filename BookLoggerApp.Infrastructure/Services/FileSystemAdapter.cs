@@ -2,9 +2,6 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Production implementation of IFileSystem that wraps System.IO operations.
-/// </summary>
 public class FileSystemAdapter : IFileSystem
 {
     public async Task<string> ReadAllTextAsync(string path, CancellationToken ct = default)

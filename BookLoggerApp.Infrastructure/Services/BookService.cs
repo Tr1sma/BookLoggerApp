@@ -8,9 +8,6 @@ using Microsoft.Extensions.Logging;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service implementation for managing books.
-/// </summary>
 public class BookService : IBookService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -49,7 +46,6 @@ public class BookService : IBookService
 
     public async Task<Book> AddAsync(Book book, CancellationToken ct = default)
     {
-        // Business Logic: Set DateAdded if not set
         if (book.DateAdded == default)
             book.DateAdded = DateTime.UtcNow;
 
@@ -125,14 +121,12 @@ public class BookService : IBookService
     {
         var booksList = books.ToList();
 
-        // Business Logic: Set DateAdded for books where not set
         foreach (var book in booksList)
         {
             if (book.DateAdded == default)
                 book.DateAdded = DateTime.UtcNow;
         }
 
-        // Bulk insert for better performance
         await _unitOfWork.Books.AddRangeAsync(booksList, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         return booksList.Count;
@@ -179,8 +173,7 @@ public class BookService : IBookService
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
-        // Idempotency guard: callers may retry (rapid double-tap, VM back-button race).
-        // Completion-XP and goal-recalc must fire exactly once across repeated calls.
+        // Idempotency: XP/goal-recalc must fire once only.
         bool wasAlreadyCompleted = book.Status == ReadingStatus.Completed;
 
         book.Status = ReadingStatus.Completed;
@@ -221,13 +214,9 @@ public class BookService : IBookService
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
-        // Idempotency guard: if the book is already completed, hitting the last page again
-        // (e.g. after the user scrubbed the page slider down and back up) must not re-award
-        // completion XP nor clobber the original DateCompleted.
+        // Idempotency: re-completing must not re-award XP or clobber DateCompleted.
         bool wasAlreadyCompleted = book.Status == ReadingStatus.Completed;
-        // Clamp to [0, PageCount] so a stray >PageCount input from the UI cannot persist
-        // an inconsistent "600 / 500 (100%)" state — the percentage is already clamped
-        // for display but the raw CurrentPage used to leak through.
+        // Clamp so UI can't persist >PageCount (display already clamps, raw value leaked).
         int clampedPage = Math.Max(0, currentPage);
         if (book.PageCount.HasValue)
         {

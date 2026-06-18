@@ -21,8 +21,7 @@ public static class MauiProgram
     {
         System.Diagnostics.Debug.WriteLine("=== MauiProgram.CreateMauiApp Started ===");
 
-        // Must run before any string resource is resolved so the very first render
-        // (AppStartupOverlay) already picks the correct culture.
+        // Must run before first render.
         InitializeCulture();
 
         var builder = MauiApp.CreateBuilder();
@@ -34,13 +33,10 @@ public static class MauiProgram
                .UseBarcodeReader()
                .UseLocalNotification();
         builder.Services.AddMauiBlazorWebView();
-        // ResourcesPath stays empty: the AppResources marker type lives in the
-        // BookLoggerApp.Core.Resources namespace already, and ResourceManagerStringLocalizer
-        // derives the base name from the type's namespace. Setting ResourcesPath = "Resources"
-        // would produce BookLoggerApp.Core.Resources.Resources.AppResources.
+        // No ResourcesPath: AppResources is already in BookLoggerApp.Core.Resources;
+        // setting it would double the namespace to ...Resources.Resources.AppResources.
         builder.Services.AddLocalization();
 
-        // Configure platform-specific handlers
         ConfigurePlatformHandlers(builder);
 
         ConfigureLogging(builder);
@@ -54,16 +50,13 @@ public static class MauiProgram
 
         var app = builder.Build();
 
-        // Wire the ambient CrashReporter on ViewModelBase so ExecuteSafely* catch-blocks
-        // forward non-fatals to Crashlytics (no-op outside Android).
+        // Wire crash reporter — no-op outside Android.
         AnalyticsBootstrapper.Install(app.Services.GetRequiredService<ICrashReportingService>());
 
-        // Wire the ambient localizer on ViewModelBase for the generic fallbacks used
-        // by ExecuteSafely*Async when a caller didn't pass an explicit errorPrefix.
+        // Wire ambient localizer for ExecuteSafely*Async fallback messages.
         BookLoggerApp.Core.ViewModels.ViewModelBase.Localizer =
             app.Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<BookLoggerApp.Core.Resources.AppResources>>();
 
-        // Setup global exception handler
         SetupGlobalExceptionHandler(app);
 
         InitializeDatabase(app);
@@ -72,12 +65,7 @@ public static class MauiProgram
         return app;
     }
 
-    /// <summary>
-    /// Reads the UI language from <see cref="Preferences"/> and sets the thread culture
-    /// before any Blazor render happens. On first launch the <see cref="Preferences"/>
-    /// key is absent; in that case the system culture is detected and persisted so the
-    /// very first frame already renders in the correct language.
-    /// </summary>
+    /// <summary>Sets thread culture from Preferences before any Blazor render.</summary>
     private static void InitializeCulture()
     {
         try
@@ -98,7 +86,7 @@ public static class MauiProgram
         }
         catch (Exception ex)
         {
-            // Never fail startup on culture setup — fall back to the system default.
+            // Never fail startup — fall back silently.
             System.Diagnostics.Debug.WriteLine($"InitializeCulture failed: {ex}");
         }
     }
@@ -106,7 +94,6 @@ public static class MauiProgram
     private static void ConfigurePlatformHandlers(MauiAppBuilder builder)
     {
 #if ANDROID
-        // Configure BlazorWebView to use custom WebChromeClient for camera permissions
         Microsoft.AspNetCore.Components.WebView.Maui.BlazorWebViewHandler.BlazorWebViewMapper.AppendToMapping(
             "CustomWebChromeClient",
             (handler, view) =>
@@ -125,13 +112,10 @@ public static class MauiProgram
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
-        // Add Memory Cache for performance optimization
         builder.Services.AddMemoryCache();
 
 #if ANDROID
-        // Fan ILogger<T> messages into Firebase Crashlytics breadcrumbs (Information+).
-        // The provider is resolved after Build() via a keyed services resolver so the
-        // consent gate + crash service are already wired when logs start flowing.
+        // Fan ILogger<T> into Crashlytics breadcrumbs.
         builder.Logging.Services.AddSingleton<ILoggerProvider>(sp =>
             new BookLoggerApp.Platforms.AndroidImpl.Analytics.CrashlyticsLoggerProvider(
                 sp.GetRequiredService<ICrashReportingService>(),
@@ -143,23 +127,16 @@ public static class MauiProgram
     {
         var dbPath = PlatformsDbPath.GetDatabasePath();
 
-        // Shared interceptor that logs SQL commands to InitLog while migrations run.
-        // Static-toggle gated so it doesn't spam during normal operation. Registered
-        // ONLY on the factory's options (not on AddDbContext) so each command fires
-        // the interceptor exactly once. DbInitializer resolves its DbContext via the
-        // factory so it still gets the migration-time logging.
+        // Interceptor logs SQL during migrations; static-toggle prevents spam at runtime.
+        // Registered on factory only so each command fires the interceptor exactly once.
         var migrationInterceptor = new BookLoggerApp.Infrastructure.Data.MigrationLoggingInterceptor();
 
-        // Register DbContextFactory for creating DbContext instances on demand
-        // This is the recommended approach for Blazor to avoid concurrency issues
         builder.Services.AddDbContextFactory<AppDbContext>(options =>
         {
             options.UseSqlite($"Data Source={dbPath}");
             options.AddInterceptors(migrationInterceptor);
         });
 
-        // Also register DbContext as Transient for compatibility with existing code
-        // Each injection gets a fresh instance from the factory
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
             options.UseSqlite($"Data Source={dbPath}");
@@ -168,25 +145,15 @@ public static class MauiProgram
 
     private static void RegisterRepositories(MauiAppBuilder builder)
     {
-        // Register Unit of Work as Transient
-        // UnitOfWork creates all repositories internally with the same DbContext instance
-        // This ensures all repositories in a single operation share the same context
         builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
-
-        // NOTE: Individual repositories are no longer registered here
-        // All services should use IUnitOfWork instead of direct repository injection
     }
 
     private static void RegisterBusinessServices(MauiAppBuilder builder)
     {
-        // Register File System Abstraction as Singleton (infrastructure layer)
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFileSystem, BookLoggerApp.Infrastructure.Services.FileSystemAdapter>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IFileSaverService, BookLoggerApp.Services.FileSaverService>();
-        
-        // Register BackButton Service as Singleton
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IBackButtonService, BookLoggerApp.Infrastructure.Services.BackButtonService>();
 
-        // Register Services as Transient (Recommended for Blazor/MAUI with EF Core to avoid DbContext tracking issues)
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IBookService, BookLoggerApp.Infrastructure.Services.BookService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IProgressService, BookLoggerApp.Infrastructure.Services.ProgressService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IGenreService, BookLoggerApp.Infrastructure.Services.GenreService>();
@@ -208,7 +175,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IProductCatalog, BookLoggerApp.Infrastructure.Services.ProductCatalog>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IPaywallCoordinator, BookLoggerApp.Infrastructure.Services.PaywallCoordinator>();
 
-        // Billing: real Android implementation on device, no-op on every other head.
+        // Real billing on Android; no-op elsewhere.
 #if ANDROID
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IBillingService, BookLoggerApp.Services.Billing.AndroidBillingService>();
 #else
@@ -232,13 +199,11 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IWishlistService, BookLoggerApp.Infrastructure.Services.WishlistService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IBlindDateService, BookLoggerApp.Infrastructure.Services.BlindDateService>();
 
-        // Database initializer service — used by the UI to retry a failed DB init
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IDatabaseInitializer, BookLoggerApp.Infrastructure.Services.DatabaseInitializer>();
 
-        // Register timer state service as Singleton (must survive across component lifetimes)
+        // Singleton: must survive across component lifetimes.
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.ITimerStateService, BookLoggerApp.Services.TimerStateService>();
 
-        // Register MAUI-specific services
         builder.Services.AddSingleton<BookLoggerApp.Services.IPermissionService, BookLoggerApp.Services.PermissionService>();
         builder.Services.AddSingleton<BookLoggerApp.Services.IScannerService, BookLoggerApp.Services.ScannerService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IShareService, BookLoggerApp.Services.ShareService>();
@@ -247,10 +212,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppRestartService, BookLoggerApp.Services.AppRestartService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.ILanguageService, BookLoggerApp.Services.LanguageService>();
 
-        // Register Widget Update Service as Singleton (triggers Android widget refresh on data changes)
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService, BookLoggerApp.Services.WidgetUpdateService>();
 
-        // Live reading-timer lock-screen notification (Android foreground service) + deep-link bridge.
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IReadingTimerNotificationService, BookLoggerApp.Services.ReadingTimerNotificationService>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IDeepLinkService, BookLoggerApp.Services.DeepLinkService>();
 
@@ -259,15 +222,12 @@ public static class MauiProgram
 
     private static void RegisterAnalyticsServices(MauiAppBuilder builder)
     {
-        // Consent gate is platform-agnostic — reads from IAppSettingsProvider.
         builder.Services.AddSingleton<IAnalyticsConsentGate, AnalyticsConsentGate>();
 
 #if ANDROID
-        // Native Firebase bindings live in Platforms/Android/Analytics.
         builder.Services.AddSingleton<IAnalyticsService, BookLoggerApp.Platforms.AndroidImpl.Analytics.FirebaseAnalyticsService>();
         builder.Services.AddSingleton<ICrashReportingService, BookLoggerApp.Platforms.AndroidImpl.Analytics.FirebaseCrashlyticsService>();
 #else
-        // Non-Android targets (tests, other MAUI heads) use no-op implementations.
         builder.Services.AddSingleton<IAnalyticsService>(_ => NoOpAnalyticsService.Instance);
         builder.Services.AddSingleton<ICrashReportingService>(_ => NoOpCrashReportingService.Instance);
 #endif
@@ -307,7 +267,6 @@ public static class MauiProgram
 
     private static void SetupGlobalExceptionHandler(MauiApp app)
     {
-        // Global exception handler for unhandled exceptions
         AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
         {
             var exception = (Exception)args.ExceptionObject;
@@ -324,12 +283,10 @@ public static class MauiProgram
                 System.Diagnostics.Debug.WriteLine($"RecordFatal(UnhandledException) failed: {reportEx}");
             }
 
-            // Log user-friendly message for custom exceptions
             if (exception is BookLoggerException bookLoggerEx)
             {
                 logger?.LogError("Application error: {Message}", bookLoggerEx.Message);
 
-                // Specific handling for different exception types
                 switch (bookLoggerEx)
                 {
                     case EntityNotFoundException notFoundEx:
@@ -359,7 +316,6 @@ public static class MauiProgram
             System.Diagnostics.Debug.WriteLine("=========================");
         };
 
-        // MAUI-specific unhandled exception handler
         TaskScheduler.UnobservedTaskException += (sender, args) =>
         {
             var logger = app.Services.GetService<ILogger<MauiApp>>();
@@ -380,19 +336,17 @@ public static class MauiProgram
                 System.Diagnostics.Debug.WriteLine($"RecordNonFatal(UnobservedTask) failed: {reportEx}");
             }
 
-            // Mark as observed to prevent app crash
             args.SetObserved();
         };
     }
 
     private static void InitializeDatabase(MauiApp app)
     {
-        // Runs DbInitializer on a dedicated background thread rather than Task.Run.
-        // On budget Android devices (reported on Samsung Galaxy A16) the ThreadPool
-        // during cold start is busy with BlazorWebView, MAUI handlers and Android
-        // activity setup, which can delay a Task.Run worker far enough to push
-        // EF migrations past the UI timeout. A dedicated thread starts immediately
-        // and doesn't compete for a ThreadPool slot.
+        // Dedicated thread instead of Task.Run: on budget Android devices (e.g. Samsung
+        // Galaxy A16) the ThreadPool during cold start is saturated by BlazorWebView and
+        // MAUI handlers, which can delay Task.Run workers long enough to push EF migrations
+        // past the UI timeout. A dedicated thread starts immediately without competing for a
+        // ThreadPool slot.
         System.Diagnostics.Debug.WriteLine("Starting database initialization...");
         BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.AppendInitLog(
             "MauiProgram.InitializeDatabase: spawning dedicated DbInit thread");
@@ -419,10 +373,8 @@ public static class MauiProgram
                 }
                 System.Diagnostics.Debug.WriteLine("=== END EXCEPTION ===");
 
-                // Safety net: DbInitializer already calls MarkAsFailed in its own catch,
-                // but if it throws before reaching that (e.g. service resolution fails),
-                // the TCS would never fault and awaiters would hang until their timeout.
-                // MarkAsFailed is idempotent, so calling it here is always safe.
+                // MarkAsFailed is idempotent; guards against service-resolution failures
+                // that would leave the TCS un-faulted and awaiters hanging until timeout.
                 BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsFailed(ex);
             }
         })

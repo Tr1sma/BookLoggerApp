@@ -4,13 +4,9 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Tests.TestHelpers;
 
-/// <summary>
-/// Mock implementation of IProgressionService for testing purposes.
-/// Calculates XP using XpCalculator (without plant boost or settings persistence).
-/// </summary>
+/// <summary>Uses XpCalculator without plant boost or settings persistence.</summary>
 public class MockProgressionService : IProgressionService
 {
-    /// <summary>Number of times <see cref="AwardBookCompletionXpAsync"/> has been called.</summary>
     public int AwardBookCompletionXpCallCount { get; private set; }
 
     public Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0, CancellationToken ct = default)

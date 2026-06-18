@@ -45,17 +45,13 @@ public sealed class SchemaDriftGuardTests : IDisposable
     [Fact]
     public async Task EnsureCriticalColumnsAsync_AddsMissingV10Columns_WhenSchemaIsDrifted()
     {
-        // Arrange — create a DB with a minimal AppSettings table that looks like
-        // the pre-V10 shape: Id + TotalXp present, but the V10 consent/subscription
-        // columns absent. __EFMigrationsHistory claims the V10 migrations applied.
+        // pre-V10 shape: TotalXp present, V10 consent/subscription columns absent
         CreateDriftedAppSettingsDb(_dbPath);
 
         await using var context = CreateContext(_dbPath);
 
-        // Act
         await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null);
 
-        // Assert — every V10 column the guard knows about now exists on the table.
         var columns = await ReadColumnsAsync(_dbPath, "AppSettings");
         columns.Should().Contain("AnalyticsEnabled");
         columns.Should().Contain("CrashReportingEnabled");
@@ -65,7 +61,6 @@ public sealed class SchemaDriftGuardTests : IDisposable
         columns.Should().Contain("EntitlementExpiresAt");
         columns.Should().Contain("HideGettingStartedCta");
 
-        // Existing row kept its data and picked up the defaults for the new columns.
         await using var verifyConn = new SqliteConnection($"Data Source={_dbPath}");
         await verifyConn.OpenAsync();
         await using var cmd = verifyConn.CreateCommand();
@@ -81,7 +76,6 @@ public sealed class SchemaDriftGuardTests : IDisposable
     [Fact]
     public async Task EnsureCriticalColumnsAsync_IsIdempotent_WhenCalledTwice()
     {
-        // Arrange — drifted DB, run the guard once to repair.
         CreateDriftedAppSettingsDb(_dbPath);
         await using (var context1 = CreateContext(_dbPath))
         {
@@ -90,13 +84,12 @@ public sealed class SchemaDriftGuardTests : IDisposable
 
         var columnsAfterFirstRun = await ReadColumnsAsync(_dbPath, "AppSettings");
 
-        // Act — run the guard a second time on an already-repaired DB.
+        // second call on already-repaired DB
         await using (var context2 = CreateContext(_dbPath))
         {
             await SchemaDriftGuard.EnsureCriticalColumnsAsync(context2, crashReporting: null, logger: null);
         }
 
-        // Assert — no duplicate columns added, no exceptions thrown.
         var columnsAfterSecondRun = await ReadColumnsAsync(_dbPath, "AppSettings");
         columnsAfterSecondRun.Should().BeEquivalentTo(columnsAfterFirstRun);
     }
@@ -104,16 +97,12 @@ public sealed class SchemaDriftGuardTests : IDisposable
     [Fact]
     public async Task AppSettingsProvider_RecoversAutomatically_WhenGetSettingsHitsDrift()
     {
-        // Arrange — drifted DB, then insert a full AppSettings row so FirstOrDefaultAsync
-        // has something to return after the guard repairs the schema.
         CreateDriftedAppSettingsDb(_dbPath);
         var factory = new FileBackedDbContextFactory(_dbPath);
         var provider = new AppSettingsProvider(factory);
 
-        // Act
         var settings = await provider.GetSettingsAsync();
 
-        // Assert — recovery pulled the existing row and the newly-defaulted columns.
         settings.Should().NotBeNull();
         settings.AnalyticsEnabled.Should().BeTrue();
         settings.CrashReportingEnabled.Should().BeTrue();
@@ -124,18 +113,12 @@ public sealed class SchemaDriftGuardTests : IDisposable
     [Fact]
     public async Task EnsureCriticalColumnsAsync_AddsMissingShelvesIsHiddenColumn_WhenForceMarkedMidMigration()
     {
-        // Arrange — DB with a Shelves table that lacks IsHiddenByEntitlement, plus
-        // __EFMigrationsHistory claiming the migration applied. Mirrors the field
-        // scenario where MigrationRecovery.ForceMarkMigrationAppliedAsync ran after
-        // the first ALTER TABLE in AddPremiumSubscriptionSystem failed but before
-        // the Shelves ALTER could execute.
+        // Shelves.IsHiddenByEntitlement missing: ForceMarkMigrationApplied fired before Shelves ALTER
         CreateDriftedPremiumDb(_dbPath, includeUserEntitlementsTable: true);
         await using var context = CreateContext(_dbPath);
 
-        // Act
         await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null);
 
-        // Assert — column now exists and a query against it succeeds.
         var columns = await ReadColumnsAsync(_dbPath, "Shelves");
         columns.Should().Contain("IsHiddenByEntitlement");
 
@@ -150,14 +133,12 @@ public sealed class SchemaDriftGuardTests : IDisposable
     [Fact]
     public async Task EnsureCriticalColumnsAsync_AddsAllMissingColumnsAcrossSixTables()
     {
-        // Arrange — drift every table the AddPremiumSubscriptionSystem migration touches.
         CreateDriftedPremiumDb(_dbPath, includeUserEntitlementsTable: true);
         await using var context = CreateContext(_dbPath);
 
-        // Act
         await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null);
 
-        // Assert — all nine column repairs land.
+
         (await ReadColumnsAsync(_dbPath, "UserPlants")).Should().Contain("IsHiddenByEntitlement");
         (await ReadColumnsAsync(_dbPath, "UserDecorations")).Should().Contain("IsHiddenByEntitlement");
         (await ReadColumnsAsync(_dbPath, "Shelves")).Should().Contain("IsHiddenByEntitlement");
@@ -174,15 +155,12 @@ public sealed class SchemaDriftGuardTests : IDisposable
     [Fact]
     public async Task EnsureCriticalColumnsAsync_CreatesUserEntitlementsTable_WhenForceMarkedBeforeCreate()
     {
-        // Arrange — every column ALTER ran but the CREATE TABLE for UserEntitlements
-        // was skipped (force-mark fired earlier in the migration than that statement).
+        // UserEntitlements CREATE TABLE skipped: force-mark fired before that statement
         CreateDriftedPremiumDb(_dbPath, includeUserEntitlementsTable: false);
         await using var context = CreateContext(_dbPath);
 
-        // Act
         await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null);
 
-        // Assert — table created with the schema migration produces, plus default Free row.
         var entitlementCols = await ReadColumnsAsync(_dbPath, "UserEntitlements");
         entitlementCols.Should().Contain("Id");
         entitlementCols.Should().Contain("Tier");
@@ -205,15 +183,12 @@ public sealed class SchemaDriftGuardTests : IDisposable
     [Fact]
     public async Task EnsureCriticalColumnsAsync_DoesNotReseedUserEntitlements_WhenTableAlreadyExists()
     {
-        // Arrange — UserEntitlements table exists with no rows; guard must not insert
-        // the seed row in this case (caller wants to control row-level seeding).
+        // Table exists with no rows — guard must not insert seed row (caller controls seeding)
         CreateDriftedPremiumDb(_dbPath, includeUserEntitlementsTable: true);
         await using var context = CreateContext(_dbPath);
 
-        // Act
         await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null);
 
-        // Assert — table is empty.
         await using var verifyConn = new SqliteConnection($"Data Source={_dbPath}");
         await verifyConn.OpenAsync();
         await using var cmd = verifyConn.CreateCommand();
@@ -222,12 +197,7 @@ public sealed class SchemaDriftGuardTests : IDisposable
         count.Should().Be(0, "seed row only inserted when guard had to create the table");
     }
 
-    /// <summary>
-    /// Creates a SQLite file with an <c>AppSettings</c> table that has every pre-V10
-    /// column the model requires, one row of real data, and <c>__EFMigrationsHistory</c>
-    /// rows claiming every shipped migration — including the V10 migrations — has been
-    /// applied. This is the exact state observed on users' devices in the field.
-    /// </summary>
+    /// <summary>Creates a SQLite file with a pre-V10 AppSettings table and history rows claiming V10 migrations applied — the exact field state.</summary>
     private static void CreateDriftedAppSettingsDb(string path)
     {
         using var connection = new SqliteConnection($"Data Source={path}");
@@ -295,9 +265,7 @@ public sealed class SchemaDriftGuardTests : IDisposable
             cmd.ExecuteNonQuery();
         }
 
-        // Fake history rows claiming V10 migrations have been applied — matches what we
-        // see in the field on broken installs where MigrateAsync returns clean but the
-        // column adds never took.
+        // Fake history rows — matches broken installs where column adds never took.
         using (var cmd = connection.CreateCommand())
         {
             cmd.CommandText = """
@@ -309,15 +277,7 @@ public sealed class SchemaDriftGuardTests : IDisposable
         }
     }
 
-    /// <summary>
-    /// Creates a SQLite file with the six tables that
-    /// <c>20260422123532_AddPremiumSubscriptionSystem</c> alters, deliberately
-    /// missing the V10 columns that migration would add. Mirrors a drifted DB on
-    /// a device where <c>MigrationRecovery.ForceMarkMigrationAppliedAsync</c>
-    /// fired after the first ALTER TABLE failed and the rest of the migration
-    /// was silently skipped. Pass <paramref name="includeUserEntitlementsTable"/>
-    /// = false to also drop the brand-new table the migration creates.
-    /// </summary>
+    /// <summary>Creates a SQLite file with pre-V10 premium tables, missing the V10 columns (mirrors a force-marked drifted device DB).</summary>
     private static void CreateDriftedPremiumDb(string path, bool includeUserEntitlementsTable)
     {
         using var connection = new SqliteConnection($"Data Source={path}");
@@ -325,9 +285,7 @@ public sealed class SchemaDriftGuardTests : IDisposable
 
         using (var cmd = connection.CreateCommand())
         {
-            // Minimal schemas — we only need the tables to exist with their primary keys
-            // and a sample of the pre-V10 columns. The guard's job is to add the missing
-            // V10 columns; nothing else here matters for that assertion.
+            // Minimal pre-V10 schemas; guard adds the missing V10 columns.
             cmd.CommandText = """
                 CREATE TABLE "__EFMigrationsHistory" (
                     "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,

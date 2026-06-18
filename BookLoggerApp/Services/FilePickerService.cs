@@ -19,8 +19,8 @@ public class FilePickerService : IFilePickerService
             var customFileType = new FilePickerFileType(
                 new Dictionary<DevicePlatform, IEnumerable<string>>
                 {
-                    { DevicePlatform.iOS, new[] { "public.content" } }, 
-                    { DevicePlatform.Android, new[] { "*/*" } }, 
+                    { DevicePlatform.iOS, new[] { "public.content" } },
+                    { DevicePlatform.Android, new[] { "*/*" } },
                     { DevicePlatform.WinUI, allowedExtensions },
                     { DevicePlatform.Tizen, new[] { "*/*" } },
                     { DevicePlatform.macOS, allowedExtensions }
@@ -35,30 +35,27 @@ public class FilePickerService : IFilePickerService
             _migrationService.Log("[FilePicker] Requesting system picker...");
             var result = await FilePicker.Default.PickAsync(options);
             _migrationService.Log($"[FilePicker] Picker returned: {(result == null ? "NULL" : result.FullPath)}");
-        
+
             if (result == null)
             {
                 _migrationService.Log("[FilePicker] Result is null.");
                 return null;
             }
 
-            // Start Modification: Handle virtual files (e.g. Google Drive) where FullPath is null
-            // Check if path is usable (local file)
-            // If FullPath is null, OR it's a content URI, OR it doesn't exist on disk -> treat as virtual
-            bool isVirtual = string.IsNullOrEmpty(result.FullPath) 
-                             || result.FullPath.StartsWith("content://") 
+            // Google Drive and other providers return a content:// URI with no local path;
+            // copy to cache so callers always get a real filesystem path.
+            bool isVirtual = string.IsNullOrEmpty(result.FullPath)
+                             || result.FullPath.StartsWith("content://")
                              || !File.Exists(result.FullPath);
-            
+
             _migrationService.Log($"[FilePicker] IsVirtual: {isVirtual} (Path: {result.FullPath})");
 
             if (isVirtual)
             {
                 _migrationService.Log("[FilePicker] Handling virtual file...");
-                // Copy to temp file in cache directory
                 var cacheFile = Path.Combine(FileSystem.CacheDirectory, result.FileName);
                 _migrationService.Log($"[FilePicker] Cache target: {cacheFile}");
 
-                // Delete if exists to ensure fresh copy
                 if (File.Exists(cacheFile))
                     File.Delete(cacheFile);
 
@@ -72,11 +69,7 @@ public class FilePickerService : IFilePickerService
                 }
                 catch
                 {
-                    // If the copy was interrupted partway through, remove the half-written
-                    // file so nothing else (or a future picker run with a different filename)
-                    // accidentally treats it as a valid backup. The next retry with the same
-                    // filename would eventually overwrite it, but that self-healing only kicks
-                    // in for matching names; clean up explicitly so the cache stays consistent.
+                    // Remove partial file so a future picker run can't treat it as valid.
                     try
                     {
                         if (File.Exists(cacheFile))
@@ -92,7 +85,6 @@ public class FilePickerService : IFilePickerService
                 _migrationService.Log("[FilePicker] Copied virtual file to cache.");
                 return cacheFile;
             }
-            // End Modification
 
             return result.FullPath;
         }

@@ -3,15 +3,10 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Tests.TestHelpers;
 
-/// <summary>
-/// Mock implementation of IBookService for testing purposes.
-/// Maintains an in-memory collection of books for testing.
-/// </summary>
 public class MockBookService : IBookService
 {
     private readonly Dictionary<Guid, Book> _books = new();
 
-    // Basic CRUD
     public Task<IReadOnlyList<Book>> GetAllAsync(CancellationToken ct = default)
     {
         return Task.FromResult<IReadOnlyList<Book>>(_books.Values.ToList());
@@ -42,7 +37,6 @@ public class MockBookService : IBookService
         return Task.CompletedTask;
     }
 
-    // Advanced Queries
     public Task<IReadOnlyList<Book>> GetByStatusAsync(ReadingStatus status, CancellationToken ct = default)
     {
         return Task.FromResult<IReadOnlyList<Book>>(Array.Empty<Book>());
@@ -63,19 +57,16 @@ public class MockBookService : IBookService
         return Task.FromResult<Book?>(null);
     }
 
-    // With Details (includes related data)
     public Task<Book?> GetWithDetailsAsync(Guid id, CancellationToken ct = default)
     {
         return Task.FromResult<Book?>(null);
     }
 
-    // Bulk Operations
     public Task<int> ImportBooksAsync(IEnumerable<Book> books, CancellationToken ct = default)
     {
         return Task.FromResult(0);
     }
 
-    // Statistics
     public Task<int> GetTotalCountAsync(CancellationToken ct = default)
     {
         return Task.FromResult(0);
@@ -86,7 +77,6 @@ public class MockBookService : IBookService
         return Task.FromResult(0);
     }
 
-    // Status Updates
     public Task StartReadingAsync(Guid bookId, CancellationToken ct = default)
     {
         return Task.CompletedTask;

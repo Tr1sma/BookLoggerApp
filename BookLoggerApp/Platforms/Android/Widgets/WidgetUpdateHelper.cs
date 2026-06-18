@@ -3,10 +3,6 @@ using Android.Content;
 
 namespace BookLoggerApp.Platforms.Android.Widgets;
 
-/// <summary>
-/// Static helper to broadcast widget update intents to all BookHeart widget providers.
-/// Called from within the running app (where MAUI DI is available) after data changes.
-/// </summary>
 public static class WidgetUpdateHelper
 {
     public static void UpdateAllWidgets(Context context)

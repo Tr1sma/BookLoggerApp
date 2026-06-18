@@ -3,9 +3,8 @@ using BookLoggerApp.Core.Services.Abstractions;
 namespace BookLoggerApp.Services;
 
 /// <summary>
-/// Relays native deep-link intents (e.g. tapping the reading-timer notification) into
-/// the Blazor router. Buffers the last requested route so a request arriving before the
-/// router subscribes (cold start) is replayed to the next subscriber.
+/// Relays deep-link intents into the Blazor router. Buffers cold-start requests
+/// and replays them to the first subscriber.
 /// </summary>
 public class DeepLinkService : IDeepLinkService
 {
@@ -52,7 +51,7 @@ public class DeepLinkService : IDeepLinkService
             handler = _handler;
             if (handler is null)
             {
-                // No subscriber yet (cold start) — buffer and replay on next subscribe.
+                // Buffer for cold-start replay.
                 _pendingRoute = route;
                 return;
             }

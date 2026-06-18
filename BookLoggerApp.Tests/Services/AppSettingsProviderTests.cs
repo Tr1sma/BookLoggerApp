@@ -24,14 +24,11 @@ public sealed class AppSettingsProviderTests : IDisposable
     [InlineData(-1)]
     public async Task SpendCoinsAsync_WhenAmountIsZeroOrNegative_ShouldThrowArgumentOutOfRangeException(int amount)
     {
-        // Arrange
         await SeedSettingsAsync(100);
         var sut = CreateSut();
 
-        // Act
         Func<Task> act = async () => await sut.SpendCoinsAsync(amount);
 
-        // Assert
         var exception = await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
         exception.Which.ParamName.Should().Be("amount");
     }
@@ -41,14 +38,11 @@ public sealed class AppSettingsProviderTests : IDisposable
     [InlineData(-1)]
     public async Task AddCoinsAsync_WhenAmountIsZeroOrNegative_ShouldThrowArgumentOutOfRangeException(int amount)
     {
-        // Arrange
         await SeedSettingsAsync(100);
         var sut = CreateSut();
 
-        // Act
         Func<Task> act = async () => await sut.AddCoinsAsync(amount);
 
-        // Assert
         var exception = await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
         exception.Which.ParamName.Should().Be("amount");
     }
@@ -80,13 +74,6 @@ public sealed class AppSettingsProviderTests : IDisposable
         }
         await context.SaveChangesAsync();
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Coverage-ergänzende Tests (GetSettings default creation + cache,
-    // GetUserCoins/GetUserLevel/GetPlantsPurchased, SpendCoins path,
-    // AddCoins path, InsufficientFunds, Increment, Update, Events,
-    // RecalculateUserLevel, InvalidateCache, SetCachedSettings)
-    // ─────────────────────────────────────────────────────────────────────────
 
     [Fact]
     public async Task GetSettingsAsync_EmptyDb_CreatesDefaultSettings()

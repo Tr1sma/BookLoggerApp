@@ -7,12 +7,7 @@ using Xunit;
 
 namespace BookLoggerApp.Tests.Repositories;
 
-/// <summary>
-/// Tests for the generic Repository&lt;T&gt; class via a representative entity (Genre).
-/// Covers paths not exercised by specific-repository tests: CountAsync, CountAsync(predicate),
-/// ExistsAsync, FirstOrDefaultAsync, UpdateAsync with tracked/detached entities,
-/// DeleteRangeAsync, AddRangeAsync.
-/// </summary>
+/// <summary>Covers generic Repository&lt;T&gt; paths not exercised by specific-repository tests.</summary>
 public class GenericRepositoryTests : IDisposable
 {
     private readonly AppDbContext _context;
@@ -191,7 +186,7 @@ public class GenericRepositoryTests : IDisposable
     [Fact]
     public async Task UpdateAsync_DetachedEntity_ReplacesTracked()
     {
-        // Attach an entity, save, then work with a detached copy with same ID
+        // Save, then work with detached copy
         var original = new Genre { Name = "Original" };
         await _repository.AddAsync(original);
         await _context.SaveChangesAsync();
@@ -225,7 +220,6 @@ public class GenericRepositoryTests : IDisposable
     [Fact]
     public async Task UpdateAsync_DetachedConflictsWithTracked_ReplacesTracked()
     {
-        // Arrange: load a tracked instance, then present a different detached instance with same key
         var genre = new Genre { Name = "First" };
         await _repository.AddAsync(genre);
         await _context.SaveChangesAsync();
@@ -234,7 +228,6 @@ public class GenericRepositoryTests : IDisposable
         var trackedLoad = await _repository.GetByIdAsync(genre.Id);
         trackedLoad.Should().NotBeNull();
 
-        // Manually attach a fresh instance with same ID
         var detached = new Genre { Id = genre.Id, Name = "Replacement" };
         await _repository.UpdateAsync(detached);
         await _context.SaveChangesAsync();

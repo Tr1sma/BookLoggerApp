@@ -27,10 +27,7 @@
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
 
-        // Subscribe to navigation changes to auto-refresh when user navigates
         Navigation.LocationChanged += OnLocationChanged;
-
-        // Subscribe to progression changes to auto-refresh when XP/level/coins change
         SettingsProvider.ProgressionChanged += OnProgressionChanged;
     }
 
@@ -65,9 +62,6 @@
         Navigation.NavigateTo("/level-overview");
     }
 
-    /// <summary>
-    /// Public method to refresh the widget (call after XP is earned).
-    /// </summary>
     public async Task RefreshAsync()
     {
         await ViewModel.RefreshCommand.ExecuteAsync(null);
@@ -76,7 +70,6 @@
 
     public void Dispose()
     {
-        // Unsubscribe from events to prevent memory leaks
         Navigation.LocationChanged -= OnLocationChanged;
         SettingsProvider.ProgressionChanged -= OnProgressionChanged;
     }

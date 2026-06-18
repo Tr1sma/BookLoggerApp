@@ -6,9 +6,6 @@ using BookLoggerApp.Infrastructure.Repositories;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service implementation for managing genres with caching support.
-/// </summary>
 public class GenreService : IGenreService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -23,16 +20,13 @@ public class GenreService : IGenreService
 
     public async Task<IReadOnlyList<Genre>> GetAllAsync(CancellationToken ct = default)
     {
-        // Try to get cached genres
         if (_cache.TryGetValue(CacheKey, out List<Genre>? cached))
             return cached!;
 
-        // Load from database if not cached
         var genres = await _unitOfWork.Genres.GetAllAsync(ct);
         var list = genres.ToList();
 
-        // Cache for 24 hours (genres rarely change)
-        _cache.Set(CacheKey, list, TimeSpan.FromHours(24));
+        _cache.Set(CacheKey, list, TimeSpan.FromHours(24)); // genres rarely change
         return list;
     }
 
@@ -45,7 +39,6 @@ public class GenreService : IGenreService
     {
         var result = await _unitOfWork.Genres.AddAsync(genre, ct);
         await _unitOfWork.SaveChangesAsync(ct);
-        // Invalidate cache when genres are modified
         _cache.Remove(CacheKey);
         return result;
     }
@@ -54,7 +47,6 @@ public class GenreService : IGenreService
     {
         await _unitOfWork.Genres.UpdateAsync(genre, ct);
         await _unitOfWork.SaveChangesAsync(ct);
-        // Invalidate cache when genres are modified
         _cache.Remove(CacheKey);
     }
 
@@ -65,7 +57,6 @@ public class GenreService : IGenreService
         {
             await _unitOfWork.Genres.DeleteAsync(genre, ct);
             await _unitOfWork.SaveChangesAsync(ct);
-            // Invalidate cache when genres are modified
             _cache.Remove(CacheKey);
         }
     }
@@ -74,7 +65,7 @@ public class GenreService : IGenreService
     {
         var existing = await _unitOfWork.BookGenres.FindAsync(bg => bg.BookId == bookId && bg.GenreId == genreId);
         if (existing.Any())
-            return; // Already exists
+            return;
 
         var bookGenre = new BookGenre
         {

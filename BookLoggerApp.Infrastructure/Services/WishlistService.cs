@@ -6,10 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service implementation for managing the book wishlist.
-/// Uses DbContextFactory for thread-safe operations (same pattern as ShelfService).
-/// </summary>
 public class WishlistService : IWishlistService
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
@@ -59,10 +55,8 @@ public class WishlistService : IWishlistService
             });
         }
 
-        // Single SaveChangesAsync ensures Book + WishlistInfo are saved atomically
         await context.SaveChangesAsync(ct);
 
-        // Reload with WishlistInfo included
         var result = await context.Books
             .Include(b => b.WishlistInfo)
             .FirstOrDefaultAsync(b => b.Id == book.Id, ct);
@@ -120,7 +114,6 @@ public class WishlistService : IWishlistService
         book.CurrentPage = 0;
         book.DateAdded = DateTime.UtcNow;
 
-        // Remove wishlist metadata
         if (book.WishlistInfo != null)
         {
             context.WishlistInfos.Remove(book.WishlistInfo);

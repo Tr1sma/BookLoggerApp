@@ -8,10 +8,7 @@ using Xunit;
 
 namespace BookLoggerApp.Tests.Integration;
 
-/// <summary>
-/// Integration tests for the multi-category rating system.
-/// Tests the full flow from saving ratings to retrieving statistics.
-/// </summary>
+/// <summary>Integration tests for the multi-category rating system end-to-end.</summary>
 public class RatingIntegrationTests : IDisposable
 {
     private readonly AppDbContext _context;
@@ -42,7 +39,7 @@ public class RatingIntegrationTests : IDisposable
     [Fact]
     public async Task FullWorkflow_SaveAndRetrieveRatings_ShouldWork()
     {
-        // Arrange - Create a book with multiple ratings
+
         var book = new Book
         {
             Title = "Test Book",
@@ -56,17 +53,16 @@ public class RatingIntegrationTests : IDisposable
             WorldBuildingRating = 5
         };
 
-        // Act - Save the book
+
         var savedBook = await _bookService.AddAsync(book);
 
-        // Retrieve the book
+
         var retrievedBook = await _bookService.GetByIdAsync(savedBook.Id);
 
-        // Get statistics
+
         var averages = await _statsService.GetAllAverageRatingsAsync();
         var topBooks = await _statsService.GetTopRatedBooksAsync(10);
 
-        // Assert - Book was saved correctly
         retrievedBook.Should().NotBeNull();
         retrievedBook!.CharactersRating.Should().Be(5);
         retrievedBook.PlotRating.Should().Be(4);
@@ -76,11 +72,9 @@ public class RatingIntegrationTests : IDisposable
         retrievedBook.WorldBuildingRating.Should().Be(5);
         retrievedBook.WorldBuildingRating.Should().Be(5);
 
-        // Assert - AverageRating calculated correctly
         retrievedBook.AverageRating.Should().NotBeNull();
         retrievedBook.AverageRating.Value.Should().BeApproximately(4.33, 0.01);
 
-        // Assert - Statistics are correct
         averages[RatingCategory.Characters].Should().Be(5.0);
         averages[RatingCategory.Plot].Should().Be(4.0);
         topBooks.Should().ContainSingle();
@@ -90,7 +84,7 @@ public class RatingIntegrationTests : IDisposable
     [Fact]
     public async Task MultipleBooks_StatisticsCalculation_ShouldBeAccurate()
     {
-        // Arrange - Create multiple books with different ratings
+
         var books = new[]
         {
             new Book
@@ -122,24 +116,20 @@ public class RatingIntegrationTests : IDisposable
             }
         };
 
-        // Act - Save all books
         foreach (var book in books)
         {
             await _bookService.AddAsync(book);
         }
 
-        // Get statistics
+
         var characterAverage = await _statsService.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
         var plotAverage = await _statsService.GetAverageRatingByCategoryAsync(RatingCategory.Plot);
         var writingAverage = await _statsService.GetAverageRatingByCategoryAsync(RatingCategory.WritingStyle);
         var topBooks = await _statsService.GetTopRatedBooksAsync(10);
 
-        // Assert - Averages are correct
         characterAverage.Should().BeApproximately(3.33, 0.01); // (5 + 3 + 2) / 3
         plotAverage.Should().BeApproximately(3.67, 0.01); // (5 + 4 + 2) / 3
         writingAverage.Should().BeApproximately(3.33, 0.01); // (5 + 3 + 2) / 3
-
-        // Assert - Top books are in correct order
         topBooks.Should().HaveCount(3);
         topBooks[0].Book.Title.Should().Be("High Rated Book");
         topBooks[1].Book.Title.Should().Be("Medium Rated Book");
@@ -149,7 +139,7 @@ public class RatingIntegrationTests : IDisposable
     [Fact]
     public async Task UpdateRating_ShouldReflectInStatistics()
     {
-        // Arrange - Create a book with initial ratings
+
         var book = new Book
         {
             Title = "Test Book",
@@ -159,17 +149,16 @@ public class RatingIntegrationTests : IDisposable
         };
         book = await _bookService.AddAsync(book);
 
-        // Act - Get initial average
+
         var initialAverage = await _statsService.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
 
-        // Update the rating
+
         book.CharactersRating = 5;
         await _bookService.UpdateAsync(book);
 
-        // Get updated average
+
         var updatedAverage = await _statsService.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
 
-        // Assert
         initialAverage.Should().Be(3.0);
         updatedAverage.Should().Be(5.0);
     }
@@ -177,7 +166,7 @@ public class RatingIntegrationTests : IDisposable
     [Fact]
     public async Task MixedRatings_SomeNull_ShouldHandleCorrectly()
     {
-        // Arrange - Create books with mixed null/non-null ratings
+
         var books = new[]
         {
             new Book
@@ -209,7 +198,6 @@ public class RatingIntegrationTests : IDisposable
             }
         };
 
-        // Act - Save all books
         foreach (var book in books)
         {
             await _bookService.AddAsync(book);
@@ -220,7 +208,6 @@ public class RatingIntegrationTests : IDisposable
         var plotAverage = await _statsService.GetAverageRatingByCategoryAsync(RatingCategory.Plot);
         var writingAverage = await _statsService.GetAverageRatingByCategoryAsync(RatingCategory.WritingStyle);
 
-        // Assert - Only non-null values are included in averages
         characterAverage.Should().BeApproximately(4.5, 0.01); // (5 + 4) / 2
         plotAverage.Should().BeApproximately(3.5, 0.01); // (3 + 4) / 2
         writingAverage.Should().BeApproximately(4.5, 0.01); // (4 + 5) / 2
@@ -229,7 +216,7 @@ public class RatingIntegrationTests : IDisposable
     [Fact]
     public async Task TopRatedBooks_FilterByCategory_ShouldShowCorrectBooks()
     {
-        // Arrange - Create books with different strengths
+
         var books = new[]
         {
             new Book
@@ -261,7 +248,6 @@ public class RatingIntegrationTests : IDisposable
             }
         };
 
-        // Act - Save all books
         foreach (var book in books)
         {
             await _bookService.AddAsync(book);
@@ -272,7 +258,6 @@ public class RatingIntegrationTests : IDisposable
         var topByPlot = await _statsService.GetTopRatedBooksAsync(10, RatingCategory.Plot);
         var topByWriting = await _statsService.GetTopRatedBooksAsync(10, RatingCategory.WritingStyle);
 
-        // Assert - Each category shows different winner
         topByCharacters[0].Book.Title.Should().Be("Best Characters");
         topByPlot[0].Book.Title.Should().Be("Best Plot");
         topByWriting[0].Book.Title.Should().Be("Best Writing");
@@ -283,7 +268,6 @@ public class RatingIntegrationTests : IDisposable
     [Fact]
     public async Task DateRangeFilter_ShouldFilterCorrectly()
     {
-        // Arrange - Create books at different times
         var oldBook = new Book
         {
             Title = "Old Book",
@@ -311,12 +295,10 @@ public class RatingIntegrationTests : IDisposable
             CharactersRating = 5
         };
 
-        // Act - Save all books
         await _bookService.AddAsync(oldBook);
         await _bookService.AddAsync(midBook);
         await _bookService.AddAsync(recentBook);
 
-        // Get averages with different date ranges
         var allTimeAverage = await _statsService.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
         var lastMonthAverage = await _statsService.GetAverageRatingByCategoryAsync(
             RatingCategory.Characters,
@@ -329,7 +311,6 @@ public class RatingIntegrationTests : IDisposable
             endDate: DateTime.UtcNow
         );
 
-        // Assert
         allTimeAverage.Should().BeApproximately(3.33, 0.01); // (2 + 3 + 5) / 3
         lastMonthAverage.Should().BeApproximately(4.0, 0.01); // (3 + 5) / 2
         lastWeekAverage.Should().Be(5.0); // Only recent book
@@ -338,7 +319,6 @@ public class RatingIntegrationTests : IDisposable
     [Fact]
     public async Task BookRatingSummary_ShouldIncludeAllRatingCategories()
     {
-        // Arrange - Create a book with all ratings
         var book = new Book
         {
             Title = "Complete Book",
@@ -358,10 +338,8 @@ public class RatingIntegrationTests : IDisposable
         };
         await _bookService.AddAsync(book);
 
-        // Act
         var booksWithRatings = await _statsService.GetBooksWithRatingsAsync();
 
-        // Assert
         booksWithRatings.Should().ContainSingle();
         var summary = booksWithRatings[0];
 

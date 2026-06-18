@@ -32,11 +32,9 @@ public class ReadingStreakWidgetProvider : AppWidgetProvider
 
             views.SetTextViewText(Resource.Id.widget_streak_count, streakData.CurrentStreak.ToString());
 
-            // Singular/plural
             views.SetTextViewText(Resource.Id.widget_streak_label,
                 streakData.CurrentStreak == 1 ? "Day Streak" : "Day Streak");
 
-            // Today status indicator
             if (streakData.ReadToday)
             {
                 views.SetTextViewText(Resource.Id.widget_streak_today, "Read today \u2713");
@@ -50,7 +48,6 @@ public class ReadingStreakWidgetProvider : AppWidgetProvider
                 views.SetTextViewText(Resource.Id.widget_streak_today, "");
             }
 
-            // Fire icon: dim when no streak
             views.SetTextViewText(Resource.Id.widget_streak_icon,
                 streakData.CurrentStreak > 0 ? "\U0001F525" : "\U0001F4D6");
         }
@@ -61,7 +58,6 @@ public class ReadingStreakWidgetProvider : AppWidgetProvider
             views.SetTextViewText(Resource.Id.widget_streak_today, "");
         }
 
-        // Click opens the app
         var intent = new Intent(context, typeof(MainActivity));
         intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);
         var pendingIntent = PendingIntent.GetActivity(

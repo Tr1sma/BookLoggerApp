@@ -49,14 +49,11 @@ public class BookEditViewModelTests
     [Fact]
     public async Task LoadAsync_Should_Initialize_New_Book_When_Id_Is_Null()
     {
-        // Arrange
         _genreService.GetAllAsync().Returns(new List<Genre>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
 
-        // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.Book.Should().NotBeNull();
         _viewModel.Book!.Id.Should().Be(Guid.Empty);
         _viewModel.Book.Status.Should().Be(ReadingStatus.Planned);
@@ -65,7 +62,6 @@ public class BookEditViewModelTests
     [Fact]
     public async Task LoadAsync_Should_Load_Existing_Book_When_Id_Is_Provided()
     {
-        // Arrange
         var bookId = Guid.NewGuid();
         var book = new Book { Id = bookId, Title = "Existing Book" };
 
@@ -73,25 +69,20 @@ public class BookEditViewModelTests
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
         _bookService.GetWithDetailsAsync(bookId).Returns(book);
 
-        // Act
         await _viewModel.LoadCommand.ExecuteAsync(bookId);
 
-        // Assert
         _viewModel.Book.Should().BeEquivalentTo(book);
     }
 
     [Fact]
     public async Task SaveAsync_Should_Show_Error_When_Title_Is_Missing()
     {
-        // Arrange
         await _viewModel.LoadCommand.ExecuteAsync(null);
         _viewModel.Book!.Title = "";
         _viewModel.Book.Author = "Author";
 
-        // Act
         await _viewModel.SaveCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.ErrorMessage.Should().NotBeNullOrEmpty();
         await _bookService.DidNotReceive().AddAsync(Arg.Any<Book>());
     }
@@ -99,7 +90,6 @@ public class BookEditViewModelTests
     [Fact]
     public async Task SaveAsync_Should_Add_New_Book()
     {
-        // Arrange
         await _viewModel.LoadCommand.ExecuteAsync(null);
         _viewModel.Book!.Title = "New Book";
         _viewModel.Book.Author = "Author";
@@ -107,10 +97,8 @@ public class BookEditViewModelTests
         var savedBook = new Book { Id = Guid.NewGuid(), Title = "New Book" };
         _bookService.AddAsync(Arg.Any<Book>()).Returns(savedBook);
 
-        // Act
         await _viewModel.SaveCommand.ExecuteAsync(null);
 
-        // Assert
         await _bookService.Received(1).AddAsync(Arg.Is<Book>(b => b.Title == "New Book"));
         _viewModel.Book.Should().Be(savedBook);
     }
@@ -118,7 +106,6 @@ public class BookEditViewModelTests
     [Fact]
     public async Task SaveAsync_Should_Update_Existing_Book()
     {
-        // Arrange
         var bookId = Guid.NewGuid();
         var book = new Book { Id = bookId, Title = "Existing Book", Author = "Author" };
 
@@ -130,17 +117,14 @@ public class BookEditViewModelTests
         await _viewModel.LoadCommand.ExecuteAsync(bookId);
         _viewModel.Book!.Title = "Updated Title";
 
-        // Act
         await _viewModel.SaveCommand.ExecuteAsync(null);
 
-        // Assert
         await _bookService.Received(1).UpdateAsync(Arg.Is<Book>(b => b.Title == "Updated Title"));
     }
 
     [Fact]
     public async Task SaveAsync_Should_Complete_Book_Only_Once_When_Saved_Twice_Without_Status_Change()
     {
-        // Arrange
         var bookId = Guid.NewGuid();
         var dbBookPlanned = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Planned };
         var dbBookCompleted = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Completed };
@@ -157,11 +141,9 @@ public class BookEditViewModelTests
         await _viewModel.LoadCommand.ExecuteAsync(bookId);
         _viewModel.Book!.Status = ReadingStatus.Completed;
 
-        // Act
         await _viewModel.SaveCommand.ExecuteAsync(null);
         await _viewModel.SaveCommand.ExecuteAsync(null);
 
-        // Assert
         await _bookService.Received(2).UpdateAsync(Arg.Any<Book>());
         await _bookService.Received(1).CompleteBookAsync(bookId);
     }
@@ -169,7 +151,6 @@ public class BookEditViewModelTests
     [Fact]
     public async Task SaveAsync_Should_Not_Complete_Book_When_Db_Status_Already_Completed()
     {
-        // Arrange
         var bookId = Guid.NewGuid();
         var loadedBook = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Planned };
         var dbBookCompleted = new Book { Id = bookId, Title = "Existing Book", Author = "Author", Status = ReadingStatus.Completed };
@@ -180,10 +161,8 @@ public class BookEditViewModelTests
         await _viewModel.LoadCommand.ExecuteAsync(bookId);
         _viewModel.Book!.Status = ReadingStatus.Completed;
 
-        // Act
         await _viewModel.SaveCommand.ExecuteAsync(null);
 
-        // Assert
         await _bookService.Received(1).UpdateAsync(Arg.Any<Book>());
         await _bookService.DidNotReceive().CompleteBookAsync(bookId);
         _viewModel.Book.Status.Should().Be(ReadingStatus.Completed);
@@ -192,7 +171,6 @@ public class BookEditViewModelTests
     [Fact]
     public async Task LookupByIsbnAsync_Should_Populate_Book_Data()
     {
-        // Arrange
         await _viewModel.LoadCommand.ExecuteAsync(null);
         _viewModel.Book!.ISBN = "1234567890";
 
@@ -204,10 +182,8 @@ public class BookEditViewModelTests
         };
         _lookupService.LookupByISBNAsync("1234567890").Returns(metadata);
 
-        // Act
         await _viewModel.LookupByIsbnCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.Book.Title.Should().Be("Lookup Title");
         _viewModel.Book.Author.Should().Be("Lookup Author");
         _viewModel.Book.Description.Should().Be("Lookup Desc");
@@ -218,7 +194,6 @@ public class BookEditViewModelTests
     [Fact]
     public async Task SearchByTitleAsync_Should_Populate_Results()
     {
-        // Arrange
         await _viewModel.LoadCommand.ExecuteAsync(null);
         _viewModel.Book!.Title = "The Hobbit";
 
@@ -229,10 +204,8 @@ public class BookEditViewModelTests
         };
         _lookupService.SearchBooksAsync(Arg.Any<string>()).Returns(results);
 
-        // Act
         await _viewModel.SearchByTitleCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.TitleSearchResults.Should().HaveCount(2);
         _viewModel.LookupMessageIsError.Should().BeFalse();
     }
@@ -240,16 +213,13 @@ public class BookEditViewModelTests
     [Fact]
     public async Task SearchByTitleAsync_Should_Include_Author_In_Query()
     {
-        // Arrange
         await _viewModel.LoadCommand.ExecuteAsync(null);
         _viewModel.Book!.Title = "The Hobbit";
         _viewModel.Book.Author = "Tolkien";
         _lookupService.SearchBooksAsync(Arg.Any<string>()).Returns(new List<BookMetadata>());
 
-        // Act
         await _viewModel.SearchByTitleCommand.ExecuteAsync(null);
 
-        // Assert
         await _lookupService.Received(1).SearchBooksAsync(
             Arg.Is<string>(q => q.Contains("The Hobbit") && q.Contains("Tolkien")),
             Arg.Any<CancellationToken>());
@@ -258,14 +228,11 @@ public class BookEditViewModelTests
     [Fact]
     public async Task SearchByTitleAsync_Should_Warn_When_Title_Empty()
     {
-        // Arrange
         await _viewModel.LoadCommand.ExecuteAsync(null);
         _viewModel.Book!.Title = "";
 
-        // Act
         await _viewModel.SearchByTitleCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.LookupMessageIsError.Should().BeTrue();
         _viewModel.TitleSearchResults.Should().BeEmpty();
         await _lookupService.DidNotReceive().SearchBooksAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
@@ -274,15 +241,12 @@ public class BookEditViewModelTests
     [Fact]
     public async Task SearchByTitleAsync_Should_Report_No_Results()
     {
-        // Arrange
         await _viewModel.LoadCommand.ExecuteAsync(null);
         _viewModel.Book!.Title = "asldkfjaslkdfj";
         _lookupService.SearchBooksAsync(Arg.Any<string>()).Returns(new List<BookMetadata>());
 
-        // Act
         await _viewModel.SearchByTitleCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.TitleSearchResults.Should().BeEmpty();
         _viewModel.LookupMessage.Should().Contain("No book");
         _viewModel.LookupMessageIsError.Should().BeTrue();
@@ -291,7 +255,6 @@ public class BookEditViewModelTests
     [Fact]
     public async Task SelectSearchResultAsync_Should_Populate_Book_And_Clear_Results()
     {
-        // Arrange
         await _viewModel.LoadCommand.ExecuteAsync(null);
         _viewModel.Book!.Title = "The Hobbit";
 
@@ -309,10 +272,8 @@ public class BookEditViewModelTests
             Description = "Chosen Desc"
         };
 
-        // Act
         await _viewModel.SelectSearchResultCommand.ExecuteAsync(chosen);
 
-        // Assert
         _viewModel.Book.Title.Should().Be("Chosen Title");
         _viewModel.Book.Author.Should().Be("Chosen Author");
         _viewModel.Book.Description.Should().Be("Chosen Desc");
@@ -324,7 +285,6 @@ public class BookEditViewModelTests
     [Fact]
     public async Task DeleteBookAsync_Should_Call_Delete_Service()
     {
-        // Arrange
         var bookId = Guid.NewGuid();
         var book = new Book { Id = bookId, Title = "Delete Me" };
 
@@ -334,10 +294,8 @@ public class BookEditViewModelTests
 
         await _viewModel.LoadCommand.ExecuteAsync(bookId);
 
-        // Act
         await _viewModel.DeleteBookCommand.ExecuteAsync(null);
 
-        // Assert
         await _bookService.Received(1).DeleteAsync(bookId);
         _viewModel.BookDeleted.Should().BeTrue();
     }
@@ -345,13 +303,10 @@ public class BookEditViewModelTests
     [Fact]
     public async Task OnBookCompletionCelebrationClose_Should_Hide_Celebration()
     {
-        // Arrange
         _viewModel.ShowBookCompletionCelebration = true;
 
-        // Act
         await _viewModel.OnBookCompletionCelebrationClose();
 
-        // Assert
         _viewModel.ShowBookCompletionCelebration.Should().BeFalse();
     }
 }

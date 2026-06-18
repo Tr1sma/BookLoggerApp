@@ -20,7 +20,6 @@
 
     @if (IsInBookshelf)
     {
-            <!-- Spine view: title and author on the spine -->
             <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
             @GetStatusIcon()
             </div>
@@ -39,7 +38,6 @@
     }
     else
     {
-            <!-- Compact card view: horizontal layout -->
             <div class="book-card-content">
                 <div class="book-card-header">
                     <div class="book-status-badge status-@Book.Status.ToString().ToLower()">
@@ -84,21 +82,16 @@
     private string? _coverImageDataUrl;
     private Guid _lastBookId;
 
-    // Lazy loading
     private ElementReference _imageContainer;
     private DotNetObjectReference<BookCard>? _dotNetHelper;
     private bool _isImageLoaded = false;
     private bool _observerRegistered = false;
 
-    // ShouldRender optimization: skip Blazor diff when parameters haven't meaningfully changed
     private bool _shouldRender = true;
 
     protected override bool ShouldRender() => _shouldRender;
 
-    protected override void OnInitialized()
-    {
-        // Don't auto-load image here anymore. Wait for observer.
-    }
+    protected override void OnInitialized() { }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -112,16 +105,13 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        // Only reload if book changed
         if (Book != null && Book.Id != _lastBookId)
         {
             _shouldRender = true;
             _lastBookId = Book.Id;
-            // Reset state for new book
             _isImageLoaded = false;
             _coverImageDataUrl = null;
 
-            // Re-observe if we swapped books (observer unobserves after trigger)
              if (_observerRegistered && _dotNetHelper != null)
              {
                  await JSRuntime.InvokeVoidAsync("lazyLoading.observe", _imageContainer, _dotNetHelper);
@@ -155,7 +145,6 @@
         {
             var coverPath = Book.CoverImagePath;
 
-            // If it's already a URL (http/https), use it directly
             if (coverPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                 coverPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             {
@@ -163,7 +152,6 @@
                 return;
             }
 
-            // Get resized image from service (automatically cached as thumbnail)
             var result = await ImageService.GetResizedCoverImageAsync(Book.Id);
             if (result == null)
                 return;
@@ -180,13 +168,11 @@
 
     private string GetSpineStyle()
     {
-        // If lazy loaded image is ready (and using cover as spine)
         if (_isImageLoaded && Book.UsesCoverAsSpine && !string.IsNullOrEmpty(_coverImageDataUrl))
         {
             return $"background-image: url('{_coverImageDataUrl}'); background-size: cover; background-position: center;";
         }
         
-        // Use centralized helper for colors
         var (dark, light) = BookLoggerApp.Core.Helpers.SpineColorHelper.GetColors(Book.SpineColor, Book.Id);
         return $"background: linear-gradient(to right, #{dark}, #{light}, #{dark});";
     }
@@ -225,13 +211,11 @@
         }
         catch (Exception ex)
         {
-            // Ignore disposal errors (e.g. if JS runtime is gone)
             System.Diagnostics.Debug.WriteLine($"Error disposing BookCard: {ex.Message}");
         }
         finally
         {
-            // Must run even if the JS call threw, otherwise the .NET-side
-            // DotNetObjectReference leaks.
+            // must run; avoids DotNetObjectReference leak
             _dotNetHelper?.Dispose();
         }
     }

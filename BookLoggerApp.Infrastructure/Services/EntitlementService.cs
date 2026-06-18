@@ -6,13 +6,8 @@ using BookLoggerApp.Core.Services.Analytics;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Singleton entitlement cache. Persists changes via <see cref="IEntitlementStore"/>,
-/// mirrors the current tier into <c>AppSettings.CurrentTier</c> for hot-path reads,
-/// and broadcasts <see cref="EntitlementChanged"/>.
-///
-/// Step 3 scope: Play Billing integration is not wired yet. <see cref="ApplyLapseAsync"/>
-/// only flips the tier — the data-guard that hides overflow shelves/plants/decorations
-/// is added in Step 5 (<c>EntitlementLapseHandler</c>).
+/// Singleton entitlement cache. Persists via <see cref="IEntitlementStore"/>,
+/// mirrors tier into <c>AppSettings.CurrentTier</c>, and broadcasts <see cref="EntitlementChanged"/>.
 /// </summary>
 public class EntitlementService : IEntitlementService
 {

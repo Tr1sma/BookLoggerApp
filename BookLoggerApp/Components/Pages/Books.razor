@@ -51,10 +51,7 @@ else
 
     private async Task RetryLoadAsync()
     {
-        // Clear the failed-init flag and re-run DbInitializer in the background;
-        // mirrors Dashboard.razor's pattern. Without Retry() the helper's
-        // InitializationFailed flag would leave the original pending TCS in place
-        // and the retry would just wait for it again (visible bug: "Retry lädt ewig").
+        // without Retry(), the failed TCS stays in place and re-waits forever
         DatabaseInitializer.Retry();
         await Vm.LoadAsync();
     }

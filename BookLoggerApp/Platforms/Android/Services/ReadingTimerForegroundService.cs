@@ -7,12 +7,6 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Platforms.Android.Services;
 
-/// <summary>
-/// Ongoing foreground-service notification that shows the live reading timer on the lock
-/// screen / status bar. While running it uses the system chronometer (no per-second IPC);
-/// while paused it shows the frozen elapsed time. Action buttons (Pause/Resume, Stop) are
-/// handled by <see cref="ReadingTimerActionReceiver"/>.
-/// </summary>
 [Service(
     Name = "com.bookheart.app.ReadingTimerForegroundService",
     Exported = false,
@@ -34,20 +28,11 @@ public class ReadingTimerForegroundService : Service
     public const string ExtraLabelResume = "extra_label_resume";
     public const string ExtraLabelStop = "extra_label_stop";
 
-    /// <summary>
-    /// Set on the activity intent launched by the notification's Stop button. Tells
-    /// <c>MainActivity</c> to pause the session before navigating to the book page,
-    /// so the user lands on the stopped timer with the save UI ready.
-    /// </summary>
+    // Stop button: pause session, then navigate to book page to confirm save
     public const string ExtraStopRequested = "extra_stop_requested";
 
     public override IBinder? OnBind(Intent? intent) => null;
 
-    /// <summary>
-    /// Starts or updates the timer notification. Safe to call repeatedly — the same
-    /// notification id is reused, so each call updates the existing notification in place.
-    /// The <paramref name="labels"/> carry the in-app-localized display strings.
-    /// </summary>
     public static void Start(Context context, ReadingTimerNotificationData data, bool isRunning, ReadingTimerNotificationLabels labels)
     {
         var intent = new Intent(context, typeof(ReadingTimerForegroundService));
@@ -76,15 +61,13 @@ public class ReadingTimerForegroundService : Service
     {
         if (intent is null)
         {
-            // Nothing to show (e.g. a redelivery race) — let the service stop.
             StopSelf();
             return StartCommandResult.NotSticky;
         }
 
         var notification = BuildNotification(intent);
 
-        // The specialUse foreground-service type only exists on Android 14+ (API 34). Below
-        // that, start without a type — the timer doesn't fit any pre-34 type and none is required.
+        // specialUse type requires API 34+
         if (OperatingSystem.IsAndroidVersionAtLeast(34))
         {
             ServiceCompat.StartForeground(
@@ -95,7 +78,6 @@ public class ReadingTimerForegroundService : Service
             StartForeground(NotificationId, notification);
         }
 
-        // Re-deliver the last intent on restart so the timer data survives a process kill.
         return StartCommandResult.RedeliverIntent;
     }
 
@@ -113,7 +95,6 @@ public class ReadingTimerForegroundService : Service
         long startUnixMs = intent.GetLongExtra(ExtraStartUnixMs, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         long elapsedMs = intent.GetLongExtra(ExtraElapsedMs, 0L);
 
-        // In-app-localized labels (English fallbacks only if the extras went missing).
         string labelPause = intent.GetStringExtra(ExtraLabelPause) ?? "Pause";
         string labelResume = intent.GetStringExtra(ExtraLabelResume) ?? "Resume";
         string labelStop = intent.GetStringExtra(ExtraLabelStop) ?? "Stop";
@@ -152,9 +133,7 @@ public class ReadingTimerForegroundService : Service
                 ReadingTimerActionReceiver.ActionResume, requestCode: 2, intent));
         }
 
-        // Stop opens the app (GetActivity) — a BroadcastReceiver can't launch an activity from
-        // the background on Android 10+. MainActivity then pauses the session and navigates to
-        // the book page so the user can confirm the page and save.
+        // Stop uses GetActivity; receiver can't launch activity on Android 10+
         builder.AddAction(BuildStopAction(
             global::Android.Resource.Drawable.IcMenuCloseClearCancel,
             labelStop,
@@ -182,8 +161,6 @@ public class ReadingTimerForegroundService : Service
     {
         var actionIntent = new Intent(this, typeof(ReadingTimerActionReceiver));
         actionIntent.SetAction(action);
-        // Carry identifying + timing data forward so the receiver is self-sufficient
-        // even when no in-app timer component is currently mounted.
         actionIntent.PutExtra(ExtraSessionId, source.GetStringExtra(ExtraSessionId));
         actionIntent.PutExtra(ExtraBookId, source.GetStringExtra(ExtraBookId));
         actionIntent.PutExtra(ExtraTitle, source.GetStringExtra(ExtraTitle));

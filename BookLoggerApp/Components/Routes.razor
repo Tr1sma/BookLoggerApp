@@ -32,10 +32,8 @@
 
     protected override void OnInitialized()
     {
-        System.Diagnostics.Debug.WriteLine("=== Routes.razor OnInitialized ===");
         NavigationManager.LocationChanged += OnLocationChanged;
-        // Subscribe last so any route buffered during cold start (e.g. tapping the
-        // reading-timer notification before the router was ready) replays immediately.
+        // Subscribe last: buffers cold-start deep links (e.g. notification tap before router ready).
         DeepLink.NavigationRequested += OnDeepLinkRequested;
         base.OnInitialized();
     }

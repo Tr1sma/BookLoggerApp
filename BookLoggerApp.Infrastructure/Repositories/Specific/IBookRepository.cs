@@ -3,9 +3,6 @@ using BookLoggerApp.Core.Enums;
 
 namespace BookLoggerApp.Infrastructure.Repositories.Specific;
 
-/// <summary>
-/// Repository interface for Book entity with specific operations.
-/// </summary>
 public interface IBookRepository : IRepository<Book>
 {
     Task<IEnumerable<Book>> GetBooksByStatusAsync(ReadingStatus status);

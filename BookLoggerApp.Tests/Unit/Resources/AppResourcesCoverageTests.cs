@@ -4,11 +4,7 @@ using Xunit;
 
 namespace BookLoggerApp.Tests.Unit.Resources;
 
-/// <summary>
-/// Guards the EN + DE <c>.resx</c> pair against drift: every key defined in the
-/// neutral resource must have a matching entry in the German resource and vice
-/// versa. Runs against the actual resx files in <c>BookLoggerApp.Core/Resources/</c>.
-/// </summary>
+/// <summary>Guards EN/DE .resx parity — every key must exist in both files.</summary>
 public class AppResourcesCoverageTests
 {
     [Fact]

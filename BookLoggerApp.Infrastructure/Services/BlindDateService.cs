@@ -5,10 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service implementation for the "Blind Date with a Book" feature.
-/// Uses DbContextFactory for thread-safe read operations (same pattern as WishlistService).
-/// </summary>
 public class BlindDateService : IBlindDateService
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;

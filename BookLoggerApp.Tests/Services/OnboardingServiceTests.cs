@@ -133,8 +133,7 @@ public class OnboardingServiceTests
     [Fact]
     public async Task GetSnapshotAsync_CompletesRatingMission_WhenGenreRelevantCategoriesRated_WithoutSpiceLevel()
     {
-        // Fantasy genre id (seeded). Its relevant categories per GenreRatingMapping are
-        // Characters, Plot, WritingStyle, Pacing, WorldBuilding, Atmosphaere — no SpiceLevel.
+        // Seeded Fantasy genre; SpiceLevel is not in its GenreRatingMapping.
         var fantasyGenreId = Guid.Parse("00000000-0000-0000-0000-000000000003");
         var databaseName = Guid.NewGuid().ToString();
 

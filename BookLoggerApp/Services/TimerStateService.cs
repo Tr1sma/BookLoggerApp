@@ -2,10 +2,7 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Services;
 
-/// <summary>
-/// Persists reading timer state to MAUI Preferences so the timer
-/// survives app background/resume cycles and process termination.
-/// </summary>
+/// <summary>Persists timer state to Preferences so it survives process termination.</summary>
 public class TimerStateService : ITimerStateService
 {
     private const string PrefKeySessionId = "timer_session_id";

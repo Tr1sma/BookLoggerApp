@@ -8,8 +8,7 @@ public static class TropeSeedData
     {
         var tropes = new List<Trope>();
 
-        // Fantasy (00000000-0000-0000-0000-000000000003)
-        var fantasyId = Guid.Parse("00000000-0000-0000-0000-000000000003");
+        var fantasyId = Guid.Parse("00000000-0000-0000-0000-000000000003"); // Fantasy
         AddTrope(tropes, "The Chosen One", fantasyId);
         AddTrope(tropes, "Dark Lord", fantasyId);
         AddTrope(tropes, "Quest/Journey", fantasyId);
@@ -19,8 +18,7 @@ public static class TropeSeedData
         AddTrope(tropes, "Reluctant Hero", fantasyId);
         AddTrope(tropes, "Magic System", fantasyId);
 
-        // SciFi (00000000-0000-0000-0000-000000000004)
-        var sciFiId = Guid.Parse("00000000-0000-0000-0000-000000000004");
+        var sciFiId = Guid.Parse("00000000-0000-0000-0000-000000000004"); // SciFi
         AddTrope(tropes, "Space Opera", sciFiId);
         AddTrope(tropes, "First Contact", sciFiId);
         AddTrope(tropes, "Artificial Intelligence", sciFiId);
@@ -29,8 +27,7 @@ public static class TropeSeedData
         AddTrope(tropes, "Cyberpunk", sciFiId);
         AddTrope(tropes, "Post-Apocalyptic", sciFiId);
 
-        // Romance (00000000-0000-0000-0000-000000000006)
-        var romanceId = Guid.Parse("00000000-0000-0000-0000-000000000006");
+        var romanceId = Guid.Parse("00000000-0000-0000-0000-000000000006"); // Romance
         AddTrope(tropes, "Enemies to Lovers", romanceId);
         AddTrope(tropes, "Friends to Lovers", romanceId);
         AddTrope(tropes, "Fake Dating", romanceId);
@@ -43,8 +40,7 @@ public static class TropeSeedData
         AddTrope(tropes, "Sport Romance", romanceId);
         AddTrope(tropes, "Age Gap", romanceId);
 
-        // Mystery (00000000-0000-0000-0000-000000000005)
-        var mysteryId = Guid.Parse("00000000-0000-0000-0000-000000000005");
+        var mysteryId = Guid.Parse("00000000-0000-0000-0000-000000000005"); // Mystery
         AddTrope(tropes, "Whodunit", mysteryId);
         AddTrope(tropes, "Locked Room", mysteryId);
         AddTrope(tropes, "Unreliable Narrator", mysteryId);
@@ -52,8 +48,7 @@ public static class TropeSeedData
         AddTrope(tropes, "Noir", mysteryId);
         AddTrope(tropes, "Cozy Mystery", mysteryId);
 
-        // Dark Romance (00000000-0000-0000-0000-000000000009)
-        var darkRomanceId = Guid.Parse("00000000-0000-0000-0000-000000000009");
+        var darkRomanceId = Guid.Parse("00000000-0000-0000-0000-000000000009"); // Dark Romance
         AddTrope(tropes, "Stalker", darkRomanceId);
         AddTrope(tropes, "Captive/Captor", darkRomanceId);
         AddTrope(tropes, "Morally Grey MC", darkRomanceId);
@@ -62,8 +57,7 @@ public static class TropeSeedData
         AddTrope(tropes, "Obsessive Love", darkRomanceId);
         AddTrope(tropes, "Enemies to Lovers", darkRomanceId);
 
-        // Thriller (00000000-0000-0000-0000-000000000012)
-        var thrillerId = Guid.Parse("00000000-0000-0000-0000-000000000012");
+        var thrillerId = Guid.Parse("00000000-0000-0000-0000-000000000012"); // Thriller
         AddTrope(tropes, "Plot Twist", thrillerId);
         AddTrope(tropes, "Psychological", thrillerId);
         AddTrope(tropes, "Serial Killer", thrillerId);
@@ -75,8 +69,7 @@ public static class TropeSeedData
 
     private static void AddTrope(List<Trope> tropes, string name, Guid genreId)
     {
-        // Generate a deterministic GUID based on name and genreId
-        // This ensures that the same trope will always have the same ID across migrations/databases
+        // Deterministic GUID — stable across migrations/databases
         var stringToHash = $"{name}:{genreId}";
         var hash = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(stringToHash));
         var id = new Guid(hash);

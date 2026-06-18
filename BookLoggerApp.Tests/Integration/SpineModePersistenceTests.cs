@@ -43,33 +43,29 @@ public class SpineModePersistenceTests : IDisposable
     [Fact]
     public async Task UpdateSpineMode_ShouldPersistCorrectly()
     {
-        // Arrange
         var book = new Book
         {
             Title = "Spine Mode Test Book",
             Author = "Author",
-            UsesCoverAsSpine = true, // Start with True (Cover Mode)
+            UsesCoverAsSpine = true,
             SpineColor = "red",
             CoverImagePath = "some/path.jpg"
         };
 
-        // Act - Save initial state
         book = await _bookService.AddAsync(book);
 
-        // Verify initial state
         var retrievedBook = await _bookService.GetByIdAsync(book.Id);
         retrievedBook.Should().NotBeNull();
         retrievedBook!.UsesCoverAsSpine.Should().BeTrue();
 
-        // Change to False (Color Mode)
         book.UsesCoverAsSpine = false;
         await _bookService.UpdateAsync(book);
 
-        // Assert - Check using SAME context (verify local tracking works)
+        // same context: verifies local tracking
         var updatedBookSameContext = await _bookService.GetByIdAsync(book.Id);
         updatedBookSameContext.UsesCoverAsSpine.Should().BeFalse("Local context should reflect change");
 
-        // Assert - Check using NEW context (verify DB persistence works)
+        // new context: verifies DB persistence
         await using var newContext = TestDbContext.Create(_dbName);
         var newUnitOfWork = new UnitOfWork(newContext);
         var freshBook = await newUnitOfWork.Books.GetByIdAsync(book.Id);
@@ -81,7 +77,6 @@ public class SpineModePersistenceTests : IDisposable
     [Fact]
     public async Task UpdateSpineMode_AndCompleteBook_ShouldPersistBoth()
     {
-        // Arrange
         var book = new Book
         {
             Title = "Completion Test Book",
@@ -92,18 +87,11 @@ public class SpineModePersistenceTests : IDisposable
         };
         book = await _bookService.AddAsync(book);
 
-        // Act - Simulate ViewModel Logic: Change Spine Mode AND Complete Book
-        // In the real app, ViewModel sets properties on the SAME object instance
+        // ViewModel sets props on the SAME object, then calls both service methods
         book.UsesCoverAsSpine = false;
-
-        // Emulate the logic flow we fixed in ViewModel
-        // 1. UpdateAsync (saves properties)
         await _bookService.UpdateAsync(book);
-
-        // 2. CompleteBookAsync (updates status)
         await _bookService.CompleteBookAsync(book.Id);
 
-        // Assert - Verify Persistence
         await using var newContext = TestDbContext.Create(_dbName);
         var newUnitOfWork = new UnitOfWork(newContext);
         var retrievedBook = await newUnitOfWork.Books.GetByIdAsync(book.Id);

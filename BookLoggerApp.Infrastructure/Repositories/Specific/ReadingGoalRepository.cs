@@ -4,9 +4,6 @@ using BookLoggerApp.Infrastructure.Data;
 
 namespace BookLoggerApp.Infrastructure.Repositories.Specific;
 
-/// <summary>
-/// Repository implementation for ReadingGoal entity.
-/// </summary>
 public class ReadingGoalRepository : Repository<ReadingGoal>, IReadingGoalRepository
 {
     public ReadingGoalRepository(AppDbContext context) : base(context)
@@ -15,10 +12,7 @@ public class ReadingGoalRepository : Repository<ReadingGoal>, IReadingGoalReposi
 
     public async Task<IEnumerable<ReadingGoal>> GetActiveGoalsAsync()
     {
-        // Compare against today's local midnight, not DateTime.UtcNow. EndDate is stored
-        // with ticks that represent the user's local calendar midnight (the UI date picker
-        // produces Kind=Unspecified values), so using UtcNow flips goals off the "active"
-        // list several hours before local midnight for users in positive-UTC timezones.
+        // EndDate is Kind=Unspecified local midnight; UtcNow would expire goals early in positive-UTC timezones
         var todayLocalMidnight = DateTime.Now.Date;
         return await _dbSet
             .AsNoTracking()

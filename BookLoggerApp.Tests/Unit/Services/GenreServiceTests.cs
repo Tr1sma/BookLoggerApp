@@ -24,7 +24,7 @@ public class GenreServiceTests : IDisposable
         _unitOfWork = new UnitOfWork(_context);
         _cache = Substitute.For<IMemoryCache>();
         
-        // Setup cache to return false for TryGetValue by default causing database hit
+        // always miss cache
         object? outValue = null;
         _cache.TryGetValue(Arg.Any<object>(), out outValue).Returns(x => 
         {
@@ -34,7 +34,7 @@ public class GenreServiceTests : IDisposable
 
         _service = new GenreService(_unitOfWork, _cache);
         
-        // Clear seeded genres to ensure tests start with empty state
+        // remove seed data
         _context.Genres.RemoveRange(_context.Genres);
         _context.SaveChanges();
     }
@@ -57,13 +57,13 @@ public class GenreServiceTests : IDisposable
 
         // Assert
         genres.Should().HaveCount(2);
-        _cache.Received(1).CreateEntry(Arg.Any<object>()); // Should cache result
+        _cache.Received(1).CreateEntry(Arg.Any<object>());
     }
 
     [Fact]
     public async Task GetAllAsync_Should_Return_Genres_From_Cache_When_Cached()
     {
-        // Arrange (Cache Hit)
+        // Arrange
         var cachedGenres = new List<Genre> { new Genre { Name = "Cached Genre" } };
         object? outValue;
         _cache.TryGetValue(Arg.Any<object>(), out outValue).Returns(x => 
@@ -78,7 +78,6 @@ public class GenreServiceTests : IDisposable
         // Assert
         genres.Should().HaveCount(1);
         genres.First().Name.Should().Be("Cached Genre");
-        // Should NOT access DB (empty DB would return 0 if accessed)
     }
 
     [Fact]

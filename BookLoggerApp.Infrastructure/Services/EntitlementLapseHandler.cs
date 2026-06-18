@@ -6,16 +6,8 @@ using BookLoggerApp.Infrastructure.Data;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Runs the data-guard when a user lapses to Free or re-upgrades to a paid tier.
-///
-/// <para><b>Lapse flow</b> (Plus/Premium → Free): hides overflow data without
-/// deleting it — exactly one plant stays active (deterministic tie-break), shelves
-/// beyond the 3-shelf Free cap get <c>IsHiddenByEntitlement</c>, Prestige plants
-/// and the Heart of Stories decoration also get hidden. Everything can be restored
-/// on re-upgrade.</para>
-///
-/// <para><b>Restore flow</b> (Free → Plus/Premium): clears every
-/// <c>IsHiddenByEntitlement</c> flag so the user sees their data again.</para>
+/// Hides overflow data on Free lapse (plants, shelves, ultimate decorations) and
+/// restores all hidden data on re-upgrade. Nothing is deleted — only <c>IsHiddenByEntitlement</c>.
 /// </summary>
 public class EntitlementLapseHandler
 {
@@ -26,10 +18,6 @@ public class EntitlementLapseHandler
         _contextFactory = contextFactory;
     }
 
-    /// <summary>
-    /// Applies the Free-tier visibility rules. Called from
-    /// <c>EntitlementService.ApplyLapseAsync</c> after the tier has flipped.
-    /// </summary>
     public async Task ApplyLapseAsync(CancellationToken ct = default)
     {
         await using AppDbContext context = await _contextFactory.CreateDbContextAsync(ct);
@@ -41,10 +29,6 @@ public class EntitlementLapseHandler
         await context.SaveChangesAsync(ct);
     }
 
-    /// <summary>
-    /// Clears every hidden flag. Called after <c>EntitlementService.ApplyPurchaseAsync</c>
-    /// or <c>ApplyPromoAsync</c> when the new tier is Plus or higher.
-    /// </summary>
     public async Task ClearEntitlementHidesAsync(CancellationToken ct = default)
     {
         await using AppDbContext context = await _contextFactory.CreateDbContextAsync(ct);
@@ -90,8 +74,7 @@ public class EntitlementLapseHandler
             return;
         }
 
-        // Determine the one plant that stays active: prefer currently-active healthy
-        // plants, then fall back to the oldest plant by PlantedAt.
+        // Prefer active+healthy, then oldest.
         UserPlant? keepActive = plants
             .Where(p => p.IsActive && p.Status == PlantStatus.Healthy)
             .OrderBy(p => p.PlantedAt)
@@ -108,9 +91,7 @@ public class EntitlementLapseHandler
         {
             plant.IsActive = plant.Id == keepActive.Id;
 
-            // Prestige plants are entirely hidden on Free — even the one that would
-            // otherwise stay active. In that edge case we fall back to the oldest
-            // non-prestige plant.
+            // Prestige always hidden on Free, even if keepActive.
             if (plant.Species.IsPrestigeTier)
             {
                 plant.IsHiddenByEntitlement = true;
@@ -118,8 +99,7 @@ public class EntitlementLapseHandler
             }
         }
 
-        // Second pass: make sure there is still exactly one active plant after the
-        // prestige-hide step (possible edge case when keepActive itself was prestige).
+        // keepActive may itself have been prestige — ensure one active remains.
         bool hasAnyActive = plants.Any(p => p.IsActive);
         if (!hasAnyActive)
         {

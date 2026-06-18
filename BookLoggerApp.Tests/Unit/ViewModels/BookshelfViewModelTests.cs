@@ -55,7 +55,6 @@ public class BookshelfViewModelTests
     [Fact]
     public async Task RenamePlantAsync_ShouldTrimName_UpdatePlant_AndReloadShelves()
     {
-        // Arrange
         var plantId = Guid.NewGuid();
         var plant = new UserPlant
         {
@@ -66,10 +65,8 @@ public class BookshelfViewModelTests
 
         _plantService.GetByIdAsync(plantId, Arg.Any<CancellationToken>()).Returns(plant);
 
-        // Act
         await _viewModel.RenamePlantAsync((plantId, "  New Name  "));
 
-        // Assert
         plant.Name.Should().Be("New Name");
         _viewModel.ErrorMessage.Should().BeNull();
         await _plantService.Received(1).UpdateAsync(
@@ -81,10 +78,8 @@ public class BookshelfViewModelTests
     [Fact]
     public async Task RenamePlantAsync_ShouldSetError_WhenNameIsEmpty()
     {
-        // Act
         await _viewModel.RenamePlantAsync((Guid.NewGuid(), "   "));
 
-        // Assert
         _viewModel.ErrorMessage.Should().Be("Plant name cannot be empty");
         await _plantService.DidNotReceiveWithAnyArgs().UpdateAsync(default!, default);
     }
@@ -92,7 +87,6 @@ public class BookshelfViewModelTests
     [Fact]
     public async Task RenamePlantAsync_ShouldSkipUpdate_WhenNameIsUnchanged()
     {
-        // Arrange
         var plantId = Guid.NewGuid();
         var plant = new UserPlant
         {
@@ -103,10 +97,8 @@ public class BookshelfViewModelTests
 
         _plantService.GetByIdAsync(plantId, Arg.Any<CancellationToken>()).Returns(plant);
 
-        // Act
         await _viewModel.RenamePlantAsync((plantId, "Story Seedling"));
 
-        // Assert
         _viewModel.ErrorMessage.Should().BeNull();
         await _plantService.DidNotReceiveWithAnyArgs().UpdateAsync(default!, default);
         await _shelfService.DidNotReceive().GetAllShelvesAsync();
@@ -115,7 +107,6 @@ public class BookshelfViewModelTests
     [Fact]
     public async Task LoadAsync_ShouldExcludeDeadPlantsFromAvailablePlants()
     {
-        // Arrange
         var shelfPlant = new UserPlant
         {
             Id = Guid.NewGuid(),
@@ -158,10 +149,8 @@ public class BookshelfViewModelTests
             }
         });
 
-        // Act
         await _viewModel.LoadAsync();
 
-        // Assert
         _viewModel.AvailablePlants.Should().ContainSingle();
         _viewModel.AvailablePlants[0].Id.Should().Be(availablePlant.Id);
     }

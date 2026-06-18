@@ -12,26 +12,19 @@ namespace BookLoggerApp
         {
             base.OnCreate(savedInstanceState);
 
-            // Register notification channels with proper importance before any notifications are scheduled.
-            // Without this, auto-created channels default to IMPORTANCE_DEFAULT which won't wake the device.
             CreateNotificationChannels();
-
-            // Use AndroidX OnBackPressedDispatcher which works for all Android versions
-            // and integrates with MAUI/AppCompat correctly.
             OnBackPressedDispatcher.AddCallback(this, new BackPressCallback(this));
 
             System.Diagnostics.Debug.WriteLine("=== MainActivity: Registered AndroidX BackPressCallback ===");
 
             InitializeFirebase();
 
-            // Cold-start deep link (e.g. launched by tapping the reading-timer notification).
             HandleTimerDeepLink(Intent);
         }
 
         protected override void OnNewIntent(Intent? intent)
         {
             base.OnNewIntent(intent);
-            // Keep getIntent() current and route the deep link while the app is already running.
             Intent = intent;
             HandleTimerDeepLink(intent);
         }
@@ -45,29 +38,19 @@ namespace BookLoggerApp
 
             var services = Microsoft.Maui.IPlatformApplication.Current?.Services;
 
-            // Stop button: pause the running session first so the user lands on the book page
-            // with the timer stopped and the save UI ready (they confirm the page and save).
             bool stopRequested = intent!.GetBooleanExtra(
                 BookLoggerApp.Platforms.Android.Services.ReadingTimerForegroundService.ExtraStopRequested, false);
             if (stopRequested)
             {
                 var timerState = services?.GetService<BookLoggerApp.Core.Services.Abstractions.ITimerStateService>();
                 PauseTimerForStop(timerState);
-                // Pause a currently-mounted inline timer immediately (no-op on cold start —
-                // the persisted paused state above drives the restore instead).
                 timerState?.NotifyExternalCommand(BookLoggerApp.Core.Services.Abstractions.ExternalTimerCommand.Pause);
             }
 
             var deepLink = services?.GetService<BookLoggerApp.Core.Services.Abstractions.IDeepLinkService>();
-            // Open the book's detail page (the inline reading timer lives there). DeepLinkService
-            // buffers the route until Routes.razor subscribes (cold start).
             deepLink?.RequestNavigation($"/books/{bookId}");
         }
 
-        /// <summary>
-        /// Converts a running persisted timer state to paused so the inline timer restores in
-        /// its stopped/save-ready state. No-op if nothing is running (already paused or none).
-        /// </summary>
         private static void PauseTimerForStop(BookLoggerApp.Core.Services.Abstractions.ITimerStateService? timerState)
         {
             if (timerState is null)
@@ -155,7 +138,6 @@ namespace BookLoggerApp
             if (notificationManager == null)
                 return;
 
-            // Reading reminders: HIGH importance so they wake the device and show heads-up
             var reminderChannel = new Android.App.NotificationChannel(
                 "bookheart_reminders",
                 "Reading Reminders",
@@ -165,7 +147,6 @@ namespace BookLoggerApp
             };
             notificationManager.CreateNotificationChannel(reminderChannel);
 
-            // General notifications (goal completed, plant water): DEFAULT importance
             var generalChannel = new Android.App.NotificationChannel(
                 "bookheart_general",
                 "General",
@@ -175,8 +156,6 @@ namespace BookLoggerApp
             };
             notificationManager.CreateNotificationChannel(generalChannel);
 
-            // Reading timer: LOW importance (silent, no heads-up) but persistent and shown
-            // on the lock screen — the live reading-timer foreground-service notification.
             var timerChannel = new Android.App.NotificationChannel(
                 "bookheart_timer",
                 GetString(Resource.String.timer_notif_channel_name),
@@ -190,8 +169,6 @@ namespace BookLoggerApp
 
             System.Diagnostics.Debug.WriteLine("=== MainActivity: Notification channels created ===");
         }
-
-        // We do NOT override OnBackPressed anymore, allowing the Dispatcher to handle flow.
 
         public async Task HandleBackAsync()
         {
@@ -220,9 +197,6 @@ namespace BookLoggerApp
                 System.Diagnostics.Debug.WriteLine($"Error handling back button: {ex.Message}");
             }
             
-            // If we are here, it means we intercepted the back press but decided NOT to handle it (e.g. no modals open).
-            // We should let the system perform the default action (minimize app).
-            
             System.Diagnostics.Debug.WriteLine("Back Action Not Handled by App -> Minimizing");
             MoveTaskToBack(false);
         }
@@ -231,7 +205,7 @@ namespace BookLoggerApp
         {
             private readonly MainActivity _activity;
 
-            public BackPressCallback(MainActivity activity) : base(true) // Enabled = true
+            public BackPressCallback(MainActivity activity) : base(true)
             {
                 _activity = activity;
             }
@@ -239,7 +213,6 @@ namespace BookLoggerApp
             public override void HandleOnBackPressed()
             {
                 System.Diagnostics.Debug.WriteLine("=== AndroidX HandleOnBackPressed Triggered ===");
-                // Fire and forget execution of async logic
                 _ = _activity.HandleBackAsync();
             }
         }

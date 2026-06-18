@@ -7,60 +7,26 @@ namespace BookLoggerApp.Tests.Unit.Helpers;
 public class XpCalculatorTests
 {
     [Theory]
-    [InlineData(1, 100)] // 100 * 1^2
-    [InlineData(2, 400)] // 100 * 2^2
-    [InlineData(5, 2500)] // 100 * 5^2
-    [InlineData(10, 10000)] // 100 * 10^2
-    [InlineData(14, 19600)] // 100 * 14^2
-    [InlineData(20, 40000)] // 100 * 20^2
+    [InlineData(1, 100)]
+    [InlineData(2, 400)]
+    [InlineData(5, 2500)]
+    [InlineData(10, 10000)]
+    [InlineData(14, 19600)]
+    [InlineData(20, 40000)]
     public void GetXpForLevel_ReturnsCorrectQuadraticValues(int level, int expectedXp)
     {
-        // Act
-        var result = XpCalculator.GetXpForLevel(level);
-
-        // Assert
-        result.Should().Be(expectedXp);
+        XpCalculator.GetXpForLevel(level).Should().Be(expectedXp);
     }
 
     [Theory]
-    // Level 1: 100 XP required. So 0-99 XP = Level 1? No, usually level 1 starts at 0.
-    // Let's re-read the logic. 
-    // CalculateLevelFromXp loop: while (totalXp >= xpRequired(level)) { totalXp -= xpRequired; level++; }
-    //
-    // Scenario: 0 XP
-    // Level = 1. xpRequired = GetXpForLevel(1) = 100.
-    // 0 >= 100 is false. Returns Level 1.
-    [InlineData(0, 1)] 
-    
-    // Scenario: 99 XP
-    // 99 >= 100 is false. Returns Level 1.
-    [InlineData(99, 1)]
-
-    // Scenario: 100 XP
-    // 100 >= 100 is true. totalXp becomes 0. Level becomes 2. xpRequired = GetXpForLevel(2) = 400.
-    // 0 >= 400 is false. Returns Level 2.
-    [InlineData(100, 2)]
-
-    // Scenario: 499 XP (Level 2 requires 100 + 400 = 500 total cumulative XP to finish?)
-    // Wait, the while loop subtracts XP. 
-    // 499 XP:
-    // 1. 499 >= 100 (L1). Rem: 399. Level: 2. Req: 400.
-    // 2. 399 >= 400 (L2). False. Returns Level 2.
-    [InlineData(499, 2)]
-
-    // Scenario: 500 XP
-    // 1. 500 >= 100 (L1). Rem: 400. Level: 2. Req: 400.
-    // 2. 400 >= 400 (L2). Rem: 0. Level: 3. Req: 2500 (L3 = 100*3^2 = 900? No wait, GetXpForLevel(3) = 900).
-    // 2. 400 >= 400 is True. Rem: 0. Level: 3. Req: 900.
-    // 3. 0 >= 900. False. Returns Level 3.
-    [InlineData(500, 3)]
+    [InlineData(0, 1)]   // 0 < 100 → stays L1
+    [InlineData(99, 1)]  // 99 < 100 → stays L1
+    [InlineData(100, 2)] // 100 - 100 = 0 < 400 → L2
+    [InlineData(499, 2)] // 499 - 100 = 399 < 400 → L2
+    [InlineData(500, 3)] // 500 - 100 - 400 = 0 < 900 → L3
     public void CalculateLevelFromXp_ReturnsCorrectLevel(int totalXp, int expectedLevel)
     {
-        // Act
-        var result = XpCalculator.CalculateLevelFromXp(totalXp);
-        
-        // Assert
-        result.Should().Be(expectedLevel);
+        XpCalculator.CalculateLevelFromXp(totalXp).Should().Be(expectedLevel);
     }
 
     [Theory]
@@ -73,20 +39,14 @@ public class XpCalculatorTests
     [InlineData(30, 4850)]
     public void CalculateStreakBonusXp_ReturnsScaledBonus(int streakDays, int expectedXp)
     {
-        // Act
-        var result = XpCalculator.CalculateStreakBonusXp(streakDays);
-
-        // Assert
-        result.Should().Be(expectedXp);
+        XpCalculator.CalculateStreakBonusXp(streakDays).Should().Be(expectedXp);
     }
 
     [Fact]
     public void CalculateSessionXpBreakdown_IncludesScaledStreakBonus()
     {
-        // Act
         var result = XpCalculator.CalculateSessionXpBreakdown(10, 2, 3);
 
-        // Assert
         result.MinutesXp.Should().Be(50);
         result.PagesXp.Should().Be(40);
         result.LongSessionXp.Should().Be(0);
@@ -94,35 +54,27 @@ public class XpCalculatorTests
     }
 
     [Theory]
-    [InlineData(1, 53)]      // 50 + 3
-    [InlineData(2, 112)]     // 100 + 12
-    [InlineData(5, 325)]     // 250 + 75
-    [InlineData(10, 800)]    // 500 + 300
-    [InlineData(20, 2200)]   // 1000 + 1200
-    [InlineData(30, 4200)]   // 1500 + 2700
-    [InlineData(33, 4917)]   // 1650 + 3267
+    [InlineData(1, 53)]
+    [InlineData(2, 112)]
+    [InlineData(5, 325)]
+    [InlineData(10, 800)]
+    [InlineData(20, 2200)]
+    [InlineData(30, 4200)]
+    [InlineData(33, 4917)]
     public void CalculateCoinsForLevel_ReturnsProgressiveValues(int level, int expectedCoins)
     {
-        // Act
-        var result = XpCalculator.CalculateCoinsForLevel(level);
-
-        // Assert
-        result.Should().Be(expectedCoins);
+        XpCalculator.CalculateCoinsForLevel(level).Should().Be(expectedCoins);
     }
 
     [Theory]
-    [InlineData(100, 0.0, 100)]        // No boost
-    [InlineData(100, 0.25, 125)]       // 25% boost, exact
-    [InlineData(100, 0.5, 150)]        // 50% boost, exact
-    [InlineData(1325, 0.5, 1988)]      // 1325 × 1.5 = 1987.5 → rounds up to 1988 (was 1987 with truncation)
-    [InlineData(1000, 0.255, 1255)]    // 1000 × 1.255 = 1255.0 exact
-    [InlineData(33, 0.5, 50)]          // 33 × 1.5 = 49.5 → rounds up to 50 (was 49 with truncation)
+    [InlineData(100, 0.0, 100)]
+    [InlineData(100, 0.25, 125)]
+    [InlineData(100, 0.5, 150)]
+    [InlineData(1325, 0.5, 1988)]   // 1987.5 → ceiling
+    [InlineData(1000, 0.255, 1255)]
+    [InlineData(33, 0.5, 50)]       // 49.5 → ceiling
     public void ApplyPlantBoost_RoundsCorrectly(int baseXp, double boostPercentage, int expectedXp)
     {
-        // Act
-        var result = XpCalculator.ApplyPlantBoost(baseXp, (decimal)boostPercentage);
-
-        // Assert
-        result.Should().Be(expectedXp);
+        XpCalculator.ApplyPlantBoost(baseXp, (decimal)boostPercentage).Should().Be(expectedXp);
     }
 }

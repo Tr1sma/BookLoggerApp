@@ -10,10 +10,7 @@ using Xunit;
 
 namespace BookLoggerApp.Tests.Integration;
 
-/// <summary>
-/// Tests to verify database migration from single Rating to multi-category ratings.
-/// These tests simulate the migration scenario and verify backwards compatibility.
-/// </summary>
+/// <summary>Verifies multi-category rating migration and backwards compatibility.</summary>
 public class MigrationTests : IDisposable
 {
     private readonly AppDbContext _context;
@@ -46,7 +43,6 @@ public class MigrationTests : IDisposable
     [Fact]
     public async Task Migration_NewBooksWithMultipleRatings_ShouldWorkCorrectly()
     {
-        // Arrange - Create a book with new rating system
         var newBook = new Book
         {
             Title = "New Book",
@@ -60,11 +56,10 @@ public class MigrationTests : IDisposable
             WorldBuildingRating = 5
         };
 
-        // Act
+
         var savedBook = await _bookService.AddAsync(newBook);
         var retrievedBook = await _bookService.GetByIdAsync(savedBook.Id);
 
-        // Assert - All ratings should be saved and retrieved correctly
         retrievedBook.Should().NotBeNull();
         retrievedBook!.CharactersRating.Should().Be(5);
         retrievedBook.PlotRating.Should().Be(4);
@@ -73,7 +68,6 @@ public class MigrationTests : IDisposable
         retrievedBook.PacingRating.Should().Be(4);
         retrievedBook.WorldBuildingRating.Should().Be(5);
 
-        // AverageRating should calculate correctly
         retrievedBook.AverageRating.Should().BeApproximately(4.33, 0.01);
     }
 
@@ -84,7 +78,6 @@ public class MigrationTests : IDisposable
     [Fact]
     public async Task Migration_NullRatings_ShouldBeHandledCorrectly()
     {
-        // Arrange - Create books with various null rating scenarios
         var noRatingsBook = new Book
         {
             Title = "No Ratings",
@@ -102,14 +95,13 @@ public class MigrationTests : IDisposable
             WritingStyleRating = 4
         };
 
-        // Act
+
         await _bookService.AddAsync(noRatingsBook);
         await _bookService.AddAsync(partialRatingsBook);
 
         var retrievedNoRatings = await _bookService.GetByIdAsync(noRatingsBook.Id);
         var retrievedPartial = await _bookService.GetByIdAsync(partialRatingsBook.Id);
 
-        // Assert
         retrievedNoRatings.Should().NotBeNull();
         retrievedNoRatings!.AverageRating.Should().BeNull();
 
