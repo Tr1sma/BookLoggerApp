@@ -41,15 +41,14 @@ public class DashboardViewModelTests
     [Fact]
     public async Task LoadAsync_Should_Populate_Dashboard_Data()
     {
-        // Arrange
         var readingBook = new Book { Title = "Reading Book", Status = ReadingStatus.Reading };
         _bookService.GetByStatusAsync(ReadingStatus.Reading).Returns(new List<Book> { readingBook });
 
-        var completedBook = new Book 
-        { 
-            Title = "Done Book", 
-            Status = ReadingStatus.Completed, 
-            DateCompleted = DateTime.UtcNow 
+        var completedBook = new Book
+        {
+            Title = "Done Book",
+            Status = ReadingStatus.Completed,
+            DateCompleted = DateTime.UtcNow
         };
         _bookService.GetByStatusAsync(ReadingStatus.Completed).Returns(new List<Book> { completedBook });
 
@@ -65,16 +64,14 @@ public class DashboardViewModelTests
         var plant = new UserPlant { Id = Guid.NewGuid() };
         _plantService.GetActivePlantAsync().Returns(plant);
 
-        var recentSessions = new List<ReadingSession> 
-        { 
-            new ReadingSession { BookId = Guid.NewGuid() } 
+        var recentSessions = new List<ReadingSession>
+        {
+            new ReadingSession { BookId = Guid.NewGuid() }
         };
         _progressService.GetRecentSessionsAsync(5).Returns(recentSessions);
 
-        // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.CurrentlyReading.Should().Be(readingBook);
         _viewModel.BooksReadThisWeek.Should().Be(1);
         _viewModel.MinutesReadThisWeek.Should().Be(30);
@@ -108,22 +105,18 @@ public class DashboardViewModelTests
     [Fact]
     public async Task WaterPlantAsync_Should_Call_PlantService()
     {
-        // Arrange
         var plant = new UserPlant { Id = Guid.NewGuid() };
         _plantService.GetActivePlantAsync().Returns(plant);
-        await _viewModel.LoadCommand.ExecuteAsync(null); // Load plant first
+        await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        // Act
         await _viewModel.WaterPlantCommand.ExecuteAsync(null);
 
-        // Assert
         await _plantService.Received(1).WaterPlantAsync(plant.Id);
     }
 
     [Fact]
     public async Task DeletePlantAsync_ShouldDeleteDeadActivePlantAndClearWidgetState()
     {
-        // Arrange
         var plant = new UserPlant
         {
             Id = Guid.NewGuid(),
@@ -132,10 +125,8 @@ public class DashboardViewModelTests
         _plantService.GetActivePlantAsync().Returns(plant, (UserPlant?)null);
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        // Act
         await _viewModel.DeletePlantCommand.ExecuteAsync(null);
 
-        // Assert
         await _plantService.Received(1).DeleteAsync(plant.Id);
         _viewModel.ActivePlant.Should().BeNull();
     }

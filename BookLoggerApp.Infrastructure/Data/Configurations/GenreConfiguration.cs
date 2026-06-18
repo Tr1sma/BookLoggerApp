@@ -4,9 +4,6 @@ using BookLoggerApp.Core.Models;
 
 namespace BookLoggerApp.Infrastructure.Data.Configurations;
 
-/// <summary>
-/// EF Core configuration for Genre entity.
-/// </summary>
 public class GenreConfiguration : IEntityTypeConfiguration<Genre>
 {
     public void Configure(EntityTypeBuilder<Genre> builder)
@@ -26,10 +23,7 @@ public class GenreConfiguration : IEntityTypeConfiguration<Genre>
         builder.Property(g => g.ColorHex)
             .HasMaxLength(7);
 
-        // Unique index on Name
         builder.HasIndex(g => g.Name)
             .IsUnique();
-
-        // Relationship configured in BookGenreConfiguration
     }
 }

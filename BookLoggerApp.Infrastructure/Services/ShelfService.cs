@@ -58,7 +58,6 @@ public class ShelfService : IShelfService
                 $"Free tier is limited to {FreeTierShelfCap} shelves. Upgrade to Plus for unlimited shelves.");
         }
 
-        // Assign sort order to be last
         var maxSortOrder = await context.Shelves.MaxAsync(s => (int?)s.SortOrder) ?? 0;
         shelf.SortOrder = maxSortOrder + 1;
 
@@ -83,7 +82,6 @@ public class ShelfService : IShelfService
             var shelf = await context.Shelves.FindAsync(id);
             if (shelf == null) return;
 
-            // Find or create the Main shelf (SortOrder == 0)
             var mainShelf = await context.Shelves
                 .FirstOrDefaultAsync(s => s.SortOrder == 0 && s.Id != id);
 
@@ -94,7 +92,6 @@ public class ShelfService : IShelfService
                 await context.SaveChangesAsync();
             }
 
-            // Get current max position on the Main shelf
             var maxBookPos = await context.BookShelves.Where(bs => bs.ShelfId == mainShelf.Id)
                 .MaxAsync(bs => (int?)bs.Position) ?? -1;
             var maxPlantPos = await context.PlantShelves.Where(ps => ps.ShelfId == mainShelf.Id)
@@ -103,7 +100,6 @@ public class ShelfService : IShelfService
                 .MaxAsync(ds => (int?)ds.Position) ?? -1;
             var maxPos = Math.Max(maxBookPos, Math.Max(maxPlantPos, maxDecoPos));
 
-            // Move books to Main shelf (skip duplicates already on Main shelf)
             var booksToMove = await context.BookShelves
                 .Where(bs => bs.ShelfId == id)
                 .ToListAsync();
@@ -128,7 +124,6 @@ public class ShelfService : IShelfService
                 }
             }
 
-            // Move plants to Main shelf (skip duplicates already on Main shelf)
             var plantsToMove = await context.PlantShelves
                 .Where(ps => ps.ShelfId == id)
                 .ToListAsync();
@@ -153,7 +148,6 @@ public class ShelfService : IShelfService
                 }
             }
 
-            // Move decorations to Main shelf (skip duplicates already on Main shelf)
             var decorationsToMove = await context.DecorationShelves
                 .Where(ds => ds.ShelfId == id)
                 .ToListAsync();
@@ -198,7 +192,7 @@ public class ShelfService : IShelfService
 
         if (!exists)
         {
-            // Shift all existing items forward so the new book goes to position 0 (first)
+            // new book lands at position 0
             var existingEntries = await context.BookShelves
                 .Where(bs => bs.ShelfId == shelfId)
                 .ToListAsync();
@@ -272,7 +266,6 @@ public class ShelfService : IShelfService
 
         if (shelf.AutoSortRule != ShelfAutoSortRule.None)
         {
-            // Dynamic query based on rule
             var query = context.Books.AsQueryable();
             switch (shelf.AutoSortRule)
             {
@@ -296,7 +289,6 @@ public class ShelfService : IShelfService
         }
         else
         {
-            // Standard manual shelf
             return await context.BookShelves
                 .Where(bs => bs.ShelfId == shelfId)
                 .OrderBy(bs => bs.Position)
@@ -584,10 +576,6 @@ public class ShelfService : IShelfService
         }
     }
 
-    /// <summary>
-    /// Returns the maximum Position across books, plants, and decorations on a shelf.
-    /// Returns -1 if the shelf is empty.
-    /// </summary>
     private static async Task<int> GetMaxPositionOnShelfAsync(AppDbContext context, Guid shelfId)
     {
         var maxBookPos = await context.BookShelves
@@ -602,9 +590,6 @@ public class ShelfService : IShelfService
         return Math.Max(maxBookPos, Math.Max(maxPlantPos, maxDecoPos));
     }
 
-    /// <summary>
-    /// Shifts all items at or beyond a given position on a shelf by +1.
-    /// </summary>
     private static async Task ShiftItemsOnShelfAsync(AppDbContext context, Guid shelfId, int fromPosition)
     {
         var booksToShift = await context.BookShelves

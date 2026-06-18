@@ -36,14 +36,11 @@ public class DecorationServiceTests : IDisposable
     [Fact]
     public async Task PurchaseDecorationAsync_WithSufficientCoins_CreatesUserDecoration()
     {
-        // Arrange
         var shopItem = await SeedDecorationShopItem("Test Candle", 100, unlockLevel: 1);
         await GiveCoins(500);
 
-        // Act
         var result = await _decorationService.PurchaseDecorationAsync(shopItem.Id);
 
-        // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be("Test Candle");
         result.ShopItemId.Should().Be(shopItem.Id);
@@ -53,29 +50,23 @@ public class DecorationServiceTests : IDisposable
     [Fact]
     public async Task PurchaseDecorationAsync_WithInsufficientCoins_ThrowsInsufficientFundsException()
     {
-        // Arrange
         var shopItem = await SeedDecorationShopItem("Expensive Deco", 9999, unlockLevel: 1);
         await GiveCoins(10);
 
-        // Act
         var act = () => _decorationService.PurchaseDecorationAsync(shopItem.Id);
 
-        // Assert
         await act.Should().ThrowAsync<InsufficientFundsException>();
     }
 
     [Fact]
     public async Task PurchaseDecorationAsync_UsesStaticCost()
     {
-        // Arrange
         var shopItem = await SeedDecorationShopItem("Static Price Deco", 200, unlockLevel: 1);
         await GiveCoins(1000);
 
-        // Act — buy the same decoration twice
         await _decorationService.PurchaseDecorationAsync(shopItem.Id);
         await _decorationService.PurchaseDecorationAsync(shopItem.Id);
 
-        // Assert — coins deducted should be 2 × 200 = 400 (no multiplier)
         var coins = await _settingsProvider.GetUserCoinsAsync();
         coins.Should().Be(600); // 1000 - 200 - 200
     }
@@ -83,7 +74,7 @@ public class DecorationServiceTests : IDisposable
     [Fact]
     public async Task PurchaseDecorationAsync_WithNonDecorationItem_ThrowsInvalidOperationException()
     {
-        // Arrange — create a Plant-type ShopItem
+        // Plant-type item should be rejected
         var shopItem = new ShopItem
         {
             Id = Guid.NewGuid(),
@@ -98,10 +89,8 @@ public class DecorationServiceTests : IDisposable
         await _dbHelper.Context.SaveChangesAsync();
         await GiveCoins(500);
 
-        // Act
         var act = () => _decorationService.PurchaseDecorationAsync(shopItem.Id);
 
-        // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*not a decoration*");
     }
@@ -113,7 +102,7 @@ public class DecorationServiceTests : IDisposable
     [Fact]
     public async Task GetAllDecorationShopItemsAsync_ReturnsOnlyDecorations()
     {
-        // Arrange — add a Plant-type item (should NOT be returned)
+        // Plant item added to confirm it gets excluded
         _dbHelper.Context.ShopItems.Add(new ShopItem
         {
             Id = Guid.NewGuid(),
@@ -126,10 +115,9 @@ public class DecorationServiceTests : IDisposable
         });
         await _dbHelper.Context.SaveChangesAsync();
 
-        // Act
         var result = await _decorationService.GetAllDecorationShopItemsAsync();
 
-        // Assert — seed data provides 14 decorations; the Plant item must be excluded
+        // seed provides 14 decorations
         result.Should().HaveCountGreaterThanOrEqualTo(14);
         result.Should().OnlyContain(si => si.ItemType == ShopItemType.Decoration);
     }
@@ -137,10 +125,8 @@ public class DecorationServiceTests : IDisposable
     [Fact]
     public async Task GetAllDecorationShopItemsAsync_OrderedByUnlockLevelThenCost()
     {
-        // Act — uses seed data (14 decorations ordered by UnlockLevel then Cost)
         var result = await _decorationService.GetAllDecorationShopItemsAsync();
 
-        // Assert — verify ordering: each item's UnlockLevel should be >= previous
         for (int i = 1; i < result.Count; i++)
         {
             result[i].UnlockLevel.Should().BeGreaterThanOrEqualTo(result[i - 1].UnlockLevel);
@@ -159,13 +145,11 @@ public class DecorationServiceTests : IDisposable
     [Fact]
     public async Task DeleteAsync_RemovesDecorationAndShelfPlacements()
     {
-        // Arrange
         var shopItem = await SeedDecorationShopItem("To Delete", 100, unlockLevel: 1);
         await GiveCoins(500);
 
         var deco = await _decorationService.PurchaseDecorationAsync(shopItem.Id);
 
-        // Place it on a shelf
         var shelf = new Shelf { Id = Guid.NewGuid(), Name = "Test Shelf" };
         _dbHelper.Context.Shelves.Add(shelf);
         _dbHelper.Context.DecorationShelves.Add(new DecorationShelf
@@ -176,14 +160,10 @@ public class DecorationServiceTests : IDisposable
         });
         await _dbHelper.Context.SaveChangesAsync();
 
-        // Act
         await _decorationService.DeleteAsync(deco.Id);
 
-        // Assert
         var allDecos = await _decorationService.GetAllAsync();
         allDecos.Should().BeEmpty();
-
-        // Shelf placement should also be gone
         _dbHelper.Context.DecorationShelves.Should().BeEmpty();
     }
 

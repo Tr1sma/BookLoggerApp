@@ -6,8 +6,7 @@ using BookLoggerApp.Infrastructure.Repositories;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Service implementation for managing annotations.
-/// Free tier is capped at 3 notes per book via <see cref="IFeatureGuard"/>.
+/// Free tier capped at 3 notes per book.
 /// </summary>
 public class AnnotationService : IAnnotationService
 {

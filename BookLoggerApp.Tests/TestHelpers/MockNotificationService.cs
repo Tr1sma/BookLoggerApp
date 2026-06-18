@@ -2,10 +2,7 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Tests.TestHelpers;
 
-/// <summary>
-/// Mock implementation of INotificationService for testing purposes.
-/// Tracks scheduled and sent notifications for assertion in tests.
-/// </summary>
+/// <summary>Tracks scheduled and sent notifications for assertion in tests.</summary>
 public class MockNotificationService : INotificationService
 {
     public bool NotificationsEnabled { get; set; } = true;

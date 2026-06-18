@@ -16,9 +16,6 @@ using Android.Provider;
 
 namespace BookLoggerApp.Services;
 
-/// <summary>
-/// Service for managing local notifications using Plugin.LocalNotification.
-/// </summary>
 public class NotificationService : Core.Services.Abstractions.INotificationService
 {
     private readonly IAppSettingsProvider _settingsProvider;
@@ -50,7 +47,7 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
 
             if (result)
             {
-                // Also verify exact alarm permission (needed for scheduled notifications on Android 12+)
+                // Android 12+ requires separate exact-alarm permission.
                 EnsureExactAlarmPermission();
             }
 
@@ -63,10 +60,7 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
         }
     }
 
-    /// <summary>
-    /// On Android 12+, checks if the app can schedule exact alarms.
-    /// If not, opens the system settings page so the user can grant the permission.
-    /// </summary>
+    /// <summary>On Android 12+, opens system settings if exact alarms aren't allowed.</summary>
     private void EnsureExactAlarmPermission()
     {
 #if ANDROID
@@ -101,7 +95,7 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
             return;
         }
 
-        // Verify OS-level permission is still granted (user may have revoked it)
+        // Re-check OS permission; user may have revoked it since last launch.
         bool hasPermission = await RequestNotificationPermissionAsync();
         if (!hasPermission)
         {
@@ -113,7 +107,6 @@ public class NotificationService : Core.Services.Abstractions.INotificationServi
         {
             _logger?.LogInformation("Scheduling daily reading reminder at {Time}", time);
 
-            // Cancel any existing reminder first
             LocalNotificationCenter.Current.Cancel(ReadingReminderId);
 
             DateTime notifyTime = DateTime.Today.Add(time);

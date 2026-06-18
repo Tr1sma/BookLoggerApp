@@ -16,7 +16,6 @@ public class BookDetailViewModelTests
     private readonly IGenreService _genreService;
     private readonly IShareCardService _shareCardService;
     private readonly IImageService _imageService;
-    private readonly IAppSettingsProvider _settingsProvider;
     private readonly BookDetailViewModel _viewModel;
 
     public BookDetailViewModelTests()
@@ -30,8 +29,6 @@ public class BookDetailViewModelTests
         _genreService = Substitute.For<IGenreService>();
         _shareCardService = Substitute.For<IShareCardService>();
         _imageService = Substitute.For<IImageService>();
-        _settingsProvider = Substitute.For<IAppSettingsProvider>();
-        _settingsProvider.GetSettingsAsync().Returns(new AppSettings { MoodTrackingEnabled = true });
 
         _viewModel = new BookDetailViewModel(
             _bookService,
@@ -40,14 +37,12 @@ public class BookDetailViewModelTests
             _annotationService,
             _genreService,
             _shareCardService,
-            _imageService,
-            _settingsProvider);
+            _imageService);
     }
 
     [Fact]
     public async Task AddSessionAsync_Should_Reload_Book_When_Session_Added()
     {
-        // Arrange
         var book = new Book { Id = Guid.NewGuid(), Title = "Test", Author = "Author" };
         _viewModel.Book = book;
 
@@ -60,26 +55,21 @@ public class BookDetailViewModelTests
 
         StubReload(book);
 
-        // Act
         await _viewModel.AddSessionAsync(15);
 
-        // Assert
         await _bookService.Received(1).GetWithDetailsAsync(book.Id, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task CompleteBookAsync_Should_Reload_Book_After_Completion()
     {
-        // Arrange
         var book = new Book { Id = Guid.NewGuid(), Title = "Test", Author = "Author" };
         _viewModel.Book = book;
 
         StubReload(book);
 
-        // Act
         await _viewModel.CompleteBookAsync();
 
-        // Assert
         await _bookService.Received(1).CompleteBookAsync(book.Id, Arg.Any<CancellationToken>());
         await _bookService.Received(1).GetWithDetailsAsync(book.Id, Arg.Any<CancellationToken>());
     }
@@ -196,7 +186,7 @@ public class BookDetailViewModelTests
             Status = ReadingStatus.Reading,
             DateStarted = DateTime.UtcNow.AddDays(-5)
         };
-        StubReload(book); // GetSessionsByBookAsync returns empty
+        StubReload(book);
 
         await _viewModel.LoadCommand.ExecuteAsync(book.Id);
 

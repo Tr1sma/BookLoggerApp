@@ -3,9 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookLoggerApp.Tests.TestHelpers;
 
-/// <summary>
-/// Helper class that wraps AppDbContext for test scenarios requiring a disposable context wrapper.
-/// </summary>
 public class DbContextTestHelper : IDisposable
 {
     public AppDbContext Context { get; }
@@ -29,4 +26,3 @@ public class DbContextTestHelper : IDisposable
         Context?.Dispose();
     }
 }
-

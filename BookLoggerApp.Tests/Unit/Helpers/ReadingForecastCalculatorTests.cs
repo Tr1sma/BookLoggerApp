@@ -41,7 +41,7 @@ public class ReadingForecastCalculatorTests
         forecast.Should().NotBeNull();
         forecast!.PagesRemaining.Should().Be(200);
         forecast.AveragePagesPerDay.Should().BeGreaterThan(0);
-        forecast.AveragePagesPerHour.Should().BeApproximately(40, 0.001); // 20 pages / 0.5h
+        forecast.AveragePagesPerHour.Should().BeApproximately(40, 0.001); // 20p / 0.5h
         forecast.ProjectedCompletionUtc.Should().BeAfter(Now);
         forecast.SessionsUsed.Should().Be(5);
     }
@@ -120,7 +120,7 @@ public class ReadingForecastCalculatorTests
         forecast.SessionsUsed.Should().Be(0);
         forecast.Confidence.Should().Be(ForecastConfidence.Low);
         forecast.HasRange.Should().BeFalse();
-        forecast.AveragePagesPerDay.Should().BeApproximately(30, 0.001); // 90 pages / 3 days
+        forecast.AveragePagesPerDay.Should().BeApproximately(30, 0.001); // 90p / 3 days
         forecast.PagesRemaining.Should().Be(210);
     }
 
@@ -136,7 +136,7 @@ public class ReadingForecastCalculatorTests
     [Fact]
     public void ActualSeries_EndsAtPagesRemaining_WhenSessionSumsDivergeFromCurrentPage()
     {
-        // Sessions sum to 80 pages, but the user manually advanced CurrentPage to 100.
+        // sessions sum 80p, CurrentPage manually set to 100
         Book book = MakeBook(300, 100, Now.AddDays(-6));
         var sessions = new List<ReadingSession>
         {
@@ -147,8 +147,8 @@ public class ReadingForecastCalculatorTests
         ReadingForecast forecast = ReadingForecastCalculator.TryBuildForecast(book, sessions, Now)!;
 
         forecast.ActualSeries.Should().NotBeEmpty();
-        forecast.ActualSeries[0].PagesRemaining.Should().Be(300); // start anchor: full book
-        forecast.ActualSeries[^1].PagesRemaining.Should().Be(200); // anchored to PageCount - CurrentPage
+        forecast.ActualSeries[0].PagesRemaining.Should().Be(300); // start anchor
+        forecast.ActualSeries[^1].PagesRemaining.Should().Be(200); // PageCount - CurrentPage
     }
 
     [Fact]
@@ -202,15 +202,15 @@ public class ReadingForecastCalculatorTests
         Book book = MakeBook(300, 100, Now.AddDays(-6));
         var sessions = new List<ReadingSession>
         {
-            Session(Now.AddDays(-5), 30, 40), // counts
-            Session(Now.AddDays(-4), 3, 15),  // too short — ignored
-            Session(Now.AddDays(-2), 2, 25),  // too short — ignored
+            Session(Now.AddDays(-5), 30, 40), // counted
+            Session(Now.AddDays(-4), 3, 15),  // too short
+            Session(Now.AddDays(-2), 2, 25),  // too short
         };
 
         ReadingForecast forecast = ReadingForecastCalculator.TryBuildForecast(book, sessions, Now)!;
 
-        forecast.SessionsUsed.Should().Be(1); // only the 30-minute session
-        forecast.AveragePagesPerHour.Should().BeApproximately(80, 0.001); // 40 pages / 0.5h
+        forecast.SessionsUsed.Should().Be(1);
+        forecast.AveragePagesPerHour.Should().BeApproximately(80, 0.001); // 40p / 0.5h
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public class ReadingForecastCalculatorTests
         forecast.HasRange.Should().BeTrue();
         forecast.OptimisticCompletionUtc.Should().BeBefore(forecast.PessimisticCompletionUtc);
 
-        // Band is clamped: slow rate >= 25% of base => pessimistic horizon stays finite & < 10y cap.
+        // clamped: slow rate >= 25% of base
         forecast.PessimisticCompletionUtc.Should().BeBefore(Now.AddDays(3650));
     }
 }

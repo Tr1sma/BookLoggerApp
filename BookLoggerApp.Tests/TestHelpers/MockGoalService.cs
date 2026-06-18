@@ -4,9 +4,6 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Tests.TestHelpers;
 
-/// <summary>
-/// Mock implementation of IGoalService for testing purposes.
-/// </summary>
 public class MockGoalService : IGoalService
 {
     public bool NextRecalculateGoalProgressResult { get; set; }

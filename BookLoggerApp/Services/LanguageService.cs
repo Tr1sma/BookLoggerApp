@@ -5,14 +5,8 @@ using Microsoft.Maui.Storage;
 namespace BookLoggerApp.Services;
 
 /// <summary>
-/// Persists the UI language in two places:
-/// <list type="bullet">
-///   <item>MAUI <see cref="Preferences"/> (key <c>app_language</c>) — read
-///     synchronously at app start in <c>MauiProgram.InitializeCulture()</c> so
-///     the <see cref="CultureInfo"/> is set before the DbContext is ready.</item>
-///   <item><see cref="BookLoggerApp.Core.Models.AppSettings.Language"/> — the
-///     canonical persistent copy that travels with backups.</item>
-/// </list>
+/// Persists the UI language in Preferences (read synchronously before DB is ready)
+/// and in AppSettings.Language (canonical copy that travels with backups).
 /// </summary>
 public sealed class LanguageService : ILanguageService
 {

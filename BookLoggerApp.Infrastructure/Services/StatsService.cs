@@ -6,9 +6,6 @@ using BookLoggerApp.Infrastructure.Repositories;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service implementation for calculating reading statistics.
-/// </summary>
 public class StatsService : IStatsService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -25,7 +22,6 @@ public class StatsService : IStatsService
 
     public async Task<int> GetTotalPagesReadAsync(CancellationToken ct = default)
     {
-        // Optimized: Calculate sum in database to avoid loading all completed books into memory.
         return await _unitOfWork.Context.Set<Book>()
             .Where(b => b.Status == ReadingStatus.Completed && b.PageCount.HasValue)
             .SumAsync(b => b.PageCount!.Value, ct);
@@ -33,7 +29,6 @@ public class StatsService : IStatsService
 
     public async Task<int> GetTotalMinutesReadAsync(CancellationToken ct = default)
     {
-        // Optimized: Calculate sum in database using existing repository method.
         return await _unitOfWork.ReadingSessions.GetTotalMinutesAsync(ct);
     }
 
@@ -41,9 +36,7 @@ public class StatsService : IStatsService
     {
         var today = DateTime.UtcNow.Date;
 
-        // Only load sessions from the last year instead of ALL sessions.
-        // A streak longer than 365 days is unrealistic, and this avoids
-        // loading thousands of records for long-time users.
+        // 365-day cap: streak >1yr is unrealistic
         var recentSessions = await _unitOfWork.ReadingSessions
             .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow);
 
@@ -76,7 +69,6 @@ public class StatsService : IStatsService
 
     public async Task<int> GetBooksCompletedInYearAsync(int year, CancellationToken ct = default)
     {
-        // Optimized: Calculate count in database to avoid loading all completed books into memory.
         return await _unitOfWork.Books.GetCountByCompletionYearAsync(year, ct);
     }
 
@@ -100,8 +92,7 @@ public class StatsService : IStatsService
                      && b.DateCompleted.Value <= end)
             .ToListAsync(ct);
 
-        // AverageRating is a computed property — sort in memory after loading.
-        // Books with no ratings are sorted last (null-safe descending).
+        // AverageRating computed — sort in-memory
         return books
             .OrderByDescending(b => b.AverageRating ?? -1)
             .Take(count)
@@ -110,7 +101,6 @@ public class StatsService : IStatsService
 
     public async Task<Dictionary<string, int>> GetBooksByGenreAsync(CancellationToken ct = default)
     {
-        // Optimized: Group by genre directly in the database to avoid loading all books and genres into memory.
         var genreCounts = await _unitOfWork.Context.Set<BookGenre>()
             .GroupBy(bg => bg.Genre.Name)
             .Select(g => new { Name = g.Key, Count = g.Count() })
@@ -168,7 +158,6 @@ public class StatsService : IStatsService
 
     public async Task<double> GetAverageRatingByCategoryAsync(RatingCategory category, DateTime? startDate = null, DateTime? endDate = null, CancellationToken ct = default)
     {
-        // Optimized: Calculate average directly in database to avoid loading all completed books
         return await _unitOfWork.Books.GetAverageRatingByCategoryAsync(category, startDate, endDate, ct);
     }
 
@@ -193,7 +182,6 @@ public class StatsService : IStatsService
 
         if (category.HasValue)
         {
-            // Sort by specific category
             sortedBooks = category.Value switch
             {
                 RatingCategory.Characters => books.Where(b => b.CharactersRating.HasValue).OrderByDescending(b => b.CharactersRating),
@@ -212,7 +200,6 @@ public class StatsService : IStatsService
         }
         else
         {
-            // Sort by average rating
             sortedBooks = books
                 .Where(b => b.AverageRating.HasValue)
                 .OrderByDescending(b => b.AverageRating ?? 0);

@@ -9,10 +9,8 @@ public class BookTests
     [Fact]
     public void Book_Constructor_ShouldSetDefaultValues()
     {
-        // Arrange & Act
         var book = new Book();
 
-        // Assert
         book.Id.Should().NotBeEmpty();
         book.Title.Should().BeEmpty();
         book.Author.Should().BeEmpty();
@@ -28,87 +26,85 @@ public class BookTests
     [Fact]
     public void ProgressPercentage_WithPageCount_ShouldCalculateCorrectly()
     {
-        // Arrange
+
         var book = new Book
         {
             PageCount = 100,
             CurrentPage = 25
         };
 
-        // Act
+
         var percentage = book.ProgressPercentage;
 
-        // Assert
+
         percentage.Should().Be(25);
     }
 
     [Fact]
     public void ProgressPercentage_WithoutPageCount_ShouldReturnZero()
     {
-        // Arrange
+
         var book = new Book
         {
             PageCount = null,
             CurrentPage = 25
         };
 
-        // Act
+
         var percentage = book.ProgressPercentage;
 
-        // Assert
+
         percentage.Should().Be(0);
     }
 
     [Fact]
     public void ProgressPercentage_WithZeroPageCount_ShouldReturnZero()
     {
-        // Arrange
+
         var book = new Book
         {
             PageCount = 0,
             CurrentPage = 25
         };
 
-        // Act
+
         var percentage = book.ProgressPercentage;
 
-        // Assert
+
         percentage.Should().Be(0);
     }
 
     [Fact]
     public void ProgressPercentage_CurrentPageExceedsPageCount_ClampedTo100()
     {
-        // Arrange: a downward correction of PageCount (e.g. user fixed a typo)
-        // must not produce a >100% display.
+        // PageCount typo fix must not produce >100%
         var book = new Book
         {
             PageCount = 100,
             CurrentPage = 150
         };
 
-        // Act
+
         var percentage = book.ProgressPercentage;
 
-        // Assert
+
         percentage.Should().Be(100);
     }
 
     [Fact]
     public void ProgressPercentage_NegativeCurrentPage_ClampedToZero()
     {
-        // Arrange: defensive — should never happen in practice, but the clamp
-        // guarantees a valid display value.
+        // clamp guarantees valid display
         var book = new Book
         {
             PageCount = 100,
             CurrentPage = -10
         };
 
-        // Act
+
         var percentage = book.ProgressPercentage;
 
-        // Assert
+
         percentage.Should().Be(0);
     }
 
@@ -117,7 +113,7 @@ public class BookTests
     [Fact]
     public void AverageRating_WithMultipleRatings_ShouldCalculateCorrectly()
     {
-        // Arrange
+
         var book = new Book
         {
             CharactersRating = 5,
@@ -125,10 +121,10 @@ public class BookTests
             WritingStyleRating = 5
         };
 
-        // Act
+
         var average = book.AverageRating;
 
-        // Assert
+
         average.Should().NotBeNull();
         average.Value.Should().BeApproximately(4.67, 0.01);
     }
@@ -136,7 +132,7 @@ public class BookTests
     [Fact]
     public void AverageRating_WithAllRatings_ShouldCalculateCorrectly()
     {
-        // Arrange
+
         var book = new Book
         {
             CharactersRating = 5,
@@ -147,10 +143,10 @@ public class BookTests
             WorldBuildingRating = 5
         };
 
-        // Act
+
         var average = book.AverageRating;
 
-        // Assert
+
         average.Should().NotBeNull();
         average.Value.Should().BeApproximately(4.33, 0.01);
     }
@@ -160,20 +156,20 @@ public class BookTests
     [Fact]
     public void AverageRating_WithNoRatings_ShouldReturnNull()
     {
-        // Arrange
+
         var book = new Book();
 
-        // Act
+
         var average = book.AverageRating;
 
-        // Assert
+
         average.Should().BeNull();
     }
 
     [Fact]
     public void AverageRating_WithSomeNullRatings_ShouldIgnoreNulls()
     {
-        // Arrange
+
         var book = new Book
         {
             CharactersRating = 5,
@@ -184,10 +180,10 @@ public class BookTests
             WorldBuildingRating = null
         };
 
-        // Act
+
         var average = book.AverageRating;
 
-        // Assert
+
         average.Should().NotBeNull();
         average.Value.Should().BeApproximately(4.0, 0.01); // (5 + 3 + 4) / 3
     }
@@ -202,7 +198,7 @@ public class BookTests
     public void AverageRating_WithVariousRatings_ShouldCalculateCorrectly(
         int characters, int plot, int writing, int spice, int pacing, int world, double expectedAverage)
     {
-        // Arrange
+
         var book = new Book
         {
             CharactersRating = characters,
@@ -213,10 +209,10 @@ public class BookTests
             WorldBuildingRating = world
         };
 
-        // Act
+
         var average = book.AverageRating;
 
-        // Assert
+
         average.Should().NotBeNull();
         average.Value.Should().BeApproximately(expectedAverage, 0.01);
     }

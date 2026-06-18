@@ -5,9 +5,6 @@ using BookLoggerApp.Infrastructure.Data;
 
 namespace BookLoggerApp.Infrastructure.Repositories.Specific;
 
-/// <summary>
-/// Repository implementation for Book entity.
-/// </summary>
 public class BookRepository : Repository<Book>, IBookRepository
 {
     public BookRepository(AppDbContext context) : base(context)

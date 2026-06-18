@@ -4,10 +4,9 @@ using BookLoggerApp.Core.Services.Abstractions;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Validates hardcoded <c>BH-</c>-prefixed promo codes. Codes are declared in
-/// <see cref="HardcodedCodes"/> as (code, grant) pairs; new codes ship in
-/// app updates. Play-native promo codes (for single-use Lifetime rewards) are
-/// handled by <see cref="IBillingService.LaunchRedeemPromoFlowAsync"/>.
+/// Validates hardcoded <c>BH-</c>-prefixed promo codes.
+/// Play-native promo codes (single-use Lifetime rewards) are handled by
+/// <see cref="IBillingService.LaunchRedeemPromoFlowAsync"/>.
 /// </summary>
 public class PromoCodeService : IPromoCodeService
 {

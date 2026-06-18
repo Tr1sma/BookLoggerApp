@@ -68,7 +68,6 @@ public class PaywallComparisonCatalogTests
 
             SubscriptionTier minimum = FeaturePolicy.GetMinimumTier(row.MappedFeature.Value);
 
-            // If feature requires Premium, the Plus column must be a "—" (not available).
             if (minimum == SubscriptionTier.Premium)
             {
                 row.PlusValue.Should().Be("—",

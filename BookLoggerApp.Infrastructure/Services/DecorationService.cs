@@ -8,10 +8,6 @@ using BookLoggerApp.Infrastructure.Data;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service implementation for cosmetic bookshelf decorations.
-/// Uses IDbContextFactory (same pattern as ShelfService).
-/// </summary>
 public class DecorationService : IDecorationService
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
@@ -68,13 +64,9 @@ public class DecorationService : IDecorationService
                 throw new InvalidOperationException("Dieses Relikt kannst du nur einmal besitzen.");
         }
 
-        // Static pricing — use ShopItem.Cost directly (no dynamic multiplier)
         await _settingsProvider.SpendCoinsAsync(shopItem.Cost, ct);
 
-        // _settingsProvider and the decoration context use separate DbContexts, so a single
-        // EF Core transaction can't cover both operations. Mirror PlantService.PurchasePlantAsync:
-        // if the decoration save fails after coins are spent, refund them explicitly so the
-        // user isn't charged for a decoration they never received.
+        // Separate DbContexts — refund coins if decoration save fails.
         try
         {
             var decoration = new UserDecoration
@@ -113,7 +105,6 @@ public class DecorationService : IDecorationService
         var decoration = await context.UserDecorations.FindAsync(new object[] { id }, ct);
         if (decoration == null) return;
 
-        // Remove shelf placement entries first
         var placements = await context.DecorationShelves
             .Where(ds => ds.DecorationId == id)
             .ToListAsync(ct);

@@ -43,24 +43,21 @@ public class StatsViewModelTests
     [Fact]
     public async Task LoadAsync_Should_Populate_Statistics()
     {
-        // Arrange
         _statsService.GetTotalBooksReadAsync().Returns(5);
         _statsService.GetTotalPagesReadAsync().Returns(1000);
         _statsService.GetTotalMinutesReadAsync().Returns(600);
         _statsService.GetCurrentStreakAsync().Returns(3);
         _statsService.GetLongestStreakAsync().Returns(10);
         _statsService.GetAverageRatingAsync().Returns(4.5);
-        
+
         var settings = new AppSettings { UserLevel = 2, TotalXp = 250, Coins = 100 };
         _settingsProvider.GetSettingsAsync().Returns(settings);
-        
+
         _plantService.CalculateTotalXpBoostAsync().Returns(0.1m);
         _plantService.GetAllAsync().Returns(new List<UserPlant>());
 
-        // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.TotalBooksRead.Should().Be(5);
         _viewModel.TotalPagesRead.Should().Be(1000);
         _viewModel.TotalMinutesRead.Should().Be(600);
@@ -76,22 +73,15 @@ public class StatsViewModelTests
     [Fact]
     public async Task LoadAsync_Should_Calculate_Level_Progress_Correctly()
     {
-        // Arrange
-        var settings = new AppSettings { UserLevel = 2, TotalXp = 175 }; 
-        // Formula: Level 1 = 100 XP. Level 2 req 400 XP. Cumulative: L1=100.
-        // CurrentLevelXp = TotalXp (175) - 100 = 75.
-        // NextLevelXp = GetXpForLevel(2) = 100 * 2^2 = 400.
-        // Percentage = 75 / 400 = 18.75%
-        
+        // L1=100 XP cumulative; L2 costs 400. 175-100=75 current, 75/400=18.75%
+        var settings = new AppSettings { UserLevel = 2, TotalXp = 175 };
+
         _settingsProvider.GetSettingsAsync().Returns(settings);
         _plantService.GetAllAsync().Returns(new List<UserPlant>());
         _plantService.CalculateTotalXpBoostAsync().Returns(0m);
-        // Note: CalculateTotalXpBoostAsync is needed because LoadAsync calls it
 
-        // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.ProgressPercentage.Should().Be(18.75m);
         _viewModel.CurrentLevelXp.Should().Be(75);
         _viewModel.NextLevelXp.Should().Be(400);
@@ -100,26 +90,14 @@ public class StatsViewModelTests
     [Fact]
     public async Task LoadAsync_WithStaleLevel_Should_Recalculate_Level()
     {
-        // Arrange
-        // Scenario: stored Level 1, but TotalXp = 600.
-        // Level 1 cost: 100. (Total 100)
-        // Level 2 cost: 400. (Total 500)
-        // Level 3 cost: 900. (Total 1400)
-        // With 600 XP: 
-        // > 100 (L1 done) -> Lev 2. Rem 500.
-        // > 400 (L2 done) -> Lev 3. Rem 100.
-        // < 900. Stop.
-        // Should be Level 3.
-        
+        // 600 XP: passes L1 (100) and L2 (400), stops before L3 (900) → Level 3
         var settings = new AppSettings { UserLevel = 1, TotalXp = 600 };
         _settingsProvider.GetSettingsAsync().Returns(settings);
         _plantService.GetAllAsync().Returns(new List<UserPlant>());
         _plantService.CalculateTotalXpBoostAsync().Returns(0m);
 
-        // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.CurrentLevel.Should().Be(3);
         _viewModel.CurrentLevelXp.Should().Be(100);
         _viewModel.NextLevelXp.Should().Be(900);
@@ -129,21 +107,18 @@ public class StatsViewModelTests
     [Fact]
     public async Task FilterTopBooksByCategoryAsync_Should_Update_TopRatedBooks()
     {
-        // Arrange
-        var topBooks = new List<BookRatingSummary> 
-        { 
-            new BookRatingSummary 
-            { 
-                Book = new Book { Title = "Book 1" }, 
-                AverageRating = 5 
-            } 
+        var topBooks = new List<BookRatingSummary>
+        {
+            new BookRatingSummary
+            {
+                Book = new Book { Title = "Book 1" },
+                AverageRating = 5
+            }
         };
         _statsService.GetTopRatedBooksAsync(10, RatingCategory.Plot).Returns(topBooks);
 
-        // Act
         await _viewModel.FilterTopBooksByCategoryAsync(RatingCategory.Plot);
 
-        // Assert
         _viewModel.TopRatedBooks.Should().HaveCount(1);
         _viewModel.TopRatedBooks.First().Book.Title.Should().Be("Book 1");
     }
@@ -151,7 +126,6 @@ public class StatsViewModelTests
     [Fact]
     public async Task LoadAsync_Should_Exclude_DeadPlants_FromPlantBoosts()
     {
-        // Arrange
         _settingsProvider.GetSettingsAsync().Returns(new AppSettings());
         _plantService.CalculateTotalXpBoostAsync().Returns(0m);
         _plantService.GetAllAsync().Returns(new List<UserPlant>
@@ -170,26 +144,22 @@ public class StatsViewModelTests
             }
         });
 
-        // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        // Assert
         _viewModel.PlantBoosts.Should().BeEmpty();
     }
 
     [Fact]
     public async Task LoadAsync_Should_Generate_PerLevel_XpValues_Not_Cumulative()
     {
-        // Arrange
         var settings = new AppSettings { UserLevel = 3, TotalXp = 600, Coins = 0 };
         _settingsProvider.GetSettingsAsync().Returns(settings);
         _plantService.GetAllAsync().Returns(new List<UserPlant>());
         _plantService.CalculateTotalXpBoostAsync().Returns(0m);
 
-        // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
-        // Assert — XpRequired should be 100 × Level² (per-level), not cumulative
+        // XpRequired = 100 × Level² (per-level, not cumulative)
         _viewModel.LevelMilestones.Should().NotBeEmpty();
 
         foreach (var milestone in _viewModel.LevelMilestones)

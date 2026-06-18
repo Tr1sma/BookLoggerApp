@@ -19,12 +19,11 @@ public sealed class AppRestartService : IAppRestartService
             return;
         }
 
-        // Hybrid restart strategy for Android 7–15. Previously we relied only
-        // on an AlarmManager + PendingIntent deferred launch, but Android 12+
-        // Background Activity Launch (BAL) restrictions block such launches
-        // when the source process is already dead. The fix is to also call
-        // StartActivity directly while we're still alive and visible — the
-        // foreground context makes BAL allow the launch unconditionally.
+        // Three-strategy restart for Android 7–15.
+        // Android 12+ BAL restrictions block AlarmManager-only restarts when the source
+        // process is already dead. Strategy 1 (direct StartActivity while still in
+        // foreground) bypasses BAL; Strategy 2 is a fallback for OEMs that silently drop
+        // it; Strategy 3 gives the IPC time to commit before the process dies.
         var context = Android.App.Application.Context;
         var packageManager = context.PackageManager;
         var launchIntent = packageManager?.GetLaunchIntentForPackage(context.PackageName!);
@@ -39,11 +38,7 @@ public sealed class AppRestartService : IAppRestartService
             ActivityFlags.ClearTask |
             ActivityFlags.ClearTop);
 
-        // --- Strategy 1: direct foreground StartActivity ---
-        // The user just tapped "Restore from Cloud" and Settings is still
-        // visible, so the app is in the foreground. Android will either start
-        // the Activity immediately in the current process (which we're about
-        // to kill) or re-fork a fresh process to host it after we die.
+        // Strategy 1: foreground StartActivity
         try
         {
             context.StartActivity(launchIntent);
@@ -54,10 +49,7 @@ public sealed class AppRestartService : IAppRestartService
             System.Diagnostics.Debug.WriteLine($"AppRestart: StartActivity threw: {ex}");
         }
 
-        // --- Strategy 2: AlarmManager fallback ---
-        // Only relevant if Strategy 1 is silently dropped (e.g. on an OEM
-        // shell with unusual restrictions). SetAndAllowWhileIdle doesn't
-        // require SCHEDULE_EXACT_ALARM.
+        // Strategy 2: AlarmManager fallback (no SCHEDULE_EXACT_ALARM required)
         try
         {
             var pendingIntentFlags = PendingIntentFlags.OneShot;
@@ -92,21 +84,16 @@ public sealed class AppRestartService : IAppRestartService
             System.Diagnostics.Debug.WriteLine($"AppRestart: alarm fallback threw: {ex}");
         }
 
-        // --- Strategy 3: delayed process kill ---
-        // Give Android ~300 ms to commit the StartActivity IPC and finalize
-        // the alarm schedule before we kill ourselves. Without this pause the
-        // race between "ipc dispatched" and "process dead" can swallow both
-        // previous strategies on fast devices.
+        // Strategy 3: 300ms pause so IPC commits before process dies
         try
         {
             System.Threading.Thread.Sleep(300);
         }
         catch
         {
-            // Interrupted — don't care, still kill the process below.
+            // Interrupted — proceed to kill.
         }
 
-        // Kill at both the Linux process level and the JVM level for safety.
         Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
         Java.Lang.JavaSystem.Exit(0);
 #endif

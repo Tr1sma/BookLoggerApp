@@ -5,14 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Generates shareable PNG cards using SkiaSharp.
-/// Stats card: 1080x1920 (Instagram Story format).
-/// Book card: 1080x1680.
-/// </summary>
 public class ShareCardService : IShareCardService
 {
-    // === Palette (matches app.css CSS variables) ===
+    // Palette matches app.css
     private static readonly SKColor BgPrimary      = SKColor.Parse("#1A1410");
     private static readonly SKColor BgSecondary    = SKColor.Parse("#2D2419");
     private static readonly SKColor BgTertiary     = SKColor.Parse("#3D3126");
@@ -21,7 +16,6 @@ public class ShareCardService : IShareCardService
     private static readonly SKColor TextSecondary  = SKColor.Parse("#C9B5A0");
     private static readonly SKColor BorderColor    = SKColor.Parse("#4A3F32");
 
-    // Tile accent colors — one per stat so cards have visual variety
     private static readonly SKColor AccentGreen  = SKColor.Parse("#88A67E");
     private static readonly SKColor AccentAmber  = SKColor.Parse("#D4A574");
     private static readonly SKColor AccentBlue   = SKColor.Parse("#7B9CB5");
@@ -51,7 +45,6 @@ public class ShareCardService : IShareCardService
     {
         const int Width = 1080;
 
-        // Dynamic height based on content presence
         bool hasCover  = data.CoverImageBytes != null && data.CoverImageBytes.Length > 0;
         bool hasBadge  = data.AverageRating.HasValue && data.AverageRating.Value >= 4.0;
         bool hasRating = data.AverageRating.HasValue;
@@ -77,16 +70,11 @@ public class ShareCardService : IShareCardService
         return Task.FromResult(EncodePng(bitmap));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Stats Card
-    // ─────────────────────────────────────────────────────────────────────────
-
     [ExcludeFromCodeCoverage]
     private static void DrawStatsCard(SKCanvas canvas, StatsShareData data, int w, int h)
     {
         const int Pad = 60;
 
-        // Subtle radial gradient overlay for depth
         using (var gradPaint = new SKPaint())
         {
             var shader = SKShader.CreateRadialGradient(
@@ -104,20 +92,17 @@ public class ShareCardService : IShareCardService
 
         float y = 110;
 
-        // ── App name: drawn heart icon + "BookHeart" text ─────────────────────
         DrawHeartAndText(canvas, "BookHeart", w / 2f, y, boldTypeface, 72, Primary);
         y += 80;
         DrawText(canvas, "Reading Recap", w / 2f, y, regularTypeface, 52, TextSecondary, SKTextAlign.Center);
         y += 70;
 
-        // Period chip shows exactly which month/year is being shared
         DrawChip(canvas, data.PeriodLabel, w / 2f, y, BgTertiary, Primary, boldTypeface, 44);
         y += 80;
 
         DrawHorizontalLine(canvas, Pad, w - Pad, y, BorderColor);
         y += 50;
 
-        // ── 3×2 stat tile grid ────────────────────────────────────────────────
         const float TileW   = 300;
         const float TileH   = 230;
         const float TileGap = 30;
@@ -135,7 +120,6 @@ public class ShareCardService : IShareCardService
         string totalBooksText = data.TotalBooks > 0 ? data.TotalBooks.ToString() : "–";
         string genreText  = TruncateText(data.FavoriteGenre ?? "–", 12);
 
-        // Row 0: Books / Pages / Hours
         DrawStatTile(canvas, data.BooksCompleted.ToString(), "Books Read",
             col0X, row0Y, TileW, TileH, boldTypeface, regularTypeface, AccentGreen);
         DrawStatTile(canvas, data.PagesRead.ToString("N0"), "Pages Read",
@@ -143,7 +127,6 @@ public class ShareCardService : IShareCardService
         DrawStatTile(canvas, hoursText, "Hours Read",
             col2X, row0Y, TileW, TileH, boldTypeface, regularTypeface, AccentBlue);
 
-        // Row 1: Avg Rating / Day Streak / Fav. Genre
         DrawStatTile(canvas, ratingText, "Avg Rating",
             col0X, row1Y, TileW, TileH, boldTypeface, regularTypeface, AccentGold, valueFontSize: 80);
         DrawStatTile(canvas, totalBooksText, "Total Books",
@@ -153,7 +136,6 @@ public class ShareCardService : IShareCardService
 
         y = row1Y + TileH + 50;
 
-        // ── Top Books ─────────────────────────────────────────────────────────
         DrawHorizontalLine(canvas, Pad, w - Pad, y, BorderColor);
         y += 50;
         DrawText(canvas, "Top Books", Pad, y, boldTypeface, 52, Primary, SKTextAlign.Left);
@@ -167,13 +149,8 @@ public class ShareCardService : IShareCardService
             y += 180;
         }
 
-        // ── Watermark ─────────────────────────────────────────────────────────
         DrawWatermark(canvas, w, h, boldTypeface, regularTypeface);
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Book Card
-    // ─────────────────────────────────────────────────────────────────────────
 
     [ExcludeFromCodeCoverage]
     private static void DrawBookCard(SKCanvas canvas, BookShareData data, int w, int h)
@@ -183,7 +160,6 @@ public class ShareCardService : IShareCardService
         using var boldTypeface    = SKTypeface.FromFamilyName(null, SKFontStyle.Bold);
         using var regularTypeface = SKTypeface.Default;
 
-        // ── Rich gradient background ────────────────────────────────────────
         using (var bgPaint = new SKPaint())
         {
             bgPaint.Shader = SKShader.CreateLinearGradient(
@@ -201,12 +177,10 @@ public class ShareCardService : IShareCardService
             canvas.DrawRect(0, 0, w, h, bgPaint);
         }
 
-        // Ambient glow orbs for warmth and depth
         DrawGlowOrb(canvas, 180, 300, 350, AccentAmber, 35);
         DrawGlowOrb(canvas, 900, 500, 400, AccentGreen, 25);
         DrawGlowOrb(canvas, 540, 1500, 500, AccentOrange, 20);
 
-        // ── Top gradient accent bar ─────────────────────────────────────────
         using (var accentPaint = new SKPaint())
         {
             accentPaint.Shader = SKShader.CreateLinearGradient(
@@ -220,13 +194,11 @@ public class ShareCardService : IShareCardService
 
         float y = 80;
 
-        // ── Header ────────────────────────────────────────────────────────────
         DrawText(canvas, "Just finished reading!", w / 2f, y, regularTypeface, 44, TextSecondary, SKTextAlign.Center);
         y += 60;
         DrawHeartAndText(canvas, "BookHeart", w / 2f, y, boldTypeface, 52, Primary);
         y += 80;
 
-        // ── Cover image with glow + shadow (only if available) ──────────────
         if (data.CoverImageBytes != null && data.CoverImageBytes.Length > 0)
         {
             const float CoverW = 320;
@@ -239,10 +211,8 @@ public class ShareCardService : IShareCardService
             using var coverBitmap = SKBitmap.Decode(data.CoverImageBytes);
             if (coverBitmap != null)
             {
-                // Warm glow halo behind cover
                 DrawGlowOrb(canvas, coverCx, coverCy, CoverW * 0.9f, Primary, 50);
 
-                // Drop shadow
                 using (var shadowPaint = new SKPaint
                 {
                     Color = SKColors.Black.WithAlpha(80),
@@ -256,7 +226,6 @@ public class ShareCardService : IShareCardService
 
                 DrawRoundedBitmap(canvas, coverBitmap, coverX, coverY, CoverW, CoverH, 16);
 
-                // Thin colored border
                 using (var borderPaint = new SKPaint
                 {
                     Color = Primary.WithAlpha(100),
@@ -272,14 +241,12 @@ public class ShareCardService : IShareCardService
             }
         }
 
-        // ── "HIGHLY RECOMMENDED" badge (only for 4.0+) ─────────────────────
         if (data.AverageRating.HasValue && data.AverageRating.Value >= 4.0)
         {
             DrawRecommendedBadge(canvas, w / 2f, y, boldTypeface);
             y += 85;
         }
 
-        // ── Title & Author ────────────────────────────────────────────────────
         var titleLines = WrapText(data.Title, w - Pad * 2, boldTypeface, 68);
         foreach (var line in titleLines.Take(2))
         {
@@ -290,11 +257,9 @@ public class ShareCardService : IShareCardService
         DrawText(canvas, $"by {data.Author}", w / 2f, y, regularTypeface, 42, TextSecondary, SKTextAlign.Center);
         y += 50;
 
-        // ── Gradient divider ────────────────────────────────────────────────
         DrawGradientDivider(canvas, Pad + 100, w - Pad - 100, y, AccentAmber, AccentGreen);
         y += 40;
 
-        // ── Colored stats chips ─────────────────────────────────────────────
         string pagesText = data.PageCount.HasValue ? $"{data.PageCount:N0} pages" : "–";
         string timeText  = data.TotalMinutesRead > 0 ? FormatReadingTime(data.TotalMinutesRead) : "–";
 
@@ -302,7 +267,6 @@ public class ShareCardService : IShareCardService
         DrawColoredInfoChip(canvas, timeText,  w / 2f + 20, y, (w / 2f) - Pad - 20, 70, regularTypeface, 38, AccentOrange);
         y += 130;
 
-        // ── Gold star rating ────────────────────────────────────────────────
         if (data.AverageRating.HasValue)
         {
             DrawGlowOrb(canvas, w / 2f, y + 15, 120, GoldStar, 25);
@@ -312,7 +276,6 @@ public class ShareCardService : IShareCardService
             y += 80;
         }
 
-        // ── Color-coded category ratings ────────────────────────────────────
         var ratedCategories = data.CategoryRatings
             .Where(kvp => kvp.Value.HasValue)
             .ToList();
@@ -323,18 +286,9 @@ public class ShareCardService : IShareCardService
             DrawColoredCategoryRatings(canvas, ratedCategories, Pad, y, w - Pad * 2, regularTypeface, boldTypeface);
         }
 
-        // ── Watermark ─────────────────────────────────────────────────────────
         DrawWatermark(canvas, w, h, boldTypeface, regularTypeface);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Drawing helpers
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Draws a path-based heart icon followed by text, all centered at (cx, y).
-    /// Avoids Unicode glyph rendering failures on Android default typefaces.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     private static void DrawHeartAndText(SKCanvas canvas, string text, float cx, float y,
         SKTypeface typeface, float fontSize, SKColor color)
@@ -343,15 +297,14 @@ public class ShareCardService : IShareCardService
         using var measurePaint = new SKPaint { IsAntialias = true };
         float textW = font.MeasureText(text, measurePaint);
 
-        float heartSize = fontSize * 0.32f;   // cubic bezier "radius"
-        float heartIconW = heartSize * 2.6f;  // total bounding width of the heart path
+        float heartSize = fontSize * 0.32f;
+        float heartIconW = heartSize * 2.6f;
         float gap        = fontSize * 0.28f;
         float totalW     = heartIconW + gap + textW;
 
         float heartCx = cx - totalW / 2f + heartIconW / 2f;
         float textX   = cx - totalW / 2f + heartIconW + gap;
 
-        // Align heart vertically with the cap-height of the text
         float heartCy = y - fontSize * 0.38f;
 
         DrawHeartIcon(canvas, heartCx, heartCy, heartSize, color);
@@ -360,18 +313,13 @@ public class ShareCardService : IShareCardService
         canvas.DrawText(text, textX, y, SKTextAlign.Left, font, textPaint);
     }
 
-    /// <summary>
-    /// Draws a filled heart at (cx, cy) using cubic bezier curves — no glyph required.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     private static void DrawHeartIcon(SKCanvas canvas, float cx, float cy, float size, SKColor color)
     {
         using var path = new SKPath();
 
-        // Start at the top-center dip (the notch between the two lobes)
         path.MoveTo(cx, cy - size * 0.2f);
 
-        // Right lobe: sweep right and down to the bottom tip
         path.CubicTo(
             cx + size * 0.1f, cy - size * 1.1f,
             cx + size * 1.3f, cy - size * 1.1f,
@@ -381,7 +329,6 @@ public class ShareCardService : IShareCardService
             cx + size * 0.4f, cy + size * 0.9f,
             cx,               cy + size * 1.4f);
 
-        // Left lobe: sweep left back up to the top-center dip
         path.CubicTo(
             cx - size * 0.4f, cy + size * 0.9f,
             cx - size * 1.3f, cy + size * 0.5f,
@@ -397,10 +344,6 @@ public class ShareCardService : IShareCardService
         canvas.DrawPath(path, paint);
     }
 
-    /// <summary>
-    /// Draws a 5-pointed star at (cx, cy) using path geometry — no Unicode glyph required.
-    /// Avoids glyph rendering failures on Android default typefaces.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     private static void DrawStarIcon(SKCanvas canvas, float cx, float cy, float outerRadius,
         SKColor color, bool filled)
@@ -510,7 +453,6 @@ public class ShareCardService : IShareCardService
         float circleX = x + CircleR + 8;
         float circleY = y + 55;
 
-        // Rank circle
         using var circleBg = new SKPaint { Color = BgTertiary, IsAntialias = true };
         canvas.DrawCircle(circleX, circleY, CircleR, circleBg);
 
@@ -518,7 +460,6 @@ public class ShareCardService : IShareCardService
         using var rankPaint = new SKPaint { Color = Primary, IsAntialias = true };
         canvas.DrawText(rank.ToString(), circleX, circleY + 13, SKTextAlign.Center, rankFont, rankPaint);
 
-        // Title and author
         float textX = circleX + CircleR + 20;
 
         using var titleFont  = new SKFont(boldTypeface,    40);
@@ -529,7 +470,6 @@ public class ShareCardService : IShareCardService
         using var authorPaint = new SKPaint { Color = TextSecondary, IsAntialias = true };
         canvas.DrawText(author, textX, y + 85, SKTextAlign.Left, authorFont, authorPaint);
 
-        // Mini star rating — right-aligned (path-based to avoid glyph failures on Android)
         if (rating.HasValue)
         {
             int filled = Math.Clamp((int)Math.Round(rating.Value), 0, 5);
@@ -545,7 +485,6 @@ public class ShareCardService : IShareCardService
             }
         }
 
-        // Row separator
         DrawHorizontalLine(canvas, x, x + width, y + 165, BorderColor);
     }
 
@@ -562,9 +501,6 @@ public class ShareCardService : IShareCardService
         canvas.Restore();
     }
 
-    /// <summary>
-    /// Draws a soft radial gradient circle for ambient glow/bokeh effects.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     private static void DrawGlowOrb(SKCanvas canvas, float cx, float cy, float radius,
         SKColor color, byte peakAlpha)
@@ -579,9 +515,6 @@ public class ShareCardService : IShareCardService
         canvas.DrawRect(cx - radius, cy - radius, radius * 2, radius * 2, paint);
     }
 
-    /// <summary>
-    /// Draws a horizontal line that fades in from transparent, transitions colors, and fades out.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     private static void DrawGradientDivider(SKCanvas canvas, float x1, float x2, float y,
         SKColor leftColor, SKColor rightColor)
@@ -601,9 +534,6 @@ public class ShareCardService : IShareCardService
         canvas.DrawLine(x1, y, x2, y, paint);
     }
 
-    /// <summary>
-    /// Draws an info chip with a colored accent dot and tinted gradient background.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     private static void DrawColoredInfoChip(SKCanvas canvas, string text, float x, float y,
         float maxW, float chipH, SKTypeface typeface, float fontSize, SKColor accentColor)
@@ -621,7 +551,6 @@ public class ShareCardService : IShareCardService
             canvas.DrawRoundRect(rect, 14, 14, bgPaint);
         }
 
-        // Accent dot on the left
         using var dotPaint = new SKPaint { Color = accentColor, IsAntialias = true };
         canvas.DrawCircle(x + 28, y + chipH / 2f, 6, dotPaint);
 
@@ -631,9 +560,6 @@ public class ShareCardService : IShareCardService
             SKTextAlign.Center, font, paint);
     }
 
-    /// <summary>
-    /// Draws gold-filled star rating with per-star glow halos.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     private static void DrawStarRatingGold(SKCanvas canvas, double rating, float centerX, float y, float fontSize)
     {
@@ -660,9 +586,6 @@ public class ShareCardService : IShareCardService
         }
     }
 
-    /// <summary>
-    /// Draws a "HIGHLY RECOMMENDED" pill badge with gradient background.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     private static void DrawRecommendedBadge(SKCanvas canvas, float cx, float y,
         SKTypeface boldTypeface)
@@ -703,9 +626,6 @@ public class ShareCardService : IShareCardService
         canvas.DrawText(BadgeText, cx, y + FontSize / 3f, SKTextAlign.Center, font, textPaint);
     }
 
-    /// <summary>
-    /// Draws a 2-column category ratings grid with per-category accent colors and progress bars.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     private static void DrawColoredCategoryRatings(SKCanvas canvas,
         List<KeyValuePair<RatingCategory, int?>> categories,
@@ -728,30 +648,26 @@ public class ShareCardService : IShareCardService
 
             var rect = new SKRect(cellX, cellY, cellX + cellW, cellY + CellH);
 
-            // Cell background
             using (var bgPaint = new SKPaint { Color = BgSecondary, IsAntialias = true })
                 canvas.DrawRoundRect(rect, 12, 12, bgPaint);
 
-            // Left accent stripe clipped to rounded corners
+            // clip stripe to rounded corners
             canvas.Save();
             canvas.ClipRoundRect(new SKRoundRect(rect, 12), SKClipOperation.Intersect, true);
             using (var stripePaint = new SKPaint { Color = accent, IsAntialias = true })
                 canvas.DrawRect(cellX, cellY, 5, CellH, stripePaint);
             canvas.Restore();
 
-            // Category label (left-aligned)
             string label = CategoryLabel(category);
             using var labelFont  = new SKFont(regularTypeface, 28);
             using var labelPaint = new SKPaint { Color = TextSecondary, IsAntialias = true };
             canvas.DrawText(label, cellX + 22, cellY + 32, SKTextAlign.Left, labelFont, labelPaint);
 
-            // Rating value in accent color (right-aligned)
             string value = ratingVal.HasValue ? $"{ratingVal}/5" : "–";
             using var valFont  = new SKFont(boldTypeface, 32);
             using var valPaint = new SKPaint { Color = accent, IsAntialias = true };
             canvas.DrawText(value, cellX + cellW - 16, cellY + 32, SKTextAlign.Right, valFont, valPaint);
 
-            // Progress bar
             if (ratingVal.HasValue)
             {
                 float barX = cellX + 22;
@@ -760,11 +676,9 @@ public class ShareCardService : IShareCardService
                 float barH = 22;
                 float fillPct = ratingVal.Value / 5f;
 
-                // Track
                 using var trackPaint = new SKPaint { Color = BgTertiary, IsAntialias = true };
                 canvas.DrawRoundRect(new SKRect(barX, barY, barX + barW, barY + barH), 11, 11, trackPaint);
 
-                // Fill
                 if (fillPct > 0)
                 {
                     float fillW = Math.Max(barH, barW * fillPct);
@@ -781,9 +695,6 @@ public class ShareCardService : IShareCardService
         }
     }
 
-    /// <summary>
-    /// Maps each RatingCategory to a unique accent color for visual variety.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     private static SKColor CategoryAccentColor(RatingCategory category) => category switch
     {
@@ -895,10 +806,6 @@ public class ShareCardService : IShareCardService
         canvas.DrawText("Track your reading journey", w / 2f, y + 42,
             SKTextAlign.Center, tagFont, tagPaint);
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Utility helpers
-    // ─────────────────────────────────────────────────────────────────────────
 
     [ExcludeFromCodeCoverage]
     private static byte[] EncodePng(SKBitmap bitmap)

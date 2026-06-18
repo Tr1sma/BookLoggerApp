@@ -13,11 +13,9 @@ public class ProgressionServiceTests
     [Fact]
     public async Task AwardSessionXpAsync_WithHigherLevelPlant_ShouldAwardMoreXp()
     {
-        // Arrange
         var lowLevelResult = await AwardSessionXpAsyncForPlantLevel(1);
         var highLevelResult = await AwardSessionXpAsyncForPlantLevel(5);
 
-        // Assert
         lowLevelResult.PlantBoostPercentage.Should().Be(0.055m);
         highLevelResult.PlantBoostPercentage.Should().Be(0.075m);
         lowLevelResult.XpEarned.Should().Be(84);
@@ -29,7 +27,6 @@ public class ProgressionServiceTests
     [Fact]
     public async Task GetTotalPlantBoostAsync_DeadPlants_ShouldBeIgnored()
     {
-        // Arrange
         var settingsProvider = CreateSettingsProvider();
         var plantService = Substitute.For<IPlantService>();
         plantService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(
@@ -43,17 +40,14 @@ public class ProgressionServiceTests
         var decorationService = CreateDecorationService();
         var service = new ProgressionService(settingsProvider, plantService, decorationService);
 
-        // Act
         var totalBoost = await service.GetTotalPlantBoostAsync();
 
-        // Assert
         totalBoost.Should().Be(0.075m);
     }
 
     [Fact]
     public async Task AwardSessionXpAsync_WithStreakDays_ShouldApplyScaledStreakBonus()
     {
-        // Arrange
         var settingsProvider = CreateSettingsProvider();
         var plantService = Substitute.For<IPlantService>();
         plantService.GetAllAsync(Arg.Any<CancellationToken>())
@@ -62,10 +56,8 @@ public class ProgressionServiceTests
         var decorationService = CreateDecorationService();
         var service = new ProgressionService(settingsProvider, plantService, decorationService);
 
-        // Act
         var result = await service.AwardSessionXpAsync(10, 5, Guid.NewGuid(), 7);
 
-        // Assert
         result.MinutesXp.Should().Be(50);
         result.PagesXp.Should().Be(100);
         result.StreakDays.Should().Be(7);

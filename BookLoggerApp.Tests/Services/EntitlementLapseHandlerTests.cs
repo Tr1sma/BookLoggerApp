@@ -9,9 +9,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// Covers the lapse / restore data-guard: hiding overflow shelves, reducing
-/// plants to one active, hiding prestige/ultimate items, and clearing those
-/// flags on re-upgrade.
+/// Covers lapse/restore data-guard: overflow shelves hidden, plants reduced to one active,
+/// prestige/ultimate items hidden, flags cleared on re-upgrade.
 /// </summary>
 public class EntitlementLapseHandlerTests : IDisposable
 {
@@ -45,8 +44,7 @@ public class EntitlementLapseHandlerTests : IDisposable
         List<UserPlant> plants = await ctx.UserPlants.OrderBy(p => p.PlantedAt).ToListAsync();
         plants.Should().HaveCount(3);
         plants.Count(p => p.IsActive).Should().Be(1);
-        // "middle" was both IsActive and Healthy; it wins (oldest among active+healthy candidates
-        // is "middle" because "oldest" was not active).
+        // "oldest" was not active, so "middle" wins
         plants.Single(p => p.IsActive).Name.Should().Be("Second");
         plants.Should().OnlyContain(p => p.IsHiddenByEntitlement == false,
             "non-prestige plants should only lose IsActive, never get hidden");

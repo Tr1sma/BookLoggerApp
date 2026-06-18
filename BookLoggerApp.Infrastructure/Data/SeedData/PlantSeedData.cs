@@ -2,10 +2,7 @@ using BookLoggerApp.Core.Models;
 
 namespace BookLoggerApp.Infrastructure.Data.SeedData;
 
-/// <summary>
-/// Central source of truth for plant species data.
-/// Used by AppDbContext for seeding (migrations) and DbInitializer for runtime syncing.
-/// </summary>
+/// <summary>Used by AppDbContext (migrations) and DbInitializer (runtime sync).</summary>
 public static class PlantSeedData
 {
     private static readonly Guid _starterSproutId = Guid.Parse("10000000-0000-0000-0000-000000000001");

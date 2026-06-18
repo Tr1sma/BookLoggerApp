@@ -3,9 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookLoggerApp.Tests.TestHelpers;
 
-/// <summary>
-/// Helper class for creating in-memory test database contexts.
-/// </summary>
 public static class TestDbContext
 {
     public static AppDbContext Create()
@@ -26,10 +23,7 @@ public static class TestDbContext
     }
 }
 
-/// <summary>
-/// Test implementation of IDbContextFactory for use in unit tests.
-/// Creates new context instances that share the same in-memory database.
-/// </summary>
+/// <summary>Instances share the same in-memory database by name.</summary>
 public class TestDbContextFactory : IDbContextFactory<AppDbContext>
 {
     private readonly string _databaseName;

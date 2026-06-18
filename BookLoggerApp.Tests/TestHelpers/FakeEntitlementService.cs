@@ -4,10 +4,7 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Tests.TestHelpers;
 
-/// <summary>
-/// In-memory fake of <see cref="IEntitlementService"/> for unit tests that don't
-/// need to exercise Play Billing. Call <see cref="SetTier"/> to flip the state.
-/// </summary>
+/// <summary>In-memory fake of <see cref="IEntitlementService"/>. Call <see cref="SetTier"/> to flip state.</summary>
 public class FakeEntitlementService : IEntitlementService
 {
     private UserEntitlement _current;

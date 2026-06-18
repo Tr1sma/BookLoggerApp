@@ -5,9 +5,6 @@ using BookLoggerApp.Core.Models;
 
 namespace BookLoggerApp.Infrastructure.Data.Configurations;
 
-/// <summary>
-/// EF Core configuration for AppSettings entity.
-/// </summary>
 public class AppSettingsConfiguration : IEntityTypeConfiguration<AppSettings>
 {
     public void Configure(EntityTypeBuilder<AppSettings> builder)
@@ -84,10 +81,6 @@ public class AppSettingsConfiguration : IEntityTypeConfiguration<AppSettings>
             .HasDefaultValue(false);
 
         builder.Property(a => a.PrivacyPolicyAcceptedAt);
-
-        builder.Property(a => a.MoodTrackingEnabled)
-            .IsRequired()
-            .HasDefaultValue(true);
 
         builder.Property(a => a.CurrentTier)
             .IsRequired()

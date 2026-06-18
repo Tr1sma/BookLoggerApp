@@ -30,9 +30,7 @@ public class AppStartupViewModelTests
         _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(new AppSettings { PrivacyBannerDismissed = true });
 
         _appVersionService.CurrentVersion.Returns("0.8.0");
-        // Default to "user has already seen this version's changelog" so tests that don't
-        // care about the changelog aren't poisoned by the first-launch path. Tests that
-        // expect the changelog to surface override this with .Returns((string?)null).
+        // Prevents first-launch changelog path from affecting unrelated tests.
         _appVersionService.LastSeenChangelogVersion.Returns("0.8.0");
         _changelogService.GetReleaseHistoryAsync(Arg.Any<CancellationToken>()).Returns(new[]
         {
@@ -68,14 +66,11 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task InitializeAsync_ShouldShowChangelog_WhenCurrentVersionIsFirstLaunch()
     {
-        // Arrange
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(true);
         _appVersionService.LastSeenChangelogVersion.Returns((string?)null);
 
-        // Act
         await _viewModel.InitializeAsync();
 
-        // Assert
         _viewModel.IsChangelogVisible.Should().BeTrue();
         _viewModel.CurrentRelease.Should().NotBeNull();
         _viewModel.CurrentRelease!.Version.Should().Be("0.8.0");
@@ -85,7 +80,6 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task InitializeAsync_ShouldQueueUpdatePrompt_BehindChangelog()
     {
-        // Arrange
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(true);
         _appVersionService.LastSeenChangelogVersion.Returns((string?)null);
         _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(new AppUpdateState
@@ -95,10 +89,8 @@ public class AppStartupViewModelTests
             CanStartFlexibleUpdate = true
         });
 
-        // Act
         await _viewModel.InitializeAsync();
 
-        // Assert
         _viewModel.IsChangelogVisible.Should().BeTrue();
         _viewModel.IsUpdateAvailableVisible.Should().BeFalse();
 
@@ -110,7 +102,6 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task HandleAppResumedAsync_ShouldShowDownloadedUpdatePrompt_WhenDownloadCompleted()
     {
-        // Arrange
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(false);
         _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(new AppUpdateState
         {
@@ -119,10 +110,8 @@ public class AppStartupViewModelTests
             IsUpdateInProgress = true
         });
 
-        // Act
         await _viewModel.InitializeAsync();
 
-        // Assert
         _viewModel.IsUpdateReadyVisible.Should().BeTrue();
         _viewModel.IsUpdateAvailableVisible.Should().BeFalse();
     }
@@ -130,7 +119,6 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task DismissUpdateAvailableAsync_ShouldHidePrompt_ForCurrentSession()
     {
-        // Arrange
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(false);
         _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(new AppUpdateState
         {
@@ -141,18 +129,15 @@ public class AppStartupViewModelTests
 
         await _viewModel.InitializeAsync();
 
-        // Act
         await _viewModel.DismissUpdateAvailableAsync();
         await _viewModel.HandleAppResumedAsync();
 
-        // Assert
         _viewModel.IsUpdateAvailableVisible.Should().BeFalse();
     }
 
     [Fact]
     public async Task HandleAppResumedAsync_ShouldNotShowAvailablePrompt_WhenUpdateIsAlreadyInProgress()
     {
-        // Arrange
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(false);
         _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(
             new AppUpdateState
@@ -170,10 +155,8 @@ public class AppStartupViewModelTests
 
         await _viewModel.InitializeAsync();
 
-        // Act
         await _viewModel.HandleAppResumedAsync();
 
-        // Assert
         _viewModel.IsUpdateAvailableVisible.Should().BeFalse();
         _viewModel.IsUpdateReadyVisible.Should().BeFalse();
         _viewModel.UpdateState.IsUpdateInProgress.Should().BeTrue();
@@ -182,7 +165,6 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task HandleAppResumedAsync_ShouldCaptureError_WhenUpdateRefreshFails()
     {
-        // Arrange
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(false);
         _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(AppUpdateState.Unsupported);
 
@@ -192,17 +174,14 @@ public class AppStartupViewModelTests
             .GetStateAsync(Arg.Any<CancellationToken>())
             .Returns(_ => Task.FromException<AppUpdateState>(new InvalidOperationException("Play Store offline")));
 
-        // Act
         await _viewModel.HandleAppResumedAsync();
 
-        // Assert
         _viewModel.ErrorMessage.Should().Be("Failed to refresh app update state: Play Store offline");
     }
 
     [Fact]
     public async Task StartFlexibleUpdateAsync_ShouldHidePrompt_WhenFlowStarts()
     {
-        // Arrange
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(false);
         _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(new AppUpdateState
         {
@@ -214,10 +193,8 @@ public class AppStartupViewModelTests
 
         await _viewModel.InitializeAsync();
 
-        // Act
         await _viewModel.StartFlexibleUpdateAsync();
 
-        // Assert
         _viewModel.IsUpdateAvailableVisible.Should().BeFalse();
         await _appUpdateService.Received(1).StartFlexibleUpdateAsync(Arg.Any<CancellationToken>());
     }
@@ -225,7 +202,6 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task StartFlexibleUpdateAsync_ShouldKeepPromptVisible_WhenUpdateFlowDidNotStart()
     {
-        // Arrange
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(false);
         _appUpdateService.GetStateAsync(Arg.Any<CancellationToken>()).Returns(new AppUpdateState
         {
@@ -237,10 +213,8 @@ public class AppStartupViewModelTests
 
         await _viewModel.InitializeAsync();
 
-        // Act
         await _viewModel.StartFlexibleUpdateAsync();
 
-        // Assert
         _viewModel.IsUpdateAvailableVisible.Should().BeTrue();
         await _appUpdateService.Received(1).StartFlexibleUpdateAsync(Arg.Any<CancellationToken>());
     }
@@ -248,14 +222,11 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task InitializeAsync_ShouldShowOnboarding_WhenOnboardingIsNotCompleted()
     {
-        // Arrange
         _onboardingService.GetSnapshotAsync(Arg.Any<CancellationToken>())
             .Returns(CreateSnapshot(shouldShowIntro: true, introStatus: OnboardingIntroStatus.NotStarted));
 
-        // Act
         await _viewModel.InitializeAsync();
 
-        // Assert
         _viewModel.IsOnboardingVisible.Should().BeTrue();
         _viewModel.IsChangelogVisible.Should().BeFalse();
     }
@@ -263,7 +234,6 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task SkipOnboardingAsync_ShouldCompleteIntroAndHideOverlay()
     {
-        // Arrange
         _onboardingService.GetSnapshotAsync(Arg.Any<CancellationToken>())
             .Returns(CreateSnapshot(shouldShowIntro: true, introStatus: OnboardingIntroStatus.NotStarted));
         _onboardingService.CompleteIntroAsync(true, Arg.Any<CancellationToken>())
@@ -271,10 +241,8 @@ public class AppStartupViewModelTests
 
         await _viewModel.InitializeAsync();
 
-        // Act
         await _viewModel.SkipOnboardingAsync();
 
-        // Assert
         await _onboardingService.Received(1).CompleteIntroAsync(true, Arg.Any<CancellationToken>());
         _viewModel.IsOnboardingVisible.Should().BeFalse();
     }
@@ -282,16 +250,13 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task HandleBackAsync_ShouldShowSkipConfirmation_WhenOnboardingIsOnFirstStep()
     {
-        // Arrange
         _onboardingService.GetSnapshotAsync(Arg.Any<CancellationToken>())
             .Returns(CreateSnapshot(shouldShowIntro: true, introStatus: OnboardingIntroStatus.NotStarted));
 
         await _viewModel.InitializeAsync();
 
-        // Act
         var handled = await _viewModel.HandleBackAsync();
 
-        // Assert
         handled.Should().BeTrue();
         _viewModel.IsOnboardingSkipConfirmationVisible.Should().BeTrue();
     }
@@ -299,7 +264,6 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task HandleBackAsync_ShouldRetreatIntro_WhenCurrentStepIsGreaterThanZero()
     {
-        // Arrange
         _onboardingService.GetSnapshotAsync(Arg.Any<CancellationToken>())
             .Returns(CreateSnapshot(shouldShowIntro: true, currentStep: 2, introStatus: OnboardingIntroStatus.InProgress));
         _onboardingService.RetreatIntroAsync(Arg.Any<CancellationToken>())
@@ -307,10 +271,8 @@ public class AppStartupViewModelTests
 
         await _viewModel.InitializeAsync();
 
-        // Act
         var handled = await _viewModel.HandleBackAsync();
 
-        // Assert
         handled.Should().BeTrue();
         _viewModel.OnboardingCurrentStep.Should().Be(1);
         await _onboardingService.Received(1).RetreatIntroAsync(Arg.Any<CancellationToken>());
@@ -319,7 +281,6 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task InitializeAsync_ShouldFallbackToUnreleased_WhenNoExactVersionMatch()
     {
-        // Arrange
         _appVersionService.CurrentVersion.Returns("0.9.2");
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(true);
         _appVersionService.LastSeenChangelogVersion.Returns((string?)null);
@@ -339,10 +300,8 @@ public class AppStartupViewModelTests
             Sections = new[] { new ChangelogSection { Title = "Hinzugefügt", Entries = new[] { "Neues Feature" } } }
         });
 
-        // Act
         await _viewModel.InitializeAsync();
 
-        // Assert
         _viewModel.IsChangelogVisible.Should().BeTrue();
         _viewModel.CurrentRelease.Should().NotBeNull();
         _viewModel.CurrentRelease!.Version.Should().Be("0.9.2");
@@ -353,7 +312,6 @@ public class AppStartupViewModelTests
     [Fact]
     public async Task InitializeAsync_ShouldNotShowChangelog_WhenNoMatchAndUnreleasedIsEmpty()
     {
-        // Arrange
         _appVersionService.CurrentVersion.Returns("0.9.2");
         _appVersionService.IsFirstLaunchForCurrentVersion.Returns(true);
         _appVersionService.LastSeenChangelogVersion.Returns((string?)null);
@@ -373,10 +331,8 @@ public class AppStartupViewModelTests
             Sections = Array.Empty<ChangelogSection>()
         });
 
-        // Act
         await _viewModel.InitializeAsync();
 
-        // Assert
         _viewModel.IsChangelogVisible.Should().BeFalse();
     }
 

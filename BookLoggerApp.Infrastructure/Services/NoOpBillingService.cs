@@ -4,9 +4,8 @@ using BookLoggerApp.Core.Services.Abstractions;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Billing stub used on non-Android heads and during Step 3–7 development before
-/// the Play Billing NuGet is wired in. Every operation is a safe no-op that returns
-/// a deterministic result so paywall UI can render.
+/// Billing stub for non-Android heads and pre-Play-Billing development.
+/// Every operation is a safe no-op so paywall UI can render.
 /// </summary>
 public class NoOpBillingService : IBillingService
 {
@@ -16,8 +15,8 @@ public class NoOpBillingService : IBillingService
 
     public event EventHandler<PurchaseResult>? PurchaseUpdated
     {
-        add { /* intentional no-op */ }
-        remove { /* intentional no-op */ }
+        add { }
+        remove { }
     }
 
     public Task<bool> ConnectAsync(CancellationToken ct = default) => Task.FromResult(false);

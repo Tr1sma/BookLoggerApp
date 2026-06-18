@@ -18,7 +18,6 @@ public class MigrationService : IMigrationService
 
     public string GetMigrationLog()
     {
-        // Combine in-memory service log, DB-init log and persistent log
         var memoryLog = MemoryLog.ToString();
         string initLog;
         lock (DatabaseInitializationHelper.InitLog)
@@ -37,11 +36,8 @@ public class MigrationService : IMigrationService
     {
         var logMsg = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
         System.Diagnostics.Debug.WriteLine(logMsg);
-        
-        // Update memory log
         MemoryLog.AppendLine(logMsg);
-        
-        // Update persistent log
+
         try
         {
             File.AppendAllText(_logFilePath, logMsg + Environment.NewLine);

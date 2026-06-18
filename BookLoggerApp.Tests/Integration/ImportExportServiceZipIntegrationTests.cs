@@ -23,7 +23,6 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
 
     public ImportExportServiceZipIntegrationTests()
     {
-        // specific temp folder for this test run
         _tempRoot = Path.Combine(Path.GetTempPath(), $"BookLoggerTests_{Guid.NewGuid()}");
         Directory.CreateDirectory(_tempRoot);
     }
@@ -52,7 +51,6 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         public void InvalidateCache(bool notifyProgressionChanged) { }
     }
 
-    // Simple IDbContextFactory implementation for real SQLite file
     private class SqliteDbContextFactory : IDbContextFactory<AppDbContext>
     {
         private readonly string _connectionString;
@@ -75,14 +73,13 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
     [Fact]
     public async Task BackupAndRestore_ShouldPersistDbAndImages()
     {
-        // 1. Setup Source Environment
         var sourceDir = Path.Combine(_tempRoot, "Source");
         Directory.CreateDirectory(sourceDir);
         var sourceDbPath = Path.Combine(sourceDir, "booklogger.db");
         var sourceCoversDir = Path.Combine(sourceDir, "covers");
         Directory.CreateDirectory(sourceCoversDir);
 
-        // a) Create DB with data (use Migrate so __EFMigrationsHistory is populated)
+        // use Migrate so __EFMigrationsHistory is populated
         var sourceFactory = new SqliteDbContextFactory(sourceDbPath);
         using (var context = sourceFactory.CreateDbContext())
         {
@@ -91,35 +88,27 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
             await context.SaveChangesAsync();
         }
 
-        // b) Create dummy image
         var imagePath = Path.Combine(sourceCoversDir, "test.jpg");
         await File.WriteAllTextAsync(imagePath, "imagedata");
 
-        // 2. Perform Backup
-        // We use FileSystemAdapter but it will work on the passed basePath
-        var fileSystem = new FileSystemAdapter(); 
+        var fileSystem = new FileSystemAdapter();
         var service = new ImportExportService(sourceFactory, fileSystem, new TestAppSettingsProvider(), null, sourceDir);
 
         var backupZipPath = await service.CreateBackupAsync();
 
-        // Verify Backup Exists
         File.Exists(backupZipPath).Should().BeTrue();
         Path.GetExtension(backupZipPath).Should().Be(".zip");
 
-        // 3. Verify Zip Contents (Optional, Restore verifies it implicitly but good primarily)
         using (var archive = ZipFile.OpenRead(backupZipPath))
         {
             archive.Entries.Should().Contain(e => e.FullName == "booklogger.db");
             archive.Entries.Should().Contain(e => e.FullName == "covers/test.jpg" || e.FullName == "covers\\test.jpg");
         }
 
-        // 4. Setup Target Environment (Simulate Fresh Install)
         var targetDir = Path.Combine(_tempRoot, "Target");
         Directory.CreateDirectory(targetDir);
-        var targetDbPath = Path.Combine(targetDir, "booklogger.db"); // Empty or non-existent initially
+        var targetDbPath = Path.Combine(targetDir, "booklogger.db");
 
-        // To simulate a fresh app start, usually DB is created empty.
-        // Let's create an empty DB there first so Restore has something to overwrite (Restore logic usually closes current DB)
         var targetFactory = new SqliteDbContextFactory(targetDbPath);
         using (var context = targetFactory.CreateDbContext())
         {
@@ -127,12 +116,9 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
             context.Books.Count().Should().Be(0);
         }
 
-        // 5. Perform Restore
         var targetService = new ImportExportService(targetFactory, fileSystem, new TestAppSettingsProvider(), null, targetDir);
         await targetService.RestoreFromBackupAsync(backupZipPath);
 
-        // 6. Verify Restore
-        // a) Check Data
         using (var context = targetFactory.CreateDbContext())
         {
             var books = await context.Books.ToListAsync();
@@ -140,7 +126,6 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
             books.First().Title.Should().Be("Backup Test Book");
         }
 
-        // b) Check Images
         var targetCoversDir = Path.Combine(targetDir, "covers");
         var restoredImagePath = Path.Combine(targetCoversDir, "test.jpg");
         File.Exists(restoredImagePath).Should().BeTrue();

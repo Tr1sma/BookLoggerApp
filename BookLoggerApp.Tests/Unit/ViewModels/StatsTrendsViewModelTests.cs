@@ -18,7 +18,6 @@ public class StatsTrendsViewModelTests
         _service = Substitute.For<IAdvancedStatsService>();
         _statsService = Substitute.For<IStatsService>();
 
-        // Default returns
         _statsService.GetActiveReadingPeriodsAsync(Arg.Any<CancellationToken>()).Returns(new List<(int, int)>());
         _service.GetReadingHeatmapAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(new Dictionary<DateTime, int>());
         _service.GetWeekdayDistributionAsync(Arg.Any<CancellationToken>()).Returns(new Dictionary<DayOfWeek, int>());

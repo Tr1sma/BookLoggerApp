@@ -13,11 +13,6 @@ using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
 
-/// <summary>
-/// Focused tests for the Ewiger Phönix-Bonsai mechanic:
-/// - The phoenix self-revives if it would die.
-/// - While the phoenix is owned, other plants cannot die.
-/// </summary>
 public class PlantServicePhoenixTests : IDisposable
 {
     private readonly DbContextTestHelper _dbHelper;
