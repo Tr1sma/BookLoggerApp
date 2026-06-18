@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
@@ -32,6 +33,7 @@ public class PlantService : IPlantService
     private readonly IMemoryCache _cache;
     private readonly ILogger<PlantService> _logger;
     private readonly IAnalyticsService _analytics;
+    private readonly IFeatureGuard? _featureGuard;
     private const string SpeciesCacheKey = "AllPlantSpecies";
 
     public PlantService(
@@ -40,7 +42,8 @@ public class PlantService : IPlantService
         IDecorationService decorationService,
         IMemoryCache cache,
         ILogger<PlantService> logger,
-        IAnalyticsService? analytics = null)
+        IAnalyticsService? analytics = null,
+        IFeatureGuard? featureGuard = null)
     {
         _unitOfWork = unitOfWork;
         _settingsProvider = settingsProvider;
@@ -48,6 +51,7 @@ public class PlantService : IPlantService
         _cache = cache;
         _logger = logger;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
+        _featureGuard = featureGuard;
     }
 
     public async Task<IReadOnlyList<UserPlant>> GetAllAsync(CancellationToken ct = default)
@@ -417,6 +421,18 @@ public class PlantService : IPlantService
 
         if (!species.IsAvailable)
             throw new InvalidOperationException("Plant species is not available for purchase");
+
+        // Entitlement gate (CODE_REVIEW SEC-08): the PlantShop.razor LockedFeatureButton is a
+        // UI hint only — enforce the plant's tier here so no caller (stale UI after a lapse,
+        // deep link, programmatic path) can buy a Plus/Premium plant without the subscription.
+        if (_featureGuard is not null)
+        {
+            FeatureKey? tierFeature = ShopTierFeatures.For(species);
+            if (tierFeature is not null)
+            {
+                _featureGuard.RequireAccess(tierFeature.Value, "This plant requires a higher subscription tier.");
+            }
+        }
 
         // Calculate dynamic cost
         int cost = await GetPlantCostAsync(speciesId, ct);

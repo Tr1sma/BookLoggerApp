@@ -456,31 +456,11 @@
         base.Dispose();
     }
 
-    private static FeatureKey? GetPlantTierFeature(PlantSpecies species)
-    {
-        if (species.IsPrestigeTier)
-        {
-            return FeatureKey.PrestigePlants;
-        }
-        if (species.IsFreeTier)
-        {
-            return null;
-        }
-        return FeatureKey.StandardPlantsAndDecorations;
-    }
+    // Tier→FeatureKey mapping lives in the shared ShopTierFeatures helper so the UI overlay and
+    // the service-layer purchase guards (PlantService / DecorationService) can never diverge.
+    private static FeatureKey? GetPlantTierFeature(PlantSpecies species) => ShopTierFeatures.For(species);
 
-    private static FeatureKey? GetDecorationTierFeature(ShopItem item)
-    {
-        if (item.IsUltimateTier)
-        {
-            return FeatureKey.UltimateDecorations;
-        }
-        if (item.IsFreeTier)
-        {
-            return null;
-        }
-        return FeatureKey.StandardPlantsAndDecorations;
-    }
+    private static FeatureKey? GetDecorationTierFeature(ShopItem item) => ShopTierFeatures.For(item);
 
     private string GetAbilityDescription(string? abilityKey) => abilityKey switch
     {

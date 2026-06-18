@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -19,6 +20,7 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IAppVersionService _appVersionService;
     private readonly ILanguageService _languageService;
     private readonly IAnalyticsService? _analytics;
+    private readonly IFeatureGuard? _featureGuard;
 
 
     public SettingsViewModel(
@@ -32,7 +34,8 @@ public partial class SettingsViewModel : ViewModelBase
         IReadingTimerNotificationService timerNotification,
         IAppVersionService appVersionService,
         ILanguageService languageService,
-        IAnalyticsService? analytics = null)
+        IAnalyticsService? analytics = null,
+        IFeatureGuard? featureGuard = null)
     {
         _importExportService = importExportService;
         _settingsProvider = settingsProvider;
@@ -45,6 +48,7 @@ public partial class SettingsViewModel : ViewModelBase
         _appVersionService = appVersionService;
         _languageService = languageService;
         _analytics = analytics;
+        _featureGuard = featureGuard;
 
         MigrationLog = _migrationService.GetMigrationLog();
         AppVersion = _appVersionService.CurrentVersion;
@@ -232,6 +236,9 @@ public partial class SettingsViewModel : ViewModelBase
     {
         await ExecuteSafelyAsync(async () =>
         {
+            // CODE_REVIEW SEC-15: custom shelf colors are Plus-only. The Settings.razor overlay
+            // is a UI hint; enforce here so no non-overlay path persists a custom color for free.
+            _featureGuard?.RequireAccess(FeatureKey.CustomShelfColors, "Custom shelf colors require Plus.");
             ShelfLedgeColor = color;
             Settings.ShelfLedgeColor = color;
             await SaveSettingsInternalAsync();
@@ -243,6 +250,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         await ExecuteSafelyAsync(async () =>
         {
+            _featureGuard?.RequireAccess(FeatureKey.CustomShelfColors, "Custom shelf colors require Plus.");
             ShelfBaseColor = color;
             Settings.ShelfBaseColor = color;
             await SaveSettingsInternalAsync();
