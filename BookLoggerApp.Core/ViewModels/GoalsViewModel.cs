@@ -62,15 +62,15 @@ public partial class GoalsViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            var genres = await _genreService.GetAllAsync();
+            var genres = await _genreService.GetAllAsync(ct);
             AllGenres = genres.OrderBy(g => g.Name).ToList();
 
-            var active = await _goalService.GetActiveGoalsAsync();
+            var active = await _goalService.GetActiveGoalsAsync(ct);
             ActiveGoals = active.ToList();
 
-            var completed = await _goalService.GetCompletedGoalsAsync();
+            var completed = await _goalService.GetCompletedGoalsAsync(ct);
             CompletedGoals = completed.ToList();
         }, Tr("Error_FailedTo_LoadGoals"));
     }

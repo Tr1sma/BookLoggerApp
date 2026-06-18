@@ -31,7 +31,7 @@ public class BookDetailViewModelTests
         _shareCardService = Substitute.For<IShareCardService>();
         _imageService = Substitute.For<IImageService>();
         _settingsProvider = Substitute.For<IAppSettingsProvider>();
-        _settingsProvider.GetSettingsAsync().Returns(new AppSettings { MoodTrackingEnabled = true });
+        _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(new AppSettings { MoodTrackingEnabled = true });
 
         _viewModel = new BookDetailViewModel(
             _bookService,

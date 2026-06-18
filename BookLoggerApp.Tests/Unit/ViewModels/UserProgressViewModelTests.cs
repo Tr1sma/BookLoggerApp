@@ -31,7 +31,7 @@ public class UserProgressViewModelTests
             TotalXp = 1000 
         };
 
-        _mockSettingsProvider.GetSettingsAsync().Returns(settings);
+        _mockSettingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(settings);
 
         // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);

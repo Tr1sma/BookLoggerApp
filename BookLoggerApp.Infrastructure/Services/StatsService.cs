@@ -45,7 +45,7 @@ public class StatsService : IStatsService
         // A streak longer than 365 days is unrealistic, and this avoids
         // loading thousands of records for long-time users.
         var recentSessions = await _unitOfWork.ReadingSessions
-            .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow);
+            .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow, ct);
 
         return ReadingStreakHelper.CalculateCurrentStreak(recentSessions, today);
     }
@@ -58,7 +58,7 @@ public class StatsService : IStatsService
 
     public async Task<Dictionary<DateTime, int>> GetReadingTrendAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end, ct);
 
         return sessions
             .GroupBy(s => s.StartedAt.Date)
@@ -70,7 +70,7 @@ public class StatsService : IStatsService
 
     public async Task<int> GetPagesReadInRangeAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end, ct);
         return sessions.Where(s => s.PagesRead.HasValue).Sum(s => s.PagesRead!.Value);
     }
 
@@ -160,7 +160,7 @@ public class StatsService : IStatsService
         var start = DateTime.UtcNow.AddDays(-days);
         var end = DateTime.UtcNow;
 
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end, ct);
         var totalMinutes = sessions.Sum(s => s.Minutes);
 
         return (double)totalMinutes / days;
@@ -187,7 +187,7 @@ public class StatsService : IStatsService
 
     public async Task<List<BookRatingSummary>> GetTopRatedBooksAsync(int count = 10, RatingCategory? category = null, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
+        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed, ct);
 
         IEnumerable<Book> sortedBooks;
 

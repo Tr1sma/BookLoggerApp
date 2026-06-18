@@ -57,10 +57,10 @@ public partial class StatsAnalysesViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
             // Load available years first
-            var periods = await _statsService.GetActiveReadingPeriodsAsync();
+            var periods = await _statsService.GetActiveReadingPeriodsAsync(ct);
             AvailableYears = periods.Select(p => p.Year).Distinct().OrderByDescending(y => y).ToList();
 
             if (AvailableYears.Count >= 2)
@@ -83,11 +83,11 @@ public partial class StatsAnalysesViewModel : ViewModelBase
             if (!AvailableYears.Contains(SelectedYear1))
                 AvailableYears = AvailableYears.Append(SelectedYear1).OrderByDescending(y => y).ToList();
 
-            var yearTask = _advancedStatsService.GetYearComparisonAsync(SelectedYear1, SelectedYear2);
-            var genreTask = _advancedStatsService.GetGenreRadarDataAsync();
-            var completionTask = _advancedStatsService.GetCompletionRateAsync();
-            var pageCountTask = _advancedStatsService.GetPageCountDistributionAsync();
-            var authorsTask = _advancedStatsService.GetTopAuthorsAsync(5);
+            var yearTask = _advancedStatsService.GetYearComparisonAsync(SelectedYear1, SelectedYear2, ct);
+            var genreTask = _advancedStatsService.GetGenreRadarDataAsync(ct: ct);
+            var completionTask = _advancedStatsService.GetCompletionRateAsync(ct);
+            var pageCountTask = _advancedStatsService.GetPageCountDistributionAsync(ct);
+            var authorsTask = _advancedStatsService.GetTopAuthorsAsync(5, ct);
 
             await Task.WhenAll(yearTask, genreTask, completionTask, pageCountTask, authorsTask);
 
