@@ -825,4 +825,85 @@ public class GoalServiceTests : IDisposable
         activeGoals.Should().HaveCount(1);
         activeGoals[0].Current.Should().Be(75);
     }
+
+    #region Validation (CODE_REVIEW BUG-05)
+
+    private GoalService CreateServiceWithValidation()
+    {
+        return new GoalService(_unitOfWork, validation: ValidationServiceFactory.CreateReal());
+    }
+
+    [Fact]
+    public async Task AddAsync_WithNonPositiveTarget_ThrowsValidationAndPersistsNothing()
+    {
+        var service = CreateServiceWithValidation();
+        var goal = new ReadingGoal
+        {
+            Title = "Bad Goal",
+            Type = GoalType.Pages,
+            Target = 0,
+            Current = 0,
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(30)
+        };
+
+        await FluentActions.Awaiting(() => service.AddAsync(goal))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await _service.GetAllAsync()).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WithBlankTitle_ThrowsValidation()
+    {
+        var service = CreateServiceWithValidation();
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Valid",
+            Type = GoalType.Pages,
+            Target = 100,
+            Current = 0,
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(30)
+        });
+
+        goal.Title = "";
+
+        await FluentActions.Awaiting(() => service.UpdateAsync(goal))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+    }
+
+    [Fact]
+    public async Task AddAsync_WithValidGoal_DoesNotThrow()
+    {
+        var service = CreateServiceWithValidation();
+        var goal = new ReadingGoal
+        {
+            Title = "Valid Goal",
+            Type = GoalType.Pages,
+            Target = 100,
+            Current = 0,
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(30)
+        };
+
+        await FluentActions.Awaiting(() => service.AddAsync(goal))
+            .Should().NotThrowAsync();
+    }
+
+    #endregion
+
+    #region CancellationToken plumbing (CODE_REVIEW BUG-15 / CQ-02 / INK-05)
+
+    [Fact]
+    public async Task GetActiveGoalsAsync_WithCancelledToken_Throws()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await FluentActions.Awaiting(() => _service.GetActiveGoalsAsync(cts.Token))
+            .Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    #endregion
 }

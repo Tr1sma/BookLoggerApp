@@ -869,4 +869,82 @@ public class ProgressServiceTests : IDisposable
 
         streak.Should().BeGreaterThanOrEqualTo(1);
     }
+
+    #region Validation (CODE_REVIEW BUG-05)
+
+    private ProgressService CreateServiceWithValidation()
+    {
+        return new ProgressService(
+            _unitOfWork, _progressionService, _plantService, _bookService,
+            _goalService, _decorationService, _settingsProvider,
+            validation: ValidationServiceFactory.CreateReal());
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_WithZeroMinutes_ThrowsValidationAndPersistsNothing()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var service = CreateServiceWithValidation();
+        var session = new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow,
+            Minutes = 0
+        };
+
+        await FluentActions.Awaiting(() => service.AddSessionAsync(session))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await _unitOfWork.ReadingSessions.GetAllAsync()).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_WithEmptyBookId_ThrowsValidation()
+    {
+        var service = CreateServiceWithValidation();
+        var session = new ReadingSession
+        {
+            BookId = Guid.Empty,
+            StartedAt = DateTime.UtcNow,
+            Minutes = 30
+        };
+
+        await FluentActions.Awaiting(() => service.AddSessionAsync(session))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_WithValidSession_DoesNotThrow()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var service = CreateServiceWithValidation();
+        var session = new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow,
+            Minutes = 30,
+            PagesRead = 20
+        };
+
+        await FluentActions.Awaiting(() => service.AddSessionAsync(session))
+            .Should().NotThrowAsync();
+    }
+
+    #endregion
+
+    #region CancellationToken plumbing (CODE_REVIEW BUG-15 / CQ-02 / INK-05)
+
+    [Fact]
+    public async Task GetSessionsByBookAsync_WithCancelledToken_Throws()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await FluentActions.Awaiting(() => _service.GetSessionsByBookAsync(Guid.NewGuid(), cts.Token))
+            .Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    #endregion
 }

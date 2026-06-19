@@ -21,12 +21,14 @@ public class GoalService : IGoalService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAnalyticsService _analytics;
     private readonly IFeatureGuard? _featureGuard;
+    private readonly IValidationService? _validation;
 
-    public GoalService(IUnitOfWork unitOfWork, IAnalyticsService? analytics = null, IFeatureGuard? featureGuard = null)
+    public GoalService(IUnitOfWork unitOfWork, IAnalyticsService? analytics = null, IFeatureGuard? featureGuard = null, IValidationService? validation = null)
     {
         _unitOfWork = unitOfWork;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
         _featureGuard = featureGuard;
+        _validation = validation;
     }
 
     /// <inheritdoc />
@@ -40,20 +42,25 @@ public class GoalService : IGoalService
 
     public async Task<IReadOnlyList<ReadingGoal>> GetAllAsync(CancellationToken ct = default)
     {
-        var goals = await _unitOfWork.ReadingGoals.GetAllAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetAllAsync(ct);
         return goals.ToList();
     }
 
     public async Task<ReadingGoal?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _unitOfWork.ReadingGoals.GetByIdAsync(id);
+        return await _unitOfWork.ReadingGoals.GetByIdAsync(id, ct);
     }
 
     public async Task<ReadingGoal> AddAsync(ReadingGoal goal, CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: validate shape (title, target range, date window) before the
+        // entitlement gate or any persistence.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(goal, ct);
+
         if (_featureGuard is not null)
         {
-            int activeCount = (await _unitOfWork.ReadingGoals.GetActiveGoalsAsync()).Count();
+            int activeCount = (await _unitOfWork.ReadingGoals.GetActiveGoalsAsync(ct)).Count();
             _featureGuard.EnforceSoftLimit(
                 FeatureKey.UnlimitedReadingGoals,
                 activeCount,
@@ -70,7 +77,7 @@ public class GoalService : IGoalService
             }
         }
 
-        var result = await _unitOfWork.ReadingGoals.AddAsync(goal);
+        var result = await _unitOfWork.ReadingGoals.AddAsync(goal, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         await RecalculateGoalProgressAsync(ct);
 
@@ -84,6 +91,10 @@ public class GoalService : IGoalService
 
     public async Task UpdateAsync(ReadingGoal goal, CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: validate before persisting an edited goal.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(goal, ct);
+
         await _unitOfWork.ReadingGoals.UpdateAsync(goal, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         await RecalculateGoalProgressAsync(ct);
@@ -91,17 +102,17 @@ public class GoalService : IGoalService
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var goal = await _unitOfWork.ReadingGoals.GetByIdAsync(id);
+        var goal = await _unitOfWork.ReadingGoals.GetByIdAsync(id, ct);
         if (goal != null)
         {
-            await _unitOfWork.ReadingGoals.DeleteAsync(goal);
+            await _unitOfWork.ReadingGoals.DeleteAsync(goal, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
     }
 
     public async Task<IReadOnlyList<ReadingGoal>> GetActiveGoalsAsync(CancellationToken ct = default)
     {
-        var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync(ct);
         var goalsList = goals.ToList();
 
         // Calculate current progress for each goal dynamically
@@ -112,7 +123,7 @@ public class GoalService : IGoalService
 
     public async Task<IReadOnlyList<ReadingGoal>> GetCompletedGoalsAsync(CancellationToken ct = default)
     {
-        var goals = await _unitOfWork.ReadingGoals.GetCompletedGoalsAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetCompletedGoalsAsync(ct);
         var goalsList = goals.ToList();
 
         // Also calculate progress for completed goals to show final values
@@ -123,7 +134,7 @@ public class GoalService : IGoalService
 
     public async Task<bool> RecalculateGoalProgressAsync(CancellationToken ct = default)
     {
-        var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync(ct);
         return await CalculateGoalProgressAsync(goals.ToList(), persistNewlyCompleted: true, ct);
     }
 
@@ -213,7 +224,7 @@ public class GoalService : IGoalService
                 {
                     goal.IsCompleted = true;
                     goal.CompletedAt = DateTime.UtcNow;
-                    await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+                    await _unitOfWork.ReadingGoals.UpdateAsync(goal, ct);
                 }
             }
         }
@@ -265,13 +276,13 @@ public class GoalService : IGoalService
 
     public async Task<IReadOnlyList<ReadingGoal>> GetGoalsByTypeAsync(GoalType type, CancellationToken ct = default)
     {
-        var goals = await _unitOfWork.ReadingGoals.FindAsync(g => g.Type == type);
+        var goals = await _unitOfWork.ReadingGoals.FindAsync(g => g.Type == type, ct);
         return goals.ToList();
     }
 
     public async Task UpdateGoalProgressAsync(Guid goalId, int progress, CancellationToken ct = default)
     {
-        var goal = await _unitOfWork.ReadingGoals.GetByIdAsync(goalId);
+        var goal = await _unitOfWork.ReadingGoals.GetByIdAsync(goalId, ct);
         if (goal == null)
             throw new EntityNotFoundException(typeof(ReadingGoal), goalId);
 
@@ -284,13 +295,13 @@ public class GoalService : IGoalService
             goal.CompletedAt = DateTime.UtcNow;
         }
 
-        await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+        await _unitOfWork.ReadingGoals.UpdateAsync(goal, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task CheckAndCompleteGoalsAsync(CancellationToken ct = default)
     {
-        var activeGoals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
+        var activeGoals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync(ct);
 
         foreach (var goal in activeGoals)
         {
@@ -298,7 +309,7 @@ public class GoalService : IGoalService
             {
                 goal.IsCompleted = true;
                 goal.CompletedAt = DateTime.UtcNow;
-                await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+                await _unitOfWork.ReadingGoals.UpdateAsync(goal, ct);
             }
         }
 
@@ -308,7 +319,7 @@ public class GoalService : IGoalService
 
     public async Task<IReadOnlyList<GoalExcludedBook>> GetExcludedBooksAsync(Guid goalId, CancellationToken ct = default)
     {
-        var exclusions = await _unitOfWork.GoalExcludedBooks.FindAsync(e => e.ReadingGoalId == goalId);
+        var exclusions = await _unitOfWork.GoalExcludedBooks.FindAsync(e => e.ReadingGoalId == goalId, ct);
         return exclusions.ToList();
     }
 
@@ -322,7 +333,7 @@ public class GoalService : IGoalService
             "Filtered goals (by genre or excluded books) require Premium.");
 
         var exists = await _unitOfWork.GoalExcludedBooks.ExistsAsync(
-            e => e.ReadingGoalId == goalId && e.BookId == bookId);
+            e => e.ReadingGoalId == goalId && e.BookId == bookId, ct);
 
         if (!exists)
         {
@@ -330,7 +341,7 @@ public class GoalService : IGoalService
             {
                 ReadingGoalId = goalId,
                 BookId = bookId
-            });
+            }, ct);
             await _unitOfWork.SaveChangesAsync(ct);
             await RecalculateGoalProgressAsync(ct);
         }
@@ -351,7 +362,7 @@ public class GoalService : IGoalService
 
     public async Task<IReadOnlyList<GoalGenre>> GetGoalGenresAsync(Guid goalId, CancellationToken ct = default)
     {
-        var goalGenres = await _unitOfWork.GoalGenres.FindAsync(gg => gg.ReadingGoalId == goalId);
+        var goalGenres = await _unitOfWork.GoalGenres.FindAsync(gg => gg.ReadingGoalId == goalId, ct);
         return goalGenres.ToList();
     }
 
@@ -366,7 +377,7 @@ public class GoalService : IGoalService
             "Filtered goals (by genre or excluded books) require Premium.");
 
         var exists = await _unitOfWork.GoalGenres.ExistsAsync(
-            gg => gg.ReadingGoalId == goalId && gg.GenreId == genreId);
+            gg => gg.ReadingGoalId == goalId && gg.GenreId == genreId, ct);
 
         if (!exists)
         {
@@ -374,7 +385,7 @@ public class GoalService : IGoalService
             {
                 ReadingGoalId = goalId,
                 GenreId = genreId
-            });
+            }, ct);
             await _unitOfWork.SaveChangesAsync(ct);
             await RecalculateGoalProgressAsync(ct);
         }

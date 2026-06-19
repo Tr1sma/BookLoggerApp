@@ -33,7 +33,7 @@ public class AdvancedStatsService : IAdvancedStatsService
         var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
 
-        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate);
+        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate, ct);
 
         return sessions
             .Where(s => s.Minutes > 0)
@@ -150,7 +150,7 @@ public class AdvancedStatsService : IAdvancedStatsService
         var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var previousMonthStart = currentMonthStart.AddMonths(-1);
 
-        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(previousMonthStart, now);
+        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(previousMonthStart, now, ct);
 
         var currentMonthSessions = sessions
             .Where(s => s.StartedAt >= currentMonthStart && s.Minutes > 0 && s.PagesRead.HasValue && s.PagesRead > 0)
@@ -326,7 +326,7 @@ public class AdvancedStatsService : IAdvancedStatsService
         int booksCompleted = completedBooks.Count;
         int pagesRead = completedBooks.Sum(b => b.PageCount ?? 0);
 
-        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate);
+        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate, ct);
         int minutesRead = sessions.Sum(s => s.Minutes);
 
         double averageRating = completedBooks

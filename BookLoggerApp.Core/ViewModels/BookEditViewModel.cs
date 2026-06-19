@@ -119,9 +119,9 @@ public partial class BookEditViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync(Guid? bookId)
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            AvailableGenres = (await _genreService.GetAllAsync()).ToList();
+            AvailableGenres = (await _genreService.GetAllAsync(ct)).ToList();
 
             // Load and filter shelves (manual only for editing)
             var allShelves = await _shelfService.GetAllShelvesAsync();
@@ -129,7 +129,7 @@ public partial class BookEditViewModel : ViewModelBase
 
             if (bookId.HasValue)
             {
-                Book = await _bookService.GetWithDetailsAsync(bookId.Value);
+                Book = await _bookService.GetWithDetailsAsync(bookId.Value, ct);
                 if (Book != null)
                 {
                     SelectedGenreIds = Book.BookGenres.Select(bg => bg.GenreId).ToList();

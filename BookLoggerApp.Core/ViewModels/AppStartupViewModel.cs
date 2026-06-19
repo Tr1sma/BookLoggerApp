@@ -7,7 +7,7 @@ using BookLoggerApp.Core.Services.Analytics;
 
 namespace BookLoggerApp.Core.ViewModels;
 
-public partial class AppStartupViewModel : ViewModelBase, IDisposable
+public partial class AppStartupViewModel : ViewModelBase
 {
     private readonly IAppVersionService _appVersionService;
     private readonly IChangelogService _changelogService;
@@ -462,7 +462,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         return false;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         _appUpdateService.StateChanged -= OnAppUpdateStateChanged;
         _onboardingService.StateChanged -= OnOnboardingStateChanged;
@@ -471,6 +471,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             _billingService.PurchaseUpdated -= OnBillingPurchaseUpdated;
             _billingEventHookInstalled = false;
         }
+        base.Dispose();
     }
 
     private void OnBillingPurchaseUpdated(object? sender, Core.Entitlements.PurchaseResult purchase)

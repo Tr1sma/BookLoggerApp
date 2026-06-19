@@ -73,21 +73,21 @@ public partial class StatsTrendsViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
             // Load available years for navigation
-            var periods = await _statsService.GetActiveReadingPeriodsAsync();
+            var periods = await _statsService.GetActiveReadingPeriodsAsync(ct);
             var years = periods.Select(p => p.Year).Distinct().OrderBy(y => y).ToList();
             MinYear = years.Count > 0 ? years[0] : DateTime.UtcNow.Year;
             MaxYear = DateTime.UtcNow.Year;
 
-            var heatmapTask = _advancedStatsService.GetReadingHeatmapAsync(HeatmapYear);
-            var weekdayTask = _advancedStatsService.GetWeekdayDistributionAsync();
-            var timeOfDayTask = _advancedStatsService.GetTimeOfDayDistributionAsync();
-            var sessionLengthTask = _advancedStatsService.GetSessionLengthDistributionAsync();
-            var monthlyTask = _advancedStatsService.GetMonthlyVolumeAsync(MonthlyVolumeYear);
-            var speedTask = _advancedStatsService.GetReadingSpeedTrendAsync();
-            var finishTask = _advancedStatsService.GetAverageFinishTimeTrendAsync();
+            var heatmapTask = _advancedStatsService.GetReadingHeatmapAsync(HeatmapYear, ct);
+            var weekdayTask = _advancedStatsService.GetWeekdayDistributionAsync(ct);
+            var timeOfDayTask = _advancedStatsService.GetTimeOfDayDistributionAsync(ct);
+            var sessionLengthTask = _advancedStatsService.GetSessionLengthDistributionAsync(ct);
+            var monthlyTask = _advancedStatsService.GetMonthlyVolumeAsync(MonthlyVolumeYear, ct);
+            var speedTask = _advancedStatsService.GetReadingSpeedTrendAsync(ct);
+            var finishTask = _advancedStatsService.GetAverageFinishTimeTrendAsync(ct);
 
             await Task.WhenAll(heatmapTask, weekdayTask, timeOfDayTask, sessionLengthTask, monthlyTask, speedTask, finishTask);
 

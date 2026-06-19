@@ -11,8 +11,18 @@ namespace BookLoggerApp.Core.ViewModels;
 /// <summary>
 /// Base class for all ViewModels.
 /// </summary>
-public abstract partial class ViewModelBase : ObservableObject
+public abstract partial class ViewModelBase : ObservableObject, IDisposable
 {
+    /// <summary>
+    /// CODE_REVIEW CQ-01: per-load cancellation source. Each ct-accepting
+    /// <see cref="ExecuteSafelyAsync(Func{CancellationToken, Task}, string?)"/> /
+    /// <see cref="ExecuteSafelyWithDbAsync(Func{CancellationToken, Task}, string?)"/> call
+    /// begins a fresh load scope: the previous in-flight load is cancelled so a torn-down
+    /// or superseded screen-load no longer races the next one through the shared transient
+    /// DbContext. Cancelled on <see cref="Dispose"/> too.
+    /// </summary>
+    private CancellationTokenSource? _loadCts;
+    private bool _disposed;
     /// <summary>
     /// Ambient crash reporter used by <see cref="ExecuteSafelyAsync"/> /
     /// <see cref="ExecuteSafelyWithDbAsync"/> to forward caught exceptions as non-fatals.
@@ -81,44 +91,52 @@ public abstract partial class ViewModelBase : ObservableObject
     /// <summary>
     /// Executes an action safely with error handling and busy state management.
     /// </summary>
-    protected async Task ExecuteSafelyAsync(Func<Task> action, string? errorPrefix = null)
-    {
-        try
-        {
-            IsBusy = true;
-            ClearError();
-            await action();
-        }
-        catch (Exception ex)
-        {
-            var prefix = errorPrefix ?? (Localizer?["Error_Generic"].Value ?? "An error occurred");
-            SetError($"{prefix}: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"ERROR: {ex}");
-            ReportNonFatal(ex, errorPrefix, source: "viewmodel");
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
+    protected Task ExecuteSafelyAsync(Func<Task> action, string? errorPrefix = null)
+        => ExecuteCoreAsync(_ => action(), errorPrefix, ensureDb: false, CancellationToken.None);
 
     /// <summary>
     /// Executes an action safely after ensuring the database is initialized.
     /// This should be called from ViewModel Load methods to prevent race conditions.
     /// Note: DbContext concurrency is now handled via Transient lifetime registration.
     /// </summary>
-    protected async Task ExecuteSafelyWithDbAsync(Func<Task> action, string? errorPrefix = null)
+    protected Task ExecuteSafelyWithDbAsync(Func<Task> action, string? errorPrefix = null)
+        => ExecuteCoreAsync(_ => action(), errorPrefix, ensureDb: true, CancellationToken.None);
+
+    /// <summary>
+    /// CODE_REVIEW CQ-01 overload: runs <paramref name="action"/> under a fresh per-load scope
+    /// and passes its <see cref="CancellationToken"/> in, so navigation/teardown (or the next
+    /// load) cancels the in-flight load instead of letting it race through the shared DbContext.
+    /// </summary>
+    protected Task ExecuteSafelyAsync(Func<CancellationToken, Task> action, string? errorPrefix = null)
+        => ExecuteCoreAsync(action, errorPrefix, ensureDb: false, BeginLoadScope());
+
+    /// <summary>
+    /// CODE_REVIEW CQ-01 overload: DB-gated variant that threads a fresh per-load token into the action.
+    /// </summary>
+    protected Task ExecuteSafelyWithDbAsync(Func<CancellationToken, Task> action, string? errorPrefix = null)
+        => ExecuteCoreAsync(action, errorPrefix, ensureDb: true, BeginLoadScope());
+
+    private async Task ExecuteCoreAsync(Func<CancellationToken, Task> action, string? errorPrefix, bool ensureDb, CancellationToken loadToken)
     {
         try
         {
             IsBusy = true;
             ClearError();
 
-            await DatabaseInitializationHelper.EnsureInitializedAsync(DatabaseInitializationHelper.DefaultTimeout);
+            if (ensureDb)
+            {
+                await DatabaseInitializationHelper.EnsureInitializedAsync(DatabaseInitializationHelper.DefaultTimeout);
+            }
 
-            await action();
+            await action(loadToken);
         }
-        catch (TimeoutException tex)
+        catch (OperationCanceledException) when (loadToken.IsCancellationRequested)
+        {
+            // CODE_REVIEW CQ-01: this load was superseded by a newer load or cancelled on
+            // teardown — swallow silently and leave the UI state to whatever replaced it.
+            System.Diagnostics.Debug.WriteLine("Load cancelled (superseded or disposed).");
+        }
+        catch (TimeoutException tex) when (ensureDb)
         {
             // Surface the timeout to the helper too, so IsDatabaseInitializationFailed
             // reflects reality for the retry UI. Without this, pages that gate Retry()
@@ -137,12 +155,62 @@ public abstract partial class ViewModelBase : ObservableObject
             var prefix = errorPrefix ?? (Localizer?["Error_Generic"].Value ?? "An error occurred");
             SetError($"{prefix}: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: {ex}");
-            ReportNonFatal(ex, errorPrefix, source: "viewmodel_db");
+            ReportNonFatal(ex, errorPrefix, source: ensureDb ? "viewmodel_db" : "viewmodel");
         }
         finally
         {
-            IsBusy = false;
+            // Don't clear IsBusy for a superseded/cancelled load — the newer load owns the
+            // busy state now, and clobbering it here would flicker the spinner off mid-load.
+            if (!loadToken.IsCancellationRequested)
+            {
+                IsBusy = false;
+            }
         }
+    }
+
+    /// <summary>
+    /// CODE_REVIEW CQ-01: cancels the previous in-flight load and starts a fresh load scope,
+    /// returning its token. The previous source is only cancelled (not disposed) here to avoid
+    /// racing an EF query that still holds the token; it is GC-reclaimed. Dispose() does the
+    /// final cleanup.
+    /// </summary>
+    protected CancellationToken BeginLoadScope()
+    {
+        if (_disposed)
+        {
+            return new CancellationToken(canceled: true);
+        }
+
+        var previous = _loadCts;
+        var fresh = new CancellationTokenSource();
+        _loadCts = fresh;
+        previous?.Cancel();
+        return fresh.Token;
+    }
+
+    public virtual void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        if (_loadCts is not null)
+        {
+            try
+            {
+                _loadCts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // already disposed elsewhere — nothing to cancel
+            }
+            _loadCts.Dispose();
+            _loadCts = null;
+        }
+
+        GC.SuppressFinalize(this);
     }
 
     private static void ReportNonFatal(Exception ex, string? errorPrefix, string source)

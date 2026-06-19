@@ -92,6 +92,91 @@ public class ViewModelBaseTests
     }
 }
 
+public class ViewModelBaseLoadScopeTests
+{
+    public ViewModelBaseLoadScopeTests()
+    {
+        DatabaseInitializationHelper.MarkAsInitialized();
+    }
+
+    private class TestViewModel : ViewModelBase
+    {
+        public Task RunCtAsync(Func<CancellationToken, Task> action, string? prefix = null)
+            => ExecuteSafelyAsync(action, prefix);
+    }
+
+    [Fact]
+    public async Task ExecuteSafelyAsync_CtOverload_SuccessPath_PassesUncancelledToken()
+    {
+        var vm = new TestViewModel();
+        CancellationToken observed = new(canceled: true);
+
+        await vm.RunCtAsync(ct =>
+        {
+            observed = ct;
+            return Task.CompletedTask;
+        });
+
+        observed.IsCancellationRequested.Should().BeFalse();
+        vm.ErrorMessage.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ExecuteSafelyAsync_SecondLoad_CancelsFirstLoadToken()
+    {
+        var vm = new TestViewModel();
+        CancellationToken firstToken = default;
+        var firstStarted = new TaskCompletionSource();
+        var release = new TaskCompletionSource();
+
+        var firstLoad = vm.RunCtAsync(async ct =>
+        {
+            firstToken = ct;
+            firstStarted.SetResult();
+            await release.Task;
+            ct.ThrowIfCancellationRequested();
+        });
+
+        await firstStarted.Task;
+        firstToken.IsCancellationRequested.Should().BeFalse();
+
+        // A second load supersedes the first.
+        await vm.RunCtAsync(_ => Task.CompletedTask);
+
+        firstToken.IsCancellationRequested.Should().BeTrue();
+
+        release.SetResult();
+        await firstLoad;
+
+        // The superseded load must not surface its cancellation as a user-facing error.
+        vm.ErrorMessage.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Dispose_CancelsCurrentLoadToken()
+    {
+        var vm = new TestViewModel();
+        CancellationToken token = default;
+        var started = new TaskCompletionSource();
+        var release = new TaskCompletionSource();
+
+        var load = vm.RunCtAsync(async ct =>
+        {
+            token = ct;
+            started.SetResult();
+            await release.Task;
+        });
+
+        await started.Task;
+        vm.Dispose();
+
+        token.IsCancellationRequested.Should().BeTrue();
+
+        release.SetResult();
+        await load;
+    }
+}
+
 public class ViewModelBaseTimeoutTests : IDisposable
 {
     public ViewModelBaseTimeoutTests()

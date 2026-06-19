@@ -29,10 +29,10 @@ public partial class BookListViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
+            var all = await _books.GetAllAsync(ct);
             Items.Clear();
-            var all = await _books.GetAllAsync();
             foreach (var b in all) Items.Add(b);
         }, Tr("Error_FailedTo_LoadBooks"));
     }

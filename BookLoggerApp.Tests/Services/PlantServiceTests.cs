@@ -1167,6 +1167,87 @@ public class PlantServiceTests : IDisposable
 
     #endregion
 
+    #region Validation (CODE_REVIEW BUG-05)
+
+    private PlantService CreatePlantServiceWithValidation()
+    {
+        var decorationService = Substitute.For<IDecorationService>();
+        decorationService.UserOwnsAbilityAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(false));
+        return new PlantService(
+            _unitOfWork, _settingsProvider, decorationService, _cache,
+            NullLogger<PlantService>.Instance,
+            validation: ValidationServiceFactory.CreateReal());
+    }
+
+    [Fact]
+    public async Task AddAsync_WithBlankName_ThrowsValidationAndPersistsNothing()
+    {
+        var species = await SeedPlantSpecies();
+        var service = CreatePlantServiceWithValidation();
+        var plant = new UserPlant
+        {
+            SpeciesId = species.Id,
+            Name = "",
+            CurrentLevel = 1,
+            Experience = 0
+        };
+
+        await FluentActions.Awaiting(() => service.AddAsync(plant))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await service.GetAllAsync()).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AddAsync_WithEmptySpeciesId_ThrowsValidation()
+    {
+        var service = CreatePlantServiceWithValidation();
+        var plant = new UserPlant
+        {
+            SpeciesId = Guid.Empty,
+            Name = "Nameless Species Plant",
+            CurrentLevel = 1,
+            Experience = 0
+        };
+
+        await FluentActions.Awaiting(() => service.AddAsync(plant))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+    }
+
+    [Fact]
+    public async Task AddAsync_WithValidPlant_DoesNotThrow()
+    {
+        var species = await SeedPlantSpecies();
+        var service = CreatePlantServiceWithValidation();
+        var plant = new UserPlant
+        {
+            SpeciesId = species.Id,
+            Name = "Valid Plant",
+            CurrentLevel = 1,
+            Experience = 0
+        };
+
+        await FluentActions.Awaiting(() => service.AddAsync(plant))
+            .Should().NotThrowAsync();
+    }
+
+    #endregion
+
+    #region CancellationToken plumbing (CODE_REVIEW BUG-15 / CQ-02 / INK-05)
+
+    [Fact]
+    public async Task GetAllAsync_WithCancelledToken_Throws()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await FluentActions.Awaiting(() => _plantService.GetAllAsync(cts.Token))
+            .Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private async Task<PlantSpecies> SeedPlantSpecies(
