@@ -1181,6 +1181,35 @@ public class PlantServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateAsync_WithBlankName_ThrowsValidation()
+    {
+        // CODE_REVIEW BUG-05: the edit path must validate too, not only the create path.
+        var species = await SeedPlantSpecies();
+        var service = CreatePlantServiceWithValidation();
+        var plant = await service.AddAsync(new UserPlant { SpeciesId = species.Id, Name = "Valid", CurrentLevel = 1, Experience = 0 });
+
+        plant.Name = "";
+
+        await FluentActions.Awaiting(() => service.UpdateAsync(plant))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+    }
+
+    [Fact]
+    public async Task PurchasePlantAsync_WithBlankName_ThrowsValidationAndPersistsNothing()
+    {
+        // CODE_REVIEW BUG-05: the purchase path constructs and persists a plant from a caller-supplied
+        // name, so it must validate (e.g. reject a blank/over-long name) before charging coins.
+        var species = await SeedPlantSpecies();
+        await _settingsProvider.AddCoinsAsync(100000); // make sure coins are not the limiting factor
+        var service = CreatePlantServiceWithValidation();
+
+        await FluentActions.Awaiting(() => service.PurchasePlantAsync(species.Id, ""))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await service.GetAllAsync()).Should().BeEmpty("an invalid plant name must abort the purchase");
+    }
+
+    [Fact]
     public async Task AddAsync_WithBlankName_ThrowsValidationAndPersistsNothing()
     {
         var species = await SeedPlantSpecies();

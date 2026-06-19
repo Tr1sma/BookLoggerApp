@@ -56,6 +56,16 @@ public static class ReadingStreakHelper
         return CalculateInclusiveStreak(GetQualifyingDates(sessions), anchorDate);
     }
 
+    /// <summary>
+    /// Inclusive-streak variant that buckets each session by its LOCAL calendar day in
+    /// <paramref name="timeZone"/> (LOG-02). The <paramref name="anchorDate"/> must already be a
+    /// local calendar date so the prior sessions and the anchor share one convention.
+    /// </summary>
+    public static int CalculateInclusiveStreak(IEnumerable<ReadingSession> sessions, DateTime anchorDate, TimeZoneInfo timeZone)
+    {
+        return CalculateInclusiveStreak(GetQualifyingDates(sessions, timeZone), anchorDate);
+    }
+
     public static int CalculateInclusiveStreak(IEnumerable<DateTime> sessionDates, DateTime anchorDate)
     {
         var dates = sessionDates
@@ -70,6 +80,16 @@ public static class ReadingStreakHelper
     public static int CalculateLongestStreak(IEnumerable<ReadingSession> sessions)
     {
         return CalculateLongestStreak(GetQualifyingDates(sessions));
+    }
+
+    /// <summary>
+    /// Longest-streak variant that buckets each session by its LOCAL calendar day in
+    /// <paramref name="timeZone"/> (LOG-02) — the same convention as the current streak, so the
+    /// two never disagree on what counts as one reading day.
+    /// </summary>
+    public static int CalculateLongestStreak(IEnumerable<ReadingSession> sessions, TimeZoneInfo timeZone)
+    {
+        return CalculateLongestStreak(GetQualifyingDates(sessions, timeZone));
     }
 
     public static int CalculateLongestStreak(IEnumerable<DateTime> sessionDates)

@@ -523,8 +523,15 @@ public partial class AppStartupViewModel : ViewModelBase
 
     private void OnAppUpdateStateChanged(object? sender, AppUpdateState state)
     {
-        UpdateState = state;
-        ApplyUpdatePromptState(state);
+        // BUG-17: background update-state event — detached (like the billing/onboarding handlers)
+        // so a throw (e.g. from a PropertyChanged subscriber) can't crash the event raiser or
+        // clobber the shared IsBusy/ErrorMessage state an in-flight startup/resume load may own.
+        _ = ExecuteDetachedAsync(() =>
+        {
+            UpdateState = state;
+            ApplyUpdatePromptState(state);
+            return Task.CompletedTask;
+        }, source: "appstartup_update_state");
     }
 
     private void OnOnboardingStateChanged(object? sender, EventArgs e)

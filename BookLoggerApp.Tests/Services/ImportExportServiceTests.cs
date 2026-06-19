@@ -63,6 +63,29 @@ public class ImportExportServiceTests
     }
 
     [Fact]
+    public async Task DeleteAllDataAsync_ResetsProgressionThroughTheSerializedProvider()
+    {
+        // CODE_REVIEW BUG-08: the settings reset must go through AppSettingsProvider (which
+        // serialises writes via its _writeGate), not a raw context write that can race a concurrent
+        // coin/XP award. Assert the reset is routed through the gated UpdateSettingsAsync.
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
+        var contextFactory = new TestDbContextFactory(dbName);
+
+        var provider = Substitute.For<IAppSettingsProvider>();
+        provider.GetSettingsAsync(Arg.Any<CancellationToken>())
+            .Returns(new AppSettings { Coins = 999, TotalXp = 777, UserLevel = 9, PlantsPurchased = 5 });
+
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), provider);
+
+        await service.DeleteAllDataAsync();
+
+        await provider.Received(1).UpdateSettingsAsync(
+            Arg.Is<AppSettings>(s => s.Coins == 100 && s.TotalXp == 0 && s.UserLevel == 1 && s.PlantsPurchased == 0),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ImportFromJsonAsync_WithoutWishlistEntitlement_StripsWishlistInfo()
     {
         // HIGH-1003: importing a backup from a Plus/Premium account must NOT reintroduce the

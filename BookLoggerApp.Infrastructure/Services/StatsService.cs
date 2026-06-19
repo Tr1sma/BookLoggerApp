@@ -65,7 +65,8 @@ public class StatsService : IStatsService
     public async Task<int> GetLongestStreakAsync(CancellationToken ct = default)
     {
         var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
-        return ReadingStreakHelper.CalculateLongestStreak(allSessions);
+        // LOG-02: bucket by the user's local calendar day, like GetCurrentStreakAsync.
+        return ReadingStreakHelper.CalculateLongestStreak(allSessions, _timeZone);
     }
 
     public async Task<Dictionary<DateTime, int>> GetReadingTrendAsync(DateTime start, DateTime end, CancellationToken ct = default)

@@ -1060,30 +1060,29 @@ public class ImportExportService : IImportExportService
             context.UserPlants.RemoveRange(context.UserPlants);
             context.ShopItems.RemoveRange(context.ShopItems);
 
-            // 3. Reset AppSettings to defaults (but keep the record)
-            var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
-            if (settings != null)
-            {
-                settings.UserLevel = 1;
-                settings.TotalXp = 0;
-                settings.Coins = 100; // Starting coins
-                settings.PlantsPurchased = 0;
-                settings.LastBackupDate = null;
-                settings.HasCompletedOnboarding = false;
-                settings.OnboardingFlowVersion = OnboardingMissionCatalog.CurrentFlowVersion;
-                settings.OnboardingIntroStatus = OnboardingIntroStatus.NotStarted;
-                settings.OnboardingCurrentStep = 0;
-                settings.OnboardingCompletedAt = null;
-                settings.OnboardingAutoCompletedForExistingUser = false;
-                settings.OnboardingTutorialPlantId = null;
-                settings.OnboardingTutorialPlantNeedsWateringAssist = false;
-                settings.UpdatedAt = DateTime.UtcNow;
-            }
-
+            // Persist all the entity deletions.
             await context.SaveChangesAsync(ct);
 
-            // Invalidate the AppSettingsProvider cache to force reload of reset values
-            _appSettingsProvider.InvalidateCache();
+            // 3. Reset AppSettings to defaults (but keep the record) through the serialized provider
+            // (CODE_REVIEW BUG-08): a raw context write here would bypass AppSettingsProvider's
+            // write-gate and could race a concurrent coin/XP/level award. Routing the reset through
+            // UpdateSettingsAsync serialises it and refreshes the provider cache (so a separate
+            // InvalidateCache is no longer needed).
+            var settings = await _appSettingsProvider.GetSettingsAsync(ct);
+            settings.UserLevel = 1;
+            settings.TotalXp = 0;
+            settings.Coins = 100; // Starting coins
+            settings.PlantsPurchased = 0;
+            settings.LastBackupDate = null;
+            settings.HasCompletedOnboarding = false;
+            settings.OnboardingFlowVersion = OnboardingMissionCatalog.CurrentFlowVersion;
+            settings.OnboardingIntroStatus = OnboardingIntroStatus.NotStarted;
+            settings.OnboardingCurrentStep = 0;
+            settings.OnboardingCompletedAt = null;
+            settings.OnboardingAutoCompletedForExistingUser = false;
+            settings.OnboardingTutorialPlantId = null;
+            settings.OnboardingTutorialPlantNeedsWateringAssist = false;
+            await _appSettingsProvider.UpdateSettingsAsync(settings, ct);
 
             _logger?.LogWarning("All user data deleted successfully");
         }
