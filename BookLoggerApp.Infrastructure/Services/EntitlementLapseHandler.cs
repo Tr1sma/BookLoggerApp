@@ -28,6 +28,21 @@ public class EntitlementLapseHandler
     }
 
     /// <summary>
+    /// Reconciles all entitlement-gated content against the user's CURRENT
+    /// <paramref name="tier"/>. Run on every initial load / refresh (CODE_REVIEW HIGH-1003) so
+    /// content reintroduced out-of-band — a backup-restore or JSON-import of a higher-tier
+    /// account — is hidden for a user who is only entitled to a lower tier. Free runs the
+    /// lapse-hide; Plus/Premium clear the flags they are entitled to (and re-hide what they
+    /// are not). Idempotent: a no-op for a user whose data already matches their tier.
+    /// </summary>
+    public Task ReconcileAsync(SubscriptionTier tier, CancellationToken ct = default)
+    {
+        return tier <= SubscriptionTier.Free
+            ? ApplyLapseAsync(ct)
+            : ClearEntitlementHidesAsync(tier, ct);
+    }
+
+    /// <summary>
     /// Applies the Free-tier visibility rules. Called from
     /// <c>EntitlementService.ApplyLapseAsync</c> after the tier has flipped.
     /// </summary>
@@ -37,7 +52,7 @@ public class EntitlementLapseHandler
 
         await HideOverflowPlantsAsync(context, ct);
         await HideOverflowShelvesAsync(context, ct);
-        await HideUltimateDecorationsAsync(context, ct);
+        await HideNonFreeDecorationsAsync(context, ct);
 
         await context.SaveChangesAsync(ct);
     }
@@ -147,47 +162,42 @@ public class EntitlementLapseHandler
             return;
         }
 
-        // Determine the one plant that stays active: prefer currently-active healthy
-        // plants, then fall back to the oldest plant by PlantedAt.
-        UserPlant? keepActive = plants
-            .Where(p => p.IsActive && p.Status == PlantStatus.Healthy)
-            .OrderBy(p => p.PlantedAt)
-            .FirstOrDefault();
-
-        keepActive ??= plants
-            .Where(p => p.IsActive)
-            .OrderBy(p => p.PlantedAt)
-            .FirstOrDefault();
-
-        keepActive ??= plants.OrderBy(p => p.PlantedAt).First();
-
+        // Free is entitled only to free-tier plants. Standard plants (Plus) and prestige
+        // plants (Premium) are hidden — preserved, not deleted — so re-upgrade restores them
+        // and a restored/imported higher-tier backup can never leak them to a Free user
+        // (CODE_REVIEW HIGH-1003; previously only prestige plants were hidden).
         foreach (var plant in plants)
         {
-            plant.IsActive = plant.Id == keepActive.Id;
-
-            // Prestige plants are entirely hidden on Free — even the one that would
-            // otherwise stay active. In that edge case we fall back to the oldest
-            // non-prestige plant.
-            if (plant.Species.IsPrestigeTier)
+            if (!plant.Species.IsFreeTier)
             {
                 plant.IsHiddenByEntitlement = true;
                 plant.IsActive = false;
             }
         }
 
-        // Second pass: make sure there is still exactly one active plant after the
-        // prestige-hide step (possible edge case when keepActive itself was prestige).
-        bool hasAnyActive = plants.Any(p => p.IsActive);
-        if (!hasAnyActive)
+        // Among the remaining visible (free-tier) plants keep exactly one active: prefer the
+        // currently-active healthy one, then any active, then the oldest by PlantedAt.
+        var visible = plants.Where(p => !p.IsHiddenByEntitlement).ToList();
+        if (visible.Count == 0)
         {
-            var fallback = plants
-                .Where(p => !p.Species.IsPrestigeTier)
-                .OrderBy(p => p.PlantedAt)
-                .FirstOrDefault();
-            if (fallback is not null)
-            {
-                fallback.IsActive = true;
-            }
+            return;
+        }
+
+        UserPlant? keepActive = visible
+            .Where(p => p.IsActive && p.Status == PlantStatus.Healthy)
+            .OrderBy(p => p.PlantedAt)
+            .FirstOrDefault();
+
+        keepActive ??= visible
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.PlantedAt)
+            .FirstOrDefault();
+
+        keepActive ??= visible.OrderBy(p => p.PlantedAt).First();
+
+        foreach (var plant in visible)
+        {
+            plant.IsActive = plant.Id == keepActive.Id;
         }
     }
 
@@ -206,7 +216,7 @@ public class EntitlementLapseHandler
         }
     }
 
-    private static async Task HideUltimateDecorationsAsync(AppDbContext context, CancellationToken ct)
+    private static async Task HideNonFreeDecorationsAsync(AppDbContext context, CancellationToken ct)
     {
         var decorations = await context.UserDecorations
             .Include(d => d.ShopItem)
@@ -214,7 +224,9 @@ public class EntitlementLapseHandler
 
         foreach (var deco in decorations)
         {
-            deco.IsHiddenByEntitlement = deco.ShopItem.IsUltimateTier;
+            // Free keeps only free-tier decorations; standard (Plus) and ultimate (Premium)
+            // are hidden (CODE_REVIEW HIGH-1003; previously only ultimate decorations were hidden).
+            deco.IsHiddenByEntitlement = !deco.ShopItem.IsFreeTier;
         }
     }
 }

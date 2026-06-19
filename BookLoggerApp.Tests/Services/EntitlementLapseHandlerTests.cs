@@ -34,7 +34,7 @@ public class EntitlementLapseHandlerTests : IDisposable
     [Fact]
     public async Task ApplyLapseAsync_reduces_plants_to_one_active_and_keeps_oldest_healthy()
     {
-        Guid species = await SeedSpeciesAsync(isPrestige: false);
+        Guid species = await SeedSpeciesAsync(isPrestige: false, isFree: true);
 
         var oldest = await SeedPlantAsync(species, name: "First", plantedAt: new DateTime(2026, 1, 1), isActive: false, status: PlantStatus.Healthy);
         var middle = await SeedPlantAsync(species, name: "Second", plantedAt: new DateTime(2026, 2, 1), isActive: true, status: PlantStatus.Healthy);
@@ -50,13 +50,13 @@ public class EntitlementLapseHandlerTests : IDisposable
         // is "middle" because "oldest" was not active).
         plants.Single(p => p.IsActive).Name.Should().Be("Second");
         plants.Should().OnlyContain(p => p.IsHiddenByEntitlement == false,
-            "non-prestige plants should only lose IsActive, never get hidden");
+            "free-tier plants should only lose IsActive, never get hidden");
     }
 
     [Fact]
     public async Task ApplyLapseAsync_falls_back_to_oldest_when_no_active_plant()
     {
-        Guid species = await SeedSpeciesAsync(isPrestige: false);
+        Guid species = await SeedSpeciesAsync(isPrestige: false, isFree: true);
 
         await SeedPlantAsync(species, name: "Third", plantedAt: new DateTime(2026, 3, 1), isActive: false, status: PlantStatus.Thirsty);
         await SeedPlantAsync(species, name: "First", plantedAt: new DateTime(2026, 1, 1), isActive: false, status: PlantStatus.Wilting);
@@ -73,7 +73,7 @@ public class EntitlementLapseHandlerTests : IDisposable
     [Fact]
     public async Task ApplyLapseAsync_hides_prestige_plants_and_keeps_non_prestige_active()
     {
-        Guid regular = await SeedSpeciesAsync(isPrestige: false);
+        Guid regular = await SeedSpeciesAsync(isPrestige: false, isFree: true);
         Guid prestige = await SeedSpeciesAsync(isPrestige: true);
 
         await SeedPlantAsync(prestige, name: "Phoenix", plantedAt: new DateTime(2026, 1, 1), isActive: true, status: PlantStatus.Healthy);
@@ -111,10 +111,10 @@ public class EntitlementLapseHandlerTests : IDisposable
     public async Task ApplyLapseAsync_hides_ultimate_decoration()
     {
         Guid ultimate = await SeedShopItemAsync("Heart of Stories", isUltimate: true);
-        Guid regular = await SeedShopItemAsync("Reading Candle", isUltimate: false);
+        Guid free = await SeedShopItemAsync("Reading Candle", isUltimate: false, isFree: true);
 
         await SeedUserDecorationAsync(ultimate);
-        await SeedUserDecorationAsync(regular);
+        await SeedUserDecorationAsync(free);
 
         await _handler.ApplyLapseAsync();
 
@@ -122,6 +122,52 @@ public class EntitlementLapseHandlerTests : IDisposable
         List<UserDecoration> decos = await ctx.UserDecorations.Include(d => d.ShopItem).ToListAsync();
         decos.Single(d => d.ShopItem.Name == "Heart of Stories").IsHiddenByEntitlement.Should().BeTrue();
         decos.Single(d => d.ShopItem.Name == "Reading Candle").IsHiddenByEntitlement.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ApplyLapseAsync_hides_standard_tier_plants_but_keeps_free()
+    {
+        // HIGH-1003 / SEC-04: Free is entitled only to free-tier plants. Standard (Plus) and
+        // prestige (Premium) plants must be hidden — preserved, not deleted — so a restored or
+        // imported higher-tier backup cannot leak them to a Free user.
+        Guid free = await SeedSpeciesAsync(isFree: true);
+        Guid standard = await SeedSpeciesAsync(isPrestige: false, isFree: false);
+        Guid prestige = await SeedSpeciesAsync(isPrestige: true);
+
+        await SeedPlantAsync(free, name: "Free", plantedAt: new DateTime(2026, 1, 1), isActive: false, status: PlantStatus.Healthy);
+        await SeedPlantAsync(standard, name: "Standard", plantedAt: new DateTime(2026, 2, 1), isActive: true, status: PlantStatus.Healthy);
+        await SeedPlantAsync(prestige, name: "Prestige", plantedAt: new DateTime(2026, 3, 1), isActive: false, status: PlantStatus.Healthy);
+
+        await _handler.ApplyLapseAsync();
+
+        await using AppDbContext ctx = _factory.CreateDbContext();
+        List<UserPlant> plants = await ctx.UserPlants.ToListAsync();
+        plants.Single(p => p.Name == "Standard").IsHiddenByEntitlement.Should().BeTrue("standard plants require Plus");
+        plants.Single(p => p.Name == "Prestige").IsHiddenByEntitlement.Should().BeTrue("prestige plants require Premium");
+        plants.Single(p => p.Name == "Free").IsHiddenByEntitlement.Should().BeFalse("free-tier plants stay for Free users");
+        plants.Single(p => p.Name == "Free").IsActive.Should().BeTrue("the one remaining free plant becomes active");
+        plants.Count(p => p.IsActive).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ApplyLapseAsync_hides_standard_tier_decorations_but_keeps_free()
+    {
+        // HIGH-1003 / SEC-04: standard (Plus) AND ultimate (Premium) decorations are hidden for Free.
+        Guid free = await SeedShopItemAsync("Starter Lamp", isUltimate: false, isFree: true);
+        Guid standard = await SeedShopItemAsync("Cozy Rug", isUltimate: false, isFree: false);
+        Guid ultimate = await SeedShopItemAsync("Heart of Stories", isUltimate: true);
+
+        await SeedUserDecorationAsync(free);
+        await SeedUserDecorationAsync(standard);
+        await SeedUserDecorationAsync(ultimate);
+
+        await _handler.ApplyLapseAsync();
+
+        await using AppDbContext ctx = _factory.CreateDbContext();
+        List<UserDecoration> decos = await ctx.UserDecorations.Include(d => d.ShopItem).ToListAsync();
+        decos.Single(d => d.ShopItem.Name == "Cozy Rug").IsHiddenByEntitlement.Should().BeTrue("standard decorations require Plus");
+        decos.Single(d => d.ShopItem.Name == "Heart of Stories").IsHiddenByEntitlement.Should().BeTrue("ultimate decorations require Premium");
+        decos.Single(d => d.ShopItem.Name == "Starter Lamp").IsHiddenByEntitlement.Should().BeFalse("free decorations stay for Free users");
     }
 
     [Fact]
@@ -230,7 +276,7 @@ public class EntitlementLapseHandlerTests : IDisposable
 
     // ───── Seed helpers ───────────────────────────────────────────────────
 
-    private async Task<Guid> SeedSpeciesAsync(bool isPrestige)
+    private async Task<Guid> SeedSpeciesAsync(bool isPrestige = false, bool isFree = false)
     {
         await using AppDbContext ctx = _factory.CreateDbContext();
         PlantSpecies species = new()
@@ -238,7 +284,8 @@ public class EntitlementLapseHandlerTests : IDisposable
             Id = Guid.NewGuid(),
             Name = isPrestige ? $"Prestige_{Guid.NewGuid():N}" : $"Regular_{Guid.NewGuid():N}",
             ImagePath = "dummy.svg",
-            IsPrestigeTier = isPrestige
+            IsPrestigeTier = isPrestige,
+            IsFreeTier = isFree
         };
         ctx.PlantSpecies.Add(species);
         await ctx.SaveChangesAsync();
@@ -277,7 +324,7 @@ public class EntitlementLapseHandlerTests : IDisposable
         return shelf;
     }
 
-    private async Task<Guid> SeedShopItemAsync(string name, bool isUltimate)
+    private async Task<Guid> SeedShopItemAsync(string name, bool isUltimate = false, bool isFree = false)
     {
         await using AppDbContext ctx = _factory.CreateDbContext();
         ShopItem item = new()
@@ -289,7 +336,8 @@ public class EntitlementLapseHandlerTests : IDisposable
             ImagePath = "dummy.svg",
             UnlockLevel = 1,
             SlotWidth = 1,
-            IsUltimateTier = isUltimate
+            IsUltimateTier = isUltimate,
+            IsFreeTier = isFree
         };
         ctx.ShopItems.Add(item);
         await ctx.SaveChangesAsync();

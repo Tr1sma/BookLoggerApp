@@ -55,7 +55,7 @@ public class EntitlementServiceTests : IDisposable
         };
         _store.GetOrCreateAsync(Arg.Any<CancellationToken>()).Returns(expired);
 
-        Guid species = await SeedSpeciesAsync();
+        Guid species = await SeedSpeciesAsync(isFree: true);
         await SeedPlantAsync(species, "First", new DateTime(2026, 1, 1), isActive: true);
         await SeedPlantAsync(species, "Second", new DateTime(2026, 2, 1), isActive: true);
         await SeedPlantAsync(species, "Third", new DateTime(2026, 3, 1), isActive: true);
@@ -95,6 +95,53 @@ public class EntitlementServiceTests : IDisposable
         await _store.DidNotReceive().SaveAsync(
             Arg.Is<UserEntitlement>(e => e.Tier == SubscriptionTier.Free),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task InitializeAsync_OnFreeLoad_ReconcilesAndHidesNonEntitledContent()
+    {
+        // HIGH-1003: a Free initial load (e.g. after a backup-restore wiped entitlements and
+        // re-seeded Free) must run the data-guard so paid content carried in the restored DB is
+        // hidden — the guard previously ran only on an expiry transition, not on a plain load.
+        _store.GetOrCreateAsync(Arg.Any<CancellationToken>())
+            .Returns(new UserEntitlement { Tier = SubscriptionTier.Free });
+
+        Guid standard = await SeedSpeciesAsync(isPrestige: false, isFree: false);
+        await SeedPlantAsync(standard, "Standard", new DateTime(2026, 1, 1), isActive: true);
+
+        EntitlementService service = CreateService();
+        await service.InitializeAsync();
+
+        service.CurrentTier.Should().Be(SubscriptionTier.Free);
+        await using AppDbContext ctx = _factory.CreateDbContext();
+        (await ctx.UserPlants.SingleAsync(p => p.Name == "Standard")).IsHiddenByEntitlement
+            .Should().BeTrue("a Free initial load must hide non-free content reintroduced out-of-band");
+    }
+
+    [Fact]
+    public async Task InitializeAsync_OnPremiumLoad_ReconcilesAndClearsEntitledHides()
+    {
+        // HIGH-1003: the reconcile pass runs on every initial load, so it must NOT strip a
+        // paying user's content — a Premium load un-hides prestige content it is entitled to.
+        _store.GetOrCreateAsync(Arg.Any<CancellationToken>())
+            .Returns(new UserEntitlement { Tier = SubscriptionTier.Premium });
+
+        Guid prestige = await SeedSpeciesAsync(isPrestige: true);
+        await SeedPlantAsync(prestige, "Phoenix", new DateTime(2026, 1, 1), isActive: false);
+        await using (AppDbContext setup = _factory.CreateDbContext())
+        {
+            UserPlant p = await setup.UserPlants.FirstAsync();
+            p.IsHiddenByEntitlement = true;
+            await setup.SaveChangesAsync();
+        }
+
+        EntitlementService service = CreateService();
+        await service.InitializeAsync();
+
+        service.CurrentTier.Should().Be(SubscriptionTier.Premium);
+        await using AppDbContext ctx = _factory.CreateDbContext();
+        (await ctx.UserPlants.SingleAsync(p => p.Name == "Phoenix")).IsHiddenByEntitlement
+            .Should().BeFalse("Premium is entitled to prestige plants");
     }
 
     [Fact]
@@ -150,7 +197,7 @@ public class EntitlementServiceTests : IDisposable
 
     // ───── Seed helpers ───────────────────────────────────────────────────
 
-    private async Task<Guid> SeedSpeciesAsync(bool isPrestige = false)
+    private async Task<Guid> SeedSpeciesAsync(bool isPrestige = false, bool isFree = false)
     {
         await using AppDbContext ctx = _factory.CreateDbContext();
         PlantSpecies species = new()
@@ -158,7 +205,8 @@ public class EntitlementServiceTests : IDisposable
             Id = Guid.NewGuid(),
             Name = $"Species_{Guid.NewGuid():N}",
             ImagePath = "dummy.svg",
-            IsPrestigeTier = isPrestige
+            IsPrestigeTier = isPrestige,
+            IsFreeTier = isFree
         };
         ctx.PlantSpecies.Add(species);
         await ctx.SaveChangesAsync();

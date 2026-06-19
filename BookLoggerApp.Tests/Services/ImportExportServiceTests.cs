@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -5,6 +6,7 @@ using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using NSubstitute;
 using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
@@ -58,6 +60,76 @@ public class ImportExportServiceTests
                 ProgressionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
+    }
+
+    [Fact]
+    public async Task ImportFromJsonAsync_WithoutWishlistEntitlement_StripsWishlistInfo()
+    {
+        // HIGH-1003: importing a backup from a Plus/Premium account must NOT reintroduce the
+        // Plus-only Wishlist metadata for a user who is not entitled to the Wishlist feature.
+        var sourceDbName = Guid.NewGuid().ToString();
+        using (var sourceContext = TestDbContext.Create(sourceDbName))
+        {
+            sourceContext.Books.Add(new Book
+            {
+                Id = Guid.NewGuid(),
+                Title = "Wished Book",
+                Author = "Author",
+                Status = ReadingStatus.Wishlist,
+                WishlistInfo = new WishlistInfo { Priority = WishlistPriority.High, WishlistNotes = "want it" }
+            });
+            await sourceContext.SaveChangesAsync();
+        }
+        var json = await new ImportExportService(new TestDbContextFactory(sourceDbName), CreateFileSystem(), CreateMockSettingsProvider())
+            .ExportToJsonAsync();
+
+        var importDbName = Guid.NewGuid().ToString();
+        using var importContext = TestDbContext.Create(importDbName);
+        var entitlement = Substitute.For<IEntitlementService>();
+        entitlement.HasAccessAsync(FeatureKey.Wishlist, Arg.Any<CancellationToken>()).Returns(false);
+        var importService = new ImportExportService(
+            new TestDbContextFactory(importDbName), CreateFileSystem(), CreateMockSettingsProvider(), null, null, entitlement);
+
+        var count = await importService.ImportFromJsonAsync(json);
+
+        count.Should().Be(1);
+        using var verify = TestDbContext.Create(importDbName);
+        var imported = await verify.Books.Include(b => b.WishlistInfo).SingleAsync(b => b.Title == "Wished Book");
+        imported.WishlistInfo.Should().BeNull("a Free user is not entitled to Wishlist metadata");
+    }
+
+    [Fact]
+    public async Task ImportFromJsonAsync_WithWishlistEntitlement_KeepsWishlistInfo()
+    {
+        var sourceDbName = Guid.NewGuid().ToString();
+        using (var sourceContext = TestDbContext.Create(sourceDbName))
+        {
+            sourceContext.Books.Add(new Book
+            {
+                Id = Guid.NewGuid(),
+                Title = "Wished Book",
+                Author = "Author",
+                Status = ReadingStatus.Wishlist,
+                WishlistInfo = new WishlistInfo { Priority = WishlistPriority.High, WishlistNotes = "want it" }
+            });
+            await sourceContext.SaveChangesAsync();
+        }
+        var json = await new ImportExportService(new TestDbContextFactory(sourceDbName), CreateFileSystem(), CreateMockSettingsProvider())
+            .ExportToJsonAsync();
+
+        var importDbName = Guid.NewGuid().ToString();
+        using var importContext = TestDbContext.Create(importDbName);
+        var entitlement = Substitute.For<IEntitlementService>();
+        entitlement.HasAccessAsync(FeatureKey.Wishlist, Arg.Any<CancellationToken>()).Returns(true);
+        var importService = new ImportExportService(
+            new TestDbContextFactory(importDbName), CreateFileSystem(), CreateMockSettingsProvider(), null, null, entitlement);
+
+        await importService.ImportFromJsonAsync(json);
+
+        using var verify = TestDbContext.Create(importDbName);
+        var imported = await verify.Books.Include(b => b.WishlistInfo).SingleAsync(b => b.Title == "Wished Book");
+        imported.WishlistInfo.Should().NotBeNull("a Plus user keeps imported Wishlist metadata");
+        imported.WishlistInfo!.WishlistNotes.Should().Be("want it");
     }
 
     [Fact]
