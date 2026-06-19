@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.Enums;
@@ -17,8 +18,9 @@ public partial class BookshelfViewModel : ViewModelBase
 
     private readonly IShelfService _shelfService;
     private readonly IAppSettingsProvider _settingsProvider;
+    private readonly IFeatureGuard? _featureGuard;
 
-    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IDecorationService decorationService, IShelfService shelfService, IAppSettingsProvider settingsProvider)
+    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IDecorationService decorationService, IShelfService shelfService, IAppSettingsProvider settingsProvider, IFeatureGuard? featureGuard = null)
     {
         _bookService = bookService;
         _genreService = genreService;
@@ -27,6 +29,7 @@ public partial class BookshelfViewModel : ViewModelBase
         _decorationService = decorationService;
         _shelfService = shelfService;
         _settingsProvider = settingsProvider;
+        _featureGuard = featureGuard;
     }
 
     [ObservableProperty]
@@ -87,10 +90,14 @@ public partial class BookshelfViewModel : ViewModelBase
         {
             await _plantService.UpdatePlantStatusesAsync(ct);
 
-            // Load shelf color from settings
+            // Load shelf color from settings. HIGH-1003: custom shelf colors are a Plus feature, so
+            // a user who is not entitled (e.g. after restoring a higher-tier backup) sees the
+            // defaults; the saved values remain in AppSettings and return automatically on re-upgrade.
             var settings = await _settingsProvider.GetSettingsAsync(ct);
-            ShelfLedgeColor = settings.ShelfLedgeColor;
-            ShelfBaseColor = settings.ShelfBaseColor;
+            bool customColorsAllowed = _featureGuard?.HasAccess(FeatureKey.CustomShelfColors) ?? true;
+            var defaultColors = new AppSettings();
+            ShelfLedgeColor = customColorsAllowed ? settings.ShelfLedgeColor : defaultColors.ShelfLedgeColor;
+            ShelfBaseColor = customColorsAllowed ? settings.ShelfBaseColor : defaultColors.ShelfBaseColor;
 
             // 1. Fetch data
             var shelves = await _shelfService.GetAllShelvesAsync();

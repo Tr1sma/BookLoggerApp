@@ -142,6 +142,12 @@ public class GoalService : IGoalService
     {
         if (!goals.Any()) return false;
 
+        // HIGH-1003: genre / excluded-book goal filters are a Premium feature. A user not entitled
+        // to them (e.g. after restoring a Premium backup) gets UNFILTERED progress — the filter
+        // rows are preserved and re-apply automatically on re-upgrade. No filter chips are shown
+        // either, because goal.GoalGenres is only populated when filters are allowed.
+        bool filtersAllowed = _featureGuard?.HasAccess(FeatureKey.ReadingGoalsWithGenreTropeFilter) ?? true;
+
         // Get all books and sessions for calculation
         var books = await _unitOfWork.Books.GetAllAsync(ct);
         var sessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
@@ -172,17 +178,21 @@ public class GoalService : IGoalService
 
         foreach (var goal in goals)
         {
-            var excludedBookIds = allExclusions
-                .Where(e => e.ReadingGoalId == goal.Id)
-                .Select(e => e.BookId)
-                .ToHashSet();
+            var excludedBookIds = filtersAllowed
+                ? allExclusions
+                    .Where(e => e.ReadingGoalId == goal.Id)
+                    .Select(e => e.BookId)
+                    .ToHashSet()
+                : new HashSet<Guid>();
 
             // Build genre-matching book IDs (null = no genre filter)
             HashSet<Guid>? genreMatchingBookIds = null;
-            var goalGenreIds = allGoalGenres
-                .Where(gg => gg.ReadingGoalId == goal.Id)
-                .Select(gg => gg.GenreId)
-                .ToHashSet();
+            var goalGenreIds = filtersAllowed
+                ? allGoalGenres
+                    .Where(gg => gg.ReadingGoalId == goal.Id)
+                    .Select(gg => gg.GenreId)
+                    .ToHashSet()
+                : new HashSet<Guid>();
 
             if (goalGenreIds.Count > 0 && allBookGenres != null)
             {

@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -185,6 +186,41 @@ public class BookshelfViewModelTests
         _viewModel.Books.Should().ContainSingle();
         _viewModel.Books[0].Id.Should().Be(reading.Id);
         _viewModel.Shelves.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task LoadAsync_WithoutCustomShelfColorEntitlement_FallsBackToDefaultColors()
+    {
+        // HIGH-1003: custom shelf colors (Plus) restored from a higher-tier backup must not be
+        // applied for a non-entitled user. The saved values stay in AppSettings and return on re-upgrade.
+        _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>())
+            .Returns(new AppSettings { ShelfLedgeColor = "#111111", ShelfBaseColor = "#222222" });
+        var guard = Substitute.For<IFeatureGuard>();
+        guard.HasAccess(FeatureKey.CustomShelfColors).Returns(false);
+        var vm = new BookshelfViewModel(_bookService, _genreService, _plantService, _goalService,
+            _decorationService, _shelfService, _settingsProvider, guard);
+
+        await vm.LoadAsync();
+
+        var defaults = new AppSettings();
+        vm.ShelfLedgeColor.Should().Be(defaults.ShelfLedgeColor);
+        vm.ShelfBaseColor.Should().Be(defaults.ShelfBaseColor);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WithCustomShelfColorEntitlement_AppliesSavedColors()
+    {
+        _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>())
+            .Returns(new AppSettings { ShelfLedgeColor = "#111111", ShelfBaseColor = "#222222" });
+        var guard = Substitute.For<IFeatureGuard>();
+        guard.HasAccess(FeatureKey.CustomShelfColors).Returns(true);
+        var vm = new BookshelfViewModel(_bookService, _genreService, _plantService, _goalService,
+            _decorationService, _shelfService, _settingsProvider, guard);
+
+        await vm.LoadAsync();
+
+        vm.ShelfLedgeColor.Should().Be("#111111");
+        vm.ShelfBaseColor.Should().Be("#222222");
     }
 
     private void ConfigureLoadDependencies()
