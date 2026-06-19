@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -378,6 +379,85 @@ public class AppStartupViewModelTests
 
         // Assert
         _viewModel.IsChangelogVisible.Should().BeFalse();
+    }
+
+    // ── BUG-02 resume-lapse promo-grant tests ─────────────────────────────
+
+    /// <summary>
+    /// Helper: creates a VM with optional entitlement + billing services injected.
+    /// All shared constructor dependencies come from the class-level fields.
+    /// </summary>
+    private AppStartupViewModel BuildVmWithBilling(
+        IEntitlementService entitlementService,
+        IBillingService billingService)
+    {
+        return new AppStartupViewModel(
+            _appVersionService, _changelogService, _appUpdateService,
+            _onboardingService, _settingsProvider,
+            entitlementService, billingService);
+    }
+
+    [Fact]
+    public async Task HandleAppResumedAsync_does_not_lapse_when_active_promo_grant_is_present()
+    {
+        // Arrange
+        IEntitlementService entitlementService = Substitute.For<IEntitlementService>();
+        IBillingService billingService = Substitute.For<IBillingService>();
+
+        entitlementService.CurrentTier.Returns(SubscriptionTier.Plus);
+        entitlementService.CurrentEntitlement.Returns(new UserEntitlement
+        {
+            Id = Guid.NewGuid(),
+            Tier = SubscriptionTier.Plus,
+            BillingPeriod = BillingPeriod.Monthly,
+            PromoExpiresAt = DateTime.UtcNow.AddDays(7)  // active promo — not from Play
+        });
+
+        billingService.IsConnected.Returns(true);
+        billingService.QueryActivePurchasesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<PurchaseResult>>(Array.Empty<PurchaseResult>()));
+
+        AppStartupViewModel vm = BuildVmWithBilling(entitlementService, billingService);
+        await vm.InitializeAsync();
+
+        // Act
+        await vm.HandleAppResumedAsync();
+
+        // Assert — promo is active: no lapse, even though Play returned no purchases
+        await entitlementService.DidNotReceive()
+            .ApplyLapseAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleAppResumedAsync_still_lapses_when_subscription_cancelled_and_no_promo()
+    {
+        // Arrange — regular Play subscription, cancelled (no active purchases, no promo)
+        IEntitlementService entitlementService = Substitute.For<IEntitlementService>();
+        IBillingService billingService = Substitute.For<IBillingService>();
+
+        entitlementService.CurrentTier.Returns(SubscriptionTier.Plus);
+        entitlementService.CurrentEntitlement.Returns(new UserEntitlement
+        {
+            Id = Guid.NewGuid(),
+            Tier = SubscriptionTier.Plus,
+            BillingPeriod = BillingPeriod.Monthly,
+            ProductId = "bh_plus_monthly",
+            PromoExpiresAt = null  // no active promo
+        });
+
+        billingService.IsConnected.Returns(true);
+        billingService.QueryActivePurchasesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<PurchaseResult>>(Array.Empty<PurchaseResult>()));
+
+        AppStartupViewModel vm = BuildVmWithBilling(entitlementService, billingService);
+        await vm.InitializeAsync();
+
+        // Act
+        await vm.HandleAppResumedAsync();
+
+        // Assert — no promo, no Play purchase → lapse should fire
+        await entitlementService.Received(1)
+            .ApplyLapseAsync("expired", Arg.Any<CancellationToken>());
     }
 
     private static OnboardingSnapshot CreateSnapshot(

@@ -107,7 +107,7 @@
                 {
                     <div class="paywall-tier-card-permonth">@plusPrice.PerMonth</div>
                 }
-                @if (ViewModel.SelectedPeriod == BillingPeriod.Monthly)
+                @if (ViewModel.HasIntroOfferPlus)
                 {
                     <div class="paywall-intro-badge">@L["Paywall_FirstMonth"]</div>
                 }
@@ -136,7 +136,7 @@
                 {
                     <div class="paywall-tier-card-permonth">@premiumPrice.PerMonth</div>
                 }
-                @if (ViewModel.SelectedPeriod == BillingPeriod.Monthly)
+                @if (ViewModel.HasIntroOfferPremium)
                 {
                     <div class="paywall-intro-badge">@L["Paywall_FirstMonth"]</div>
                 }

@@ -59,6 +59,17 @@ public partial class PaywallViewModel : ViewModelBase
     [ObservableProperty]
     private string? _celebrationDetail;
 
+    // LOG-07: Per-SKU intro-offer flags. Defaults to false (no badge shown) until
+    // QueryProductsAsync populates them from the Play Store product details.
+    // Using separate booleans instead of a single SelectedPeriod==Monthly guard because
+    // intro offers are SKU-specific — a yearly Plus SKU could have an intro offer while
+    // the monthly Premium SKU does not, or vice versa.
+    [ObservableProperty]
+    private bool _hasIntroOfferPlus;
+
+    [ObservableProperty]
+    private bool _hasIntroOfferPremium;
+
     public SubscriptionTier CurrentTier => _entitlementService.CurrentTier;
 
     public bool IsTierUnlocked(SubscriptionTier tier) => _entitlementService.CurrentTier >= tier;
@@ -92,7 +103,14 @@ public partial class PaywallViewModel : ViewModelBase
                 await _billingService.ConnectAsync();
             }
 
-            BillingPurchaseOutcome outcome = await _billingService.LaunchPurchaseFlowAsync(productId);
+            // BUG-12: Pass the current subscription's PurchaseToken as oldPurchaseToken so
+            // Google Play can apply proration when upgrading from Plus to Premium.
+            // ProductId == null distinguishes promo grants (no billing token) from real subs.
+            string? oldPurchaseToken = _entitlementService.CurrentEntitlement?.ProductId is not null
+                ? _entitlementService.CurrentEntitlement.PurchaseToken
+                : null;
+
+            BillingPurchaseOutcome outcome = await _billingService.LaunchPurchaseFlowAsync(productId, oldPurchaseToken);
 
             string eventName = outcome switch
             {

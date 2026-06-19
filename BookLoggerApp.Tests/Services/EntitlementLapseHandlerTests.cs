@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data;
@@ -152,11 +153,97 @@ public class EntitlementLapseHandlerTests : IDisposable
             await setup.SaveChangesAsync();
         }
 
-        await _handler.ClearEntitlementHidesAsync();
+        await _handler.ClearEntitlementHidesAsync(SubscriptionTier.Premium);
 
         await using AppDbContext ctx = _factory.CreateDbContext();
         (await ctx.UserPlants.AllAsync(p => !p.IsHiddenByEntitlement)).Should().BeTrue();
         (await ctx.Shelves.AllAsync(s => !s.IsHiddenByEntitlement)).Should().BeTrue();
+        (await ctx.UserDecorations.AllAsync(d => !d.IsHiddenByEntitlement)).Should().BeTrue();
+    }
+
+    // ── SEC-04: tier-aware restore ─────────────────────────────────────────
+
+    [Fact]
+    public async Task ClearEntitlementHidesAsync_plus_tier_keeps_prestige_plants_hidden()
+    {
+        Guid prestige = await SeedSpeciesAsync(isPrestige: true);
+        Guid regular = await SeedSpeciesAsync(isPrestige: false);
+
+        UserPlant prestigePlant = await SeedPlantAsync(prestige, "Phoenix", DateTime.UtcNow, isActive: false, status: PlantStatus.Healthy);
+        UserPlant regularPlant = await SeedPlantAsync(regular, "Fern", DateTime.UtcNow, isActive: false, status: PlantStatus.Healthy);
+
+        // Mark both hidden (simulate post-lapse state)
+        await using (AppDbContext setup = _factory.CreateDbContext())
+        {
+            foreach (var p in await setup.UserPlants.ToListAsync())
+            {
+                p.IsHiddenByEntitlement = true;
+            }
+            await setup.SaveChangesAsync();
+        }
+
+        // Act — restore to Plus (not Premium)
+        await _handler.ClearEntitlementHidesAsync(SubscriptionTier.Plus);
+
+        // Assert — prestige stays hidden, regular is unhidden
+        await using AppDbContext ctx = _factory.CreateDbContext();
+        List<UserPlant> plants = await ctx.UserPlants.Include(p => p.Species).ToListAsync();
+        plants.Single(p => p.Name == "Phoenix").IsHiddenByEntitlement.Should().BeTrue("Prestige plants require Premium");
+        plants.Single(p => p.Name == "Fern").IsHiddenByEntitlement.Should().BeFalse("Regular plants unlock at Plus");
+    }
+
+    [Fact]
+    public async Task ClearEntitlementHidesAsync_plus_tier_keeps_ultimate_decorations_hidden()
+    {
+        Guid ultimate = await SeedShopItemAsync("Heart of Stories", isUltimate: true);
+        Guid regular = await SeedShopItemAsync("Reading Candle", isUltimate: false);
+
+        await SeedUserDecorationAsync(ultimate);
+        await SeedUserDecorationAsync(regular);
+
+        // Mark both hidden
+        await using (AppDbContext setup = _factory.CreateDbContext())
+        {
+            foreach (var d in await setup.UserDecorations.ToListAsync())
+            {
+                d.IsHiddenByEntitlement = true;
+            }
+            await setup.SaveChangesAsync();
+        }
+
+        // Act — restore to Plus
+        await _handler.ClearEntitlementHidesAsync(SubscriptionTier.Plus);
+
+        // Assert — ultimate stays hidden, regular is unhidden
+        await using AppDbContext ctx = _factory.CreateDbContext();
+        List<UserDecoration> decos = await ctx.UserDecorations.Include(d => d.ShopItem).ToListAsync();
+        decos.Single(d => d.ShopItem.Name == "Heart of Stories").IsHiddenByEntitlement.Should().BeTrue("Ultimate decorations require Premium");
+        decos.Single(d => d.ShopItem.Name == "Reading Candle").IsHiddenByEntitlement.Should().BeFalse("Regular decorations unlock at Plus");
+    }
+
+    [Fact]
+    public async Task ClearEntitlementHidesAsync_premium_tier_unhides_prestige_plants_and_ultimate_decorations()
+    {
+        Guid prestige = await SeedSpeciesAsync(isPrestige: true);
+        await SeedPlantAsync(prestige, "Phoenix", DateTime.UtcNow, isActive: false, status: PlantStatus.Healthy);
+
+        Guid ultimate = await SeedShopItemAsync("Heart of Stories", isUltimate: true);
+        await SeedUserDecorationAsync(ultimate);
+
+        // Mark both hidden
+        await using (AppDbContext setup = _factory.CreateDbContext())
+        {
+            foreach (var p in await setup.UserPlants.ToListAsync()) p.IsHiddenByEntitlement = true;
+            foreach (var d in await setup.UserDecorations.ToListAsync()) d.IsHiddenByEntitlement = true;
+            await setup.SaveChangesAsync();
+        }
+
+        // Act — restore to Premium
+        await _handler.ClearEntitlementHidesAsync(SubscriptionTier.Premium);
+
+        // Assert — everything unhidden, Premium unlocks all
+        await using AppDbContext ctx = _factory.CreateDbContext();
+        (await ctx.UserPlants.AllAsync(p => !p.IsHiddenByEntitlement)).Should().BeTrue();
         (await ctx.UserDecorations.AllAsync(d => !d.IsHiddenByEntitlement)).Should().BeTrue();
     }
 

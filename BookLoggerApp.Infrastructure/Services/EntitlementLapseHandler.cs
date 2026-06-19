@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data;
@@ -42,21 +43,33 @@ public class EntitlementLapseHandler
     }
 
     /// <summary>
-    /// Clears every hidden flag. Called after <c>EntitlementService.ApplyPurchaseAsync</c>
-    /// or <c>ApplyPromoAsync</c> when the new tier is Plus or higher.
+    /// Clears entitlement-hide flags according to <paramref name="newTier"/>.
+    /// <list type="bullet">
+    ///   <item><description><b>Premium:</b> unhides everything — Prestige plants and Ultimate decorations included.</description></item>
+    ///   <item><description><b>Plus:</b> unhides non-Prestige plants and non-Ultimate decorations; Prestige / Ultimate
+    ///   items remain hidden because they require Premium.</description></item>
+    /// </list>
+    /// Called after <c>EntitlementService.ApplyPurchaseAsync</c>, <c>ApplyPromoAsync</c>, or
+    /// <c>ForceTierForDebugAsync</c> when the new tier is Plus or higher.
     /// </summary>
-    public async Task ClearEntitlementHidesAsync(CancellationToken ct = default)
+    public async Task ClearEntitlementHidesAsync(SubscriptionTier newTier, CancellationToken ct = default)
     {
         await using AppDbContext context = await _contextFactory.CreateDbContextAsync(ct);
 
+        // Plants: Premium unlocks Prestige; Plus only unlocks non-Prestige.
         var plants = await context.UserPlants
+            .Include(p => p.Species)
             .Where(p => p.IsHiddenByEntitlement)
             .ToListAsync(ct);
         foreach (var plant in plants)
         {
-            plant.IsHiddenByEntitlement = false;
+            if (newTier >= SubscriptionTier.Premium || !plant.Species.IsPrestigeTier)
+            {
+                plant.IsHiddenByEntitlement = false;
+            }
         }
 
+        // Shelves: both Plus and Premium get all shelves back.
         var shelves = await context.Shelves
             .Where(s => s.IsHiddenByEntitlement)
             .ToListAsync(ct);
@@ -65,15 +78,21 @@ public class EntitlementLapseHandler
             shelf.IsHiddenByEntitlement = false;
         }
 
+        // Decorations: Premium unlocks Ultimate; Plus only unlocks non-Ultimate.
         var decorations = await context.UserDecorations
+            .Include(d => d.ShopItem)
             .Where(d => d.IsHiddenByEntitlement)
             .ToListAsync(ct);
         foreach (var deco in decorations)
         {
-            deco.IsHiddenByEntitlement = false;
+            if (newTier >= SubscriptionTier.Premium || !deco.ShopItem.IsUltimateTier)
+            {
+                deco.IsHiddenByEntitlement = false;
+            }
         }
 
-        if (plants.Count > 0 || shelves.Count > 0 || decorations.Count > 0)
+        if (plants.Any(p => !p.IsHiddenByEntitlement) || shelves.Count > 0
+            || decorations.Any(d => !d.IsHiddenByEntitlement))
         {
             await context.SaveChangesAsync(ct);
         }
