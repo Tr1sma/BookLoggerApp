@@ -167,16 +167,25 @@ public class AndroidBillingService : IBillingService
 
         try
         {
-            InAppBillingPurchase? purchase = await _billing!.PurchaseAsync(productId, itemType);
+            // BUG-12: replacing an owned subscription must go through the proration upgrade flow,
+            // otherwise Play throws AlreadyOwned and the user can't switch tier/period.
+            InAppBillingPurchase? purchase = !string.IsNullOrEmpty(oldPurchaseToken) && itemType == ItemType.Subscription
+                ? await _billing!.UpgradePurchasedSubscriptionAsync(productId, oldPurchaseToken!, SubscriptionProrationMode.ImmediateWithTimeProration, ct)
+                : await _billing!.PurchaseAsync(productId, itemType);
+
             if (purchase is null)
             {
                 return BillingPurchaseOutcome.UserCancelled;
             }
 
-            // Acknowledge so Play doesn't auto-refund the purchase after 3 days.
+            // BUG-04: acknowledge using the purchase token (NOT the order/transaction id) so Play
+            // recognises the acknowledgement and doesn't auto-refund the purchase after 3 days.
             try
             {
-                await _billing.FinalizePurchaseAsync(new[] { purchase.TransactionIdentifier ?? purchase.PurchaseToken });
+                if (!string.IsNullOrEmpty(purchase.PurchaseToken))
+                {
+                    await _billing.FinalizePurchaseAsync(new[] { purchase.PurchaseToken });
+                }
             }
             catch (Exception ex)
             {
@@ -184,11 +193,15 @@ public class AndroidBillingService : IBillingService
             }
 
             PurchaseResult? mapped = TryMapPurchase(purchase);
-            if (mapped is not null)
+            if (mapped is null)
             {
-                PurchaseUpdated?.Invoke(this, mapped);
+                // BUG-14: the SKU completed at Play but the catalog can't resolve it, so entitlement
+                // would never be applied. Report an error instead of a false "unlocked" celebration.
+                System.Diagnostics.Debug.WriteLine($"Purchase completed but SKU '{purchase.ProductId}' is not in the catalog; reporting Error.");
+                return BillingPurchaseOutcome.Error;
             }
 
+            PurchaseUpdated?.Invoke(this, mapped);
             return BillingPurchaseOutcome.Success;
         }
         catch (InAppBillingPurchaseException purchaseEx)
@@ -293,7 +306,11 @@ public class AndroidBillingService : IBillingService
             return null;
         }
 
-        DateTime? expiresAt = resolved.Value.Period == BillingPeriod.Lifetime
+        // LOG-01: never synthesize an expiry for auto-renewing subscriptions. Google Play presence
+        // (QueryActivePurchasesAsync) is the source of truth; a guessed +30/+365-day date would
+        // wrongly lapse a healthy subscriber one period after the first purchase. A cancelled
+        // (non-auto-renewing) subscription still gets an estimate so it lapses at period end.
+        DateTime? expiresAt = resolved.Value.Period == BillingPeriod.Lifetime || source.AutoRenewing
             ? null
             : InferExpiryDate(resolved.Value.Period, source);
 
@@ -312,9 +329,10 @@ public class AndroidBillingService : IBillingService
 
     private static DateTime? InferExpiryDate(BillingPeriod period, InAppBillingPurchase purchase)
     {
-        // Play Billing exposes the authoritative expiry on the subscription response
-        // but the plugin's InAppBillingPurchase does not always surface it as a field.
-        // Estimate from the transaction date until the server-verification layer lands.
+        // Only called for NON-auto-renewing (cancelled) subscriptions — see TryMapPurchase.
+        // Play Billing exposes the authoritative expiry on the subscription response but the
+        // plugin's InAppBillingPurchase does not always surface it as a field, so estimate the
+        // remaining term from the transaction date until the server-verification layer lands.
         DateTime baseDate = purchase.TransactionDateUtc;
         return period switch
         {

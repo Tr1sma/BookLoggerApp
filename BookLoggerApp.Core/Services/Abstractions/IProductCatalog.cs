@@ -15,6 +15,13 @@ public interface IProductCatalog
     /// <summary>Reverse lookup: resolve a SKU back to tier+period. Returns null for unknown SKUs.</summary>
     (SubscriptionTier Tier, BillingPeriod Period)? TryResolve(string productId);
 
+    /// <summary>
+    /// True only when the SKU for <paramref name="tier"/>+<paramref name="period"/> actually has a
+    /// configured Play Console introductory offer. Drives the paywall "first month" badge so it is
+    /// never shown for a tier that has no intro offer (CODE_REVIEW LOG-07).
+    /// </summary>
+    bool HasIntroductoryOffer(SubscriptionTier tier, BillingPeriod period);
+
     /// <summary>All SKUs the app cares about — handed to <c>IBillingService.QueryProductsAsync</c>.</summary>
     IReadOnlyList<string> AllProductIds { get; }
 }

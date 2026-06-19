@@ -31,6 +31,13 @@ public class ProductCatalog : IProductCatalog
     private static readonly Dictionary<string, (SubscriptionTier, BillingPeriod)> _reverse =
         _forward.ToDictionary(kv => kv.Value, kv => kv.Key, StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// SKUs that have a confirmed Play Console introductory offer. Intentionally empty until a
+    /// real intro offer is configured: the paywall must not advertise a "first month" price on a
+    /// SKU that does not have one (CODE_REVIEW LOG-07). Add the SKU constant here once verified.
+    /// </summary>
+    private static readonly HashSet<string> _introOfferSkus = new(StringComparer.OrdinalIgnoreCase);
+
     public IReadOnlyList<string> AllProductIds { get; } = _forward.Values.ToArray();
 
     public string? GetProductId(SubscriptionTier tier, BillingPeriod period)
@@ -43,5 +50,11 @@ public class ProductCatalog : IProductCatalog
         return _reverse.TryGetValue(productId, out (SubscriptionTier Tier, BillingPeriod Period) pair)
             ? pair
             : null;
+    }
+
+    public bool HasIntroductoryOffer(SubscriptionTier tier, BillingPeriod period)
+    {
+        string? sku = GetProductId(tier, period);
+        return sku is not null && _introOfferSkus.Contains(sku);
     }
 }

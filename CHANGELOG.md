@@ -22,6 +22,14 @@ Versionsschema:
 - Buchdetailseite wartet beim Laden jetzt — wie alle anderen Inhaltsseiten — auf die Hintergrund-Initialisierung der Datenbank, statt direkt loszulegen.
 - Eingabevalidierung wird jetzt im Service-Layer durchgesetzt: Ungültige Buch-, Lesesitzungs-, Leseziel- und Pflanzendaten (leere Titel/Autoren, negative oder absurde Seiten-/Zielwerte, 0-Minuten-Sitzungen) werden vor dem Speichern abgewiesen, statt ungeprüft in die Datenbank zu gelangen. Die vorhandenen Validierungsregeln waren zuvor nie aktiv (toter Code).
 - Bildschirm-Ladevorgänge lassen sich jetzt abbrechen: Beim Wegnavigieren oder schnellen Seitenwechsel wird ein noch laufender Ladevorgang abgebrochen, statt im Hintergrund weiterzulaufen und mit dem nächsten Ladevorgang um den geteilten Datenbank-Kontext zu rennen. Dafür reichen die spezifischen Repository-Methoden und die datenladenden ViewModels den `CancellationToken` jetzt durchgängig bis zur Datenbankabfrage durch.
+- Abo-Status & Play-Billing-Lebenszyklus sind robuster geworden:
+  - Promo-Codes (z. B. `BH-LAUNCH`/`BH-BETA2026`) werden beim Zurückholen der App in den Vordergrund nicht mehr fälschlich auf Free herabgestuft und ihre Inhalte nicht mehr ausgeblendet, solange der Code gültig ist.
+  - Ein zeitlich abgelaufenes Abo wird jetzt dauerhaft auf Free gesetzt und seine Überlauf-Inhalte (zusätzliche Regale, Prestige-Pflanzen, Ultimate-Dekoration) werden ausgeblendet — zuvor wurde nur die Tarif-Anzeige im Speicher geändert, ohne Persistenz und ohne die Inhalte tatsächlich zu verbergen.
+  - Aktive, sich automatisch verlängernde Abos werden nicht mehr fälschlich genau einen Abrechnungszeitraum (30 bzw. 365 Tage) nach dem Erstkauf auf Free herabgestuft; maßgeblich ist jetzt, ob Google Play das Abo noch zurückmeldet, statt eines geschätzten Ablaufdatums.
+  - Google-Play-Käufe werden jetzt mit dem korrekten Kauf-Token bestätigt, sodass Play sie nicht mehr nach 3 Tagen automatisch erstattet.
+  - Ein Tarif- oder Zeitraumwechsel eines bestehenden Abos läuft jetzt über den Play-Upgrade-/Proration-Flow, statt in einer „Du besitzt dieses Abo bereits"-Sackgasse zu enden.
+  - Lässt sich ein gekauftes Produkt nicht zuordnen, zeigt die App jetzt einen Fehler statt einer falschen „Freigeschaltet"-Feier ohne tatsächliche Freischaltung.
+- Der „Erster Monat"-Hinweis im Paywall wird nur noch angezeigt, wenn der jeweilige Tarif tatsächlich ein Einführungsangebot hat (zuvor pauschal bei beiden Monatstarifen).
 
 ### Sicherheit
 - Abo-Features werden jetzt im Service-Layer durchgesetzt, nicht mehr nur über die Sperr-Overlays in der UI. Damit lassen sich kostenpflichtige Funktionen nicht mehr über Umwege (veraltete UI nach Tarif-Ablauf, programmatische Aufrufe) freischalten:
@@ -29,6 +37,7 @@ Versionsschema:
   - Genre-Filter und Buch-Ausschlüsse auf Lesezielen (Premium) werden beim Hinzufügen geprüft — der Umweg über das Bearbeiten-/Ausschluss-Modal ist geschlossen. Das Entfernen bleibt offen, damit herabgestufte Nutzer ihre Filter weiterhin bereinigen können.
   - Wishlist-Schreibzugriffe (Plus), Tropes-Verschlagwortung (Plus) und individuelle Regal-Farben (Plus) sind ebenfalls serverseitig abgesichert.
 - Nach einer Herabstufung (z. B. Premium → Free) ausgeblendete Bezahl-Inhalte bleiben jetzt konsequent verborgen: versteckte Prestige-Pflanzen und die Ultimate-Dekoration erscheinen nicht mehr im Garten/Regal und fließen nicht mehr in Boost-Berechnungen ein (zuvor wurden nur Regale gefiltert).
+- Eine Herabstufung von Premium auf Plus gibt Premium-exklusive Inhalte (Prestige-Pflanzen, „Heart of Stories"-Dekoration) nicht mehr frei: Plus stellt nur die ihm zustehenden Inhalte (Regale, Standard-Pflanzen/-Dekorationen) wieder her und blendet Premium-Inhalte weiterhin aus — auch wenn sie aus einer früheren Premium-Phase noch sichtbar waren.
 
 ## [0.12.0]
 
