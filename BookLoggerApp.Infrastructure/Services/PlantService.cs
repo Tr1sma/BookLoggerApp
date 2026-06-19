@@ -95,6 +95,10 @@ public class PlantService : IPlantService
 
     public async Task UpdateAsync(UserPlant plant, CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: validate the edited plant before persisting, like the create path.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(plant, ct);
+
         try
         {
             await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
@@ -445,6 +449,22 @@ public class PlantService : IPlantService
         // Calculate dynamic cost
         int cost = await GetPlantCostAsync(speciesId, ct);
 
+        var plant = new UserPlant
+        {
+            SpeciesId = speciesId,
+            Name = name,
+            CurrentLevel = 1,
+            Experience = 0,
+            PlantedAt = DateTime.UtcNow,
+            LastWatered = DateTime.UtcNow,
+            IsActive = false
+        };
+
+        // CODE_REVIEW BUG-05: validate the new plant (e.g. name bounds) BEFORE charging coins, so an
+        // invalid name can't deduct coins and then fail the save.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(plant, ct);
+
         // Spend coins (will throw if not enough)
         await _settingsProvider.SpendCoinsAsync(cost, ct);
 
@@ -455,17 +475,6 @@ public class PlantService : IPlantService
         UserPlant result;
         try
         {
-            var plant = new UserPlant
-            {
-                SpeciesId = speciesId,
-                Name = name,
-                CurrentLevel = 1,
-                Experience = 0,
-                PlantedAt = DateTime.UtcNow,
-                LastWatered = DateTime.UtcNow,
-                IsActive = false
-            };
-
             result = await _unitOfWork.UserPlants.AddAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }

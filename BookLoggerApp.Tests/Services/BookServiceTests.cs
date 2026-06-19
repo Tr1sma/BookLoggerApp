@@ -594,6 +594,24 @@ public class BookServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ImportBooksAsync_WithAnyInvalidBook_ThrowsValidationAndPersistsNothing()
+    {
+        // CODE_REVIEW BUG-05: bulk import must validate every row before inserting, so one bad
+        // book aborts the whole batch instead of letting unchecked data reach the DB.
+        var service = CreateServiceWithValidation();
+        var books = new[]
+        {
+            new Book { Title = "Valid", Author = "Author" },
+            new Book { Title = "", Author = "Author" } // invalid
+        };
+
+        await FluentActions.Awaiting(() => service.ImportBooksAsync(books))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await _service.GetTotalCountAsync()).Should().Be(0, "a batch with any invalid book must not be partially imported");
+    }
+
+    [Fact]
     public async Task UpdateAsync_WithNegativePageCount_ThrowsValidation()
     {
         var service = CreateServiceWithValidation();

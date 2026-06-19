@@ -189,6 +189,79 @@ public class ProgressServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task AddSessionAsync_StreakBonus_UsesLocalCalendarDay()
+    {
+        // LOG-02: the streak-bonus "first qualifying session of the day" dedup must use the user's
+        // LOCAL calendar day, like GetCurrentStreakAsync — not raw UTC. Two sessions a few hours
+        // apart that straddle UTC midnight are the SAME local day in UTC+2, so the second must not
+        // be treated as a new streak day. With raw UTC they fall on different days and the second
+        // would wrongly earn a fresh streak bonus.
+        var tzPlus2 = TimeZoneInfo.CreateCustomTimeZone("t+2", TimeSpan.FromHours(2), "t+2", "t+2");
+        var service = new ProgressService(
+            _unitOfWork, _progressionService, _plantService, _bookService,
+            _goalService, _decorationService, _settingsProvider, timeZone: tzPlus2);
+
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+
+        // Session A — first qualifying session of local day Jan 3 (UTC+2): 2026-01-02 23:00Z = Jan 3 01:00 local.
+        await service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2026, 1, 2, 23, 0, 0, DateTimeKind.Utc),
+            Minutes = 10
+        });
+
+        // Session B — same LOCAL day (Jan 3 07:00 local) but a different UTC day (Jan 3).
+        var result = await service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2026, 1, 3, 5, 0, 0, DateTimeKind.Utc),
+            Minutes = 12,
+            PagesRead = 3
+        });
+
+        result.ProgressionResult.StreakDays.Should().Be(0, "session B is the same local day as session A");
+        result.ProgressionResult.StreakBonusXp.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task StoryHeartFirstOfDayBonus_UsesLocalCalendarDay()
+    {
+        // LOG-02: the Story-Heart "first qualifying session of the day" bonus must bucket by the
+        // LOCAL calendar day, like the streak. Two sessions across UTC midnight are the same local
+        // day in UTC+2, so only the first earns the first-of-day bonus.
+        var tzPlus2 = TimeZoneInfo.CreateCustomTimeZone("t+2", TimeSpan.FromHours(2), "t+2", "t+2");
+        var decorationService = Substitute.For<IDecorationService>();
+        decorationService.UserOwnsAbilityAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(true));
+        var service = new ProgressService(
+            _unitOfWork, _progressionService, _plantService, _bookService,
+            _goalService, decorationService, _settingsProvider, timeZone: tzPlus2);
+
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+
+        // Session A — first session of local day Jan 3 (UTC+2): 2026-01-02 23:00Z = Jan 3 01:00 local.
+        var a = await service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2026, 1, 2, 23, 0, 0, DateTimeKind.Utc),
+            Minutes = 20
+        });
+        // Session B — same LOCAL day (Jan 3 07:00 local) but a different UTC day (Jan 3).
+        var b = await service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2026, 1, 3, 5, 0, 0, DateTimeKind.Utc),
+            Minutes = 20
+        });
+
+        a.StoryHeartFirstOfDayBonusXp.Should().BeGreaterThan(0, "session A is the first session of the local day");
+        b.StoryHeartFirstOfDayBonusXp.Should().Be(0, "session B is the same local day as session A");
+    }
+
+    [Fact]
     public async Task AddSessionAsync_ShouldIgnoreOpenPlaceholderSessions_WhenCalculatingStreak()
     {
         // Arrange
@@ -906,6 +979,23 @@ public class ProgressServiceTests : IDisposable
             _goalService, _decorationService, _settingsProvider,
             validation: ValidationServiceFactory.CreateReal(),
             timeZone: TimeZoneInfo.Utc);
+    }
+
+    [Fact]
+    public async Task UpdateSessionAsync_WithZeroMinutes_ThrowsValidation()
+    {
+        // CODE_REVIEW BUG-05: the edit path must validate too, not only AddSessionAsync.
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var service = CreateServiceWithValidation();
+        var session = new ReadingSession { BookId = book.Id, StartedAt = DateTime.UtcNow, Minutes = 20 };
+        await _unitOfWork.ReadingSessions.AddAsync(session);
+        await _unitOfWork.SaveChangesAsync();
+
+        session.Minutes = 0; // a timeless, pages-less session is invalid
+
+        await FluentActions.Awaiting(() => service.UpdateSessionAsync(session))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
     }
 
     [Fact]

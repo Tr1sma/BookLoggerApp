@@ -29,6 +29,24 @@ public class StatsServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task GetLongestStreakAsync_GroupsSessionsByLocalCalendarDay()
+    {
+        // LOG-02: the longest streak must bucket sessions by the user's LOCAL calendar day, like the
+        // current streak — not by raw UTC. Two sessions a couple of hours apart that straddle UTC
+        // midnight are ONE local day in UTC+2, so the longest streak is 1, not 2.
+        var tzPlus2 = TimeZoneInfo.CreateCustomTimeZone("t+2", TimeSpan.FromHours(2), "t+2", "t+2");
+        var service = new StatsService(_unitOfWork, tzPlus2);
+
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession { BookId = book.Id, StartedAt = new DateTime(2026, 1, 1, 23, 0, 0, DateTimeKind.Utc), Minutes = 15 });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession { BookId = book.Id, StartedAt = new DateTime(2026, 1, 2, 1, 0, 0, DateTimeKind.Utc), Minutes = 15 });
+        await _context.SaveChangesAsync();
+
+        (await service.GetLongestStreakAsync()).Should().Be(1, "both sessions fall on the same local day (UTC+2)");
+    }
+
+    [Fact]
     public async Task GetCurrentStreakAsync_ShouldIgnoreOpenPlaceholderSessions()
     {
         // Arrange

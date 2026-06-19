@@ -141,6 +141,14 @@ public class BookService : IBookService
     {
         var booksList = books.ToList();
 
+        // CODE_REVIEW BUG-05: validate EVERY book up front so a single invalid row aborts the whole
+        // batch before any insert, instead of letting unchecked data reach the DB via bulk import.
+        if (_validation is not null)
+        {
+            foreach (var book in booksList)
+                await _validation.ValidateAndThrowAsync(book, ct);
+        }
+
         // Business Logic: Set DateAdded for books where not set
         foreach (var book in booksList)
         {

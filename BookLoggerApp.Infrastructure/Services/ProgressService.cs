@@ -256,6 +256,10 @@ public class ProgressService : IProgressService
 
     public async Task UpdateSessionAsync(ReadingSession session, CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: validate the edited session before persisting, like AddSessionAsync.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(session, ct);
+
         await _unitOfWork.ReadingSessions.UpdateAsync(session, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
@@ -351,15 +355,17 @@ public class ProgressService : IProgressService
             return new ResolvedStreak(0, false, null);
         }
 
-        var sessionDate = session.StartedAt.Date;
-        var rangeEnd = sessionDate.AddDays(1).AddTicks(-1);
+        // LOG-02: bucket the session and its neighbours by the user's LOCAL calendar day (like
+        // GetCurrentStreakAsync), so a session that crosses UTC midnight is attributed to the same
+        // day everywhere. The range query still filters by the raw UTC instant.
+        var sessionDate = LocalTimeHelper.LocalDate(session.StartedAt, _timeZone);
 
         var recentSessions = (await _unitOfWork.ReadingSessions
-            .GetSessionsInRangeAsync(sessionDate.AddDays(-365), rangeEnd, ct)).ToList();
+            .GetSessionsInRangeAsync(session.StartedAt.AddDays(-365), session.StartedAt.AddDays(1), ct)).ToList();
 
         var alreadyAwardedToday = recentSessions.Any(existingSession =>
             existingSession.Id != session.Id
-            && existingSession.StartedAt.Date == sessionDate
+            && LocalTimeHelper.LocalDate(existingSession.StartedAt, _timeZone) == sessionDate
             && ReadingStreakHelper.CountsTowardStreak(existingSession));
 
         if (alreadyAwardedToday)
@@ -368,7 +374,7 @@ public class ProgressService : IProgressService
         }
 
         var priorSessions = recentSessions.Where(s => s.Id != session.Id).ToList();
-        var regularStreak = ReadingStreakHelper.CalculateInclusiveStreak(priorSessions, sessionDate);
+        var regularStreak = ReadingStreakHelper.CalculateInclusiveStreak(priorSessions, sessionDate, _timeZone);
 
         // Streak-Wächter: fires only when the regular streak would be 1 (yesterday missed),
         // there was a qualifying session day-before-yesterday (so a prior streak existed),
@@ -381,7 +387,7 @@ public class ProgressService : IProgressService
         var dayBeforeYesterday = sessionDate.AddDays(-2);
         bool priorStreakExists = priorSessions
             .Where(ReadingStreakHelper.CountsTowardStreak)
-            .Any(s => s.StartedAt.Date == dayBeforeYesterday);
+            .Any(s => LocalTimeHelper.LocalDate(s.StartedAt, _timeZone) == dayBeforeYesterday);
 
         if (!priorStreakExists)
         {
@@ -403,7 +409,7 @@ public class ProgressService : IProgressService
         // Fill the missing yesterday and recompute.
         var rescuedDates = priorSessions
             .Where(ReadingStreakHelper.CountsTowardStreak)
-            .Select(s => s.StartedAt.Date)
+            .Select(s => LocalTimeHelper.LocalDate(s.StartedAt, _timeZone))
             .ToList();
         rescuedDates.Add(sessionDate.AddDays(-1));
         var rescuedStreak = ReadingStreakHelper.CalculateInclusiveStreak(rescuedDates, sessionDate);
@@ -441,14 +447,17 @@ public class ProgressService : IProgressService
             coinBonus = SpecialAbilityResolver.StoryHeartSessionCoinBonus;
         }
 
-        var sessionDate = session.StartedAt.Date;
-        var dayRangeEnd = sessionDate.AddDays(1).AddTicks(-1);
-        var sessionsToday = await _unitOfWork.ReadingSessions
-            .GetSessionsInRangeAsync(sessionDate, dayRangeEnd, ct);
+        // LOG-02: "first qualifying session of the day" uses the user's LOCAL calendar day, same as
+        // the streak logic. Load a generous UTC instant window (the local day can straddle two UTC
+        // days) and match by local day in memory.
+        var sessionLocalDate = LocalTimeHelper.LocalDate(session.StartedAt, _timeZone);
+        var nearbySessions = await _unitOfWork.ReadingSessions
+            .GetSessionsInRangeAsync(session.StartedAt.AddDays(-1), session.StartedAt.AddDays(1), ct);
 
         bool isFirstQualifyingSession = ReadingStreakHelper.CountsTowardStreak(session)
-            && !sessionsToday.Any(existing =>
+            && !nearbySessions.Any(existing =>
                 existing.Id != session.Id
+                && LocalTimeHelper.LocalDate(existing.StartedAt, _timeZone) == sessionLocalDate
                 && ReadingStreakHelper.CountsTowardStreak(existing));
 
         if (isFirstQualifyingSession)
