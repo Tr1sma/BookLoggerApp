@@ -31,6 +31,10 @@ Versionsschema:
   - Lässt sich ein gekauftes Produkt nicht zuordnen, zeigt die App jetzt einen Fehler statt einer falschen „Freigeschaltet"-Feier ohne tatsächliche Freischaltung.
 - Der „Erster Monat"-Hinweis im Paywall wird nur noch angezeigt, wenn der jeweilige Tarif tatsächlich ein Einführungsangebot hat (zuvor pauschal bei beiden Monatstarifen).
 - App-Neustart (z. B. nach Cloud-Wiederherstellung oder Sprachwechsel) blockiert die Oberfläche nicht mehr: Die kurze Wartezeit vor dem Beenden des Prozesses läuft jetzt ohne den UI-Thread einzufrieren, sodass kein „App reagiert nicht"-Eindruck (ANR-Risiko) auf langsameren Geräten mehr entsteht.
+- JSON-Import (Backup/Merge) schlägt nicht mehr komplett fehl, wenn ein importiertes Buch dieselben internen Schlüssel wie bereits vorhandene Daten trägt (insbesondere die fest vergebenen Genre-Schlüssel): Beim Import werden Büchern und ihren Unterdaten (Lesesitzungen, Zitate, Notizen) jetzt neue Schlüssel zugewiesen und Genres anhand ihres Namens wiederverwendet statt doppelt angelegt. Zudem überspringt ein Fehler bei einem einzelnen Buch nur dieses Buch, statt den ganzen Import abzubrechen.
+- Wiederherstellung aus einem Backup ist jetzt absturzsicher: Bevor die Live-Datenbank überschrieben wird, legt die App eine Sicherungskopie an. Schlägt die anschließende Schema-Aktualisierung fehl, wird die ursprüngliche Datenbank automatisch zurückgespielt, statt den Nutzer mit einer halb-aktualisierten, unbrauchbaren Datenbank zurückzulassen.
+- Schema-Reparatur bei Datenbank-Aktualisierungen greift nur noch bei den tatsächlich zugehörigen „… existiert bereits"-Fehlern (Tabelle/Index/Trigger/View) und nicht mehr bei beliebigen, zufällig ähnlich lautenden Fehlermeldungen — so wird eine Aktualisierung nicht mehr fälschlich als vollständig angewendet markiert, obwohl noch Schritte fehlen.
+- Lese-Abfragen (Statistiken, Suche, Listen) belasten die interne Änderungsverfolgung nicht mehr unnötig, was seltene „Instanz wird bereits verfolgt"-Konflikte vermeidet und große Statistik-Auswertungen schlanker macht.
 
 ### Sicherheit
 - Abo-Features werden jetzt im Service-Layer durchgesetzt, nicht mehr nur über die Sperr-Overlays in der UI. Damit lassen sich kostenpflichtige Funktionen nicht mehr über Umwege (veraltete UI nach Tarif-Ablauf, programmatische Aufrufe) freischalten:
@@ -44,6 +48,9 @@ Versionsschema:
   - Lässt sich die gespeicherte Einwilligung nicht lesen (Datenbank langsam/fehlerhaft), bleiben Analytics und Absturzberichte AUS statt sich stillschweigend einzuschalten. Auch der Fallback in der Android-Aktivität nutzt jetzt „AUS" statt „AN".
   - Nutzer-Profil-Eigenschaften (z. B. Level-/Sprache-/Onboarding-Merkmale, `environment`) werden bei deaktivierten Analytics nicht mehr an Firebase geschrieben — bisher waren nur Ereignisse, nicht aber Profil-Attribute durch die Einwilligung geschützt.
 - Die App-WebView gewährt eingebettetem Web-Inhalt nicht mehr pauschal alle angeforderten Geräte-Berechtigungen: Es wird ausschließlich die Kamera (Video-Capture) freigegeben und auch nur dann, wenn die native Kamera-Berechtigung tatsächlich erteilt ist (für den Barcode-Scanner). Mikrofon und alle übrigen Ressourcen werden abgelehnt.
+- Zip-Bomb-Schutz beim Wiederherstellen eines Backups begrenzt jetzt die tatsächlich entpackten Bytes statt der im Archiv deklarierten (und fälschbaren) Größenangabe. Ein manipuliertes Backup kann den Gerätespeicher so nicht mehr vollschreiben.
+- Cover-Bild-Downloads sind gegen SSRF abgesichert: Es werden nur noch öffentliche `http`/`https`-Adressen geladen; `file://`, andere Schemata sowie loopback-, private und link-lokale Ziele (z. B. `127.0.0.1`, `192.168.x.x`, `169.254.169.254`) werden vor dem Abruf abgelehnt.
+- CSV-Export schützt jetzt vor Formel-Injektion (CSV Injection): Felder, die mit `=`, `+`, `-`, `@`, Tab oder Zeilenumbruch beginnen, werden mit einem führenden Apostroph entschärft, damit Tabellenkalkulationen (Excel/Google Sheets/LibreOffice) sie als Text statt als ausführbare Formel interpretieren. Betrifft u. a. Titel/Beschreibung, die teils aus Fremddaten (Google-Books-API) stammen.
 
 ## [0.12.0]
 

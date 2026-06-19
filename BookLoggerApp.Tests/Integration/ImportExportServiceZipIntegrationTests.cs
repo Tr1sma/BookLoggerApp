@@ -150,6 +150,59 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task RestoreFromBackupAsync_RollsBackLiveDb_WhenRestoreMigrationFails()
+    {
+        // Target: a real, migrated DB holding one book the user must not lose.
+        var targetDir = Path.Combine(_tempRoot, "RollbackTarget");
+        Directory.CreateDirectory(targetDir);
+        var targetDbPath = Path.Combine(targetDir, "booklogger.db");
+        var targetFactory = new SqliteDbContextFactory(targetDbPath);
+        using (var ctx = targetFactory.CreateDbContext())
+        {
+            await ctx.Database.MigrateAsync();
+            ctx.Books.Add(new Book { Title = "Original Book" });
+            await ctx.SaveChangesAsync();
+        }
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+
+        // A corrupt backup: a well-formed SQLite file (so it passes integrity_check)
+        // whose __EFMigrationsHistory is missing the ProductVersion column. EF's
+        // GetAppliedMigrationsAsync then throws a NON-recoverable error during the
+        // restore migration phase — AFTER the live DB has already been overwritten.
+        var badDbPath = Path.Combine(_tempRoot, "bad.db");
+        await using (var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={badDbPath}"))
+        {
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = "CREATE TABLE __EFMigrationsHistory (MigrationId TEXT NOT NULL PRIMARY KEY);";
+            await cmd.ExecuteNonQueryAsync();
+        }
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+
+        var backupPath = Path.Combine(_tempRoot, "rollback-backup.zip");
+        using (var archive = ZipFile.Open(backupPath, ZipArchiveMode.Create))
+        {
+            archive.CreateEntryFromFile(badDbPath, "booklogger.db");
+        }
+
+        var service = new ImportExportService(
+            targetFactory, new FileSystemAdapter(), new TestAppSettingsProvider(), null, targetDir);
+
+        // Act — the restore must fail...
+        Func<Task> act = async () => await service.RestoreFromBackupAsync(backupPath);
+        await act.Should().ThrowAsync<Exception>();
+
+        // Assert — ...and the live DB is rolled back to its original content rather than
+        // left as the half-applied corrupt backup. The user keeps "Original Book".
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        using (var ctx = targetFactory.CreateDbContext())
+        {
+            var titles = await ctx.Books.Select(b => b.Title).ToListAsync();
+            titles.Should().ContainSingle().Which.Should().Be("Original Book");
+        }
+    }
+
+    [Fact]
     public async Task RestoreFromBackupAsync_ShouldHandleCaseInsensitiveBackupEntries()
     {
         var sourceDir = Path.Combine(_tempRoot, "CaseInsensitiveSource");

@@ -15,7 +15,9 @@ public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSess
 
     public async Task<IEnumerable<ReadingSession>> GetSessionsByBookAsync(Guid bookId, CancellationToken ct = default)
     {
+        // Read-only (display/stats); don't pollute the change tracker (INK-10).
         return await _dbSet
+            .AsNoTracking()
             .Include(rs => rs.Moods)
             .Where(rs => rs.BookId == bookId)
             .OrderByDescending(rs => rs.StartedAt)
@@ -24,7 +26,9 @@ public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSess
 
     public async Task<IEnumerable<ReadingSession>> GetSessionsInRangeAsync(DateTime startDate, DateTime endDate, CancellationToken ct = default)
     {
+        // Read-only (stats over potentially a year of sessions); INK-10.
         return await _dbSet
+            .AsNoTracking()
             .Where(rs => rs.StartedAt >= startDate && rs.StartedAt <= endDate)
             .OrderBy(rs => rs.StartedAt)
             .Include(rs => rs.Book)
@@ -47,7 +51,9 @@ public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSess
 
     public async Task<IEnumerable<ReadingSession>> GetRecentSessionsAsync(int count = 10, CancellationToken ct = default)
     {
+        // Read-only (dashboard recent activity); INK-10.
         return await _dbSet
+            .AsNoTracking()
             .OrderByDescending(rs => rs.StartedAt)
             .Take(count)
             .Include(rs => rs.Book)

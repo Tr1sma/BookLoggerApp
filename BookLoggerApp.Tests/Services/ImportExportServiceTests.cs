@@ -4,6 +4,7 @@ using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Tests.TestHelpers;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
@@ -115,6 +116,33 @@ public class ImportExportServiceTests
     }
 
     [Fact]
+    public async Task ExportToCsvAsync_NeutralizesFormulaInjection()
+    {
+        // Arrange — a book whose untrusted fields begin with spreadsheet formula triggers.
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
+        context.Books.Add(new Book
+        {
+            Title = "=HYPERLINK(\"http://evil\",\"x\")",
+            Author = "@SUM(1+1)",
+            ISBN = "1234567890"
+        });
+        await context.SaveChangesAsync();
+
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
+
+        // Act
+        var csv = await service.ExportToCsvAsync();
+
+        // Assert — the dangerous leading characters are escaped with a leading apostrophe,
+        // so a spreadsheet renders them as text instead of executing a formula.
+        csv.Should().Contain("'=HYPERLINK");
+        csv.Should().Contain("'@SUM");
+        csv.Should().NotContain(",=HYPERLINK");
+    }
+
+    [Fact]
     public async Task ImportFromJsonAsync_ShouldImportBooks()
     {
         // Arrange
@@ -197,6 +225,90 @@ public class ImportExportServiceTests
         using var verifyContext = TestDbContext.Create(importDbName);
         var moods = verifyContext.ReadingSessionMoods.Select(m => m.Mood).ToList();
         moods.Should().BeEquivalentTo(new[] { SessionMood.Crying, SessionMood.MindBlown });
+    }
+
+    [Fact]
+    public async Task ImportFromJsonAsync_WithSeededGenre_DoesNotCollideOnGenrePrimaryKey()
+    {
+        // BUG-03: exported books carry their BookGenres + the full Genre entity, whose
+        // primary key is a fixed seed Guid identical on every device. Importing such a
+        // book into any DB (which already holds the seeded genres) used to re-INSERT the
+        // seed Genre row → PK/UNIQUE violation that aborted the whole import. On a real
+        // SQLite engine this reproduces; the EF InMemory provider hides it.
+        using var source = new SqliteTestContext();
+        Guid seededGenreId;
+        string seededGenreName;
+        using (var ctx = source.CreateContext())
+        {
+            var genre = ctx.Genres.First();
+            seededGenreId = genre.Id;
+            seededGenreName = genre.Name;
+            ctx.Books.Add(new Book
+            {
+                Title = "Imported Book",
+                Author = "Author",
+                ISBN = "111",
+                BookGenres = new List<BookGenre> { new() { GenreId = genre.Id } }
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        var exportService = new ImportExportService(source.CreateFactory(), CreateFileSystem(), CreateMockSettingsProvider());
+        var json = await exportService.ExportToJsonAsync();
+
+        using var target = new SqliteTestContext(); // fresh DB with the same seeded genres
+        var importService = new ImportExportService(target.CreateFactory(), CreateFileSystem(), CreateMockSettingsProvider());
+
+        // Act — must not throw a PK/unique violation on the seeded genre.
+        var imported = await importService.ImportFromJsonAsync(json);
+
+        // Assert — book imported and linked to the EXISTING seeded genre (find-or-create),
+        // with no duplicate genre row.
+        imported.Should().Be(1);
+        using var verify = target.CreateContext();
+        var book = verify.Books.Include(b => b.BookGenres).Single(b => b.Title == "Imported Book");
+        book.BookGenres.Should().ContainSingle().Which.GenreId.Should().Be(seededGenreId);
+        verify.Genres.Count(g => g.Name == seededGenreName).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ImportFromJsonAsync_OnRealEngine_AssignsFreshIdsAndPreservesChildren()
+    {
+        // BUG-03: importing must reassign new primary keys to the book and its children so
+        // re-importing the same export (or merging into a DB that shares child PKs) cannot
+        // collide. Children (sessions) must still survive the id rewiring.
+        using var source = new SqliteTestContext();
+        Guid originalBookId = Guid.NewGuid();
+        using (var ctx = source.CreateContext())
+        {
+            ctx.Books.Add(new Book
+            {
+                Id = originalBookId,
+                Title = "Child Book",
+                Author = "Author",
+                ISBN = "222",
+                ReadingSessions = new List<ReadingSession>
+                {
+                    new() { BookId = originalBookId, Minutes = 30 }
+                }
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        var exportService = new ImportExportService(source.CreateFactory(), CreateFileSystem(), CreateMockSettingsProvider());
+        var json = await exportService.ExportToJsonAsync();
+
+        using var target = new SqliteTestContext();
+        var importService = new ImportExportService(target.CreateFactory(), CreateFileSystem(), CreateMockSettingsProvider());
+
+        var imported = await importService.ImportFromJsonAsync(json);
+
+        imported.Should().Be(1);
+        using var verify = target.CreateContext();
+        var book = verify.Books.Include(b => b.ReadingSessions).Single(b => b.Title == "Child Book");
+        book.Id.Should().NotBe(originalBookId, "the import must assign a fresh primary key");
+        book.ReadingSessions.Should().ContainSingle().Which.Minutes.Should().Be(30);
+        book.ReadingSessions.Single().BookId.Should().Be(book.Id);
     }
 
     [Fact]
