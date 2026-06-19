@@ -259,9 +259,12 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
                         }
                     }
                     else if (_entitlementService.CurrentTier != Core.Entitlements.SubscriptionTier.Free
-                             && _entitlementService.CurrentEntitlement?.BillingPeriod != Core.Entitlements.BillingPeriod.Lifetime)
+                             && _entitlementService.CurrentEntitlement?.BillingPeriod != Core.Entitlements.BillingPeriod.Lifetime
+                             && !(_entitlementService.CurrentEntitlement?.PromoExpiresAt > DateTime.UtcNow))
                     {
                         // Subscription is gone from Play; downgrade to Free.
+                        // Guard: don't lapse a promo grant — promos set ProductId=null and
+                        // PromoExpiresAt; they are never returned by QueryActivePurchasesAsync.
                         await _entitlementService.ApplyLapseAsync("expired", ct);
                     }
                 }

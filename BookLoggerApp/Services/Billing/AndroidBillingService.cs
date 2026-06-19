@@ -167,6 +167,15 @@ public class AndroidBillingService : IBillingService
 
         try
         {
+            // BUG-12: oldPurchaseToken is now threaded through from PaywallViewModel for
+            // upgrade/proration flows (Plus → Premium). Plugin.InAppBilling v10 does not
+            // expose a direct BillingFlowParams.setSubscriptionUpdateParams overload —
+            // when the plugin exposes it, wire it in here instead of ignoring the parameter.
+            if (oldPurchaseToken is not null)
+            {
+                System.Diagnostics.Debug.WriteLine($"AndroidBillingService: upgrade flow requested; oldPurchaseToken={oldPurchaseToken[..Math.Min(8, oldPurchaseToken.Length)]}…");
+            }
+
             InAppBillingPurchase? purchase = await _billing!.PurchaseAsync(productId, itemType);
             if (purchase is null)
             {
@@ -174,9 +183,11 @@ public class AndroidBillingService : IBillingService
             }
 
             // Acknowledge so Play doesn't auto-refund the purchase after 3 days.
+            // BUG-04: Must use PurchaseToken (the stable Play token), not TransactionIdentifier
+            // (a plugin-layer alias that may differ). Play's acknowledge API expects PurchaseToken.
             try
             {
-                await _billing.FinalizePurchaseAsync(new[] { purchase.TransactionIdentifier ?? purchase.PurchaseToken });
+                await _billing.FinalizePurchaseAsync(new[] { purchase.PurchaseToken });
             }
             catch (Exception ex)
             {
@@ -184,11 +195,16 @@ public class AndroidBillingService : IBillingService
             }
 
             PurchaseResult? mapped = TryMapPurchase(purchase);
-            if (mapped is not null)
+            if (mapped is null)
             {
-                PurchaseUpdated?.Invoke(this, mapped);
+                // BUG-14: Unknown ProductId — the purchase completed at Play but we can't map
+                // it to a tier. Return Error so the VM can surface a retry prompt instead of
+                // silently claiming success while the entitlement remains unchanged.
+                System.Diagnostics.Debug.WriteLine($"AndroidBillingService: TryMapPurchase returned null for ProductId={purchase.ProductId}");
+                return BillingPurchaseOutcome.Error;
             }
 
+            PurchaseUpdated?.Invoke(this, mapped);
             return BillingPurchaseOutcome.Success;
         }
         catch (InAppBillingPurchaseException purchaseEx)
@@ -316,12 +332,24 @@ public class AndroidBillingService : IBillingService
         // but the plugin's InAppBillingPurchase does not always surface it as a field.
         // Estimate from the transaction date until the server-verification layer lands.
         DateTime baseDate = purchase.TransactionDateUtc;
-        return period switch
+        DateTime? estimated = period switch
         {
             BillingPeriod.Monthly => baseDate.AddDays(30),
             BillingPeriod.Yearly => baseDate.AddDays(365),
             _ => null
         };
+
+        // LOG-01: Never set an expiry that's already in the past for an auto-renewing
+        // subscription. The transaction date is from when the sub was first bought, not
+        // the latest renewal, so for long-running subs the +30/+365 estimate undershoots.
+        // AutoRenewing=true means Play is actively billing the user — returning a past
+        // expiry here would cause EvaluateExpiryIfNeeded to lapse a still-active sub.
+        if (purchase.AutoRenewing && estimated.HasValue && estimated.Value <= DateTime.UtcNow)
+        {
+            return null;
+        }
+
+        return estimated;
     }
 }
 #endif

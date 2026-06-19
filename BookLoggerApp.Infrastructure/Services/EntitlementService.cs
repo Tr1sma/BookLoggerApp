@@ -61,7 +61,15 @@ public class EntitlementService : IEntitlementService
             }
 
             UserEntitlement entitlement = await _store.GetOrCreateAsync(ct);
-            EvaluateExpiryIfNeeded(entitlement);
+
+            if (ShouldExpire(entitlement))
+            {
+                // Route through the full lapse path: persists + runs EntitlementLapseHandler.
+                // ApplyLapseAsync sets _current, _isInitialized, syncs the AppSettings mirror,
+                // and fires EntitlementChanged — so we just return after it completes.
+                await ApplyLapseAsync("expired", ct);
+                return;
+            }
 
             SubscriptionTier previous = SubscriptionTier.Free;
             _current = entitlement;
@@ -97,7 +105,12 @@ public class EntitlementService : IEntitlementService
     public async Task RefreshAsync(CancellationToken ct = default)
     {
         UserEntitlement reloaded = await _store.GetOrCreateAsync(ct);
-        EvaluateExpiryIfNeeded(reloaded);
+
+        if (ShouldExpire(reloaded))
+        {
+            await ApplyLapseAsync("expired", ct);
+            return;
+        }
 
         SubscriptionTier previous = _current?.Tier ?? SubscriptionTier.Free;
         _current = reloaded;
@@ -135,7 +148,7 @@ public class EntitlementService : IEntitlementService
 
         if (purchase.Tier >= SubscriptionTier.Plus && _lapseHandler is not null)
         {
-            await _lapseHandler.ClearEntitlementHidesAsync(ct);
+            await _lapseHandler.ClearEntitlementHidesAsync(purchase.Tier, ct);
         }
 
         await SyncAppSettingsMirrorAsync(current, ct);
@@ -202,7 +215,7 @@ public class EntitlementService : IEntitlementService
 
         if (promo.GrantedTier >= SubscriptionTier.Plus && _lapseHandler is not null)
         {
-            await _lapseHandler.ClearEntitlementHidesAsync(ct);
+            await _lapseHandler.ClearEntitlementHidesAsync(promo.GrantedTier, ct);
         }
 
         await SyncAppSettingsMirrorAsync(current, ct);
@@ -239,7 +252,7 @@ public class EntitlementService : IEntitlementService
             }
             else
             {
-                await _lapseHandler.ClearEntitlementHidesAsync(ct);
+                await _lapseHandler.ClearEntitlementHidesAsync(tier, ct);
             }
         }
 
@@ -247,27 +260,16 @@ public class EntitlementService : IEntitlementService
         Raise(previous, current, EntitlementChangeReason.DebugForce);
     }
 
-    private static void EvaluateExpiryIfNeeded(UserEntitlement entitlement)
-    {
-        if (entitlement.Tier == SubscriptionTier.Free)
-        {
-            return;
-        }
-
-        if (entitlement.BillingPeriod == BillingPeriod.Lifetime)
-        {
-            return;
-        }
-
-        if (entitlement.ExpiresAt is { } expires && expires <= DateTime.UtcNow)
-        {
-            entitlement.Tier = SubscriptionTier.Free;
-            entitlement.LapseReason = "expired";
-            entitlement.LapsedAt = DateTime.UtcNow;
-            entitlement.InGracePeriod = false;
-            entitlement.AutoRenewing = false;
-        }
-    }
+    // Returns true when the subscription has definitely expired and must lapse.
+    // AutoRenewing=true is excluded: the billing provider will renew imminently and
+    // the estimated ExpiresAt (transactionDate + 30/365 days) is unreliable for
+    // active subscriptions — never lapse while the server says it is still active.
+    private static bool ShouldExpire(UserEntitlement entitlement) =>
+        entitlement.Tier != SubscriptionTier.Free
+        && entitlement.BillingPeriod != BillingPeriod.Lifetime
+        && !entitlement.AutoRenewing
+        && entitlement.ExpiresAt is { } expires
+        && expires <= DateTime.UtcNow;
 
     private async Task SyncAppSettingsMirrorAsync(UserEntitlement entitlement, CancellationToken ct)
     {
