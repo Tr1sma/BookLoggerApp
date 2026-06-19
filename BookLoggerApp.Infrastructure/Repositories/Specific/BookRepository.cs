@@ -25,7 +25,9 @@ public class BookRepository : Repository<Book>, IBookRepository
 
     public async Task<IEnumerable<Book>> GetBooksByGenreAsync(Guid genreId, CancellationToken ct = default)
     {
+        // Read-only listing; INK-10. GetBookWithDetailsAsync stays tracked (edit path).
         return await _dbSet
+            .AsNoTracking()
             .Where(b => b.BookGenres.Any(bg => bg.GenreId == genreId))
             .Include(b => b.BookGenres)
                 .ThenInclude(bg => bg.Genre)
@@ -35,6 +37,7 @@ public class BookRepository : Repository<Book>, IBookRepository
     public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, CancellationToken ct = default)
     {
         return await _dbSet
+            .AsNoTracking()
             .Where(b => EF.Functions.Like(b.Title, $"%{searchTerm}%") ||
                        EF.Functions.Like(b.Author, $"%{searchTerm}%") ||
                        (b.ISBN != null && EF.Functions.Like(b.ISBN, $"%{searchTerm}%")) ||
@@ -64,7 +67,9 @@ public class BookRepository : Repository<Book>, IBookRepository
 
     public async Task<IEnumerable<Book>> GetRecentBooksAsync(int count = 10, CancellationToken ct = default)
     {
+        // Read-only listing; INK-10.
         return await _dbSet
+            .AsNoTracking()
             .OrderByDescending(b => b.DateAdded)
             .Take(count)
             .ToListAsync(ct);
@@ -72,7 +77,9 @@ public class BookRepository : Repository<Book>, IBookRepository
 
     public async Task<IEnumerable<Book>> GetBooksByAuthorAsync(string author, CancellationToken ct = default)
     {
+        // Read-only listing; INK-10.
         return await _dbSet
+            .AsNoTracking()
             .Where(b => EF.Functions.Like(b.Author, author))
             .OrderByDescending(b => b.DateAdded)
             .ToListAsync(ct);
@@ -80,7 +87,9 @@ public class BookRepository : Repository<Book>, IBookRepository
 
     public async Task<Book?> GetBookByISBNAsync(string isbn, CancellationToken ct = default)
     {
+        // Read-only lookup (duplicate detection / scan); INK-10.
         return await _dbSet
+            .AsNoTracking()
             .FirstOrDefaultAsync(b => b.ISBN == isbn, ct);
     }
 

@@ -28,6 +28,9 @@ public class UserPlantRepository : Repository<UserPlant>, IUserPlantRepository
         // Filter out hidden-by-entitlement plants so downgraded users neither see them in the
         // garden nor have them counted in boost/status math (CODE_REVIEW SEC-11), mirroring
         // the IsHiddenByEntitlement filter already applied in ShelfService.
+        // NB (INK-10): intentionally TRACKED. PlantService.GetAllAsync feeds these plants into
+        // RefreshPlantStatusesAsync, which mutates growth/water/status and persists via
+        // SaveChanges — AsNoTracking here would silently drop those updates.
         return await _dbSet
             .Include(up => up.Species)
             .Where(up => !up.IsHiddenByEntitlement)

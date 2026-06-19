@@ -32,6 +32,10 @@ public class ImportExportService : IImportExportService
     private const long MaxTotalExtractionSize = 1024L * 1024L * 1024L; // 1 GB
     private const int MaxEntryCount = 10000;
 
+    // BUG-11: suffix for the pre-restore rollback snapshot of the live DB + sidecars.
+    private const string RollbackSnapshotSuffix = ".pre-restore.bak";
+    private static readonly string[] DbFileSuffixes = { "", "-wal", "-shm" };
+
     public ImportExportService(
         IDbContextFactory<AppDbContext> contextFactory,
         IFileSystem fileSystem,
@@ -125,26 +129,30 @@ public class ImportExportService : IImportExportService
                 HasHeaderRecord = true
             });
 
-            // Map books to flat structure for CSV
+            // Map books to flat structure for CSV. Free-text fields are passed through
+            // SanitizeCsvField so a value beginning with =, +, -, @ or a control char
+            // cannot be interpreted as a formula when the export is opened in a
+            // spreadsheet (CSV/formula injection — SEC-14). Title/Author/Description may
+            // contain untrusted Google-Books data, so they are not safe to write verbatim.
             var flatBooks = books.Select(b => new
             {
                 b.Id,
-                b.Title,
-                b.Author,
-                b.ISBN,
-                b.Publisher,
+                Title = SanitizeCsvField(b.Title),
+                Author = SanitizeCsvField(b.Author),
+                ISBN = SanitizeCsvField(b.ISBN),
+                Publisher = SanitizeCsvField(b.Publisher),
                 b.PublicationYear,
-                b.Language,
-                b.Description,
+                Language = SanitizeCsvField(b.Language),
+                Description = SanitizeCsvField(b.Description),
                 b.PageCount,
                 b.CurrentPage,
-                b.CoverImagePath,
+                CoverImagePath = SanitizeCsvField(b.CoverImagePath),
                 Status = b.Status.ToString(),
                 Rating = b.AverageRating,
                 b.DateAdded,
                 b.DateStarted,
                 b.DateCompleted,
-                Genres = string.Join(";", b.BookGenres.Where(bg => bg.Genre != null).Select(bg => bg.Genre.Name))
+                Genres = SanitizeCsvField(string.Join(";", b.BookGenres.Where(bg => bg.Genre != null).Select(bg => bg.Genre.Name)))
             });
 
             await csv.WriteRecordsAsync(flatBooks, ct);
@@ -191,31 +199,44 @@ public class ImportExportService : IImportExportService
                 return 0;
             }
 
-            await using var context = await _contextFactory.CreateDbContextAsync(ct);
-
-            // Add books (with merge strategy to avoid duplicates)
+            // Add books with a merge strategy. Each book is imported in its OWN context and
+            // try/catch so a single failure (e.g. an unexpected constraint) skips just that
+            // book instead of aborting the whole batch (BUG-03).
             int importedCount = 0;
             foreach (var book in books)
             {
-                // Check if book already exists (by ISBN or Title+Author)
-                var existingBook = await context.Books
-                    .FirstOrDefaultAsync(b =>
+                try
+                {
+                    await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
+                    // Check if book already exists (by ISBN or Title+Author)
+                    var exists = await context.Books.AnyAsync(b =>
                         (b.ISBN != null && b.ISBN == book.ISBN) ||
                         (b.Title == book.Title && b.Author == book.Author), ct);
 
-                if (existingBook == null)
-                {
+                    if (exists)
+                    {
+                        _logger?.LogInformation("Book already exists, skipping: {Title} by {Author}",
+                            book.Title, book.Author);
+                        continue;
+                    }
+
+                    // Reassign fresh primary keys to the book + its owned children and resolve
+                    // genres by name (find-or-create) so the import never re-inserts seeded
+                    // Genre rows or collides with existing child PKs (BUG-03).
+                    PrepareImportedBookGraph(book);
+                    await ResolveImportedGenresAsync(context, book, ct);
+
                     context.Books.Add(book);
+                    await context.SaveChangesAsync(ct);
                     importedCount++;
                 }
-                else
+                catch (Exception bookEx)
                 {
-                    _logger?.LogInformation("Book already exists, skipping: {Title} by {Author}",
-                        book.Title, book.Author);
+                    _logger?.LogWarning(bookEx,
+                        "Skipping book '{Title}' during JSON import due to an error", book.Title);
                 }
             }
-
-            await context.SaveChangesAsync(ct);
 
             _logger?.LogInformation("JSON import completed. Imported: {Count}", importedCount);
 
@@ -421,6 +442,196 @@ public class ImportExportService : IImportExportService
         }
     }
 
+    /// <summary>
+    /// Reassigns fresh primary keys to an imported book and its owned children, and rewires
+    /// the child foreign keys, so importing into a non-empty DB (or re-importing the same
+    /// export) can never collide with existing rows. Genres are resolved separately
+    /// (find-or-create) because they are shared/seed entities. See code review BUG-03.
+    /// </summary>
+    private static void PrepareImportedBookGraph(Book book)
+    {
+        book.Id = Guid.NewGuid();
+
+        foreach (var session in book.ReadingSessions)
+        {
+            session.Id = Guid.NewGuid();
+            session.BookId = book.Id;
+            // Moods have a composite PK (ReadingSessionId, Mood); point them at the new
+            // session id so they don't carry the source device's key.
+            foreach (var mood in session.Moods)
+            {
+                mood.ReadingSessionId = session.Id;
+            }
+        }
+
+        foreach (var quote in book.Quotes)
+        {
+            quote.Id = Guid.NewGuid();
+            quote.BookId = book.Id;
+        }
+
+        foreach (var annotation in book.Annotations)
+        {
+            annotation.Id = Guid.NewGuid();
+            annotation.BookId = book.Id;
+        }
+
+        if (book.WishlistInfo is not null)
+        {
+            book.WishlistInfo.BookId = book.Id; // PK == FK for the 1:1
+        }
+    }
+
+    /// <summary>
+    /// Replaces the imported book's carried Genre entities (which keep their original seed
+    /// primary keys) with find-or-create resolutions against the target DB, so a seeded
+    /// genre is never re-inserted (PK collision) and free-form genres are de-duplicated by
+    /// name — mirroring the CSV import path. See code review BUG-03.
+    /// </summary>
+    private static async Task ResolveImportedGenresAsync(AppDbContext context, Book book, CancellationToken ct)
+    {
+        if (book.BookGenres.Count == 0)
+        {
+            return;
+        }
+
+        var existingGenres = await context.Genres.ToListAsync(ct);
+        var lookup = existingGenres.ToDictionary(g => g.Name, StringComparer.OrdinalIgnoreCase);
+
+        var resolved = new List<BookGenre>();
+        var linkedGenreIds = new HashSet<Guid>();
+        foreach (var bookGenre in book.BookGenres)
+        {
+            var name = bookGenre.Genre?.Name?.Trim();
+            if (string.IsNullOrEmpty(name))
+            {
+                continue; // can't resolve a genre we don't have a name for
+            }
+
+            if (!lookup.TryGetValue(name, out var genre))
+            {
+                genre = new Genre { Name = name };
+                context.Genres.Add(genre);
+                lookup[name] = genre;
+            }
+
+            // Skip duplicate links to the same genre (composite PK BookId+GenreId).
+            if (!linkedGenreIds.Add(genre.Id) && genre.Id != Guid.Empty)
+            {
+                continue;
+            }
+
+            resolved.Add(new BookGenre
+            {
+                BookId = book.Id,
+                GenreId = genre.Id,
+                Genre = genre,
+                AddedAt = bookGenre.AddedAt
+            });
+        }
+
+        book.BookGenres = resolved;
+    }
+
+    /// <summary>
+    /// Neutralizes CSV/formula injection: if <paramref name="value"/> begins with a
+    /// character a spreadsheet may interpret as a formula (=, +, -, @) or a control
+    /// character (Tab, CR, LF), it is prefixed with a single apostrophe so Excel /
+    /// Google Sheets / LibreOffice render it as literal text. See code review SEC-14.
+    /// </summary>
+    internal static string? SanitizeCsvField(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        char first = value[0];
+        if (first is '=' or '+' or '-' or '@' or '\t' or '\r' or '\n')
+        {
+            return "'" + value;
+        }
+
+        return value;
+    }
+
+    /// <summary>
+    /// Copies <paramref name="source"/> to <paramref name="destination"/> while counting
+    /// the bytes actually transferred. Throws <see cref="IOException"/> the moment the
+    /// running total would exceed <paramref name="maxBytes"/>. This is the authoritative
+    /// Zip-Bomb guard: it measures real decompressed output rather than trusting the
+    /// archive's declared (and forgeable) entry length. Returns the number of bytes written.
+    /// See code review SEC-05.
+    /// </summary>
+    internal static long CopyStreamWithLimit(Stream source, Stream destination, long maxBytes)
+    {
+        byte[] buffer = new byte[81920];
+        long total = 0;
+        int read;
+        while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            total += read;
+            if (total > maxBytes)
+            {
+                throw new IOException(
+                    "Zip Bomb detected: decompressed content exceeds the total extraction size limit.");
+            }
+            destination.Write(buffer, 0, read);
+        }
+        return total;
+    }
+
+    /// <summary>
+    /// Copies the live DB and its WAL/SHM sidecars to side-by-side <c>.pre-restore.bak</c>
+    /// files so a failed restore can be rolled back. See code review BUG-11.
+    /// </summary>
+    private static void CreateRollbackSnapshot(string dbPath)
+    {
+        foreach (var suffix in DbFileSuffixes)
+        {
+            var src = dbPath + suffix;
+            if (File.Exists(src))
+            {
+                File.Copy(src, src + RollbackSnapshotSuffix, overwrite: true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Restores the DB and sidecars previously captured by <see cref="CreateRollbackSnapshot"/>.
+    /// Any sidecar that did not exist pre-restore is removed so an old DB is never paired
+    /// with a newer WAL/SHM produced by the failed attempt.
+    /// </summary>
+    private static void RestoreRollbackSnapshot(string dbPath)
+    {
+        foreach (var suffix in DbFileSuffixes)
+        {
+            var target = dbPath + suffix;
+            var snapshot = target + RollbackSnapshotSuffix;
+            if (File.Exists(snapshot))
+            {
+                File.Copy(snapshot, target, overwrite: true);
+            }
+            else if (File.Exists(target))
+            {
+                try { File.Delete(target); } catch { /* best effort */ }
+            }
+        }
+    }
+
+    /// <summary>Deletes the rollback snapshot files created by <see cref="CreateRollbackSnapshot"/>.</summary>
+    private static void DeleteRollbackSnapshot(string dbPath)
+    {
+        foreach (var suffix in DbFileSuffixes)
+        {
+            var snapshot = dbPath + suffix + RollbackSnapshotSuffix;
+            if (File.Exists(snapshot))
+            {
+                try { File.Delete(snapshot); } catch { /* best effort */ }
+            }
+        }
+    }
+
     private void CopyDirectory(string sourceDir, string destinationDir)
     {
         var dir = new DirectoryInfo(sourceDir);
@@ -473,7 +684,7 @@ public class ImportExportService : IImportExportService
                 // Sentinel: Manual extraction with path validation to prevent Zip Slip and Zip Bomb vulnerabilities
                 using (var archive = ZipFile.OpenRead(backupPath))
                 {
-                    long totalSize = 0;
+                    long totalExtracted = 0;
                     int entryCount = 0;
 
                     foreach (var entry in archive.Entries)
@@ -483,13 +694,6 @@ public class ImportExportService : IImportExportService
                         if (entryCount > MaxEntryCount)
                         {
                             throw new IOException("Zip Bomb detected: Too many entries in archive.");
-                        }
-
-                        // Check for Zip Bomb (total uncompressed size)
-                        totalSize += entry.Length;
-                        if (totalSize > MaxTotalExtractionSize)
-                        {
-                            throw new IOException("Zip Bomb detected: Total extraction size exceeds limit.");
                         }
 
                         var destinationPath = Path.GetFullPath(Path.Combine(tempExtractDir, entry.FullName));
@@ -515,7 +719,18 @@ public class ImportExportService : IImportExportService
                         else
                         {
                             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-                            entry.ExtractToFile(destinationPath, overwrite: true);
+
+                            // Zip Bomb protection (SEC-05): cap the ACTUAL decompressed bytes
+                            // written across the whole archive, not the entry.Length header.
+                            // A crafted archive can declare a tiny uncompressed size yet
+                            // inflate to gigabytes; the only reliable defense counts the bytes
+                            // as they are written through a limiting copy.
+                            long remainingBudget = MaxTotalExtractionSize - totalExtracted;
+                            using (var entryStream = entry.Open())
+                            using (var fileStream = File.Create(destinationPath))
+                            {
+                                totalExtracted += CopyStreamWithLimit(entryStream, fileStream, remainingBudget);
+                            }
                         }
                     }
                 }
@@ -581,134 +796,159 @@ public class ImportExportService : IImportExportService
                 // Wait a bit to ensure locks are released (SQLite can be sticky)
                 await Task.Delay(200, ct);
 
-                progress?.Report("Swapping DB file");
-                File.Copy(extractedDbPath, currentDbPath, true);
-
-                // Also delete any WAL/SHM files that might cause issues
+                // BUG-11: snapshot the live DB (and any WAL/SHM sidecars) BEFORE overwriting
+                // it, so a failure during the file swap or the subsequent migration can be
+                // rolled back. Without this, a failed restore-migration leaves the user with
+                // an irreversibly overwritten, half-migrated database.
                 var walPath = currentDbPath + "-wal";
                 var shmPath = currentDbPath + "-shm";
-                if (File.Exists(walPath)) File.Delete(walPath);
-                if (File.Exists(shmPath)) File.Delete(shmPath);
+                CreateRollbackSnapshot(currentDbPath);
 
-                progress?.Report("Applying migrations to restored DB");
-                // Run migrations on a FRESH context after file copy. Per-migration
-                // logging mirrors DbInitializer.MigrateDatabaseAsync so a hung migration
-                // is identifiable from Settings → More Info → Diagnostics. A backup may
-                // come from an older schema version, so the pending list can be long
-                // here even when nothing is wrong.
-                _logger?.LogInformation("Applying migrations to restored database...");
-                await using var freshContext = await _contextFactory.CreateDbContextAsync(ct);
-
-                // Mirror DbInitializer's slow-storage tweaks for the restore path.
-                // synchronous=NORMAL with WAL is safe and dramatically speeds up
-                // multi-statement migrations on slow Android eMMC.
                 try
                 {
-                    await freshContext.Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL;", ct);
-                    await freshContext.Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY;", ct);
-                    DatabaseInitializationHelper.AppendInitLog(
-                        "[Restore] [pragma] synchronous=NORMAL, temp_store=MEMORY");
-                }
-                catch (Exception pragmaEx)
-                {
-                    DatabaseInitializationHelper.AppendInitLog(
-                        $"[Restore] [pragma] failed: {pragmaEx.GetType().Name}: {pragmaEx.Message}");
-                }
+                    progress?.Report("Swapping DB file");
+                    File.Copy(extractedDbPath, currentDbPath, true);
 
-                // The backup we just restored may itself contain a stale
-                // __EFMigrationsLock row from the source device. Clear it before
-                // calling MigrateAsync so EF Core's lock acquisition succeeds on
-                // first try instead of polling.
-                await MigrationRecovery.ClearStaleMigrationLockAsync(freshContext, ct);
+                    // Also delete any WAL/SHM files that might cause issues
+                    if (File.Exists(walPath)) File.Delete(walPath);
+                    if (File.Exists(shmPath)) File.Delete(shmPath);
 
-                var restoreApplied = (await freshContext.Database.GetAppliedMigrationsAsync(ct)).ToList();
-                var restorePending = (await freshContext.Database.GetPendingMigrationsAsync(ct)).ToList();
-                DatabaseInitializationHelper.AppendInitLog(
-                    $"[Restore] applied={restoreApplied.Count} pending={restorePending.Count}");
-                if (restoreApplied.Count > 0)
-                {
-                    DatabaseInitializationHelper.AppendInitLog(
-                        $"[Restore] last applied: {restoreApplied[^1]}");
-                }
-                foreach (var p in restorePending)
-                {
-                    DatabaseInitializationHelper.AppendInitLog($"[Restore] pending: {p}");
-                }
+                    progress?.Report("Applying migrations to restored DB");
+                    // Run migrations on a FRESH context after file copy. Per-migration
+                    // logging mirrors DbInitializer.MigrateDatabaseAsync so a hung migration
+                    // is identifiable from Settings → More Info → Diagnostics. A backup may
+                    // come from an older schema version, so the pending list can be long
+                    // here even when nothing is wrong.
+                    _logger?.LogInformation("Applying migrations to restored database...");
+                    await using var freshContext = await _contextFactory.CreateDbContextAsync(ct);
 
-                if (restorePending.Count > 0)
-                {
-                    var restoreMigrator = freshContext.Database.GetInfrastructure()
-                        .GetRequiredService<IMigrator>();
-                    // Surface every SQL command issued by EF Core during these migrations
-                    // to the InitLog. Toggle is reset in finally even if a migration throws.
-                    MigrationLoggingInterceptor.Enabled = true;
+                    // Mirror DbInitializer's slow-storage tweaks for the restore path.
+                    // synchronous=NORMAL with WAL is safe and dramatically speeds up
+                    // multi-statement migrations on slow Android eMMC.
                     try
                     {
-                        for (int i = 0; i < restorePending.Count; i++)
+                        await freshContext.Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL;", ct);
+                        await freshContext.Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY;", ct);
+                        DatabaseInitializationHelper.AppendInitLog(
+                            "[Restore] [pragma] synchronous=NORMAL, temp_store=MEMORY");
+                    }
+                    catch (Exception pragmaEx)
+                    {
+                        DatabaseInitializationHelper.AppendInitLog(
+                            $"[Restore] [pragma] failed: {pragmaEx.GetType().Name}: {pragmaEx.Message}");
+                    }
+
+                    // The backup we just restored may itself contain a stale
+                    // __EFMigrationsLock row from the source device. Clear it before
+                    // calling MigrateAsync so EF Core's lock acquisition succeeds on
+                    // first try instead of polling.
+                    await MigrationRecovery.ClearStaleMigrationLockAsync(freshContext, ct);
+
+                    var restoreApplied = (await freshContext.Database.GetAppliedMigrationsAsync(ct)).ToList();
+                    var restorePending = (await freshContext.Database.GetPendingMigrationsAsync(ct)).ToList();
+                    DatabaseInitializationHelper.AppendInitLog(
+                        $"[Restore] applied={restoreApplied.Count} pending={restorePending.Count}");
+                    if (restoreApplied.Count > 0)
+                    {
+                        DatabaseInitializationHelper.AppendInitLog(
+                            $"[Restore] last applied: {restoreApplied[^1]}");
+                    }
+                    foreach (var p in restorePending)
+                    {
+                        DatabaseInitializationHelper.AppendInitLog($"[Restore] pending: {p}");
+                    }
+
+                    if (restorePending.Count > 0)
+                    {
+                        var restoreMigrator = freshContext.Database.GetInfrastructure()
+                            .GetRequiredService<IMigrator>();
+                        // Surface every SQL command issued by EF Core during these migrations
+                        // to the InitLog. Toggle is reset in finally even if a migration throws.
+                        MigrationLoggingInterceptor.Enabled = true;
+                        try
                         {
-                            var name = restorePending[i];
-                            var stepSw = System.Diagnostics.Stopwatch.StartNew();
-                            DatabaseInitializationHelper.AppendInitLog(
-                                $"[Restore] > [{i + 1}/{restorePending.Count}] {name} ...");
-                            progress?.Report($"Migration {i + 1}/{restorePending.Count}: {name}");
-                            try
+                            for (int i = 0; i < restorePending.Count; i++)
                             {
-                                await restoreMigrator.MigrateAsync(name, ct)
-                                    .WaitAsync(TimeSpan.FromSeconds(180), ct);
-                                stepSw.Stop();
+                                var name = restorePending[i];
+                                var stepSw = System.Diagnostics.Stopwatch.StartNew();
                                 DatabaseInitializationHelper.AppendInitLog(
-                                    $"[Restore] + [{i + 1}/{restorePending.Count}] {name} OK ({stepSw.ElapsedMilliseconds}ms)");
-                            }
-                            catch (TimeoutException)
-                            {
-                                stepSw.Stop();
-                                DatabaseInitializationHelper.AppendInitLog(
-                                    $"[Restore] ! [{i + 1}/{restorePending.Count}] {name} TIMEOUT after {stepSw.ElapsedMilliseconds}ms");
-                                throw new TimeoutException(
-                                    $"Migration '{name}' did not finish within 180 seconds during restore. " +
-                                    "See Settings → More Info → Diagnostics for the full migration log.");
-                            }
-                            catch (Exception ex) when (MigrationRecovery.IsSchemaAlreadyAppliedError(ex))
-                            {
-                                // Same recovery path as DbInitializer: the migration's
-                                // ALTER TABLE / CREATE TABLE found pre-existing schema.
-                                // Mark applied and continue so the user isn't blocked.
-                                stepSw.Stop();
-                                DatabaseInitializationHelper.AppendInitLog(
-                                    $"[Restore] ~ [{i + 1}/{restorePending.Count}] {name} schema already present " +
-                                    $"({ex.GetType().Name}: {ex.Message}); recording as applied");
-                                await MigrationRecovery.ForceMarkMigrationAppliedAsync(freshContext, name, ct);
-                            }
-                            catch (Exception ex)
-                            {
-                                stepSw.Stop();
-                                DatabaseInitializationHelper.AppendInitLog(
-                                    $"[Restore] ! [{i + 1}/{restorePending.Count}] {name} FAILED after {stepSw.ElapsedMilliseconds}ms — {ex.GetType().Name}: {ex.Message}");
-                                throw;
+                                    $"[Restore] > [{i + 1}/{restorePending.Count}] {name} ...");
+                                progress?.Report($"Migration {i + 1}/{restorePending.Count}: {name}");
+                                try
+                                {
+                                    await restoreMigrator.MigrateAsync(name, ct)
+                                        .WaitAsync(TimeSpan.FromSeconds(180), ct);
+                                    stepSw.Stop();
+                                    DatabaseInitializationHelper.AppendInitLog(
+                                        $"[Restore] + [{i + 1}/{restorePending.Count}] {name} OK ({stepSw.ElapsedMilliseconds}ms)");
+                                }
+                                catch (TimeoutException)
+                                {
+                                    stepSw.Stop();
+                                    DatabaseInitializationHelper.AppendInitLog(
+                                        $"[Restore] ! [{i + 1}/{restorePending.Count}] {name} TIMEOUT after {stepSw.ElapsedMilliseconds}ms");
+                                    throw new TimeoutException(
+                                        $"Migration '{name}' did not finish within 180 seconds during restore. " +
+                                        "See Settings → More Info → Diagnostics for the full migration log.");
+                                }
+                                catch (Exception ex) when (MigrationRecovery.IsSchemaAlreadyAppliedError(ex))
+                                {
+                                    // Same recovery path as DbInitializer: the migration's
+                                    // ALTER TABLE / CREATE TABLE found pre-existing schema.
+                                    // Mark applied and continue so the user isn't blocked.
+                                    stepSw.Stop();
+                                    DatabaseInitializationHelper.AppendInitLog(
+                                        $"[Restore] ~ [{i + 1}/{restorePending.Count}] {name} schema already present " +
+                                        $"({ex.GetType().Name}: {ex.Message}); recording as applied");
+                                    await MigrationRecovery.ForceMarkMigrationAppliedAsync(freshContext, name, ct);
+                                }
+                                catch (Exception ex)
+                                {
+                                    stepSw.Stop();
+                                    DatabaseInitializationHelper.AppendInitLog(
+                                        $"[Restore] ! [{i + 1}/{restorePending.Count}] {name} FAILED after {stepSw.ElapsedMilliseconds}ms — {ex.GetType().Name}: {ex.Message}");
+                                    throw;
+                                }
                             }
                         }
+                        finally
+                        {
+                            MigrationLoggingInterceptor.Enabled = false;
+                        }
                     }
-                    finally
+                    else
                     {
-                        MigrationLoggingInterceptor.Enabled = false;
+                        DatabaseInitializationHelper.AppendInitLog("[Restore] no pending migrations");
+                    }
+
+                    // Entitlement state is device-bound: it reflects what Google Play says
+                    // THIS device owns, not what the backup source had. Wipe the UserEntitlement
+                    // rows from the restored DB so DbInitializer re-seeds a Free row on the next
+                    // app-launch; AppStartup then re-queries Play Billing and upgrades if the
+                    // Google account has an active subscription.
+                    if (await freshContext.UserEntitlements.AnyAsync(ct))
+                    {
+                        _logger?.LogInformation("Wiping {Count} imported UserEntitlement rows; they will be re-verified against Play Billing on next startup.",
+                            await freshContext.UserEntitlements.CountAsync(ct));
+                        freshContext.UserEntitlements.RemoveRange(freshContext.UserEntitlements);
+                        await freshContext.SaveChangesAsync(ct);
                     }
                 }
-                else
+                catch
                 {
-                    DatabaseInitializationHelper.AppendInitLog("[Restore] no pending migrations");
+                    // BUG-11 rollback: a failed swap or migration must not leave the user with
+                    // a half-migrated or wrong-schema database. The freshContext above is
+                    // disposed as the exception unwinds (await using), so the file is unlocked
+                    // here — restore the pre-restore snapshot before propagating the error.
+                    DatabaseInitializationHelper.AppendInitLog(
+                        "[Restore] swap/migration failed — rolling back to the pre-restore database");
+                    Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+                    RestoreRollbackSnapshot(currentDbPath);
+                    throw;
                 }
-
-                // Entitlement state is device-bound: it reflects what Google Play says
-                // THIS device owns, not what the backup source had. Wipe the UserEntitlement
-                // rows from the restored DB so DbInitializer re-seeds a Free row on the next
-                // app-launch; AppStartup then re-queries Play Billing and upgrades if the
-                // Google account has an active subscription.
-                if (await freshContext.UserEntitlements.AnyAsync(ct))
+                finally
                 {
-                    _logger?.LogInformation("Wiping {Count} imported UserEntitlement rows; they will be re-verified against Play Billing on next startup.",
-                        await freshContext.UserEntitlements.CountAsync(ct));
-                    freshContext.UserEntitlements.RemoveRange(freshContext.UserEntitlements);
-                    await freshContext.SaveChangesAsync(ct);
+                    DeleteRollbackSnapshot(currentDbPath);
                 }
 
                 progress?.Report("Restoring cover images");

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using BookLoggerApp.Core.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,11 +13,24 @@ namespace BookLoggerApp.Infrastructure.Data;
 internal static class MigrationRecovery
 {
     /// <summary>
+    /// Matches the canonical SQLite "<c>&lt;object&gt; already exists</c>" DDL phrasings —
+    /// <c>table</c>/<c>index</c>/<c>trigger</c>/<c>view</c> — and nothing else. A bare
+    /// "already exists" substring is intentionally NOT enough: unrelated errors (e.g.
+    /// "a file with that name already exists") must not be mistaken for a recoverable
+    /// schema-already-applied condition. See code review LOG-03.
+    /// </summary>
+    private static readonly Regex SchemaObjectAlreadyExistsRegex = new(
+        @"\b(table|index|trigger|view)\b.*\balready exists\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    /// <summary>
     /// True when <paramref name="ex"/> indicates the SQL DDL operation failed because
-    /// the schema element it tried to create already exists. Covers SQLite messages
-    /// observed in field reports — "duplicate column name", "table ... already exists",
-    /// "index ... already exists" — all of which are recoverable by treating the
-    /// migration as already applied.
+    /// the schema element it tried to create already exists. Covers the SQLite messages
+    /// observed in field reports — "duplicate column name" and "<c>table/index/trigger/view
+    /// ... already exists</c>" — all of which are recoverable by treating the migration as
+    /// already applied. The match is deliberately narrow (LOG-03): a generic "already
+    /// exists" substring from an unrelated failure must not trigger a force-mark, which
+    /// would skip the migration's remaining, genuinely-needed statements.
     /// </summary>
     public static bool IsSchemaAlreadyAppliedError(Exception ex)
     {
@@ -30,7 +44,7 @@ internal static class MigrationRecovery
                 continue;
             }
             if (msg.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase) ||
-                msg.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+                SchemaObjectAlreadyExistsRegex.IsMatch(msg))
             {
                 return true;
             }
