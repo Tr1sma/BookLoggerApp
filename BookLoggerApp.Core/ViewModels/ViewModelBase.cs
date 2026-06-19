@@ -116,6 +116,27 @@ public abstract partial class ViewModelBase : ObservableObject, IDisposable
     protected Task ExecuteSafelyWithDbAsync(Func<CancellationToken, Task> action, string? errorPrefix = null)
         => ExecuteCoreAsync(action, errorPrefix, ensureDb: true, BeginLoadScope());
 
+    /// <summary>
+    /// CODE_REVIEW BUG-17: error wrapper for event-driven, fire-and-forget callbacks (billing
+    /// purchase / onboarding state changes) that must NOT touch the shared IsBusy/ErrorMessage.
+    /// Unlike <see cref="ExecuteSafelyAsync(Func{Task}, string?)"/> this neither sets IsBusy nor
+    /// clears/sets ErrorMessage, so a background event firing during an in-flight foreground load
+    /// can't clobber that load's busy/overlay/error state. Caught exceptions are still forwarded
+    /// to the crash reporter.
+    /// </summary>
+    protected async Task ExecuteDetachedAsync(Func<Task> action, string source)
+    {
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"ERROR (detached {source}): {ex}");
+            ReportNonFatal(ex, errorPrefix: null, source: source);
+        }
+    }
+
     private async Task ExecuteCoreAsync(Func<CancellationToken, Task> action, string? errorPrefix, bool ensureDb, CancellationToken loadToken)
     {
         try

@@ -171,6 +171,32 @@ public class PaywallViewModelTests
     }
 
     [Fact]
+    public async Task PurchaseTierAsync_WhenAlreadyInProgress_IgnoresReentrantCall()
+    {
+        // BUG-18: a double-tap on the buy button must not launch two purchase flows.
+        // The reentrancy guard short-circuits the second call while the first is still in flight.
+        _catalog.GetProductId(SubscriptionTier.Plus, BillingPeriod.Yearly).Returns("plus_yearly");
+        var gate = new TaskCompletionSource<BillingPurchaseOutcome>();
+        _billing.LaunchPurchaseFlowAsync("plus_yearly", Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(gate.Task);
+        var vm = CreateVm();
+
+        // First call enters, flips IsPurchaseInProgress, and parks on the gated billing flow.
+        Task first = vm.PurchaseTierAsync(SubscriptionTier.Plus, BillingPeriod.Yearly);
+        vm.IsPurchaseInProgress.Should().BeTrue();
+
+        // Second call is the double-tap and must short-circuit on the guard.
+        Task second = vm.PurchaseTierAsync(SubscriptionTier.Plus, BillingPeriod.Yearly);
+
+        // Release the gated flow and let both calls settle.
+        gate.SetResult(BillingPurchaseOutcome.Success);
+        await Task.WhenAll(first, second);
+
+        await _billing.Received(1).LaunchPurchaseFlowAsync("plus_yearly", Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        vm.IsPurchaseInProgress.Should().BeFalse();
+    }
+
+    [Fact]
     public void DismissCelebration_ClearsShowCelebration()
     {
         var vm = CreateVm();
