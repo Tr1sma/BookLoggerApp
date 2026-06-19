@@ -83,18 +83,18 @@ public partial class BookshelfViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            await _plantService.UpdatePlantStatusesAsync();
+            await _plantService.UpdatePlantStatusesAsync(ct);
 
             // Load shelf color from settings
-            var settings = await _settingsProvider.GetSettingsAsync();
+            var settings = await _settingsProvider.GetSettingsAsync(ct);
             ShelfLedgeColor = settings.ShelfLedgeColor;
             ShelfBaseColor = settings.ShelfBaseColor;
 
             // 1. Fetch data
             var shelves = await _shelfService.GetAllShelvesAsync();
-            var allBooks = await _bookService.GetAllAsync(); // Still needed for Search/Filter? Or just rely on shelves?
+            var allBooks = await _bookService.GetAllAsync(ct); // Still needed for Search/Filter? Or just rely on shelves?
             // Note: GetAllShelvesAsync fetches light objects? 
             // We need full details for items. The ShelfService methods like GetBooksForShelfAsync might be needed,
             // OR we rely on GetShelfByIdAsync having Includes. 
@@ -114,7 +114,7 @@ public partial class BookshelfViewModel : ViewModelBase
             var decorationsOnShelvesIds = new HashSet<Guid>();
 
             // 2. Migration Check: Fetch legacy plants
-            var allPlants = await _plantService.GetAllAsync();
+            var allPlants = await _plantService.GetAllAsync(ct);
             var legacyPlants = allPlants
                 .Where(p => p.IsInBookshelf && p.Status != PlantStatus.Dead)
                 .ToList();

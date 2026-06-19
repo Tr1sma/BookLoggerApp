@@ -47,9 +47,9 @@ public partial class BlindDateViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            var books = await _blindDateService.GetCandidatesAsync();
+            var books = await _blindDateService.GetCandidatesAsync(ct);
             _allCandidates = books.ToList();
             HasCandidates = _allCandidates.Count > 0;
             HasRevealed = false;

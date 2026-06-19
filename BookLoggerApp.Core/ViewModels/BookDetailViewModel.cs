@@ -86,30 +86,30 @@ public partial class BookDetailViewModel : ViewModelBase
         // Initial load gates on the background DB-init like every other content VM
         // (BookList/BookEdit/Bookshelf/Dashboard/...) — CODE_REVIEW INK-13. Follow-up
         // actions (StartReading/Complete/AddSession) stay on ExecuteSafelyAsync.
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            Book = await _bookService.GetWithDetailsAsync(bookId);
+            Book = await _bookService.GetWithDetailsAsync(bookId, ct);
             if (Book == null)
             {
                 SetError(Tr("Error_BookNotFound"));
                 return;
             }
 
-            TotalMinutes = await _progressService.GetTotalMinutesAsync(bookId);
-            TotalPages = await _progressService.GetTotalPagesAsync(bookId);
+            TotalMinutes = await _progressService.GetTotalMinutesAsync(bookId, ct);
+            TotalPages = await _progressService.GetTotalPagesAsync(bookId, ct);
 
-            var sessions = await _progressService.GetSessionsByBookAsync(bookId);
+            var sessions = await _progressService.GetSessionsByBookAsync(bookId, ct);
             Sessions = new ObservableCollection<ReadingSession>(sessions);
 
-            MoodTrackingEnabled = (await _settingsProvider.GetSettingsAsync()).MoodTrackingEnabled;
+            MoodTrackingEnabled = (await _settingsProvider.GetSettingsAsync(ct)).MoodTrackingEnabled;
 
-            var quotes = await _quoteService.GetQuotesByBookAsync(bookId);
+            var quotes = await _quoteService.GetQuotesByBookAsync(bookId, ct);
             Quotes = new ObservableCollection<Quote>(quotes);
 
-            var annotations = await _annotationService.GetAnnotationsByBookAsync(bookId);
+            var annotations = await _annotationService.GetAnnotationsByBookAsync(bookId, ct);
             Annotations = new ObservableCollection<Annotation>(annotations);
 
-            BookGenres = (await _genreService.GetGenresForBookAsync(bookId)).ToList();
+            BookGenres = (await _genreService.GetGenresForBookAsync(bookId, ct)).ToList();
 
             // Build the finish forecast from the freshly-loaded sessions (no extra DB call).
             Forecast = Book is { Status: ReadingStatus.Reading, PageCount: > 0 }

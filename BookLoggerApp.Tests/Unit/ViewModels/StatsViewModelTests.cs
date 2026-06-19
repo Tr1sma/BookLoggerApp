@@ -30,12 +30,12 @@ public class StatsViewModelTests
         _progressService = Substitute.For<IProgressService>();
         _bookService = Substitute.For<IBookService>();
 
-        _statsService.GetReadingTrendAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>())
+        _statsService.GetReadingTrendAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
             .Returns(new Dictionary<DateTime, int>());
-        _statsService.GetBooksByGenreAsync().Returns(new Dictionary<string, int>());
-        _statsService.GetAllAverageRatingsAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>())
+        _statsService.GetBooksByGenreAsync(Arg.Any<CancellationToken>()).Returns(new Dictionary<string, int>());
+        _statsService.GetAllAverageRatingsAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
             .Returns(new Dictionary<RatingCategory, double>());
-        _statsService.GetTopRatedBooksAsync(Arg.Any<int>()).Returns(new List<BookRatingSummary>());
+        _statsService.GetTopRatedBooksAsync(Arg.Any<int>(), ct: Arg.Any<CancellationToken>()).Returns(new List<BookRatingSummary>());
 
         _viewModel = new StatsViewModel(_statsService, _settingsProvider, _plantService, _shareCardService, _progressService, _bookService);
     }
@@ -44,18 +44,18 @@ public class StatsViewModelTests
     public async Task LoadAsync_Should_Populate_Statistics()
     {
         // Arrange
-        _statsService.GetTotalBooksReadAsync().Returns(5);
-        _statsService.GetTotalPagesReadAsync().Returns(1000);
-        _statsService.GetTotalMinutesReadAsync().Returns(600);
-        _statsService.GetCurrentStreakAsync().Returns(3);
-        _statsService.GetLongestStreakAsync().Returns(10);
-        _statsService.GetAverageRatingAsync().Returns(4.5);
+        _statsService.GetTotalBooksReadAsync(Arg.Any<CancellationToken>()).Returns(5);
+        _statsService.GetTotalPagesReadAsync(Arg.Any<CancellationToken>()).Returns(1000);
+        _statsService.GetTotalMinutesReadAsync(Arg.Any<CancellationToken>()).Returns(600);
+        _statsService.GetCurrentStreakAsync(Arg.Any<CancellationToken>()).Returns(3);
+        _statsService.GetLongestStreakAsync(Arg.Any<CancellationToken>()).Returns(10);
+        _statsService.GetAverageRatingAsync(Arg.Any<CancellationToken>()).Returns(4.5);
         
         var settings = new AppSettings { UserLevel = 2, TotalXp = 250, Coins = 100 };
-        _settingsProvider.GetSettingsAsync().Returns(settings);
+        _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(settings);
         
-        _plantService.CalculateTotalXpBoostAsync().Returns(0.1m);
-        _plantService.GetAllAsync().Returns(new List<UserPlant>());
+        _plantService.CalculateTotalXpBoostAsync(Arg.Any<CancellationToken>()).Returns(0.1m);
+        _plantService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(new List<UserPlant>());
 
         // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
@@ -83,9 +83,9 @@ public class StatsViewModelTests
         // NextLevelXp = GetXpForLevel(2) = 100 * 2^2 = 400.
         // Percentage = 75 / 400 = 18.75%
         
-        _settingsProvider.GetSettingsAsync().Returns(settings);
-        _plantService.GetAllAsync().Returns(new List<UserPlant>());
-        _plantService.CalculateTotalXpBoostAsync().Returns(0m);
+        _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(settings);
+        _plantService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(new List<UserPlant>());
+        _plantService.CalculateTotalXpBoostAsync(Arg.Any<CancellationToken>()).Returns(0m);
         // Note: CalculateTotalXpBoostAsync is needed because LoadAsync calls it
 
         // Act
@@ -112,9 +112,9 @@ public class StatsViewModelTests
         // Should be Level 3.
         
         var settings = new AppSettings { UserLevel = 1, TotalXp = 600 };
-        _settingsProvider.GetSettingsAsync().Returns(settings);
-        _plantService.GetAllAsync().Returns(new List<UserPlant>());
-        _plantService.CalculateTotalXpBoostAsync().Returns(0m);
+        _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(settings);
+        _plantService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(new List<UserPlant>());
+        _plantService.CalculateTotalXpBoostAsync(Arg.Any<CancellationToken>()).Returns(0m);
 
         // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
@@ -152,9 +152,9 @@ public class StatsViewModelTests
     public async Task LoadAsync_Should_Exclude_DeadPlants_FromPlantBoosts()
     {
         // Arrange
-        _settingsProvider.GetSettingsAsync().Returns(new AppSettings());
-        _plantService.CalculateTotalXpBoostAsync().Returns(0m);
-        _plantService.GetAllAsync().Returns(new List<UserPlant>
+        _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(new AppSettings());
+        _plantService.CalculateTotalXpBoostAsync(Arg.Any<CancellationToken>()).Returns(0m);
+        _plantService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(new List<UserPlant>
         {
             new()
             {
@@ -182,9 +182,9 @@ public class StatsViewModelTests
     {
         // Arrange
         var settings = new AppSettings { UserLevel = 3, TotalXp = 600, Coins = 0 };
-        _settingsProvider.GetSettingsAsync().Returns(settings);
-        _plantService.GetAllAsync().Returns(new List<UserPlant>());
-        _plantService.CalculateTotalXpBoostAsync().Returns(0m);
+        _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(settings);
+        _plantService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(new List<UserPlant>());
+        _plantService.CalculateTotalXpBoostAsync(Arg.Any<CancellationToken>()).Returns(0m);
 
         // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);

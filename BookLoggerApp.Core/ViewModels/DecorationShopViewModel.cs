@@ -37,13 +37,13 @@ public partial class DecorationShopViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            UserCoins = await _settingsProvider.GetUserCoinsAsync();
-            UserLevel = await _settingsProvider.GetUserLevelAsync();
+            UserCoins = await _settingsProvider.GetUserCoinsAsync(ct);
+            UserLevel = await _settingsProvider.GetUserLevelAsync(ct);
 
             // Load ALL decorations (including locked) — card handles lock overlay
-            var items = await _decorationService.GetAllDecorationShopItemsAsync();
+            var items = await _decorationService.GetAllDecorationShopItemsAsync(ct);
             AllDecorations = new ObservableCollection<ShopItem>(
                 items.OrderBy(d => d.UnlockLevel).ThenBy(d => d.Cost).ThenBy(d => d.Name));
         }, Tr("Error_FailedTo_LoadDecorationShop"));

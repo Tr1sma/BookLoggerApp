@@ -71,7 +71,7 @@ public class BookEditViewModelTests
 
         _genreService.GetAllAsync().Returns(new List<Genre>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
-        _bookService.GetWithDetailsAsync(bookId).Returns(book);
+        _bookService.GetWithDetailsAsync(bookId, Arg.Any<CancellationToken>()).Returns(book);
 
         // Act
         await _viewModel.LoadCommand.ExecuteAsync(bookId);
@@ -132,7 +132,7 @@ public class BookEditViewModelTests
 
         _genreService.GetAllAsync().Returns(new List<Genre>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
-        _bookService.GetWithDetailsAsync(bookId).Returns(book);
+        _bookService.GetWithDetailsAsync(bookId, Arg.Any<CancellationToken>()).Returns(book);
         _bookService.SaveBookWithRelationsAsync(
             Arg.Any<Book>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(),
             Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<IReadOnlyList<Guid>>(), Arg.Any<CancellationToken>())
@@ -334,7 +334,7 @@ public class BookEditViewModelTests
 
         _genreService.GetAllAsync().Returns(new List<Genre>());
         _shelfService.GetAllShelvesAsync().Returns(new List<Shelf>());
-        _bookService.GetWithDetailsAsync(bookId).Returns(book);
+        _bookService.GetWithDetailsAsync(bookId, Arg.Any<CancellationToken>()).Returns(book);
 
         await _viewModel.LoadCommand.ExecuteAsync(bookId);
 

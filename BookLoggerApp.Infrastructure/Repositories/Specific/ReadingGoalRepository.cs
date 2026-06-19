@@ -13,7 +13,7 @@ public class ReadingGoalRepository : Repository<ReadingGoal>, IReadingGoalReposi
     {
     }
 
-    public async Task<IEnumerable<ReadingGoal>> GetActiveGoalsAsync()
+    public async Task<IEnumerable<ReadingGoal>> GetActiveGoalsAsync(CancellationToken ct = default)
     {
         // Compare against today's local midnight, not DateTime.UtcNow. EndDate is stored
         // with ticks that represent the user's local calendar midnight (the UI date picker
@@ -24,24 +24,24 @@ public class ReadingGoalRepository : Repository<ReadingGoal>, IReadingGoalReposi
             .AsNoTracking()
             .Where(rg => !rg.IsCompleted && rg.EndDate >= todayLocalMidnight)
             .OrderBy(rg => rg.EndDate)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<ReadingGoal>> GetCompletedGoalsAsync()
+    public async Task<IEnumerable<ReadingGoal>> GetCompletedGoalsAsync(CancellationToken ct = default)
     {
         return await _dbSet
             .AsNoTracking()
             .Where(rg => rg.IsCompleted)
             .OrderByDescending(rg => rg.EndDate)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<ReadingGoal>> GetGoalsInRangeAsync(DateTime startDate, DateTime endDate)
+    public async Task<IEnumerable<ReadingGoal>> GetGoalsInRangeAsync(DateTime startDate, DateTime endDate, CancellationToken ct = default)
     {
         return await _dbSet
             .AsNoTracking()
             .Where(rg => rg.StartDate <= endDate && rg.EndDate >= startDate)
             .OrderBy(rg => rg.StartDate)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 }

@@ -21,6 +21,7 @@ public class BookService : IBookService
     private readonly ILogger<BookService> _logger;
     private readonly IAnalyticsService _analytics;
     private readonly IFeatureGuard? _featureGuard;
+    private readonly IValidationService? _validation;
 
     public BookService(
         IUnitOfWork unitOfWork,
@@ -29,7 +30,8 @@ public class BookService : IBookService
         IGoalService goalService,
         ILogger<BookService> logger,
         IAnalyticsService? analytics = null,
-        IFeatureGuard? featureGuard = null)
+        IFeatureGuard? featureGuard = null,
+        IValidationService? validation = null)
     {
         _unitOfWork = unitOfWork;
         _progressionService = progressionService;
@@ -38,26 +40,32 @@ public class BookService : IBookService
         _logger = logger;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
         _featureGuard = featureGuard;
+        _validation = validation;
     }
 
     public async Task<IReadOnlyList<Book>> GetAllAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync();
+        var books = await _unitOfWork.Books.GetAllAsync(ct);
         return books.OrderByDescending(b => b.DateAdded).ToList();
     }
 
     public async Task<Book?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _unitOfWork.Books.GetByIdAsync(id);
+        return await _unitOfWork.Books.GetByIdAsync(id, ct);
     }
 
     public async Task<Book> AddAsync(Book book, CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: enforce the BookValidator here so invalid data (blank title/author,
+        // absurd page counts) cannot reach the DB via any caller, not just the BookEdit form.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(book, ct);
+
         // Business Logic: Set DateAdded if not set
         if (book.DateAdded == default)
             book.DateAdded = DateTime.UtcNow;
 
-        var result = await _unitOfWork.Books.AddAsync(book);
+        var result = await _unitOfWork.Books.AddAsync(book, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _analytics.LogEvent(AnalyticsEventNames.BookAdded, AnalyticsParamBuilder.Create()
@@ -70,9 +78,13 @@ public class BookService : IBookService
 
     public async Task UpdateAsync(Book book, CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: validate before persisting any edit.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(book, ct);
+
         try
         {
-            await _unitOfWork.Books.UpdateAsync(book);
+            await _unitOfWork.Books.UpdateAsync(book, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (DbUpdateConcurrencyException ex)
@@ -84,23 +96,23 @@ public class BookService : IBookService
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var book = await _unitOfWork.Books.GetByIdAsync(id);
+        var book = await _unitOfWork.Books.GetByIdAsync(id, ct);
         if (book != null)
         {
-            await _unitOfWork.Books.DeleteAsync(book);
+            await _unitOfWork.Books.DeleteAsync(book, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
     }
 
     public async Task<IReadOnlyList<Book>> GetByStatusAsync(ReadingStatus status, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetBooksByStatusAsync(status);
+        var books = await _unitOfWork.Books.GetBooksByStatusAsync(status, ct);
         return books.ToList();
     }
 
     public async Task<IReadOnlyList<Book>> GetByGenreAsync(Guid genreId, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetBooksByGenreAsync(genreId);
+        var books = await _unitOfWork.Books.GetBooksByGenreAsync(genreId, ct);
         return books.ToList();
     }
 
@@ -111,18 +123,18 @@ public class BookService : IBookService
             return await GetAllAsync(ct);
         }
 
-        var books = await _unitOfWork.Books.SearchBooksAsync(query);
+        var books = await _unitOfWork.Books.SearchBooksAsync(query, ct);
         return books.ToList();
     }
 
     public async Task<Book?> GetByISBNAsync(string isbn, CancellationToken ct = default)
     {
-        return await _unitOfWork.Books.GetBookByISBNAsync(isbn);
+        return await _unitOfWork.Books.GetBookByISBNAsync(isbn, ct);
     }
 
     public async Task<Book?> GetWithDetailsAsync(Guid id, CancellationToken ct = default)
     {
-        return await _unitOfWork.Books.GetBookWithDetailsAsync(id);
+        return await _unitOfWork.Books.GetBookWithDetailsAsync(id, ct);
     }
 
     public async Task<int> ImportBooksAsync(IEnumerable<Book> books, CancellationToken ct = default)
@@ -144,17 +156,17 @@ public class BookService : IBookService
 
     public async Task<int> GetTotalCountAsync(CancellationToken ct = default)
     {
-        return await _unitOfWork.Books.CountAsync();
+        return await _unitOfWork.Books.CountAsync(ct);
     }
 
     public async Task<int> GetCountByStatusAsync(ReadingStatus status, CancellationToken ct = default)
     {
-        return await _unitOfWork.Books.CountAsync(b => b.Status == status);
+        return await _unitOfWork.Books.CountAsync(b => b.Status == status, ct);
     }
 
     public async Task StartReadingAsync(Guid bookId, CancellationToken ct = default)
     {
-        var book = await _unitOfWork.Books.GetByIdAsync(bookId);
+        var book = await _unitOfWork.Books.GetByIdAsync(bookId, ct);
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
@@ -167,7 +179,7 @@ public class BookService : IBookService
 
         try
         {
-            await _unitOfWork.Books.UpdateAsync(book);
+            await _unitOfWork.Books.UpdateAsync(book, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (DbUpdateConcurrencyException ex)
@@ -179,7 +191,7 @@ public class BookService : IBookService
 
     public async Task CompleteBookAsync(Guid bookId, CancellationToken ct = default)
     {
-        var book = await _unitOfWork.Books.GetByIdAsync(bookId);
+        var book = await _unitOfWork.Books.GetByIdAsync(bookId, ct);
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
@@ -193,7 +205,7 @@ public class BookService : IBookService
 
         try
         {
-            await _unitOfWork.Books.UpdateAsync(book);
+            await _unitOfWork.Books.UpdateAsync(book, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
             if (!wasAlreadyCompleted)
@@ -227,11 +239,16 @@ public class BookService : IBookService
         IReadOnlyList<Guid> manualShelfIds,
         CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: this is the load-bearing BookEdit save path. Validate up front so
+        // an invalid book never opens the transaction or writes relation rows.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(book, ct);
+
         // Derive the new/existing + completion/wishlist decisions from PERSISTED state
         // before touching anything, so they reflect the DB, not the in-memory edit.
         var persisted = book.Id == Guid.Empty
             ? null
-            : await _unitOfWork.Books.GetByIdAsync(book.Id);
+            : await _unitOfWork.Books.GetByIdAsync(book.Id, ct);
         bool isNew = persisted == null;
         var persistedStatus = persisted?.Status;
 
@@ -251,11 +268,11 @@ public class BookService : IBookService
             // ---- Book record ----
             if (isNew)
             {
-                await _unitOfWork.Books.AddAsync(book);
+                await _unitOfWork.Books.AddAsync(book, ct);
             }
             else
             {
-                await _unitOfWork.Books.UpdateAsync(book);
+                await _unitOfWork.Books.UpdateAsync(book, ct);
 
                 if (isLeavingWishlist)
                 {
@@ -368,7 +385,7 @@ public class BookService : IBookService
 
     public async Task<ProgressionResult?> UpdateProgressAsync(Guid bookId, int currentPage, CancellationToken ct = default)
     {
-        var book = await _unitOfWork.Books.GetByIdAsync(bookId);
+        var book = await _unitOfWork.Books.GetByIdAsync(bookId, ct);
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
@@ -396,7 +413,7 @@ public class BookService : IBookService
 
         try
         {
-            await _unitOfWork.Books.UpdateAsync(book);
+            await _unitOfWork.Books.UpdateAsync(book, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
             ProgressionResult? completionResult = null;
