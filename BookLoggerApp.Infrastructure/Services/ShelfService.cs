@@ -198,21 +198,18 @@ public class ShelfService : IShelfService
 
         if (!exists)
         {
-            // Shift all existing items forward so the new book goes to position 0 (first)
-            var existingEntries = await context.BookShelves
-                .Where(bs => bs.ShelfId == shelfId)
-                .ToListAsync();
-
-            foreach (var entry in existingEntries)
-            {
-                entry.Position += 1;
-            }
+            // Append at the end of the shelf's unified position space, identical to
+            // AddPlantToShelfAsync / AddDecorationToShelfAsync. Books, plants and
+            // decorations share one Position sequence on a shelf, so inserting a book
+            // at 0 (shifting only BookShelves) collided with plants/decorations already
+            // there and produced unstable ordering. (INK-02)
+            var maxPos = await GetMaxPositionOnShelfAsync(context, shelfId);
 
             context.BookShelves.Add(new BookShelf
             {
                 ShelfId = shelfId,
                 BookId = bookId,
-                Position = 0
+                Position = maxPos + 1
             });
             await context.SaveChangesAsync();
         }

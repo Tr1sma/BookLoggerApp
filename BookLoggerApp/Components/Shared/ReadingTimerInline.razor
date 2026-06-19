@@ -144,7 +144,7 @@
                     <div class="timer-detail-item">
                         <label>@L["TimerInline_Minutes"]</label>
                         <div class="minutes-display">
-                            @L["TimerInline_MinutesValue", (int)Math.Ceiling(ElapsedTime.TotalMinutes)]
+                            @L["TimerInline_MinutesValue", (int)ElapsedTime.TotalMinutes]
                         </div>
                     </div>
                 </div>
@@ -631,7 +631,7 @@
                 CurrentPageInput >= Book.PageCount.Value;
 
             // End session using ProgressService which handles XP, streak, plant boost, level-ups
-            int minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes);
+            int minutes = (int)ElapsedTime.TotalMinutes;
             var result = await ProgressService.EndSessionAsync(CurrentSessionId.Value, pagesRead, minutes, _selectedMoods);
 
             // Update book progress if pages were read
@@ -932,7 +932,7 @@
     private int CalculateXP()
     {
         // Use correct XP formula: 5 XP per minute, 20 XP per page
-        int minutes = (int)Math.Ceiling(ElapsedTime.TotalMinutes);
+        int minutes = (int)ElapsedTime.TotalMinutes;
         int pagesRead = CalculatePagesRead();
         int baseXp = (minutes * 5) + (pagesRead * 20);
 
