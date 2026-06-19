@@ -98,7 +98,7 @@ public partial class PaywallViewModel : ViewModelBase
                 string? productId = _productCatalog.GetProductId(tier, period);
                 if (productId is null)
                 {
-                    Banner = $"{tier} is not available as {period}.";
+                    Banner = Tr("Paywall_TierNotAvailableAsPeriod", tier, period);
                     return;
                 }
 
@@ -142,10 +142,10 @@ public partial class PaywallViewModel : ViewModelBase
 
                 if (outcome == BillingPurchaseOutcome.Success)
                 {
-                    CelebrationHeadline = $"{tier} unlocked!";
+                    CelebrationHeadline = Tr("Paywall_TierUnlocked", tier);
                     CelebrationDetail = period == BillingPeriod.Lifetime
-                        ? "Thanks for going Lifetime — enjoy forever."
-                        : "Thanks! Your subscription is active.";
+                        ? Tr("Paywall_LifetimeCelebration")
+                        : Tr("Paywall_SubscriptionActive");
                     ShowCelebration = true;
                     Banner = null;
                 }
@@ -154,13 +154,13 @@ public partial class PaywallViewModel : ViewModelBase
                     Banner = outcome switch
                     {
                         BillingPurchaseOutcome.UserCancelled => null,
-                        BillingPurchaseOutcome.AlreadyOwned => "You already own this subscription.",
-                        BillingPurchaseOutcome.BillingUnavailable => "Google Play Billing is not available right now.",
-                        BillingPurchaseOutcome.NotAvailable => "This product is not available in your region.",
-                        _ => "Purchase failed. Please try again."
+                        BillingPurchaseOutcome.AlreadyOwned => Tr("Paywall_AlreadyOwned"),
+                        BillingPurchaseOutcome.BillingUnavailable => Tr("Paywall_BillingUnavailable"),
+                        BillingPurchaseOutcome.NotAvailable => Tr("Paywall_ProductNotAvailableRegion"),
+                        _ => Tr("Paywall_PurchaseFailed")
                     };
                 }
-            }, "Failed to start purchase");
+            }, Tr("Error_FailedTo_StartPurchase"));
         }
         finally
         {
@@ -178,7 +178,7 @@ public partial class PaywallViewModel : ViewModelBase
             _analytics.LogEvent(AnalyticsEventNames.PurchaseRestored, AnalyticsParamBuilder.Create()
                 .Add(AnalyticsParamNames.Tier, _entitlementService.CurrentTier.ToString())
                 .BuildMutable());
-            Banner = $"Current tier: {_entitlementService.CurrentTier}.";
+            Banner = Tr("Paywall_CurrentTier", _entitlementService.CurrentTier);
         }, Tr("Error_FailedTo_RestorePurchases"));
     }
 
@@ -196,7 +196,7 @@ public partial class PaywallViewModel : ViewModelBase
                     .Add(AnalyticsParamNames.GrantedTier, result.Activation?.GrantedTier.ToString() ?? "unknown")
                     .BuildMutable());
                 PromoCodeInput = string.Empty;
-                CelebrationHeadline = "Successfully redeemed code";
+                CelebrationHeadline = Tr("Paywall_PromoRedeemed");
                 CelebrationDetail = result.Message;
                 ShowCelebration = true;
                 Banner = null;

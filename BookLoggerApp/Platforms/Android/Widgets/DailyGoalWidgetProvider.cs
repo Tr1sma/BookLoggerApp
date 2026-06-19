@@ -65,31 +65,33 @@ public class DailyGoalWidgetProvider : AppWidgetProvider
                     Math.Min(goalData.ProgressPercentage, 100), false);
                 views.SetTextViewText(Resource.Id.widget_goal_percent, $"{goalData.ProgressPercentage}%");
 
-                // Goal type icon and detail text
-                var (icon, unit) = goalData.GoalType switch
+                // Goal type icon and detail text. UX-01: the unit label is resolved from localized
+                // resources (the GoalType string itself stays the canonical English enum key).
+                var (icon, unitResId) = goalData.GoalType switch
                 {
-                    "Books" => ("\U0001F4DA", "Books"),
-                    "Pages" => ("\U0001F4C4", "Pages"),
-                    "Minutes" => ("\u23F1\uFE0F", "Minutes"),
-                    _ => ("\U0001F3AF", "")
+                    "Books" => ("\U0001F4DA", Resource.String.widget_unit_books),
+                    "Pages" => ("\U0001F4C4", Resource.String.widget_unit_pages),
+                    "Minutes" => ("\u23F1\uFE0F", Resource.String.widget_unit_minutes),
+                    _ => ("\U0001F3AF", 0)
                 };
+                string unit = unitResId != 0 ? context.GetString(unitResId) : string.Empty;
                 views.SetTextViewText(Resource.Id.widget_goal_icon, icon);
                 views.SetTextViewText(Resource.Id.widget_goal_detail,
                     $"{goalData.Current}/{goalData.Target} {unit}");
             }
             else
             {
-                views.SetTextViewText(Resource.Id.widget_goal_title, "No active goal");
+                views.SetTextViewText(Resource.Id.widget_goal_title, context.GetString(Resource.String.widget_no_active_goal));
                 views.SetTextViewText(Resource.Id.widget_goal_icon, "\U0001F3AF");
                 views.SetProgressBar(Resource.Id.widget_goal_progress_bar, 100, 0, false);
                 views.SetTextViewText(Resource.Id.widget_goal_percent, "");
-                views.SetTextViewText(Resource.Id.widget_goal_detail, "Create a goal in BookHeart");
+                views.SetTextViewText(Resource.Id.widget_goal_detail, context.GetString(Resource.String.widget_create_goal));
             }
         }
         catch
         {
             views.SetTextViewText(Resource.Id.widget_goal_title, "BookHeart");
-            views.SetTextViewText(Resource.Id.widget_goal_detail, "Tap to open");
+            views.SetTextViewText(Resource.Id.widget_goal_detail, context.GetString(Resource.String.widget_tap_to_open));
         }
 
         // Click opens the app

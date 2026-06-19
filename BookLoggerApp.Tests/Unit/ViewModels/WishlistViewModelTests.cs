@@ -197,6 +197,44 @@ public class WishlistViewModelTests
     }
 
     [Fact]
+    public async Task LookupByIsbnAsync_Success_SetsLookupMessageIsErrorFalse()
+    {
+        // INK-09: the UI styles the lookup message by a bool flag (mirroring BookEditViewModel)
+        // instead of sniffing the message text for "found", which broke under German.
+        _vm.NewIsbn = "9780140449136";
+        _lookupService.LookupByISBNAsync("9780140449136", Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<BookMetadata?>(new BookMetadata { Title = "The Odyssey", Author = "Homer" }));
+
+        await _vm.LookupByIsbnCommand.ExecuteAsync(null);
+
+        _vm.LookupMessageIsError.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task LookupByIsbnAsync_NotFound_SetsLookupMessageIsErrorTrue()
+    {
+        _vm.NewIsbn = "0000000000";
+        _lookupService.LookupByISBNAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<BookMetadata?>(null));
+
+        await _vm.LookupByIsbnCommand.ExecuteAsync(null);
+
+        _vm.LookupMessageIsError.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task LookupByIsbnAsync_Error_SetsLookupMessageIsErrorTrue()
+    {
+        _vm.NewIsbn = "9780140449136";
+        _lookupService.LookupByISBNAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns<Task<BookMetadata?>>(_ => throw new InvalidOperationException("boom"));
+
+        await _vm.LookupByIsbnCommand.ExecuteAsync(null);
+
+        _vm.LookupMessageIsError.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task MoveToLibraryAsync_RemovesFromCollection()
     {
         var book = new Book { Id = Guid.NewGuid(), Title = "B" };
@@ -302,6 +340,7 @@ public class WishlistViewModelTests
         _vm.NewRecommendedBy = "friend";
         _vm.NewWishlistNotes = "notes";
         _vm.LookupMessage = "msg";
+        _vm.LookupMessageIsError = true;
 
         _vm.ClearAddForm();
 
@@ -312,5 +351,6 @@ public class WishlistViewModelTests
         _vm.NewRecommendedBy.Should().BeEmpty();
         _vm.NewWishlistNotes.Should().BeEmpty();
         _vm.LookupMessage.Should().BeNull();
+        _vm.LookupMessageIsError.Should().BeFalse();
     }
 }

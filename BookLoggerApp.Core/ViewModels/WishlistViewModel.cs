@@ -53,6 +53,9 @@ public partial class WishlistViewModel : ViewModelBase
     [ObservableProperty]
     private string? _lookupMessage;
 
+    [ObservableProperty]
+    private bool _lookupMessageIsError;
+
     // Lookup result fields for auto-fill
     [ObservableProperty]
     private int? _lookupPageCount;
@@ -128,6 +131,10 @@ public partial class WishlistViewModel : ViewModelBase
 
         IsLookingUp = true;
         LookupMessage = null;
+        // INK-09: default to the error styling; only a confirmed hit flips it to success. This
+        // mirrors BookEditViewModel so the UI binds to a flag instead of sniffing the message text
+        // for "found" (which broke once the message was localized to German).
+        LookupMessageIsError = true;
 
         try
         {
@@ -140,6 +147,7 @@ public partial class WishlistViewModel : ViewModelBase
                 _lookupCoverUrl = metadata.CoverImageUrl;
                 _lookupDescription = metadata.Description;
                 LookupMessage = Tr("Lookup_BookFound");
+                LookupMessageIsError = false;
             }
             else
             {
@@ -250,6 +258,7 @@ public partial class WishlistViewModel : ViewModelBase
         _lookupCoverUrl = null;
         _lookupDescription = null;
         LookupMessage = null;
+        LookupMessageIsError = false;
         ErrorMessage = null;
     }
 
