@@ -256,10 +256,13 @@ public class GoalService : IGoalService
     {
         var (startDate, endDate) = GoalDateRangeHelper.GetGoalRangeUtc(goal);
 
+        // INK-01: attribute a session to the goal window by StartedAt (the canonical timestamp
+        // streaks, the reading trend and the dashboard already use), so a session that crosses a
+        // day/period boundary lands in the same window everywhere.
         return sessions
             .Where(s => !excludedBookIds.Contains(s.BookId) &&
                         (genreMatchingBookIds == null || genreMatchingBookIds.Contains(s.BookId)) &&
-                        s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
+                        s.StartedAt >= startDate && s.StartedAt <= endDate)
             .Sum(s => s.PagesRead ?? 0);
     }
 
@@ -267,10 +270,11 @@ public class GoalService : IGoalService
     {
         var (startDate, endDate) = GoalDateRangeHelper.GetGoalRangeUtc(goal);
 
+        // INK-01: attribute a session to the goal window by StartedAt (see CalculatePagesProgress).
         return sessions
             .Where(s => !excludedBookIds.Contains(s.BookId) &&
                         (genreMatchingBookIds == null || genreMatchingBookIds.Contains(s.BookId)) &&
-                        s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
+                        s.StartedAt >= startDate && s.StartedAt <= endDate)
             .Sum(s => s.Minutes);
     }
 

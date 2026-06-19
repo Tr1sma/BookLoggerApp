@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BookLoggerApp.Core.Enums;
+using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp.Core.Models;
 
@@ -41,11 +42,9 @@ public class ReadingGoal
     // Computed Properties
     public int ProgressPercentage => Target > 0 ? (Current * 100 / Target) : 0;
 
-    // Uses DateTime.Now.Date (local today's midnight) rather than DateTime.UtcNow because
+    // Active is decided against local midnight (DateTime.Now), never DateTime.UtcNow, because
     // EndDate comes from the UI's <input type="date"> picker as Kind=Unspecified with ticks
-    // representing the user's local calendar date. Comparing against UtcNow would flip this
-    // flag to false several hours too early for users in positive-UTC timezones (e.g. a
-    // German user on Dec 31 22:00 local time would see the goal disappear from "active"
-    // because UtcNow's ticks already exceed EndDate's local-midnight ticks).
-    public bool IsActive => !IsCompleted && DateTime.Now.Date <= EndDate;
+    // representing the user's local calendar date. The rule lives in GoalActivityHelper so the
+    // app, the repository query and the Android widget cannot drift (CODE_REVIEW INK-06).
+    public bool IsActive => GoalActivityHelper.IsActiveAsOf(this, DateTime.Now);
 }

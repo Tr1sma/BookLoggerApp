@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Data;
@@ -17,10 +18,15 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class AdvancedStatsService : IAdvancedStatsService
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
+    private readonly TimeZoneInfo _timeZone;
 
-    public AdvancedStatsService(IDbContextFactory<AppDbContext> contextFactory)
+    // ReadingSession.StartedAt is canonically UTC; day/weekday/hour buckets must be formed in the
+    // user's local calendar (CODE_REVIEW LOG-04/LOG-08). The zone is injectable (default
+    // TimeZoneInfo.Local) so the bucketing stays deterministically testable on any CI offset.
+    public AdvancedStatsService(IDbContextFactory<AppDbContext> contextFactory, TimeZoneInfo? timeZone = null)
     {
         _contextFactory = contextFactory;
+        _timeZone = timeZone ?? TimeZoneInfo.Local;
     }
 
     // ===== Trends tab =====
@@ -37,7 +43,7 @@ public class AdvancedStatsService : IAdvancedStatsService
 
         return sessions
             .Where(s => s.Minutes > 0)
-            .GroupBy(s => s.StartedAt.Date)
+            .GroupBy(s => LocalTimeHelper.LocalDate(s.StartedAt, _timeZone))
             .ToDictionary(
                 g => g.Key,
                 g => g.Sum(s => s.Minutes)
@@ -53,7 +59,7 @@ public class AdvancedStatsService : IAdvancedStatsService
 
         return sessions
             .Where(s => s.Minutes > 0)
-            .GroupBy(s => s.StartedAt.DayOfWeek)
+            .GroupBy(s => LocalTimeHelper.ToLocal(s.StartedAt, _timeZone).DayOfWeek)
             .ToDictionary(
                 g => g.Key,
                 g => g.Sum(s => s.Minutes)
@@ -77,7 +83,7 @@ public class AdvancedStatsService : IAdvancedStatsService
 
         foreach (var session in sessions.Where(s => s.Minutes > 0))
         {
-            int hour = session.StartedAt.Hour;
+            int hour = LocalTimeHelper.ToLocal(session.StartedAt, _timeZone).Hour;
             string bucket = hour switch
             {
                 >= 5 and <= 11 => "Morning",
@@ -107,7 +113,9 @@ public class AdvancedStatsService : IAdvancedStatsService
             { ">2h", 0 }
         };
 
-        foreach (var session in sessions)
+        // INK-12: exclude 0-minute (pages-only) sessions so the length histogram uses the same
+        // session population as every other distribution method (all filter Minutes > 0).
+        foreach (var session in sessions.Where(s => s.Minutes > 0))
         {
             string bucket = session.Minutes switch
             {
