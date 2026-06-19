@@ -69,19 +69,20 @@ public class AnalyticsConsentGateTests : IDisposable
     }
 
     [Fact]
-    public async Task InitializeAsync_falls_back_to_allowed_on_db_init_timeout()
+    public async Task InitializeAsync_fails_closed_on_db_init_timeout()
     {
         DatabaseInitializationHelper.ResetForTests();
         DatabaseInitializationHelper.MarkAsFailed(new InvalidOperationException("db down"));
 
-        var provider = new FakeSettingsProvider(analytics: false, crash: false);
+        var provider = new FakeSettingsProvider(analytics: true, crash: true);
         using var gate = new AnalyticsConsentGate(provider);
 
         await gate.InitializeAsync();
 
+        // Consent must default OFF whenever the persisted choice cannot be confirmed.
         gate.IsInitialized.Should().BeTrue();
-        gate.AnalyticsAllowed.Should().BeTrue();
-        gate.CrashAllowed.Should().BeTrue();
+        gate.AnalyticsAllowed.Should().BeFalse();
+        gate.CrashAllowed.Should().BeFalse();
     }
 
     [Fact]

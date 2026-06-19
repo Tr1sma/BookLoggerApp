@@ -45,10 +45,14 @@ public sealed class AnalyticsConsentGate : IAnalyticsConsentGate, IDisposable
         }
         catch
         {
+            // Fail CLOSED: when the persisted consent choice cannot be confirmed
+            // (DB init timed out or threw), default analytics + crash reporting to
+            // OFF rather than ON. Honoring an opt-out under DB failure outweighs
+            // losing telemetry for a degraded session. See code review SEC-02.
             lock (_lock)
             {
-                _analyticsAllowed = true;
-                _crashAllowed = true;
+                _analyticsAllowed = false;
+                _crashAllowed = false;
                 _initialized = true;
             }
             RaiseConsentChanged();

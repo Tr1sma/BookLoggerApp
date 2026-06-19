@@ -87,6 +87,10 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
 
     public void SetUserProperty(string name, string? value)
     {
+        // Gate user-profile attributes the same way as events (LogEvent/LogScreenView).
+        // Without this, profile properties are written to the Firebase analytics state
+        // even when the user has opted out. See code review BUG-07.
+        if (!_gate.AnalyticsAllowed) return;
         try
         {
             GetAnalytics()?.SetUserProperty(name, value);
@@ -99,6 +103,7 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
 
     public void SetUserId(string? userId)
     {
+        if (!_gate.AnalyticsAllowed) return;
         try
         {
             GetAnalytics()?.SetUserId(userId);

@@ -1,11 +1,14 @@
+using Android.Content.PM;
 using Android.Webkit;
 
 namespace BookLoggerApp.Platforms.Android;
 
 /// <summary>
-/// Custom WebChromeClient that grants camera and microphone permissions to the WebView.
-/// This is necessary because MAUI Blazor Hybrid WebViews don't automatically inherit
-/// native app permissions for getUserMedia() JavaScript calls.
+/// Custom WebChromeClient that grants the WebView the camera permission required by the
+/// in-app barcode scanner (getUserMedia video capture). It grants ONLY video capture, and
+/// ONLY while the native CAMERA runtime permission is actually held. Every other resource
+/// (microphone, protected media id, …) is denied so embedded or future remote web content
+/// cannot silently obtain device sensors. See code review SEC-18.
 /// </summary>
 public class CustomWebChromeClient : WebChromeClient
 {
@@ -13,10 +16,28 @@ public class CustomWebChromeClient : WebChromeClient
     {
         if (request == null) return;
 
-        // Grant all requested permissions (camera, microphone, etc.)
-        // The native MAUI permission service has already verified the user granted permission
-        request.Grant(request.GetResources());
+        string[] requested = request.GetResources() ?? Array.Empty<string>();
 
-        System.Diagnostics.Debug.WriteLine($"WebChromeClient: Granted permissions: {string.Join(", ", request.GetResources() ?? Array.Empty<string>())}");
+        bool cameraGranted =
+            global::Android.App.Application.Context.CheckSelfPermission(
+                global::Android.Manifest.Permission.Camera) == Permission.Granted;
+
+        // Grant nothing but VIDEO_CAPTURE, and only when the OS-level camera permission is held.
+        string[] toGrant = cameraGranted
+            ? Array.FindAll(requested, static r => r == PermissionRequest.ResourceVideoCapture)
+            : Array.Empty<string>();
+
+        if (toGrant.Length > 0)
+        {
+            request.Grant(toGrant);
+            System.Diagnostics.Debug.WriteLine(
+                $"WebChromeClient: granted {string.Join(", ", toGrant)}");
+        }
+        else
+        {
+            request.Deny();
+            System.Diagnostics.Debug.WriteLine(
+                $"WebChromeClient: denied {string.Join(", ", requested)} (cameraGranted={cameraGranted})");
+        }
     }
 }
