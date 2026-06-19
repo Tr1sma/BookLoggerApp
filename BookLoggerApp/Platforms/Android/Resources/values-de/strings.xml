@@ -10,4 +10,21 @@
          Benachrichtigung nutzen die aus dem Managed-Code übergebene App-Sprache. -->
     <string name="timer_notif_channel_name">Lese-Timer</string>
     <string name="timer_notif_channel_desc">Live-Timer für Lesesitzungen</string>
+
+    <!-- UX-01: Laufzeit-Strings der Home-Screen-Widgets. Android wählt values/ vs values-de/
+         anhand der Gerätesprache. Format-Platzhalter nutzen .NET-Syntax ({0}). -->
+    <string name="widget_no_active_book">Kein aktives Buch</string>
+    <string name="widget_tap_to_open_app">Zum Öffnen von BookHeart tippen</string>
+    <string name="widget_tap_to_open">Zum Öffnen tippen</string>
+    <string name="widget_page_info">Seite {0}/{1} — {2}%</string>
+    <string name="widget_streak_label_one">Tag-Streak</string>
+    <string name="widget_streak_label_other">Tage-Streak</string>
+    <string name="widget_streak">Streak</string>
+    <string name="widget_read_today">Heute gelesen ✓</string>
+    <string name="widget_not_read_today">Heute noch nicht gelesen</string>
+    <string name="widget_no_active_goal">Kein aktives Ziel</string>
+    <string name="widget_create_goal">Erstelle ein Ziel in BookHeart</string>
+    <string name="widget_unit_books">Bücher</string>
+    <string name="widget_unit_pages">Seiten</string>
+    <string name="widget_unit_minutes">Minuten</string>
 </resources>

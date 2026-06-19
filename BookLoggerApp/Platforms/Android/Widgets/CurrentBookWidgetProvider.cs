@@ -38,7 +38,8 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
                 views.SetTextViewText(Resource.Id.widget_book_author, bookData.Author);
                 views.SetProgressBar(Resource.Id.widget_progress_bar, 100, bookData.ProgressPercentage, false);
                 views.SetTextViewText(Resource.Id.widget_page_info,
-                    $"Page {bookData.CurrentPage}/{bookData.TotalPages} — {bookData.ProgressPercentage}%");
+                    string.Format(context.GetString(Resource.String.widget_page_info),
+                        bookData.CurrentPage, bookData.TotalPages, bookData.ProgressPercentage));
 
                 // Load cover image
                 if (bookData.CoverImagePath is not null && File.Exists(bookData.CoverImagePath))
@@ -57,10 +58,10 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
             else
             {
                 // No book currently being read
-                views.SetTextViewText(Resource.Id.widget_book_title, "No active book");
+                views.SetTextViewText(Resource.Id.widget_book_title, context.GetString(Resource.String.widget_no_active_book));
                 views.SetTextViewText(Resource.Id.widget_book_author, "");
                 views.SetProgressBar(Resource.Id.widget_progress_bar, 100, 0, false);
-                views.SetTextViewText(Resource.Id.widget_page_info, "Tap to open BookHeart");
+                views.SetTextViewText(Resource.Id.widget_page_info, context.GetString(Resource.String.widget_tap_to_open_app));
                 views.SetImageViewResource(Resource.Id.widget_cover_image, Resource.Drawable.widget_placeholder_cover);
             }
         }
@@ -69,7 +70,7 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
             // Fallback on any error
             views.SetTextViewText(Resource.Id.widget_book_title, "BookHeart");
             views.SetTextViewText(Resource.Id.widget_book_author, "");
-            views.SetTextViewText(Resource.Id.widget_page_info, "Tap to open");
+            views.SetTextViewText(Resource.Id.widget_page_info, context.GetString(Resource.String.widget_tap_to_open));
         }
 
         // Click opens the app

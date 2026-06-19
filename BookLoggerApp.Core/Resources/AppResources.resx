@@ -2151,6 +2151,48 @@
   <data name="Paywall_AlreadyPremium" xml:space="preserve">
     <value>Already Premium</value>
   </data>
+  <data name="Paywall_TierNotAvailableAsPeriod" xml:space="preserve">
+    <value>{0} is not available as {1}.</value>
+  </data>
+  <data name="Paywall_TierUnlocked" xml:space="preserve">
+    <value>{0} unlocked!</value>
+  </data>
+  <data name="Paywall_LifetimeCelebration" xml:space="preserve">
+    <value>Thanks for going Lifetime — enjoy forever.</value>
+  </data>
+  <data name="Paywall_SubscriptionActive" xml:space="preserve">
+    <value>Thanks! Your subscription is active.</value>
+  </data>
+  <data name="Paywall_AlreadyOwned" xml:space="preserve">
+    <value>You already own this subscription.</value>
+  </data>
+  <data name="Paywall_BillingUnavailable" xml:space="preserve">
+    <value>Google Play Billing is not available right now.</value>
+  </data>
+  <data name="Paywall_ProductNotAvailableRegion" xml:space="preserve">
+    <value>This product is not available in your region.</value>
+  </data>
+  <data name="Paywall_PurchaseFailed" xml:space="preserve">
+    <value>Purchase failed. Please try again.</value>
+  </data>
+  <data name="Paywall_CurrentTier" xml:space="preserve">
+    <value>Current tier: {0}.</value>
+  </data>
+  <data name="Paywall_PromoRedeemed" xml:space="preserve">
+    <value>Successfully redeemed code</value>
+  </data>
+  <data name="Paywall_PeriodMonth" xml:space="preserve">
+    <value>month</value>
+  </data>
+  <data name="Paywall_PeriodYear" xml:space="preserve">
+    <value>year</value>
+  </data>
+  <data name="Paywall_PerMonthHint" xml:space="preserve">
+    <value>just {0}/mo</value>
+  </data>
+  <data name="Paywall_SavePercent" xml:space="preserve">
+    <value>Save {0}%</value>
+  </data>
   <data name="Paywall_GetLifetime" xml:space="preserve">
     <value>Get Lifetime for €99.99</value>
   </data>

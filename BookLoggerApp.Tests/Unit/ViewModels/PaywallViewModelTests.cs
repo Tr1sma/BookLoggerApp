@@ -1,3 +1,4 @@
+using System.Globalization;
 using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Models;
@@ -194,6 +195,53 @@ public class PaywallViewModelTests
 
         await _billing.Received(1).LaunchPurchaseFlowAsync("plus_yearly", Arg.Any<string?>(), Arg.Any<CancellationToken>());
         vm.IsPurchaseInProgress.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task PurchaseTierAsync_OnSuccess_UsesLocalizedGermanCelebration()
+    {
+        // UX-04: the paywall celebration/banner copy must come from resx, so a German user
+        // sees German text instead of the previously hardcoded English literals.
+        CultureInfo original = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = new CultureInfo("de");
+            _catalog.GetProductId(SubscriptionTier.Plus, BillingPeriod.Yearly).Returns("plus_yearly");
+            _billing.LaunchPurchaseFlowAsync("plus_yearly", Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                .Returns(BillingPurchaseOutcome.Success);
+            var vm = CreateVm();
+
+            await vm.PurchaseTierAsync(SubscriptionTier.Plus, BillingPeriod.Yearly);
+
+            vm.CelebrationHeadline.Should().Be("Plus freigeschaltet!");
+            vm.CelebrationDetail.Should().Be("Danke! Dein Abo ist aktiv.");
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = original;
+        }
+    }
+
+    [Fact]
+    public async Task PurchaseTierAsync_AlreadyOwned_UsesLocalizedGermanBanner()
+    {
+        CultureInfo original = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = new CultureInfo("de");
+            _catalog.GetProductId(SubscriptionTier.Plus, BillingPeriod.Monthly).Returns("plus_monthly");
+            _billing.LaunchPurchaseFlowAsync("plus_monthly", Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                .Returns(BillingPurchaseOutcome.AlreadyOwned);
+            var vm = CreateVm();
+
+            await vm.PurchaseTierAsync(SubscriptionTier.Plus, BillingPeriod.Monthly);
+
+            vm.Banner.Should().Be("Du besitzt dieses Abo bereits.");
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = original;
+        }
     }
 
     [Fact]
