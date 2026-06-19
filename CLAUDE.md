@@ -12,6 +12,13 @@ BookLoggerApp (branded as **BookHeart**) is a .NET 10 MAUI Blazor Hybrid Android
 - `SECURITY.md` — security posture (read before touching import/export, image handling, URL parsing)
 - `CHANGELOG.md` — user-facing change log (German, see section below)
 
+## Codebase Navigation - MANDATORY
+ALWAYS use token-savior MCP tools FIRST before any grep/cat/Read.
+- Start with: find_symbol, get_function_source, get_class_source, search_codebase
+- get_change_impact before any refactor
+- Only fall back to Read/Grep when token-savior tools genuinely don't cover it
+
+
 ## Build and Test Commands
 
 ```bash
