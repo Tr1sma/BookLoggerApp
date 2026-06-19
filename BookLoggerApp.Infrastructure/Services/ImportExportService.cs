@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Infrastructure;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -25,6 +26,7 @@ public class ImportExportService : IImportExportService
     private readonly ILogger<ImportExportService>? _logger;
     private readonly IFileSystem _fileSystem;
     private readonly IAppSettingsProvider _appSettingsProvider;
+    private readonly IEntitlementService? _entitlementService;
     private readonly string _backupDirectory;
     private readonly string _basePath;
 
@@ -41,11 +43,13 @@ public class ImportExportService : IImportExportService
         IFileSystem fileSystem,
         IAppSettingsProvider appSettingsProvider,
         ILogger<ImportExportService>? logger = null,
-        string? appDataPath = null)
+        string? appDataPath = null,
+        IEntitlementService? entitlementService = null)
     {
         _contextFactory = contextFactory;
         _fileSystem = fileSystem;
         _appSettingsProvider = appSettingsProvider;
+        _entitlementService = entitlementService;
         _logger = logger;
 
         // Set up backup directory
@@ -226,6 +230,16 @@ public class ImportExportService : IImportExportService
                     // Genre rows or collides with existing child PKs (BUG-03).
                     PrepareImportedBookGraph(book);
                     await ResolveImportedGenresAsync(context, book, ct);
+
+                    // HIGH-1003: a backup/import from a higher tier must not reintroduce the
+                    // Plus-only Wishlist metadata for a user who is not entitled to it. The
+                    // service-layer guards (SEC-16) only cover live writes; import bypasses them.
+                    if (book.WishlistInfo is not null
+                        && _entitlementService is not null
+                        && !await _entitlementService.HasAccessAsync(FeatureKey.Wishlist, ct))
+                    {
+                        book.WishlistInfo = null;
+                    }
 
                     context.Books.Add(book);
                     await context.SaveChangesAsync(ct);

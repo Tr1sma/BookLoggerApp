@@ -74,6 +74,15 @@ public class EntitlementService : IEntitlementService
             _current = entitlement;
             _isInitialized = true;
 
+            // HIGH-1003: reconcile content against the real device tier on every load — not just
+            // on an expiry transition. A backup-restore / JSON-import can reintroduce higher-tier
+            // content for a lower-tier user; this hides what the current tier is not entitled to
+            // (and un-hides what it is). Idempotent for a user whose data already matches.
+            if (_lapseHandler is not null)
+            {
+                await _lapseHandler.ReconcileAsync(entitlement.Tier, ct);
+            }
+
             await SyncAppSettingsMirrorAsync(entitlement, ct);
             Raise(previous, entitlement, EntitlementChangeReason.InitialLoad);
         }
@@ -114,6 +123,12 @@ public class EntitlementService : IEntitlementService
         SubscriptionTier previous = _current?.Tier ?? SubscriptionTier.Free;
         _current = reloaded;
         _isInitialized = true;
+
+        // HIGH-1003: same reconcile-against-real-tier pass as InitializeAsync.
+        if (_lapseHandler is not null)
+        {
+            await _lapseHandler.ReconcileAsync(reloaded.Tier, ct);
+        }
 
         await SyncAppSettingsMirrorAsync(reloaded, ct);
         Raise(previous, reloaded, EntitlementChangeReason.InitialLoad);
