@@ -30,6 +30,7 @@ Versionsschema:
   - Ein Tarif- oder Zeitraumwechsel eines bestehenden Abos läuft jetzt über den Play-Upgrade-/Proration-Flow, statt in einer „Du besitzt dieses Abo bereits"-Sackgasse zu enden.
   - Lässt sich ein gekauftes Produkt nicht zuordnen, zeigt die App jetzt einen Fehler statt einer falschen „Freigeschaltet"-Feier ohne tatsächliche Freischaltung.
 - Der „Erster Monat"-Hinweis im Paywall wird nur noch angezeigt, wenn der jeweilige Tarif tatsächlich ein Einführungsangebot hat (zuvor pauschal bei beiden Monatstarifen).
+- App-Neustart (z. B. nach Cloud-Wiederherstellung oder Sprachwechsel) blockiert die Oberfläche nicht mehr: Die kurze Wartezeit vor dem Beenden des Prozesses läuft jetzt ohne den UI-Thread einzufrieren, sodass kein „App reagiert nicht"-Eindruck (ANR-Risiko) auf langsameren Geräten mehr entsteht.
 
 ### Sicherheit
 - Abo-Features werden jetzt im Service-Layer durchgesetzt, nicht mehr nur über die Sperr-Overlays in der UI. Damit lassen sich kostenpflichtige Funktionen nicht mehr über Umwege (veraltete UI nach Tarif-Ablauf, programmatische Aufrufe) freischalten:
@@ -38,6 +39,11 @@ Versionsschema:
   - Wishlist-Schreibzugriffe (Plus), Tropes-Verschlagwortung (Plus) und individuelle Regal-Farben (Plus) sind ebenfalls serverseitig abgesichert.
 - Nach einer Herabstufung (z. B. Premium → Free) ausgeblendete Bezahl-Inhalte bleiben jetzt konsequent verborgen: versteckte Prestige-Pflanzen und die Ultimate-Dekoration erscheinen nicht mehr im Garten/Regal und fließen nicht mehr in Boost-Berechnungen ein (zuvor wurden nur Regale gefiltert).
 - Eine Herabstufung von Premium auf Plus gibt Premium-exklusive Inhalte (Prestige-Pflanzen, „Heart of Stories"-Dekoration) nicht mehr frei: Plus stellt nur die ihm zustehenden Inhalte (Regale, Standard-Pflanzen/-Dekorationen) wieder her und blendet Premium-Inhalte weiterhin aus — auch wenn sie aus einer früheren Premium-Phase noch sichtbar waren.
+- Datenschutz/Einwilligung (Analytics & Absturzberichte) ist jetzt durchgängig „fail-closed", also standardmäßig AUS, bis die Zustimmung bestätigt ist:
+  - Firebase-Datenerfassung startet jetzt deaktiviert (Manifest-Standard auf `false`) und wird erst eingeschaltet, nachdem der Einwilligungs-Gate die gespeicherte Zustimmung als `true` bestätigt hat. Zuvor erfasste die Plattform beim Kaltstart automatisch Ereignisse (z. B. `first_open`/`session_start`), bevor die Einwilligung geprüft war.
+  - Lässt sich die gespeicherte Einwilligung nicht lesen (Datenbank langsam/fehlerhaft), bleiben Analytics und Absturzberichte AUS statt sich stillschweigend einzuschalten. Auch der Fallback in der Android-Aktivität nutzt jetzt „AUS" statt „AN".
+  - Nutzer-Profil-Eigenschaften (z. B. Level-/Sprache-/Onboarding-Merkmale, `environment`) werden bei deaktivierten Analytics nicht mehr an Firebase geschrieben — bisher waren nur Ereignisse, nicht aber Profil-Attribute durch die Einwilligung geschützt.
+- Die App-WebView gewährt eingebettetem Web-Inhalt nicht mehr pauschal alle angeforderten Geräte-Berechtigungen: Es wird ausschließlich die Kamera (Video-Capture) freigegeben und auch nur dann, wenn die native Kamera-Berechtigung tatsächlich erteilt ist (für den Barcode-Scanner). Mikrofon und alle übrigen Ressourcen werden abgelehnt.
 
 ## [0.12.0]
 
