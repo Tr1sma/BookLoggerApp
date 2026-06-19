@@ -64,6 +64,24 @@ public class ReadingStreakHelperTests
     }
 
     [Fact]
+    public void CalculateCurrentStreak_WithTimeZone_BucketsSessionByLocalDate()
+    {
+        // LOG-02: streak must use the user's local calendar day, like goals.
+        var tzPlus5 = TimeZoneInfo.CreateCustomTimeZone("t+5", TimeSpan.FromHours(5), "t+5", "t+5");
+        var sessions = new[]
+        {
+            new ReadingSession { StartedAt = new DateTime(2025, 6, 9, 22, 0, 0, DateTimeKind.Utc), Minutes = 20 }
+        };
+        var today = new DateTime(2025, 6, 11);
+
+        // Local (+5): 2025-06-09 22:00 UTC == 2025-06-10 03:00 local → yesterday → streak 1.
+        ReadingStreakHelper.CalculateCurrentStreak(sessions, today, tzPlus5).Should().Be(1);
+
+        // Raw UTC: stays on 2025-06-09 → neither today nor yesterday → streak 0.
+        ReadingStreakHelper.CalculateCurrentStreak(sessions, today).Should().Be(0);
+    }
+
+    [Fact]
     public void CalculateLongestStreak_ShouldIgnoreOpenPlaceholderSessions()
     {
         // Arrange

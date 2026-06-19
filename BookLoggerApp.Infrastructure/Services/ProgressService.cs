@@ -23,6 +23,7 @@ public class ProgressService : IProgressService
     private readonly IAppSettingsProvider _settingsProvider;
     private readonly IAnalyticsService _analytics;
     private readonly IValidationService? _validation;
+    private readonly TimeZoneInfo _timeZone;
 
     public ProgressService(
         IUnitOfWork unitOfWork,
@@ -33,7 +34,8 @@ public class ProgressService : IProgressService
         IDecorationService decorationService,
         IAppSettingsProvider settingsProvider,
         IAnalyticsService? analytics = null,
-        IValidationService? validation = null)
+        IValidationService? validation = null,
+        TimeZoneInfo? timeZone = null)
     {
         _unitOfWork = unitOfWork;
         _progressionService = progressionService;
@@ -44,6 +46,9 @@ public class ProgressService : IProgressService
         _settingsProvider = settingsProvider;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
         _validation = validation;
+        // CODE_REVIEW LOG-02: streak "today"/session days use the local calendar; injectable
+        // (default TimeZoneInfo.Local) for deterministic tests.
+        _timeZone = timeZone ?? TimeZoneInfo.Local;
     }
 
     public async Task<SessionSaveResult> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
@@ -315,17 +320,24 @@ public class ProgressService : IProgressService
             );
     }
 
-    public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
+    public Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
+        => GetCurrentStreakAsync(DateTime.UtcNow, ct);
+
+    // Internal clock seam so the local-day streak logic stays deterministically testable
+    // with a fixed "now" (the public method passes DateTime.UtcNow).
+    internal async Task<int> GetCurrentStreakAsync(DateTime utcNow, CancellationToken ct)
     {
-        var today = DateTime.UtcNow.Date;
+        // LOG-02: anchor "today" and each session's day to the user's local calendar so the
+        // displayed streak matches the goals feature's local-midnight convention.
+        var localToday = LocalTimeHelper.LocalDate(utcNow, _timeZone);
 
         // Only load sessions from the last year instead of ALL sessions.
         // A streak longer than 365 days is unrealistic, and this avoids
         // loading thousands of records for long-time users.
         var recentSessions = await _unitOfWork.ReadingSessions
-            .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow, ct);
+            .GetSessionsInRangeAsync(utcNow.AddDays(-365), utcNow, ct);
 
-        return ReadingStreakHelper.CalculateCurrentStreak(recentSessions, today);
+        return ReadingStreakHelper.CalculateCurrentStreak(recentSessions, localToday, _timeZone);
     }
 
     private readonly record struct ResolvedStreak(int StreakDays, bool RescuedByGuardian, Guid? GuardianToUpdate);

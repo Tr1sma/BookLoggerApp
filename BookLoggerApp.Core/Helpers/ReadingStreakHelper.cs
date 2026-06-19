@@ -15,6 +15,16 @@ public static class ReadingStreakHelper
         return CalculateCurrentStreak(GetQualifyingDates(sessions), today);
     }
 
+    /// <summary>
+    /// Current-streak variant that buckets each session by its LOCAL calendar day in
+    /// <paramref name="timeZone"/> (LOG-02). Callers pass a local "today" so streaks share the
+    /// goal feature's local-midnight convention instead of raw UTC day boundaries.
+    /// </summary>
+    public static int CalculateCurrentStreak(IEnumerable<ReadingSession> sessions, DateTime today, TimeZoneInfo timeZone)
+    {
+        return CalculateCurrentStreak(GetQualifyingDates(sessions, timeZone), today);
+    }
+
     public static int CalculateCurrentStreak(IEnumerable<DateTime> sessionDates, DateTime today)
     {
         var dates = sessionDates
@@ -99,6 +109,14 @@ public static class ReadingStreakHelper
         return sessions
             .Where(CountsTowardStreak)
             .Select(session => session.StartedAt.Date)
+            .Distinct();
+    }
+
+    private static IEnumerable<DateTime> GetQualifyingDates(IEnumerable<ReadingSession> sessions, TimeZoneInfo timeZone)
+    {
+        return sessions
+            .Where(CountsTowardStreak)
+            .Select(session => LocalTimeHelper.LocalDate(session.StartedAt, timeZone))
             .Distinct();
     }
 

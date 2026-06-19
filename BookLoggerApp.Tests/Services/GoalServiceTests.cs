@@ -226,6 +226,38 @@ public class GoalServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task CalculateGoalProgress_AttributesSessionByStartedAt_NotEndedAt()
+    {
+        // INK-01: a session that STARTS inside the goal window but ENDS well outside it must
+        // still count toward Minutes/Pages goals, because streaks/stats/dashboard all attribute
+        // sessions by StartedAt. Previously the goal filtered on EndedAt, so a boundary-crossing
+        // session was dropped.
+        var goal = await _service.AddAsync(new ReadingGoal
+        {
+            Title = "Minutes",
+            Type = GoalType.Minutes,
+            Target = 1000, // high so it never auto-completes and drops off the active list
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(5),
+            IsCompleted = false
+        });
+
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "T", Author = "A" });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow,             // inside the goal window
+            EndedAt = DateTime.UtcNow.AddDays(30),   // far outside the goal window
+            Minutes = 40
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        var activeGoals = await _service.GetActiveGoalsAsync();
+
+        activeGoals.Single(g => g.Id == goal.Id).Current.Should().Be(40);
+    }
+
+    [Fact]
     public async Task CheckAndCompleteGoalsAsync_ShouldCompleteReachedGoals()
     {
         // Arrange

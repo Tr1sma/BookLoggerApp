@@ -343,7 +343,7 @@
                     @foreach (var session in GetRecentSessions())
                     {
                         <div class="session-item" @key="@session.Id">
-                            <div class="session-date">@session.StartedAt.ToString("g")</div>
+                            <div class="session-date">@session.StartedAt.ToLocalTime().ToString("g")</div>
                             <div class="session-details">
                                 <span>⏱️ @L["BookDetail_SessionMinutes", session.Minutes]</span>
                                 @if (session.PagesRead.HasValue && session.PagesRead > 0)

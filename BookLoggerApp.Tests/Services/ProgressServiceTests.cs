@@ -41,7 +41,8 @@ public class ProgressServiceTests : IDisposable
             .Returns(Task.FromResult(new AppSettings { UserLevel = 1, TotalXp = 0, Coins = 0 }));
         _service = new ProgressService(
             _unitOfWork, _progressionService, _plantService, _bookService,
-            _goalService, _decorationService, _settingsProvider);
+            _goalService, _decorationService, _settingsProvider,
+            timeZone: TimeZoneInfo.Utc);
     }
 
     public void Dispose()
@@ -870,6 +871,32 @@ public class ProgressServiceTests : IDisposable
         streak.Should().BeGreaterThanOrEqualTo(1);
     }
 
+    [Fact]
+    public async Task GetCurrentStreakAsync_UsesLocalCalendarDay()
+    {
+        // LOG-02: with a +5h zone, a session at 2025-06-09 22:00 UTC falls on local 2025-06-10
+        // (yesterday relative to a local "today" of 2025-06-11) → streak 1; raw-UTC day
+        // boundaries would leave it on 2025-06-09 → streak 0.
+        var tzPlus5 = TimeZoneInfo.CreateCustomTimeZone("t+5", TimeSpan.FromHours(5), "t+5", "t+5");
+        var service = new ProgressService(
+            _unitOfWork, _progressionService, _plantService, _bookService,
+            _goalService, _decorationService, _settingsProvider, timeZone: tzPlus5);
+
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        _context.ReadingSessions.Add(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2025, 6, 9, 22, 0, 0, DateTimeKind.Utc),
+            Minutes = 20
+        });
+        await _context.SaveChangesAsync();
+
+        var streak = await service.GetCurrentStreakAsync(new DateTime(2025, 6, 11, 12, 0, 0, DateTimeKind.Utc), default);
+
+        streak.Should().Be(1);
+    }
+
     #region Validation (CODE_REVIEW BUG-05)
 
     private ProgressService CreateServiceWithValidation()
@@ -877,7 +904,8 @@ public class ProgressServiceTests : IDisposable
         return new ProgressService(
             _unitOfWork, _progressionService, _plantService, _bookService,
             _goalService, _decorationService, _settingsProvider,
-            validation: ValidationServiceFactory.CreateReal());
+            validation: ValidationServiceFactory.CreateReal(),
+            timeZone: TimeZoneInfo.Utc);
     }
 
     [Fact]
