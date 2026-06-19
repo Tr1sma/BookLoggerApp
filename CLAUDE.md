@@ -451,7 +451,7 @@ The solution follows a layered architecture with four main projects:
 - Pages: `Books.razor`, `BookDetail.razor`, `BookEdit.razor`, `Bookshelf.razor` (includes Wishlist), `Dashboard.razor`, `Goals.razor`, `Stats.razor`, `Settings.razor`, `PlantShop.razor`, `GettingStarted.razor`
 - Layout: `MainLayout.razor`, `NavMenu.razor`, `BottomNavBar.razor`
 - Shared components in `Components/Shared/` — reusable across pages:
-  - Timer: `ReadingTimerInline.razor`, `QuickReadingTimer.razor` (share state via singleton `ITimerStateService`)
+  - Timer: `ReadingTimerInline.razor` (timer state via singleton `ITimerStateService`)
   - Celebrations: `BookCompletionCelebration.razor`, `LevelUpCelebration.razor`, `SessionCompleteCelebration.razor`
   - Cards: `BookCard.razor`, `StatCard.razor`, `GoalCard.razor`, `PlantCard.razor`, `PlantShopCard.razor`, `PlantDetailCard.razor`, `DecorationCard.razor`, `DecorationShopCard.razor`
   - Widgets: `PlantWidget.razor`, `UserProgressWidget.razor`
@@ -474,7 +474,7 @@ CSS files are in `BookLoggerApp/wwwroot/css/`:
 - `app.css` - Global styles, CSS variables, loading spinner, status bar safe area
 - `components.css` - Book cards (spine view), stat cards, goal cards, buttons, forms
 - `dashboard.css`, `stats.css`, `ratings.css`, `bookdetail.css`, `bookedit.css`, `bookshelf.css`
-- `reading.css`, `reading-timer-inline.css`, `quicktimer.css`
+- `reading.css`, `reading-timer-inline.css`
 - `plantshop.css`, `plantwidget.css`, `plant-selection.css`
 - `userprogress.css`, `bottomnav.css`, `celebrations.css`, `wishlist.css`, `stats-advanced.css`
 
