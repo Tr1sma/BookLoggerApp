@@ -118,4 +118,52 @@ public class GoalServiceEntitlementTests : IDisposable
         await act.Should().NotThrowAsync("downgraded users must be able to remove a previously-set filter");
         (await service.GetGoalGenresAsync(goal.Id)).Should().BeEmpty();
     }
+
+    private async Task<ReadingGoal> SeedBooksGoalWithExcludedBookAsync()
+    {
+        var goal = new ReadingGoal
+        {
+            Id = Guid.NewGuid(),
+            Title = "Filtered Goal",
+            Type = GoalType.Books,
+            Target = 5,
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(30)
+        };
+        var keep = new Book { Id = Guid.NewGuid(), Title = "Keep", Author = "A", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        var excluded = new Book { Id = Guid.NewGuid(), Title = "Excluded", Author = "A", Status = ReadingStatus.Completed, DateCompleted = DateTime.UtcNow };
+        _context.ReadingGoals.Add(goal);
+        _context.Books.AddRange(keep, excluded);
+        _context.Set<GoalExcludedBook>().Add(new GoalExcludedBook { ReadingGoalId = goal.Id, BookId = excluded.Id });
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+        return goal;
+    }
+
+    [Fact]
+    public async Task CalculateProgress_FreeUser_IgnoresExcludedBookFilter()
+    {
+        // HIGH-1003: a restored Premium goal carries a book exclusion (a Premium-only filter). A
+        // Free user is not entitled to it, so progress is computed UNFILTERED — both completed
+        // books count. The exclusion row is preserved and re-applies on re-upgrade.
+        await SeedBooksGoalWithExcludedBookAsync();
+        var service = CreateService(SubscriptionTier.Free);
+
+        var goals = await service.GetActiveGoalsAsync();
+
+        goals.Should().ContainSingle().Which.Current.Should().Be(2,
+            "a Free user is not entitled to excluded-book filters, so all completed books count");
+    }
+
+    [Fact]
+    public async Task CalculateProgress_PremiumUser_AppliesExcludedBookFilter()
+    {
+        await SeedBooksGoalWithExcludedBookAsync();
+        var service = CreateService(SubscriptionTier.Premium);
+
+        var goals = await service.GetActiveGoalsAsync();
+
+        goals.Should().ContainSingle().Which.Current.Should().Be(1,
+            "Premium applies the exclusion, so the excluded book does not count");
+    }
 }

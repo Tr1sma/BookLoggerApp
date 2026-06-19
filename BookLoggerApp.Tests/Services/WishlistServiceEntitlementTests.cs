@@ -118,4 +118,44 @@ public class WishlistServiceEntitlementTests : IDisposable
         await using var verify = _factory.CreateDbContext();
         (await verify.Books.FirstAsync(b => b.Id == bookId)).Status.Should().Be(ReadingStatus.Planned);
     }
+
+    [Fact]
+    public async Task GetWishlistBooksAsync_FreeUser_ReturnsEmptyButKeepsData()
+    {
+        // HIGH-1003: a backup-restore of a Plus account leaves wishlist books in the DB. A Free
+        // user must not see them (read is gated), but the data is preserved and reappears on re-upgrade.
+        Guid bookId;
+        await using (var ctx = _factory.CreateDbContext())
+        {
+            var book = new Book { Title = "Restored Wish", Author = "A", Status = ReadingStatus.Wishlist, DateAdded = DateTime.UtcNow };
+            ctx.Books.Add(book);
+            await ctx.SaveChangesAsync();
+            bookId = book.Id;
+        }
+
+        var service = CreateService(SubscriptionTier.Free);
+
+        (await service.GetWishlistBooksAsync()).Should().BeEmpty("a non-entitled user must not see restored wishlist books");
+        (await service.GetWishlistCountAsync()).Should().Be(0);
+        (await service.SearchWishlistAsync("Restored")).Should().BeEmpty();
+
+        await using var verify = _factory.CreateDbContext();
+        (await verify.Books.AnyAsync(b => b.Id == bookId)).Should().BeTrue("the wishlist book is hidden, not deleted");
+    }
+
+    [Fact]
+    public async Task GetWishlistBooksAsync_PlusUser_ReturnsBooks()
+    {
+        await using (var ctx = _factory.CreateDbContext())
+        {
+            ctx.Books.Add(new Book { Title = "Restored Wish", Author = "A", Status = ReadingStatus.Wishlist, DateAdded = DateTime.UtcNow });
+            await ctx.SaveChangesAsync();
+        }
+
+        var service = CreateService(SubscriptionTier.Plus);
+
+        (await service.GetWishlistBooksAsync()).Should().ContainSingle();
+        (await service.GetWishlistCountAsync()).Should().Be(1);
+        (await service.SearchWishlistAsync("Restored")).Should().ContainSingle();
+    }
 }

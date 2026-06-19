@@ -29,6 +29,12 @@ public class WishlistService : IWishlistService
 
     public async Task<IReadOnlyList<Book>> GetWishlistBooksAsync(CancellationToken ct = default)
     {
+        // HIGH-1003: the Wishlist (Plus) is preserved but not surfaced for a user who is not
+        // entitled — e.g. wishlist books carried in a restored higher-tier backup. The rows stay
+        // in the DB and reappear automatically on re-upgrade (no deletion).
+        if (_featureGuard is not null && !_featureGuard.HasAccess(FeatureKey.Wishlist))
+            return Array.Empty<Book>();
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         return await context.Books
             .Include(b => b.WishlistInfo)
@@ -159,6 +165,10 @@ public class WishlistService : IWishlistService
 
     public async Task<int> GetWishlistCountAsync(CancellationToken ct = default)
     {
+        // HIGH-1003: hide the count too, so a non-entitled user sees no trace of restored wishlist data.
+        if (_featureGuard is not null && !_featureGuard.HasAccess(FeatureKey.Wishlist))
+            return 0;
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         return await context.Books.CountAsync(b => b.Status == ReadingStatus.Wishlist, ct);
     }
@@ -181,6 +191,10 @@ public class WishlistService : IWishlistService
 
     public async Task<IReadOnlyList<Book>> SearchWishlistAsync(string query, CancellationToken ct = default)
     {
+        // HIGH-1003: searching the wishlist is part of the Plus Wishlist feature.
+        if (_featureGuard is not null && !_featureGuard.HasAccess(FeatureKey.Wishlist))
+            return Array.Empty<Book>();
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var lowerQuery = query.ToLowerInvariant();
 

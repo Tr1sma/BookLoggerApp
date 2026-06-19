@@ -78,4 +78,38 @@ public class GenreServiceEntitlementTests : IDisposable
         await act.Should().NotThrowAsync();
         (await _unitOfWork.BookTropes.FindAsync(bt => bt.BookId == bookId)).Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task GetTropesForBookAsync_FreeUser_ReturnsEmptyButKeepsData()
+    {
+        // HIGH-1003: trope tags (Plus) carried in a restored higher-tier backup must not be
+        // surfaced for a non-entitled user; the BookTrope rows stay and reappear on re-upgrade.
+        var bookId = Guid.NewGuid();
+        var tropeId = Guid.NewGuid();
+        _context.Set<Trope>().Add(new Trope { Id = tropeId, Name = "Enemies to Lovers", GenreId = Guid.NewGuid() });
+        _context.Set<BookTrope>().Add(new BookTrope { BookId = bookId, TropeId = tropeId, AddedAt = DateTime.UtcNow });
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        var service = CreateService(SubscriptionTier.Free);
+
+        (await service.GetTropesForBookAsync(bookId)).Should().BeEmpty("Tropes are a Plus feature");
+        (await _unitOfWork.BookTropes.FindAsync(bt => bt.BookId == bookId)).Should().ContainSingle("the trope tag is hidden, not deleted");
+    }
+
+    [Fact]
+    public async Task GetTropesForBookAsync_PlusUser_ReturnsTropes()
+    {
+        var bookId = Guid.NewGuid();
+        var tropeId = Guid.NewGuid();
+        _context.Set<Trope>().Add(new Trope { Id = tropeId, Name = "Enemies to Lovers", GenreId = Guid.NewGuid() });
+        _context.Set<BookTrope>().Add(new BookTrope { BookId = bookId, TropeId = tropeId, AddedAt = DateTime.UtcNow });
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        var service = CreateService(SubscriptionTier.Plus);
+
+        (await service.GetTropesForBookAsync(bookId)).Should().ContainSingle()
+            .Which.Name.Should().Be("Enemies to Lovers");
+    }
 }

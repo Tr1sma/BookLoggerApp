@@ -117,6 +117,11 @@ public class GenreService : IGenreService
 
     public async Task<IReadOnlyList<Trope>> GetTropesForBookAsync(Guid bookId, CancellationToken ct = default)
     {
+        // HIGH-1003: Tropes (Plus) tags are preserved but not surfaced for a non-entitled user
+        // (e.g. tags carried in a restored higher-tier backup); they reappear on re-upgrade.
+        if (_featureGuard is not null && !_featureGuard.HasAccess(FeatureKey.Tropes))
+            return Array.Empty<Trope>();
+
         return await _unitOfWork.Context.BookTropes
             .Where(bt => bt.BookId == bookId)
             .Include(bt => bt.Trope)
