@@ -611,17 +611,10 @@ public class BookServiceTests : IDisposable
         (await _service.GetTotalCountAsync()).Should().Be(0, "a batch with any invalid book must not be partially imported");
     }
 
-    [Fact]
-    public async Task UpdateAsync_WithNegativePageCount_ThrowsValidation()
-    {
-        var service = CreateServiceWithValidation();
-        var book = await _service.AddAsync(new Book { Title = "Valid", Author = "Author" });
-
-        book.PageCount = -5;
-
-        await FluentActions.Awaiting(() => service.UpdateAsync(book))
-            .Should().ThrowAsync<FluentValidation.ValidationException>();
-    }
+    // NOTE: BookService.UpdateAsync deliberately does NOT validate (see the method's comment and
+    // ServiceValidationTests.BookService_UpdateAsync_PreexistingInvalidBook_DoesNotThrow). It is the
+    // incidental single-field edit path (BookDetail rating/notes) and must not reject pre-existing
+    // legacy violations the edit did not introduce. Validation lives on AddAsync / SaveBookWithRelationsAsync.
 
     [Fact]
     public async Task SaveBookWithRelationsAsync_WithBlankTitle_ThrowsValidationAndPersistsNothing()

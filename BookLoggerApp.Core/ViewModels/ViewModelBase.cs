@@ -157,6 +157,16 @@ public abstract partial class ViewModelBase : ObservableObject, IDisposable
             // teardown — swallow silently and leave the UI state to whatever replaced it.
             System.Diagnostics.Debug.WriteLine("Load cancelled (superseded or disposed).");
         }
+        catch (Exception ex) when (loadToken.IsCancellationRequested)
+        {
+            // CODE_REVIEW CQ-01: a superseded/cancelled load failed with a NON-cancellation
+            // exception — most plausibly the shared transient DbContext's "A second operation was
+            // started on this context" InvalidOperationException once a newer load began. Its token
+            // is already cancelled, so it must NOT clobber the active load's ErrorMessage/IsBusy;
+            // report it as a non-fatal only. (Non-token overloads pass CancellationToken.None, whose
+            // IsCancellationRequested is always false, so their failures still surface as errors.)
+            ReportNonFatal(ex, errorPrefix, source: ensureDb ? "viewmodel_db_superseded" : "viewmodel_superseded");
+        }
         catch (TimeoutException tex) when (ensureDb)
         {
             // Surface the timeout to the helper too, so IsDatabaseInitializationFailed
@@ -207,6 +217,24 @@ public abstract partial class ViewModelBase : ObservableObject, IDisposable
         _loadCts = fresh;
         previous?.Cancel();
         return fresh.Token;
+    }
+
+    /// <summary>
+    /// CODE_REVIEW CQ-01: cancels the currently running scoped load, if any. The primary
+    /// cancellation mechanism is supersede-on-reload (a new scoped load cancels the previous one);
+    /// this additionally lets a page cancel an in-flight load on teardown by calling it from its own
+    /// Dispose/navigation hook. Safe no-op when no load is running or its source was already disposed.
+    /// </summary>
+    public void CancelOngoingLoad()
+    {
+        try
+        {
+            _loadCts?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Already disposed by the completing load's Dispose() — nothing to cancel.
+        }
     }
 
     public virtual void Dispose()

@@ -78,10 +78,11 @@ public class BookService : IBookService
 
     public async Task UpdateAsync(Book book, CancellationToken ct = default)
     {
-        // CODE_REVIEW BUG-05: validate before persisting any edit.
-        if (_validation is not null)
-            await _validation.ValidateAndThrowAsync(book, ct);
-
+        // CODE_REVIEW BUG-05 (review follow-up): intentionally NOT validating here. UpdateAsync is the
+        // in-place single-field edit path (BookDetail rating/notes) which passes the WHOLE entity; running
+        // the full BookValidator would reject pre-existing legacy violations (e.g. CurrentPage > PageCount
+        // from before the progress clamp) that the edit did not introduce, silently dropping the change.
+        // User-entered data is validated at the true entry points: AddAsync and SaveBookWithRelationsAsync.
         try
         {
             await _unitOfWork.Books.UpdateAsync(book, ct);
