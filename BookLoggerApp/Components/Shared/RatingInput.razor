@@ -1,16 +1,26 @@
 @* RatingInput - Reusable component for single rating category input *@
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
 
 <div class="rating-input">
     <div class="rating-header">
-        <span class="rating-emoji">@Emoji</span>
+        <span class="rating-emoji" aria-hidden="true">@Emoji</span>
         <span class="rating-label">@Label</span>
     </div>
-    <div class="rating-stars">
+    @* UX-02: expose the stars as an accessible radiogroup so keyboard users can focus and
+       activate them (Enter/Space) and screen readers announce the rating instead of a bare "★". *@
+    <div class="rating-stars" role="radiogroup" aria-label="@Label">
         @for (int i = 1; i <= 5; i++)
         {
             int starValue = i;
             <span class="star @GetStarClass(starValue)"
+                  role="radio"
+                  aria-checked="@(((Rating ?? 0) == starValue) ? "true" : "false")"
+                  aria-label="@L["RatingInput_RateValue", starValue].Value"
+                  tabindex="@(ReadOnly ? "-1" : "0")"
                   @onclick="() => OnStarClick(starValue)"
+                  @onkeydown="@(e => OnStarKeydown(e, starValue))"
                   @onmouseover="() => OnStarHover(starValue)"
                   @onmouseout="OnStarHoverEnd"
                   style="@(ReadOnly ? "cursor: default;" : "cursor: pointer;")">
@@ -19,7 +29,7 @@
         }
         @if (Rating.HasValue && !ReadOnly)
         {
-            <button class="clear-rating" @onclick="ClearRating">✕</button>
+            <button class="clear-rating" @onclick="ClearRating" aria-label="@L["RatingInput_Clear"].Value">✕</button>
         }
     </div>
     @if (Rating.HasValue)
@@ -60,6 +70,17 @@
         {
             Rating = starValue;
             await RatingChanged.InvokeAsync(Rating);
+        }
+    }
+
+    private async Task OnStarKeydown(KeyboardEventArgs e, int starValue)
+    {
+        if (ReadOnly) return;
+
+        // Activate the focused star with Enter or Space, mirroring LockedFeatureButton.
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            await OnStarClick(starValue);
         }
     }
 

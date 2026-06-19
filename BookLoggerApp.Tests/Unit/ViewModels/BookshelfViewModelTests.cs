@@ -166,6 +166,27 @@ public class BookshelfViewModelTests
         _viewModel.AvailablePlants[0].Id.Should().Be(availablePlant.Id);
     }
 
+    [Fact]
+    public async Task SearchAsync_WithEmptyQueryButStatusFilter_AppliesFilterInsteadOfResettingToShelves()
+    {
+        // LOG-09: a status filter with no search text must still filter the library,
+        // not short-circuit back to the shelf view and ignore the filter entirely.
+        var reading = new Book { Id = Guid.NewGuid(), Title = "Reading Book", Status = ReadingStatus.Reading };
+        var completed = new Book { Id = Guid.NewGuid(), Title = "Completed Book", Status = ReadingStatus.Completed };
+        _bookService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(new[] { reading, completed });
+
+        _viewModel.SearchQuery = "";
+        _viewModel.FilterStatus = ReadingStatus.Reading;
+
+        // Act
+        await _viewModel.SearchAsync();
+
+        // Assert: only the Reading book survives the filter, and shelf view is cleared (search mode).
+        _viewModel.Books.Should().ContainSingle();
+        _viewModel.Books[0].Id.Should().Be(reading.Id);
+        _viewModel.Shelves.Should().BeEmpty();
+    }
+
     private void ConfigureLoadDependencies()
     {
         _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(new AppSettings());

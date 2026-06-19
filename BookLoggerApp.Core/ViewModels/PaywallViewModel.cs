@@ -77,79 +77,95 @@ public partial class PaywallViewModel : ViewModelBase
 
     public async Task PurchaseTierAsync(SubscriptionTier tier, BillingPeriod period)
     {
-        await ExecuteSafelyAsync(async () =>
+        // BUG-18: reentrancy guard. A double-tap on the buy button (before the UI processes the
+        // in-progress flag) must not launch two purchase flows or fire duplicate analytics.
+        // Set the flag synchronously before the first await so a near-simultaneous second call
+        // short-circuits here, and reset it in finally — not after ExecuteSafelyAsync — so a throw
+        // from the wrapper itself can't strand IsPurchaseInProgress=true. Mirrors the entry guard
+        // in AppStartupViewModel.StartFlexibleUpdateAsync.
+        if (IsPurchaseInProgress)
         {
-            IsPurchaseInProgress = true;
-            Banner = null;
+            return;
+        }
 
-            string? productId = _productCatalog.GetProductId(tier, period);
-            if (productId is null)
+        IsPurchaseInProgress = true;
+        try
+        {
+            await ExecuteSafelyAsync(async () =>
             {
-                Banner = $"{tier} is not available as {period}.";
-                return;
-            }
-
-            _analytics.LogEvent(AnalyticsEventNames.PurchaseInitiated, AnalyticsParamBuilder.Create()
-                .Add(AnalyticsParamNames.Tier, tier.ToString())
-                .Add(AnalyticsParamNames.Period, period.ToString())
-                .BuildMutable());
-
-            if (!_billingService.IsConnected)
-            {
-                await _billingService.ConnectAsync();
-            }
-
-            // BUG-12: when the user already owns a subscription and is switching to a different
-            // subscription, hand Play the owned purchase token so it does a proration replacement
-            // instead of throwing AlreadyOwned. A managed Lifetime product cannot replace a sub.
-            string? oldPurchaseToken = null;
-            if (period != BillingPeriod.Lifetime
-                && _entitlementService.CurrentTier != SubscriptionTier.Free
-                && _entitlementService.CurrentEntitlement is { } current
-                && current.BillingPeriod != BillingPeriod.Lifetime
-                && !string.IsNullOrEmpty(current.PurchaseToken))
-            {
-                oldPurchaseToken = current.PurchaseToken;
-            }
-
-            BillingPurchaseOutcome outcome = await _billingService.LaunchPurchaseFlowAsync(productId, oldPurchaseToken);
-
-            string eventName = outcome switch
-            {
-                BillingPurchaseOutcome.Success => AnalyticsEventNames.PurchaseCompleted,
-                BillingPurchaseOutcome.UserCancelled => AnalyticsEventNames.PurchaseCancelled,
-                _ => AnalyticsEventNames.PurchaseFailed
-            };
-
-            _analytics.LogEvent(eventName, AnalyticsParamBuilder.Create()
-                .Add(AnalyticsParamNames.Tier, tier.ToString())
-                .Add(AnalyticsParamNames.Period, period.ToString())
-                .Add(AnalyticsParamNames.Outcome, outcome.ToString())
-                .BuildMutable());
-
-            if (outcome == BillingPurchaseOutcome.Success)
-            {
-                CelebrationHeadline = $"{tier} unlocked!";
-                CelebrationDetail = period == BillingPeriod.Lifetime
-                    ? "Thanks for going Lifetime — enjoy forever."
-                    : "Thanks! Your subscription is active.";
-                ShowCelebration = true;
                 Banner = null;
-            }
-            else
-            {
-                Banner = outcome switch
-                {
-                    BillingPurchaseOutcome.UserCancelled => null,
-                    BillingPurchaseOutcome.AlreadyOwned => "You already own this subscription.",
-                    BillingPurchaseOutcome.BillingUnavailable => "Google Play Billing is not available right now.",
-                    BillingPurchaseOutcome.NotAvailable => "This product is not available in your region.",
-                    _ => "Purchase failed. Please try again."
-                };
-            }
-        }, "Failed to start purchase");
 
-        IsPurchaseInProgress = false;
+                string? productId = _productCatalog.GetProductId(tier, period);
+                if (productId is null)
+                {
+                    Banner = $"{tier} is not available as {period}.";
+                    return;
+                }
+
+                _analytics.LogEvent(AnalyticsEventNames.PurchaseInitiated, AnalyticsParamBuilder.Create()
+                    .Add(AnalyticsParamNames.Tier, tier.ToString())
+                    .Add(AnalyticsParamNames.Period, period.ToString())
+                    .BuildMutable());
+
+                if (!_billingService.IsConnected)
+                {
+                    await _billingService.ConnectAsync();
+                }
+
+                // BUG-12: when the user already owns a subscription and is switching to a different
+                // subscription, hand Play the owned purchase token so it does a proration replacement
+                // instead of throwing AlreadyOwned. A managed Lifetime product cannot replace a sub.
+                string? oldPurchaseToken = null;
+                if (period != BillingPeriod.Lifetime
+                    && _entitlementService.CurrentTier != SubscriptionTier.Free
+                    && _entitlementService.CurrentEntitlement is { } current
+                    && current.BillingPeriod != BillingPeriod.Lifetime
+                    && !string.IsNullOrEmpty(current.PurchaseToken))
+                {
+                    oldPurchaseToken = current.PurchaseToken;
+                }
+
+                BillingPurchaseOutcome outcome = await _billingService.LaunchPurchaseFlowAsync(productId, oldPurchaseToken);
+
+                string eventName = outcome switch
+                {
+                    BillingPurchaseOutcome.Success => AnalyticsEventNames.PurchaseCompleted,
+                    BillingPurchaseOutcome.UserCancelled => AnalyticsEventNames.PurchaseCancelled,
+                    _ => AnalyticsEventNames.PurchaseFailed
+                };
+
+                _analytics.LogEvent(eventName, AnalyticsParamBuilder.Create()
+                    .Add(AnalyticsParamNames.Tier, tier.ToString())
+                    .Add(AnalyticsParamNames.Period, period.ToString())
+                    .Add(AnalyticsParamNames.Outcome, outcome.ToString())
+                    .BuildMutable());
+
+                if (outcome == BillingPurchaseOutcome.Success)
+                {
+                    CelebrationHeadline = $"{tier} unlocked!";
+                    CelebrationDetail = period == BillingPeriod.Lifetime
+                        ? "Thanks for going Lifetime — enjoy forever."
+                        : "Thanks! Your subscription is active.";
+                    ShowCelebration = true;
+                    Banner = null;
+                }
+                else
+                {
+                    Banner = outcome switch
+                    {
+                        BillingPurchaseOutcome.UserCancelled => null,
+                        BillingPurchaseOutcome.AlreadyOwned => "You already own this subscription.",
+                        BillingPurchaseOutcome.BillingUnavailable => "Google Play Billing is not available right now.",
+                        BillingPurchaseOutcome.NotAvailable => "This product is not available in your region.",
+                        _ => "Purchase failed. Please try again."
+                    };
+                }
+            }, "Failed to start purchase");
+        }
+        finally
+        {
+            IsPurchaseInProgress = false;
+        }
     }
 
     [RelayCommand]

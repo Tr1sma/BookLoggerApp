@@ -1417,6 +1417,12 @@
   <data name="Review_NeverAsk" xml:space="preserve">
     <value>Nicht mehr fragen</value>
   </data>
+  <data name="RatingInput_RateValue" xml:space="preserve">
+    <value>Mit {0} von 5 bewerten</value>
+  </data>
+  <data name="RatingInput_Clear" xml:space="preserve">
+    <value>Bewertung löschen</value>
+  </data>
   <data name="DeleteModal_Title" xml:space="preserve">
     <value>Buch löschen?</value>
   </data>

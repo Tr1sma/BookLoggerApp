@@ -514,9 +514,11 @@ public partial class AppStartupViewModel : ViewModelBase
             return;
         }
 
-        _ = ExecuteSafelyAsync(
+        // BUG-17: background billing event — use the detached wrapper so it never touches the
+        // shared IsBusy/ErrorMessage state an in-flight startup/resume load may own.
+        _ = ExecuteDetachedAsync(
             () => _entitlementService.ApplyPurchaseAsync(purchase, Core.Entitlements.EntitlementChangeReason.Purchase),
-            Tr("Error_FailedTo_ApplyGooglePlayPurchase"));
+            source: "appstartup_billing_purchase");
     }
 
     private void OnAppUpdateStateChanged(object? sender, AppUpdateState state)
@@ -527,7 +529,9 @@ public partial class AppStartupViewModel : ViewModelBase
 
     private void OnOnboardingStateChanged(object? sender, EventArgs e)
     {
-        _ = ExecuteSafelyAsync(async () =>
+        // BUG-17: background onboarding-state event — detached so it never clobbers the shared
+        // IsBusy/ErrorMessage state an in-flight startup/resume load may own.
+        _ = ExecuteDetachedAsync(async () =>
         {
             var snapshot = await _onboardingService.RefreshSnapshotAsync();
             var wasVisible = IsOnboardingVisible;
@@ -538,7 +542,7 @@ public partial class AppStartupViewModel : ViewModelBase
             {
                 await HandleOnboardingDismissedAsync();
             }
-        }, Tr("Error_FailedTo_RefreshOnboardingState"));
+        }, source: "appstartup_onboarding_state");
     }
 
     private async Task LoadChangelogAsync(CancellationToken ct)

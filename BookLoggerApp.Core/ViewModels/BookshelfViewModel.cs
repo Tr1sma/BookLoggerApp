@@ -392,9 +392,17 @@ public partial class BookshelfViewModel : ViewModelBase
 
             if (string.IsNullOrWhiteSpace(SearchQuery))
             {
-                // Reset to shelf view
-                await LoadAsync();
-                return;
+                // LOG-09: only reset to the shelf view when there is genuinely nothing to filter.
+                // If a status/genre filter is active (even without search text), fall through to
+                // the shared filter/sort pipeline below using the full library as the base set —
+                // previously this branch always short-circuited and the filters never applied.
+                if (!FilterStatus.HasValue && !FilterGenreId.HasValue)
+                {
+                    await LoadAsync();
+                    return;
+                }
+
+                filtered = await _bookService.GetAllAsync();
             }
             else
             {
