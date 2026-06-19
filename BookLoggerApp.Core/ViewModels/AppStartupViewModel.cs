@@ -258,10 +258,9 @@ public partial class AppStartupViewModel : ViewModelBase
                             await _entitlementService.ApplyPurchaseAsync(p, Core.Entitlements.EntitlementChangeReason.Restore, ct);
                         }
                     }
-                    else if (_entitlementService.CurrentTier != Core.Entitlements.SubscriptionTier.Free
-                             && _entitlementService.CurrentEntitlement?.BillingPeriod != Core.Entitlements.BillingPeriod.Lifetime)
+                    else if (ShouldLapseOnResume(_entitlementService.CurrentEntitlement))
                     {
-                        // Subscription is gone from Play; downgrade to Free.
+                        // A genuine Play subscription is gone from Play; downgrade to Free.
                         await _entitlementService.ApplyLapseAsync("expired", ct);
                     }
                 }
@@ -273,6 +272,40 @@ public partial class AppStartupViewModel : ViewModelBase
                 System.Diagnostics.Debug.WriteLine($"Entitlement refresh on resume failed: {ex}");
             }
         }
+    }
+
+    /// <summary>
+    /// CODE_REVIEW BUG-02: only force-lapse on resume when the current entitlement is a real
+    /// Play purchase that Google Play no longer returns. Active promo grants have no
+    /// ProductId/PurchaseToken and never appear in QueryActivePurchasesAsync, so they must not
+    /// be downgraded while still valid; an expired promo is handled by the expiry path instead.
+    /// </summary>
+    private static bool ShouldLapseOnResume(UserEntitlement? entitlement)
+    {
+        if (entitlement is null)
+        {
+            return false;
+        }
+
+        if (entitlement.Tier == Core.Entitlements.SubscriptionTier.Free)
+        {
+            return false;
+        }
+
+        if (entitlement.BillingPeriod == Core.Entitlements.BillingPeriod.Lifetime)
+        {
+            return false;
+        }
+
+        // Still-valid promo grant: not a Play purchase, won't be returned by Play. Leave it.
+        if (entitlement.PromoExpiresAt is { } promoExpires && promoExpires > DateTime.UtcNow)
+        {
+            return false;
+        }
+
+        // Only a genuine Play purchase carries a ProductId / PurchaseToken.
+        return !string.IsNullOrEmpty(entitlement.ProductId)
+               || !string.IsNullOrEmpty(entitlement.PurchaseToken);
     }
 
     public Task ToggleHistoryAsync()

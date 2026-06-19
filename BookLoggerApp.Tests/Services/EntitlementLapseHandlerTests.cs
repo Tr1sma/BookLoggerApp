@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data;
@@ -124,7 +125,7 @@ public class EntitlementLapseHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task ClearEntitlementHidesAsync_unhides_everything()
+    public async Task ClearEntitlementHidesAsync_Premium_unhides_everything()
     {
         Guid species = await SeedSpeciesAsync(isPrestige: true);
         var plant = await SeedPlantAsync(species, name: "Phoenix", plantedAt: DateTime.UtcNow, isActive: false, status: PlantStatus.Healthy);
@@ -152,12 +153,79 @@ public class EntitlementLapseHandlerTests : IDisposable
             await setup.SaveChangesAsync();
         }
 
-        await _handler.ClearEntitlementHidesAsync();
+        await _handler.ClearEntitlementHidesAsync(SubscriptionTier.Premium);
 
         await using AppDbContext ctx = _factory.CreateDbContext();
         (await ctx.UserPlants.AllAsync(p => !p.IsHiddenByEntitlement)).Should().BeTrue();
         (await ctx.Shelves.AllAsync(s => !s.IsHiddenByEntitlement)).Should().BeTrue();
         (await ctx.UserDecorations.AllAsync(d => !d.IsHiddenByEntitlement)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ClearEntitlementHidesAsync_Plus_unhides_standard_but_keeps_prestige_and_ultimate_hidden()
+    {
+        // SEC-04: granting Plus must NOT un-hide Premium-only content (prestige plants,
+        // ultimate decorations). Standard plants, shelves and standard decorations come back.
+        Guid regular = await SeedSpeciesAsync(isPrestige: false);
+        Guid prestige = await SeedSpeciesAsync(isPrestige: true);
+        await SeedPlantAsync(regular, name: "Fern", plantedAt: new DateTime(2026, 1, 1), isActive: false, status: PlantStatus.Healthy);
+        await SeedPlantAsync(prestige, name: "Phoenix", plantedAt: new DateTime(2026, 2, 1), isActive: false, status: PlantStatus.Healthy);
+
+        Guid ultimate = await SeedShopItemAsync("Heart of Stories", isUltimate: true);
+        Guid standard = await SeedShopItemAsync("Reading Candle", isUltimate: false);
+        await SeedUserDecorationAsync(ultimate);
+        await SeedUserDecorationAsync(standard);
+
+        await SeedShelfAsync("Shelf A", sortOrder: 0);
+
+        // Hide everything first (Free state).
+        await using (var setup = _factory.CreateDbContext())
+        {
+            foreach (var p in await setup.UserPlants.ToListAsync()) p.IsHiddenByEntitlement = true;
+            foreach (var d in await setup.UserDecorations.ToListAsync()) d.IsHiddenByEntitlement = true;
+            foreach (var s in await setup.Shelves.ToListAsync()) s.IsHiddenByEntitlement = true;
+            await setup.SaveChangesAsync();
+        }
+
+        await _handler.ClearEntitlementHidesAsync(SubscriptionTier.Plus);
+
+        await using AppDbContext ctx = _factory.CreateDbContext();
+        List<UserPlant> plants = await ctx.UserPlants.Include(p => p.Species).ToListAsync();
+        plants.Single(p => p.Name == "Fern").IsHiddenByEntitlement.Should().BeFalse("standard plants unlock at Plus");
+        plants.Single(p => p.Name == "Phoenix").IsHiddenByEntitlement.Should().BeTrue("prestige plants require Premium");
+
+        List<UserDecoration> decos = await ctx.UserDecorations.Include(d => d.ShopItem).ToListAsync();
+        decos.Single(d => d.ShopItem.Name == "Reading Candle").IsHiddenByEntitlement.Should().BeFalse("standard decorations unlock at Plus");
+        decos.Single(d => d.ShopItem.Name == "Heart of Stories").IsHiddenByEntitlement.Should().BeTrue("ultimate decorations require Premium");
+
+        (await ctx.Shelves.AllAsync(s => !s.IsHiddenByEntitlement)).Should().BeTrue("Plus unlocks unlimited shelves");
+    }
+
+    [Fact]
+    public async Task ClearEntitlementHidesAsync_Plus_rehides_currently_visible_premium_content()
+    {
+        // Premium→Plus downgrade: prestige plant + ultimate decoration were visible under
+        // Premium and must be re-hidden when the new tier is only Plus.
+        Guid regular = await SeedSpeciesAsync(isPrestige: false);
+        Guid prestige = await SeedSpeciesAsync(isPrestige: true);
+        await SeedPlantAsync(regular, name: "Fern", plantedAt: new DateTime(2026, 1, 1), isActive: true, status: PlantStatus.Healthy);
+        await SeedPlantAsync(prestige, name: "Phoenix", plantedAt: new DateTime(2026, 2, 1), isActive: true, status: PlantStatus.Healthy);
+
+        Guid ultimate = await SeedShopItemAsync("Heart of Stories", isUltimate: true);
+        await SeedUserDecorationAsync(ultimate);
+        // Everything starts visible (IsHiddenByEntitlement == false by default).
+
+        await _handler.ClearEntitlementHidesAsync(SubscriptionTier.Plus);
+
+        await using AppDbContext ctx = _factory.CreateDbContext();
+        UserPlant phoenix = await ctx.UserPlants.Include(p => p.Species).SingleAsync(p => p.Name == "Phoenix");
+        phoenix.IsHiddenByEntitlement.Should().BeTrue("prestige plant must be re-hidden on downgrade to Plus");
+        phoenix.IsActive.Should().BeFalse("a hidden prestige plant cannot stay active");
+
+        UserDecoration heart = await ctx.UserDecorations.Include(d => d.ShopItem).SingleAsync(d => d.ShopItem.Name == "Heart of Stories");
+        heart.IsHiddenByEntitlement.Should().BeTrue("ultimate decoration must be re-hidden on downgrade to Plus");
+
+        ctx.UserPlants.Single(p => p.Name == "Fern").IsActive.Should().BeTrue("a standard plant stays active under Plus");
     }
 
     // ───── Seed helpers ───────────────────────────────────────────────────

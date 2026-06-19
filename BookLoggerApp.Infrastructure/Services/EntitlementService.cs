@@ -61,7 +61,14 @@ public class EntitlementService : IEntitlementService
             }
 
             UserEntitlement entitlement = await _store.GetOrCreateAsync(ct);
-            EvaluateExpiryIfNeeded(entitlement);
+
+            if (ShouldLapseByExpiry(entitlement))
+            {
+                // Persist the downgrade AND run the overflow-hide data-guard
+                // (CODE_REVIEW BUG-09) instead of a silent in-memory tier flip.
+                await ApplyLapseAsync("expired", ct);
+                return;
+            }
 
             SubscriptionTier previous = SubscriptionTier.Free;
             _current = entitlement;
@@ -97,7 +104,12 @@ public class EntitlementService : IEntitlementService
     public async Task RefreshAsync(CancellationToken ct = default)
     {
         UserEntitlement reloaded = await _store.GetOrCreateAsync(ct);
-        EvaluateExpiryIfNeeded(reloaded);
+
+        if (ShouldLapseByExpiry(reloaded))
+        {
+            await ApplyLapseAsync("expired", ct);
+            return;
+        }
 
         SubscriptionTier previous = _current?.Tier ?? SubscriptionTier.Free;
         _current = reloaded;
@@ -135,7 +147,7 @@ public class EntitlementService : IEntitlementService
 
         if (purchase.Tier >= SubscriptionTier.Plus && _lapseHandler is not null)
         {
-            await _lapseHandler.ClearEntitlementHidesAsync(ct);
+            await _lapseHandler.ClearEntitlementHidesAsync(purchase.Tier, ct);
         }
 
         await SyncAppSettingsMirrorAsync(current, ct);
@@ -202,7 +214,7 @@ public class EntitlementService : IEntitlementService
 
         if (promo.GrantedTier >= SubscriptionTier.Plus && _lapseHandler is not null)
         {
-            await _lapseHandler.ClearEntitlementHidesAsync(ct);
+            await _lapseHandler.ClearEntitlementHidesAsync(promo.GrantedTier, ct);
         }
 
         await SyncAppSettingsMirrorAsync(current, ct);
@@ -239,7 +251,7 @@ public class EntitlementService : IEntitlementService
             }
             else
             {
-                await _lapseHandler.ClearEntitlementHidesAsync(ct);
+                await _lapseHandler.ClearEntitlementHidesAsync(tier, ct);
             }
         }
 
@@ -247,26 +259,31 @@ public class EntitlementService : IEntitlementService
         Raise(previous, current, EntitlementChangeReason.DebugForce);
     }
 
-    private static void EvaluateExpiryIfNeeded(UserEntitlement entitlement)
+    /// <summary>
+    /// True when a loaded entitlement should be lapsed because its term has passed.
+    /// Read-only: the actual downgrade goes through <see cref="ApplyLapseAsync"/> so it is
+    /// persisted and runs the data-guard (CODE_REVIEW BUG-09). Auto-renewing subscriptions
+    /// are never lapsed on a guessed <see cref="UserEntitlement.ExpiresAt"/> — Google Play
+    /// presence is the source of truth (CODE_REVIEW LOG-01).
+    /// </summary>
+    private static bool ShouldLapseByExpiry(UserEntitlement entitlement)
     {
         if (entitlement.Tier == SubscriptionTier.Free)
         {
-            return;
+            return false;
         }
 
         if (entitlement.BillingPeriod == BillingPeriod.Lifetime)
         {
-            return;
+            return false;
         }
 
-        if (entitlement.ExpiresAt is { } expires && expires <= DateTime.UtcNow)
+        if (entitlement.AutoRenewing)
         {
-            entitlement.Tier = SubscriptionTier.Free;
-            entitlement.LapseReason = "expired";
-            entitlement.LapsedAt = DateTime.UtcNow;
-            entitlement.InGracePeriod = false;
-            entitlement.AutoRenewing = false;
+            return false;
         }
+
+        return entitlement.ExpiresAt is { } expires && expires <= DateTime.UtcNow;
     }
 
     private async Task SyncAppSettingsMirrorAsync(UserEntitlement entitlement, CancellationToken ct)

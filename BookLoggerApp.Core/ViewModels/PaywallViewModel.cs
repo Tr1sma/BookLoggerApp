@@ -63,6 +63,13 @@ public partial class PaywallViewModel : ViewModelBase
 
     public bool IsTierUnlocked(SubscriptionTier tier) => _entitlementService.CurrentTier >= tier;
 
+    /// <summary>
+    /// True only when the SKU for <paramref name="tier"/>+<paramref name="period"/> has a configured
+    /// introductory offer — drives the paywall "first month" badge (CODE_REVIEW LOG-07).
+    /// </summary>
+    public bool HasIntroOffer(SubscriptionTier tier, BillingPeriod period)
+        => _productCatalog.HasIntroductoryOffer(tier, period);
+
     public void SelectPeriod(BillingPeriod period)
     {
         SelectedPeriod = period;
@@ -92,7 +99,20 @@ public partial class PaywallViewModel : ViewModelBase
                 await _billingService.ConnectAsync();
             }
 
-            BillingPurchaseOutcome outcome = await _billingService.LaunchPurchaseFlowAsync(productId);
+            // BUG-12: when the user already owns a subscription and is switching to a different
+            // subscription, hand Play the owned purchase token so it does a proration replacement
+            // instead of throwing AlreadyOwned. A managed Lifetime product cannot replace a sub.
+            string? oldPurchaseToken = null;
+            if (period != BillingPeriod.Lifetime
+                && _entitlementService.CurrentTier != SubscriptionTier.Free
+                && _entitlementService.CurrentEntitlement is { } current
+                && current.BillingPeriod != BillingPeriod.Lifetime
+                && !string.IsNullOrEmpty(current.PurchaseToken))
+            {
+                oldPurchaseToken = current.PurchaseToken;
+            }
+
+            BillingPurchaseOutcome outcome = await _billingService.LaunchPurchaseFlowAsync(productId, oldPurchaseToken);
 
             string eventName = outcome switch
             {

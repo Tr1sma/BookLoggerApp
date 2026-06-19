@@ -1,5 +1,6 @@
 using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Infrastructure;
+using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.ViewModels;
 using FluentAssertions;
@@ -108,6 +109,65 @@ public class PaywallViewModelTests
 
         vm.ShowCelebration.Should().BeFalse();
         vm.Banner.Should().Be("You already own this subscription.");
+    }
+
+    [Fact]
+    public async Task PurchaseTierAsync_WhenAlreadySubscribed_PassesOwnedPurchaseTokenForProration()
+    {
+        // BUG-12: switching from an owned subscription must pass the old purchase token so Play
+        // does a proration replacement instead of throwing AlreadyOwned.
+        _entitlements.CurrentTier.Returns(SubscriptionTier.Plus);
+        _entitlements.CurrentEntitlement.Returns(new UserEntitlement
+        {
+            Tier = SubscriptionTier.Plus,
+            BillingPeriod = BillingPeriod.Monthly,
+            ProductId = "plus_monthly",
+            PurchaseToken = "owned-token"
+        });
+        _catalog.GetProductId(SubscriptionTier.Premium, BillingPeriod.Yearly).Returns("premium_yearly");
+        _billing.LaunchPurchaseFlowAsync("premium_yearly", "owned-token", Arg.Any<CancellationToken>())
+            .Returns(BillingPurchaseOutcome.Success);
+        var vm = CreateVm();
+
+        await vm.PurchaseTierAsync(SubscriptionTier.Premium, BillingPeriod.Yearly);
+
+        await _billing.Received(1).LaunchPurchaseFlowAsync("premium_yearly", "owned-token", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task PurchaseTierAsync_FreshPurchase_PassesNoOldToken()
+    {
+        _entitlements.CurrentTier.Returns(SubscriptionTier.Free);
+        _catalog.GetProductId(SubscriptionTier.Plus, BillingPeriod.Yearly).Returns("plus_yearly");
+        _billing.LaunchPurchaseFlowAsync("plus_yearly", null, Arg.Any<CancellationToken>())
+            .Returns(BillingPurchaseOutcome.Success);
+        var vm = CreateVm();
+
+        await vm.PurchaseTierAsync(SubscriptionTier.Plus, BillingPeriod.Yearly);
+
+        await _billing.Received(1).LaunchPurchaseFlowAsync("plus_yearly", null, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task PurchaseTierAsync_Lifetime_DoesNotPassOldToken_EvenWhenSubscribed()
+    {
+        // A managed Lifetime product cannot proration-replace a subscription.
+        _entitlements.CurrentTier.Returns(SubscriptionTier.Plus);
+        _entitlements.CurrentEntitlement.Returns(new UserEntitlement
+        {
+            Tier = SubscriptionTier.Plus,
+            BillingPeriod = BillingPeriod.Monthly,
+            ProductId = "plus_monthly",
+            PurchaseToken = "owned-token"
+        });
+        _catalog.GetProductId(SubscriptionTier.Premium, BillingPeriod.Lifetime).Returns("premium_lifetime");
+        _billing.LaunchPurchaseFlowAsync("premium_lifetime", null, Arg.Any<CancellationToken>())
+            .Returns(BillingPurchaseOutcome.Success);
+        var vm = CreateVm();
+
+        await vm.PurchaseTierAsync(SubscriptionTier.Premium, BillingPeriod.Lifetime);
+
+        await _billing.Received(1).LaunchPurchaseFlowAsync("premium_lifetime", null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
