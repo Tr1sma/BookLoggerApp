@@ -144,6 +144,19 @@ public class EntitlementService : IEntitlementService
     public async Task ApplyPurchaseAsync(PurchaseResult purchase, EntitlementChangeReason reason = EntitlementChangeReason.Purchase, CancellationToken ct = default)
     {
         UserEntitlement current = await _store.GetOrCreateAsync(ct);
+
+        // Z.679: a restore/resume re-applies every active Play purchase on each foreground.
+        // When the stored entitlement already matches this purchase's identity, short-circuit
+        // — no DB write, no EntitlementChanged broadcast. Otherwise every resume churns the DB
+        // and re-runs each subscriber's diff/UI work for a no-op. Genuine purchases (reason
+        // Purchase) always fall through so a re-purchase after a refund still applies.
+        if (reason == EntitlementChangeReason.Restore && MatchesStoredPurchase(current, purchase))
+        {
+            _current = current;
+            _isInitialized = true;
+            return;
+        }
+
         SubscriptionTier previous = current.Tier;
 
         current.Tier = purchase.Tier;
@@ -280,6 +293,16 @@ public class EntitlementService : IEntitlementService
         await SyncAppSettingsMirrorAsync(current, ct);
         Raise(previous, current, EntitlementChangeReason.DebugForce);
     }
+
+    /// <summary>
+    /// True when the stored entitlement already represents this exact purchase. Compares the
+    /// stable purchase identity (tier + product + token) — a renewed ExpiresAt for the same
+    /// token is irrelevant to whether a fresh apply is needed on resume.
+    /// </summary>
+    private static bool MatchesStoredPurchase(UserEntitlement stored, PurchaseResult purchase)
+        => stored.Tier == purchase.Tier
+           && string.Equals(stored.ProductId, purchase.ProductId, StringComparison.Ordinal)
+           && string.Equals(stored.PurchaseToken, purchase.PurchaseToken, StringComparison.Ordinal);
 
     /// <summary>
     /// True when a loaded entitlement should be lapsed because its term has passed.

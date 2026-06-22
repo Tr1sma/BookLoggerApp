@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -169,6 +170,10 @@ public static class DbInitializer
     /// <summary>
     /// Sets per-connection PRAGMAs that significantly speed up migrations on slow
     /// Android storage without compromising data safety:
+    /// - <c>journal_mode=WAL</c>: set explicitly (and the resulting mode logged) so the
+    ///   <c>synchronous=NORMAL</c> safety assumption below actually holds — NORMAL only
+    ///   survives power loss without corruption when the journal is WAL. WAL is persistent
+    ///   at the DB level, but forcing it here guarantees it regardless of prior state.
     /// - <c>synchronous=NORMAL</c>: with journal_mode=WAL this is the recommended
     ///   setting and survives power loss with at most rolling back the last
     ///   uncommitted transaction.
@@ -180,16 +185,52 @@ public static class DbInitializer
         try
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            // PRAGMA journal_mode returns the active mode as a result row, which
+            // ExecuteSqlRawAsync discards — read it back via a raw command so a DB that
+            // refuses WAL (e.g. an in-memory or networked FS) is visible in the diagnostic.
+            string journalMode = await SetJournalModeWalAsync(context);
+
             await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL;");
             await context.Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY;");
             sw.Stop();
             DatabaseInitializationHelper.AppendInitLog(
-                $"  [pragma] synchronous=NORMAL, temp_store=MEMORY ({sw.ElapsedMilliseconds}ms)");
+                $"  [pragma] journal_mode={journalMode}, synchronous=NORMAL, temp_store=MEMORY ({sw.ElapsedMilliseconds}ms)");
         }
         catch (Exception ex)
         {
             DatabaseInitializationHelper.AppendInitLog(
                 $"  [pragma] failed: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Issues <c>PRAGMA journal_mode = WAL</c> and returns the mode SQLite reports back
+    /// (lowercase, e.g. "wal" or "memory"). Opens/closes the connection only if it wasn't
+    /// already open so the caller's connection lifetime is preserved.
+    /// </summary>
+    private static async Task<string> SetJournalModeWalAsync(AppDbContext context)
+    {
+        var connection = context.Database.GetDbConnection();
+        bool shouldClose = connection.State != ConnectionState.Open;
+        if (shouldClose)
+        {
+            await connection.OpenAsync();
+        }
+
+        try
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA journal_mode = WAL;";
+            var result = await command.ExecuteScalarAsync();
+            return result?.ToString() ?? "unknown";
+        }
+        finally
+        {
+            if (shouldClose)
+            {
+                await connection.CloseAsync();
+            }
         }
     }
 
