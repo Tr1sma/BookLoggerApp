@@ -414,7 +414,6 @@ else if (activeTab == 2)
     private RatingCategory? selectedCategory = null;
     private bool showAllTopBooks = false;
     private string sharePeriodType = "alltime";
-    private string? _currentUrl;
 
     private Func<Task<bool>>? _backHandler;
     private Func<Task<bool>>? _shareModalBackHandler;
@@ -464,16 +463,10 @@ else if (activeTab == 2)
         });
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        // Check if we navigated to this page
-        var newUrl = NavigationManager.Uri;
-        if (_currentUrl != newUrl)
-        {
-            _currentUrl = newUrl;
-            await LoadDataAsync();
-        }
-    }
+    // Z.717: the initial load happens once in OnInitializedAsync; in-app navigation to /stats or
+    // /level-overview (same component, different route — no re-init) reloads via OnLocationChanged.
+    // The former OnParametersSetAsync reload duplicated the initial load on first render, so it was
+    // removed to leave a single reload trigger.
 
     private async Task LoadDataAsync()
     {
@@ -486,11 +479,20 @@ else if (activeTab == 2)
         // Reload when navigating to this page
         if (e.Location.Contains("/stats") || e.Location.Contains("/level-overview"))
         {
-            await InvokeAsync(async () =>
+            // Z.225: this is the last unguarded async-void handler — wrap the awaited body so an
+            // exception during reload can't escape as an unobserved crash.
+            try
             {
-                await LoadDataAsync();
-                StateHasChanged();
-            });
+                await InvokeAsync(async () =>
+                {
+                    await LoadDataAsync();
+                    StateHasChanged();
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Stats OnLocationChanged reload failed: {ex}");
+            }
         }
     }
 

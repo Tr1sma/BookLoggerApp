@@ -338,17 +338,10 @@
         await DecorationVM.LoadCommand.ExecuteAsync(null);
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        if (ViewModel.AvailableSpecies.Any())
-        {
-            await ViewModel.LoadCommand.ExecuteAsync(null);
-        }
-        if (DecorationVM.AllDecorations.Any())
-        {
-            await DecorationVM.LoadCommand.ExecuteAsync(null);
-        }
-    }
+    // Z.730: OnParametersSetAsync removed — PlantShop has no route parameters, so its only effect
+    // was to re-run both LoadCommands on every render once the first load had populated the lists
+    // (a redundant reload + flicker). The initial load lives in OnInitializedAsync; SwitchTab
+    // reloads the relevant VM on tab change.
 
     private async Task SwitchTab(string tab)
     {
