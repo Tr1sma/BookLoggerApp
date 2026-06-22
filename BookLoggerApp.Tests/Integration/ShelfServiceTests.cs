@@ -94,4 +94,40 @@ public class ShelfServiceTests : IDisposable
         books.First().UsesCoverAsSpine.Should().BeFalse();
         books.First().SpineColor.Should().Be("red");
     }
+
+    [Fact]
+    public async Task GetShelfByIdAsync_HiddenByEntitlement_ReturnsNull()
+    {
+        // Z.350: a downgrade-hidden shelf must not be reachable by direct id either.
+        Guid hiddenId;
+        using (var context = _contextFactory.CreateDbContext())
+        {
+            var hidden = new Shelf { Name = "Hidden", IsHiddenByEntitlement = true };
+            context.Shelves.Add(hidden);
+            await context.SaveChangesAsync();
+            hiddenId = hidden.Id;
+        }
+
+        var result = await _shelfService.GetShelfByIdAsync(hiddenId);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetShelfByIdAsync_VisibleShelf_ReturnsShelf()
+    {
+        Guid visibleId;
+        using (var context = _contextFactory.CreateDbContext())
+        {
+            var visible = new Shelf { Name = "Visible", IsHiddenByEntitlement = false };
+            context.Shelves.Add(visible);
+            await context.SaveChangesAsync();
+            visibleId = visible.Id;
+        }
+
+        var result = await _shelfService.GetShelfByIdAsync(visibleId);
+
+        result.Should().NotBeNull();
+        result!.Name.Should().Be("Visible");
+    }
 }

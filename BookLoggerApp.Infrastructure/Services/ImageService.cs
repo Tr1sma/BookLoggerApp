@@ -209,6 +209,11 @@ public class ImageService : IImageService
                 throw;
             }
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // A real caller cancellation must propagate, not be swallowed as a download failure.
+            throw;
+        }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Failed to download image from URL: {Url}", url);
@@ -230,6 +235,10 @@ public class ImageService : IImageService
                 var path = await SaveCoverImageAsync(stream, bookId, ct);
                 return path;
             }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -309,6 +318,10 @@ public class ImageService : IImageService
                 originalBytes.Length, resizedBytes.Length);
 
             return (resizedBytes, "image/jpeg");
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {

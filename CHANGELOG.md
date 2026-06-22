@@ -30,6 +30,11 @@ Versionsschema:
 - ISBN-Suche prüft die Länge vorab und spart eine sinnlose Abfrage bei offensichtlich falscher ISBN
 - ISBN-Treffer mit leerem Titel/Autor überschreibt nicht mehr deine bereits eingetippten Eingaben
 - Notizen und Zitate werden getrimmt; reine Leerzeichen lassen sich nicht mehr speichern (verbrauchen keinen Frei-Slot mehr)
+- Abbrechen eines Cover-Downloads bricht jetzt sauber ab statt still als Fehler zu enden
+- Abo-Status-Refresh löst nur noch bei echter Tarifänderung eine Aktualisierung aus (kein unnötiges Neu-Rendern)
+
+### Sicherheit
+- Ein nach Tarif-Downgrade verstecktes Regal ist nicht mehr über einen Direkt-Link/seine ID erreichbar
 
 ## [V1.0.0]
 

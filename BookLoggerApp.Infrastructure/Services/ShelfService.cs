@@ -41,7 +41,9 @@ public class ShelfService : IShelfService
             .Include(s => s.DecorationShelves)
             .ThenInclude(ds => ds.Decoration)
             .ThenInclude(d => d.ShopItem)
-            .FirstOrDefaultAsync(s => s.Id == id);
+            // Same entitlement filter as GetAllShelvesAsync: a downgrade-hidden shelf must not be
+            // reachable by direct id either, otherwise deep-links / stale nav would surface it.
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsHiddenByEntitlement);
     }
 
     public async Task<Shelf> CreateShelfAsync(Shelf shelf)
