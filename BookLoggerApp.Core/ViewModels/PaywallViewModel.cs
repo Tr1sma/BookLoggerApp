@@ -188,6 +188,7 @@ public partial class PaywallViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             PromoCodeRedemptionResult result = await _promoCodeService.RedeemAsync(PromoCodeInput);
+            string message = Tr(result.MessageKey, result.MessageArgs);
 
             if (result.Success)
             {
@@ -197,15 +198,15 @@ public partial class PaywallViewModel : ViewModelBase
                     .BuildMutable());
                 PromoCodeInput = string.Empty;
                 CelebrationHeadline = Tr("Paywall_PromoRedeemed");
-                CelebrationDetail = result.Message;
+                CelebrationDetail = message;
                 ShowCelebration = true;
                 Banner = null;
             }
             else
             {
-                Banner = result.Message;
+                Banner = message;
                 _analytics.LogEvent(AnalyticsEventNames.PromoCodeFailed, AnalyticsParamBuilder.Create()
-                    .Add(AnalyticsParamNames.Reason, result.Message)
+                    .Add(AnalyticsParamNames.Reason, result.MessageKey)
                     .BuildMutable());
             }
         }, Tr("Error_FailedTo_RedeemPromoCode"));

@@ -39,7 +39,7 @@ public class PaywallViewModelTests
     {
         PromoActivation activation = new(SubscriptionTier.Plus, BillingPeriod.Monthly, "BH-BETA2026", DateTime.UtcNow.AddDays(30));
         _promoCodes.RedeemAsync("BH-BETA2026", Arg.Any<CancellationToken>())
-            .Returns(new PromoCodeRedemptionResult(true, "Plus unlocked for 30 days.", activation));
+            .Returns(new PromoCodeRedemptionResult(true, "Promo_Success_Days", new object[] { SubscriptionTier.Plus, 30 }, activation));
         var vm = CreateVm();
         vm.PromoCodeInput = "BH-BETA2026";
 
@@ -56,7 +56,7 @@ public class PaywallViewModelTests
     public async Task RedeemPromoAsync_OnFailure_SetsBannerAndDoesNotShowCelebration()
     {
         _promoCodes.RedeemAsync("BOGUS", Arg.Any<CancellationToken>())
-            .Returns(new PromoCodeRedemptionResult(false, "Unknown promo code."));
+            .Returns(new PromoCodeRedemptionResult(false, "Promo_Unknown", Array.Empty<object>()));
         var vm = CreateVm();
         vm.PromoCodeInput = "BOGUS";
 
