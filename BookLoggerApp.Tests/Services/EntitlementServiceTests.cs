@@ -207,6 +207,67 @@ public class EntitlementServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ApplyPurchaseAsync_RestoreOfAlreadyStoredPurchase_DoesNotResaveOrRaise()
+    {
+        // Z.679: resume/restore re-applies every active purchase on each foreground. When the
+        // stored entitlement already matches the purchase identity, ApplyPurchaseAsync must
+        // short-circuit — no SaveAsync, no EntitlementChanged churn.
+        var stored = new UserEntitlement
+        {
+            Tier = SubscriptionTier.Plus,
+            BillingPeriod = BillingPeriod.Monthly,
+            ProductId = "plus_monthly",
+            PurchaseToken = "tok-123",
+            AutoRenewing = true,
+            ExpiresAt = DateTime.UtcNow.AddDays(20)
+        };
+        _store.GetOrCreateAsync(Arg.Any<CancellationToken>()).Returns(stored);
+        EntitlementService service = CreateService();
+        await service.InitializeAsync();
+
+        int raised = 0;
+        service.EntitlementChanged += (_, _) => raised++;
+        _store.ClearReceivedCalls();
+
+        var purchase = new PurchaseResult(
+            SubscriptionTier.Plus, BillingPeriod.Monthly, "plus_monthly", "tok-123", "order-1",
+            DateTime.UtcNow.AddDays(-10), DateTime.UtcNow.AddDays(25), AutoRenewing: true,
+            IsInIntroductoryPrice: false, IsFamilyShared: false);
+        await service.ApplyPurchaseAsync(purchase, EntitlementChangeReason.Restore);
+
+        raised.Should().Be(0);
+        await _store.DidNotReceive().SaveAsync(Arg.Any<UserEntitlement>(), Arg.Any<CancellationToken>());
+        service.CurrentTier.Should().Be(SubscriptionTier.Plus);
+    }
+
+    [Fact]
+    public async Task ApplyPurchaseAsync_RestoreWithDifferentToken_AppliesAndPersists()
+    {
+        // Z.679 guard: a changed purchase token is a real change and must still apply on restore.
+        _store.GetOrCreateAsync(Arg.Any<CancellationToken>())
+            .Returns(new UserEntitlement
+            {
+                Tier = SubscriptionTier.Plus,
+                BillingPeriod = BillingPeriod.Monthly,
+                ProductId = "plus_monthly",
+                PurchaseToken = "tok-OLD",
+                AutoRenewing = true
+            });
+        EntitlementService service = CreateService();
+        await service.InitializeAsync();
+        _store.ClearReceivedCalls();
+
+        var purchase = new PurchaseResult(
+            SubscriptionTier.Plus, BillingPeriod.Monthly, "plus_monthly", "tok-NEW", "order-2",
+            DateTime.UtcNow, DateTime.UtcNow.AddDays(30), AutoRenewing: true,
+            IsInIntroductoryPrice: false, IsFamilyShared: false);
+        await service.ApplyPurchaseAsync(purchase, EntitlementChangeReason.Restore);
+
+        await _store.Received(1).SaveAsync(
+            Arg.Is<UserEntitlement>(e => e.PurchaseToken == "tok-NEW"), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ApplyPurchaseAsync_Plus_DoesNotUnhidePrestigeContent()
     {
         // SEC-04 wiring: granting Plus must route the granted tier into the lapse handler so

@@ -16,6 +16,7 @@ Versionsschema:
 
 ### Geändert
 - Level-Up-Feier und Ziele-Seite nutzen durchgängig die warme App-Farbpalette (kein Bootstrap-Rot/-Grün/-Grau mehr)
+- App-Start/-Resume schreibt aktive Käufe nicht mehr bei jedem Vordergrund neu — nur bei echter Änderung (weniger unnötige DB-Schreibvorgänge und Neu-Renders)
 
 ### Behoben
 - Promo-Code-Meldungen, Export-Teilen-Titel und Share-Card-Texte (Statistik & Buch) erscheinen jetzt in der App-Sprache statt fest auf Englisch
@@ -32,9 +33,11 @@ Versionsschema:
 - Notizen und Zitate werden getrimmt; reine Leerzeichen lassen sich nicht mehr speichern (verbrauchen keinen Frei-Slot mehr)
 - Abbrechen eines Cover-Downloads bricht jetzt sauber ab statt still als Fehler zu enden
 - Abo-Status-Refresh löst nur noch bei echter Tarifänderung eine Aktualisierung aus (kein unnötiges Neu-Rendern)
+- Bewertungs-Aufforderung verbrennt keinen Monats-Slot mehr, wenn das Speichern der Einstellung fehlschlägt
 
 ### Sicherheit
 - Ein nach Tarif-Downgrade verstecktes Regal ist nicht mehr über einen Direkt-Link/seine ID erreichbar
+- WAL-Journalmodus wird vor Migrationen explizit erzwungen und protokolliert — senkt das DB-Korruptionsrisiko bei Stromausfall/Force-Close während einer Migration
 
 ## [V1.0.0]
 

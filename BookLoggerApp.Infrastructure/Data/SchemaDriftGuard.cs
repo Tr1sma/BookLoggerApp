@@ -424,6 +424,19 @@ public static class SchemaDriftGuard
         }
     }
 
+    /// <summary>
+    /// Test-only projection of <see cref="ExpectedTables"/> so a drift test can assert every
+    /// table/column the guard hard-codes still maps to the current EF model (Z.673). Keeps the
+    /// record types private while exposing just the names the assertion needs.
+    /// </summary>
+    internal static IReadOnlyList<(string Table, IReadOnlyList<string> Columns, bool HasCreateSql)> GetExpectedSchemaForTests()
+        => ExpectedTables
+            .Select(t => (
+                t.Name,
+                (IReadOnlyList<string>)t.Columns.Select(c => c.Name).ToList(),
+                !string.IsNullOrEmpty(t.CreateTableSql)))
+            .ToList();
+
     private sealed record ExpectedColumn(string Name, string Definition);
 
     private sealed record ExpectedTable(
