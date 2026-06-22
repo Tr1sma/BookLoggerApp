@@ -138,12 +138,19 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        var books = await unitOfWork.Books.GetAllAsync(ct);
+        // Z.761: pull only the requested year's completed books DB-side (half-open range, matching
+        // BookRepository.GetCountByCompletionYearAsync), then bucket by month in memory.
+        var startOfYear = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var startOfNextYear = startOfYear.AddYears(1);
 
-        return books
-            .Where(b => b.Status == ReadingStatus.Completed
-                     && b.DateCompleted.HasValue
-                     && b.DateCompleted.Value.Year == year)
+        var completedBooks = await unitOfWork.Books.FindAsync(
+            b => b.Status == ReadingStatus.Completed
+                 && b.DateCompleted.HasValue
+                 && b.DateCompleted.Value >= startOfYear
+                 && b.DateCompleted.Value < startOfNextYear,
+            ct);
+
+        return completedBooks
             .GroupBy(b => b.DateCompleted!.Value.Month)
             .ToDictionary(
                 g => g.Key,
@@ -156,22 +163,25 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
+        // Z.389: rolling 30-day windows (current = last 30 days, previous = the 30 days before
+        // that), consistent with GetAverageFinishTimeTrendAsync. Calendar-month boundaries made the
+        // "current" figure collapse toward zero at the very start of each month.
         var now = DateTime.UtcNow;
-        var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        var previousMonthStart = currentMonthStart.AddMonths(-1);
+        var thirtyDaysAgo = now.AddDays(-30);
+        var sixtyDaysAgo = now.AddDays(-60);
 
-        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(previousMonthStart, now, ct);
+        var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(sixtyDaysAgo, now, ct);
 
-        var currentMonthSessions = sessions
-            .Where(s => s.StartedAt >= currentMonthStart && s.Minutes > 0 && s.PagesRead.HasValue && s.PagesRead > 0)
+        var currentSessions = sessions
+            .Where(s => s.StartedAt >= thirtyDaysAgo && s.Minutes > 0 && s.PagesRead.HasValue && s.PagesRead > 0)
             .ToList();
 
-        var previousMonthSessions = sessions
-            .Where(s => s.StartedAt >= previousMonthStart && s.StartedAt < currentMonthStart && s.Minutes > 0 && s.PagesRead.HasValue && s.PagesRead > 0)
+        var previousSessions = sessions
+            .Where(s => s.StartedAt >= sixtyDaysAgo && s.StartedAt < thirtyDaysAgo && s.Minutes > 0 && s.PagesRead.HasValue && s.PagesRead > 0)
             .ToList();
 
-        double currentSpeed = CalculateSpeed(currentMonthSessions);
-        double previousSpeed = CalculateSpeed(previousMonthSessions);
+        double currentSpeed = CalculateSpeed(currentSessions);
+        double previousSpeed = CalculateSpeed(previousSessions);
 
         return (Math.Round(currentSpeed, 0), Math.Round(previousSpeed, 0));
     }
@@ -230,24 +240,22 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        var books = await unitOfWork.Books.GetAllAsync(ct);
-        var completedBookIds = books
-            .Where(b => b.Status == ReadingStatus.Completed)
-            .Select(b => b.Id)
-            .ToHashSet();
+        // Z.761: only completed books feed the radar — filter status DB-side instead of loading
+        // every book and filtering in memory.
+        var completedBooks = await unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed, ct);
+        var completedBookIds = completedBooks.Select(b => b.Id).ToHashSet();
 
         var bookGenres = await unitOfWork.BookGenres.GetAllAsync(ct);
         var genres = await unitOfWork.Genres.GetAllAsync(ct);
         var genreLookup = genres.ToDictionary(g => g.Id, g => g.Name);
 
+        // Z.749: a single GroupBy keyed on the resolved genre name. The previous nested
+        // GroupBy(g => g.Key) was a no-op — group keys are already unique, so g.Sum(x => x.Count())
+        // just re-summed a one-element sequence.
         var result = bookGenres
             .Where(bg => completedBookIds.Contains(bg.BookId))
             .GroupBy(bg => genreLookup.TryGetValue(bg.GenreId, out var name) ? name : "Unknown")
-            .GroupBy(g => g.Key)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Sum(x => x.Count())
-            )
+            .ToDictionary(g => g.Key, g => g.Count())
             .OrderByDescending(kvp => kvp.Value)
             .Take(maxGenres)
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
@@ -260,10 +268,9 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        var books = await unitOfWork.Books.GetAllAsync(ct);
-
-        var completed = books.Count(b => b.Status == ReadingStatus.Completed);
-        var abandoned = books.Count(b => b.Status == ReadingStatus.Abandoned);
+        // Z.761: two DB-side counts instead of loading every book to count in memory.
+        var completed = await unitOfWork.Books.CountAsync(b => b.Status == ReadingStatus.Completed, ct);
+        var abandoned = await unitOfWork.Books.CountAsync(b => b.Status == ReadingStatus.Abandoned, ct);
 
         return (completed, abandoned);
     }
@@ -273,7 +280,9 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        var books = await unitOfWork.Books.GetAllAsync(ct);
+        // Z.761: only completed books with a page count contribute — filter DB-side.
+        var books = await unitOfWork.Books.FindAsync(
+            b => b.Status == ReadingStatus.Completed && b.PageCount.HasValue, ct);
 
         var result = new Dictionary<string, int>
         {
@@ -283,7 +292,7 @@ public class AdvancedStatsService : IAdvancedStatsService
             { ">600", 0 }
         };
 
-        foreach (var book in books.Where(b => b.Status == ReadingStatus.Completed && b.PageCount.HasValue))
+        foreach (var book in books)
         {
             string bucket = book.PageCount!.Value switch
             {
@@ -303,10 +312,12 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        var books = await unitOfWork.Books.GetAllAsync(ct);
+        // Z.761: load only completed books DB-side; the whitespace-author filter stays in memory
+        // (string.IsNullOrWhiteSpace doesn't translate to SQL).
+        var books = await unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed, ct);
 
         var result = books
-            .Where(b => b.Status == ReadingStatus.Completed && !string.IsNullOrWhiteSpace(b.Author))
+            .Where(b => !string.IsNullOrWhiteSpace(b.Author))
             .GroupBy(b => b.Author)
             .Select(g => new AuthorStats(
                 g.Key,
@@ -325,14 +336,18 @@ public class AdvancedStatsService : IAdvancedStatsService
 
     private static async Task<YearStats> BuildYearStatsAsync(IUnitOfWork unitOfWork, int year, CancellationToken ct = default)
     {
-        var books = await unitOfWork.Books.GetAllAsync(ct);
         var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         // Half-open [startOfYear, startOfNextYear) via the inclusive last tick (see GetReadingHeatmapAsync).
         var endDate = startDate.AddYears(1).AddTicks(-1);
+        var startOfNextYear = startDate.AddYears(1);
 
-        var completedBooks = books
-            .Where(b => b.Status == ReadingStatus.Completed && b.DateCompleted.HasValue && b.DateCompleted.Value.Year == year)
-            .ToList();
+        // Z.761: pull only the requested year's completed books DB-side (range form == .Year == year).
+        var completedBooks = (await unitOfWork.Books.FindAsync(
+            b => b.Status == ReadingStatus.Completed
+                 && b.DateCompleted.HasValue
+                 && b.DateCompleted.Value >= startDate
+                 && b.DateCompleted.Value < startOfNextYear,
+            ct)).ToList();
 
         int booksCompleted = completedBooks.Count;
         int pagesRead = completedBooks.Sum(b => b.PageCount ?? 0);

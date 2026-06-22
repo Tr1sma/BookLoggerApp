@@ -621,25 +621,21 @@ public class AdvancedStatsServiceTests : IDisposable
         await _context.SaveChangesAsync();
 
         var now = DateTime.UtcNow;
-        var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        // Current month: 60 pages in 60 minutes = 60 pages/hour.
-        // Use `now` (not a fixed day-of-month) so the session is never dated in the
-        // future when the test runs on the 1st of a month — the service only counts
-        // sessions with StartedAt <= now.
+        // Current 30-day window: 60 pages in 60 minutes = 60 pages/hour.
         await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
         {
             BookId = book.Id,
-            StartedAt = now,
+            StartedAt = now.AddDays(-5),
             Minutes = 60,
             PagesRead = 60
         });
 
-        // Previous month: 30 pages in 60 minutes = 30 pages/hour
+        // Previous 30-day window (30-60 days ago): 30 pages in 60 minutes = 30 pages/hour.
         await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
         {
             BookId = book.Id,
-            StartedAt = currentMonthStart.AddMonths(-1).AddDays(1),
+            StartedAt = now.AddDays(-45),
             Minutes = 60,
             PagesRead = 30
         });
