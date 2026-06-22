@@ -4,11 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BookLoggerApp (branded as **BookHeart**) is a .NET 10 MAUI Blazor Hybrid Android app for managing and tracking books. It uses Entity Framework Core with SQLite for local data storage and follows a layered architecture with Repository and Unit of Work patterns. It includes gamification features (XP/levels, plant growing, decoration shop, shelf decorations) — see `XP_CALCULATION_GUIDE.md` for the full progression system.
+BookLoggerApp (branded as **BookHeart**) is a .NET 10 MAUI Blazor Hybrid Android app for managing and tracking books. It uses Entity Framework Core with SQLite for local data storage and follows a layered architecture with Repository and Unit of Work patterns. It includes gamification features (XP/levels, plant growing, decoration shop, shelf decorations); the XP/level progression math lives in `BookLoggerApp.Core/Helpers/XpCalculator.cs`.
 
 **Companion docs** (read when relevant):
 - `AGENTS.md` — repo guidelines with DI, testing, commit/PR conventions (overlaps this file but shorter)
-- `XP_CALCULATION_GUIDE.md` — XP, levels, and progression math
 - `SECURITY.md` — security posture (read before touching import/export, image handling, URL parsing)
 - `CHANGELOG.md` — user-facing change log (German, see section below)
 
