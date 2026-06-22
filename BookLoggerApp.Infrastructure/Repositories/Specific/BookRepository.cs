@@ -14,6 +14,13 @@ public class BookRepository : Repository<Book>, IBookRepository
     {
     }
 
+    // Z.570 — eager-loading contract: the plain list queries below (GetBooksByStatusAsync,
+    // GetRecentBooksAsync, GetBooksByAuthorAsync, GetBookByISBNAsync) return Books WITHOUT their
+    // BookGenres/BookTropes/sessions navigations. Callers that need genres either Include them on
+    // their own query (BlindDateService, ImportExportService, OnboardingService) or read the
+    // BookGenres join table directly (GoalService, AdvancedStatsService) — none assume these lists
+    // carry loaded navigations. The detail/search queries that DO need them Include explicitly
+    // (GetBookWithDetailsAsync, GetBooksByGenreAsync, SearchBooksAsync).
     public async Task<IEnumerable<Book>> GetBooksByStatusAsync(ReadingStatus status, CancellationToken ct = default)
     {
         return await _dbSet
