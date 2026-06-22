@@ -413,6 +413,17 @@
     animation: slideUp 0.6s ease 0.5s both;
 }
 
+.levelup-earned-label {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.levelup-total-coins {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
 /* ===== Confetti Particles ===== */
 .confetti {
     position: absolute;
