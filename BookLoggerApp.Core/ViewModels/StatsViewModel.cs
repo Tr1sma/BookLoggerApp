@@ -392,7 +392,7 @@ public partial class StatsViewModel : ViewModelBase
             var yearStart = new DateTime(yearOnly, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             var yearEnd = yearOnly == DateTime.UtcNow.Year
                 ? DateTime.UtcNow
-                : new DateTime(yearOnly, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+                : yearStart.AddYears(1).AddTicks(-1); // half-open [year, year+1), matches the month branch below
             return (yearStart, yearEnd);
         }
 

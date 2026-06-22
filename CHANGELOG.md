@@ -21,6 +21,10 @@ Versionsschema:
 - Promo-Code-Meldungen, Export-Teilen-Titel und Share-Card-Texte (Statistik & Buch) erscheinen jetzt in der App-Sprache statt fest auf Englisch
 - Lesezeit-Anzeige auf Dashboard & Statistik nutzt die lokalisierte Schreibweise (vorher fest „Xh Ym")
 - Genre-Badges in Ziel-Karten zeigen bei fehlender Genre-Farbe wieder eine gültige Farbe statt einer kaputten
+- Durchschnittsbewertung eines Buchs zählt die Spice-Stufe nicht mehr mit (sie misst Intensität, nicht Qualität)
+- „Diese Woche" auf dem Dashboard rechnet nach lokaler Kalenderwoche statt UTC
+- Jahres-Statistiken erfassen jetzt auch die letzte Sekunde des Jahres (Off-by-one behoben)
+- Verschieben eines Wunschlisten-Buchs in die Bibliothek behält das ursprüngliche Hinzufügedatum
 
 ## [V1.0.0]
 

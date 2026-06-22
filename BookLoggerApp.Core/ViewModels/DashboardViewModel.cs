@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 
@@ -72,19 +73,25 @@ public partial class DashboardViewModel : ViewModelBase
             var readingBooks = await _bookService.GetByStatusAsync(ReadingStatus.Reading, ct);
             CurrentlyReading = readingBooks.FirstOrDefault();
 
-            // This Week Stats — ISO 8601 / DE: Woche beginnt Montag
-            var today = DateTime.UtcNow.Date;
+            // This Week Stats — ISO 8601 / DE: Woche beginnt Montag, lokaler Kalender
+            // (konsistent mit Goals/Streaks; CODE_REVIEW LOG-*). Die Stats-Zeitstempel
+            // (DateCompleted, Session.StartedAt) sind kanonisch UTC.
+            var timeZone = TimeZoneInfo.Local;
+            var today = DateTime.Now.Date;
             int daysSinceMonday = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
             var weekStart = today.AddDays(-daysSinceMonday);
             var weekEnd = today.AddDays(1).AddTicks(-1);
 
-            // Calculate books read this week (completed books)
+            // Calculate books read this week (completed books) — bucket UTC DateCompleted by local date
             var completedBooksThisWeek = await _bookService.GetByStatusAsync(ReadingStatus.Completed, ct);
             BooksReadThisWeek = completedBooksThisWeek.Count(b => b.DateCompleted.HasValue &&
-                b.DateCompleted.Value >= weekStart && b.DateCompleted.Value <= weekEnd);
+                LocalTimeHelper.ToLocal(b.DateCompleted.Value, timeZone) is var localCompleted &&
+                localCompleted >= weekStart && localCompleted <= weekEnd);
 
-            // Get sessions this week
-            var weekSessions = await _progressService.GetSessionsInRangeAsync(weekStart, weekEnd, ct);
+            // Get sessions this week — convert the local week bounds to UTC for the StartedAt query
+            var weekStartUtc = TimeZoneInfo.ConvertTimeToUtc(weekStart, timeZone);
+            var weekEndUtc = TimeZoneInfo.ConvertTimeToUtc(weekEnd, timeZone);
+            var weekSessions = await _progressService.GetSessionsInRangeAsync(weekStartUtc, weekEndUtc, ct);
             MinutesReadThisWeek = weekSessions.Sum(s => s.Minutes);
             PagesReadThisWeek = weekSessions.Sum(s => s.PagesRead ?? 0);
             XpEarnedThisWeek = weekSessions.Sum(s => s.XpEarned);

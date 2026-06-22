@@ -76,9 +76,9 @@ public class RatingIntegrationTests : IDisposable
         retrievedBook.WorldBuildingRating.Should().Be(5);
         retrievedBook.WorldBuildingRating.Should().Be(5);
 
-        // Assert - AverageRating calculated correctly
+        // Assert - AverageRating calculated correctly (SpiceLevelRating 3 excluded): (5+4+5+4+5)/5
         retrievedBook.AverageRating.Should().NotBeNull();
-        retrievedBook.AverageRating.Value.Should().BeApproximately(4.33, 0.01);
+        retrievedBook.AverageRating.Value.Should().BeApproximately(4.6, 0.01);
 
         // Assert - Statistics are correct
         averages[RatingCategory.Characters].Should().Be(5.0);
@@ -365,7 +365,8 @@ public class RatingIntegrationTests : IDisposable
         booksWithRatings.Should().ContainSingle();
         var summary = booksWithRatings[0];
 
-        summary.AverageRating.Should().BeApproximately(4.27, 0.01);
+        // SpiceLevelRating (3) excluded → 10 quality ratings: (5+4+5+4+5+4+3+5+4+5)/10
+        summary.AverageRating.Should().BeApproximately(4.4, 0.01);
         summary.Ratings.Should().HaveCount(11);
         summary.Ratings[RatingCategory.Characters].Should().Be(5);
         summary.Ratings[RatingCategory.Plot].Should().Be(4);

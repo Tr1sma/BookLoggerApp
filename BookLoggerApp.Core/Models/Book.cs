@@ -99,7 +99,9 @@ public class Book
 
     /// <summary>
     /// Calculates the average of all set category ratings.
-    /// Returns OverallRating if no category ratings are set.
+    /// SpiceLevelRating is deliberately excluded — it measures romantic intensity,
+    /// not book quality, so it must not skew the quality average.
+    /// Returns null if no (non-spice) category ratings are set.
     /// </summary>
     public double? AverageRating
     {
@@ -110,7 +112,6 @@ public class Book
                 CharactersRating,
                 PlotRating,
                 WritingStyleRating,
-                SpiceLevelRating,
                 PacingRating,
                 WorldBuildingRating,
                 SpannungRating,

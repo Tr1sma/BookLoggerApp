@@ -37,7 +37,9 @@ public class AdvancedStatsService : IAdvancedStatsService
         var unitOfWork = new UnitOfWork(context);
 
         var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        var endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+        // Half-open [startOfYear, startOfNextYear): the inclusive last tick avoids the
+        // 23:59:59.000-23:59:59.999 gap (GetSessionsInRangeAsync compares with <=).
+        var endDate = startDate.AddYears(1).AddTicks(-1);
 
         var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate, ct);
 
@@ -325,7 +327,8 @@ public class AdvancedStatsService : IAdvancedStatsService
     {
         var books = await unitOfWork.Books.GetAllAsync(ct);
         var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        var endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+        // Half-open [startOfYear, startOfNextYear) via the inclusive last tick (see GetReadingHeatmapAsync).
+        var endDate = startDate.AddYears(1).AddTicks(-1);
 
         var completedBooks = books
             .Where(b => b.Status == ReadingStatus.Completed && b.DateCompleted.HasValue && b.DateCompleted.Value.Year == year)
