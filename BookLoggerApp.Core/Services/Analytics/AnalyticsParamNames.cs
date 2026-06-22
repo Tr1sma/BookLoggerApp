@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace BookLoggerApp.Core.Services.Analytics;
 
 public static class AnalyticsParamNames
@@ -82,7 +84,8 @@ public static class AnalyticsParamNames
     public const string DismissReason = "dismiss_reason";
     public const string CtaSource = "cta_source";
 
-    // Forbidden-key set used by AnalyticsParamBuilder (PII guard)
+    // Forbidden-key set used by AnalyticsParamBuilder (PII guard). Kept so a known-PII key gets a
+    // precise diagnostic; the Allowlist below is the primary gate (Z.501).
     public static readonly HashSet<string> Forbidden = new(StringComparer.OrdinalIgnoreCase)
     {
         "title", "book_title", "author", "isbn", "quote", "quote_text", "annotation",
@@ -92,4 +95,30 @@ public static class AnalyticsParamNames
         "lat", "lon", "latitude", "longitude", "ip", "advertising_id", "idfa",
         "user_text", "search_query", "query"
     };
+
+    /// <summary>
+    /// Z.501: allowlist of every param key the app may emit — derived by reflection from the
+    /// <c>const string</c> fields above so it can never drift from the declared keys. The builder
+    /// rejects (DEBUG: throws, RELEASE: drops) any key not in this set, which is strictly safer
+    /// than the denylist alone: a newly-introduced raw-content key is blocked by default unless a
+    /// const is added for it here. Case-insensitive to match <see cref="Forbidden"/>.
+    /// </summary>
+    public static readonly HashSet<string> Allowed = BuildAllowed();
+
+    private static HashSet<string> BuildAllowed()
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (FieldInfo field in typeof(AnalyticsParamNames)
+                     .GetFields(BindingFlags.Public | BindingFlags.Static))
+        {
+            // const string fields are literals; the Forbidden/Allowed sets are static readonly
+            // (IsInitOnly) and are skipped.
+            if (field is { IsLiteral: true, IsInitOnly: false } && field.FieldType == typeof(string)
+                && field.GetRawConstantValue() is string value)
+            {
+                set.Add(value);
+            }
+        }
+        return set;
+    }
 }
