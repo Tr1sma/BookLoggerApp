@@ -138,7 +138,12 @@ public class WishlistService : IWishlistService
 
         book.Status = ReadingStatus.Planned;
         book.CurrentPage = 0;
-        book.DateAdded = DateTime.UtcNow;
+        // Preserve the original add date (stamped when the book was wishlisted);
+        // moving to the library is not a fresh "add". Only stamp it if unset.
+        if (book.DateAdded == default)
+        {
+            book.DateAdded = DateTime.UtcNow;
+        }
 
         // Remove wishlist metadata
         if (book.WishlistInfo != null)

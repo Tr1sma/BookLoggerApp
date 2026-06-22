@@ -86,6 +86,39 @@ public class WishlistServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task MoveToLibraryAsync_PreservesOriginalDateAdded()
+    {
+        // Arrange — a book wishlisted long ago
+        var originalDate = new DateTime(2024, 1, 15, 8, 0, 0, DateTimeKind.Utc);
+        Guid bookId;
+        await using (var ctx = _factory.CreateDbContext())
+        {
+            var book = new Book
+            {
+                Title = "Old Wish",
+                Author = "Author",
+                Status = ReadingStatus.Wishlist,
+                DateAdded = originalDate
+            };
+            ctx.Books.Add(book);
+            ctx.WishlistInfos.Add(new WishlistInfo { BookId = book.Id, Priority = WishlistPriority.Medium });
+            await ctx.SaveChangesAsync();
+            bookId = book.Id;
+        }
+
+        // Act
+        await _service.MoveToLibraryAsync(bookId);
+
+        // Assert — moved to the library, original add date untouched
+        await using (var ctx = _factory.CreateDbContext())
+        {
+            var moved = await ctx.Books.FindAsync(bookId);
+            moved!.Status.Should().Be(ReadingStatus.Planned);
+            moved.DateAdded.Should().Be(originalDate);
+        }
+    }
+
+    [Fact]
     public async Task AddToWishlistAsync_WithoutInfo_CreatesDefaultMediumPriority()
     {
         var book = new Book { Title = "New Wish", Author = "a" };

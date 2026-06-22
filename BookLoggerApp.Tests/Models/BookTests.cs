@@ -150,12 +150,29 @@ public class BookTests
         // Act
         var average = book.AverageRating;
 
-        // Assert
+        // Assert — SpiceLevelRating (3) is excluded: (5 + 4 + 5 + 4 + 5) / 5
         average.Should().NotBeNull();
-        average.Value.Should().BeApproximately(4.33, 0.01);
+        average.Value.Should().BeApproximately(4.6, 0.01);
     }
 
+    [Fact]
+    public void AverageRating_ExcludesSpiceLevel()
+    {
+        // Arrange — high spice must not lift the quality average
+        var book = new Book
+        {
+            CharactersRating = 3,
+            PlotRating = 3,
+            SpiceLevelRating = 5
+        };
 
+        // Act
+        var average = book.AverageRating;
+
+        // Assert — only the two quality ratings count: (3 + 3) / 2
+        average.Should().NotBeNull();
+        average.Value.Should().BeApproximately(3.0, 0.01);
+    }
 
     [Fact]
     public void AverageRating_WithNoRatings_ShouldReturnNull()
@@ -194,11 +211,12 @@ public class BookTests
 
 
 
+    // spice is set but excluded from the average; expectedAverage = mean of the other five
     [Theory]
-    [InlineData(1, 2, 3, 4, 5, 5, 3.33)]
+    [InlineData(1, 2, 3, 4, 5, 5, 3.2)]
     [InlineData(5, 5, 5, 5, 5, 5, 5.0)]
     [InlineData(1, 1, 1, 1, 1, 1, 1.0)]
-    [InlineData(3, 4, 5, 2, 3, 4, 3.5)]
+    [InlineData(3, 4, 5, 2, 3, 4, 3.8)]
     public void AverageRating_WithVariousRatings_ShouldCalculateCorrectly(
         int characters, int plot, int writing, int spice, int pacing, int world, double expectedAverage)
     {
