@@ -4,8 +4,7 @@
 @inject IStringLocalizer<AppResources> L
 
 <div class="plant-shop-card @(IsSelected ? "selected" : "") @(IsLockedByLevel ? "locked" : "") @(IsLegendary ? "legendary" : "")"
-     @onclick="OnSelect"
-     style="display: flex; flex-direction: column;">
+     @onclick="OnSelect">
     <!-- Decoration Image -->
     <div class="plant-card-image">
         <img src="@Item.ImagePath" alt="@Item.LocalizedName(L)" />
