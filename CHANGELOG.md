@@ -34,6 +34,8 @@ Versionsschema:
 - Abbrechen eines Cover-Downloads bricht jetzt sauber ab statt still als Fehler zu enden
 - Abo-Status-Refresh löst nur noch bei echter Tarifänderung eine Aktualisierung aus (kein unnötiges Neu-Rendern)
 - Bewertungs-Aufforderung verbrennt keinen Monats-Slot mehr, wenn das Speichern der Einstellung fehlschlägt
+- Abschließen eines genre-gefilterten Ziels überschreibt/dupliziert keine Genre-Daten mehr
+- Pflanzen ansehen schreibt nicht mehr in die Datenbank; ein Ewiger Phönix setzt seinen Gieß-Timer nicht mehr bei jedem Blick zurück (nur noch beim Pflege-Durchlauf)
 
 ### Sicherheit
 - Ein nach Tarif-Downgrade verstecktes Regal ist nicht mehr über einen Direkt-Link/seine ID erreichbar

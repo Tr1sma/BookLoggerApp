@@ -177,6 +177,21 @@ public class ProgressService : IProgressService
             session.Minutes = Math.Max(0, (int)(session.EndedAt.Value - session.StartedAt).TotalMinutes);
         }
 
+        // Z.375 — Session completion fans out several persistent writes (session XP via
+        // ProgressionService, plant reading-day via PlantService, the session row + moods via
+        // this UnitOfWork, the guardian cooldown, Story-Heart coin/bonus-XP via the settings
+        // provider, and goal recompute). These run across DISTINCT, transient DbContexts — each
+        // service owns its own IUnitOfWork/AppDbContext and therefore its own SQLite connection —
+        // so a single EF transaction cannot span the chain (EF transactions are per-connection).
+        // The sequence is deliberately non-atomic; it is ordered so that the side-effects most
+        // expensive to repeat are deferred until AFTER the main session save succeeds: the
+        // guardian cooldown (PersistGuardianCooldownAsync) and the Story-Heart bonuses are only
+        // applied once the session row is committed, so a failed save never burns a cooldown or
+        // double-awards a bonus. Each step is individually idempotent-safe on retry. In this
+        // single-user offline app a mid-chain crash leaves at worst a slightly stale streak/goal
+        // total that the next session recomputes — an acceptable trade vs. unifying every service
+        // onto one shared connection.
+
         // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 

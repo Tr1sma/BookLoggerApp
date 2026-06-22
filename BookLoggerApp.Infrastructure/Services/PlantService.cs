@@ -60,7 +60,7 @@ public class PlantService : IPlantService
     public async Task<IReadOnlyList<UserPlant>> GetAllAsync(CancellationToken ct = default)
     {
         var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
-        await RefreshPlantStatusesAsync(plants, ct);
+        await ApplyDisplayStatusesAsync(plants, ct);
         return plants.ToList();
     }
 
@@ -69,7 +69,7 @@ public class PlantService : IPlantService
         var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(id, ct);
         if (plant != null)
         {
-            await RefreshPlantStatusAsync(plant, ct);
+            await ApplyDisplayStatusAsync(plant, ct);
         }
 
         return plant;
@@ -135,7 +135,7 @@ public class PlantService : IPlantService
         var plant = await _unitOfWork.UserPlants.GetActivePlantAsync(ct);
         if (plant != null)
         {
-            await RefreshPlantStatusAsync(plant, ct);
+            await ApplyDisplayStatusAsync(plant, ct);
         }
 
         return plant;
@@ -339,7 +339,7 @@ public class PlantService : IPlantService
         if (plant == null)
             return false;
 
-        await RefreshPlantStatusAsync(plant, ct);
+        await ApplyDisplayStatusAsync(plant, ct);
 
         if (plant.Status == PlantStatus.Dead)
             return false;
@@ -548,7 +548,7 @@ public class PlantService : IPlantService
     public async Task<IReadOnlyList<UserPlant>> GetPlantsNeedingWaterAsync(CancellationToken ct = default)
     {
         var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
-        await RefreshPlantStatusesAsync(plants, ct);
+        await ApplyDisplayStatusesAsync(plants, ct);
 
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
 
@@ -576,7 +576,7 @@ public class PlantService : IPlantService
     public async Task<decimal> CalculateTotalXpBoostAsync(CancellationToken ct = default)
     {
         var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
-        await RefreshPlantStatusesAsync(allPlants, ct);
+        await ApplyDisplayStatusesAsync(allPlants, ct);
         bool hasStoryHeart = await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct);
         return SpecialAbilityResolver.CalculateAggregatedPlantBoost(allPlants, hasStoryHeart);
     }
@@ -599,6 +599,58 @@ public class PlantService : IPlantService
         int dynamicCost = species.BaseCost + (plantsPurchased * 200);
 
         return dynamicCost;
+    }
+
+    /// <summary>
+    /// Z.206 — pure, read-only status projection for the GETTER paths. Recomputes
+    /// <see cref="UserPlant.Status"/> in memory so callers display the current thirst state,
+    /// but does NOT persist and does NOT reset a Phoenix's water timer. The stateful side of a
+    /// status refresh (the Phoenix LastWatered reset + SaveChanges) lives only in the maintenance
+    /// pass (<see cref="UpdatePlantStatusesAsync"/>) and the real mutators, so a plain read never
+    /// writes to the database.
+    /// </summary>
+    private async Task ApplyDisplayStatusesAsync(IEnumerable<UserPlant> plants, CancellationToken ct)
+    {
+        var plantList = plants as IList<UserPlant> ?? plants.ToList();
+        bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(plantList, SpecialAbilityKeys.EternalPhoenix);
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
+        foreach (var plant in plantList)
+        {
+            ApplyDisplayStatus(plant, userOwnsPhoenix, growthMultiplier);
+        }
+    }
+
+    private async Task ApplyDisplayStatusAsync(UserPlant plant, CancellationToken ct)
+    {
+        // Phoenix ownership gates a protection rule that applies across all plants, so we load
+        // the full set to determine it even when only one plant is being projected.
+        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
+        bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(allPlants, SpecialAbilityKeys.EternalPhoenix);
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
+        ApplyDisplayStatus(plant, userOwnsPhoenix, growthMultiplier);
+    }
+
+    private static void ApplyDisplayStatus(UserPlant plant, bool userOwnsPhoenix, double growthMultiplier)
+    {
+        if (plant.Species == null)
+            return;
+
+        var currentStatus = PlantGrowthCalculator.CalculatePlantStatus(
+            plant.LastWatered,
+            plant.Species.WaterIntervalDays,
+            growthMultiplier);
+
+        // Phoenix protection (display only): never SHOW a plant as Dead while a Phoenix is owned.
+        // The persist path (TryApplyCurrentPlantStatus) additionally resets the Phoenix's
+        // LastWatered; a read must not, so the water timer is left untouched here (Z.206).
+        if (currentStatus == PlantStatus.Dead && userOwnsPhoenix)
+        {
+            currentStatus = PlantStatus.Wilting;
+        }
+
+        plant.Status = currentStatus;
     }
 
     private async Task RefreshPlantStatusesAsync(IEnumerable<UserPlant> plants, CancellationToken ct)
