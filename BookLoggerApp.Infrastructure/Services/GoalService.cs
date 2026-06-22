@@ -175,6 +175,7 @@ public class GoalService : IGoalService
         }
 
         bool anyGoalNewlyCompleted = false;
+        List<Guid>? newlyCompletedGoalIds = null;
 
         foreach (var goal in goals)
         {
@@ -232,17 +233,35 @@ public class GoalService : IGoalService
 
                 if (persistNewlyCompleted)
                 {
+                    // Reflect completion on the in-memory (returned) object for the caller/UI,
+                    // but DON'T persist via this instance — see the Z.187 note below.
                     goal.IsCompleted = true;
                     goal.CompletedAt = DateTime.UtcNow;
-                    await _unitOfWork.ReadingGoals.UpdateAsync(goal, ct);
+                    (newlyCompletedGoalIds ??= new List<Guid>()).Add(goal.Id);
                 }
             }
         }
 
-        // Only persist changes when a goal was actually newly completed,
-        // not on every read. Current is computed dynamically each time.
-        if (persistNewlyCompleted && anyGoalNewlyCompleted)
+        // Z.187: persist completion as a targeted scalar update on a freshly-loaded TRACKED entity.
+        // The `goals` here come from AsNoTracking() repository reads and, for genre-filtered goals,
+        // had their GoalGenres navigation REPLACED above with synthetic GoalGenre instances (sharing
+        // Genre references across goals) purely for UI display. Calling UpdateAsync on such an
+        // instance makes _dbSet.Update graft that projection graph into the change tracker and
+        // rewrite Genre / GoalGenre rows on SaveChanges (clobber + duplicate-tracking risk). Loading
+        // the goal by id (FindAsync → tracked, navigations not loaded) and writing only the two
+        // completion scalars keeps the persist path independent of the display projection.
+        if (persistNewlyCompleted && newlyCompletedGoalIds is { Count: > 0 })
         {
+            foreach (var goalId in newlyCompletedGoalIds)
+            {
+                var tracked = await _unitOfWork.ReadingGoals.GetByIdAsync(goalId, ct);
+                if (tracked is not null && !tracked.IsCompleted)
+                {
+                    tracked.IsCompleted = true;
+                    tracked.CompletedAt = DateTime.UtcNow;
+                    await _unitOfWork.ReadingGoals.UpdateAsync(tracked, ct);
+                }
+            }
             await _unitOfWork.SaveChangesAsync(ct);
         }
 
