@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Core.Enums;
@@ -17,8 +18,9 @@ public partial class BookshelfViewModel : ViewModelBase
 
     private readonly IShelfService _shelfService;
     private readonly IAppSettingsProvider _settingsProvider;
+    private readonly IFeatureGuard? _featureGuard;
 
-    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IDecorationService decorationService, IShelfService shelfService, IAppSettingsProvider settingsProvider)
+    public BookshelfViewModel(IBookService bookService, IGenreService genreService, IPlantService plantService, IGoalService goalService, IDecorationService decorationService, IShelfService shelfService, IAppSettingsProvider settingsProvider, IFeatureGuard? featureGuard = null)
     {
         _bookService = bookService;
         _genreService = genreService;
@@ -27,6 +29,7 @@ public partial class BookshelfViewModel : ViewModelBase
         _decorationService = decorationService;
         _shelfService = shelfService;
         _settingsProvider = settingsProvider;
+        _featureGuard = featureGuard;
     }
 
     [ObservableProperty]
@@ -37,8 +40,8 @@ public partial class BookshelfViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<Book> _books = new();
 
-    [ObservableProperty]
-    private ObservableCollection<UserPlant> _bookshelfPlants = new();
+    // Z.780: removed the never-populated BookshelfPlants collection (its only reader was the dead
+    // MovePlantToPositionAsync below; reordering goes through ReorderShelfItemsAsync).
 
     [ObservableProperty]
     private ObservableCollection<UserPlant> _availablePlants = new();
@@ -83,18 +86,22 @@ public partial class BookshelfViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            await _plantService.UpdatePlantStatusesAsync();
+            await _plantService.UpdatePlantStatusesAsync(ct);
 
-            // Load shelf color from settings
-            var settings = await _settingsProvider.GetSettingsAsync();
-            ShelfLedgeColor = settings.ShelfLedgeColor;
-            ShelfBaseColor = settings.ShelfBaseColor;
+            // Load shelf color from settings. HIGH-1003: custom shelf colors are a Plus feature, so
+            // a user who is not entitled (e.g. after restoring a higher-tier backup) sees the
+            // defaults; the saved values remain in AppSettings and return automatically on re-upgrade.
+            var settings = await _settingsProvider.GetSettingsAsync(ct);
+            bool customColorsAllowed = _featureGuard?.HasAccess(FeatureKey.CustomShelfColors) ?? true;
+            var defaultColors = new AppSettings();
+            ShelfLedgeColor = customColorsAllowed ? settings.ShelfLedgeColor : defaultColors.ShelfLedgeColor;
+            ShelfBaseColor = customColorsAllowed ? settings.ShelfBaseColor : defaultColors.ShelfBaseColor;
 
             // 1. Fetch data
             var shelves = await _shelfService.GetAllShelvesAsync();
-            var allBooks = await _bookService.GetAllAsync(); // Still needed for Search/Filter? Or just rely on shelves?
+            var allBooks = await _bookService.GetAllAsync(ct); // Still needed for Search/Filter? Or just rely on shelves?
             // Note: GetAllShelvesAsync fetches light objects? 
             // We need full details for items. The ShelfService methods like GetBooksForShelfAsync might be needed,
             // OR we rely on GetShelfByIdAsync having Includes. 
@@ -114,7 +121,7 @@ public partial class BookshelfViewModel : ViewModelBase
             var decorationsOnShelvesIds = new HashSet<Guid>();
 
             // 2. Migration Check: Fetch legacy plants
-            var allPlants = await _plantService.GetAllAsync();
+            var allPlants = await _plantService.GetAllAsync(ct);
             var legacyPlants = allPlants
                 .Where(p => p.IsInBookshelf && p.Status != PlantStatus.Dead)
                 .ToList();
@@ -392,9 +399,17 @@ public partial class BookshelfViewModel : ViewModelBase
 
             if (string.IsNullOrWhiteSpace(SearchQuery))
             {
-                // Reset to shelf view
-                await LoadAsync();
-                return;
+                // LOG-09: only reset to the shelf view when there is genuinely nothing to filter.
+                // If a status/genre filter is active (even without search text), fall through to
+                // the shared filter/sort pipeline below using the full library as the base set —
+                // previously this branch always short-circuited and the filters never applied.
+                if (!FilterStatus.HasValue && !FilterGenreId.HasValue)
+                {
+                    await LoadAsync();
+                    return;
+                }
+
+                filtered = await _bookService.GetAllAsync();
             }
             else
             {
@@ -537,29 +552,9 @@ public partial class BookshelfViewModel : ViewModelBase
         }, Tr("Error_FailedTo_DeletePlant"));
     }
 
-    // Dropping "MovePlantToPositionAsync" in favor of generic Drag/Drop reordering if possible
-    // or adapting it later. For now, removing the legacy string-based position logic.
-
-
-    [RelayCommand]
-    public async Task MovePlantToPositionAsync((Guid plantId, string position) args)
-    {
-        await ExecuteSafelyAsync(async () =>
-        {
-            var plant = BookshelfPlants.FirstOrDefault(p => p.Id == args.plantId);
-            if (plant == null)
-            {
-                SetError(Tr("Error_PlantNotFound"));
-                return;
-            }
-
-            plant.BookshelfPosition = args.position;
-            await _plantService.UpdateAsync(plant);
-
-            // Reload to reflect new positions
-            await LoadAsync();
-        }, Tr("Error_FailedTo_MovePlant"));
-    }
+    // Z.780: removed the dead MovePlantToPositionAsync — it read the never-populated
+    // BookshelfPlants (so it always errored "plant not found") and used the legacy string-based
+    // BookshelfPosition. Plant reordering goes through ReorderShelfItemsAsync below.
 
     [RelayCommand]
     public async Task ReorderShelfItemsAsync((Guid shelfId, Guid sourceId, Guid targetId) args)

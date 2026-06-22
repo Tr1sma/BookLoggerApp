@@ -526,7 +526,7 @@
                 </div>
                 @if (WishlistVM.LookupMessage != null)
                 {
-                    <div class="wishlist-lookup-msg @(WishlistVM.LookupMessage.Contains("found") ? "success" : "error")">
+                    <div class="wishlist-lookup-msg @(WishlistVM.LookupMessageIsError ? "error" : "success")">
                         @WishlistVM.LookupMessage
                     </div>
                 }

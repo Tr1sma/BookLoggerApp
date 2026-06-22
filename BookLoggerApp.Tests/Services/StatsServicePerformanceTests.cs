@@ -19,7 +19,7 @@ public class StatsServicePerformanceTests : IDisposable
     {
         _context = TestDbContext.Create();
         _unitOfWork = new UnitOfWork(_context);
-        _service = new StatsService(_unitOfWork);
+        _service = new StatsService(_unitOfWork, TimeZoneInfo.Utc);
     }
 
     public void Dispose()

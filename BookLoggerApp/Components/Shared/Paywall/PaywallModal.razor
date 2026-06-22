@@ -107,7 +107,7 @@
                 {
                     <div class="paywall-tier-card-permonth">@plusPrice.PerMonth</div>
                 }
-                @if (ViewModel.SelectedPeriod == BillingPeriod.Monthly)
+                @if (ViewModel.SelectedPeriod == BillingPeriod.Monthly && ViewModel.HasIntroOffer(SubscriptionTier.Plus, BillingPeriod.Monthly))
                 {
                     <div class="paywall-intro-badge">@L["Paywall_FirstMonth"]</div>
                 }
@@ -136,7 +136,7 @@
                 {
                     <div class="paywall-tier-card-permonth">@premiumPrice.PerMonth</div>
                 }
-                @if (ViewModel.SelectedPeriod == BillingPeriod.Monthly)
+                @if (ViewModel.SelectedPeriod == BillingPeriod.Monthly && ViewModel.HasIntroOffer(SubscriptionTier.Premium, BillingPeriod.Monthly))
                 {
                     <div class="paywall-intro-badge">@L["Paywall_FirstMonth"]</div>
                 }
@@ -212,25 +212,29 @@
     // Hardcoded prices mirror the Play Console SKU configuration for plus_monthly / plus_yearly
     // / premium_monthly / premium_yearly. Swap to BillingProduct.FormattedPrice once
     // IBillingService.QueryProductsAsync is wired into the Paywall (regional pricing story).
-    private static PriceDisplay GetPrice(SubscriptionTier tier, BillingPeriod period)
+    // UX-03: instance method so the period suffix, per-month hint and savings badge resolve via L
+    // (the surrounding labels were already localized; only these three bypassed it).
+    private PriceDisplay GetPrice(SubscriptionTier tier, BillingPeriod period)
     {
+        string month = L["Paywall_PeriodMonth"].Value;
+        string year = L["Paywall_PeriodYear"].Value;
         if (tier == SubscriptionTier.Plus && period == BillingPeriod.Monthly)
         {
-            return new PriceDisplay("€2.99", "month", string.Empty, string.Empty);
+            return new PriceDisplay("€2.99", month, string.Empty, string.Empty);
         }
         if (tier == SubscriptionTier.Plus && period == BillingPeriod.Yearly)
         {
             // €29.99 / 12 ≈ €2.50
-            return new PriceDisplay("€29.99", "year", "just €2.50/mo", "Save 16%");
+            return new PriceDisplay("€29.99", year, L["Paywall_PerMonthHint", "€2.50"].Value, L["Paywall_SavePercent", 16].Value);
         }
         if (tier == SubscriptionTier.Premium && period == BillingPeriod.Monthly)
         {
-            return new PriceDisplay("€11.99", "month", string.Empty, string.Empty);
+            return new PriceDisplay("€11.99", month, string.Empty, string.Empty);
         }
         if (tier == SubscriptionTier.Premium && period == BillingPeriod.Yearly)
         {
             // €99.99 / 12 ≈ €8.33
-            return new PriceDisplay("€99.99", "year", "just €8.33/mo", "Save 30%");
+            return new PriceDisplay("€99.99", year, L["Paywall_PerMonthHint", "€8.33"].Value, L["Paywall_SavePercent", 30].Value);
         }
         // Lifetime isn't rendered via this helper — the lifetime card has its own hard-coded layout.
         return new PriceDisplay("—", string.Empty, string.Empty, string.Empty);

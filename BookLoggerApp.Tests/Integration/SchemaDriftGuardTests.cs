@@ -4,6 +4,7 @@ using BookLoggerApp.Infrastructure.Services;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Xunit;
 
@@ -220,6 +221,43 @@ public sealed class SchemaDriftGuardTests : IDisposable
         cmd.CommandText = "SELECT COUNT(*) FROM \"UserEntitlements\";";
         var count = (long)(await cmd.ExecuteScalarAsync())!;
         count.Should().Be(0, "seed row only inserted when guard had to create the table");
+    }
+
+    [Fact]
+    public void ExpectedTables_MatchCurrentEfModel_NoDrift()
+    {
+        // Z.673: the guard repairs a hard-coded list of tables/columns. If a future migration
+        // renames or drops one of them in the EF model, the guard would silently keep trying to
+        // ALTER in a column the model no longer has. Fail loudly here instead — analogous to
+        // AppResourcesCoverageTests catching resx drift. No connection is opened: context.Model
+        // is built from the configuration alone.
+        using var context = CreateContext(":memory:");
+        var model = context.Model;
+
+        var tableNames = model.GetEntityTypes()
+            .Select(e => e.GetTableName())
+            .Where(n => n is not null)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var (table, columns, _) in SchemaDriftGuard.GetExpectedSchemaForTests())
+        {
+            tableNames.Should().Contain(table,
+                $"SchemaDriftGuard repairs table '{table}', but no EF entity maps to it — update ExpectedTables");
+
+            var entity = model.GetEntityTypes()
+                .First(e => string.Equals(e.GetTableName(), table, StringComparison.Ordinal));
+            var storeObject = StoreObjectIdentifier.Table(table, entity.GetSchema());
+            var modelColumns = entity.GetProperties()
+                .Select(p => p.GetColumnName(storeObject))
+                .Where(n => n is not null)
+                .ToHashSet(StringComparer.Ordinal);
+
+            foreach (var column in columns)
+            {
+                modelColumns.Should().Contain(column,
+                    $"SchemaDriftGuard adds {table}.{column}, but the EF model no longer maps it — update ExpectedTables");
+            }
+        }
     }
 
     /// <summary>

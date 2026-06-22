@@ -21,12 +21,14 @@ public class GoalService : IGoalService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAnalyticsService _analytics;
     private readonly IFeatureGuard? _featureGuard;
+    private readonly IValidationService? _validation;
 
-    public GoalService(IUnitOfWork unitOfWork, IAnalyticsService? analytics = null, IFeatureGuard? featureGuard = null)
+    public GoalService(IUnitOfWork unitOfWork, IAnalyticsService? analytics = null, IFeatureGuard? featureGuard = null, IValidationService? validation = null)
     {
         _unitOfWork = unitOfWork;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
         _featureGuard = featureGuard;
+        _validation = validation;
     }
 
     /// <inheritdoc />
@@ -40,20 +42,25 @@ public class GoalService : IGoalService
 
     public async Task<IReadOnlyList<ReadingGoal>> GetAllAsync(CancellationToken ct = default)
     {
-        var goals = await _unitOfWork.ReadingGoals.GetAllAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetAllAsync(ct);
         return goals.ToList();
     }
 
     public async Task<ReadingGoal?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _unitOfWork.ReadingGoals.GetByIdAsync(id);
+        return await _unitOfWork.ReadingGoals.GetByIdAsync(id, ct);
     }
 
     public async Task<ReadingGoal> AddAsync(ReadingGoal goal, CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: validate shape (title, target range, date window) before the
+        // entitlement gate or any persistence.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(goal, ct);
+
         if (_featureGuard is not null)
         {
-            int activeCount = (await _unitOfWork.ReadingGoals.GetActiveGoalsAsync()).Count();
+            int activeCount = (await _unitOfWork.ReadingGoals.GetActiveGoalsAsync(ct)).Count();
             _featureGuard.EnforceSoftLimit(
                 FeatureKey.UnlimitedReadingGoals,
                 activeCount,
@@ -70,7 +77,7 @@ public class GoalService : IGoalService
             }
         }
 
-        var result = await _unitOfWork.ReadingGoals.AddAsync(goal);
+        var result = await _unitOfWork.ReadingGoals.AddAsync(goal, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         await RecalculateGoalProgressAsync(ct);
 
@@ -84,6 +91,10 @@ public class GoalService : IGoalService
 
     public async Task UpdateAsync(ReadingGoal goal, CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: validate before persisting an edited goal.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(goal, ct);
+
         await _unitOfWork.ReadingGoals.UpdateAsync(goal, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         await RecalculateGoalProgressAsync(ct);
@@ -91,17 +102,17 @@ public class GoalService : IGoalService
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var goal = await _unitOfWork.ReadingGoals.GetByIdAsync(id);
+        var goal = await _unitOfWork.ReadingGoals.GetByIdAsync(id, ct);
         if (goal != null)
         {
-            await _unitOfWork.ReadingGoals.DeleteAsync(goal);
+            await _unitOfWork.ReadingGoals.DeleteAsync(goal, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
     }
 
     public async Task<IReadOnlyList<ReadingGoal>> GetActiveGoalsAsync(CancellationToken ct = default)
     {
-        var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync(ct);
         var goalsList = goals.ToList();
 
         // Calculate current progress for each goal dynamically
@@ -112,7 +123,7 @@ public class GoalService : IGoalService
 
     public async Task<IReadOnlyList<ReadingGoal>> GetCompletedGoalsAsync(CancellationToken ct = default)
     {
-        var goals = await _unitOfWork.ReadingGoals.GetCompletedGoalsAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetCompletedGoalsAsync(ct);
         var goalsList = goals.ToList();
 
         // Also calculate progress for completed goals to show final values
@@ -123,13 +134,19 @@ public class GoalService : IGoalService
 
     public async Task<bool> RecalculateGoalProgressAsync(CancellationToken ct = default)
     {
-        var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
+        var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync(ct);
         return await CalculateGoalProgressAsync(goals.ToList(), persistNewlyCompleted: true, ct);
     }
 
     private async Task<bool> CalculateGoalProgressAsync(List<ReadingGoal> goals, bool persistNewlyCompleted, CancellationToken ct)
     {
         if (!goals.Any()) return false;
+
+        // HIGH-1003: genre / excluded-book goal filters are a Premium feature. A user not entitled
+        // to them (e.g. after restoring a Premium backup) gets UNFILTERED progress — the filter
+        // rows are preserved and re-apply automatically on re-upgrade. No filter chips are shown
+        // either, because goal.GoalGenres is only populated when filters are allowed.
+        bool filtersAllowed = _featureGuard?.HasAccess(FeatureKey.ReadingGoalsWithGenreTropeFilter) ?? true;
 
         // Get all books and sessions for calculation
         var books = await _unitOfWork.Books.GetAllAsync(ct);
@@ -158,20 +175,25 @@ public class GoalService : IGoalService
         }
 
         bool anyGoalNewlyCompleted = false;
+        List<Guid>? newlyCompletedGoalIds = null;
 
         foreach (var goal in goals)
         {
-            var excludedBookIds = allExclusions
-                .Where(e => e.ReadingGoalId == goal.Id)
-                .Select(e => e.BookId)
-                .ToHashSet();
+            var excludedBookIds = filtersAllowed
+                ? allExclusions
+                    .Where(e => e.ReadingGoalId == goal.Id)
+                    .Select(e => e.BookId)
+                    .ToHashSet()
+                : new HashSet<Guid>();
 
             // Build genre-matching book IDs (null = no genre filter)
             HashSet<Guid>? genreMatchingBookIds = null;
-            var goalGenreIds = allGoalGenres
-                .Where(gg => gg.ReadingGoalId == goal.Id)
-                .Select(gg => gg.GenreId)
-                .ToHashSet();
+            var goalGenreIds = filtersAllowed
+                ? allGoalGenres
+                    .Where(gg => gg.ReadingGoalId == goal.Id)
+                    .Select(gg => gg.GenreId)
+                    .ToHashSet()
+                : new HashSet<Guid>();
 
             if (goalGenreIds.Count > 0 && allBookGenres != null)
             {
@@ -211,17 +233,35 @@ public class GoalService : IGoalService
 
                 if (persistNewlyCompleted)
                 {
+                    // Reflect completion on the in-memory (returned) object for the caller/UI,
+                    // but DON'T persist via this instance — see the Z.187 note below.
                     goal.IsCompleted = true;
                     goal.CompletedAt = DateTime.UtcNow;
-                    await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+                    (newlyCompletedGoalIds ??= new List<Guid>()).Add(goal.Id);
                 }
             }
         }
 
-        // Only persist changes when a goal was actually newly completed,
-        // not on every read. Current is computed dynamically each time.
-        if (persistNewlyCompleted && anyGoalNewlyCompleted)
+        // Z.187: persist completion as a targeted scalar update on a freshly-loaded TRACKED entity.
+        // The `goals` here come from AsNoTracking() repository reads and, for genre-filtered goals,
+        // had their GoalGenres navigation REPLACED above with synthetic GoalGenre instances (sharing
+        // Genre references across goals) purely for UI display. Calling UpdateAsync on such an
+        // instance makes _dbSet.Update graft that projection graph into the change tracker and
+        // rewrite Genre / GoalGenre rows on SaveChanges (clobber + duplicate-tracking risk). Loading
+        // the goal by id (FindAsync → tracked, navigations not loaded) and writing only the two
+        // completion scalars keeps the persist path independent of the display projection.
+        if (persistNewlyCompleted && newlyCompletedGoalIds is { Count: > 0 })
         {
+            foreach (var goalId in newlyCompletedGoalIds)
+            {
+                var tracked = await _unitOfWork.ReadingGoals.GetByIdAsync(goalId, ct);
+                if (tracked is not null && !tracked.IsCompleted)
+                {
+                    tracked.IsCompleted = true;
+                    tracked.CompletedAt = DateTime.UtcNow;
+                    await _unitOfWork.ReadingGoals.UpdateAsync(tracked, ct);
+                }
+            }
             await _unitOfWork.SaveChangesAsync(ct);
         }
 
@@ -245,10 +285,13 @@ public class GoalService : IGoalService
     {
         var (startDate, endDate) = GoalDateRangeHelper.GetGoalRangeUtc(goal);
 
+        // INK-01: attribute a session to the goal window by StartedAt (the canonical timestamp
+        // streaks, the reading trend and the dashboard already use), so a session that crosses a
+        // day/period boundary lands in the same window everywhere.
         return sessions
             .Where(s => !excludedBookIds.Contains(s.BookId) &&
                         (genreMatchingBookIds == null || genreMatchingBookIds.Contains(s.BookId)) &&
-                        s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
+                        s.StartedAt >= startDate && s.StartedAt <= endDate)
             .Sum(s => s.PagesRead ?? 0);
     }
 
@@ -256,22 +299,23 @@ public class GoalService : IGoalService
     {
         var (startDate, endDate) = GoalDateRangeHelper.GetGoalRangeUtc(goal);
 
+        // INK-01: attribute a session to the goal window by StartedAt (see CalculatePagesProgress).
         return sessions
             .Where(s => !excludedBookIds.Contains(s.BookId) &&
                         (genreMatchingBookIds == null || genreMatchingBookIds.Contains(s.BookId)) &&
-                        s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
+                        s.StartedAt >= startDate && s.StartedAt <= endDate)
             .Sum(s => s.Minutes);
     }
 
     public async Task<IReadOnlyList<ReadingGoal>> GetGoalsByTypeAsync(GoalType type, CancellationToken ct = default)
     {
-        var goals = await _unitOfWork.ReadingGoals.FindAsync(g => g.Type == type);
+        var goals = await _unitOfWork.ReadingGoals.FindAsync(g => g.Type == type, ct);
         return goals.ToList();
     }
 
     public async Task UpdateGoalProgressAsync(Guid goalId, int progress, CancellationToken ct = default)
     {
-        var goal = await _unitOfWork.ReadingGoals.GetByIdAsync(goalId);
+        var goal = await _unitOfWork.ReadingGoals.GetByIdAsync(goalId, ct);
         if (goal == null)
             throw new EntityNotFoundException(typeof(ReadingGoal), goalId);
 
@@ -284,13 +328,13 @@ public class GoalService : IGoalService
             goal.CompletedAt = DateTime.UtcNow;
         }
 
-        await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+        await _unitOfWork.ReadingGoals.UpdateAsync(goal, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task CheckAndCompleteGoalsAsync(CancellationToken ct = default)
     {
-        var activeGoals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync();
+        var activeGoals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync(ct);
 
         foreach (var goal in activeGoals)
         {
@@ -298,7 +342,7 @@ public class GoalService : IGoalService
             {
                 goal.IsCompleted = true;
                 goal.CompletedAt = DateTime.UtcNow;
-                await _unitOfWork.ReadingGoals.UpdateAsync(goal);
+                await _unitOfWork.ReadingGoals.UpdateAsync(goal, ct);
             }
         }
 
@@ -308,14 +352,21 @@ public class GoalService : IGoalService
 
     public async Task<IReadOnlyList<GoalExcludedBook>> GetExcludedBooksAsync(Guid goalId, CancellationToken ct = default)
     {
-        var exclusions = await _unitOfWork.GoalExcludedBooks.FindAsync(e => e.ReadingGoalId == goalId);
+        var exclusions = await _unitOfWork.GoalExcludedBooks.FindAsync(e => e.ReadingGoalId == goalId, ct);
         return exclusions.ToList();
     }
 
     public async Task ExcludeBookFromGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default)
     {
+        // CODE_REVIEW SEC-03/SEC-07/SEC-10: AddAsync only guards filters present at creation, but
+        // the exclude modal attaches exclusions afterwards via this method. Enforce the Premium
+        // filter feature here so the gate covers every caller, not just the Goals.razor overlay.
+        _featureGuard?.RequireAccess(
+            FeatureKey.ReadingGoalsWithGenreTropeFilter,
+            "Filtered goals (by genre or excluded books) require Premium.");
+
         var exists = await _unitOfWork.GoalExcludedBooks.ExistsAsync(
-            e => e.ReadingGoalId == goalId && e.BookId == bookId);
+            e => e.ReadingGoalId == goalId && e.BookId == bookId, ct);
 
         if (!exists)
         {
@@ -323,7 +374,7 @@ public class GoalService : IGoalService
             {
                 ReadingGoalId = goalId,
                 BookId = bookId
-            });
+            }, ct);
             await _unitOfWork.SaveChangesAsync(ct);
             await RecalculateGoalProgressAsync(ct);
         }
@@ -344,14 +395,22 @@ public class GoalService : IGoalService
 
     public async Task<IReadOnlyList<GoalGenre>> GetGoalGenresAsync(Guid goalId, CancellationToken ct = default)
     {
-        var goalGenres = await _unitOfWork.GoalGenres.FindAsync(gg => gg.ReadingGoalId == goalId);
+        var goalGenres = await _unitOfWork.GoalGenres.FindAsync(gg => gg.ReadingGoalId == goalId, ct);
         return goalGenres.ToList();
     }
 
     public async Task AddGenreToGoalAsync(Guid goalId, Guid genreId, CancellationToken ct = default)
     {
+        // CODE_REVIEW SEC-03/SEC-07/SEC-10: the load-bearing gate for the Premium genre filter.
+        // The create form locks the genre picker, but the edit/exclude modal calls this directly,
+        // so enforcing here closes the bypass for all callers (RemoveGenreFromGoalAsync stays open
+        // so downgraded users can still clear filters).
+        _featureGuard?.RequireAccess(
+            FeatureKey.ReadingGoalsWithGenreTropeFilter,
+            "Filtered goals (by genre or excluded books) require Premium.");
+
         var exists = await _unitOfWork.GoalGenres.ExistsAsync(
-            gg => gg.ReadingGoalId == goalId && gg.GenreId == genreId);
+            gg => gg.ReadingGoalId == goalId && gg.GenreId == genreId, ct);
 
         if (!exists)
         {
@@ -359,7 +418,7 @@ public class GoalService : IGoalService
             {
                 ReadingGoalId = goalId,
                 GenreId = genreId
-            });
+            }, ct);
             await _unitOfWork.SaveChangesAsync(ct);
             await RecalculateGoalProgressAsync(ct);
         }

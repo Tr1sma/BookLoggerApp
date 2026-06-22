@@ -53,6 +53,9 @@ public partial class WishlistViewModel : ViewModelBase
     [ObservableProperty]
     private string? _lookupMessage;
 
+    [ObservableProperty]
+    private bool _lookupMessageIsError;
+
     // Lookup result fields for auto-fill
     [ObservableProperty]
     private int? _lookupPageCount;
@@ -72,11 +75,11 @@ public partial class WishlistViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            WishlistBooks.Clear();
-            var books = await _wishlistService.GetWishlistBooksAsync();
+            var books = await _wishlistService.GetWishlistBooksAsync(ct);
 
+            WishlistBooks.Clear();
             foreach (var b in ApplySort(books))
                 WishlistBooks.Add(b);
 
@@ -128,18 +131,27 @@ public partial class WishlistViewModel : ViewModelBase
 
         IsLookingUp = true;
         LookupMessage = null;
+        // INK-09: default to the error styling; only a confirmed hit flips it to success. This
+        // mirrors BookEditViewModel so the UI binds to a flag instead of sniffing the message text
+        // for "found" (which broke once the message was localized to German).
+        LookupMessageIsError = true;
 
         try
         {
             var metadata = await _lookupService.LookupByISBNAsync(NewIsbn.Trim());
             if (metadata != null)
             {
-                NewTitle = metadata.Title;
-                NewAuthor = metadata.Author;
+                // Only overwrite a field the lookup actually filled — keep what the user already
+                // typed if Google returns a blank title/author (mirrors BookEditViewModel).
+                if (!string.IsNullOrWhiteSpace(metadata.Title))
+                    NewTitle = metadata.Title;
+                if (!string.IsNullOrWhiteSpace(metadata.Author))
+                    NewAuthor = metadata.Author;
                 _lookupPageCount = metadata.PageCount;
                 _lookupCoverUrl = metadata.CoverImageUrl;
                 _lookupDescription = metadata.Description;
                 LookupMessage = Tr("Lookup_BookFound");
+                LookupMessageIsError = false;
             }
             else
             {
@@ -250,6 +262,7 @@ public partial class WishlistViewModel : ViewModelBase
         _lookupCoverUrl = null;
         _lookupDescription = null;
         LookupMessage = null;
+        LookupMessageIsError = false;
         ErrorMessage = null;
     }
 

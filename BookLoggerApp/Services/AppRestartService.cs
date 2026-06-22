@@ -92,23 +92,19 @@ public sealed class AppRestartService : IAppRestartService
             System.Diagnostics.Debug.WriteLine($"AppRestart: alarm fallback threw: {ex}");
         }
 
-        // --- Strategy 3: delayed process kill ---
-        // Give Android ~300 ms to commit the StartActivity IPC and finalize
-        // the alarm schedule before we kill ourselves. Without this pause the
-        // race between "ipc dispatched" and "process dead" can swallow both
-        // previous strategies on fast devices.
-        try
+        // --- Strategy 3: deferred process kill (non-blocking) ---
+        // Give Android ~300 ms to commit the StartActivity IPC and finalize the
+        // alarm schedule before we kill ourselves. We must NOT Thread.Sleep here:
+        // we're on the main looper, so sleeping freezes the UI and risks an ANR.
+        // Post the kill onto the looper instead — it stays responsive for the
+        // 300 ms, then runs the kill. See code review BUG-13.
+        var handler = new Handler(Looper.MainLooper!);
+        handler.PostDelayed(() =>
         {
-            System.Threading.Thread.Sleep(300);
-        }
-        catch
-        {
-            // Interrupted — don't care, still kill the process below.
-        }
-
-        // Kill at both the Linux process level and the JVM level for safety.
-        Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
-        Java.Lang.JavaSystem.Exit(0);
+            // Kill at both the Linux process level and the JVM level for safety.
+            Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
+            Java.Lang.JavaSystem.Exit(0);
+        }, 300);
 #endif
     }
 }

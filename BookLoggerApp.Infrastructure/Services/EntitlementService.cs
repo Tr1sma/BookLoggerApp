@@ -61,11 +61,27 @@ public class EntitlementService : IEntitlementService
             }
 
             UserEntitlement entitlement = await _store.GetOrCreateAsync(ct);
-            EvaluateExpiryIfNeeded(entitlement);
+
+            if (ShouldLapseByExpiry(entitlement))
+            {
+                // Persist the downgrade AND run the overflow-hide data-guard
+                // (CODE_REVIEW BUG-09) instead of a silent in-memory tier flip.
+                await ApplyLapseAsync("expired", ct);
+                return;
+            }
 
             SubscriptionTier previous = SubscriptionTier.Free;
             _current = entitlement;
             _isInitialized = true;
+
+            // HIGH-1003: reconcile content against the real device tier on every load — not just
+            // on an expiry transition. A backup-restore / JSON-import can reintroduce higher-tier
+            // content for a lower-tier user; this hides what the current tier is not entitled to
+            // (and un-hides what it is). Idempotent for a user whose data already matches.
+            if (_lapseHandler is not null)
+            {
+                await _lapseHandler.ReconcileAsync(entitlement.Tier, ct);
+            }
 
             await SyncAppSettingsMirrorAsync(entitlement, ct);
             Raise(previous, entitlement, EntitlementChangeReason.InitialLoad);
@@ -97,19 +113,50 @@ public class EntitlementService : IEntitlementService
     public async Task RefreshAsync(CancellationToken ct = default)
     {
         UserEntitlement reloaded = await _store.GetOrCreateAsync(ct);
-        EvaluateExpiryIfNeeded(reloaded);
+
+        if (ShouldLapseByExpiry(reloaded))
+        {
+            await ApplyLapseAsync("expired", ct);
+            return;
+        }
 
         SubscriptionTier previous = _current?.Tier ?? SubscriptionTier.Free;
         _current = reloaded;
         _isInitialized = true;
 
+        // HIGH-1003: same reconcile-against-real-tier pass as InitializeAsync.
+        if (_lapseHandler is not null)
+        {
+            await _lapseHandler.ReconcileAsync(reloaded.Tier, ct);
+        }
+
         await SyncAppSettingsMirrorAsync(reloaded, ct);
-        Raise(previous, reloaded, EntitlementChangeReason.InitialLoad);
+
+        // Only broadcast when the tier actually changed. A no-op refresh (app resume, periodic
+        // reconcile) must not fire EntitlementChanged — every subscriber re-runs its diff/UI work
+        // on each raise, so a same-tier refresh was redundant churn.
+        if (previous != reloaded.Tier)
+        {
+            Raise(previous, reloaded, EntitlementChangeReason.Refresh);
+        }
     }
 
     public async Task ApplyPurchaseAsync(PurchaseResult purchase, EntitlementChangeReason reason = EntitlementChangeReason.Purchase, CancellationToken ct = default)
     {
         UserEntitlement current = await _store.GetOrCreateAsync(ct);
+
+        // Z.679: a restore/resume re-applies every active Play purchase on each foreground.
+        // When the stored entitlement already matches this purchase's identity, short-circuit
+        // — no DB write, no EntitlementChanged broadcast. Otherwise every resume churns the DB
+        // and re-runs each subscriber's diff/UI work for a no-op. Genuine purchases (reason
+        // Purchase) always fall through so a re-purchase after a refund still applies.
+        if (reason == EntitlementChangeReason.Restore && MatchesStoredPurchase(current, purchase))
+        {
+            _current = current;
+            _isInitialized = true;
+            return;
+        }
+
         SubscriptionTier previous = current.Tier;
 
         current.Tier = purchase.Tier;
@@ -135,7 +182,7 @@ public class EntitlementService : IEntitlementService
 
         if (purchase.Tier >= SubscriptionTier.Plus && _lapseHandler is not null)
         {
-            await _lapseHandler.ClearEntitlementHidesAsync(ct);
+            await _lapseHandler.ClearEntitlementHidesAsync(purchase.Tier, ct);
         }
 
         await SyncAppSettingsMirrorAsync(current, ct);
@@ -202,7 +249,7 @@ public class EntitlementService : IEntitlementService
 
         if (promo.GrantedTier >= SubscriptionTier.Plus && _lapseHandler is not null)
         {
-            await _lapseHandler.ClearEntitlementHidesAsync(ct);
+            await _lapseHandler.ClearEntitlementHidesAsync(promo.GrantedTier, ct);
         }
 
         await SyncAppSettingsMirrorAsync(current, ct);
@@ -239,7 +286,7 @@ public class EntitlementService : IEntitlementService
             }
             else
             {
-                await _lapseHandler.ClearEntitlementHidesAsync(ct);
+                await _lapseHandler.ClearEntitlementHidesAsync(tier, ct);
             }
         }
 
@@ -247,42 +294,51 @@ public class EntitlementService : IEntitlementService
         Raise(previous, current, EntitlementChangeReason.DebugForce);
     }
 
-    private static void EvaluateExpiryIfNeeded(UserEntitlement entitlement)
+    /// <summary>
+    /// True when the stored entitlement already represents this exact purchase. Compares the
+    /// stable purchase identity (tier + product + token) — a renewed ExpiresAt for the same
+    /// token is irrelevant to whether a fresh apply is needed on resume.
+    /// </summary>
+    private static bool MatchesStoredPurchase(UserEntitlement stored, PurchaseResult purchase)
+        => stored.Tier == purchase.Tier
+           && string.Equals(stored.ProductId, purchase.ProductId, StringComparison.Ordinal)
+           && string.Equals(stored.PurchaseToken, purchase.PurchaseToken, StringComparison.Ordinal);
+
+    /// <summary>
+    /// True when a loaded entitlement should be lapsed because its term has passed.
+    /// Read-only: the actual downgrade goes through <see cref="ApplyLapseAsync"/> so it is
+    /// persisted and runs the data-guard (CODE_REVIEW BUG-09). Auto-renewing subscriptions
+    /// are never lapsed on a guessed <see cref="UserEntitlement.ExpiresAt"/> — Google Play
+    /// presence is the source of truth (CODE_REVIEW LOG-01).
+    /// </summary>
+    private static bool ShouldLapseByExpiry(UserEntitlement entitlement)
     {
         if (entitlement.Tier == SubscriptionTier.Free)
         {
-            return;
+            return false;
         }
 
         if (entitlement.BillingPeriod == BillingPeriod.Lifetime)
         {
-            return;
+            return false;
         }
 
-        if (entitlement.ExpiresAt is { } expires && expires <= DateTime.UtcNow)
+        if (entitlement.AutoRenewing)
         {
-            entitlement.Tier = SubscriptionTier.Free;
-            entitlement.LapseReason = "expired";
-            entitlement.LapsedAt = DateTime.UtcNow;
-            entitlement.InGracePeriod = false;
-            entitlement.AutoRenewing = false;
+            return false;
         }
+
+        return entitlement.ExpiresAt is { } expires && expires <= DateTime.UtcNow;
     }
 
     private async Task SyncAppSettingsMirrorAsync(UserEntitlement entitlement, CancellationToken ct)
     {
         try
         {
-            AppSettings settings = await _settingsProvider.GetSettingsAsync(ct);
-            if (settings.CurrentTier == entitlement.Tier
-                && Nullable.Equals(settings.EntitlementExpiresAt, entitlement.ExpiresAt))
-            {
-                return;
-            }
-
-            settings.CurrentTier = entitlement.Tier;
-            settings.EntitlementExpiresAt = entitlement.ExpiresAt;
-            await _settingsProvider.UpdateSettingsAsync(settings, ct);
+            // Narrow update: touches only CurrentTier/EntitlementExpiresAt so it can never
+            // clobber a concurrent XP/coin/level award (CODE_REVIEW SEC-12). The provider
+            // serialises this against all other AppSettings writes.
+            await _settingsProvider.UpdateEntitlementMirrorAsync(entitlement.Tier, entitlement.ExpiresAt, ct);
         }
         catch (Exception ex)
         {

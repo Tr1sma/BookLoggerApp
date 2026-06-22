@@ -16,9 +16,15 @@ public class AdvancedStatsServiceTests : IDisposable
 
     public AdvancedStatsServiceTests()
     {
-        _context = TestDbContext.Create();
+        // Share one named in-memory store between the arrange-context (_unitOfWork) and the
+        // service's per-query factory, since AdvancedStatsService now opens its own context
+        // per call (CODE_REVIEW BUG-06).
+        var databaseName = Guid.NewGuid().ToString();
+        _context = TestDbContext.Create(databaseName);
         _unitOfWork = new UnitOfWork(_context);
-        _service = new AdvancedStatsService(_unitOfWork);
+        // Pin UTC so this fixture's UTC-authored timestamps bucket deterministically regardless of
+        // the CI/dev machine zone; the local-bucketing behaviour is covered by dedicated zone tests.
+        _service = new AdvancedStatsService(new TestDbContextFactory(databaseName), TimeZoneInfo.Utc);
     }
 
     public void Dispose()
@@ -373,7 +379,6 @@ public class AdvancedStatsServiceTests : IDisposable
     }
 
     [Theory]
-    [InlineData(0, "<15")]
     [InlineData(14, "<15")]
     [InlineData(15, "15-30")]
     [InlineData(29, "15-30")]
@@ -403,6 +408,105 @@ public class AdvancedStatsServiceTests : IDisposable
         // Assert
         result[expectedBucket].Should().Be(1);
         result.Where(kvp => kvp.Key != expectedBucket).All(kvp => kvp.Value == 0).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetSessionLengthDistributionAsync_ShouldExcludeZeroMinuteSessions()
+    {
+        // INK-10/INK-12: a pages-only session (Minutes == 0) must NOT inflate the "<15" bucket,
+        // matching the Minutes > 0 filter every other distribution method already applies.
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession { BookId = book.Id, StartedAt = DateTime.UtcNow, Minutes = 0, PagesRead = 30 });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession { BookId = book.Id, StartedAt = DateTime.UtcNow, Minutes = 20 });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetSessionLengthDistributionAsync();
+
+        result["<15"].Should().Be(0);
+        result["15-30"].Should().Be(1);
+        result.Values.Sum().Should().Be(1);
+    }
+
+    // ===== Local-time bucketing (CODE_REVIEW LOG-04/LOG-08) =====
+
+    private static readonly TimeZoneInfo PlusFive =
+        TimeZoneInfo.CreateCustomTimeZone("t+5", TimeSpan.FromHours(5), "t+5", "t+5");
+
+    [Fact]
+    public async Task GetTimeOfDayDistributionAsync_BucketsByLocalHour_NotUtc()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        using var ctx = TestDbContext.Create(dbName);
+        var uow = new UnitOfWork(ctx);
+        var book = await uow.Books.AddAsync(new Book { Title = "T", Author = "A" });
+        await ctx.SaveChangesAsync();
+
+        // 21:00 UTC == 02:00 local (+5) → "Night", not the raw-UTC "Evening" (17-21).
+        await uow.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2025, 3, 15, 21, 0, 0, DateTimeKind.Utc),
+            Minutes = 30
+        });
+        await ctx.SaveChangesAsync();
+        var service = new AdvancedStatsService(new TestDbContextFactory(dbName), PlusFive);
+
+        var result = await service.GetTimeOfDayDistributionAsync();
+
+        result["Night"].Should().Be(30);
+        result["Evening"].Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetWeekdayDistributionAsync_BucketsByLocalDay_NotUtc()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        using var ctx = TestDbContext.Create(dbName);
+        var uow = new UnitOfWork(ctx);
+        var book = await uow.Books.AddAsync(new Book { Title = "T", Author = "A" });
+        await ctx.SaveChangesAsync();
+
+        // 2025-03-16 is a Sunday; 22:00 UTC + 5h = Monday 03:00 local.
+        await uow.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2025, 3, 16, 22, 0, 0, DateTimeKind.Utc),
+            Minutes = 30
+        });
+        await ctx.SaveChangesAsync();
+        var service = new AdvancedStatsService(new TestDbContextFactory(dbName), PlusFive);
+
+        var result = await service.GetWeekdayDistributionAsync();
+
+        result[DayOfWeek.Monday].Should().Be(30);
+        result.GetValueOrDefault(DayOfWeek.Sunday, 0).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetReadingHeatmapAsync_KeysByLocalDate_NotUtc()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        using var ctx = TestDbContext.Create(dbName);
+        var uow = new UnitOfWork(ctx);
+        var book = await uow.Books.AddAsync(new Book { Title = "T", Author = "A" });
+        await ctx.SaveChangesAsync();
+
+        // 2025-03-15 22:00 UTC + 5h = 2025-03-16 03:00 local.
+        await uow.ReadingSessions.AddAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2025, 3, 15, 22, 0, 0, DateTimeKind.Utc),
+            Minutes = 40
+        });
+        await ctx.SaveChangesAsync();
+        var service = new AdvancedStatsService(new TestDbContextFactory(dbName), PlusFive);
+
+        var result = await service.GetReadingHeatmapAsync(2025);
+
+        result.Should().ContainKey(new DateTime(2025, 3, 16));
+        result.Should().NotContainKey(new DateTime(2025, 3, 15));
     }
 
     // ===== GetMonthlyVolumeAsync =====
@@ -517,25 +621,21 @@ public class AdvancedStatsServiceTests : IDisposable
         await _context.SaveChangesAsync();
 
         var now = DateTime.UtcNow;
-        var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        // Current month: 60 pages in 60 minutes = 60 pages/hour.
-        // Use `now` (not a fixed day-of-month) so the session is never dated in the
-        // future when the test runs on the 1st of a month — the service only counts
-        // sessions with StartedAt <= now.
+        // Current 30-day window: 60 pages in 60 minutes = 60 pages/hour.
         await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
         {
             BookId = book.Id,
-            StartedAt = now,
+            StartedAt = now.AddDays(-5),
             Minutes = 60,
             PagesRead = 60
         });
 
-        // Previous month: 30 pages in 60 minutes = 30 pages/hour
+        // Previous 30-day window (30-60 days ago): 30 pages in 60 minutes = 30 pages/hour.
         await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
         {
             BookId = book.Id,
-            StartedAt = currentMonthStart.AddMonths(-1).AddDays(1),
+            StartedAt = now.AddDays(-45),
             Minutes = 60,
             PagesRead = 30
         });

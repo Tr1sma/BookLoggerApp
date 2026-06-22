@@ -7,7 +7,7 @@ namespace BookLoggerApp.Infrastructure.Repositories.Specific;
 /// </summary>
 public interface IReadingGoalRepository : IRepository<ReadingGoal>
 {
-    Task<IEnumerable<ReadingGoal>> GetActiveGoalsAsync();
-    Task<IEnumerable<ReadingGoal>> GetCompletedGoalsAsync();
-    Task<IEnumerable<ReadingGoal>> GetGoalsInRangeAsync(DateTime startDate, DateTime endDate);
+    Task<IEnumerable<ReadingGoal>> GetActiveGoalsAsync(CancellationToken ct = default);
+    Task<IEnumerable<ReadingGoal>> GetCompletedGoalsAsync(CancellationToken ct = default);
+    Task<IEnumerable<ReadingGoal>> GetGoalsInRangeAsync(DateTime startDate, DateTime endDate, CancellationToken ct = default);
 }

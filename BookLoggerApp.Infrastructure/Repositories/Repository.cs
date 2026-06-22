@@ -49,48 +49,48 @@ public class Repository<T> : IRepository<T> where T : class
         await _dbSet.AddRangeAsync(entities, ct);
     }
 
-    public virtual async Task UpdateAsync(T entity, CancellationToken ct = default)
+    public virtual Task UpdateAsync(T entity, CancellationToken ct = default)
     {
-        // Check if entity is already tracked
-        var entry = _context.Entry(entity);
-        
-        if (entry.State == EntityState.Detached)
+        // Change-tracker only mutates here; the I/O happens in SaveChangesAsync. Honour ct so a
+        // cancelled unit of work stops before touching the tracker, and return a completed task
+        // (no await needed) to avoid the CS1998 "async without await" warning (Z.245).
+        ct.ThrowIfCancellationRequested();
+
+        // If a *different* instance with the same key is already tracked, detach it first so
+        // _dbSet.Update doesn't throw an identity conflict. Both former branches called Update,
+        // so the conditional only guards the detach, not the Update itself (Z.245 dead-branch).
+        if (_context.Entry(entity).State == EntityState.Detached)
         {
-            // Get the primary key value of the detached entity we want to update
             var keyProperty = _context.Model.FindEntityType(typeof(T))?.FindPrimaryKey()?.Properties.FirstOrDefault();
-            
             if (keyProperty != null)
             {
                 var currentId = keyProperty.GetGetter().GetClrValue(entity);
+                var trackedEntity = _dbSet.Local.FirstOrDefault(e =>
+                    keyProperty.GetGetter().GetClrValue(e)?.Equals(currentId) == true);
 
-                // Find if any tracked entity of type T has this ID
-                var trackedEntity = _dbSet.Local.FirstOrDefault(e => 
-                    keyProperty.GetGetter().GetClrValue(e).Equals(currentId));
-
-                if (trackedEntity != null)
+                if (trackedEntity != null && !ReferenceEquals(trackedEntity, entity))
                 {
-                    // Detach the existing tracked instance to avoid conflict
                     _context.Entry(trackedEntity).State = EntityState.Detached;
                 }
             }
-            
-            _dbSet.Update(entity);
         }
-        else
-        {
-            // Already tracked, just ensure it's marked as modified
-            _dbSet.Update(entity);
-        }
+
+        _dbSet.Update(entity);
+        return Task.CompletedTask;
     }
 
-    public virtual async Task DeleteAsync(T entity, CancellationToken ct = default)
+    public virtual Task DeleteAsync(T entity, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         _dbSet.Remove(entity);
+        return Task.CompletedTask;
     }
 
-    public virtual async Task DeleteRangeAsync(IEnumerable<T> entities, CancellationToken ct = default)
+    public virtual Task DeleteRangeAsync(IEnumerable<T> entities, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         _dbSet.RemoveRange(entities);
+        return Task.CompletedTask;
     }
 
     public virtual async Task<int> CountAsync(CancellationToken ct = default)

@@ -18,6 +18,13 @@ public static class WidgetDataService
 {
     private static AppDbContext CreateDbContext()
     {
+        // A backup restore swaps booklogger.db3 out from under any open connection. The widget
+        // runs in a BroadcastReceiver with its own non-DI connection that the restore cannot
+        // close or pool-clear, so refuse to open the DB while a restore is in progress. Callers
+        // already treat exceptions as "no data" and render a fallback.
+        if (BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.IsRestoreInProgress)
+            throw new InvalidOperationException("Database restore in progress; widget data access is temporarily unavailable.");
+
         var dbPath = PlatformsDbPath.GetDatabasePath();
 
         if (!File.Exists(dbPath))
@@ -92,18 +99,20 @@ public static class WidgetDataService
         {
             using var context = CreateDbContext();
 
-            var today = DateTime.UtcNow.Date;
-            var cutoff = today.AddDays(-365);
+            // LOG-02: streak uses the user's LOCAL calendar day (matching the app/goals), not
+            // raw UTC day boundaries. The 365-day load window can stay UTC-coarse.
+            var today = DateTime.Now.Date;
+            var cutoff = DateTime.UtcNow.AddDays(-365);
 
             var recentSessions = await context.ReadingSessions
                 .AsNoTracking()
                 .Where(s => s.StartedAt >= cutoff)
                 .ToListAsync();
 
-            var streak = ReadingStreakHelper.CalculateCurrentStreak(recentSessions, today);
+            var streak = ReadingStreakHelper.CalculateCurrentStreak(recentSessions, today, TimeZoneInfo.Local);
             var readToday = recentSessions
                 .Where(ReadingStreakHelper.CountsTowardStreak)
-                .Any(session => session.StartedAt.Date == today);
+                .Any(session => LocalTimeHelper.LocalDate(session.StartedAt, TimeZoneInfo.Local) == today);
 
             if (streak == 0 && !readToday)
                 return new StreakWidgetData(0, false);
@@ -128,11 +137,13 @@ public static class WidgetDataService
         {
             using var context = CreateDbContext();
 
-            var now = DateTime.UtcNow;
+            // INK-06: "active" is decided against local midnight (same GoalActivityHelper rule the
+            // app/repository use), not a DateTime.UtcNow instant that drops the goal hours early.
+            var cutoff = GoalActivityHelper.ActiveCutoff(DateTime.Now);
 
             var goals = await context.ReadingGoals
                 .AsNoTracking()
-                .Where(g => !g.IsCompleted && g.EndDate >= now)
+                .Where(g => !g.IsCompleted && g.EndDate >= cutoff)
                 .OrderBy(g => g.EndDate)
                 .ToListAsync();
 
@@ -173,7 +184,7 @@ public static class WidgetDataService
 
                 // Use the shared helper so the widget's goal window matches the app's
                 // (ToUniversalTime() is essential — goal dates come from the UI as
-                // Kind=Unspecified local dates, and the DateCompleted/EndedAt values
+                // Kind=Unspecified local dates, and the DateCompleted/StartedAt values
                 // are stored as UTC. Skipping the conversion was showing different
                 // progress in the widget vs. the main Goals page for non-UTC users.)
                 var (startDate, endDate) = BookLoggerApp.Core.Helpers.GoalDateRangeHelper.GetGoalRangeUtc(goal);
@@ -188,18 +199,19 @@ public static class WidgetDataService
                         b.DateCompleted.Value >= startDate &&
                         b.DateCompleted.Value <= endDate),
 
+                    // INK-01: attribute sessions to the goal window by StartedAt (mirrors GoalService).
                     GoalType.Pages => sessions
                         .Where(s =>
                             !excludedBookIds.Contains(s.BookId) &&
                             (genreMatchingBookIds is null || genreMatchingBookIds.Contains(s.BookId)) &&
-                            s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
+                            s.StartedAt >= startDate && s.StartedAt <= endDate)
                         .Sum(s => s.PagesRead ?? 0),
 
                     GoalType.Minutes => sessions
                         .Where(s =>
                             !excludedBookIds.Contains(s.BookId) &&
                             (genreMatchingBookIds is null || genreMatchingBookIds.Contains(s.BookId)) &&
-                            s.EndedAt.HasValue && s.EndedAt.Value >= startDate && s.EndedAt.Value <= endDate)
+                            s.StartedAt >= startDate && s.StartedAt <= endDate)
                         .Sum(s => s.Minutes),
 
                     _ => goal.Current

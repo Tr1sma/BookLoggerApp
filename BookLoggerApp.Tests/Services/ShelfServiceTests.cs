@@ -142,7 +142,7 @@ public class ShelfServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task AddBookToShelfAsync_ShiftsOtherBooksForward()
+    public async Task AddBookToShelfAsync_AppendsBooksInOrder()
     {
         var shelf = await _service.CreateShelfAsync(new Shelf { Name = "S" });
         Book b1, b2;
@@ -160,8 +160,38 @@ public class ShelfServiceTests : IDisposable
         await using var verify = _factory.CreateDbContext();
         var entries = await verify.BookShelves.Where(bs => bs.ShelfId == shelf.Id).OrderBy(bs => bs.Position).ToListAsync();
         entries.Should().HaveCount(2);
-        entries[0].BookId.Should().Be(b2.Id); // Last-added is first
-        entries[1].BookId.Should().Be(b1.Id);
+        entries[0].BookId.Should().Be(b1.Id); // appended in add order (INK-02)
+        entries[1].BookId.Should().Be(b2.Id);
+    }
+
+    [Fact]
+    public async Task AddBookToShelfAsync_AppendsAfterExistingPlant_NoPositionCollision()
+    {
+        // Books, plants and decorations share one Position space on a shelf
+        // (GetMaxPositionOnShelfAsync / ShiftItemsOnShelfAsync / DeleteShelfAsync all
+        // treat it as unified). Adding a book must append after the existing plant,
+        // not collide at position 0. (INK-02)
+        var shelf = await _service.CreateShelfAsync(new Shelf { Name = "S" });
+        var plantId = Guid.NewGuid();
+        Book book;
+        await using (var ctx = _factory.CreateDbContext())
+        {
+            var species = new PlantSpecies { Name = "Sp" };
+            ctx.PlantSpecies.Add(species);
+            ctx.UserPlants.Add(new UserPlant { Id = plantId, SpeciesId = species.Id });
+            book = new Book { Title = "B", Author = "A" };
+            ctx.Books.Add(book);
+            await ctx.SaveChangesAsync();
+        }
+        await _service.AddPlantToShelfAsync(shelf.Id, plantId); // plant occupies position 0
+
+        await _service.AddBookToShelfAsync(shelf.Id, book.Id);
+
+        await using var verify = _factory.CreateDbContext();
+        var plantPos = (await verify.PlantShelves.FirstAsync(ps => ps.ShelfId == shelf.Id && ps.PlantId == plantId)).Position;
+        var bookPos = (await verify.BookShelves.FirstAsync(bs => bs.ShelfId == shelf.Id && bs.BookId == book.Id)).Position;
+        plantPos.Should().Be(0);
+        bookPos.Should().Be(1); // appended after the plant, no collision
     }
 
     [Fact]

@@ -10,7 +10,8 @@ public interface IFileSaverService
     /// </summary>
     /// <param name="defaultFileName">The suggested file name.</param>
     /// <param name="content">The content to save.</param>
+    /// <param name="shareTitle">Localized title shown in the platform share sheet.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The path where the file was saved, or null if cancelled.</returns>
-    Task<string?> SaveFileAsync(string defaultFileName, string content, CancellationToken ct = default);
+    Task<string?> SaveFileAsync(string defaultFileName, string content, string shareTitle, CancellationToken ct = default);
 }

@@ -63,11 +63,13 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         return await _context.SaveChangesAsync(ct);
     }
 
     public async Task BeginTransactionAsync(CancellationToken ct = default)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         if (_transaction != null)
         {
             throw new InvalidOperationException("A transaction is already in progress.");
@@ -78,6 +80,7 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task CommitAsync(CancellationToken ct = default)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         if (_transaction == null)
         {
             throw new InvalidOperationException("No transaction is in progress.");
@@ -96,6 +99,7 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task RollbackAsync(CancellationToken ct = default)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         if (_transaction == null)
         {
             throw new InvalidOperationException("No transaction is in progress.");
@@ -126,5 +130,37 @@ public class UnitOfWork : IUnitOfWork
             // Note: We don't dispose the context here because it's managed by DI
             _disposed = true;
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (_transaction != null)
+        {
+            try
+            {
+                // An undisposed transaction at teardown means a commit/rollback path was missed —
+                // roll back so a half-written unit of work can't linger, then surface it in logs.
+                await _transaction.RollbackAsync().ConfigureAwait(false);
+                System.Diagnostics.Debug.WriteLine("UnitOfWork.DisposeAsync rolled back an open transaction.");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"UnitOfWork.DisposeAsync rollback failed: {ex}");
+            }
+            finally
+            {
+                await _transaction.DisposeAsync().ConfigureAwait(false);
+                _transaction = null;
+            }
+        }
+
+        // Context is owned by DI — not disposed here (matches Dispose()).
+        _disposed = true;
+        GC.SuppressFinalize(this);
     }
 }

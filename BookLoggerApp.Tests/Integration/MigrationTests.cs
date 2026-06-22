@@ -73,8 +73,8 @@ public class MigrationTests : IDisposable
         retrievedBook.PacingRating.Should().Be(4);
         retrievedBook.WorldBuildingRating.Should().Be(5);
 
-        // AverageRating should calculate correctly
-        retrievedBook.AverageRating.Should().BeApproximately(4.33, 0.01);
+        // AverageRating should calculate correctly (SpiceLevelRating 3 excluded): (5+4+5+4+5)/5
+        retrievedBook.AverageRating.Should().BeApproximately(4.6, 0.01);
     }
 
 

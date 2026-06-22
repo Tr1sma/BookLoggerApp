@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Genre> Genres => Set<Genre>();
     public DbSet<BookGenre> BookGenres => Set<BookGenre>();
     public DbSet<ReadingSession> ReadingSessions => Set<ReadingSession>();
+    public DbSet<ReadingSessionMood> ReadingSessionMoods => Set<ReadingSessionMood>();
     public DbSet<Quote> Quotes => Set<Quote>();
     public DbSet<Annotation> Annotations => Set<Annotation>();
     public DbSet<ReadingGoal> ReadingGoals => Set<ReadingGoal>();
@@ -107,8 +108,74 @@ public class AppDbContext : DbContext
         // Apply all configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
+        // Optimistic-concurrency tokens.
+        // SQLite has no native rowversion type and never auto-generates the BLOB, so the
+        // [Timestamp]/store-generated pattern is a no-op there (the token stays null and the
+        // WHERE clause always matches — DbUpdateConcurrencyException can never fire). For the
+        // entities where lost updates actually matter and writes always go load-modify-save in a
+        // single context (AppSettings: coins/XP/level; UserEntitlement: tier), we turn RowVersion
+        // into a real, app-set concurrency token stamped in SaveChanges (see StampRowVersions).
+        // ValueGeneratedNever tells EF to include the value in INSERT/UPDATE SET and to use the
+        // original value in the UPDATE WHERE clause — which is what makes optimistic concurrency
+        // actually work on SQLite.
+        //
+        // The remaining entities carry a RowVersion column too, but they are updated through the
+        // generic repository's detached "blind update" path (Repository.UpdateAsync), which
+        // fabricates an entity from an Id without the current token. Enforcing concurrency there
+        // would break that intentional pattern, so we explicitly DEMOTE their RowVersion to a
+        // non-token column — removing the dead/false "RowVersion protects us" assumption the code
+        // review flagged (BUG-01/BUG-10/INK-07) without changing their last-writer-wins behaviour.
+        var concurrencyEntities = new[] { typeof(AppSettings), typeof(UserEntitlement) };
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var rowVersion = entityType.FindProperty("RowVersion");
+            if (rowVersion is null || rowVersion.ClrType != typeof(byte[]))
+                continue;
+
+            modelBuilder.Entity(entityType.ClrType)
+                .Property("RowVersion")
+                .ValueGeneratedNever()
+                .IsConcurrencyToken(Array.IndexOf(concurrencyEntities, entityType.ClrType) >= 0);
+        }
+
         // Seed data
         SeedData(modelBuilder);
+    }
+
+    /// <inheritdoc />
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        StampRowVersions();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    /// <inheritdoc />
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        StampRowVersions();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>
+    /// Stamps a fresh value onto the RowVersion concurrency token of every added/modified
+    /// entity that has one. This is the in-app substitute for SQLite's missing native
+    /// rowversion generation — without it the token never changes and optimistic concurrency
+    /// (the documented protection in ProgressionService/AppSettingsProvider/PlantService) is
+    /// silently dead. Runs on every SaveChanges path because both core overloads funnel here.
+    /// </summary>
+    private void StampRowVersions()
+    {
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.State != EntityState.Added && entry.State != EntityState.Modified)
+                continue;
+
+            var rowVersion = entry.Metadata.FindProperty("RowVersion");
+            if (rowVersion is null || rowVersion.ClrType != typeof(byte[]) || !rowVersion.IsConcurrencyToken)
+                continue;
+
+            entry.Property("RowVersion").CurrentValue = Guid.NewGuid().ToByteArray();
+        }
     }
 
     private void SeedData(ModelBuilder modelBuilder)

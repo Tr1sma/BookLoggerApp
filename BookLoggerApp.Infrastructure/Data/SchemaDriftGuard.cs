@@ -58,6 +58,8 @@ public static class SchemaDriftGuard
                 new ExpectedColumn("EntitlementExpiresAt",    "TEXT NULL"),
                 // AddLiveTimerNotificationSetting
                 new ExpectedColumn("LiveTimerNotificationEnabled", "INTEGER NOT NULL DEFAULT 1"),
+                // AddSessionMoodTracking
+                new ExpectedColumn("MoodTrackingEnabled", "INTEGER NOT NULL DEFAULT 1"),
             },
             SeedRowSqlIfJustCreated: null),
 
@@ -115,6 +117,13 @@ public static class SchemaDriftGuard
             CreateTableSql: UserEntitlementsCreateSql,
             Columns: Array.Empty<ExpectedColumn>(),
             SeedRowSqlIfJustCreated: UserEntitlementsSeedSql),
+
+        // --- AddSessionMoodTracking: brand-new child table that may be missing. ---
+        new ExpectedTable(
+            Name: "ReadingSessionMoods",
+            CreateTableSql: ReadingSessionMoodsCreateSql,
+            Columns: Array.Empty<ExpectedColumn>(),
+            SeedRowSqlIfJustCreated: null),
     };
 
     /// <summary>
@@ -145,6 +154,22 @@ public static class SchemaDriftGuard
             "CreatedAt" TEXT NOT NULL,
             "UpdatedAt" TEXT NULL,
             "RowVersion" BLOB NULL
+        );
+        """;
+
+    /// <summary>
+    /// Mirrors the <c>CREATE TABLE</c> emitted by migration
+    /// <c>AddSessionMoodTracking</c> for the per-session mood tags. Kept as a constant
+    /// so a future <c>ReadingSessionMoods</c> schema change is a single-file search
+    /// target — see CLAUDE.md migration section for the maintenance rule.
+    /// </summary>
+    private const string ReadingSessionMoodsCreateSql = """
+        CREATE TABLE IF NOT EXISTS "ReadingSessionMoods" (
+            "ReadingSessionId" TEXT NOT NULL,
+            "Mood" INTEGER NOT NULL,
+            CONSTRAINT "PK_ReadingSessionMoods" PRIMARY KEY ("ReadingSessionId", "Mood"),
+            CONSTRAINT "FK_ReadingSessionMoods_ReadingSessions_ReadingSessionId"
+                FOREIGN KEY ("ReadingSessionId") REFERENCES "ReadingSessions" ("Id") ON DELETE CASCADE
         );
         """;
 
@@ -398,6 +423,19 @@ public static class SchemaDriftGuard
             // Reporting failures must never replace or mask a real schema repair.
         }
     }
+
+    /// <summary>
+    /// Test-only projection of <see cref="ExpectedTables"/> so a drift test can assert every
+    /// table/column the guard hard-codes still maps to the current EF model (Z.673). Keeps the
+    /// record types private while exposing just the names the assertion needs.
+    /// </summary>
+    internal static IReadOnlyList<(string Table, IReadOnlyList<string> Columns, bool HasCreateSql)> GetExpectedSchemaForTests()
+        => ExpectedTables
+            .Select(t => (
+                t.Name,
+                (IReadOnlyList<string>)t.Columns.Select(c => c.Name).ToList(),
+                !string.IsNullOrEmpty(t.CreateTableSql)))
+            .ToList();
 
     private sealed record ExpectedColumn(string Name, string Definition);
 

@@ -18,12 +18,32 @@ public class StatsServiceTests : IDisposable
     {
         _context = TestDbContext.Create();
         _unitOfWork = new UnitOfWork(_context);
-        _service = new StatsService(_unitOfWork);
+        // Pin UTC so this fixture's UTC-authored timestamps group deterministically regardless of
+        // the CI/dev machine zone; local-time behaviour is covered by dedicated zone tests.
+        _service = new StatsService(_unitOfWork, TimeZoneInfo.Utc);
     }
 
     public void Dispose()
     {
         _context.Dispose();
+    }
+
+    [Fact]
+    public async Task GetLongestStreakAsync_GroupsSessionsByLocalCalendarDay()
+    {
+        // LOG-02: the longest streak must bucket sessions by the user's LOCAL calendar day, like the
+        // current streak — not by raw UTC. Two sessions a couple of hours apart that straddle UTC
+        // midnight are ONE local day in UTC+2, so the longest streak is 1, not 2.
+        var tzPlus2 = TimeZoneInfo.CreateCustomTimeZone("t+2", TimeSpan.FromHours(2), "t+2", "t+2");
+        var service = new StatsService(_unitOfWork, tzPlus2);
+
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession { BookId = book.Id, StartedAt = new DateTime(2026, 1, 1, 23, 0, 0, DateTimeKind.Utc), Minutes = 15 });
+        await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession { BookId = book.Id, StartedAt = new DateTime(2026, 1, 2, 1, 0, 0, DateTimeKind.Utc), Minutes = 15 });
+        await _context.SaveChangesAsync();
+
+        (await service.GetLongestStreakAsync()).Should().Be(1, "both sessions fall on the same local day (UTC+2)");
     }
 
     [Fact]
@@ -615,6 +635,54 @@ public class StatsServiceTests : IDisposable
         var total = await _service.GetTotalMinutesReadAsync();
 
         total.Should().Be(55);
+    }
+
+    [Fact]
+    public async Task GetCurrentStreakAsync_UsesLocalCalendarDay()
+    {
+        // LOG-02: with a +5h zone, a session at 2025-06-09 22:00 UTC falls on local 2025-06-10
+        // (yesterday relative to a local "today" of 2025-06-11) → streak 1. Under raw-UTC day
+        // boundaries it would stay on 2025-06-09 (neither today nor yesterday) → streak 0.
+        var tzPlus5 = TimeZoneInfo.CreateCustomTimeZone("t+5", TimeSpan.FromHours(5), "t+5", "t+5");
+        using var ctx = TestDbContext.Create();
+        var uow = new UnitOfWork(ctx);
+        var service = new StatsService(uow, tzPlus5);
+        var book = await uow.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await ctx.SaveChangesAsync();
+
+        ctx.ReadingSessions.Add(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2025, 6, 9, 22, 0, 0, DateTimeKind.Utc),
+            Minutes = 20
+        });
+        await ctx.SaveChangesAsync();
+
+        var streak = await service.GetCurrentStreakAsync(new DateTime(2025, 6, 11, 12, 0, 0, DateTimeKind.Utc), default);
+
+        streak.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetReadingTrendAsync_GroupsByLocalDate_NotUtc()
+    {
+        // LOG-08: a session at 22:00 UTC belongs to the next local day for a +5h user.
+        var tzPlus5 = TimeZoneInfo.CreateCustomTimeZone("t+5", TimeSpan.FromHours(5), "t+5", "t+5");
+        using var ctx = TestDbContext.Create();
+        var uow = new UnitOfWork(ctx);
+        var service = new StatsService(uow, tzPlus5);
+        var book = await uow.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await ctx.SaveChangesAsync();
+
+        var utc = new DateTime(2025, 6, 10, 22, 0, 0, DateTimeKind.Utc); // → 2025-06-11 03:00 local
+        ctx.ReadingSessions.Add(new ReadingSession { BookId = book.Id, StartedAt = utc, EndedAt = utc.AddMinutes(25), Minutes = 25 });
+        await ctx.SaveChangesAsync();
+
+        var result = await service.GetReadingTrendAsync(new DateTime(2025, 6, 9), new DateTime(2025, 6, 12));
+
+        result.Should().ContainKey(new DateTime(2025, 6, 11));
+        result.Should().NotContainKey(new DateTime(2025, 6, 10));
+        result[new DateTime(2025, 6, 11)].Should().Be(25);
     }
 
     [Fact]

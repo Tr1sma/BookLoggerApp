@@ -8,7 +8,7 @@ namespace BookLoggerApp.Infrastructure.Repositories;
 /// Unit of Work pattern for coordinating multiple repository operations
 /// and managing transactions.
 /// </summary>
-public interface IUnitOfWork : IDisposable
+public interface IUnitOfWork : IDisposable, IAsyncDisposable
 {
     // ===== Specific Repositories =====
 

@@ -36,6 +36,13 @@ public class QuoteService : IQuoteService
 
     public async Task<Quote> AddAsync(Quote quote, CancellationToken ct = default)
     {
+        // Trim and reject blank quotes before counting against the per-book cap, so whitespace
+        // can't burn a free-tier slot or persist an empty quote.
+        quote.Text = quote.Text?.Trim() ?? string.Empty;
+        quote.Context = string.IsNullOrWhiteSpace(quote.Context) ? null : quote.Context.Trim();
+        if (string.IsNullOrWhiteSpace(quote.Text))
+            throw new ValidationException(new[] { "Quote text cannot be empty." });
+
         if (_featureGuard is not null)
         {
             int currentCountForBook = (await _unitOfWork.Quotes.FindAsync(q => q.BookId == quote.BookId)).Count();

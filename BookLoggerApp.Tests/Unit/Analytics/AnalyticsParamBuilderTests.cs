@@ -41,8 +41,10 @@ public class AnalyticsParamBuilderTests
     public void Add_throws_on_long_string_value()
     {
         var builder = AnalyticsParamBuilder.Create();
-        var longValue = new string('x', 100);
-        var act = () => builder.Add("custom_key", longValue);
+        // Allowlisted key so the length tripwire is what trips (> 100 = Firebase cap), not the
+        // allowlist gate.
+        var longValue = new string('x', 101);
+        var act = () => builder.Add(AnalyticsParamNames.Source, longValue);
         act.Should().Throw<InvalidOperationException>();
     }
 
@@ -53,21 +55,47 @@ public class AnalyticsParamBuilderTests
         var act = () => builder.Add("", "value");
         act.Should().Throw<ArgumentException>();
     }
+
+    [Fact]
+    public void Add_throws_on_unknown_key()
+    {
+        // Z.501: a key with no const in AnalyticsParamNames is rejected by the allowlist.
+        var builder = AnalyticsParamBuilder.Create();
+        var act = () => builder.Add("definitely_not_allowlisted", "v");
+        act.Should().Throw<InvalidOperationException>();
+    }
 #endif
 
     [Fact]
     public void Add_accepts_short_string_value()
     {
         var result = AnalyticsParamBuilder.Create()
-            .Add("custom_key", "short")
+            .Add(AnalyticsParamNames.Source, "short")
             .Build();
-        result.Should().ContainKey("custom_key");
+        result.Should().ContainKey(AnalyticsParamNames.Source);
+    }
+
+    [Fact]
+    public void Add_drops_unknown_key_in_release()
+    {
+        // Z.501: in RELEASE the allowlist silently drops a non-declared key (defense-in-depth).
+        // In DEBUG the same key throws, so only assert the drop when DEBUG is not defined.
+        var result = AnalyticsParamBuilder.Create()
+            .Add(AnalyticsParamNames.Source, "ok")
+            .Build();
+#if !DEBUG
+        var withUnknown = AnalyticsParamBuilder.Create()
+            .Add("not_a_real_key", "x")
+            .Build();
+        withUnknown.Should().NotContainKey("not_a_real_key");
+#endif
+        result.Should().ContainKey(AnalyticsParamNames.Source);
     }
 
     [Fact]
     public void BuildMutable_returns_mutable_copy()
     {
-        var builder = AnalyticsParamBuilder.Create().Add("k", 1);
+        var builder = AnalyticsParamBuilder.Create().Add(AnalyticsParamNames.CategoryCount, 1);
         var dict = builder.BuildMutable();
         dict["added_later"] = "v";
         dict.Should().HaveCount(2);

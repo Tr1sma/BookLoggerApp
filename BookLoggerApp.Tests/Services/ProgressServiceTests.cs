@@ -1,4 +1,5 @@
 using FluentAssertions;
+using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -40,7 +41,8 @@ public class ProgressServiceTests : IDisposable
             .Returns(Task.FromResult(new AppSettings { UserLevel = 1, TotalXp = 0, Coins = 0 }));
         _service = new ProgressService(
             _unitOfWork, _progressionService, _plantService, _bookService,
-            _goalService, _decorationService, _settingsProvider);
+            _goalService, _decorationService, _settingsProvider,
+            timeZone: TimeZoneInfo.Utc);
     }
 
     public void Dispose()
@@ -184,6 +186,79 @@ public class ProgressServiceTests : IDisposable
         result.ProgressionResult.StreakDays.Should().Be(0);
         result.ProgressionResult.StreakBonusXp.Should().Be(0);
         result.Session.XpEarned.Should().Be(120);
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_StreakBonus_UsesLocalCalendarDay()
+    {
+        // LOG-02: the streak-bonus "first qualifying session of the day" dedup must use the user's
+        // LOCAL calendar day, like GetCurrentStreakAsync — not raw UTC. Two sessions a few hours
+        // apart that straddle UTC midnight are the SAME local day in UTC+2, so the second must not
+        // be treated as a new streak day. With raw UTC they fall on different days and the second
+        // would wrongly earn a fresh streak bonus.
+        var tzPlus2 = TimeZoneInfo.CreateCustomTimeZone("t+2", TimeSpan.FromHours(2), "t+2", "t+2");
+        var service = new ProgressService(
+            _unitOfWork, _progressionService, _plantService, _bookService,
+            _goalService, _decorationService, _settingsProvider, timeZone: tzPlus2);
+
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+
+        // Session A — first qualifying session of local day Jan 3 (UTC+2): 2026-01-02 23:00Z = Jan 3 01:00 local.
+        await service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2026, 1, 2, 23, 0, 0, DateTimeKind.Utc),
+            Minutes = 10
+        });
+
+        // Session B — same LOCAL day (Jan 3 07:00 local) but a different UTC day (Jan 3).
+        var result = await service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2026, 1, 3, 5, 0, 0, DateTimeKind.Utc),
+            Minutes = 12,
+            PagesRead = 3
+        });
+
+        result.ProgressionResult.StreakDays.Should().Be(0, "session B is the same local day as session A");
+        result.ProgressionResult.StreakBonusXp.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task StoryHeartFirstOfDayBonus_UsesLocalCalendarDay()
+    {
+        // LOG-02: the Story-Heart "first qualifying session of the day" bonus must bucket by the
+        // LOCAL calendar day, like the streak. Two sessions across UTC midnight are the same local
+        // day in UTC+2, so only the first earns the first-of-day bonus.
+        var tzPlus2 = TimeZoneInfo.CreateCustomTimeZone("t+2", TimeSpan.FromHours(2), "t+2", "t+2");
+        var decorationService = Substitute.For<IDecorationService>();
+        decorationService.UserOwnsAbilityAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(true));
+        var service = new ProgressService(
+            _unitOfWork, _progressionService, _plantService, _bookService,
+            _goalService, decorationService, _settingsProvider, timeZone: tzPlus2);
+
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+
+        // Session A — first session of local day Jan 3 (UTC+2): 2026-01-02 23:00Z = Jan 3 01:00 local.
+        var a = await service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2026, 1, 2, 23, 0, 0, DateTimeKind.Utc),
+            Minutes = 20
+        });
+        // Session B — same LOCAL day (Jan 3 07:00 local) but a different UTC day (Jan 3).
+        var b = await service.AddSessionAsync(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2026, 1, 3, 5, 0, 0, DateTimeKind.Utc),
+            Minutes = 20
+        });
+
+        a.StoryHeartFirstOfDayBonusXp.Should().BeGreaterThan(0, "session A is the first session of the local day");
+        b.StoryHeartFirstOfDayBonusXp.Should().Be(0, "session B is the same local day as session A");
     }
 
     [Fact]
@@ -344,6 +419,68 @@ public class ProgressServiceTests : IDisposable
         result.Session.Minutes.Should().BeGreaterThanOrEqualTo(0);
         result.Session.PagesRead.Should().Be(10);
         result.Session.XpEarned.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_WithMoods_PersistsMoods()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var session = await _service.StartSessionAsync(book.Id);
+
+        // Act
+        await _service.EndSessionAsync(session.Id, 10, durationMinutes: 20,
+            moods: new[] { SessionMood.Crying, SessionMood.Spice });
+
+        // Assert — reload fresh to prove the child rows round-trip.
+        _context.ChangeTracker.Clear();
+        var reloaded = (await _unitOfWork.ReadingSessions.GetSessionsByBookAsync(book.Id)).Single();
+        reloaded.MoodList.Should().BeEquivalentTo(new[] { SessionMood.Crying, SessionMood.Spice });
+    }
+
+    [Fact]
+    public async Task EndSessionAsync_WithoutMoods_LeavesMoodsEmpty()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var session = await _service.StartSessionAsync(book.Id);
+
+        // Act — the existing 3-arg call path (backward compatibility).
+        await _service.EndSessionAsync(session.Id, 10);
+
+        // Assert
+        _context.ChangeTracker.Clear();
+        var reloaded = (await _unitOfWork.ReadingSessions.GetSessionsByBookAsync(book.Id)).Single();
+        reloaded.MoodList.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_WithMoods_PersistsMoods()
+    {
+        // Arrange
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var session = new ReadingSession
+        {
+            BookId = book.Id,
+            Minutes = 15,
+            PagesRead = 10,
+            Moods = new List<ReadingSessionMood>
+            {
+                new() { Mood = SessionMood.Anger },
+                new() { Mood = SessionMood.Butterflies }
+            }
+        };
+
+        // Act
+        await _service.AddSessionAsync(session);
+
+        // Assert
+        _context.ChangeTracker.Clear();
+        var reloaded = (await _unitOfWork.ReadingSessions.GetSessionsByBookAsync(book.Id)).Single();
+        reloaded.MoodList.Should().BeEquivalentTo(new[] { SessionMood.Anger, SessionMood.Butterflies });
     }
 
     [Fact]
@@ -806,4 +943,126 @@ public class ProgressServiceTests : IDisposable
 
         streak.Should().BeGreaterThanOrEqualTo(1);
     }
+
+    [Fact]
+    public async Task GetCurrentStreakAsync_UsesLocalCalendarDay()
+    {
+        // LOG-02: with a +5h zone, a session at 2025-06-09 22:00 UTC falls on local 2025-06-10
+        // (yesterday relative to a local "today" of 2025-06-11) → streak 1; raw-UTC day
+        // boundaries would leave it on 2025-06-09 → streak 0.
+        var tzPlus5 = TimeZoneInfo.CreateCustomTimeZone("t+5", TimeSpan.FromHours(5), "t+5", "t+5");
+        var service = new ProgressService(
+            _unitOfWork, _progressionService, _plantService, _bookService,
+            _goalService, _decorationService, _settingsProvider, timeZone: tzPlus5);
+
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "B", Author = "A" });
+        await _context.SaveChangesAsync();
+        _context.ReadingSessions.Add(new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = new DateTime(2025, 6, 9, 22, 0, 0, DateTimeKind.Utc),
+            Minutes = 20
+        });
+        await _context.SaveChangesAsync();
+
+        var streak = await service.GetCurrentStreakAsync(new DateTime(2025, 6, 11, 12, 0, 0, DateTimeKind.Utc), default);
+
+        streak.Should().Be(1);
+    }
+
+    #region Validation (CODE_REVIEW BUG-05)
+
+    private ProgressService CreateServiceWithValidation()
+    {
+        return new ProgressService(
+            _unitOfWork, _progressionService, _plantService, _bookService,
+            _goalService, _decorationService, _settingsProvider,
+            validation: ValidationServiceFactory.CreateReal(),
+            timeZone: TimeZoneInfo.Utc);
+    }
+
+    [Fact]
+    public async Task UpdateSessionAsync_WithZeroMinutes_ThrowsValidation()
+    {
+        // CODE_REVIEW BUG-05: the edit path must validate too, not only AddSessionAsync.
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var service = CreateServiceWithValidation();
+        var session = new ReadingSession { BookId = book.Id, StartedAt = DateTime.UtcNow, Minutes = 20 };
+        await _unitOfWork.ReadingSessions.AddAsync(session);
+        await _unitOfWork.SaveChangesAsync();
+
+        session.Minutes = 0; // a timeless, pages-less session is invalid
+
+        await FluentActions.Awaiting(() => service.UpdateSessionAsync(session))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_WithZeroMinutes_ThrowsValidationAndPersistsNothing()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var service = CreateServiceWithValidation();
+        var session = new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow,
+            Minutes = 0
+        };
+
+        await FluentActions.Awaiting(() => service.AddSessionAsync(session))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await _unitOfWork.ReadingSessions.GetAllAsync()).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_WithEmptyBookId_ThrowsValidation()
+    {
+        var service = CreateServiceWithValidation();
+        var session = new ReadingSession
+        {
+            BookId = Guid.Empty,
+            StartedAt = DateTime.UtcNow,
+            Minutes = 30
+        };
+
+        await FluentActions.Awaiting(() => service.AddSessionAsync(session))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+    }
+
+    [Fact]
+    public async Task AddSessionAsync_WithValidSession_DoesNotThrow()
+    {
+        var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test", Author = "Author" });
+        await _context.SaveChangesAsync();
+        var service = CreateServiceWithValidation();
+        var session = new ReadingSession
+        {
+            BookId = book.Id,
+            StartedAt = DateTime.UtcNow,
+            Minutes = 30,
+            PagesRead = 20
+        };
+
+        await FluentActions.Awaiting(() => service.AddSessionAsync(session))
+            .Should().NotThrowAsync();
+    }
+
+    #endregion
+
+    #region CancellationToken plumbing (CODE_REVIEW BUG-15 / CQ-02 / INK-05)
+
+    [Fact]
+    public async Task GetSessionsByBookAsync_WithCancelledToken_Throws()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await FluentActions.Awaiting(() => _service.GetSessionsByBookAsync(Guid.NewGuid(), cts.Token))
+            .Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    #endregion
 }

@@ -13,7 +13,13 @@ public interface IPromoCodeService
     Task<PromoCodeRedemptionResult> RedeemAsync(string code, CancellationToken ct = default);
 }
 
+/// <summary>
+/// Result of a promo-code redemption. <see cref="MessageKey"/> is an AppResources
+/// key and <see cref="MessageArgs"/> its format arguments — the UI layer resolves
+/// them via the active localizer, keeping this service localization-free.
+/// </summary>
 public record PromoCodeRedemptionResult(
     bool Success,
-    string Message,
+    string MessageKey,
+    object[] MessageArgs,
     PromoActivation? Activation = null);

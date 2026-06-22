@@ -1,4 +1,6 @@
+using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using BookLoggerApp.Core.Services.Abstractions;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
@@ -16,12 +18,10 @@ public class ImageService : IImageService
     private readonly ILogger<ImageService>? _logger;
     private readonly IFileSystem _fileSystem;
 
-    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null)
-        : this(fileSystem, logger, null)
-    {
-    }
-    // Public constructor for testing or custom HttpClient usage
-    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger, HttpClient? httpClient)
+    // Single constructor so the DI typed-client (AddHttpClient<IImageService, ImageService>, Z.528)
+    // has one unambiguous ctor to activate. In production IHttpClientFactory supplies a pooled
+    // httpClient; tests pass one explicitly (or leave it null to fall back to a self-owned client).
+    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null, HttpClient? httpClient = null)
     {
         _fileSystem = fileSystem;
         _logger = logger;
@@ -138,6 +138,15 @@ public class ImageService : IImageService
         if (string.IsNullOrWhiteSpace(url))
             return null;
 
+        // SSRF defense-in-depth (SEC-13): only fetch from public http/https hosts. Reject
+        // other schemes (file://, ftp://, …) and any loopback / private / link-local target
+        // so a hostile cover URL can't probe localhost, the LAN, or a cloud metadata endpoint.
+        if (!IsSafeRemoteImageUrl(url, out _))
+        {
+            _logger?.LogWarning("Refusing to download image from disallowed URL: {Url}", url);
+            return null;
+        }
+
         try
         {
             _logger?.LogInformation("Downloading image from URL: {Url}", url);
@@ -198,6 +207,11 @@ public class ImageService : IImageService
                 throw;
             }
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // A real caller cancellation must propagate, not be swallowed as a download failure.
+            throw;
+        }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Failed to download image from URL: {Url}", url);
@@ -219,6 +233,10 @@ public class ImageService : IImageService
                 var path = await SaveCoverImageAsync(stream, bookId, ct);
                 return path;
             }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -299,11 +317,91 @@ public class ImageService : IImageService
 
             return (resizedBytes, "image/jpeg");
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Failed to get resized cover image for book {BookId}", bookId);
             return null;
         }
+    }
+
+    /// <summary>
+    /// Returns true only when <paramref name="url"/> is an absolute http/https URL whose
+    /// host is not loopback, private, link-local or otherwise reserved. SSRF guard for
+    /// remote image fetches. See code review SEC-13.
+    /// </summary>
+    internal static bool IsSafeRemoteImageUrl(string url, out Uri? uri)
+    {
+        uri = null;
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var parsed))
+        {
+            return false;
+        }
+
+        if (parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps)
+        {
+            return false;
+        }
+
+        if (parsed.IsLoopback)
+        {
+            return false;
+        }
+
+        // If the host is a literal IP, reject internal/reserved ranges outright. (Hostnames
+        // are left to DNS — this is defense-in-depth, not a substitute for network policy.)
+        string host = parsed.HostNameType == UriHostNameType.IPv6
+            ? parsed.Host.Trim('[', ']')
+            : parsed.Host;
+        if (IPAddress.TryParse(host, out var ip) && IsPrivateOrReservedIp(ip))
+        {
+            return false;
+        }
+
+        uri = parsed;
+        return true;
+    }
+
+    private static bool IsPrivateOrReservedIp(IPAddress ip)
+    {
+        if (IPAddress.IsLoopback(ip))
+        {
+            return true;
+        }
+
+        if (ip.AddressFamily == AddressFamily.InterNetwork)
+        {
+            byte[] b = ip.GetAddressBytes();
+            return b[0] switch
+            {
+                0 => true,                                   // 0.0.0.0/8 "this network"
+                10 => true,                                  // 10.0.0.0/8 private
+                127 => true,                                 // 127.0.0.0/8 loopback
+                169 when b[1] == 254 => true,                // 169.254.0.0/16 link-local
+                172 when b[1] >= 16 && b[1] <= 31 => true,   // 172.16.0.0/12 private
+                192 when b[1] == 168 => true,                // 192.168.0.0/16 private
+                100 when b[1] >= 64 && b[1] <= 127 => true,  // 100.64.0.0/10 CGNAT
+                _ => false
+            };
+        }
+
+        if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            if (ip.IsIPv6LinkLocal || ip.IsIPv6SiteLocal || ip.IsIPv6UniqueLocal)
+            {
+                return true;
+            }
+            if (ip.IsIPv4MappedToIPv6)
+            {
+                return IsPrivateOrReservedIp(ip.MapToIPv4());
+            }
+        }
+
+        return false;
     }
 
     private void DeleteThumbnail(Guid bookId)

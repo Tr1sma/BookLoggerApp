@@ -57,10 +57,10 @@ public partial class StatsAnalysesViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
             // Load available years first
-            var periods = await _statsService.GetActiveReadingPeriodsAsync();
+            var periods = await _statsService.GetActiveReadingPeriodsAsync(ct);
             AvailableYears = periods.Select(p => p.Year).Distinct().OrderByDescending(y => y).ToList();
 
             if (AvailableYears.Count >= 2)
@@ -83,11 +83,11 @@ public partial class StatsAnalysesViewModel : ViewModelBase
             if (!AvailableYears.Contains(SelectedYear1))
                 AvailableYears = AvailableYears.Append(SelectedYear1).OrderByDescending(y => y).ToList();
 
-            var yearTask = _advancedStatsService.GetYearComparisonAsync(SelectedYear1, SelectedYear2);
-            var genreTask = _advancedStatsService.GetGenreRadarDataAsync();
-            var completionTask = _advancedStatsService.GetCompletionRateAsync();
-            var pageCountTask = _advancedStatsService.GetPageCountDistributionAsync();
-            var authorsTask = _advancedStatsService.GetTopAuthorsAsync(5);
+            var yearTask = _advancedStatsService.GetYearComparisonAsync(SelectedYear1, SelectedYear2, ct);
+            var genreTask = _advancedStatsService.GetGenreRadarDataAsync(ct: ct);
+            var completionTask = _advancedStatsService.GetCompletionRateAsync(ct);
+            var pageCountTask = _advancedStatsService.GetPageCountDistributionAsync(ct);
+            var authorsTask = _advancedStatsService.GetTopAuthorsAsync(5, ct);
 
             await Task.WhenAll(yearTask, genreTask, completionTask, pageCountTask, authorsTask);
 
@@ -108,13 +108,18 @@ public partial class StatsAnalysesViewModel : ViewModelBase
         }, Tr("Error_FailedTo_LoadAnalysisStatistics"));
     }
 
+    // Z.606: year-change command wrapped in ExecuteSafelyWithDbAsync (IsBusy/ClearError/DB-gate/
+    // crash-report + ct) like LoadAsync, instead of an unguarded direct service call.
     [RelayCommand]
     public async Task ChangeComparisonYearsAsync((int year1, int year2) years)
     {
-        SelectedYear1 = years.year1;
-        SelectedYear2 = years.year2;
-        var (y1, y2) = await _advancedStatsService.GetYearComparisonAsync(years.year1, years.year2);
-        Year1Stats = y1;
-        Year2Stats = y2;
+        await ExecuteSafelyWithDbAsync(async ct =>
+        {
+            SelectedYear1 = years.year1;
+            SelectedYear2 = years.year2;
+            var (y1, y2) = await _advancedStatsService.GetYearComparisonAsync(years.year1, years.year2, ct);
+            Year1Stats = y1;
+            Year2Stats = y2;
+        }, Tr("Error_FailedTo_LoadAnalysisStatistics"));
     }
 }

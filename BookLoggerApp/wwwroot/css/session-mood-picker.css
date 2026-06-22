@@ -1,0 +1,89 @@
+/* Session Mood Picker — emoji chips shown when ending a reading session.
+   Cozy dark-brown theme (see app.css variables). */
+
+.session-mood-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0.75rem 0;
+}
+
+.session-mood-picker .mood-picker-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.session-mood-picker .mood-picker-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+}
+
+.session-mood-picker .mood-picker-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.session-mood-picker .mood-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease,
+                color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.session-mood-picker .mood-chip:hover:not(:disabled) {
+    border-color: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.session-mood-picker .mood-chip.selected {
+    border-color: var(--primary-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 1px var(--primary-color), 0 2px 8px rgba(212, 165, 116, 0.25);
+}
+
+.session-mood-picker .mood-chip:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.session-mood-picker .mood-emoji {
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.session-mood-picker .mood-label {
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .session-mood-picker .mood-chip {
+        padding: 0.45rem 0.7rem;
+        font-size: 0.8rem;
+    }
+
+    .session-mood-picker .mood-emoji {
+        font-size: 1.05rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .session-mood-picker .mood-label {
+        display: none; /* emoji-only chips on very small screens */
+    }
+
+    .session-mood-picker .mood-chip {
+        padding: 0.5rem 0.6rem;
+    }
+}

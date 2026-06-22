@@ -237,6 +237,27 @@
             }
         </section>
 
+        <!-- Reading Features -->
+        <section class="settings-card">
+            <div class="section-header">
+                <h2>📖 @L["Settings_Features_Title"]</h2>
+                <p>@L["Settings_Features_Subtitle"]</p>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-label">@L["Settings_MoodTracking_Label"]</span>
+                    <span class="setting-description">@L["Settings_MoodTracking_Description"]</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox"
+                           checked="@ViewModel.Settings.MoodTrackingEnabled"
+                           @onchange="@(async (ChangeEventArgs e) => await ViewModel.ToggleMoodTrackingCommand.ExecuteAsync((bool)(e.Value ?? false)))" />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </section>
+
         <!-- Data & Backup (merged with Danger Zone) -->
         <section class="settings-card">
             <div class="section-header">

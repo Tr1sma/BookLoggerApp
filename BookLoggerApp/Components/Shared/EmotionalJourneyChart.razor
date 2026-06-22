@@ -1,0 +1,122 @@
+@using ApexCharts
+@using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Core.Models
+@using BookLoggerApp.Core.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> L
+
+<div class="advanced-stats-card emotional-journey @(IsCompleted ? "completed" : "")">
+    <h3>🎢 @L["BookDetail_EmotionalJourney_Title"]</h3>
+    <p class="advanced-stats-subtitle">@L["BookDetail_EmotionalJourney_Subtitle"]</p>
+
+    @if (_hasAnyMood)
+    {
+        <ApexChart TItem="MoodPoint"
+                   Options="_options"
+                   Height="260">
+            @foreach (var info in SessionMoodInfo.GetAll(L))
+            {
+                <ApexPointSeries TItem="MoodPoint"
+                                 Items="_series[info.Mood]"
+                                 Name="@($"{info.Emoji} {info.Label}")"
+                                 SeriesType="SeriesType.Area"
+                                 XValue="e => e.Label"
+                                 YValue="e => e.Value" />
+            }
+        </ApexChart>
+    }
+    else
+    {
+        <p class="advanced-stats-subtitle">@L["BookDetail_EmotionalJourney_Empty"]</p>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<ReadingSession> Sessions { get; set; } = Array.Empty<ReadingSession>();
+    [Parameter] public bool IsCompleted { get; set; }
+
+    private sealed class MoodPoint
+    {
+        public string Label { get; set; } = string.Empty;
+        public decimal Value { get; set; }
+    }
+
+    private Dictionary<SessionMood, List<MoodPoint>> _series = new();
+    private ApexChartOptions<MoodPoint> _options = new();
+    private bool _hasAnyMood;
+
+    protected override void OnParametersSet()
+    {
+        BuildOptions();
+        BuildSeries();
+    }
+
+    private void BuildSeries()
+    {
+        // Repo returns sessions newest-first; the emotional arc reads chronologically.
+        var ordered = Sessions.OrderBy(s => s.StartedAt).ToList();
+        _hasAnyMood = ordered.Any(s => s.MoodList.Count > 0);
+
+        _series = SessionMoodInfo.GetAll().ToDictionary(m => m.Mood, _ => new List<MoodPoint>());
+
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            string label = $"{L["BookDetail_EmotionalJourney_AxisSession"].Value} {i + 1}";
+            var moods = ordered[i].MoodList;
+
+            // Emit a point per mood per session so all series share identical x-categories.
+            foreach (var info in SessionMoodInfo.GetAll())
+            {
+                _series[info.Mood].Add(new MoodPoint
+                {
+                    Label = label,
+                    Value = moods.Contains(info.Mood) ? 1 : 0
+                });
+            }
+        }
+    }
+
+    private void BuildOptions()
+    {
+        _options = new ApexChartOptions<MoodPoint>
+        {
+            Chart = new Chart
+            {
+                Background = "transparent",
+                ForeColor = "#C9B5A0",
+                Toolbar = new Toolbar { Show = false },
+                Animations = new Animations { Enabled = true, Speed = 400 }
+            },
+            Colors = SessionMoodInfo.GetAll().Select(m => m.ColorHex).ToList(),
+            Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 },
+            Fill = new Fill { Opacity = new Opacity(0.25) },
+            DataLabels = new DataLabels { Enabled = false },
+            Legend = new Legend
+            {
+                Show = true,
+                Position = LegendPosition.Bottom,
+                Labels = new LegendLabels { Colors = "#C9B5A0" }
+            },
+            Grid = new Grid { BorderColor = "#3D3126", StrokeDashArray = 4 },
+            Xaxis = new XAxis
+            {
+                Type = XAxisType.Category,
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = "#C9B5A0", FontSize = "11px" }
+                },
+                AxisTicks = new AxisTicks { Color = "#3D3126" }
+            },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Min = 0,
+                    Max = 1,
+                    Show = false
+                }
+            },
+            Tooltip = new Tooltip { Theme = Mode.Dark }
+        };
+    }
+}

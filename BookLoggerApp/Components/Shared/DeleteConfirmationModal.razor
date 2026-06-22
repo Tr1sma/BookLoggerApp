@@ -5,9 +5,10 @@
 @if (IsVisible)
 {
     <div class="delete-modal-overlay" @onclick="HandleCancel">
-        <div class="delete-modal" @onclick:stopPropagation="true">
+        <div class="delete-modal" @onclick:stopPropagation="true"
+             role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
             <div class="delete-modal-header">
-                <h2>@L["DeleteModal_Title"]</h2>
+                <h2 id="deleteModalTitle">@L["DeleteModal_Title"]</h2>
             </div>
 
             <div class="delete-modal-content">

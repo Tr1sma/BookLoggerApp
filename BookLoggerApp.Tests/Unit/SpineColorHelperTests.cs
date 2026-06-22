@@ -52,8 +52,39 @@ public class SpineColorHelperTests
     {
         var bookId = Guid.NewGuid();
         var (dark, light) = SpineColorHelper.GetColors(null, bookId);
-        
+
         dark.Should().NotBeNullOrEmpty();
         light.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void GetColors_With3DigitHex_ExpandsToSixDigits()
+    {
+        var (dark, _) = SpineColorHelper.GetColors("#abc", Guid.NewGuid());
+
+        dark.Should().Be("aabbcc");
+    }
+
+    [Fact]
+    public void GetColors_With8DigitHex_StripsAlphaChannel()
+    {
+        var (dark, _) = SpineColorHelper.GetColors("#123456FF", Guid.NewGuid());
+
+        dark.Should().Be("123456");
+    }
+
+    [Theory]
+    [InlineData("#12345")]   // 5 digits — invalid length
+    [InlineData("#GGGGGG")]  // non-hex characters
+    [InlineData("#12")]      // too short
+    public void GetColors_WithMalformedHex_FallsBackToHashColor(string malformed)
+    {
+        var bookId = Guid.NewGuid();
+        var (dark, light) = SpineColorHelper.GetColors(malformed, bookId);
+
+        // Falls back to a preset palette entry (6-digit, never the broken input).
+        dark.Should().NotBe(malformed.TrimStart('#'));
+        dark.Length.Should().Be(6);
+        light.Length.Should().Be(6);
     }
 }

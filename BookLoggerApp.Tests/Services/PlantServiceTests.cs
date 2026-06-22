@@ -263,125 +263,10 @@ public class PlantServiceTests : IDisposable
 
     #endregion
 
-    #region Experience & Leveling Tests
-
-    [Fact]
-    public async Task AddExperienceAsync_ShouldIncreaseExperience()
-    {
-        // Arrange
-        var species = await SeedPlantSpecies();
-        var plant = await SeedUserPlant(species.Id, "Growing Plant");
-
-        // Act
-        await _plantService.AddExperienceAsync(plant.Id, 50);
-
-        // Assert
-        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
-        updatedPlant!.Experience.Should().Be(50);
-    }
-
-    [Fact]
-    public async Task AddExperienceAsync_WhenEnoughForLevelUp_ShouldIncreaseLevel()
-    {
-        // Arrange
-        var species = await SeedPlantSpecies();
-        var plant = await SeedUserPlant(species.Id, "Leveling Plant");
-
-        // Act - Add enough XP to reach level 2 (150 XP needed based on formula 100 * 1.5^1)
-        await _plantService.AddExperienceAsync(plant.Id, 150);
-
-        // Assert
-        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
-        updatedPlant!.CurrentLevel.Should().Be(2);
-        updatedPlant.Experience.Should().Be(150);
-    }
-
-    [Fact]
-    public async Task AddExperienceAsync_WhenEnoughForMultipleLevels_ShouldLevelUpCorrectly()
-    {
-        // Arrange
-        var species = await SeedPlantSpecies();
-        var plant = await SeedUserPlant(species.Id, "Fast Growing Plant");
-
-        // Act - Add enough XP to reach level 3 (375 XP needed: 150 for L2 + 225 for L3)
-        await _plantService.AddExperienceAsync(plant.Id, 375);
-
-        // Assert
-        var updatedPlant = await _plantService.GetByIdAsync(plant.Id);
-        updatedPlant!.CurrentLevel.Should().Be(3);
-        updatedPlant.Experience.Should().Be(375);
-    }
-
-    [Fact]
-    public async Task CanLevelUpAsync_WhenEnoughXp_ShouldReturnTrue()
-    {
-        // Arrange
-        var species = await SeedPlantSpecies();
-        var plant = await SeedUserPlant(species.Id, "Ready Plant");
-        plant.Experience = 150; // Enough for level 2 (150 XP needed)
-        await _unitOfWork.UserPlants.UpdateAsync(plant);
-
-        // Act
-        var canLevel = await _plantService.CanLevelUpAsync(plant.Id);
-
-        // Assert
-        canLevel.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task CanLevelUpAsync_WhenNotEnoughXp_ShouldReturnFalse()
-    {
-        // Arrange
-        var species = await SeedPlantSpecies();
-        var plant = await SeedUserPlant(species.Id, "Not Ready Plant");
-        plant.Experience = 50; // Not enough for level 2
-        await _unitOfWork.UserPlants.UpdateAsync(plant);
-
-        // Act
-        var canLevel = await _plantService.CanLevelUpAsync(plant.Id);
-
-        // Assert
-        canLevel.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task CanLevelUpAsync_WhenPlantHasBecomeDeadSinceLastStatusUpdate_ShouldReturnFalse()
-    {
-        // Arrange
-        var species = await SeedPlantSpecies();
-        var plant = await SeedUserPlant(species.Id, "Dead Level Plant");
-        plant.Experience = 999;
-        plant.LastWatered = DateTime.UtcNow.AddDays(-10);
-        plant.Status = PlantStatus.Healthy;
-        await _unitOfWork.UserPlants.UpdateAsync(plant);
-
-        // Act
-        var canLevel = await _plantService.CanLevelUpAsync(plant.Id);
-
-        // Assert
-        canLevel.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task LevelUpAsync_WhenPlantHasBecomeDeadSinceLastStatusUpdate_ShouldThrowException()
-    {
-        // Arrange
-        var species = await SeedPlantSpecies();
-        var plant = await SeedUserPlant(species.Id, "Dead Manual Level Plant");
-        plant.Experience = 999;
-        plant.LastWatered = DateTime.UtcNow.AddDays(-10);
-        plant.Status = PlantStatus.Healthy;
-        await _unitOfWork.UserPlants.UpdateAsync(plant);
-
-        // Act
-        Func<Task> act = async () => await _plantService.LevelUpAsync(plant.Id);
-
-        // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Cannot level up a dead plant");
-    }
-
-    #endregion
+    // Z.692: Experience & Leveling tests removed — the AddExperienceAsync/CanLevelUpAsync/
+    // LevelUpAsync XP-based path they exercised was deleted (dead code, double-coin risk).
+    // Reading-day leveling (RecordReadingDayAsync) and coin-purchased leveling (PurchaseLevelAsync)
+    // remain covered by their own tests.
 
     #region XP Boost Tests
 
@@ -1082,53 +967,8 @@ public class PlantServiceTests : IDisposable
 
     #region Coin Reward Tests
 
-    [Fact]
-    public async Task AddExperienceAsync_WhenLevelUp_ShouldAwardCoins()
-    {
-        // Arrange
-        var species = await SeedPlantSpecies();
-        var plant = await SeedUserPlant(species.Id, "Coin Earning Plant");
-        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
-
-        // Act - Add enough XP to reach level 2 (150 XP needed)
-        await _plantService.AddExperienceAsync(plant.Id, 150);
-
-        // Assert - Should award 100 coins for 1 level gained
-        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
-        finalCoins.Should().Be(initialCoins + 100);
-    }
-
-    [Fact]
-    public async Task AddExperienceAsync_WhenMultipleLevelUps_ShouldAwardCoinsForEachLevel()
-    {
-        // Arrange
-        var species = await SeedPlantSpecies();
-        var plant = await SeedUserPlant(species.Id, "Multi Level Coin Plant");
-        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
-
-        // Act - Add enough XP to reach level 3 (375 XP needed: 150 for L2 + 225 for L3)
-        await _plantService.AddExperienceAsync(plant.Id, 375);
-
-        // Assert - Should award 200 coins for 2 levels gained (2 * 100)
-        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
-        finalCoins.Should().Be(initialCoins + 200);
-    }
-
-    [Fact]
-    public async Task AddExperienceAsync_WhenNoLevelUp_ShouldNotAwardCoins()
-    {
-        // Arrange
-        var species = await SeedPlantSpecies();
-        var plant = await SeedUserPlant(species.Id, "No Level Plant");
-        var initialCoins = await _settingsProvider.GetUserCoinsAsync();
-
-        // Act - Add XP but not enough to level up
-        await _plantService.AddExperienceAsync(plant.Id, 50);
-
-        // Assert - Coins should remain unchanged
-        var finalCoins = await _settingsProvider.GetUserCoinsAsync();
-        finalCoins.Should().Be(initialCoins);
-    }
+    // Z.692: AddExperienceAsync coin-award tests removed with the XP-based path. RecordReadingDay
+    // and PurchaseLevel coin behaviour stays covered below.
 
     [Fact]
     public async Task RecordReadingDayAsync_WhenLevelUp_ShouldAwardCoins()
@@ -1163,6 +1003,116 @@ public class PlantServiceTests : IDisposable
         // Assert - Coins should remain unchanged
         var finalCoins = await _settingsProvider.GetUserCoinsAsync();
         finalCoins.Should().Be(initialCoins);
+    }
+
+    #endregion
+
+    #region Validation (CODE_REVIEW BUG-05)
+
+    private PlantService CreatePlantServiceWithValidation()
+    {
+        var decorationService = Substitute.For<IDecorationService>();
+        decorationService.UserOwnsAbilityAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(false));
+        return new PlantService(
+            _unitOfWork, _settingsProvider, decorationService, _cache,
+            NullLogger<PlantService>.Instance,
+            validation: ValidationServiceFactory.CreateReal());
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WithBlankName_ThrowsValidation()
+    {
+        // CODE_REVIEW BUG-05: the edit path must validate too, not only the create path.
+        var species = await SeedPlantSpecies();
+        var service = CreatePlantServiceWithValidation();
+        var plant = await service.AddAsync(new UserPlant { SpeciesId = species.Id, Name = "Valid", CurrentLevel = 1, Experience = 0 });
+
+        plant.Name = "";
+
+        await FluentActions.Awaiting(() => service.UpdateAsync(plant))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+    }
+
+    [Fact]
+    public async Task PurchasePlantAsync_WithBlankName_ThrowsValidationAndPersistsNothing()
+    {
+        // CODE_REVIEW BUG-05: the purchase path constructs and persists a plant from a caller-supplied
+        // name, so it must validate (e.g. reject a blank/over-long name) before charging coins.
+        var species = await SeedPlantSpecies();
+        await _settingsProvider.AddCoinsAsync(100000); // make sure coins are not the limiting factor
+        var service = CreatePlantServiceWithValidation();
+
+        await FluentActions.Awaiting(() => service.PurchasePlantAsync(species.Id, ""))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await service.GetAllAsync()).Should().BeEmpty("an invalid plant name must abort the purchase");
+    }
+
+    [Fact]
+    public async Task AddAsync_WithBlankName_ThrowsValidationAndPersistsNothing()
+    {
+        var species = await SeedPlantSpecies();
+        var service = CreatePlantServiceWithValidation();
+        var plant = new UserPlant
+        {
+            SpeciesId = species.Id,
+            Name = "",
+            CurrentLevel = 1,
+            Experience = 0
+        };
+
+        await FluentActions.Awaiting(() => service.AddAsync(plant))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await service.GetAllAsync()).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AddAsync_WithEmptySpeciesId_ThrowsValidation()
+    {
+        var service = CreatePlantServiceWithValidation();
+        var plant = new UserPlant
+        {
+            SpeciesId = Guid.Empty,
+            Name = "Nameless Species Plant",
+            CurrentLevel = 1,
+            Experience = 0
+        };
+
+        await FluentActions.Awaiting(() => service.AddAsync(plant))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+    }
+
+    [Fact]
+    public async Task AddAsync_WithValidPlant_DoesNotThrow()
+    {
+        var species = await SeedPlantSpecies();
+        var service = CreatePlantServiceWithValidation();
+        var plant = new UserPlant
+        {
+            SpeciesId = species.Id,
+            Name = "Valid Plant",
+            CurrentLevel = 1,
+            Experience = 0
+        };
+
+        await FluentActions.Awaiting(() => service.AddAsync(plant))
+            .Should().NotThrowAsync();
+    }
+
+    #endregion
+
+    #region CancellationToken plumbing (CODE_REVIEW BUG-15 / CQ-02 / INK-05)
+
+    [Fact]
+    public async Task GetAllAsync_WithCancelledToken_Throws()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await FluentActions.Awaiting(() => _plantService.GetAllAsync(cts.Token))
+            .Should().ThrowAsync<OperationCanceledException>();
     }
 
     #endregion

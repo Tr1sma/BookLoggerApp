@@ -56,7 +56,7 @@ public static class MauiProgram
 
         // Wire the ambient CrashReporter on ViewModelBase so ExecuteSafely* catch-blocks
         // forward non-fatals to Crashlytics (no-op outside Android).
-        AnalyticsBootstrapper.Install(app.Services.GetRequiredService<ICrashReportingService>());
+        AnalyticsBootstrapper.InstallCrashReporter(app.Services.GetRequiredService<ICrashReportingService>());
 
         // Wire the ambient localizer on ViewModelBase for the generic fallbacks used
         // by ExecuteSafely*Async when a caller didn't pass an explicit errorPrefix.
@@ -198,7 +198,13 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IAdvancedStatsService, BookLoggerApp.Infrastructure.Services.AdvancedStatsService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IReadingForecastService, BookLoggerApp.Infrastructure.Services.ReadingForecastService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IShareCardService, BookLoggerApp.Infrastructure.Services.ShareCardService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
+        // Z.528: hand ImageService a factory-managed HttpClient (typed client) instead of letting
+        // it new one up per instance — IHttpClientFactory pools the handler so cover downloads
+        // reuse sockets and can't exhaust the connection pool. Mirrors the LookupService setup.
+        builder.Services.AddHttpClient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
         builder.Services.AddSingleton<BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider>(sp => sp.GetRequiredService<BookLoggerApp.Infrastructure.Services.AppSettingsProvider>());
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IEntitlementStore, BookLoggerApp.Infrastructure.Services.EntitlementStore>();

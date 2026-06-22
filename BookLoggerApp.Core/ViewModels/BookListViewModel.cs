@@ -29,10 +29,10 @@ public partial class BookListViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
+            var all = await _books.GetAllAsync(ct);
             Items.Clear();
-            var all = await _books.GetAllAsync();
             foreach (var b in all) Items.Add(b);
         }, Tr("Error_FailedTo_LoadBooks"));
     }
@@ -67,8 +67,12 @@ public partial class BookListViewModel : ViewModelBase
 
     private void NotifyCanExecuteChanged()
     {
-        // Re-evaluate CanExecute for AddAsync
-        AddAsyncCommand.NotifyCanExecuteChanged();
+        // Z.774: re-evaluate CanExecute on the generated AddCommand. The hand-rolled
+        // AddAsyncCommand (a second AsyncRelayCommand over the same method) was removed — the
+        // [RelayCommand(CanExecute = nameof(CanAdd))] attribute already provides AddCommand with
+        // the guard wired, and two parallel commands meant NotifyCanExecuteChanged only refreshed
+        // one of them.
+        AddCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnNewTitleChanged(string value)
@@ -80,9 +84,4 @@ public partial class BookListViewModel : ViewModelBase
     {
         NotifyCanExecuteChanged();
     }
-
-    // Add this property to expose the RelayCommand instance for AddAsync
-    public IRelayCommand AddAsyncCommand => AddAsyncCommandField ??= new AsyncRelayCommand(AddAsync, CanAdd);
-
-    private AsyncRelayCommand? AddAsyncCommandField;
 }

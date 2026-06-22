@@ -4,33 +4,33 @@ namespace BookLoggerApp.Core.Services.Abstractions;
 
 public interface IShelfService
 {
-    Task<List<Shelf>> GetAllShelvesAsync();
-    Task<Shelf?> GetShelfByIdAsync(Guid id);
-    Task<Shelf> CreateShelfAsync(Shelf shelf);
-    Task UpdateShelfAsync(Shelf shelf);
-    Task DeleteShelfAsync(Guid id);
+    Task<List<Shelf>> GetAllShelvesAsync(CancellationToken ct = default);
+    Task<Shelf?> GetShelfByIdAsync(Guid id, CancellationToken ct = default);
+    Task<Shelf> CreateShelfAsync(Shelf shelf, CancellationToken ct = default);
+    Task UpdateShelfAsync(Shelf shelf, CancellationToken ct = default);
+    Task DeleteShelfAsync(Guid id, CancellationToken ct = default);
 
     // Management
-    Task AddBookToShelfAsync(Guid shelfId, Guid bookId);
-    Task RemoveBookFromShelfAsync(Guid shelfId, Guid bookId);
-    Task ReorderShelvesAsync(List<Guid> shelfIdsInOrder);
-    Task UpdateBookPositionAsync(Guid shelfId, Guid bookId, int newPosition);
-    Task<List<Book>> GetBooksForShelfAsync(Guid shelfId);
+    Task AddBookToShelfAsync(Guid shelfId, Guid bookId, CancellationToken ct = default);
+    Task RemoveBookFromShelfAsync(Guid shelfId, Guid bookId, CancellationToken ct = default);
+    Task ReorderShelvesAsync(List<Guid> shelfIdsInOrder, CancellationToken ct = default);
+    Task UpdateBookPositionAsync(Guid shelfId, Guid bookId, int newPosition, CancellationToken ct = default);
+    Task<List<Book>> GetBooksForShelfAsync(Guid shelfId, CancellationToken ct = default);
 
     // Plant Management
-    Task AddPlantToShelfAsync(Guid shelfId, Guid plantId);
-    Task RemovePlantFromShelfAsync(Guid shelfId, Guid plantId);
-    Task<List<UserPlant>> GetPlantsForShelfAsync(Guid shelfId);
+    Task AddPlantToShelfAsync(Guid shelfId, Guid plantId, CancellationToken ct = default);
+    Task RemovePlantFromShelfAsync(Guid shelfId, Guid plantId, CancellationToken ct = default);
+    Task<List<UserPlant>> GetPlantsForShelfAsync(Guid shelfId, CancellationToken ct = default);
 
     // Decoration Management
-    Task AddDecorationToShelfAsync(Guid shelfId, Guid decorationId);
-    Task RemoveDecorationFromShelfAsync(Guid shelfId, Guid decorationId);
+    Task AddDecorationToShelfAsync(Guid shelfId, Guid decorationId, CancellationToken ct = default);
+    Task RemoveDecorationFromShelfAsync(Guid shelfId, Guid decorationId, CancellationToken ct = default);
 
     // Positioning
-    Task UpdateShelfPositionsAsync(Guid shelfId, Dictionary<Guid, int> bookPositions, Dictionary<Guid, int> plantPositions, Dictionary<Guid, int> decorationPositions);
+    Task UpdateShelfPositionsAsync(Guid shelfId, Dictionary<Guid, int> bookPositions, Dictionary<Guid, int> plantPositions, Dictionary<Guid, int> decorationPositions, CancellationToken ct = default);
 
     // Cross-shelf movement
-    Task MoveBookBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid bookId, int targetPosition);
-    Task MovePlantBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid plantId, int targetPosition);
-    Task MoveDecorationBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid decorationId, int targetPosition);
+    Task MoveBookBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid bookId, int targetPosition, CancellationToken ct = default);
+    Task MovePlantBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid plantId, int targetPosition, CancellationToken ct = default);
+    Task MoveDecorationBetweenShelvesAsync(Guid sourceShelfId, Guid targetShelfId, Guid decorationId, int targetPosition, CancellationToken ct = default);
 }

@@ -9,7 +9,7 @@
         <div class="goal-genre-badges">
             @foreach (var gg in Goal.GoalGenres)
             {
-                <span class="genre-badge" style="background-color: @(gg.Genre?.ColorHex ?? "#666")20; color: @(gg.Genre?.ColorHex ?? "#666"); border-color: @(gg.Genre?.ColorHex ?? "#666")40">
+                <span class="genre-badge" style="background-color: @(gg.Genre?.ColorHex ?? "#8B7355")20; color: @(gg.Genre?.ColorHex ?? "#8B7355"); border-color: @(gg.Genre?.ColorHex ?? "#8B7355")40">
                     @gg.Genre?.Icon @gg.Genre?.Name
                 </span>
             }

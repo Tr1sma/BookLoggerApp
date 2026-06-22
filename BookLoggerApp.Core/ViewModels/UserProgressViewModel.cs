@@ -35,9 +35,9 @@ public partial class UserProgressViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            var settings = await _settingsProvider.GetSettingsAsync();
+            var settings = await _settingsProvider.GetSettingsAsync(ct);
 
             TotalXp = settings.TotalXp;
 
@@ -71,14 +71,6 @@ public partial class UserProgressViewModel : ViewModelBase
         {
             ProgressPercentage = 0m;
         }
-    }
-
-    /// <summary>
-    /// Calculate XP required for a specific level (matches XpCalculator logic).
-    /// </summary>
-    private static int GetXpForLevel(int level)
-    {
-        return XpCalculator.GetXpForLevel(level);
     }
 
     /// <summary>

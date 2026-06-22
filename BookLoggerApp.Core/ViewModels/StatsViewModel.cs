@@ -158,33 +158,33 @@ public partial class StatsViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            TotalBooksRead = await _statsService.GetTotalBooksReadAsync();
-            TotalPagesRead = await _statsService.GetTotalPagesReadAsync();
-            TotalMinutesRead = await _statsService.GetTotalMinutesReadAsync();
-            CurrentStreak = await _statsService.GetCurrentStreakAsync();
-            LongestStreak = await _statsService.GetLongestStreakAsync();
-            AverageRating = await _statsService.GetAverageRatingAsync();
+            TotalBooksRead = await _statsService.GetTotalBooksReadAsync(ct);
+            TotalPagesRead = await _statsService.GetTotalPagesReadAsync(ct);
+            TotalMinutesRead = await _statsService.GetTotalMinutesReadAsync(ct);
+            CurrentStreak = await _statsService.GetCurrentStreakAsync(ct);
+            LongestStreak = await _statsService.GetLongestStreakAsync(ct);
+            AverageRating = await _statsService.GetAverageRatingAsync(ct);
 
-            ReadingTrend = await _statsService.GetReadingTrendAsync(DateRangeStart, DateRangeEnd);
-            BooksByGenre = await _statsService.GetBooksByGenreAsync();
-            FavoriteGenre = await _statsService.GetFavoriteGenreAsync();
+            ReadingTrend = await _statsService.GetReadingTrendAsync(DateRangeStart, DateRangeEnd, ct);
+            BooksByGenre = await _statsService.GetBooksByGenreAsync(ct);
+            FavoriteGenre = await _statsService.GetFavoriteGenreAsync(ct);
 
             // Load rating statistics
-            await LoadRatingStatisticsAsync();
+            await LoadRatingStatisticsAsync(ct);
 
             // Load progression statistics
-            await LoadProgressionStatisticsAsync();
+            await LoadProgressionStatisticsAsync(ct);
         }, Tr("Error_FailedTo_LoadStatistics"));
     }
 
     /// <summary>
     /// Loads multi-category rating statistics.
     /// </summary>
-    private async Task LoadRatingStatisticsAsync()
+    private async Task LoadRatingStatisticsAsync(CancellationToken ct = default)
     {
-        CategoryAverages = await _statsService.GetAllAverageRatingsAsync(DateRangeStart, DateRangeEnd);
+        CategoryAverages = await _statsService.GetAllAverageRatingsAsync(DateRangeStart, DateRangeEnd, ct);
 
         // Set individual category averages
         AverageCharactersRating = CategoryAverages.GetValueOrDefault(RatingCategory.Characters, 0);
@@ -200,7 +200,7 @@ public partial class StatsViewModel : ViewModelBase
         AverageAtmosphaereRating = CategoryAverages.GetValueOrDefault(RatingCategory.Atmosphaere, 0);
 
         // Load top rated books
-        var topBooks = await _statsService.GetTopRatedBooksAsync(10);
+        var topBooks = await _statsService.GetTopRatedBooksAsync(10, ct: ct);
         TopRatedBooks = new ObservableCollection<BookRatingSummary>(topBooks);
     }
 
@@ -225,24 +225,25 @@ public partial class StatsViewModel : ViewModelBase
     /// <summary>
     /// Loads progression system statistics (level, XP, coins, plant boosts).
     /// </summary>
-    private async Task LoadProgressionStatisticsAsync()
+    private async Task LoadProgressionStatisticsAsync(CancellationToken ct = default)
     {
-        var settings = await _settingsProvider.GetSettingsAsync();
+        var settings = await _settingsProvider.GetSettingsAsync(ct);
 
-        CurrentLevel = settings.UserLevel;
         TotalXp = settings.TotalXp;
         TotalCoins = settings.Coins;
 
-        // Recalculate level from total XP to ensure consistency and fix sync bugs
+        // Z.786: CurrentLevel is derived solely from TotalXp (removed the dead
+        // `CurrentLevel = settings.UserLevel` that was overwritten on the next line).
+        // Recalculate level from total XP to ensure consistency and fix sync bugs.
         CurrentLevel = XpCalculator.CalculateLevelFromXp(TotalXp);
 
         // Calculate XP for current level progress
         CalculateProgress();
 
         // Load plant boost details
-        TotalPlantBoost = await _plantService.CalculateTotalXpBoostAsync();
+        TotalPlantBoost = await _plantService.CalculateTotalXpBoostAsync(ct);
 
-        var plants = await _plantService.GetAllAsync();
+        var plants = await _plantService.GetAllAsync(ct);
         var plantBoostList = new List<PlantBoostInfo>();
 
         foreach (var plant in plants)
@@ -392,7 +393,7 @@ public partial class StatsViewModel : ViewModelBase
             var yearStart = new DateTime(yearOnly, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             var yearEnd = yearOnly == DateTime.UtcNow.Year
                 ? DateTime.UtcNow
-                : new DateTime(yearOnly, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+                : yearStart.AddYears(1).AddTicks(-1); // half-open [year, year+1), matches the month branch below
             return (yearStart, yearEnd);
         }
 

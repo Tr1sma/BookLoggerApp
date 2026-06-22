@@ -10,4 +10,22 @@
          the notification body/actions use the in-app language passed from managed code. -->
     <string name="timer_notif_channel_name">Reading Timer</string>
     <string name="timer_notif_channel_desc">Live reading session timer</string>
+
+    <!-- UX-01: home-screen widget runtime strings. Android picks values/ vs values-de/ by the
+         device locale. Format placeholders use .NET composite syntax ({0}) and are resolved via
+         string.Format in the providers, so aapt does not treat them as Java format specifiers. -->
+    <string name="widget_no_active_book">No active book</string>
+    <string name="widget_tap_to_open_app">Tap to open BookHeart</string>
+    <string name="widget_tap_to_open">Tap to open</string>
+    <string name="widget_page_info">Page {0}/{1} — {2}%</string>
+    <string name="widget_streak_label_one">Day Streak</string>
+    <string name="widget_streak_label_other">Days Streak</string>
+    <string name="widget_streak">Streak</string>
+    <string name="widget_read_today">Read today ✓</string>
+    <string name="widget_not_read_today">Not read today</string>
+    <string name="widget_no_active_goal">No active goal</string>
+    <string name="widget_create_goal">Create a goal in BookHeart</string>
+    <string name="widget_unit_books">Books</string>
+    <string name="widget_unit_pages">Pages</string>
+    <string name="widget_unit_minutes">Minutes</string>
 </resources>

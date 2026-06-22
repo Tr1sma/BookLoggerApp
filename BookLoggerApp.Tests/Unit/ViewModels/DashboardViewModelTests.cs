@@ -43,33 +43,33 @@ public class DashboardViewModelTests
     {
         // Arrange
         var readingBook = new Book { Title = "Reading Book", Status = ReadingStatus.Reading };
-        _bookService.GetByStatusAsync(ReadingStatus.Reading).Returns(new List<Book> { readingBook });
+        _bookService.GetByStatusAsync(ReadingStatus.Reading, Arg.Any<CancellationToken>()).Returns(new List<Book> { readingBook });
 
-        var completedBook = new Book 
-        { 
-            Title = "Done Book", 
-            Status = ReadingStatus.Completed, 
-            DateCompleted = DateTime.UtcNow 
+        var completedBook = new Book
+        {
+            Title = "Done Book",
+            Status = ReadingStatus.Completed,
+            DateCompleted = DateTime.UtcNow
         };
-        _bookService.GetByStatusAsync(ReadingStatus.Completed).Returns(new List<Book> { completedBook });
+        _bookService.GetByStatusAsync(ReadingStatus.Completed, Arg.Any<CancellationToken>()).Returns(new List<Book> { completedBook });
 
         var sessions = new List<ReadingSession>
         {
             new ReadingSession { Minutes = 30, PagesRead = 10, XpEarned = 50 }
         };
-        _progressService.GetSessionsInRangeAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>()).Returns(sessions);
+        _progressService.GetSessionsInRangeAsync(Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns(sessions);
 
         var goals = new List<ReadingGoal> { new ReadingGoal { Title = "Goal 1" } };
-        _goalService.GetActiveGoalsAsync().Returns(goals);
+        _goalService.GetActiveGoalsAsync(Arg.Any<CancellationToken>()).Returns(goals);
 
         var plant = new UserPlant { Id = Guid.NewGuid() };
-        _plantService.GetActivePlantAsync().Returns(plant);
+        _plantService.GetActivePlantAsync(Arg.Any<CancellationToken>()).Returns(plant);
 
-        var recentSessions = new List<ReadingSession> 
-        { 
-            new ReadingSession { BookId = Guid.NewGuid() } 
+        var recentSessions = new List<ReadingSession>
+        {
+            new ReadingSession { BookId = Guid.NewGuid() }
         };
-        _progressService.GetRecentSessionsAsync(5).Returns(recentSessions);
+        _progressService.GetRecentSessionsAsync(5, Arg.Any<CancellationToken>()).Returns(recentSessions);
 
         // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
@@ -110,7 +110,7 @@ public class DashboardViewModelTests
     {
         // Arrange
         var plant = new UserPlant { Id = Guid.NewGuid() };
-        _plantService.GetActivePlantAsync().Returns(plant);
+        _plantService.GetActivePlantAsync(Arg.Any<CancellationToken>()).Returns(plant);
         await _viewModel.LoadCommand.ExecuteAsync(null); // Load plant first
 
         // Act
@@ -129,7 +129,7 @@ public class DashboardViewModelTests
             Id = Guid.NewGuid(),
             Status = PlantStatus.Dead
         };
-        _plantService.GetActivePlantAsync().Returns(plant, (UserPlant?)null);
+        _plantService.GetActivePlantAsync(Arg.Any<CancellationToken>()).Returns(plant, (UserPlant?)null);
         await _viewModel.LoadCommand.ExecuteAsync(null);
 
         // Act

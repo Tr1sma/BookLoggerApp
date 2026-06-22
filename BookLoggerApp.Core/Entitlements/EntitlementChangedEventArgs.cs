@@ -37,5 +37,6 @@ public enum EntitlementChangeReason
     Restore = 2,
     Lapse = 3,
     Promo = 4,
-    DebugForce = 5
+    DebugForce = 5,
+    Refresh = 6
 }

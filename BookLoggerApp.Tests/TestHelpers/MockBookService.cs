@@ -101,4 +101,15 @@ public class MockBookService : IBookService
     {
         return Task.FromResult<ProgressionResult?>(null);
     }
+
+    public Task<BookSaveResult> SaveBookWithRelationsAsync(
+        Book book,
+        IReadOnlyList<Guid> genreIds,
+        IReadOnlyList<Guid> shelfIds,
+        IReadOnlyList<Guid> tropeIds,
+        IReadOnlyList<Guid> manualShelfIds,
+        CancellationToken ct = default)
+    {
+        return Task.FromResult(new BookSaveResult(book, false, false));
+    }
 }

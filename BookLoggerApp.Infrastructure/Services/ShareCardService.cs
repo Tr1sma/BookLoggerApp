@@ -1,5 +1,8 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Resources;
 using BookLoggerApp.Core.Services.Abstractions;
+using Microsoft.Extensions.Localization;
 using SkiaSharp;
 using System.Diagnostics.CodeAnalysis;
 
@@ -33,8 +36,24 @@ public class ShareCardService : IShareCardService
     private static readonly SKColor GoldStar     = SKColor.Parse("#FFD700");
     private static readonly SKColor GoldStarDim  = SKColor.Parse("#4A3F32");
 
+    private readonly IStringLocalizer<AppResources> _localizer;
+    private readonly IFeatureGuard? _featureGuard;
+
+    // Z.996: featureGuard is optional (default null) so existing tests construct the service with
+    // just the localizer; production wires the real guard so share-card generation is enforced
+    // service-side, not only behind the UI gate.
+    public ShareCardService(IStringLocalizer<AppResources> localizer, IFeatureGuard? featureGuard = null)
+    {
+        _localizer = localizer;
+        _featureGuard = featureGuard;
+    }
+
     public Task<byte[]> GenerateStatsCardAsync(StatsShareData data, CancellationToken ct = default)
     {
+        // Z.996: Share cards are a Premium feature — enforce here (pattern SEC-06/SEC-08) so no
+        // caller can generate one without the entitlement, regardless of the UI state.
+        _featureGuard?.RequireAccess(FeatureKey.ShareCards, "Share cards require Premium.");
+
         const int Width  = 1080;
         const int Height = 1920;
 
@@ -49,6 +68,9 @@ public class ShareCardService : IShareCardService
 
     public Task<byte[]> GenerateBookCardAsync(BookShareData data, CancellationToken ct = default)
     {
+        // Z.996: service-side Premium enforcement (see GenerateStatsCardAsync).
+        _featureGuard?.RequireAccess(FeatureKey.ShareCards, "Share cards require Premium.");
+
         const int Width = 1080;
 
         // Dynamic height based on content presence
@@ -82,7 +104,7 @@ public class ShareCardService : IShareCardService
     // ─────────────────────────────────────────────────────────────────────────
 
     [ExcludeFromCodeCoverage]
-    private static void DrawStatsCard(SKCanvas canvas, StatsShareData data, int w, int h)
+    private void DrawStatsCard(SKCanvas canvas, StatsShareData data, int w, int h)
     {
         const int Pad = 60;
 
@@ -107,7 +129,7 @@ public class ShareCardService : IShareCardService
         // ── App name: drawn heart icon + "BookHeart" text ─────────────────────
         DrawHeartAndText(canvas, "BookHeart", w / 2f, y, boldTypeface, 72, Primary);
         y += 80;
-        DrawText(canvas, "Reading Recap", w / 2f, y, regularTypeface, 52, TextSecondary, SKTextAlign.Center);
+        DrawText(canvas, _localizer["ShareCard_Stats_Heading"], w / 2f, y, regularTypeface, 52, TextSecondary, SKTextAlign.Center);
         y += 70;
 
         // Period chip shows exactly which month/year is being shared
@@ -136,19 +158,19 @@ public class ShareCardService : IShareCardService
         string genreText  = TruncateText(data.FavoriteGenre ?? "–", 12);
 
         // Row 0: Books / Pages / Hours
-        DrawStatTile(canvas, data.BooksCompleted.ToString(), "Books Read",
+        DrawStatTile(canvas, data.BooksCompleted.ToString(), _localizer["ShareCard_Stats_BooksRead"],
             col0X, row0Y, TileW, TileH, boldTypeface, regularTypeface, AccentGreen);
-        DrawStatTile(canvas, data.PagesRead.ToString("N0"), "Pages Read",
+        DrawStatTile(canvas, data.PagesRead.ToString("N0"), _localizer["ShareCard_Stats_PagesRead"],
             col1X, row0Y, TileW, TileH, boldTypeface, regularTypeface, AccentAmber);
-        DrawStatTile(canvas, hoursText, "Hours Read",
+        DrawStatTile(canvas, hoursText, _localizer["ShareCard_Stats_HoursRead"],
             col2X, row0Y, TileW, TileH, boldTypeface, regularTypeface, AccentBlue);
 
         // Row 1: Avg Rating / Day Streak / Fav. Genre
-        DrawStatTile(canvas, ratingText, "Avg Rating",
+        DrawStatTile(canvas, ratingText, _localizer["ShareCard_Stats_AvgRating"],
             col0X, row1Y, TileW, TileH, boldTypeface, regularTypeface, AccentGold, valueFontSize: 80);
-        DrawStatTile(canvas, totalBooksText, "Total Books",
+        DrawStatTile(canvas, totalBooksText, _localizer["ShareCard_Stats_TotalBooks"],
             col1X, row1Y, TileW, TileH, boldTypeface, regularTypeface, AccentOrange);
-        DrawStatTile(canvas, genreText, "Fav. Genre",
+        DrawStatTile(canvas, genreText, _localizer["ShareCard_Stats_FavGenre"],
             col2X, row1Y, TileW, TileH, boldTypeface, regularTypeface, AccentRose, valueFontSize: 42);
 
         y = row1Y + TileH + 50;
@@ -156,7 +178,7 @@ public class ShareCardService : IShareCardService
         // ── Top Books ─────────────────────────────────────────────────────────
         DrawHorizontalLine(canvas, Pad, w - Pad, y, BorderColor);
         y += 50;
-        DrawText(canvas, "Top Books", Pad, y, boldTypeface, 52, Primary, SKTextAlign.Left);
+        DrawText(canvas, _localizer["ShareCard_Stats_TopBooks"], Pad, y, boldTypeface, 52, Primary, SKTextAlign.Left);
         y += 75;
 
         for (int i = 0; i < data.TopBooks.Count && i < 3; i++)
@@ -168,7 +190,7 @@ public class ShareCardService : IShareCardService
         }
 
         // ── Watermark ─────────────────────────────────────────────────────────
-        DrawWatermark(canvas, w, h, boldTypeface, regularTypeface);
+        DrawWatermark(canvas, w, h, boldTypeface, regularTypeface, _localizer["ShareCard_Watermark_Tagline"]);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -176,7 +198,7 @@ public class ShareCardService : IShareCardService
     // ─────────────────────────────────────────────────────────────────────────
 
     [ExcludeFromCodeCoverage]
-    private static void DrawBookCard(SKCanvas canvas, BookShareData data, int w, int h)
+    private void DrawBookCard(SKCanvas canvas, BookShareData data, int w, int h)
     {
         const int Pad = 60;
 
@@ -221,7 +243,7 @@ public class ShareCardService : IShareCardService
         float y = 80;
 
         // ── Header ────────────────────────────────────────────────────────────
-        DrawText(canvas, "Just finished reading!", w / 2f, y, regularTypeface, 44, TextSecondary, SKTextAlign.Center);
+        DrawText(canvas, _localizer["ShareCard_Book_JustFinished"], w / 2f, y, regularTypeface, 44, TextSecondary, SKTextAlign.Center);
         y += 60;
         DrawHeartAndText(canvas, "BookHeart", w / 2f, y, boldTypeface, 52, Primary);
         y += 80;
@@ -275,7 +297,7 @@ public class ShareCardService : IShareCardService
         // ── "HIGHLY RECOMMENDED" badge (only for 4.0+) ─────────────────────
         if (data.AverageRating.HasValue && data.AverageRating.Value >= 4.0)
         {
-            DrawRecommendedBadge(canvas, w / 2f, y, boldTypeface);
+            DrawRecommendedBadge(canvas, w / 2f, y, boldTypeface, _localizer["ShareCard_Book_Recommended"]);
             y += 85;
         }
 
@@ -287,7 +309,7 @@ public class ShareCardService : IShareCardService
             y += 80;
         }
 
-        DrawText(canvas, $"by {data.Author}", w / 2f, y, regularTypeface, 42, TextSecondary, SKTextAlign.Center);
+        DrawText(canvas, _localizer["ShareCard_Book_By", data.Author], w / 2f, y, regularTypeface, 42, TextSecondary, SKTextAlign.Center);
         y += 50;
 
         // ── Gradient divider ────────────────────────────────────────────────
@@ -295,7 +317,7 @@ public class ShareCardService : IShareCardService
         y += 40;
 
         // ── Colored stats chips ─────────────────────────────────────────────
-        string pagesText = data.PageCount.HasValue ? $"{data.PageCount:N0} pages" : "–";
+        string pagesText = data.PageCount.HasValue ? _localizer["ShareCard_Book_Pages", data.PageCount.Value.ToString("N0")] : "–";
         string timeText  = data.TotalMinutesRead > 0 ? FormatReadingTime(data.TotalMinutesRead) : "–";
 
         DrawColoredInfoChip(canvas, pagesText, Pad, y, (w / 2f) - Pad - 20, 70, regularTypeface, 38, AccentBlue);
@@ -324,7 +346,7 @@ public class ShareCardService : IShareCardService
         }
 
         // ── Watermark ─────────────────────────────────────────────────────────
-        DrawWatermark(canvas, w, h, boldTypeface, regularTypeface);
+        DrawWatermark(canvas, w, h, boldTypeface, regularTypeface, _localizer["ShareCard_Watermark_Tagline"]);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -665,14 +687,13 @@ public class ShareCardService : IShareCardService
     /// </summary>
     [ExcludeFromCodeCoverage]
     private static void DrawRecommendedBadge(SKCanvas canvas, float cx, float y,
-        SKTypeface boldTypeface)
+        SKTypeface boldTypeface, string badgeText)
     {
-        const string BadgeText = "HIGHLY RECOMMENDED";
         const float FontSize = 26;
 
         using var font = new SKFont(boldTypeface, FontSize);
         using var measurePaint = new SKPaint { IsAntialias = true };
-        float textW = font.MeasureText(BadgeText, measurePaint);
+        float textW = font.MeasureText(badgeText, measurePaint);
 
         float padH = 20, padV = 12;
         var rect = new SKRect(
@@ -700,14 +721,14 @@ public class ShareCardService : IShareCardService
         canvas.DrawRoundRect(rect, 20, 20, borderPaint);
 
         using var textPaint = new SKPaint { Color = AccentGreen, IsAntialias = true };
-        canvas.DrawText(BadgeText, cx, y + FontSize / 3f, SKTextAlign.Center, font, textPaint);
+        canvas.DrawText(badgeText, cx, y + FontSize / 3f, SKTextAlign.Center, font, textPaint);
     }
 
     /// <summary>
     /// Draws a 2-column category ratings grid with per-category accent colors and progress bars.
     /// </summary>
     [ExcludeFromCodeCoverage]
-    private static void DrawColoredCategoryRatings(SKCanvas canvas,
+    private void DrawColoredCategoryRatings(SKCanvas canvas,
         List<KeyValuePair<RatingCategory, int?>> categories,
         float x, float y, float totalW, SKTypeface regularTypeface, SKTypeface boldTypeface)
     {
@@ -801,90 +822,12 @@ public class ShareCardService : IShareCardService
         _ => Primary
     };
 
-    [ExcludeFromCodeCoverage]
-    private static void DrawCoverPlaceholder(SKCanvas canvas, string title,
-        float x, float y, float w, float h, SKTypeface boldTypeface)
-    {
-        var rect = new SKRect(x, y, x + w, y + h);
-        using var bgPaint = new SKPaint { Color = BgTertiary, IsAntialias = true };
-        canvas.DrawRoundRect(rect, 16, 16, bgPaint);
-
-        string letter = string.IsNullOrEmpty(title) ? "?" : title[0].ToString().ToUpperInvariant();
-        using var font  = new SKFont(boldTypeface, 120);
-        using var paint = new SKPaint { Color = Primary, IsAntialias = true };
-        canvas.DrawText(letter, x + w / 2f, y + h / 2f + 40, SKTextAlign.Center, font, paint);
-    }
-
-    [ExcludeFromCodeCoverage]
-    private static void DrawInfoChip(SKCanvas canvas, string text, float x, float y,
-        float maxW, float chipH, SKTypeface typeface, float fontSize)
-    {
-        var rect = new SKRect(x, y, x + maxW, y + chipH);
-        using var bgPaint = new SKPaint { Color = BgSecondary, IsAntialias = true };
-        canvas.DrawRoundRect(rect, 14, 14, bgPaint);
-
-        using var font  = new SKFont(typeface, fontSize);
-        using var paint = new SKPaint { Color = TextSecondary, IsAntialias = true };
-        canvas.DrawText(text, x + maxW / 2f, y + chipH / 2f + fontSize / 3f,
-            SKTextAlign.Center, font, paint);
-    }
-
-    [ExcludeFromCodeCoverage]
-    private static void DrawStarRating(SKCanvas canvas, double rating, float centerX, float y, float fontSize)
-    {
-        int filled = Math.Clamp((int)Math.Round(rating), 0, 5);
-        float starRadius = fontSize * 0.5f;
-
-        const float StarSpacing = 70;
-        float startX = centerX - (5 * StarSpacing) / 2f + StarSpacing / 2f;
-
-        for (int i = 0; i < 5; i++)
-        {
-            SKColor starColor = i < filled ? Primary : BgTertiary.WithAlpha(180);
-            DrawStarIcon(canvas, startX + i * StarSpacing, y + fontSize / 3f,
-                starRadius, starColor, filled: i < filled);
-        }
-    }
-
-    [ExcludeFromCodeCoverage]
-    private static void DrawCategoryRatings(SKCanvas canvas,
-        List<KeyValuePair<RatingCategory, int?>> categories,
-        float x, float y, float totalW, SKTypeface regularTypeface, SKTypeface boldTypeface)
-    {
-        const int   Cols  = 3;
-        const float CellH = 90;
-        const float Gap   = 20;
-        float cellW = (totalW - Gap * (Cols - 1)) / Cols;
-
-        for (int i = 0; i < categories.Count; i++)
-        {
-            int   col   = i % Cols;
-            int   row   = i / Cols;
-            float cellX = x + col * (cellW + Gap);
-            float cellY = y + row * (CellH + Gap);
-
-            var (category, ratingVal) = (categories[i].Key, categories[i].Value);
-
-            var rect = new SKRect(cellX, cellY, cellX + cellW, cellY + CellH);
-            using var bgPaint = new SKPaint { Color = BgTertiary, IsAntialias = true };
-            canvas.DrawRoundRect(rect, 12, 12, bgPaint);
-
-            string label = CategoryLabel(category);
-            string value = ratingVal.HasValue ? $"{ratingVal}/5" : "–";
-
-            using var labelFont  = new SKFont(regularTypeface, 30);
-            using var labelPaint = new SKPaint { Color = TextSecondary, IsAntialias = true };
-            canvas.DrawText(label, cellX + cellW / 2f, cellY + 38, SKTextAlign.Center, labelFont, labelPaint);
-
-            using var valFont  = new SKFont(boldTypeface, 36);
-            using var valPaint = new SKPaint { Color = Primary, IsAntialias = true };
-            canvas.DrawText(value, cellX + cellW / 2f, cellY + 74, SKTextAlign.Center, valFont, valPaint);
-        }
-    }
+    // Z.768: removed unused private draw helpers DrawCoverPlaceholder, DrawInfoChip, DrawStarRating
+    // (the live card uses DrawStarRatingGold) and DrawCategoryRatings — none had a caller.
 
     [ExcludeFromCodeCoverage]
     private static void DrawWatermark(SKCanvas canvas, int w, int h,
-        SKTypeface boldTypeface, SKTypeface regularTypeface)
+        SKTypeface boldTypeface, SKTypeface regularTypeface, string tagline)
     {
         float y = h - 120;
 
@@ -892,7 +835,7 @@ public class ShareCardService : IShareCardService
 
         using var tagFont  = new SKFont(regularTypeface, 26);
         using var tagPaint = new SKPaint { Color = TextSecondary.WithAlpha(100), IsAntialias = true };
-        canvas.DrawText("Track your reading journey", w / 2f, y + 42,
+        canvas.DrawText(tagline, w / 2f, y + 42,
             SKTextAlign.Center, tagFont, tagPaint);
     }
 
@@ -957,19 +900,19 @@ public class ShareCardService : IShareCardService
     }
 
     [ExcludeFromCodeCoverage]
-    private static string CategoryLabel(RatingCategory category) => category switch
+    private string CategoryLabel(RatingCategory category) => category switch
     {
-        RatingCategory.Characters    => "Characters",
-        RatingCategory.Plot          => "Plot",
-        RatingCategory.WritingStyle  => "Writing",
-        RatingCategory.SpiceLevel    => "Spice",
-        RatingCategory.Pacing        => "Pacing",
-        RatingCategory.WorldBuilding => "World",
-        RatingCategory.Spannung => "Spannung",
-        RatingCategory.Humor => "Humor",
-        RatingCategory.Informationsgehalt => "Info",
-        RatingCategory.EmotionaleTiefe => "Emotion",
-        RatingCategory.Atmosphaere => "Atmo",
+        RatingCategory.Characters    => _localizer["ShareCard_Category_Characters"],
+        RatingCategory.Plot          => _localizer["ShareCard_Category_Plot"],
+        RatingCategory.WritingStyle  => _localizer["ShareCard_Category_WritingStyle"],
+        RatingCategory.SpiceLevel    => _localizer["ShareCard_Category_SpiceLevel"],
+        RatingCategory.Pacing        => _localizer["ShareCard_Category_Pacing"],
+        RatingCategory.WorldBuilding => _localizer["ShareCard_Category_WorldBuilding"],
+        RatingCategory.Spannung => _localizer["ShareCard_Category_Spannung"],
+        RatingCategory.Humor => _localizer["ShareCard_Category_Humor"],
+        RatingCategory.Informationsgehalt => _localizer["ShareCard_Category_Informationsgehalt"],
+        RatingCategory.EmotionaleTiefe => _localizer["ShareCard_Category_EmotionaleTiefe"],
+        RatingCategory.Atmosphaere => _localizer["ShareCard_Category_Atmosphaere"],
         _ => category.ToString()
     };
 }

@@ -15,6 +15,16 @@ public static class ReadingStreakHelper
         return CalculateCurrentStreak(GetQualifyingDates(sessions), today);
     }
 
+    /// <summary>
+    /// Current-streak variant that buckets each session by its LOCAL calendar day in
+    /// <paramref name="timeZone"/> (LOG-02). Callers pass a local "today" so streaks share the
+    /// goal feature's local-midnight convention instead of raw UTC day boundaries.
+    /// </summary>
+    public static int CalculateCurrentStreak(IEnumerable<ReadingSession> sessions, DateTime today, TimeZoneInfo timeZone)
+    {
+        return CalculateCurrentStreak(GetQualifyingDates(sessions, timeZone), today);
+    }
+
     public static int CalculateCurrentStreak(IEnumerable<DateTime> sessionDates, DateTime today)
     {
         var dates = sessionDates
@@ -46,6 +56,16 @@ public static class ReadingStreakHelper
         return CalculateInclusiveStreak(GetQualifyingDates(sessions), anchorDate);
     }
 
+    /// <summary>
+    /// Inclusive-streak variant that buckets each session by its LOCAL calendar day in
+    /// <paramref name="timeZone"/> (LOG-02). The <paramref name="anchorDate"/> must already be a
+    /// local calendar date so the prior sessions and the anchor share one convention.
+    /// </summary>
+    public static int CalculateInclusiveStreak(IEnumerable<ReadingSession> sessions, DateTime anchorDate, TimeZoneInfo timeZone)
+    {
+        return CalculateInclusiveStreak(GetQualifyingDates(sessions, timeZone), anchorDate);
+    }
+
     public static int CalculateInclusiveStreak(IEnumerable<DateTime> sessionDates, DateTime anchorDate)
     {
         var dates = sessionDates
@@ -60,6 +80,16 @@ public static class ReadingStreakHelper
     public static int CalculateLongestStreak(IEnumerable<ReadingSession> sessions)
     {
         return CalculateLongestStreak(GetQualifyingDates(sessions));
+    }
+
+    /// <summary>
+    /// Longest-streak variant that buckets each session by its LOCAL calendar day in
+    /// <paramref name="timeZone"/> (LOG-02) — the same convention as the current streak, so the
+    /// two never disagree on what counts as one reading day.
+    /// </summary>
+    public static int CalculateLongestStreak(IEnumerable<ReadingSession> sessions, TimeZoneInfo timeZone)
+    {
+        return CalculateLongestStreak(GetQualifyingDates(sessions, timeZone));
     }
 
     public static int CalculateLongestStreak(IEnumerable<DateTime> sessionDates)
@@ -99,6 +129,14 @@ public static class ReadingStreakHelper
         return sessions
             .Where(CountsTowardStreak)
             .Select(session => session.StartedAt.Date)
+            .Distinct();
+    }
+
+    private static IEnumerable<DateTime> GetQualifyingDates(IEnumerable<ReadingSession> sessions, TimeZoneInfo timeZone)
+    {
+        return sessions
+            .Where(CountsTowardStreak)
+            .Select(session => LocalTimeHelper.LocalDate(session.StartedAt, timeZone))
             .Distinct();
     }
 

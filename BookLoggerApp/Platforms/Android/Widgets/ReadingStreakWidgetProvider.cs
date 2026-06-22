@@ -32,18 +32,21 @@ public class ReadingStreakWidgetProvider : AppWidgetProvider
 
             views.SetTextViewText(Resource.Id.widget_streak_count, streakData.CurrentStreak.ToString());
 
-            // Singular/plural
+            // UX-01: real singular/plural via locale-aware resources (the old branch returned the
+            // same literal for both arms, so the conditional was dead).
             views.SetTextViewText(Resource.Id.widget_streak_label,
-                streakData.CurrentStreak == 1 ? "Day Streak" : "Day Streak");
+                context.GetString(streakData.CurrentStreak == 1
+                    ? Resource.String.widget_streak_label_one
+                    : Resource.String.widget_streak_label_other));
 
             // Today status indicator
             if (streakData.ReadToday)
             {
-                views.SetTextViewText(Resource.Id.widget_streak_today, "Read today \u2713");
+                views.SetTextViewText(Resource.Id.widget_streak_today, context.GetString(Resource.String.widget_read_today));
             }
             else if (streakData.CurrentStreak > 0)
             {
-                views.SetTextViewText(Resource.Id.widget_streak_today, "Not read today");
+                views.SetTextViewText(Resource.Id.widget_streak_today, context.GetString(Resource.String.widget_not_read_today));
             }
             else
             {
@@ -57,7 +60,7 @@ public class ReadingStreakWidgetProvider : AppWidgetProvider
         catch
         {
             views.SetTextViewText(Resource.Id.widget_streak_count, "—");
-            views.SetTextViewText(Resource.Id.widget_streak_label, "Streak");
+            views.SetTextViewText(Resource.Id.widget_streak_label, context.GetString(Resource.String.widget_streak));
             views.SetTextViewText(Resource.Id.widget_streak_today, "");
         }
 

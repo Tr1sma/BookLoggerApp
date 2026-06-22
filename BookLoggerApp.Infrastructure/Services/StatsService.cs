@@ -12,10 +12,15 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class StatsService : IStatsService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeZoneInfo _timeZone;
 
-    public StatsService(IUnitOfWork unitOfWork)
+    // Reading trend and streak group sessions by the user's local calendar day, not raw UTC
+    // (CODE_REVIEW LOG-02/LOG-08). The zone is injectable (default TimeZoneInfo.Local) so the
+    // grouping stays deterministically testable on any CI offset.
+    public StatsService(IUnitOfWork unitOfWork, TimeZoneInfo? timeZone = null)
     {
         _unitOfWork = unitOfWork;
+        _timeZone = timeZone ?? TimeZoneInfo.Local;
     }
 
     public async Task<int> GetTotalBooksReadAsync(CancellationToken ct = default)
@@ -37,31 +42,40 @@ public class StatsService : IStatsService
         return await _unitOfWork.ReadingSessions.GetTotalMinutesAsync(ct);
     }
 
-    public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
+    public Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
+        => GetCurrentStreakAsync(DateTime.UtcNow, ct);
+
+    // Internal clock seam so the local-day streak logic stays deterministically testable
+    // with a fixed "now" (the public method passes DateTime.UtcNow).
+    internal async Task<int> GetCurrentStreakAsync(DateTime utcNow, CancellationToken ct)
     {
-        var today = DateTime.UtcNow.Date;
+        // LOG-02: anchor "today" and each session's day to the user's local calendar so streaks
+        // share the goal feature's local-midnight convention instead of raw UTC boundaries.
+        var localToday = LocalTimeHelper.LocalDate(utcNow, _timeZone);
 
         // Only load sessions from the last year instead of ALL sessions.
         // A streak longer than 365 days is unrealistic, and this avoids
         // loading thousands of records for long-time users.
         var recentSessions = await _unitOfWork.ReadingSessions
-            .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow);
+            .GetSessionsInRangeAsync(utcNow.AddDays(-365), utcNow, ct);
 
-        return ReadingStreakHelper.CalculateCurrentStreak(recentSessions, today);
+        return ReadingStreakHelper.CalculateCurrentStreak(recentSessions, localToday, _timeZone);
     }
 
     public async Task<int> GetLongestStreakAsync(CancellationToken ct = default)
     {
         var allSessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
-        return ReadingStreakHelper.CalculateLongestStreak(allSessions);
+        // LOG-02: bucket by the user's local calendar day, like GetCurrentStreakAsync.
+        return ReadingStreakHelper.CalculateLongestStreak(allSessions, _timeZone);
     }
 
     public async Task<Dictionary<DateTime, int>> GetReadingTrendAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end, ct);
 
+        // LOG-08: group by the user's local calendar day, not the raw UTC StartedAt.
         return sessions
-            .GroupBy(s => s.StartedAt.Date)
+            .GroupBy(s => LocalTimeHelper.LocalDate(s.StartedAt, _timeZone))
             .ToDictionary(
                 g => g.Key,
                 g => g.Sum(s => s.Minutes)
@@ -70,7 +84,7 @@ public class StatsService : IStatsService
 
     public async Task<int> GetPagesReadInRangeAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end, ct);
         return sessions.Where(s => s.PagesRead.HasValue).Sum(s => s.PagesRead!.Value);
     }
 
@@ -160,7 +174,7 @@ public class StatsService : IStatsService
         var start = DateTime.UtcNow.AddDays(-days);
         var end = DateTime.UtcNow;
 
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end, ct);
         var totalMinutes = sessions.Sum(s => s.Minutes);
 
         return (double)totalMinutes / days;
@@ -187,7 +201,7 @@ public class StatsService : IStatsService
 
     public async Task<List<BookRatingSummary>> GetTopRatedBooksAsync(int count = 10, RatingCategory? category = null, CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed);
+        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed, ct);
 
         IEnumerable<Book> sortedBooks;
 
@@ -226,10 +240,11 @@ public class StatsService : IStatsService
 
     public async Task<List<BookRatingSummary>> GetBooksWithRatingsAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        // Z.761: only completed books are summarised — filter status DB-side instead of loading
+        // the whole library and filtering in memory.
+        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed, ct);
 
         return books
-            .Where(b => b.Status == ReadingStatus.Completed)
             .Select(BookRatingSummary.FromBook)
             .OrderByDescending(s => s.AverageRating)
             .ToList();
