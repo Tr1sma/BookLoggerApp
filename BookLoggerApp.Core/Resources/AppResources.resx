@@ -156,6 +156,9 @@
   <data name="Common_Back" xml:space="preserve">
     <value>Back</value>
   </data>
+  <data name="Common_ExportData" xml:space="preserve">
+    <value>Export Data</value>
+  </data>
   <data name="Common_Loading" xml:space="preserve">
     <value>Loading…</value>
   </data>
@@ -2181,6 +2184,18 @@
   <data name="Paywall_PromoRedeemed" xml:space="preserve">
     <value>Successfully redeemed code</value>
   </data>
+  <data name="Promo_EnterCode" xml:space="preserve">
+    <value>Please enter a promo code.</value>
+  </data>
+  <data name="Promo_Unknown" xml:space="preserve">
+    <value>Unknown promo code.</value>
+  </data>
+  <data name="Promo_Success_Days" xml:space="preserve">
+    <value>{0} unlocked for {1} days.</value>
+  </data>
+  <data name="Promo_Success_Months" xml:space="preserve">
+    <value>{0} unlocked for {1} months.</value>
+  </data>
   <data name="Paywall_PeriodMonth" xml:space="preserve">
     <value>month</value>
   </data>
@@ -3437,5 +3452,77 @@
   </data>
   <data name="Error_FailedTo_UpdateMoodTrackingSettings" xml:space="preserve">
     <value>Failed to update mood tracking settings</value>
+  </data>
+  <data name="ShareCard_Stats_Heading" xml:space="preserve">
+    <value>Reading Recap</value>
+  </data>
+  <data name="ShareCard_Stats_BooksRead" xml:space="preserve">
+    <value>Books Read</value>
+  </data>
+  <data name="ShareCard_Stats_PagesRead" xml:space="preserve">
+    <value>Pages Read</value>
+  </data>
+  <data name="ShareCard_Stats_HoursRead" xml:space="preserve">
+    <value>Hours Read</value>
+  </data>
+  <data name="ShareCard_Stats_AvgRating" xml:space="preserve">
+    <value>Avg Rating</value>
+  </data>
+  <data name="ShareCard_Stats_TotalBooks" xml:space="preserve">
+    <value>Total Books</value>
+  </data>
+  <data name="ShareCard_Stats_FavGenre" xml:space="preserve">
+    <value>Fav. Genre</value>
+  </data>
+  <data name="ShareCard_Stats_TopBooks" xml:space="preserve">
+    <value>Top Books</value>
+  </data>
+  <data name="ShareCard_Book_JustFinished" xml:space="preserve">
+    <value>Just finished reading!</value>
+  </data>
+  <data name="ShareCard_Book_By" xml:space="preserve">
+    <value>by {0}</value>
+  </data>
+  <data name="ShareCard_Book_Pages" xml:space="preserve">
+    <value>{0} pages</value>
+  </data>
+  <data name="ShareCard_Book_Recommended" xml:space="preserve">
+    <value>HIGHLY RECOMMENDED</value>
+  </data>
+  <data name="ShareCard_Watermark_Tagline" xml:space="preserve">
+    <value>Track your reading journey</value>
+  </data>
+  <data name="ShareCard_Category_Characters" xml:space="preserve">
+    <value>Characters</value>
+  </data>
+  <data name="ShareCard_Category_Plot" xml:space="preserve">
+    <value>Plot</value>
+  </data>
+  <data name="ShareCard_Category_WritingStyle" xml:space="preserve">
+    <value>Writing</value>
+  </data>
+  <data name="ShareCard_Category_SpiceLevel" xml:space="preserve">
+    <value>Spice</value>
+  </data>
+  <data name="ShareCard_Category_Pacing" xml:space="preserve">
+    <value>Pacing</value>
+  </data>
+  <data name="ShareCard_Category_WorldBuilding" xml:space="preserve">
+    <value>World</value>
+  </data>
+  <data name="ShareCard_Category_Spannung" xml:space="preserve">
+    <value>Spannung</value>
+  </data>
+  <data name="ShareCard_Category_Humor" xml:space="preserve">
+    <value>Humor</value>
+  </data>
+  <data name="ShareCard_Category_Informationsgehalt" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="ShareCard_Category_EmotionaleTiefe" xml:space="preserve">
+    <value>Emotion</value>
+  </data>
+  <data name="ShareCard_Category_Atmosphaere" xml:space="preserve">
+    <value>Atmo</value>
   </data>
 </root>

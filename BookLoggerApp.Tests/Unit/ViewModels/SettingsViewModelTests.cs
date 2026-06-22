@@ -320,7 +320,8 @@ public class SettingsViewModelTests
         await _importExport.Received(1).ExportToJsonAsync(Arg.Any<CancellationToken>());
         await _fileSaver.Received(1).SaveFileAsync(
             Arg.Is<string>(s => s.StartsWith("BookLoggerExport_") && s.EndsWith(".json")),
-            "{\"data\":1}");
+            "{\"data\":1}",
+            Arg.Any<string>());
     }
 
     [Fact]

@@ -7,7 +7,7 @@ namespace BookLoggerApp.Services;
 /// </summary>
 public class FileSaverService : IFileSaverService
 {
-    public async Task<string?> SaveFileAsync(string defaultFileName, string content, CancellationToken ct = default)
+    public async Task<string?> SaveFileAsync(string defaultFileName, string content, string shareTitle, CancellationToken ct = default)
     {
         try
         {
@@ -17,7 +17,7 @@ public class FileSaverService : IFileSaverService
 
             await Share.Default.RequestAsync(new ShareFileRequest
             {
-                Title = "Export Data",
+                Title = shareTitle,
                 File = new ShareFile(tempPath)
             });
 

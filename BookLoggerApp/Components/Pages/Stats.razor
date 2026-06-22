@@ -512,12 +512,7 @@ else if (activeTab == 2)
     }
 
     private string FormatMinutes(int minutes)
-    {
-        if (minutes < 60) return $"{minutes}m";
-        var hours = minutes / 60;
-        var remainingMinutes = minutes % 60;
-        return $"{hours}h {remainingMinutes}m";
-    }
+        => BookLoggerApp.Core.Helpers.TimeFormatHelper.FormatMinutes(L, minutes);
 
     private async Task FilterByCategory(RatingCategory? category)
     {

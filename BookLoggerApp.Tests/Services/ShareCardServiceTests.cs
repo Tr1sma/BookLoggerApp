@@ -1,5 +1,7 @@
 using BookLoggerApp.Core.Models;
+using BookLoggerApp.Core.Resources;
 using BookLoggerApp.Infrastructure.Services;
+using BookLoggerApp.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 
@@ -11,7 +13,7 @@ namespace BookLoggerApp.Tests.Services;
 /// </summary>
 public class ShareCardServiceTests
 {
-    private readonly ShareCardService _service = new();
+    private readonly ShareCardService _service = new(new TestStringLocalizer<AppResources>());
 
     private static readonly byte[] PngMagic = new byte[] { 0x89, 0x50, 0x4E, 0x47 };
 

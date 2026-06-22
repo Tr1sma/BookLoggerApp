@@ -257,7 +257,7 @@ public partial class GoalsViewModel : ViewModelBase
             SelectedGenreIds = goalGenres.Select(gg => gg.GenreId).ToHashSet();
 
             ShowExcludeModal = true;
-        }, "Fehler beim Laden der Bücher");
+        }, Tr("Error_FailedTo_LoadBooks"));
     }
 
     [RelayCommand]

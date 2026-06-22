@@ -359,7 +359,7 @@ public partial class SettingsViewModel : ViewModelBase
         {
             var json = await _importExportService.ExportToJsonAsync();
             var fileName = $"BookLoggerExport_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-            await _fileSaverService.SaveFileAsync(fileName, json);
+            await _fileSaverService.SaveFileAsync(fileName, json, Tr("Common_ExportData"));
         }, Tr("Error_FailedTo_ExportData"));
     }
 

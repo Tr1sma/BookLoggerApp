@@ -484,12 +484,7 @@
     }
 
     private string FormatMinutes(int minutes)
-    {
-        if (minutes < 60) return L["Common_Time_Minutes", minutes];
-        var hours = minutes / 60;
-        var remainingMinutes = minutes % 60;
-        return L["Common_Time_HoursMinutes", hours, remainingMinutes];
-    }
+        => BookLoggerApp.Core.Helpers.TimeFormatHelper.FormatMinutes(L, minutes);
 
     private string GetStatusLabel() => ViewModel.Book?.Status switch
     {

@@ -12,6 +12,12 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
+## [Unveröffentlicht]
+
+### Behoben
+- Promo-Code-Meldungen, Export-Teilen-Titel und Share-Card-Texte (Statistik & Buch) erscheinen jetzt in der App-Sprache statt fest auf Englisch
+- Lesezeit-Anzeige auf Dashboard & Statistik nutzt die lokalisierte Schreibweise (vorher fest „Xh Ym")
+
 ## [V1.0.0]
 
 Erster offizieller Play-Store-Release. 🎉
