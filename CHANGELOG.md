@@ -17,6 +17,7 @@ Versionsschema:
 ### Geändert
 - Level-Up-Feier und Ziele-Seite nutzen durchgängig die warme App-Farbpalette (kein Bootstrap-Rot/-Grün/-Grau mehr)
 - App-Start/-Resume schreibt aktive Käufe nicht mehr bei jedem Vordergrund neu — nur bei echter Änderung (weniger unnötige DB-Schreibvorgänge und Neu-Renders)
+- Cover-Downloads nutzen einen gepoolten HTTP-Client (kein Socket-Leck-Risiko bei vielen Bildern)
 
 ### Behoben
 - Promo-Code-Meldungen, Export-Teilen-Titel und Share-Card-Texte (Statistik & Buch) erscheinen jetzt in der App-Sprache statt fest auf Englisch
@@ -36,10 +37,13 @@ Versionsschema:
 - Bewertungs-Aufforderung verbrennt keinen Monats-Slot mehr, wenn das Speichern der Einstellung fehlschlägt
 - Abschließen eines genre-gefilterten Ziels überschreibt/dupliziert keine Genre-Daten mehr
 - Pflanzen ansehen schreibt nicht mehr in die Datenbank; ein Ewiger Phönix setzt seinen Gieß-Timer nicht mehr bei jedem Blick zurück (nur noch beim Pflege-Durchlauf)
+- Barcode-Scanner öffnet zuverlässiger (nutzt das aktuelle App-Fenster statt der veralteten MainPage-API)
+- Datei-Import aus Cloud-Speichern (z.B. Google Drive): gleichnamige Dateien kollidieren nicht mehr in der Zwischenkopie
 
 ### Sicherheit
 - Ein nach Tarif-Downgrade verstecktes Regal ist nicht mehr über einen Direkt-Link/seine ID erreichbar
 - WAL-Journalmodus wird vor Migrationen explizit erzwungen und protokolliert — senkt das DB-Korruptionsrisiko bei Stromausfall/Force-Close während einer Migration
+- Migrations-Debug-Log wächst nicht mehr unbegrenzt und protokolliert keine vollständigen Dateipfade mehr
 
 ## [V1.0.0]
 

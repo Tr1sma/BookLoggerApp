@@ -198,7 +198,13 @@ public static class MauiProgram
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IAdvancedStatsService, BookLoggerApp.Infrastructure.Services.AdvancedStatsService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IReadingForecastService, BookLoggerApp.Infrastructure.Services.ReadingForecastService>();
         builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IShareCardService, BookLoggerApp.Infrastructure.Services.ShareCardService>();
-        builder.Services.AddTransient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>();
+        // Z.528: hand ImageService a factory-managed HttpClient (typed client) instead of letting
+        // it new one up per instance — IHttpClientFactory pools the handler so cover downloads
+        // reuse sockets and can't exhaust the connection pool. Mirrors the LookupService setup.
+        builder.Services.AddHttpClient<BookLoggerApp.Core.Services.Abstractions.IImageService, BookLoggerApp.Infrastructure.Services.ImageService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
         builder.Services.AddSingleton<BookLoggerApp.Infrastructure.Services.AppSettingsProvider>();
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IAppSettingsProvider>(sp => sp.GetRequiredService<BookLoggerApp.Infrastructure.Services.AppSettingsProvider>());
         builder.Services.AddSingleton<BookLoggerApp.Core.Services.Abstractions.IEntitlementStore, BookLoggerApp.Infrastructure.Services.EntitlementStore>();

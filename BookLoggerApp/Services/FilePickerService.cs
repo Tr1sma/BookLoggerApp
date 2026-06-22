@@ -34,8 +34,9 @@ public class FilePickerService : IFilePickerService
 
             _migrationService.Log("[FilePicker] Requesting system picker...");
             var result = await FilePicker.Default.PickAsync(options);
-            _migrationService.Log($"[FilePicker] Picker returned: {(result == null ? "NULL" : result.FullPath)}");
-        
+            // Log only the file name, never the full path (which can carry user/account folders).
+            _migrationService.Log($"[FilePicker] Picker returned: {(result == null ? "NULL" : result.FileName)}");
+
             if (result == null)
             {
                 _migrationService.Log("[FilePicker] Result is null.");
@@ -45,22 +46,22 @@ public class FilePickerService : IFilePickerService
             // Start Modification: Handle virtual files (e.g. Google Drive) where FullPath is null
             // Check if path is usable (local file)
             // If FullPath is null, OR it's a content URI, OR it doesn't exist on disk -> treat as virtual
-            bool isVirtual = string.IsNullOrEmpty(result.FullPath) 
-                             || result.FullPath.StartsWith("content://") 
+            bool isVirtual = string.IsNullOrEmpty(result.FullPath)
+                             || result.FullPath.StartsWith("content://")
                              || !File.Exists(result.FullPath);
-            
-            _migrationService.Log($"[FilePicker] IsVirtual: {isVirtual} (Path: {result.FullPath})");
+
+            _migrationService.Log($"[FilePicker] IsVirtual: {isVirtual} (File: {result.FileName})");
 
             if (isVirtual)
             {
                 _migrationService.Log("[FilePicker] Handling virtual file...");
-                // Copy to temp file in cache directory
-                var cacheFile = Path.Combine(FileSystem.CacheDirectory, result.FileName);
-                _migrationService.Log($"[FilePicker] Cache target: {cacheFile}");
-
-                // Delete if exists to ensure fresh copy
-                if (File.Exists(cacheFile))
-                    File.Delete(cacheFile);
+                // Z.557: copy to a GUID-prefixed cache file so two picks of same-named files (or a
+                // retry after a partial copy) can't collide on one path. The returned temp file is
+                // owned by the caller, which consumes it; it lives in CacheDirectory, which the OS
+                // reclaims, so we don't delete it here after the (synchronous) consumer reads it.
+                var safeName = $"{Guid.NewGuid():N}_{Path.GetFileName(result.FileName)}";
+                var cacheFile = Path.Combine(FileSystem.CacheDirectory, safeName);
+                _migrationService.Log($"[FilePicker] Cache target: {safeName}");
 
                 using var stream = await result.OpenReadAsync();
                 try
@@ -72,11 +73,10 @@ public class FilePickerService : IFilePickerService
                 }
                 catch
                 {
-                    // If the copy was interrupted partway through, remove the half-written
-                    // file so nothing else (or a future picker run with a different filename)
-                    // accidentally treats it as a valid backup. The next retry with the same
-                    // filename would eventually overwrite it, but that self-healing only kicks
-                    // in for matching names; clean up explicitly so the cache stays consistent.
+                    // If the copy was interrupted partway through, remove the half-written file so
+                    // nothing treats it as a valid backup. With the GUID-prefixed name each pick is
+                    // unique, so no later run would ever overwrite this partial — explicit cleanup
+                    // is the only thing that keeps the cache from accumulating dead fragments.
                     try
                     {
                         if (File.Exists(cacheFile))
