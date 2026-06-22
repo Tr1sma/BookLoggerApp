@@ -7,7 +7,7 @@ using BookLoggerApp.Core.Services.Analytics;
 
 namespace BookLoggerApp.Core.ViewModels;
 
-public partial class AppStartupViewModel : ViewModelBase, IDisposable
+public partial class AppStartupViewModel : ViewModelBase
 {
     private readonly IAppVersionService _appVersionService;
     private readonly IChangelogService _changelogService;
@@ -258,10 +258,9 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
                             await _entitlementService.ApplyPurchaseAsync(p, Core.Entitlements.EntitlementChangeReason.Restore, ct);
                         }
                     }
-                    else if (_entitlementService.CurrentTier != Core.Entitlements.SubscriptionTier.Free
-                             && _entitlementService.CurrentEntitlement?.BillingPeriod != Core.Entitlements.BillingPeriod.Lifetime)
+                    else if (ShouldLapseOnResume(_entitlementService.CurrentEntitlement))
                     {
-                        // Subscription is gone from Play; downgrade to Free.
+                        // A genuine Play subscription is gone from Play; downgrade to Free.
                         await _entitlementService.ApplyLapseAsync("expired", ct);
                     }
                 }
@@ -273,6 +272,40 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
                 System.Diagnostics.Debug.WriteLine($"Entitlement refresh on resume failed: {ex}");
             }
         }
+    }
+
+    /// <summary>
+    /// CODE_REVIEW BUG-02: only force-lapse on resume when the current entitlement is a real
+    /// Play purchase that Google Play no longer returns. Active promo grants have no
+    /// ProductId/PurchaseToken and never appear in QueryActivePurchasesAsync, so they must not
+    /// be downgraded while still valid; an expired promo is handled by the expiry path instead.
+    /// </summary>
+    private static bool ShouldLapseOnResume(UserEntitlement? entitlement)
+    {
+        if (entitlement is null)
+        {
+            return false;
+        }
+
+        if (entitlement.Tier == Core.Entitlements.SubscriptionTier.Free)
+        {
+            return false;
+        }
+
+        if (entitlement.BillingPeriod == Core.Entitlements.BillingPeriod.Lifetime)
+        {
+            return false;
+        }
+
+        // Still-valid promo grant: not a Play purchase, won't be returned by Play. Leave it.
+        if (entitlement.PromoExpiresAt is { } promoExpires && promoExpires > DateTime.UtcNow)
+        {
+            return false;
+        }
+
+        // Only a genuine Play purchase carries a ProductId / PurchaseToken.
+        return !string.IsNullOrEmpty(entitlement.ProductId)
+               || !string.IsNullOrEmpty(entitlement.PurchaseToken);
     }
 
     public Task ToggleHistoryAsync()
@@ -462,7 +495,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
         return false;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         _appUpdateService.StateChanged -= OnAppUpdateStateChanged;
         _onboardingService.StateChanged -= OnOnboardingStateChanged;
@@ -471,6 +504,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             _billingService.PurchaseUpdated -= OnBillingPurchaseUpdated;
             _billingEventHookInstalled = false;
         }
+        base.Dispose();
     }
 
     private void OnBillingPurchaseUpdated(object? sender, Core.Entitlements.PurchaseResult purchase)
@@ -480,20 +514,31 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        _ = ExecuteSafelyAsync(
+        // BUG-17: background billing event — use the detached wrapper so it never touches the
+        // shared IsBusy/ErrorMessage state an in-flight startup/resume load may own.
+        _ = ExecuteDetachedAsync(
             () => _entitlementService.ApplyPurchaseAsync(purchase, Core.Entitlements.EntitlementChangeReason.Purchase),
-            Tr("Error_FailedTo_ApplyGooglePlayPurchase"));
+            source: "appstartup_billing_purchase");
     }
 
     private void OnAppUpdateStateChanged(object? sender, AppUpdateState state)
     {
-        UpdateState = state;
-        ApplyUpdatePromptState(state);
+        // BUG-17: background update-state event — detached (like the billing/onboarding handlers)
+        // so a throw (e.g. from a PropertyChanged subscriber) can't crash the event raiser or
+        // clobber the shared IsBusy/ErrorMessage state an in-flight startup/resume load may own.
+        _ = ExecuteDetachedAsync(() =>
+        {
+            UpdateState = state;
+            ApplyUpdatePromptState(state);
+            return Task.CompletedTask;
+        }, source: "appstartup_update_state");
     }
 
     private void OnOnboardingStateChanged(object? sender, EventArgs e)
     {
-        _ = ExecuteSafelyAsync(async () =>
+        // BUG-17: background onboarding-state event — detached so it never clobbers the shared
+        // IsBusy/ErrorMessage state an in-flight startup/resume load may own.
+        _ = ExecuteDetachedAsync(async () =>
         {
             var snapshot = await _onboardingService.RefreshSnapshotAsync();
             var wasVisible = IsOnboardingVisible;
@@ -504,7 +549,7 @@ public partial class AppStartupViewModel : ViewModelBase, IDisposable
             {
                 await HandleOnboardingDismissedAsync();
             }
-        }, Tr("Error_FailedTo_RefreshOnboardingState"));
+        }, source: "appstartup_onboarding_state");
     }
 
     private async Task LoadChangelogAsync(CancellationToken ct)

@@ -14,27 +14,37 @@ public class BookRepository : Repository<Book>, IBookRepository
     {
     }
 
-    public async Task<IEnumerable<Book>> GetBooksByStatusAsync(ReadingStatus status)
+    // Z.570 — eager-loading contract: the plain list queries below (GetBooksByStatusAsync,
+    // GetRecentBooksAsync, GetBooksByAuthorAsync, GetBookByISBNAsync) return Books WITHOUT their
+    // BookGenres/BookTropes/sessions navigations. Callers that need genres either Include them on
+    // their own query (BlindDateService, ImportExportService, OnboardingService) or read the
+    // BookGenres join table directly (GoalService, AdvancedStatsService) — none assume these lists
+    // carry loaded navigations. The detail/search queries that DO need them Include explicitly
+    // (GetBookWithDetailsAsync, GetBooksByGenreAsync, SearchBooksAsync).
+    public async Task<IEnumerable<Book>> GetBooksByStatusAsync(ReadingStatus status, CancellationToken ct = default)
     {
         return await _dbSet
             .AsNoTracking()
             .Where(b => b.Status == status)
             .OrderByDescending(b => b.DateAdded)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<Book>> GetBooksByGenreAsync(Guid genreId)
+    public async Task<IEnumerable<Book>> GetBooksByGenreAsync(Guid genreId, CancellationToken ct = default)
     {
+        // Read-only listing; INK-10. GetBookWithDetailsAsync stays tracked (edit path).
         return await _dbSet
+            .AsNoTracking()
             .Where(b => b.BookGenres.Any(bg => bg.GenreId == genreId))
             .Include(b => b.BookGenres)
                 .ThenInclude(bg => bg.Genre)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm)
+    public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, CancellationToken ct = default)
     {
         return await _dbSet
+            .AsNoTracking()
             .Where(b => EF.Functions.Like(b.Title, $"%{searchTerm}%") ||
                        EF.Functions.Like(b.Author, $"%{searchTerm}%") ||
                        (b.ISBN != null && EF.Functions.Like(b.ISBN, $"%{searchTerm}%")) ||
@@ -44,10 +54,10 @@ public class BookRepository : Repository<Book>, IBookRepository
                 .ThenInclude(bg => bg.Genre)
             .Include(b => b.BookTropes)
                 .ThenInclude(bt => bt.Trope)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<Book?> GetBookWithDetailsAsync(Guid id)
+    public async Task<Book?> GetBookWithDetailsAsync(Guid id, CancellationToken ct = default)
     {
         return await _dbSet
             .Include(b => b.BookGenres)
@@ -59,29 +69,35 @@ public class BookRepository : Repository<Book>, IBookRepository
             .Include(b => b.Annotations)
             .Include(b => b.BookShelves)
                 .ThenInclude(bs => bs.Shelf)
-            .FirstOrDefaultAsync(b => b.Id == id);
+            .FirstOrDefaultAsync(b => b.Id == id, ct);
     }
 
-    public async Task<IEnumerable<Book>> GetRecentBooksAsync(int count = 10)
+    public async Task<IEnumerable<Book>> GetRecentBooksAsync(int count = 10, CancellationToken ct = default)
     {
+        // Read-only listing; INK-10.
         return await _dbSet
+            .AsNoTracking()
             .OrderByDescending(b => b.DateAdded)
             .Take(count)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<Book>> GetBooksByAuthorAsync(string author)
+    public async Task<IEnumerable<Book>> GetBooksByAuthorAsync(string author, CancellationToken ct = default)
     {
+        // Read-only listing; INK-10.
         return await _dbSet
+            .AsNoTracking()
             .Where(b => EF.Functions.Like(b.Author, author))
             .OrderByDescending(b => b.DateAdded)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<Book?> GetBookByISBNAsync(string isbn)
+    public async Task<Book?> GetBookByISBNAsync(string isbn, CancellationToken ct = default)
     {
+        // Read-only lookup (duplicate detection / scan); INK-10.
         return await _dbSet
-            .FirstOrDefaultAsync(b => b.ISBN == isbn);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.ISBN == isbn, ct);
     }
 
     public async Task<int> GetCountByCompletionYearAsync(int year, CancellationToken ct = default)

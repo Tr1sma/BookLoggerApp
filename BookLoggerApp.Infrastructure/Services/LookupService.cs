@@ -40,8 +40,16 @@ public class LookupService : ILookupService
         if (string.IsNullOrWhiteSpace(isbn))
             return null;
 
-        // Clean ISBN (remove dashes and spaces)
-        isbn = isbn.Replace("-", "").Replace(" ", "");
+        // Clean ISBN (remove dashes and spaces) and uppercase the optional ISBN-10 'X' check digit.
+        isbn = isbn.Replace("-", "").Replace(" ", "").ToUpperInvariant();
+
+        // Reject malformed input early instead of firing a guaranteed-empty API query: a valid ISBN
+        // is exactly 10 (digits + optional trailing 'X' check digit) or 13 digits.
+        if (!IsValidIsbn(isbn))
+        {
+            _logger?.LogInformation("Skipping lookup for malformed ISBN: {ISBN}", isbn);
+            return null;
+        }
 
         _logger?.LogInformation("Looking up book by ISBN: {ISBN}", isbn);
 
@@ -85,6 +93,30 @@ public class LookupService : ILookupService
         _logger?.LogInformation("Found {Count} books for query: {Query}", results.Count, query);
 
         return results;
+    }
+
+    /// <summary>
+    /// Validates the structural shape of an ISBN (already stripped of separators, uppercased).
+    /// ISBN-13: 13 digits. ISBN-10: 9 digits + a final check digit that may be 'X'.
+    /// Does not verify the checksum — Google Books rejects bad checksums anyway.
+    /// </summary>
+    private static bool IsValidIsbn(string isbn)
+    {
+        if (isbn.Length == 13)
+            return isbn.All(char.IsDigit);
+
+        if (isbn.Length == 10)
+        {
+            for (int i = 0; i < 9; i++)
+            {
+                if (!char.IsDigit(isbn[i]))
+                    return false;
+            }
+            char last = isbn[9];
+            return char.IsDigit(last) || last == 'X';
+        }
+
+        return false;
     }
 
     private string BuildUrl(string queryParams, bool includeApiKey)

@@ -1,3 +1,4 @@
+using System.Linq;
 using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp.Services;
@@ -39,14 +40,17 @@ public class ScannerService : IScannerService
             var scannerPage = new ScannerPage();
             scannerPage.AssignTaskCompletionSource(tcs);
             
-            // Get the current navigation context
-            // In MAUI Blazor, we can usually access MainPge via Application.Current
-            if (Application.Current?.MainPage != null)
+            // Get the current navigation context. Application.Current.MainPage is obsolete in
+            // .NET MAUI 9+, so resolve the active window's page instead.
+            var page = Application.Current?.Windows.FirstOrDefault()?.Page;
+            if (page?.Navigation != null)
             {
-                await Application.Current.MainPage.Navigation.PushModalAsync(scannerPage);
+                await page.Navigation.PushModalAsync(scannerPage);
             }
             else
             {
+                System.Diagnostics.Debug.WriteLine(
+                    "ScannerService: no active window/page available; cannot present the scanner.");
                 return null;
             }
 

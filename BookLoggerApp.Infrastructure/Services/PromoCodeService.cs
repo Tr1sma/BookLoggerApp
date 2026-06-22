@@ -30,14 +30,14 @@ public class PromoCodeService : IPromoCodeService
     {
         if (string.IsNullOrWhiteSpace(code))
         {
-            return new PromoCodeRedemptionResult(false, "Please enter a promo code.");
+            return new PromoCodeRedemptionResult(false, "Promo_EnterCode", Array.Empty<object>());
         }
 
         string trimmed = code.Trim();
 
         if (!HardcodedCodes.TryGetValue(trimmed, out PromoGrant? grant))
         {
-            return new PromoCodeRedemptionResult(false, "Unknown promo code.");
+            return new PromoCodeRedemptionResult(false, "Promo_Unknown", Array.Empty<object>());
         }
 
         DateTime expiresAt = DateTime.UtcNow.AddDays(grant.DurationDays);
@@ -45,13 +45,14 @@ public class PromoCodeService : IPromoCodeService
 
         await _entitlementService.ApplyPromoAsync(activation, ct);
 
-        string duration = grant.DurationDays switch
+        // The UI layer localizes these keys; pick a whole-month phrasing for 90 days,
+        // otherwise express the window in days. Tier name (Plus/Premium) stays verbatim.
+        (string messageKey, object[] args) = grant.DurationDays switch
         {
-            30 => "30 days",
-            90 => "3 months",
-            _ => $"{grant.DurationDays} days"
+            90 => ("Promo_Success_Months", new object[] { grant.Tier, 3 }),
+            _ => ("Promo_Success_Days", new object[] { grant.Tier, grant.DurationDays })
         };
-        return new PromoCodeRedemptionResult(true, $"{grant.Tier} unlocked for {duration}.", activation);
+        return new PromoCodeRedemptionResult(true, messageKey, args, activation);
     }
 
     private sealed record PromoGrant(SubscriptionTier Tier, BillingPeriod Period, int DurationDays);

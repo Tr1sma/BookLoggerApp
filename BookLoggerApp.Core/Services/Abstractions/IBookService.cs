@@ -38,4 +38,25 @@ public interface IBookService
     /// Returns the <see cref="ProgressionResult"/> when auto-completion occurs, <c>null</c> otherwise.
     /// </summary>
     Task<ProgressionResult?> UpdateProgressAsync(Guid bookId, int currentPage, CancellationToken ct = default);
+
+    /// <summary>
+    /// Atomically persists a book together with its genre/shelf/trope associations and
+    /// wishlist cleanup in a single transaction (CODE_REVIEW BUG-16). Either everything
+    /// commits or nothing does — no half-saved book without its relations. Completion
+    /// side-effects (XP/goal-recalc via <see cref="CompleteBookAsync"/>) run AFTER the
+    /// commit, so the status→Completed transition is the last step.
+    /// </summary>
+    /// <param name="book">The book to insert (Id unset/new) or update.</param>
+    /// <param name="genreIds">Desired genre ids; the set is synced (add/remove diff).</param>
+    /// <param name="shelfIds">Desired shelf ids; synced against <paramref name="manualShelfIds"/>.</param>
+    /// <param name="tropeIds">Desired trope ids; synced (add/remove diff).</param>
+    /// <param name="manualShelfIds">Shelf ids the editor is allowed to remove (manual,
+    /// non-auto-sort shelves); auto-sort shelf memberships are never removed here.</param>
+    Task<BookSaveResult> SaveBookWithRelationsAsync(
+        Book book,
+        IReadOnlyList<Guid> genreIds,
+        IReadOnlyList<Guid> shelfIds,
+        IReadOnlyList<Guid> tropeIds,
+        IReadOnlyList<Guid> manualShelfIds,
+        CancellationToken ct = default);
 }

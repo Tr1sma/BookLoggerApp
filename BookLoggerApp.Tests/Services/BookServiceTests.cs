@@ -571,4 +571,99 @@ public class BookServiceTests : IDisposable
         reloaded!.Status.Should().Be(ReadingStatus.Reading);
         reloaded.CurrentPage.Should().Be(10000);
     }
+
+    #region Validation (CODE_REVIEW BUG-05)
+
+    private BookService CreateServiceWithValidation()
+    {
+        return new BookService(
+            _unitOfWork, _progressionService, _plantService, _goalService, null!,
+            validation: ValidationServiceFactory.CreateReal());
+    }
+
+    [Fact]
+    public async Task AddAsync_WithBlankTitle_ThrowsValidationAndPersistsNothing()
+    {
+        var service = CreateServiceWithValidation();
+        var book = new Book { Title = "", Author = "Author" };
+
+        await FluentActions.Awaiting(() => service.AddAsync(book))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await _service.GetTotalCountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ImportBooksAsync_WithAnyInvalidBook_ThrowsValidationAndPersistsNothing()
+    {
+        // CODE_REVIEW BUG-05: bulk import must validate every row before inserting, so one bad
+        // book aborts the whole batch instead of letting unchecked data reach the DB.
+        var service = CreateServiceWithValidation();
+        var books = new[]
+        {
+            new Book { Title = "Valid", Author = "Author" },
+            new Book { Title = "", Author = "Author" } // invalid
+        };
+
+        await FluentActions.Awaiting(() => service.ImportBooksAsync(books))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await _service.GetTotalCountAsync()).Should().Be(0, "a batch with any invalid book must not be partially imported");
+    }
+
+    // NOTE: BookService.UpdateAsync deliberately does NOT validate (see the method's comment and
+    // ServiceValidationTests.BookService_UpdateAsync_PreexistingInvalidBook_DoesNotThrow). It is the
+    // incidental single-field edit path (BookDetail rating/notes) and must not reject pre-existing
+    // legacy violations the edit did not introduce. Validation lives on AddAsync / SaveBookWithRelationsAsync.
+
+    [Fact]
+    public async Task SaveBookWithRelationsAsync_WithBlankTitle_ThrowsValidationAndPersistsNothing()
+    {
+        var service = CreateServiceWithValidation();
+        var book = new Book { Title = "   ", Author = "Author", Status = ReadingStatus.Planned };
+
+        await FluentActions.Awaiting(() => service.SaveBookWithRelationsAsync(
+                book,
+                Array.Empty<Guid>(), Array.Empty<Guid>(),
+                Array.Empty<Guid>(), Array.Empty<Guid>()))
+            .Should().ThrowAsync<FluentValidation.ValidationException>();
+
+        (await _service.GetTotalCountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task AddAsync_WithValidBook_DoesNotThrow()
+    {
+        var service = CreateServiceWithValidation();
+        var book = new Book { Title = "Valid Title", Author = "Valid Author" };
+
+        await FluentActions.Awaiting(() => service.AddAsync(book))
+            .Should().NotThrowAsync();
+    }
+
+    #endregion
+
+    #region CancellationToken plumbing (CODE_REVIEW BUG-15 / CQ-02 / INK-05)
+
+    [Fact]
+    public async Task GetByStatusAsync_WithCancelledToken_Throws()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await FluentActions.Awaiting(() => _service.GetByStatusAsync(ReadingStatus.Reading, cts.Token))
+            .Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task SearchAsync_WithCancelledToken_Throws()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await FluentActions.Awaiting(() => _service.SearchAsync("query", cts.Token))
+            .Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    #endregion
 }

@@ -380,6 +380,23 @@ public class AppStartupViewModelTests
         _viewModel.IsChangelogVisible.Should().BeFalse();
     }
 
+    [Fact]
+    public void OnOnboardingStateChanged_DoesNotClobberForegroundErrorState()
+    {
+        // BUG-17: the fire-and-forget onboarding StateChanged handler must NOT run through
+        // ExecuteSafelyAsync (which clears ErrorMessage and toggles IsBusy). Otherwise a
+        // background event clobbers the shared error/busy state owned by an in-flight load.
+        var gate = new TaskCompletionSource<OnboardingSnapshot>();
+        _onboardingService.RefreshSnapshotAsync(Arg.Any<CancellationToken>()).Returns(gate.Task);
+        _viewModel.ErrorMessage = "Real startup error";
+
+        // Fire the onboarding service's StateChanged event (subscribed in the VM ctor).
+        _onboardingService.StateChanged += Raise.Event<EventHandler>(_onboardingService, EventArgs.Empty);
+
+        // The detached handler must leave the foreground error message intact.
+        _viewModel.ErrorMessage.Should().Be("Real startup error");
+    }
+
     private static OnboardingSnapshot CreateSnapshot(
         bool shouldShowIntro = false,
         int currentStep = 0,

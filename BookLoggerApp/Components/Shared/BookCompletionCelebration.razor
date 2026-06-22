@@ -6,7 +6,8 @@
 @if (IsVisible && Book != null)
 {
     <div class="celebration-overlay" @onclick="HandleClose">
-        <div class="celebration-card" @onclick:stopPropagation="true">
+        <div class="celebration-card" @onclick:stopPropagation="true"
+             role="dialog" aria-modal="true" aria-labelledby="bookCompleteTitle">
             <!-- Confetti particles -->
             @for (int i = 0; i < 12; i++)
             {
@@ -15,7 +16,7 @@
 
             <!-- Header -->
             <div class="book-complete-header">
-                <h1>📚 @L["BookCompletion_Header"]</h1>
+                <h1 id="bookCompleteTitle">📚 @L["BookCompletion_Header"]</h1>
             </div>
 
             <!-- Book Info -->

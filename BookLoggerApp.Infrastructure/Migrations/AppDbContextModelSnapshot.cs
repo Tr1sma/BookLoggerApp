@@ -15,7 +15,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.8");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Annotation", b =>
                 {
@@ -42,8 +42,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<string>("Title")
@@ -119,6 +117,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Property<bool>("LiveTimerNotificationEnabled")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("MoodTrackingEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("NotificationsEnabled")
                         .HasColumnType("INTEGER");
 
@@ -178,7 +181,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<string>("ShelfBaseColor")
@@ -226,6 +228,7 @@ namespace BookLoggerApp.Infrastructure.Migrations
                             HideGettingStartedCta = false,
                             Language = "en",
                             LiveTimerNotificationEnabled = true,
+                            MoodTrackingEnabled = true,
                             NotificationsEnabled = false,
                             OnboardingAutoCompletedForExistingUser = false,
                             OnboardingCurrentStep = 0,
@@ -325,8 +328,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<int?>("SpannungRating")
@@ -381,8 +382,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.HasKey("BookId", "GenreId");
@@ -483,8 +482,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.HasKey("Id");
@@ -693,8 +690,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<string>("SpecialAbilityKey")
@@ -906,8 +901,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<string>("Text")
@@ -947,8 +940,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<DateTime>("StartDate")
@@ -1002,8 +993,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<int?>("StartPage")
@@ -1022,6 +1011,19 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.HasIndex("StartedAt");
 
                     b.ToTable("ReadingSessions");
+                });
+
+            modelBuilder.Entity("BookLoggerApp.Core.Models.ReadingSessionMood", b =>
+                {
+                    b.Property<Guid>("ReadingSessionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Mood")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ReadingSessionId", "Mood");
+
+                    b.ToTable("ReadingSessionMoods");
                 });
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Shelf", b =>
@@ -1096,8 +1098,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<int>("SlotWidth")
@@ -1656,8 +1656,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<Guid>("ShopItemId")
@@ -1739,7 +1737,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<int>("Tier")
@@ -1813,8 +1810,6 @@ namespace BookLoggerApp.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("BLOB");
 
                     b.Property<Guid>("SpeciesId")
@@ -2037,6 +2032,17 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Navigation("Book");
                 });
 
+            modelBuilder.Entity("BookLoggerApp.Core.Models.ReadingSessionMood", b =>
+                {
+                    b.HasOne("BookLoggerApp.Core.Models.ReadingSession", "ReadingSession")
+                        .WithMany("Moods")
+                        .HasForeignKey("ReadingSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReadingSession");
+                });
+
             modelBuilder.Entity("BookLoggerApp.Core.Models.ShopItem", b =>
                 {
                     b.HasOne("BookLoggerApp.Core.Models.PlantSpecies", "PlantSpecies")
@@ -2125,6 +2131,11 @@ namespace BookLoggerApp.Infrastructure.Migrations
                     b.Navigation("ExcludedBooks");
 
                     b.Navigation("GoalGenres");
+                });
+
+            modelBuilder.Entity("BookLoggerApp.Core.Models.ReadingSession", b =>
+                {
+                    b.Navigation("Moods");
                 });
 
             modelBuilder.Entity("BookLoggerApp.Core.Models.Shelf", b =>

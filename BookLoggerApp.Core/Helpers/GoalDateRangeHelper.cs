@@ -7,8 +7,9 @@ namespace BookLoggerApp.Core.Helpers;
 /// range suitable for comparing against UTC timestamps on Books/ReadingSessions.
 ///
 /// Goal dates arrive from the UI's &lt;input type="date"&gt; binding as Kind=Unspecified
-/// and represent the user's local calendar; Book.DateCompleted and ReadingSession.EndedAt
-/// are written as DateTime.UtcNow. Without the ToUniversalTime() conversion, a book
+/// and represent the user's local calendar; Book.DateCompleted and ReadingSession.StartedAt
+/// (the canonical session timestamp goals attribute by — see CODE_REVIEW INK-01) are written as
+/// DateTime.UtcNow. Without the ToUniversalTime() conversion, a book
 /// finished just after local midnight could count in the wrong day/month/year for
 /// users in non-UTC timezones, since DateTime comparison uses raw ticks and ignores Kind.
 /// </summary>

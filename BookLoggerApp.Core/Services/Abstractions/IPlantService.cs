@@ -24,9 +24,10 @@ public interface IPlantService
 
     // Growth & Care
     Task WaterPlantAsync(Guid plantId, CancellationToken ct = default);
-    Task AddExperienceAsync(Guid plantId, int xp, CancellationToken ct = default);
-    Task<bool> CanLevelUpAsync(Guid plantId, CancellationToken ct = default);
-    Task LevelUpAsync(Guid plantId, CancellationToken ct = default);
+    // Z.692: the XP-based plant-level path (AddExperienceAsync/CanLevelUpAsync/LevelUpAsync) was
+    // removed — it had no production caller and co-existed with the reading-days leveling in
+    // RecordReadingDayAsync, which together risked double coin awards. Leveling now flows only
+    // through reading days (RecordReadingDayAsync) and the coin-purchased PurchaseLevelAsync.
     Task PurchaseLevelAsync(Guid plantId, CancellationToken ct = default);
 
     /// <summary>

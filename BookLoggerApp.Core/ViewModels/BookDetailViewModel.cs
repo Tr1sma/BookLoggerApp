@@ -16,6 +16,7 @@ public partial class BookDetailViewModel : ViewModelBase
     private readonly IGenreService _genreService;
     private readonly IShareCardService _shareCardService;
     private readonly IImageService _imageService;
+    private readonly IAppSettingsProvider _settingsProvider;
 
     /// <summary>
     /// Raised when a book recommendation share card PNG is ready.
@@ -29,7 +30,8 @@ public partial class BookDetailViewModel : ViewModelBase
         IAnnotationService annotationService,
         IGenreService genreService,
         IShareCardService shareCardService,
-        IImageService imageService)
+        IImageService imageService,
+        IAppSettingsProvider settingsProvider)
     {
         _bookService = bookService;
         _progressService = progressService;
@@ -38,6 +40,7 @@ public partial class BookDetailViewModel : ViewModelBase
         _genreService = genreService;
         _shareCardService = shareCardService;
         _imageService = imageService;
+        _settingsProvider = settingsProvider;
     }
 
     [ObservableProperty]
@@ -65,6 +68,12 @@ public partial class BookDetailViewModel : ViewModelBase
     private bool _isGeneratingBookCard;
 
     /// <summary>
+    /// Whether mood/trigger tracking is enabled (gates the "Emotional Journey" chart).
+    /// </summary>
+    [ObservableProperty]
+    private bool _moodTrackingEnabled = true;
+
+    /// <summary>
     /// Data-driven finish prediction for the currently-loaded book, or <c>null</c> when
     /// the book is not being read or there is not enough session data to forecast.
     /// </summary>
@@ -74,28 +83,33 @@ public partial class BookDetailViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync(Guid bookId)
     {
-        await ExecuteSafelyAsync(async () =>
+        // Initial load gates on the background DB-init like every other content VM
+        // (BookList/BookEdit/Bookshelf/Dashboard/...) — CODE_REVIEW INK-13. Follow-up
+        // actions (StartReading/Complete/AddSession) stay on ExecuteSafelyAsync.
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
-            Book = await _bookService.GetWithDetailsAsync(bookId);
+            Book = await _bookService.GetWithDetailsAsync(bookId, ct);
             if (Book == null)
             {
                 SetError(Tr("Error_BookNotFound"));
                 return;
             }
 
-            TotalMinutes = await _progressService.GetTotalMinutesAsync(bookId);
-            TotalPages = await _progressService.GetTotalPagesAsync(bookId);
+            TotalMinutes = await _progressService.GetTotalMinutesAsync(bookId, ct);
+            TotalPages = await _progressService.GetTotalPagesAsync(bookId, ct);
 
-            var sessions = await _progressService.GetSessionsByBookAsync(bookId);
+            var sessions = await _progressService.GetSessionsByBookAsync(bookId, ct);
             Sessions = new ObservableCollection<ReadingSession>(sessions);
 
-            var quotes = await _quoteService.GetQuotesByBookAsync(bookId);
+            MoodTrackingEnabled = (await _settingsProvider.GetSettingsAsync(ct)).MoodTrackingEnabled;
+
+            var quotes = await _quoteService.GetQuotesByBookAsync(bookId, ct);
             Quotes = new ObservableCollection<Quote>(quotes);
 
-            var annotations = await _annotationService.GetAnnotationsByBookAsync(bookId);
+            var annotations = await _annotationService.GetAnnotationsByBookAsync(bookId, ct);
             Annotations = new ObservableCollection<Annotation>(annotations);
 
-            BookGenres = (await _genreService.GetGenresForBookAsync(bookId)).ToList();
+            BookGenres = (await _genreService.GetGenresForBookAsync(bookId, ct)).ToList();
 
             // Build the finish forecast from the freshly-loaded sessions (no extra DB call).
             Forecast = Book is { Status: ReadingStatus.Reading, PageCount: > 0 }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Repositories;
@@ -13,12 +14,14 @@ public class GenreService : IGenreService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMemoryCache _cache;
+    private readonly IFeatureGuard? _featureGuard;
     private const string CacheKey = "AllGenres";
 
-    public GenreService(IUnitOfWork unitOfWork, IMemoryCache cache)
+    public GenreService(IUnitOfWork unitOfWork, IMemoryCache cache, IFeatureGuard? featureGuard = null)
     {
         _unitOfWork = unitOfWork;
         _cache = cache;
+        _featureGuard = featureGuard;
     }
 
     public async Task<IReadOnlyList<Genre>> GetAllAsync(CancellationToken ct = default)
@@ -114,6 +117,11 @@ public class GenreService : IGenreService
 
     public async Task<IReadOnlyList<Trope>> GetTropesForBookAsync(Guid bookId, CancellationToken ct = default)
     {
+        // HIGH-1003: Tropes (Plus) tags are preserved but not surfaced for a non-entitled user
+        // (e.g. tags carried in a restored higher-tier backup); they reappear on re-upgrade.
+        if (_featureGuard is not null && !_featureGuard.HasAccess(FeatureKey.Tropes))
+            return Array.Empty<Trope>();
+
         return await _unitOfWork.Context.BookTropes
             .Where(bt => bt.BookId == bookId)
             .Include(bt => bt.Trope)
@@ -123,6 +131,11 @@ public class GenreService : IGenreService
 
     public async Task AddTropeToBookAsync(Guid bookId, Guid tropeId, CancellationToken ct = default)
     {
+        // CODE_REVIEW SEC-17: Tropes (Plus) tagging was gated only by the BookEdit.razor overlay.
+        // Enforce in the service so every caller is covered (RemoveTropeFromBookAsync stays open
+        // so downgraded users can still clean up existing trope tags).
+        _featureGuard?.RequireAccess(FeatureKey.Tropes, "Tropes require Plus.");
+
         var existing = await _unitOfWork.BookTropes.FindAsync(bt => bt.BookId == bookId && bt.TropeId == tropeId);
         if (existing.Any())
             return;

@@ -182,6 +182,30 @@ public class SettingsViewModelTests
     }
 
     [Fact]
+    public async Task ToggleMoodTrackingAsync_Disabled_PersistsSetting()
+    {
+        var vm = CreateVm();
+        vm.Settings.MoodTrackingEnabled = true;
+
+        await vm.ToggleMoodTrackingCommand.ExecuteAsync(false);
+
+        vm.Settings.MoodTrackingEnabled.Should().BeFalse();
+        await _settingsProvider.Received().UpdateSettingsAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ToggleMoodTrackingAsync_Enabled_PersistsSetting()
+    {
+        var vm = CreateVm();
+        vm.Settings.MoodTrackingEnabled = false;
+
+        await vm.ToggleMoodTrackingCommand.ExecuteAsync(true);
+
+        vm.Settings.MoodTrackingEnabled.Should().BeTrue();
+        await _settingsProvider.Received().UpdateSettingsAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ToggleReadingRemindersAsync_Enabled_SchedulesReminder()
     {
         _notifications.RequestNotificationPermissionAsync().Returns(Task.FromResult(true));
@@ -296,7 +320,8 @@ public class SettingsViewModelTests
         await _importExport.Received(1).ExportToJsonAsync(Arg.Any<CancellationToken>());
         await _fileSaver.Received(1).SaveFileAsync(
             Arg.Is<string>(s => s.StartsWith("BookLoggerExport_") && s.EndsWith(".json")),
-            "{\"data\":1}");
+            "{\"data\":1}",
+            Arg.Any<string>());
     }
 
     [Fact]

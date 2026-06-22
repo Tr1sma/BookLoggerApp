@@ -13,44 +13,59 @@ public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSess
     {
     }
 
-    public async Task<IEnumerable<ReadingSession>> GetSessionsByBookAsync(Guid bookId)
+    // Z.570 — eager-loading contract for the two session list queries:
+    //  * GetSessionsByBookAsync includes Moods (the book-detail timeline renders the per-session
+    //    mood tags) but NOT Book (the caller already has the book).
+    //  * GetSessionsInRangeAsync includes Book (stats group/label by book) but deliberately NOT
+    //    Moods — no stats/forecast consumer reads ReadingSession.Moods, and this query can span a
+    //    full year of sessions, so loading the mood child rows would be pure waste. If a future
+    //    range-based feature needs moods, add a dedicated overload/flag rather than widening this.
+    public async Task<IEnumerable<ReadingSession>> GetSessionsByBookAsync(Guid bookId, CancellationToken ct = default)
     {
+        // Read-only (display/stats); don't pollute the change tracker (INK-10).
         return await _dbSet
+            .AsNoTracking()
+            .Include(rs => rs.Moods)
             .Where(rs => rs.BookId == bookId)
             .OrderByDescending(rs => rs.StartedAt)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<ReadingSession>> GetSessionsInRangeAsync(DateTime startDate, DateTime endDate)
+    public async Task<IEnumerable<ReadingSession>> GetSessionsInRangeAsync(DateTime startDate, DateTime endDate, CancellationToken ct = default)
     {
+        // Read-only (stats over potentially a year of sessions); INK-10. Includes Book only — see
+        // the eager-loading contract note above for why Moods are intentionally not loaded here.
         return await _dbSet
+            .AsNoTracking()
             .Where(rs => rs.StartedAt >= startDate && rs.StartedAt <= endDate)
             .OrderBy(rs => rs.StartedAt)
             .Include(rs => rs.Book)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<int> GetTotalMinutesReadAsync(Guid bookId)
+    public async Task<int> GetTotalMinutesReadAsync(Guid bookId, CancellationToken ct = default)
     {
         return await _dbSet
             .Where(rs => rs.BookId == bookId)
-            .SumAsync(rs => rs.Minutes);
+            .SumAsync(rs => rs.Minutes, ct);
     }
 
-    public async Task<int> GetTotalPagesReadAsync(Guid bookId)
+    public async Task<int> GetTotalPagesReadAsync(Guid bookId, CancellationToken ct = default)
     {
         return await _dbSet
             .Where(rs => rs.BookId == bookId && rs.PagesRead.HasValue)
-            .SumAsync(rs => rs.PagesRead!.Value);
+            .SumAsync(rs => rs.PagesRead!.Value, ct);
     }
 
-    public async Task<IEnumerable<ReadingSession>> GetRecentSessionsAsync(int count = 10)
+    public async Task<IEnumerable<ReadingSession>> GetRecentSessionsAsync(int count = 10, CancellationToken ct = default)
     {
+        // Read-only (dashboard recent activity); INK-10.
         return await _dbSet
+            .AsNoTracking()
             .OrderByDescending(rs => rs.StartedAt)
             .Take(count)
             .Include(rs => rs.Book)
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
     public async Task<int> GetTotalMinutesAsync(CancellationToken ct = default)

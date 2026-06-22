@@ -156,6 +156,9 @@
   <data name="Common_Back" xml:space="preserve">
     <value>Back</value>
   </data>
+  <data name="Common_ExportData" xml:space="preserve">
+    <value>Export Data</value>
+  </data>
   <data name="Common_Loading" xml:space="preserve">
     <value>Loading…</value>
   </data>
@@ -1476,6 +1479,12 @@
   <data name="Review_NeverAsk" xml:space="preserve">
     <value>Don't ask again</value>
   </data>
+  <data name="RatingInput_RateValue" xml:space="preserve">
+    <value>Rate {0} of 5</value>
+  </data>
+  <data name="RatingInput_Clear" xml:space="preserve">
+    <value>Clear rating</value>
+  </data>
   <data name="DeleteModal_Title" xml:space="preserve">
     <value>Delete book?</value>
   </data>
@@ -2145,6 +2154,60 @@
   <data name="Paywall_AlreadyPremium" xml:space="preserve">
     <value>Already Premium</value>
   </data>
+  <data name="Paywall_TierNotAvailableAsPeriod" xml:space="preserve">
+    <value>{0} is not available as {1}.</value>
+  </data>
+  <data name="Paywall_TierUnlocked" xml:space="preserve">
+    <value>{0} unlocked!</value>
+  </data>
+  <data name="Paywall_LifetimeCelebration" xml:space="preserve">
+    <value>Thanks for going Lifetime — enjoy forever.</value>
+  </data>
+  <data name="Paywall_SubscriptionActive" xml:space="preserve">
+    <value>Thanks! Your subscription is active.</value>
+  </data>
+  <data name="Paywall_AlreadyOwned" xml:space="preserve">
+    <value>You already own this subscription.</value>
+  </data>
+  <data name="Paywall_BillingUnavailable" xml:space="preserve">
+    <value>Google Play Billing is not available right now.</value>
+  </data>
+  <data name="Paywall_ProductNotAvailableRegion" xml:space="preserve">
+    <value>This product is not available in your region.</value>
+  </data>
+  <data name="Paywall_PurchaseFailed" xml:space="preserve">
+    <value>Purchase failed. Please try again.</value>
+  </data>
+  <data name="Paywall_CurrentTier" xml:space="preserve">
+    <value>Current tier: {0}.</value>
+  </data>
+  <data name="Paywall_PromoRedeemed" xml:space="preserve">
+    <value>Successfully redeemed code</value>
+  </data>
+  <data name="Promo_EnterCode" xml:space="preserve">
+    <value>Please enter a promo code.</value>
+  </data>
+  <data name="Promo_Unknown" xml:space="preserve">
+    <value>Unknown promo code.</value>
+  </data>
+  <data name="Promo_Success_Days" xml:space="preserve">
+    <value>{0} unlocked for {1} days.</value>
+  </data>
+  <data name="Promo_Success_Months" xml:space="preserve">
+    <value>{0} unlocked for {1} months.</value>
+  </data>
+  <data name="Paywall_PeriodMonth" xml:space="preserve">
+    <value>month</value>
+  </data>
+  <data name="Paywall_PeriodYear" xml:space="preserve">
+    <value>year</value>
+  </data>
+  <data name="Paywall_PerMonthHint" xml:space="preserve">
+    <value>just {0}/mo</value>
+  </data>
+  <data name="Paywall_SavePercent" xml:space="preserve">
+    <value>Save {0}%</value>
+  </data>
   <data name="Paywall_GetLifetime" xml:space="preserve">
     <value>Get Lifetime for €99.99</value>
   </data>
@@ -2518,7 +2581,7 @@
     <value>Decoration not found.</value>
   </data>
   <data name="Error_DecorationRequiresLevel" xml:space="preserve">
-    <value>This decoration requires level {0}.</value>
+    <value>This decoration requires level {0}. You are currently level {1}.</value>
   </data>
   <data name="Error_PurchaseDecorationFailed" xml:space="preserve">
     <value>Failed to purchase decoration</value>
@@ -3338,5 +3401,128 @@
   </data>
   <data name="Feature_ReadingForecast_Description" xml:space="preserve">
     <value>Predict when you'll finish your current book from your own reading pace, with a burn-down chart.</value>
+  </data>
+  <data name="Session_Mood_Crying_Label" xml:space="preserve">
+    <value>Crying</value>
+  </data>
+  <data name="Session_Mood_Butterflies_Label" xml:space="preserve">
+    <value>Butterflies</value>
+  </data>
+  <data name="Session_Mood_Spice_Label" xml:space="preserve">
+    <value>Spice</value>
+  </data>
+  <data name="Session_Mood_Anger_Label" xml:space="preserve">
+    <value>Anger</value>
+  </data>
+  <data name="Session_Mood_Laughing_Label" xml:space="preserve">
+    <value>Laughing</value>
+  </data>
+  <data name="Session_Mood_MindBlown_Label" xml:space="preserve">
+    <value>Mind-blown</value>
+  </data>
+  <data name="Session_Mood_PickerTitle" xml:space="preserve">
+    <value>How did this session feel?</value>
+  </data>
+  <data name="Session_Mood_PickerHint" xml:space="preserve">
+    <value>Pick up to 3</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_Title" xml:space="preserve">
+    <value>Emotional Journey</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_Subtitle" xml:space="preserve">
+    <value>Your mood across this book's sessions</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_Empty" xml:space="preserve">
+    <value>Tag moods on your sessions to see your emotional arc.</value>
+  </data>
+  <data name="BookDetail_EmotionalJourney_AxisSession" xml:space="preserve">
+    <value>Session</value>
+  </data>
+  <data name="Settings_Features_Title" xml:space="preserve">
+    <value>Reading features</value>
+  </data>
+  <data name="Settings_Features_Subtitle" xml:space="preserve">
+    <value>Turn optional reading features on or off</value>
+  </data>
+  <data name="Settings_MoodTracking_Label" xml:space="preserve">
+    <value>Mood &amp; trigger tracking</value>
+  </data>
+  <data name="Settings_MoodTracking_Description" xml:space="preserve">
+    <value>Tag 1–3 emojis per session and see your emotional journey per book.</value>
+  </data>
+  <data name="Error_FailedTo_UpdateMoodTrackingSettings" xml:space="preserve">
+    <value>Failed to update mood tracking settings</value>
+  </data>
+  <data name="ShareCard_Stats_Heading" xml:space="preserve">
+    <value>Reading Recap</value>
+  </data>
+  <data name="ShareCard_Stats_BooksRead" xml:space="preserve">
+    <value>Books Read</value>
+  </data>
+  <data name="ShareCard_Stats_PagesRead" xml:space="preserve">
+    <value>Pages Read</value>
+  </data>
+  <data name="ShareCard_Stats_HoursRead" xml:space="preserve">
+    <value>Hours Read</value>
+  </data>
+  <data name="ShareCard_Stats_AvgRating" xml:space="preserve">
+    <value>Avg Rating</value>
+  </data>
+  <data name="ShareCard_Stats_TotalBooks" xml:space="preserve">
+    <value>Total Books</value>
+  </data>
+  <data name="ShareCard_Stats_FavGenre" xml:space="preserve">
+    <value>Fav. Genre</value>
+  </data>
+  <data name="ShareCard_Stats_TopBooks" xml:space="preserve">
+    <value>Top Books</value>
+  </data>
+  <data name="ShareCard_Book_JustFinished" xml:space="preserve">
+    <value>Just finished reading!</value>
+  </data>
+  <data name="ShareCard_Book_By" xml:space="preserve">
+    <value>by {0}</value>
+  </data>
+  <data name="ShareCard_Book_Pages" xml:space="preserve">
+    <value>{0} pages</value>
+  </data>
+  <data name="ShareCard_Book_Recommended" xml:space="preserve">
+    <value>HIGHLY RECOMMENDED</value>
+  </data>
+  <data name="ShareCard_Watermark_Tagline" xml:space="preserve">
+    <value>Track your reading journey</value>
+  </data>
+  <data name="ShareCard_Category_Characters" xml:space="preserve">
+    <value>Characters</value>
+  </data>
+  <data name="ShareCard_Category_Plot" xml:space="preserve">
+    <value>Plot</value>
+  </data>
+  <data name="ShareCard_Category_WritingStyle" xml:space="preserve">
+    <value>Writing</value>
+  </data>
+  <data name="ShareCard_Category_SpiceLevel" xml:space="preserve">
+    <value>Spice</value>
+  </data>
+  <data name="ShareCard_Category_Pacing" xml:space="preserve">
+    <value>Pacing</value>
+  </data>
+  <data name="ShareCard_Category_WorldBuilding" xml:space="preserve">
+    <value>World</value>
+  </data>
+  <data name="ShareCard_Category_Spannung" xml:space="preserve">
+    <value>Spannung</value>
+  </data>
+  <data name="ShareCard_Category_Humor" xml:space="preserve">
+    <value>Humor</value>
+  </data>
+  <data name="ShareCard_Category_Informationsgehalt" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="ShareCard_Category_EmotionaleTiefe" xml:space="preserve">
+    <value>Emotion</value>
+  </data>
+  <data name="ShareCard_Category_Atmosphaere" xml:space="preserve">
+    <value>Atmo</value>
   </data>
 </root>

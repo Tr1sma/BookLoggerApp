@@ -89,6 +89,23 @@ public class ReviewPromptServiceTests
     }
 
     [Fact]
+    public async Task TryStartPromptAsync_WhenPersistFails_InvalidatesCacheAndRethrows()
+    {
+        // Z.263: a failed UpdateSettingsAsync leaves the in-memory settings instance with a
+        // phantom increment + timestamp. The provider cache must be invalidated so the wasted
+        // month-slot isn't observed on the next read, and the failure surfaces to the caller.
+        _settings.LastReviewPromptDate = DateTime.UtcNow.AddMonths(-1);
+        _settings.ReviewPromptMonthCount = 0;
+        _settingsProvider.UpdateSettingsAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromException(new InvalidOperationException("db write failed")));
+
+        Func<Task> act = async () => await _service.TryStartPromptAsync();
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        _settingsProvider.Received(1).InvalidateCache();
+    }
+
+    [Fact]
     public async Task DisablePromptAsync_ShouldPersistDisabledFlag()
     {
         // Act

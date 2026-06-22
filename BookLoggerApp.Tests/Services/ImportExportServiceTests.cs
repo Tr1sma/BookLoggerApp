@@ -1,9 +1,12 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Services;
 using BookLoggerApp.Tests.TestHelpers;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using NSubstitute;
 using Xunit;
 
 namespace BookLoggerApp.Tests.Services;
@@ -42,6 +45,9 @@ public class ImportExportServiceTests
         public Task<int> GetPlantsPurchasedAsync(CancellationToken ct = default)
             => Task.FromResult(0);
 
+        public Task UpdateEntitlementMirrorAsync(BookLoggerApp.Core.Entitlements.SubscriptionTier tier, DateTime? expiresAt, CancellationToken ct = default)
+            => Task.CompletedTask;
+
         public void InvalidateCache()
         {
             ProgressionChanged?.Invoke(this, EventArgs.Empty);
@@ -54,6 +60,99 @@ public class ImportExportServiceTests
                 ProgressionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
+    }
+
+    [Fact]
+    public async Task DeleteAllDataAsync_ResetsProgressionThroughTheSerializedProvider()
+    {
+        // CODE_REVIEW BUG-08: the settings reset must go through AppSettingsProvider (which
+        // serialises writes via its _writeGate), not a raw context write that can race a concurrent
+        // coin/XP award. Assert the reset is routed through the gated UpdateSettingsAsync.
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
+        var contextFactory = new TestDbContextFactory(dbName);
+
+        var provider = Substitute.For<IAppSettingsProvider>();
+        provider.GetSettingsAsync(Arg.Any<CancellationToken>())
+            .Returns(new AppSettings { Coins = 999, TotalXp = 777, UserLevel = 9, PlantsPurchased = 5 });
+
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), provider);
+
+        await service.DeleteAllDataAsync();
+
+        await provider.Received(1).UpdateSettingsAsync(
+            Arg.Is<AppSettings>(s => s.Coins == 100 && s.TotalXp == 0 && s.UserLevel == 1 && s.PlantsPurchased == 0),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ImportFromJsonAsync_WithoutWishlistEntitlement_StripsWishlistInfo()
+    {
+        // HIGH-1003: importing a backup from a Plus/Premium account must NOT reintroduce the
+        // Plus-only Wishlist metadata for a user who is not entitled to the Wishlist feature.
+        var sourceDbName = Guid.NewGuid().ToString();
+        using (var sourceContext = TestDbContext.Create(sourceDbName))
+        {
+            sourceContext.Books.Add(new Book
+            {
+                Id = Guid.NewGuid(),
+                Title = "Wished Book",
+                Author = "Author",
+                Status = ReadingStatus.Wishlist,
+                WishlistInfo = new WishlistInfo { Priority = WishlistPriority.High, WishlistNotes = "want it" }
+            });
+            await sourceContext.SaveChangesAsync();
+        }
+        var json = await new ImportExportService(new TestDbContextFactory(sourceDbName), CreateFileSystem(), CreateMockSettingsProvider())
+            .ExportToJsonAsync();
+
+        var importDbName = Guid.NewGuid().ToString();
+        using var importContext = TestDbContext.Create(importDbName);
+        var entitlement = Substitute.For<IEntitlementService>();
+        entitlement.HasAccessAsync(FeatureKey.Wishlist, Arg.Any<CancellationToken>()).Returns(false);
+        var importService = new ImportExportService(
+            new TestDbContextFactory(importDbName), CreateFileSystem(), CreateMockSettingsProvider(), null, null, entitlement);
+
+        var count = await importService.ImportFromJsonAsync(json);
+
+        count.Should().Be(1);
+        using var verify = TestDbContext.Create(importDbName);
+        var imported = await verify.Books.Include(b => b.WishlistInfo).SingleAsync(b => b.Title == "Wished Book");
+        imported.WishlistInfo.Should().BeNull("a Free user is not entitled to Wishlist metadata");
+    }
+
+    [Fact]
+    public async Task ImportFromJsonAsync_WithWishlistEntitlement_KeepsWishlistInfo()
+    {
+        var sourceDbName = Guid.NewGuid().ToString();
+        using (var sourceContext = TestDbContext.Create(sourceDbName))
+        {
+            sourceContext.Books.Add(new Book
+            {
+                Id = Guid.NewGuid(),
+                Title = "Wished Book",
+                Author = "Author",
+                Status = ReadingStatus.Wishlist,
+                WishlistInfo = new WishlistInfo { Priority = WishlistPriority.High, WishlistNotes = "want it" }
+            });
+            await sourceContext.SaveChangesAsync();
+        }
+        var json = await new ImportExportService(new TestDbContextFactory(sourceDbName), CreateFileSystem(), CreateMockSettingsProvider())
+            .ExportToJsonAsync();
+
+        var importDbName = Guid.NewGuid().ToString();
+        using var importContext = TestDbContext.Create(importDbName);
+        var entitlement = Substitute.For<IEntitlementService>();
+        entitlement.HasAccessAsync(FeatureKey.Wishlist, Arg.Any<CancellationToken>()).Returns(true);
+        var importService = new ImportExportService(
+            new TestDbContextFactory(importDbName), CreateFileSystem(), CreateMockSettingsProvider(), null, null, entitlement);
+
+        await importService.ImportFromJsonAsync(json);
+
+        using var verify = TestDbContext.Create(importDbName);
+        var imported = await verify.Books.Include(b => b.WishlistInfo).SingleAsync(b => b.Title == "Wished Book");
+        imported.WishlistInfo.Should().NotBeNull("a Plus user keeps imported Wishlist metadata");
+        imported.WishlistInfo!.WishlistNotes.Should().Be("want it");
     }
 
     [Fact]
@@ -112,6 +211,33 @@ public class ImportExportServiceTests
     }
 
     [Fact]
+    public async Task ExportToCsvAsync_NeutralizesFormulaInjection()
+    {
+        // Arrange — a book whose untrusted fields begin with spreadsheet formula triggers.
+        var dbName = Guid.NewGuid().ToString();
+        using var context = TestDbContext.Create(dbName);
+        context.Books.Add(new Book
+        {
+            Title = "=HYPERLINK(\"http://evil\",\"x\")",
+            Author = "@SUM(1+1)",
+            ISBN = "1234567890"
+        });
+        await context.SaveChangesAsync();
+
+        var contextFactory = new TestDbContextFactory(dbName);
+        var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
+
+        // Act
+        var csv = await service.ExportToCsvAsync();
+
+        // Assert — the dangerous leading characters are escaped with a leading apostrophe,
+        // so a spreadsheet renders them as text instead of executing a formula.
+        csv.Should().Contain("'=HYPERLINK");
+        csv.Should().Contain("'@SUM");
+        csv.Should().NotContain(",=HYPERLINK");
+    }
+
+    [Fact]
     public async Task ImportFromJsonAsync_ShouldImportBooks()
     {
         // Arrange
@@ -146,6 +272,138 @@ public class ImportExportServiceTests
         books.Should().HaveCount(1);
         books[0].Title.Should().Be("Test Book");
         books[0].Author.Should().Be("Test Author");
+    }
+
+    [Fact]
+    public async Task JsonRoundTrip_ShouldPreserveSessionMoods()
+    {
+        // Arrange — a book with one session tagged with two moods.
+        var exportDbName = Guid.NewGuid().ToString();
+        var bookId = Guid.NewGuid();
+        using var exportContext = TestDbContext.Create(exportDbName);
+        exportContext.Books.Add(new Book
+        {
+            Id = bookId,
+            Title = "Mood Book",
+            Author = "Mood Author",
+            ISBN = "9990001112",
+            ReadingSessions = new List<ReadingSession>
+            {
+                new()
+                {
+                    BookId = bookId,
+                    Minutes = 25,
+                    Moods = new List<ReadingSessionMood>
+                    {
+                        new() { Mood = SessionMood.Crying },
+                        new() { Mood = SessionMood.MindBlown }
+                    }
+                }
+            }
+        });
+        await exportContext.SaveChangesAsync();
+
+        var exportService = new ImportExportService(
+            new TestDbContextFactory(exportDbName), CreateFileSystem(), CreateMockSettingsProvider());
+        var json = await exportService.ExportToJsonAsync();
+
+        var importDbName = Guid.NewGuid().ToString();
+        using var importContext = TestDbContext.Create(importDbName);
+        var importService = new ImportExportService(
+            new TestDbContextFactory(importDbName), CreateFileSystem(), CreateMockSettingsProvider());
+
+        // Act
+        var importedCount = await importService.ImportFromJsonAsync(json);
+
+        // Assert — the moods survived export -> import.
+        importedCount.Should().Be(1);
+        using var verifyContext = TestDbContext.Create(importDbName);
+        var moods = verifyContext.ReadingSessionMoods.Select(m => m.Mood).ToList();
+        moods.Should().BeEquivalentTo(new[] { SessionMood.Crying, SessionMood.MindBlown });
+    }
+
+    [Fact]
+    public async Task ImportFromJsonAsync_WithSeededGenre_DoesNotCollideOnGenrePrimaryKey()
+    {
+        // BUG-03: exported books carry their BookGenres + the full Genre entity, whose
+        // primary key is a fixed seed Guid identical on every device. Importing such a
+        // book into any DB (which already holds the seeded genres) used to re-INSERT the
+        // seed Genre row → PK/UNIQUE violation that aborted the whole import. On a real
+        // SQLite engine this reproduces; the EF InMemory provider hides it.
+        using var source = new SqliteTestContext();
+        Guid seededGenreId;
+        string seededGenreName;
+        using (var ctx = source.CreateContext())
+        {
+            var genre = ctx.Genres.First();
+            seededGenreId = genre.Id;
+            seededGenreName = genre.Name;
+            ctx.Books.Add(new Book
+            {
+                Title = "Imported Book",
+                Author = "Author",
+                ISBN = "111",
+                BookGenres = new List<BookGenre> { new() { GenreId = genre.Id } }
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        var exportService = new ImportExportService(source.CreateFactory(), CreateFileSystem(), CreateMockSettingsProvider());
+        var json = await exportService.ExportToJsonAsync();
+
+        using var target = new SqliteTestContext(); // fresh DB with the same seeded genres
+        var importService = new ImportExportService(target.CreateFactory(), CreateFileSystem(), CreateMockSettingsProvider());
+
+        // Act — must not throw a PK/unique violation on the seeded genre.
+        var imported = await importService.ImportFromJsonAsync(json);
+
+        // Assert — book imported and linked to the EXISTING seeded genre (find-or-create),
+        // with no duplicate genre row.
+        imported.Should().Be(1);
+        using var verify = target.CreateContext();
+        var book = verify.Books.Include(b => b.BookGenres).Single(b => b.Title == "Imported Book");
+        book.BookGenres.Should().ContainSingle().Which.GenreId.Should().Be(seededGenreId);
+        verify.Genres.Count(g => g.Name == seededGenreName).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ImportFromJsonAsync_OnRealEngine_AssignsFreshIdsAndPreservesChildren()
+    {
+        // BUG-03: importing must reassign new primary keys to the book and its children so
+        // re-importing the same export (or merging into a DB that shares child PKs) cannot
+        // collide. Children (sessions) must still survive the id rewiring.
+        using var source = new SqliteTestContext();
+        Guid originalBookId = Guid.NewGuid();
+        using (var ctx = source.CreateContext())
+        {
+            ctx.Books.Add(new Book
+            {
+                Id = originalBookId,
+                Title = "Child Book",
+                Author = "Author",
+                ISBN = "222",
+                ReadingSessions = new List<ReadingSession>
+                {
+                    new() { BookId = originalBookId, Minutes = 30 }
+                }
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        var exportService = new ImportExportService(source.CreateFactory(), CreateFileSystem(), CreateMockSettingsProvider());
+        var json = await exportService.ExportToJsonAsync();
+
+        using var target = new SqliteTestContext();
+        var importService = new ImportExportService(target.CreateFactory(), CreateFileSystem(), CreateMockSettingsProvider());
+
+        var imported = await importService.ImportFromJsonAsync(json);
+
+        imported.Should().Be(1);
+        using var verify = target.CreateContext();
+        var book = verify.Books.Include(b => b.ReadingSessions).Single(b => b.Title == "Child Book");
+        book.Id.Should().NotBe(originalBookId, "the import must assign a fresh primary key");
+        book.ReadingSessions.Should().ContainSingle().Which.Minutes.Should().Be(30);
+        book.ReadingSessions.Single().BookId.Should().Be(book.Id);
     }
 
     [Fact]

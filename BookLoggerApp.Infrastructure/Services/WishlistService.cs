@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Enums;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -14,17 +15,26 @@ public class WishlistService : IWishlistService
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
     private readonly ILookupService _lookupService;
+    private readonly IFeatureGuard? _featureGuard;
 
     public WishlistService(
         IDbContextFactory<AppDbContext> contextFactory,
-        ILookupService lookupService)
+        ILookupService lookupService,
+        IFeatureGuard? featureGuard = null)
     {
         _contextFactory = contextFactory;
         _lookupService = lookupService;
+        _featureGuard = featureGuard;
     }
 
     public async Task<IReadOnlyList<Book>> GetWishlistBooksAsync(CancellationToken ct = default)
     {
+        // HIGH-1003: the Wishlist (Plus) is preserved but not surfaced for a user who is not
+        // entitled — e.g. wishlist books carried in a restored higher-tier backup. The rows stay
+        // in the DB and reappear automatically on re-upgrade (no deletion).
+        if (_featureGuard is not null && !_featureGuard.HasAccess(FeatureKey.Wishlist))
+            return Array.Empty<Book>();
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         return await context.Books
             .Include(b => b.WishlistInfo)
@@ -35,6 +45,10 @@ public class WishlistService : IWishlistService
 
     public async Task<Book> AddToWishlistAsync(Book book, WishlistInfo? info = null, CancellationToken ct = default)
     {
+        // CODE_REVIEW SEC-16/INK-08: the Wishlist (Plus) write path was gated only by the
+        // Bookshelf.razor LockedFeatureButton. Enforce in the service so every caller is covered.
+        _featureGuard?.RequireAccess(FeatureKey.Wishlist, "The wishlist requires Plus.");
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
         book.Status = ReadingStatus.Wishlist;
@@ -71,6 +85,9 @@ public class WishlistService : IWishlistService
 
     public async Task<Book?> AddToWishlistByIsbnAsync(string isbn, CancellationToken ct = default)
     {
+        // Fail fast before the network ISBN lookup if the user is not entitled (SEC-16/INK-08).
+        _featureGuard?.RequireAccess(FeatureKey.Wishlist, "The wishlist requires Plus.");
+
         var metadata = await _lookupService.LookupByISBNAsync(isbn, ct);
         if (metadata == null)
             return null;
@@ -94,6 +111,9 @@ public class WishlistService : IWishlistService
 
     public async Task UpdateWishlistInfoAsync(Guid bookId, WishlistPriority priority, string? recommendedBy, string? notes, CancellationToken ct = default)
     {
+        // Editing wishlist metadata is part of the Plus Wishlist feature (SEC-16/INK-08).
+        _featureGuard?.RequireAccess(FeatureKey.Wishlist, "The wishlist requires Plus.");
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var info = await context.WishlistInfos.FindAsync(new object[] { bookId }, ct);
 
@@ -118,7 +138,12 @@ public class WishlistService : IWishlistService
 
         book.Status = ReadingStatus.Planned;
         book.CurrentPage = 0;
-        book.DateAdded = DateTime.UtcNow;
+        // Preserve the original add date (stamped when the book was wishlisted);
+        // moving to the library is not a fresh "add". Only stamp it if unset.
+        if (book.DateAdded == default)
+        {
+            book.DateAdded = DateTime.UtcNow;
+        }
 
         // Remove wishlist metadata
         if (book.WishlistInfo != null)
@@ -145,12 +170,21 @@ public class WishlistService : IWishlistService
 
     public async Task<int> GetWishlistCountAsync(CancellationToken ct = default)
     {
+        // HIGH-1003: hide the count too, so a non-entitled user sees no trace of restored wishlist data.
+        if (_featureGuard is not null && !_featureGuard.HasAccess(FeatureKey.Wishlist))
+            return 0;
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         return await context.Books.CountAsync(b => b.Status == ReadingStatus.Wishlist, ct);
     }
 
     public async Task ClearWishlistInfoAsync(Guid bookId, CancellationToken ct = default)
     {
+        // CODE_REVIEW SEC-16/INK-08: clearing wishlist metadata is a Wishlist-feature write.
+        // (Deleting the whole entry via RemoveFromWishlistAsync / MoveToLibraryAsync stays open
+        // so downgraded users can still remove or migrate existing wishlist books.)
+        _featureGuard?.RequireAccess(FeatureKey.Wishlist, "The wishlist requires Plus.");
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var info = await context.WishlistInfos.FindAsync(new object[] { bookId }, ct);
         if (info != null)
@@ -162,6 +196,15 @@ public class WishlistService : IWishlistService
 
     public async Task<IReadOnlyList<Book>> SearchWishlistAsync(string query, CancellationToken ct = default)
     {
+        // HIGH-1003: searching the wishlist is part of the Plus Wishlist feature.
+        if (_featureGuard is not null && !_featureGuard.HasAccess(FeatureKey.Wishlist))
+            return Array.Empty<Book>();
+
+        // Empty/whitespace query (or a null from a cleared search box) returns the full list
+        // instead of NRE-ing on query.ToLowerInvariant() — same guard as Quote/AnnotationService.
+        if (string.IsNullOrWhiteSpace(query))
+            return await GetWishlistBooksAsync(ct);
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var lowerQuery = query.ToLowerInvariant();
 

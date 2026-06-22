@@ -7,7 +7,7 @@ namespace BookLoggerApp.Infrastructure.Repositories.Specific;
 /// </summary>
 public interface IUserPlantRepository : IRepository<UserPlant>
 {
-    Task<UserPlant?> GetActivePlantAsync();
-    Task<IEnumerable<UserPlant>> GetUserPlantsAsync();
-    Task<UserPlant?> GetPlantWithSpeciesAsync(Guid id);
+    Task<UserPlant?> GetActivePlantAsync(CancellationToken ct = default);
+    Task<IEnumerable<UserPlant>> GetUserPlantsAsync(CancellationToken ct = default);
+    Task<UserPlant?> GetPlantWithSpeciesAsync(Guid id, CancellationToken ct = default);
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Helpers;
 using BookLoggerApp.Core.Models;
@@ -14,6 +15,15 @@ namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
 /// Service implementation for managing user plants with caching support.
+///
+/// <para><b>Concurrency model (CODE_REVIEW BUG-10 / INK-07):</b> only
+/// <c>AppSettings</c> and <c>UserEntitlement</c> carry a working, app-stamped RowVersion
+/// concurrency token (see <c>AppDbContext.StampRowVersions</c>). <c>UserPlant</c> is
+/// deliberately <i>last-writer-wins</i> (its RowVersion is configured as a non-token), so
+/// the <see cref="DbUpdateConcurrencyException"/> handlers below do NOT detect optimistic
+/// write conflicts — they translate EF's missing-row signal (the plant row was deleted
+/// concurrently, which still surfaces as <see cref="DbUpdateConcurrencyException"/> even
+/// without a token) into a friendly <see cref="ConcurrencyException"/>.</para>
 /// </summary>
 public class PlantService : IPlantService
 {
@@ -23,6 +33,8 @@ public class PlantService : IPlantService
     private readonly IMemoryCache _cache;
     private readonly ILogger<PlantService> _logger;
     private readonly IAnalyticsService _analytics;
+    private readonly IFeatureGuard? _featureGuard;
+    private readonly IValidationService? _validation;
     private const string SpeciesCacheKey = "AllPlantSpecies";
 
     public PlantService(
@@ -31,7 +43,9 @@ public class PlantService : IPlantService
         IDecorationService decorationService,
         IMemoryCache cache,
         ILogger<PlantService> logger,
-        IAnalyticsService? analytics = null)
+        IAnalyticsService? analytics = null,
+        IFeatureGuard? featureGuard = null,
+        IValidationService? validation = null)
     {
         _unitOfWork = unitOfWork;
         _settingsProvider = settingsProvider;
@@ -39,21 +53,23 @@ public class PlantService : IPlantService
         _cache = cache;
         _logger = logger;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
+        _featureGuard = featureGuard;
+        _validation = validation;
     }
 
     public async Task<IReadOnlyList<UserPlant>> GetAllAsync(CancellationToken ct = default)
     {
-        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
-        await RefreshPlantStatusesAsync(plants, ct);
+        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
+        await ApplyDisplayStatusesAsync(plants, ct);
         return plants.ToList();
     }
 
     public async Task<UserPlant?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(id);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(id, ct);
         if (plant != null)
         {
-            await RefreshPlantStatusAsync(plant, ct);
+            await ApplyDisplayStatusAsync(plant, ct);
         }
 
         return plant;
@@ -67,16 +83,25 @@ public class PlantService : IPlantService
         if (plant.LastWatered == default)
             plant.LastWatered = DateTime.UtcNow;
 
-        var result = await _unitOfWork.UserPlants.AddAsync(plant);
+        // CODE_REVIEW BUG-05: validate after the timestamp defaults are filled (the validator
+        // requires PlantedAt/LastWatered) so blank names or out-of-range levels are rejected.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(plant, ct);
+
+        var result = await _unitOfWork.UserPlants.AddAsync(plant, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         return result;
     }
 
     public async Task UpdateAsync(UserPlant plant, CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: validate the edited plant before persisting, like the create path.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(plant, ct);
+
         try
         {
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (DbUpdateConcurrencyException ex)
@@ -88,7 +113,7 @@ public class PlantService : IPlantService
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetByIdAsync(id);
+        var plant = await _unitOfWork.UserPlants.GetByIdAsync(id, ct);
         if (plant != null)
         {
             var plantShelves = await _unitOfWork.Context.PlantShelves
@@ -100,17 +125,17 @@ public class PlantService : IPlantService
                 _unitOfWork.Context.PlantShelves.RemoveRange(plantShelves);
             }
 
-            await _unitOfWork.UserPlants.DeleteAsync(plant);
+            await _unitOfWork.UserPlants.DeleteAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
     }
 
     public async Task<UserPlant?> GetActivePlantAsync(CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetActivePlantAsync();
+        var plant = await _unitOfWork.UserPlants.GetActivePlantAsync(ct);
         if (plant != null)
         {
-            await RefreshPlantStatusAsync(plant, ct);
+            await ApplyDisplayStatusAsync(plant, ct);
         }
 
         return plant;
@@ -125,12 +150,12 @@ public class PlantService : IPlantService
 
         // Get all plants and update their active status
         // Note: Using Load-Update-Save pattern instead of ExecuteUpdateAsync for compatibility with InMemory provider in tests
-        var allPlants = await _unitOfWork.UserPlants.GetAllAsync();
+        var allPlants = await _unitOfWork.UserPlants.GetAllAsync(ct);
 
         foreach (var plant in allPlants)
         {
             plant.IsActive = plant.Id == plantId;
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
         }
 
         await _unitOfWork.SaveChangesAsync(ct);
@@ -153,12 +178,12 @@ public class PlantService : IPlantService
 
     public async Task<PlantSpecies?> GetSpeciesByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _unitOfWork.PlantSpecies.GetByIdAsync(id);
+        return await _unitOfWork.PlantSpecies.GetByIdAsync(id, ct);
     }
 
     public async Task WaterPlantAsync(Guid plantId, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
 
@@ -176,7 +201,7 @@ public class PlantService : IPlantService
 
         try
         {
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (DbUpdateConcurrencyException ex)
@@ -186,55 +211,7 @@ public class PlantService : IPlantService
         }
     }
 
-    public async Task AddExperienceAsync(Guid plantId, int xp, CancellationToken ct = default)
-    {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
-        if (plant == null)
-            throw new EntityNotFoundException(typeof(UserPlant), plantId);
-
-        await RefreshPlantStatusAsync(plant, ct);
-
-        // Dead plants don't earn experience (consistent with RecordReadingDayAsync)
-        if (plant.Status == PlantStatus.Dead)
-            return;
-
-        plant.Experience += xp;
-
-        // Use PlantGrowthCalculator for level calculation
-        int newLevel = PlantGrowthCalculator.CalculateLevelFromXp(
-            plant.Experience,
-            plant.Species.GrowthRate,
-            plant.Species.MaxLevel
-        );
-
-        // Compute coin payout but defer persistence until the plant save succeeds,
-        // otherwise a failed plant save would leave the user with the coins but no level-up.
-        int coinsAwarded = 0;
-        if (newLevel > plant.CurrentLevel)
-        {
-            int levelsGained = newLevel - plant.CurrentLevel;
-            plant.CurrentLevel = newLevel;
-            coinsAwarded = levelsGained * 100;
-        }
-
-        try
-        {
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
-            await _unitOfWork.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            _logger.LogWarning(ex, "Concurrency conflict adding experience to plant {PlantId}", plantId);
-            throw new ConcurrencyException($"Plant with ID {plantId} was modified by another user. Please reload and try again.", ex);
-        }
-
-        if (coinsAwarded > 0)
-        {
-            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
-            _logger.LogInformation("Plant {PlantId} leveled up to {Level}, awarded {Coins} coins",
-                plantId, newLevel, coinsAwarded);
-        }
-    }
+    // Z.692: AddExperienceAsync (XP-based plant leveling) removed — dead path, see IPlantService note.
 
     /// <summary>
     /// Records a reading day for the plant if:
@@ -249,7 +226,7 @@ public class PlantService : IPlantService
         if (sessionMinutes < 15)
             return;
 
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
         if (plant == null)
             return;
 
@@ -291,7 +268,7 @@ public class PlantService : IPlantService
 
         try
         {
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (DbUpdateConcurrencyException ex)
@@ -308,56 +285,12 @@ public class PlantService : IPlantService
         }
     }
 
-    public async Task<bool> CanLevelUpAsync(Guid plantId, CancellationToken ct = default)
-    {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
-        if (plant == null)
-            return false;
-
-        await RefreshPlantStatusAsync(plant, ct);
-
-        if (plant.Status == PlantStatus.Dead)
-            return false;
-
-        return PlantGrowthCalculator.CanLevelUp(
-            plant.CurrentLevel,
-            plant.Experience,
-            plant.Species.GrowthRate,
-            plant.Species.MaxLevel
-        );
-    }
-
-    public async Task LevelUpAsync(Guid plantId, CancellationToken ct = default)
-    {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
-        if (plant == null)
-            throw new EntityNotFoundException(typeof(UserPlant), plantId);
-
-        await RefreshPlantStatusAsync(plant, ct);
-
-        if (plant.Status == PlantStatus.Dead)
-            throw new InvalidOperationException("Cannot level up a dead plant");
-
-        if (!await CanLevelUpAsync(plantId, ct))
-            throw new InvalidOperationException("Plant cannot level up yet");
-
-        plant.CurrentLevel++;
-
-        try
-        {
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
-            await _unitOfWork.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            _logger.LogWarning(ex, "Concurrency conflict leveling up plant {PlantId}", plantId);
-            throw new ConcurrencyException($"Plant with ID {plantId} was modified by another user. Please reload and try again.", ex);
-        }
-    }
+    // Z.692: CanLevelUpAsync / LevelUpAsync (XP-based plant leveling) removed — dead path, see
+    // IPlantService note. Coin-purchased leveling lives in PurchaseLevelAsync below.
 
     public async Task PurchaseLevelAsync(Guid plantId, CancellationToken ct = default)
     {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId);
+        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
         if (plant == null)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
 
@@ -382,7 +315,7 @@ public class PlantService : IPlantService
         try
         {
             plant.CurrentLevel++;
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (Exception ex)
@@ -402,15 +335,43 @@ public class PlantService : IPlantService
 
     public async Task<UserPlant> PurchasePlantAsync(Guid speciesId, string name, CancellationToken ct = default)
     {
-        var species = await _unitOfWork.PlantSpecies.GetByIdAsync(speciesId);
+        var species = await _unitOfWork.PlantSpecies.GetByIdAsync(speciesId, ct);
         if (species == null)
             throw new EntityNotFoundException(typeof(PlantSpecies), speciesId);
 
         if (!species.IsAvailable)
             throw new InvalidOperationException("Plant species is not available for purchase");
 
+        // Entitlement gate (CODE_REVIEW SEC-08): the PlantShop.razor LockedFeatureButton is a
+        // UI hint only — enforce the plant's tier here so no caller (stale UI after a lapse,
+        // deep link, programmatic path) can buy a Plus/Premium plant without the subscription.
+        if (_featureGuard is not null)
+        {
+            FeatureKey? tierFeature = ShopTierFeatures.For(species);
+            if (tierFeature is not null)
+            {
+                _featureGuard.RequireAccess(tierFeature.Value, "This plant requires a higher subscription tier.");
+            }
+        }
+
         // Calculate dynamic cost
         int cost = await GetPlantCostAsync(speciesId, ct);
+
+        var plant = new UserPlant
+        {
+            SpeciesId = speciesId,
+            Name = name,
+            CurrentLevel = 1,
+            Experience = 0,
+            PlantedAt = DateTime.UtcNow,
+            LastWatered = DateTime.UtcNow,
+            IsActive = false
+        };
+
+        // CODE_REVIEW BUG-05: validate the new plant (e.g. name bounds) BEFORE charging coins, so an
+        // invalid name can't deduct coins and then fail the save.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(plant, ct);
 
         // Spend coins (will throw if not enough)
         await _settingsProvider.SpendCoinsAsync(cost, ct);
@@ -422,18 +383,7 @@ public class PlantService : IPlantService
         UserPlant result;
         try
         {
-            var plant = new UserPlant
-            {
-                SpeciesId = speciesId,
-                Name = name,
-                CurrentLevel = 1,
-                Experience = 0,
-                PlantedAt = DateTime.UtcNow,
-                LastWatered = DateTime.UtcNow,
-                IsActive = false
-            };
-
-            result = await _unitOfWork.UserPlants.AddAsync(plant);
+            result = await _unitOfWork.UserPlants.AddAsync(plant, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         catch (Exception ex)
@@ -494,7 +444,7 @@ public class PlantService : IPlantService
     /// </summary>
     public async Task UpdatePlantStatusesAsync(CancellationToken ct = default)
     {
-        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
         await RefreshPlantStatusesAsync(plants, ct);
     }
 
@@ -505,8 +455,8 @@ public class PlantService : IPlantService
     /// </summary>
     public async Task<IReadOnlyList<UserPlant>> GetPlantsNeedingWaterAsync(CancellationToken ct = default)
     {
-        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
-        await RefreshPlantStatusesAsync(plants, ct);
+        var plants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
+        await ApplyDisplayStatusesAsync(plants, ct);
 
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
 
@@ -533,8 +483,8 @@ public class PlantService : IPlantService
     /// </summary>
     public async Task<decimal> CalculateTotalXpBoostAsync(CancellationToken ct = default)
     {
-        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
-        await RefreshPlantStatusesAsync(allPlants, ct);
+        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
+        await ApplyDisplayStatusesAsync(allPlants, ct);
         bool hasStoryHeart = await _decorationService.UserOwnsAbilityAsync(SpecialAbilityKeys.StoryHeart, ct);
         return SpecialAbilityResolver.CalculateAggregatedPlantBoost(allPlants, hasStoryHeart);
     }
@@ -546,7 +496,7 @@ public class PlantService : IPlantService
     /// </summary>
     public async Task<int> GetPlantCostAsync(Guid speciesId, CancellationToken ct = default)
     {
-        var species = await _unitOfWork.PlantSpecies.GetByIdAsync(speciesId);
+        var species = await _unitOfWork.PlantSpecies.GetByIdAsync(speciesId, ct);
         if (species == null)
             throw new EntityNotFoundException(typeof(PlantSpecies), speciesId);
 
@@ -557,6 +507,58 @@ public class PlantService : IPlantService
         int dynamicCost = species.BaseCost + (plantsPurchased * 200);
 
         return dynamicCost;
+    }
+
+    /// <summary>
+    /// Z.206 — pure, read-only status projection for the GETTER paths. Recomputes
+    /// <see cref="UserPlant.Status"/> in memory so callers display the current thirst state,
+    /// but does NOT persist and does NOT reset a Phoenix's water timer. The stateful side of a
+    /// status refresh (the Phoenix LastWatered reset + SaveChanges) lives only in the maintenance
+    /// pass (<see cref="UpdatePlantStatusesAsync"/>) and the real mutators, so a plain read never
+    /// writes to the database.
+    /// </summary>
+    private async Task ApplyDisplayStatusesAsync(IEnumerable<UserPlant> plants, CancellationToken ct)
+    {
+        var plantList = plants as IList<UserPlant> ?? plants.ToList();
+        bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(plantList, SpecialAbilityKeys.EternalPhoenix);
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
+        foreach (var plant in plantList)
+        {
+            ApplyDisplayStatus(plant, userOwnsPhoenix, growthMultiplier);
+        }
+    }
+
+    private async Task ApplyDisplayStatusAsync(UserPlant plant, CancellationToken ct)
+    {
+        // Phoenix ownership gates a protection rule that applies across all plants, so we load
+        // the full set to determine it even when only one plant is being projected.
+        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
+        bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(allPlants, SpecialAbilityKeys.EternalPhoenix);
+        double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
+
+        ApplyDisplayStatus(plant, userOwnsPhoenix, growthMultiplier);
+    }
+
+    private static void ApplyDisplayStatus(UserPlant plant, bool userOwnsPhoenix, double growthMultiplier)
+    {
+        if (plant.Species == null)
+            return;
+
+        var currentStatus = PlantGrowthCalculator.CalculatePlantStatus(
+            plant.LastWatered,
+            plant.Species.WaterIntervalDays,
+            growthMultiplier);
+
+        // Phoenix protection (display only): never SHOW a plant as Dead while a Phoenix is owned.
+        // The persist path (TryApplyCurrentPlantStatus) additionally resets the Phoenix's
+        // LastWatered; a read must not, so the water timer is left untouched here (Z.206).
+        if (currentStatus == PlantStatus.Dead && userOwnsPhoenix)
+        {
+            currentStatus = PlantStatus.Wilting;
+        }
+
+        plant.Status = currentStatus;
     }
 
     private async Task RefreshPlantStatusesAsync(IEnumerable<UserPlant> plants, CancellationToken ct)
@@ -573,7 +575,7 @@ public class PlantService : IPlantService
                 continue;
 
             hasChanges = true;
-            await _unitOfWork.UserPlants.UpdateAsync(plant);
+            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
         }
 
         if (hasChanges)
@@ -586,14 +588,14 @@ public class PlantService : IPlantService
     {
         // Phoenix ownership gates a protection rule that applies across all plants, so we
         // load the full set to determine it even when only one plant is being refreshed.
-        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync();
+        var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
         bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(allPlants, SpecialAbilityKeys.EternalPhoenix);
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
 
         if (!TryApplyCurrentPlantStatus(plant, userOwnsPhoenix, growthMultiplier))
             return;
 
-        await _unitOfWork.UserPlants.UpdateAsync(plant);
+        await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 

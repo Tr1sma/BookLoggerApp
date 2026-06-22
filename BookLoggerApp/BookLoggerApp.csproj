@@ -31,8 +31,13 @@
         <ApplicationId>com.bookheart.app</ApplicationId>
 
         <!-- Versions (werden beim CI-Release-Build durch den Tag überschrieben) -->
-        <ApplicationDisplayVersion>0.11.7</ApplicationDisplayVersion>
-        <ApplicationVersion>1107</ApplicationVersion>
+        <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
+        <ApplicationVersion>10000</ApplicationVersion>
+        <!-- PackageVersion/Version explizit pinnen, damit er über ALLE TargetFrameworks
+             (net10.0-android UND net10.0-windows) identisch ist. Sonst leitet nur das
+             Android-SDK Version aus ApplicationDisplayVersion ab, Windows fällt auf den
+             1.0.0-Default zurück → NU1105 (PackageVersion 0.12.0 vs 1.0.0) → Restore bricht. -->
+        <Version>$(ApplicationDisplayVersion)</Version>
 
         <!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
         <WindowsPackageType>None</WindowsPackageType>
@@ -87,16 +92,18 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7" Condition="'$(Configuration)' == 'Debug'">
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.7" />
-        <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.51" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.9" />
+        <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.71" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.71" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.9" />
         <PackageReference Include="Plugin.InAppBilling" Version="10.0.0" />
-        <PackageReference Include="Plugin.LocalNotification" Version="14.1.0" />
-        <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.7" />
+        <!-- Override transitive 2.1.11 (CVE-2025-6965) with patched 3.0.3; pulls lib.e_sqlite3(.android) 3.0.3 -->
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+        <PackageReference Include="Plugin.LocalNotification" Version="14.1.1" />
+        <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.9" />
         <PackageReference Include="Xamarin.Google.Android.Play.App.Update" Version="2.1.0.18" Condition="$(TargetFramework.Contains('-android'))" />
-        <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.7.4" />
+        <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.10.1" />
 
 
     </ItemGroup>
@@ -106,8 +113,8 @@
          de-obfuscated stack traces in R8/ProGuard release builds are a known MAUI
          limitation (see SECURITY.md). Non-fatals and symbolicated debug stacks work. -->
     <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
-        <PackageReference Include="Xamarin.Firebase.Analytics" Version="123.0.0.3" />
-        <PackageReference Include="Xamarin.Firebase.Crashlytics" Version="120.0.4.1" />
+        <PackageReference Include="Xamarin.Firebase.Analytics" Version="123.2.0" />
+        <PackageReference Include="Xamarin.Firebase.Crashlytics" Version="120.0.6" />
         <PackageReference Include="Xamarin.GooglePlayServices.Base" Version="118.10.0.1" />
     </ItemGroup>
 

@@ -22,6 +22,8 @@ public class ProgressService : IProgressService
     private readonly IDecorationService _decorationService;
     private readonly IAppSettingsProvider _settingsProvider;
     private readonly IAnalyticsService _analytics;
+    private readonly IValidationService? _validation;
+    private readonly TimeZoneInfo _timeZone;
 
     public ProgressService(
         IUnitOfWork unitOfWork,
@@ -31,7 +33,9 @@ public class ProgressService : IProgressService
         IGoalService goalService,
         IDecorationService decorationService,
         IAppSettingsProvider settingsProvider,
-        IAnalyticsService? analytics = null)
+        IAnalyticsService? analytics = null,
+        IValidationService? validation = null,
+        TimeZoneInfo? timeZone = null)
     {
         _unitOfWork = unitOfWork;
         _progressionService = progressionService;
@@ -41,10 +45,19 @@ public class ProgressService : IProgressService
         _decorationService = decorationService;
         _settingsProvider = settingsProvider;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
+        _validation = validation;
+        // CODE_REVIEW LOG-02: streak "today"/session days use the local calendar; injectable
+        // (default TimeZoneInfo.Local) for deterministic tests.
+        _timeZone = timeZone ?? TimeZoneInfo.Local;
     }
 
     public async Task<SessionSaveResult> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
     {
+        // CODE_REVIEW BUG-05: validate the externally supplied session (book id, started/ended
+        // times, minute/page bounds) before awarding XP or persisting anything.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(session, ct);
+
         // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 
@@ -69,7 +82,7 @@ public class ProgressService : IProgressService
 
         session.XpEarned = progressionResult.XpEarned;
 
-        var result = await _unitOfWork.ReadingSessions.AddAsync(session);
+        var result = await _unitOfWork.ReadingSessions.AddAsync(session, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         if (streak.GuardianToUpdate.HasValue)
@@ -123,7 +136,7 @@ public class ProgressService : IProgressService
             StartedAt = DateTime.UtcNow
         };
 
-        var result = await _unitOfWork.ReadingSessions.AddAsync(session);
+        var result = await _unitOfWork.ReadingSessions.AddAsync(session, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _analytics.LogEvent(AnalyticsEventNames.SessionStarted, AnalyticsParamBuilder.Create()
@@ -133,13 +146,13 @@ public class ProgressService : IProgressService
         return result;
     }
 
-    public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, int? durationMinutes = null, CancellationToken ct = default)
+    public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, int? durationMinutes = null, IReadOnlyList<SessionMood>? moods = null, CancellationToken ct = default)
     {
         // Validate input
         if (pagesRead < 0)
             throw new ArgumentOutOfRangeException(nameof(pagesRead), "Pages read cannot be negative");
 
-        var session = await _unitOfWork.ReadingSessions.GetByIdAsync(sessionId);
+        var session = await _unitOfWork.ReadingSessions.GetByIdAsync(sessionId, ct);
         if (session == null)
             throw new EntityNotFoundException(typeof(ReadingSession), sessionId);
 
@@ -164,6 +177,21 @@ public class ProgressService : IProgressService
             session.Minutes = Math.Max(0, (int)(session.EndedAt.Value - session.StartedAt).TotalMinutes);
         }
 
+        // Z.375 — Session completion fans out several persistent writes (session XP via
+        // ProgressionService, plant reading-day via PlantService, the session row + moods via
+        // this UnitOfWork, the guardian cooldown, Story-Heart coin/bonus-XP via the settings
+        // provider, and goal recompute). These run across DISTINCT, transient DbContexts — each
+        // service owns its own IUnitOfWork/AppDbContext and therefore its own SQLite connection —
+        // so a single EF transaction cannot span the chain (EF transactions are per-connection).
+        // The sequence is deliberately non-atomic; it is ordered so that the side-effects most
+        // expensive to repeat are deferred until AFTER the main session save succeeds: the
+        // guardian cooldown (PersistGuardianCooldownAsync) and the Story-Heart bonuses are only
+        // applied once the session row is committed, so a failed save never burns a cooldown or
+        // double-awards a bonus. Each step is individually idempotent-safe on retry. In this
+        // single-user offline app a mid-chain crash leaves at worst a slightly stale streak/goal
+        // total that the next session recomputes — an acceptable trade vs. unifying every service
+        // onto one shared connection.
+
         // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 
@@ -187,6 +215,13 @@ public class ProgressService : IProgressService
         // Store the XP earned in the session
         session.XpEarned = progressionResult.XpEarned;
 
+        // Persist mood/trigger tags (1-3); the session was just started, so the
+        // navigation is empty and we simply add the new child rows.
+        foreach (var mood in SessionMoodHelper.Clamp(moods))
+        {
+            session.Moods.Add(new ReadingSessionMood { ReadingSessionId = session.Id, Mood = mood });
+        }
+
         // Record reading day for active plant (for plant leveling)
         // Plants level up based on reading days (15+ min sessions), not XP
         if (activePlant != null)
@@ -199,7 +234,7 @@ public class ProgressService : IProgressService
             );
         }
 
-        await _unitOfWork.ReadingSessions.UpdateAsync(session);
+        await _unitOfWork.ReadingSessions.UpdateAsync(session, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         if (streak.GuardianToUpdate.HasValue)
@@ -236,16 +271,20 @@ public class ProgressService : IProgressService
 
     public async Task UpdateSessionAsync(ReadingSession session, CancellationToken ct = default)
     {
-        await _unitOfWork.ReadingSessions.UpdateAsync(session);
+        // CODE_REVIEW BUG-05: validate the edited session before persisting, like AddSessionAsync.
+        if (_validation is not null)
+            await _validation.ValidateAndThrowAsync(session, ct);
+
+        await _unitOfWork.ReadingSessions.UpdateAsync(session, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task DeleteSessionAsync(Guid sessionId, CancellationToken ct = default)
     {
-        var session = await _unitOfWork.ReadingSessions.GetByIdAsync(sessionId);
+        var session = await _unitOfWork.ReadingSessions.GetByIdAsync(sessionId, ct);
         if (session != null)
         {
-            await _unitOfWork.ReadingSessions.DeleteAsync(session);
+            await _unitOfWork.ReadingSessions.DeleteAsync(session, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
     }
@@ -257,30 +296,30 @@ public class ProgressService : IProgressService
 
     public async Task<IReadOnlyList<ReadingSession>> GetSessionsByBookAsync(Guid bookId, CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsByBookAsync(bookId);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsByBookAsync(bookId, ct);
         return sessions.ToList();
     }
 
     public async Task<IReadOnlyList<ReadingSession>> GetRecentSessionsAsync(int count = 10, CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetRecentSessionsAsync(count);
+        var sessions = await _unitOfWork.ReadingSessions.GetRecentSessionsAsync(count, ct);
         return sessions.ToList();
     }
 
     public async Task<IReadOnlyList<ReadingSession>> GetSessionsInRangeAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end, ct);
         return sessions.ToList();
     }
 
     public async Task<int> GetTotalMinutesAsync(Guid bookId, CancellationToken ct = default)
     {
-        return await _unitOfWork.ReadingSessions.GetTotalMinutesReadAsync(bookId);
+        return await _unitOfWork.ReadingSessions.GetTotalMinutesReadAsync(bookId, ct);
     }
 
     public async Task<int> GetTotalPagesAsync(Guid bookId, CancellationToken ct = default)
     {
-        return await _unitOfWork.ReadingSessions.GetTotalPagesReadAsync(bookId);
+        return await _unitOfWork.ReadingSessions.GetTotalPagesReadAsync(bookId, ct);
     }
 
     public async Task<int> GetTotalMinutesAllBooksAsync(CancellationToken ct = default)
@@ -290,7 +329,7 @@ public class ProgressService : IProgressService
 
     public async Task<Dictionary<DateTime, int>> GetMinutesByDateAsync(DateTime start, DateTime end, CancellationToken ct = default)
     {
-        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end);
+        var sessions = await _unitOfWork.ReadingSessions.GetSessionsInRangeAsync(start, end, ct);
 
         return sessions
             .GroupBy(s => s.StartedAt.Date)
@@ -300,17 +339,24 @@ public class ProgressService : IProgressService
             );
     }
 
-    public async Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
+    public Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
+        => GetCurrentStreakAsync(DateTime.UtcNow, ct);
+
+    // Internal clock seam so the local-day streak logic stays deterministically testable
+    // with a fixed "now" (the public method passes DateTime.UtcNow).
+    internal async Task<int> GetCurrentStreakAsync(DateTime utcNow, CancellationToken ct)
     {
-        var today = DateTime.UtcNow.Date;
+        // LOG-02: anchor "today" and each session's day to the user's local calendar so the
+        // displayed streak matches the goals feature's local-midnight convention.
+        var localToday = LocalTimeHelper.LocalDate(utcNow, _timeZone);
 
         // Only load sessions from the last year instead of ALL sessions.
         // A streak longer than 365 days is unrealistic, and this avoids
         // loading thousands of records for long-time users.
         var recentSessions = await _unitOfWork.ReadingSessions
-            .GetSessionsInRangeAsync(today.AddDays(-365), DateTime.UtcNow);
+            .GetSessionsInRangeAsync(utcNow.AddDays(-365), utcNow, ct);
 
-        return ReadingStreakHelper.CalculateCurrentStreak(recentSessions, today);
+        return ReadingStreakHelper.CalculateCurrentStreak(recentSessions, localToday, _timeZone);
     }
 
     private readonly record struct ResolvedStreak(int StreakDays, bool RescuedByGuardian, Guid? GuardianToUpdate);
@@ -324,15 +370,17 @@ public class ProgressService : IProgressService
             return new ResolvedStreak(0, false, null);
         }
 
-        var sessionDate = session.StartedAt.Date;
-        var rangeEnd = sessionDate.AddDays(1).AddTicks(-1);
+        // LOG-02: bucket the session and its neighbours by the user's LOCAL calendar day (like
+        // GetCurrentStreakAsync), so a session that crosses UTC midnight is attributed to the same
+        // day everywhere. The range query still filters by the raw UTC instant.
+        var sessionDate = LocalTimeHelper.LocalDate(session.StartedAt, _timeZone);
 
         var recentSessions = (await _unitOfWork.ReadingSessions
-            .GetSessionsInRangeAsync(sessionDate.AddDays(-365), rangeEnd)).ToList();
+            .GetSessionsInRangeAsync(session.StartedAt.AddDays(-365), session.StartedAt.AddDays(1), ct)).ToList();
 
         var alreadyAwardedToday = recentSessions.Any(existingSession =>
             existingSession.Id != session.Id
-            && existingSession.StartedAt.Date == sessionDate
+            && LocalTimeHelper.LocalDate(existingSession.StartedAt, _timeZone) == sessionDate
             && ReadingStreakHelper.CountsTowardStreak(existingSession));
 
         if (alreadyAwardedToday)
@@ -341,7 +389,7 @@ public class ProgressService : IProgressService
         }
 
         var priorSessions = recentSessions.Where(s => s.Id != session.Id).ToList();
-        var regularStreak = ReadingStreakHelper.CalculateInclusiveStreak(priorSessions, sessionDate);
+        var regularStreak = ReadingStreakHelper.CalculateInclusiveStreak(priorSessions, sessionDate, _timeZone);
 
         // Streak-Wächter: fires only when the regular streak would be 1 (yesterday missed),
         // there was a qualifying session day-before-yesterday (so a prior streak existed),
@@ -354,7 +402,7 @@ public class ProgressService : IProgressService
         var dayBeforeYesterday = sessionDate.AddDays(-2);
         bool priorStreakExists = priorSessions
             .Where(ReadingStreakHelper.CountsTowardStreak)
-            .Any(s => s.StartedAt.Date == dayBeforeYesterday);
+            .Any(s => LocalTimeHelper.LocalDate(s.StartedAt, _timeZone) == dayBeforeYesterday);
 
         if (!priorStreakExists)
         {
@@ -376,7 +424,7 @@ public class ProgressService : IProgressService
         // Fill the missing yesterday and recompute.
         var rescuedDates = priorSessions
             .Where(ReadingStreakHelper.CountsTowardStreak)
-            .Select(s => s.StartedAt.Date)
+            .Select(s => LocalTimeHelper.LocalDate(s.StartedAt, _timeZone))
             .ToList();
         rescuedDates.Add(sessionDate.AddDays(-1));
         var rescuedStreak = ReadingStreakHelper.CalculateInclusiveStreak(rescuedDates, sessionDate);
@@ -388,11 +436,11 @@ public class ProgressService : IProgressService
 
     private async Task PersistGuardianCooldownAsync(Guid guardianId, CancellationToken ct)
     {
-        var guardianEntity = await _unitOfWork.UserPlants.GetByIdAsync(guardianId);
+        var guardianEntity = await _unitOfWork.UserPlants.GetByIdAsync(guardianId, ct);
         if (guardianEntity is not null)
         {
             guardianEntity.LastStreakSaveAt = DateTime.UtcNow;
-            await _unitOfWork.UserPlants.UpdateAsync(guardianEntity);
+            await _unitOfWork.UserPlants.UpdateAsync(guardianEntity, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
     }
@@ -414,14 +462,17 @@ public class ProgressService : IProgressService
             coinBonus = SpecialAbilityResolver.StoryHeartSessionCoinBonus;
         }
 
-        var sessionDate = session.StartedAt.Date;
-        var dayRangeEnd = sessionDate.AddDays(1).AddTicks(-1);
-        var sessionsToday = await _unitOfWork.ReadingSessions
-            .GetSessionsInRangeAsync(sessionDate, dayRangeEnd);
+        // LOG-02: "first qualifying session of the day" uses the user's LOCAL calendar day, same as
+        // the streak logic. Load a generous UTC instant window (the local day can straddle two UTC
+        // days) and match by local day in memory.
+        var sessionLocalDate = LocalTimeHelper.LocalDate(session.StartedAt, _timeZone);
+        var nearbySessions = await _unitOfWork.ReadingSessions
+            .GetSessionsInRangeAsync(session.StartedAt.AddDays(-1), session.StartedAt.AddDays(1), ct);
 
         bool isFirstQualifyingSession = ReadingStreakHelper.CountsTowardStreak(session)
-            && !sessionsToday.Any(existing =>
+            && !nearbySessions.Any(existing =>
                 existing.Id != session.Id
+                && LocalTimeHelper.LocalDate(existing.StartedAt, _timeZone) == sessionLocalDate
                 && ReadingStreakHelper.CountsTowardStreak(existing));
 
         if (isFirstQualifyingSession)

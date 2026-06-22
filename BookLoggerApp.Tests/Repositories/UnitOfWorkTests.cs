@@ -129,4 +129,43 @@ public class UnitOfWorkTests : IDisposable
 
         act.Should().NotThrow();
     }
+
+    [Fact]
+    public async Task DisposeAsync_CalledTwice_DoesNotThrow()
+    {
+        var ctx = TestDbContext.Create();
+        var uow = new UnitOfWork(ctx);
+
+        await uow.DisposeAsync();
+        Func<Task> act = async () => await uow.DisposeAsync();
+
+        await act.Should().NotThrowAsync();
+        ctx.Dispose();
+    }
+
+    [Fact]
+    public async Task SaveChangesAsync_AfterDispose_ThrowsObjectDisposed()
+    {
+        var ctx = TestDbContext.Create();
+        var uow = new UnitOfWork(ctx);
+        uow.Dispose();
+
+        Func<Task> act = async () => await uow.SaveChangesAsync();
+
+        await act.Should().ThrowAsync<ObjectDisposedException>();
+        ctx.Dispose();
+    }
+
+    [Fact]
+    public async Task BeginTransactionAsync_AfterDisposeAsync_ThrowsObjectDisposed()
+    {
+        var ctx = TestDbContext.Create();
+        var uow = new UnitOfWork(ctx);
+        await uow.DisposeAsync();
+
+        Func<Task> act = async () => await uow.BeginTransactionAsync();
+
+        await act.Should().ThrowAsync<ObjectDisposedException>();
+        ctx.Dispose();
+    }
 }

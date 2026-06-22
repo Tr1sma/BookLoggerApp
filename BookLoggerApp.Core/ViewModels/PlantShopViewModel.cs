@@ -43,21 +43,21 @@ public partial class PlantShopViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadAsync()
     {
-        await ExecuteSafelyWithDbAsync(async () =>
+        await ExecuteSafelyWithDbAsync(async ct =>
         {
             // Load user stats
-            UserCoins = await _settingsProvider.GetUserCoinsAsync();
-            UserLevel = await _settingsProvider.GetUserLevelAsync();
+            UserCoins = await _settingsProvider.GetUserCoinsAsync(ct);
+            UserLevel = await _settingsProvider.GetUserLevelAsync(ct);
 
             // Load ALL species (including locked ones for display)
-            var species = await _plantService.GetAllSpeciesAsync();
+            var species = await _plantService.GetAllSpeciesAsync(ct);
             AvailableSpecies = new ObservableCollection<PlantSpecies>(species.Where(s => s.IsAvailable).OrderBy(s => s.UnlockLevel).ThenBy(s => s.BaseCost).ThenBy(s => s.Name));
 
             // Load dynamic prices for each species
             _dynamicPrices.Clear();
             foreach (var sp in AvailableSpecies)
             {
-                var price = await _plantService.GetPlantCostAsync(sp.Id);
+                var price = await _plantService.GetPlantCostAsync(sp.Id, ct);
                 _dynamicPrices[sp.Id] = price;
             }
         }, Tr("Error_FailedTo_LoadShop"));
@@ -119,6 +119,8 @@ public partial class PlantShopViewModel : ViewModelBase
     public void SelectSpecies(PlantSpecies species)
     {
         SelectedSpecies = species;
+        // Z.620: clear any stale error when picking a species, like DecorationShopViewModel.SelectDecoration.
+        ClearError();
     }
 
     [RelayCommand]

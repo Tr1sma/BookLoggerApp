@@ -1,4 +1,5 @@
 using BookLoggerApp.Core.Entitlements;
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Repositories;
@@ -35,6 +36,13 @@ public class AnnotationService : IAnnotationService
 
     public async Task<Annotation> AddAsync(Annotation annotation, CancellationToken ct = default)
     {
+        // Trim and reject blank notes before counting against the per-book cap, so whitespace
+        // can't burn a free-tier slot or persist an empty annotation.
+        annotation.Note = annotation.Note?.Trim() ?? string.Empty;
+        annotation.Title = string.IsNullOrWhiteSpace(annotation.Title) ? null : annotation.Title.Trim();
+        if (string.IsNullOrWhiteSpace(annotation.Note))
+            throw new ValidationException(new[] { "Note text cannot be empty." });
+
         if (_featureGuard is not null)
         {
             int currentCountForBook = (await _unitOfWork.Annotations.FindAsync(a => a.BookId == annotation.BookId)).Count();

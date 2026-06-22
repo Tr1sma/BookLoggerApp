@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application android:allowBackup="true" android:icon="@mipmap/bookheart_launcher" android:roundIcon="@mipmap/bookheart_launcher_round" android:supportsRtl="true">
-        <!-- Firebase collection defaults — opt-out model; runtime gate adjusts these based on AppSettings consent flags -->
-        <meta-data android:name="firebase_analytics_collection_enabled" android:value="true" />
-        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="true" />
+        <!-- Firebase collection starts OFF (fail-closed). The platform must NOT auto-collect
+             first_open/session_start/crash data before the consent gate resolves. The runtime
+             gate (AnalyticsConsentGate → MainActivity.InitializeFirebase) flips collection ON
+             via SetAnalyticsCollectionEnabled/SetCrashlyticsCollectionEnabled only after it has
+             confirmed the user's persisted consent=true. See code review SEC-01. -->
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
+        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
         <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
         <meta-data android:name="google_analytics_ssaid_collection_enabled" android:value="false" />
         <!-- Live reading-timer foreground service. The [Service] attribute generates the base

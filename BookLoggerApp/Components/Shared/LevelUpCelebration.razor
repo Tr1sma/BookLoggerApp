@@ -6,7 +6,8 @@
 @if (Result != null)
 {
     <div class="celebration-overlay" @onclick="HandleClose">
-        <div class="celebration-card" @onclick:stopPropagation="true">
+        <div class="celebration-card" @onclick:stopPropagation="true"
+             role="dialog" aria-modal="true" aria-labelledby="levelUpTitle">
             <!-- Confetti particles (more for level-up!) -->
             @for (int i = 0; i < 15; i++)
             {
@@ -15,7 +16,7 @@
 
             <!-- Header -->
             <div class="levelup-header">
-                <h1>🏆 @L["LevelUp_Header"]</h1>
+                <h1 id="levelUpTitle">🏆 @L["LevelUp_Header"]</h1>
             </div>
 
             <!-- Level Transition -->
@@ -33,7 +34,7 @@
 
             <!-- Coins Reward -->
             <div class="coins-reward">
-                <p style="color: #e0e0e0; margin-bottom: 0.5rem; font-size: 1.1rem;">
+                <p class="levelup-earned-label">
                     @L["BookCompletion_YouEarned"]
                 </p>
                 <div class="coins-amount">
@@ -43,7 +44,7 @@
 
             <!-- New Total -->
             <div style="text-align: center; margin: 1rem 0;">
-                <p style="color: #999; font-size: 0.9rem;">
+                <p class="levelup-total-coins">
                     @L["LevelUp_TotalCoins", Result.NewTotalCoins]
                 </p>
             </div>

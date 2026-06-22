@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http;
 using BookLoggerApp.Core.Services.Abstractions;
 using BookLoggerApp.Infrastructure.Services;
 using FluentAssertions;
@@ -18,6 +20,32 @@ public class ImageServiceTests : IDisposable
         // Create a test image file
         _testImagePath = Path.Combine(Path.GetTempPath(), "test_image.jpg");
         File.WriteAllBytes(_testImagePath, new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }); // Minimal JPEG header
+    }
+
+    [Fact]
+    public async Task DownloadImageFromUrlAsync_WhenCancelled_PropagatesCancellation()
+    {
+        // Z.213: a real caller cancellation must surface as OperationCanceledException, not be
+        // swallowed into a null "download failed".
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        using var httpClient = new HttpClient(new CancellationAwareHandler());
+        IFileSystem fileSystem = new FileSystemAdapter();
+        var service = new ImageService(fileSystem, null, httpClient);
+
+        Func<Task> act = async () =>
+            await service.DownloadImageFromUrlAsync("https://example.com/cover.jpg", cts.Token);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    private sealed class CancellationAwareHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        }
     }
 
     [Fact]

@@ -343,7 +343,7 @@
                     @foreach (var session in GetRecentSessions())
                     {
                         <div class="session-item" @key="@session.Id">
-                            <div class="session-date">@session.StartedAt.ToString("g")</div>
+                            <div class="session-date">@session.StartedAt.ToLocalTime().ToString("g")</div>
                             <div class="session-details">
                                 <span>⏱️ @L["BookDetail_SessionMinutes", session.Minutes]</span>
                                 @if (session.PagesRead.HasValue && session.PagesRead > 0)
@@ -360,6 +360,15 @@
                     <p class="sessions-note">@L["BookDetail_ShowingLatest", GetSessionsCount()]</p>
                 }
             </div>
+        }
+
+        <!-- Emotional Journey -->
+        @if (ViewModel.MoodTrackingEnabled && ViewModel.Sessions?.Any() == true)
+        {
+            <section class="advanced-stats-section emotional-journey-section">
+                <EmotionalJourneyChart Sessions="ViewModel.Sessions"
+                                       IsCompleted="ViewModel.Book.Status == ReadingStatus.Completed" />
+            </section>
         }
         <!-- Notes Section -->
         <div class="book-notes-section" style="margin-top: 2rem; padding: 1.5rem; background: var(--card-bg, #fff); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
@@ -475,12 +484,7 @@
     }
 
     private string FormatMinutes(int minutes)
-    {
-        if (minutes < 60) return L["Common_Time_Minutes", minutes];
-        var hours = minutes / 60;
-        var remainingMinutes = minutes % 60;
-        return L["Common_Time_HoursMinutes", hours, remainingMinutes];
-    }
+        => BookLoggerApp.Core.Helpers.TimeFormatHelper.FormatMinutes(L, minutes);
 
     private string GetStatusLabel() => ViewModel.Book?.Status switch
     {
@@ -613,26 +617,31 @@
         await ViewModel.GenerateAndShareBookCardCommand.ExecuteAsync(null);
     }
 
-    private async void OnBookShareCardReady(byte[] cardBytes)
+    // Z.238: synchronous void + `_ = InvokeAsync(...)` (like BookEdit.OnShareCardReady) so the
+    // event handler isn't `async void` — exceptions stay observed inside the dispatched task.
+    private void OnBookShareCardReady(byte[] cardBytes)
     {
-        try
+        _ = InvokeAsync(async () =>
         {
-            var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
-            var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-            await File.WriteAllBytesAsync(filePath, cardBytes);
-            await ShareService.ShareFileAsync(L["Reading_ShareFileName"], filePath, "image/png");
-
-            if (ViewModel.Book?.Status == ReadingStatus.Completed)
+            try
             {
-                await OnboardingService.TrackEventAsync(OnboardingEvent.BookShared, ViewModel.Book.Id);
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to share book card: {ex.Message}");
-        }
+                var fileName = $"bookheart_recommendation_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+                var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+                await File.WriteAllBytesAsync(filePath, cardBytes);
+                await ShareService.ShareFileAsync(L["Reading_ShareFileName"], filePath, "image/png");
 
-        await InvokeAsync(StateHasChanged);
+                if (ViewModel.Book?.Status == ReadingStatus.Completed)
+                {
+                    await OnboardingService.TrackEventAsync(OnboardingEvent.BookShared, ViewModel.Book.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to share book card: {ex.Message}");
+            }
+
+            StateHasChanged();
+        });
     }
 
     public override void Dispose()

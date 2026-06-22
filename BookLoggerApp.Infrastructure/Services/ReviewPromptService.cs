@@ -35,7 +35,18 @@ public class ReviewPromptService : IReviewPromptService
 
             settings.ReviewPromptMonthCount++;
             settings.LastReviewPromptDate = now;
-            await _settingsProvider.UpdateSettingsAsync(settings, ct);
+            try
+            {
+                await _settingsProvider.UpdateSettingsAsync(settings, ct);
+            }
+            catch
+            {
+                // Persist failed — the in-memory settings instance now carries a phantom
+                // increment/timestamp that was never written. Drop the provider cache so the
+                // next read reloads the real DB state instead of burning a monthly prompt slot.
+                _settingsProvider.InvalidateCache();
+                throw;
+            }
             return true;
         }
         finally

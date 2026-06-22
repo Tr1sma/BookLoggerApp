@@ -121,8 +121,11 @@ namespace BookLoggerApp
                     {
                         try
                         {
-                            analytics?.SetAnalyticsCollectionEnabled(gate?.AnalyticsAllowed ?? true);
-                            crash?.SetCrashlyticsCollectionEnabled(gate?.CrashAllowed ?? true);
+                            // Fail-closed fallback: if the gate could not be resolved, keep
+                            // collection OFF rather than ON (mirrors the gate's own fail-closed
+                            // default and the manifest defaults). See code review SEC-01.
+                            analytics?.SetAnalyticsCollectionEnabled(gate?.AnalyticsAllowed ?? false);
+                            crash?.SetCrashlyticsCollectionEnabled(gate?.CrashAllowed ?? false);
 
                             const string envKey = "environment";
 #if DEBUG
