@@ -47,6 +47,7 @@ Versionsschema:
 ### Sicherheit
 - Ein nach Tarif-Downgrade verstecktes Regal ist nicht mehr über einen Direkt-Link/seine ID erreichbar
 - WAL-Journalmodus wird vor Migrationen explizit erzwungen und protokolliert — senkt das DB-Korruptionsrisiko bei Stromausfall/Force-Close während einer Migration
+- Share-Cards (Premium) werden jetzt serverseitig im Service abgesichert, nicht nur über die Oberfläche — kein Umgehen des Premium-Gates mehr
 - Migrations-Debug-Log wächst nicht mehr unbegrenzt und protokolliert keine vollständigen Dateipfade mehr
 
 ## [V1.0.0]

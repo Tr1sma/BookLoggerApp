@@ -1,3 +1,5 @@
+using BookLoggerApp.Core.Entitlements;
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Resources;
 using BookLoggerApp.Infrastructure.Services;
@@ -19,6 +21,44 @@ public class ShareCardServiceTests
 
     private static bool IsPng(byte[] bytes) =>
         bytes.Length >= 4 && bytes.Take(4).SequenceEqual(PngMagic);
+
+    // Z.996: share cards are a Premium feature — enforced service-side via IFeatureGuard.
+    private static ShareCardService GuardedService(SubscriptionTier tier) =>
+        new(new TestStringLocalizer<AppResources>(), new FeatureGuard(new FakeEntitlementService(tier)));
+
+    [Fact]
+    public async Task GenerateStatsCardAsync_FreeTier_ThrowsEntitlementRequired()
+    {
+        var service = GuardedService(SubscriptionTier.Free);
+        var data = new StatsShareData();
+
+        Func<Task> act = () => service.GenerateStatsCardAsync(data);
+
+        await act.Should().ThrowAsync<EntitlementRequiredException>();
+    }
+
+    [Fact]
+    public async Task GenerateBookCardAsync_FreeTier_ThrowsEntitlementRequired()
+    {
+        var service = GuardedService(SubscriptionTier.Free);
+        var data = new BookShareData { Title = "Locked", Author = "Tester" };
+
+        Func<Task> act = () => service.GenerateBookCardAsync(data);
+
+        await act.Should().ThrowAsync<EntitlementRequiredException>();
+    }
+
+    [Fact]
+    public async Task GenerateBookCardAsync_PremiumTier_ReturnsPng()
+    {
+        var service = GuardedService(SubscriptionTier.Premium);
+        var data = new BookShareData { Title = "Allowed", Author = "Tester" };
+
+        var result = await service.GenerateBookCardAsync(data);
+
+        result.Should().NotBeNull();
+        IsPng(result).Should().BeTrue();
+    }
 
     [Fact]
     public async Task GenerateBookCardAsync_MinimalData_ReturnsPng()
