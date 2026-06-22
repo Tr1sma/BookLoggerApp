@@ -211,55 +211,7 @@ public class PlantService : IPlantService
         }
     }
 
-    public async Task AddExperienceAsync(Guid plantId, int xp, CancellationToken ct = default)
-    {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
-        if (plant == null)
-            throw new EntityNotFoundException(typeof(UserPlant), plantId);
-
-        await RefreshPlantStatusAsync(plant, ct);
-
-        // Dead plants don't earn experience (consistent with RecordReadingDayAsync)
-        if (plant.Status == PlantStatus.Dead)
-            return;
-
-        plant.Experience += xp;
-
-        // Use PlantGrowthCalculator for level calculation
-        int newLevel = PlantGrowthCalculator.CalculateLevelFromXp(
-            plant.Experience,
-            plant.Species.GrowthRate,
-            plant.Species.MaxLevel
-        );
-
-        // Compute coin payout but defer persistence until the plant save succeeds,
-        // otherwise a failed plant save would leave the user with the coins but no level-up.
-        int coinsAwarded = 0;
-        if (newLevel > plant.CurrentLevel)
-        {
-            int levelsGained = newLevel - plant.CurrentLevel;
-            plant.CurrentLevel = newLevel;
-            coinsAwarded = levelsGained * 100;
-        }
-
-        try
-        {
-            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            _logger.LogWarning(ex, "Concurrency conflict adding experience to plant {PlantId}", plantId);
-            throw new ConcurrencyException($"Plant with ID {plantId} was modified by another user. Please reload and try again.", ex);
-        }
-
-        if (coinsAwarded > 0)
-        {
-            await _settingsProvider.AddCoinsAsync(coinsAwarded, ct);
-            _logger.LogInformation("Plant {PlantId} leveled up to {Level}, awarded {Coins} coins",
-                plantId, newLevel, coinsAwarded);
-        }
-    }
+    // Z.692: AddExperienceAsync (XP-based plant leveling) removed — dead path, see IPlantService note.
 
     /// <summary>
     /// Records a reading day for the plant if:
@@ -333,52 +285,8 @@ public class PlantService : IPlantService
         }
     }
 
-    public async Task<bool> CanLevelUpAsync(Guid plantId, CancellationToken ct = default)
-    {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
-        if (plant == null)
-            return false;
-
-        await ApplyDisplayStatusAsync(plant, ct);
-
-        if (plant.Status == PlantStatus.Dead)
-            return false;
-
-        return PlantGrowthCalculator.CanLevelUp(
-            plant.CurrentLevel,
-            plant.Experience,
-            plant.Species.GrowthRate,
-            plant.Species.MaxLevel
-        );
-    }
-
-    public async Task LevelUpAsync(Guid plantId, CancellationToken ct = default)
-    {
-        var plant = await _unitOfWork.UserPlants.GetPlantWithSpeciesAsync(plantId, ct);
-        if (plant == null)
-            throw new EntityNotFoundException(typeof(UserPlant), plantId);
-
-        await RefreshPlantStatusAsync(plant, ct);
-
-        if (plant.Status == PlantStatus.Dead)
-            throw new InvalidOperationException("Cannot level up a dead plant");
-
-        if (!await CanLevelUpAsync(plantId, ct))
-            throw new InvalidOperationException("Plant cannot level up yet");
-
-        plant.CurrentLevel++;
-
-        try
-        {
-            await _unitOfWork.UserPlants.UpdateAsync(plant, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            _logger.LogWarning(ex, "Concurrency conflict leveling up plant {PlantId}", plantId);
-            throw new ConcurrencyException($"Plant with ID {plantId} was modified by another user. Please reload and try again.", ex);
-        }
-    }
+    // Z.692: CanLevelUpAsync / LevelUpAsync (XP-based plant leveling) removed — dead path, see
+    // IPlantService note. Coin-purchased leveling lives in PurchaseLevelAsync below.
 
     public async Task PurchaseLevelAsync(Guid plantId, CancellationToken ct = default)
     {

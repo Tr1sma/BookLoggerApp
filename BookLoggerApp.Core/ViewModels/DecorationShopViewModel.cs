@@ -63,13 +63,14 @@ public partial class DecorationShopViewModel : ViewModelBase
 
             if (UserLevel < item.UnlockLevel)
             {
-                SetError(Tr("Error_DecorationRequiresLevel", item.UnlockLevel));
+                // Z.627: include the current level and use the same coin key as PlantShopViewModel.
+                SetError(Tr("Error_DecorationRequiresLevel", item.UnlockLevel, UserLevel));
                 return;
             }
 
             if (UserCoins < item.Cost)
             {
-                SetError(Tr("Error_NotEnoughCoinsShort", item.Cost, UserCoins));
+                SetError(Tr("Error_NotEnoughCoins", item.Cost, UserCoins));
                 return;
             }
 

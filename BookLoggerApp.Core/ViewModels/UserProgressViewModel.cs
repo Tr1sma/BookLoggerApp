@@ -74,14 +74,6 @@ public partial class UserProgressViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Calculate XP required for a specific level (matches XpCalculator logic).
-    /// </summary>
-    private static int GetXpForLevel(int level)
-    {
-        return XpCalculator.GetXpForLevel(level);
-    }
-
-    /// <summary>
     /// Refresh the progress display (call after XP is earned).
     /// </summary>
     [RelayCommand]

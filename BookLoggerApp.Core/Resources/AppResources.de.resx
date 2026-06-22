@@ -2522,7 +2522,7 @@
     <value>Dekoration nicht gefunden.</value>
   </data>
   <data name="Error_DecorationRequiresLevel" xml:space="preserve">
-    <value>Diese Dekoration benoetigt Level {0}.</value>
+    <value>Diese Dekoration benoetigt Level {0}. Du bist aktuell auf Level {1}.</value>
   </data>
   <data name="Error_PurchaseDecorationFailed" xml:space="preserve">
     <value>Dekoration konnte nicht gekauft werden</value>

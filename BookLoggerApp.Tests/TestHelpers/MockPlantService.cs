@@ -63,21 +63,6 @@ public class MockPlantService : IPlantService
         return Task.CompletedTask;
     }
 
-    public Task AddExperienceAsync(Guid plantId, int xp, CancellationToken ct = default)
-    {
-        return Task.CompletedTask;
-    }
-
-    public Task<bool> CanLevelUpAsync(Guid plantId, CancellationToken ct = default)
-    {
-        return Task.FromResult(false);
-    }
-
-    public Task LevelUpAsync(Guid plantId, CancellationToken ct = default)
-    {
-        return Task.CompletedTask;
-    }
-
     public Task PurchaseLevelAsync(Guid plantId, CancellationToken ct = default)
     {
         return Task.CompletedTask;

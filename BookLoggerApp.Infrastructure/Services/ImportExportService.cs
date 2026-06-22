@@ -383,13 +383,10 @@ public class ImportExportService : IImportExportService
 
             try
             {
-                // 1. Copy Database
-                // Using File.Copy since we disabled pooling in the test, so file should be unlocked and consistent.
+                // Z.699: checkpoint the WAL into the main DB file before copying so the backup is
+                // self-contained and doesn't depend on a separate -wal/-shm sidecar.
                 var destDbPath = _fileSystem.CombinePath(tempBackupDir, "booklogger.db");
-                
-                // Optional: Checkpoint to be super safe (though Dispose should have handled it)
                 try { await context.Database.ExecuteSqlRawAsync("PRAGMA wal_checkpoint(FULL);", ct); } catch { }
-                
                 _fileSystem.CopyFile(dbPath, destDbPath, overwrite: true);
 
                 // 2. Copy Covers

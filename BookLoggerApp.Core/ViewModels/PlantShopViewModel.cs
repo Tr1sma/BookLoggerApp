@@ -119,6 +119,8 @@ public partial class PlantShopViewModel : ViewModelBase
     public void SelectSpecies(PlantSpecies species)
     {
         SelectedSpecies = species;
+        // Z.620: clear any stale error when picking a species, like DecorationShopViewModel.SelectDecoration.
+        ClearError();
     }
 
     [RelayCommand]

@@ -229,11 +229,12 @@ public partial class StatsViewModel : ViewModelBase
     {
         var settings = await _settingsProvider.GetSettingsAsync(ct);
 
-        CurrentLevel = settings.UserLevel;
         TotalXp = settings.TotalXp;
         TotalCoins = settings.Coins;
 
-        // Recalculate level from total XP to ensure consistency and fix sync bugs
+        // Z.786: CurrentLevel is derived solely from TotalXp (removed the dead
+        // `CurrentLevel = settings.UserLevel` that was overwritten on the next line).
+        // Recalculate level from total XP to ensure consistency and fix sync bugs.
         CurrentLevel = XpCalculator.CalculateLevelFromXp(TotalXp);
 
         // Calculate XP for current level progress
