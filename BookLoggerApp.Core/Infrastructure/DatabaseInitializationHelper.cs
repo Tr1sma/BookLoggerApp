@@ -22,6 +22,21 @@ public static class DatabaseInitializationHelper
     // should not hijack the worker thread that just finished the migration.
     private static TaskCompletionSource<bool> _initializationTcs =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    // Completes when DbInitializer's deferred background maintenance
+    // (RunDeferredMaintenanceAsync) has finished. The restore path awaits this so it
+    // never swaps the DB file while that fire-and-forget context is still writing — a
+    // surviving second connection across the swap corrupts the WAL-index ("database disk
+    // image is malformed"). MarkAsInitialized only signals the *migration* gate; deferred
+    // maintenance keeps writing afterwards.
+    private static TaskCompletionSource<bool> _deferredMaintenanceTcs =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    // In-process flag the Android widget (WidgetDataService — a BroadcastReceiver with its
+    // own non-DI connection that ClearAllPools cannot reach) checks before opening the DB,
+    // so a widget refresh cannot race a restore's file swap.
+    private static volatile bool _restoreInProgress;
+
     private static bool _isInitialized;
     private static bool _initializationFailed;
     private static Exception? _initializationException;
@@ -140,6 +155,62 @@ public static class DatabaseInitializationHelper
     }
 
     /// <summary>
+    /// True while a backup restore is swapping the DB file. The Android widget consults
+    /// this before opening its own connection so a BroadcastReceiver refresh cannot race
+    /// the file swap.
+    /// </summary>
+    public static bool IsRestoreInProgress => _restoreInProgress;
+
+    /// <summary>Marks the start of a restore (blocks widget DB access).</summary>
+    public static void BeginRestore() => _restoreInProgress = true;
+
+    /// <summary>Marks the end of a restore (re-enables widget DB access). Idempotent.</summary>
+    public static void EndRestore() => _restoreInProgress = false;
+
+    /// <summary>
+    /// Signals that DbInitializer's deferred background maintenance has finished. Called by
+    /// the Infrastructure layer. Idempotent — a second call is a no-op.
+    /// </summary>
+    public static void MarkDeferredMaintenanceComplete()
+    {
+        TaskCompletionSource<bool> tcs;
+        lock (_lock)
+        {
+            tcs = _deferredMaintenanceTcs;
+        }
+        tcs.TrySetResult(true);
+    }
+
+    /// <summary>
+    /// Waits (best-effort) for deferred startup maintenance to complete. Unlike
+    /// <see cref="EnsureInitializedAsync()"/> this NEVER throws on timeout: if maintenance
+    /// is slow the caller proceeds anyway (the restore's other safeguards still apply);
+    /// blocking the restore indefinitely would be worse UX. Returns immediately when the
+    /// gate is already signalled.
+    /// </summary>
+    public static async Task EnsureDeferredMaintenanceCompleteAsync(TimeSpan timeout)
+    {
+        Task<bool> tcsTask;
+        lock (_lock)
+        {
+            tcsTask = _deferredMaintenanceTcs.Task;
+        }
+
+        if (tcsTask.IsCompleted)
+        {
+            return;
+        }
+
+        using var delayCts = new CancellationTokenSource();
+        Task delayTask = Task.Delay(timeout, delayCts.Token);
+        Task completed = await Task.WhenAny(tcsTask, delayTask).ConfigureAwait(false);
+        if (completed == tcsTask)
+        {
+            delayCts.Cancel();
+        }
+    }
+
+    /// <summary>
     /// Marks the database as initialized successfully.
     /// This should be called by the Infrastructure layer's DbInitializer.
     /// Idempotent — a second call becomes a no-op rather than crashing.
@@ -204,6 +275,8 @@ public static class DatabaseInitializationHelper
             _initializationFailed = false;
             _initializationException = null;
             _initializationTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _deferredMaintenanceTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _restoreInProgress = false;
         }
     }
 
@@ -219,6 +292,8 @@ public static class DatabaseInitializationHelper
             _initializationFailed = false;
             _initializationException = null;
             _initializationTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _deferredMaintenanceTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _restoreInProgress = false;
         }
     }
 }

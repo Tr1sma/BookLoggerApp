@@ -19,6 +19,10 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         // to avoid racing the fire-and-forget DbInitializer on fresh installs. Tests bypass
         // the initializer entirely, so satisfy the gate eagerly and idempotently here.
         BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
+        // Restore now also awaits deferred-maintenance completion before swapping the file.
+        // Tests don't run the initializer, so satisfy that gate too — otherwise the restore
+        // would block for the full timeout.
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkDeferredMaintenanceComplete();
     }
 
     public ImportExportServiceZipIntegrationTests()
@@ -26,6 +30,13 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         // specific temp folder for this test run
         _tempRoot = Path.Combine(Path.GetTempPath(), $"BookLoggerTests_{Guid.NewGuid()}");
         Directory.CreateDirectory(_tempRoot);
+
+        // Restore awaits both the init gate AND the deferred-maintenance gate before swapping
+        // the file. Other test classes call ResetForTests() (which un-signals both) in their
+        // teardown, so signal them per-test here — otherwise a restore would block on the
+        // un-signalled deferred gate for its full timeout.
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
+        BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkDeferredMaintenanceComplete();
     }
 
     public void Dispose()
@@ -199,6 +210,60 @@ public class ImportExportServiceZipIntegrationTests : IDisposable
         {
             var titles = await ctx.Books.Select(b => b.Title).ToListAsync();
             titles.Should().ContainSingle().Which.Should().Be("Original Book");
+        }
+    }
+
+    [Fact]
+    public async Task RestoreFromBackupAsync_SucceedsWhileAnotherConnectionIsOpen()
+    {
+        // Reproduces the field scenario: a SECOND live connection to the target DB is open
+        // across the restore (in production: the Android widget / deferred-maintenance writer).
+        // Before the fix, swapping the file + deleting sidecars under that open handle led to
+        // SQLITE_CORRUPT "database disk image is malformed" once the restore wrote migrations.
+        // After the fix (sidecars deleted before copy, dedicated non-pooled migration context,
+        // deterministic WAL reset), the restore must complete and the data must be intact.
+        var sourceDir = Path.Combine(_tempRoot, "OpenConnSource");
+        Directory.CreateDirectory(sourceDir);
+        var sourceDbPath = Path.Combine(sourceDir, "booklogger.db");
+        var sourceFactory = new SqliteDbContextFactory(sourceDbPath);
+        using (var ctx = sourceFactory.CreateDbContext())
+        {
+            await ctx.Database.MigrateAsync();
+            ctx.Books.Add(new Book { Title = "Survivor Book" });
+            await ctx.SaveChangesAsync();
+        }
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+
+        var fileSystem = new FileSystemAdapter();
+        var backupZipPath = await new ImportExportService(
+            sourceFactory, fileSystem, new TestAppSettingsProvider(), null, sourceDir).CreateBackupAsync();
+
+        var targetDir = Path.Combine(_tempRoot, "OpenConnTarget");
+        Directory.CreateDirectory(targetDir);
+        var targetDbPath = Path.Combine(targetDir, "booklogger.db");
+        var targetFactory = new SqliteDbContextFactory(targetDbPath);
+        using (var ctx = targetFactory.CreateDbContext())
+        {
+            await ctx.Database.MigrateAsync();
+        }
+
+        // Open and HOLD a second connection to the target DB that has read a page, so it has a
+        // cached header / wal-index, exactly like a live widget/maintenance connection.
+        await using var foreignContext = targetFactory.CreateDbContext();
+        _ = await foreignContext.Books.CountAsync();
+
+        var targetService = new ImportExportService(
+            targetFactory, fileSystem, new TestAppSettingsProvider(), null, targetDir);
+
+        // Act — restore while the foreign connection is still open.
+        await targetService.RestoreFromBackupAsync(backupZipPath);
+
+        // Assert — restore succeeded and the backup's data is present.
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        using (var ctx = targetFactory.CreateDbContext())
+        {
+            var titles = await ctx.Books.Select(b => b.Title).ToListAsync();
+            titles.Should().ContainSingle().Which.Should().Be("Survivor Book");
         }
     }
 
