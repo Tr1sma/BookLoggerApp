@@ -18,12 +18,10 @@ public class ImageService : IImageService
     private readonly ILogger<ImageService>? _logger;
     private readonly IFileSystem _fileSystem;
 
-    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null)
-        : this(fileSystem, logger, null)
-    {
-    }
-    // Public constructor for testing or custom HttpClient usage
-    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger, HttpClient? httpClient)
+    // Single constructor so the DI typed-client (AddHttpClient<IImageService, ImageService>, Z.528)
+    // has one unambiguous ctor to activate. In production IHttpClientFactory supplies a pooled
+    // httpClient; tests pass one explicitly (or leave it null to fall back to a self-owned client).
+    public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null, HttpClient? httpClient = null)
     {
         _fileSystem = fileSystem;
         _logger = logger;
