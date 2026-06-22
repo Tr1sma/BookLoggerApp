@@ -69,6 +69,27 @@ public class AnalyticsConsentGateTests : IDisposable
     }
 
     [Fact]
+    public async Task ConsentChanged_fires_and_initializes_on_settings_change_before_initialize()
+    {
+        // Z.181: unified ApplyConsentAndNotify path — a settings change that lands before
+        // InitializeAsync now applies consent, marks the gate initialized, and notifies.
+        var provider = new FakeSettingsProvider(analytics: false, crash: false);
+        using var gate = new AnalyticsConsentGate(provider);
+
+        var fireCount = 0;
+        gate.ConsentChanged += (_, _) => Interlocked.Increment(ref fireCount);
+
+        provider.Update(analytics: true, crash: true);
+
+        await WaitUntil(() => fireCount >= 1, TimeSpan.FromSeconds(2));
+
+        fireCount.Should().Be(1);
+        gate.IsInitialized.Should().BeTrue();
+        gate.AnalyticsAllowed.Should().BeTrue();
+        gate.CrashAllowed.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task InitializeAsync_fails_closed_on_db_init_timeout()
     {
         DatabaseInitializationHelper.ResetForTests();

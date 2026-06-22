@@ -131,7 +131,14 @@ public class EntitlementService : IEntitlementService
         }
 
         await SyncAppSettingsMirrorAsync(reloaded, ct);
-        Raise(previous, reloaded, EntitlementChangeReason.InitialLoad);
+
+        // Only broadcast when the tier actually changed. A no-op refresh (app resume, periodic
+        // reconcile) must not fire EntitlementChanged — every subscriber re-runs its diff/UI work
+        // on each raise, so a same-tier refresh was redundant churn.
+        if (previous != reloaded.Tier)
+        {
+            Raise(previous, reloaded, EntitlementChangeReason.Refresh);
+        }
     }
 
     public async Task ApplyPurchaseAsync(PurchaseResult purchase, EntitlementChangeReason reason = EntitlementChangeReason.Purchase, CancellationToken ct = default)

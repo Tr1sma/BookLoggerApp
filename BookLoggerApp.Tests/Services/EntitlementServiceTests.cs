@@ -168,6 +168,45 @@ public class EntitlementServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RefreshAsync_SameTier_DoesNotRaiseEntitlementChanged()
+    {
+        // Z.357: a no-op refresh (resume, periodic reconcile) must not fire EntitlementChanged.
+        _store.GetOrCreateAsync(Arg.Any<CancellationToken>())
+            .Returns(new UserEntitlement { Tier = SubscriptionTier.Free });
+        EntitlementService service = CreateService();
+        await service.InitializeAsync();
+
+        int raised = 0;
+        service.EntitlementChanged += (_, _) => raised++;
+
+        await service.RefreshAsync();
+
+        raised.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_TierChanged_RaisesWithRefreshReason()
+    {
+        // Z.357: a refresh that observes a real tier change still broadcasts, tagged Refresh.
+        _store.GetOrCreateAsync(Arg.Any<CancellationToken>())
+            .Returns(new UserEntitlement { Tier = SubscriptionTier.Free });
+        EntitlementService service = CreateService();
+        await service.InitializeAsync();
+
+        EntitlementChangedEventArgs? captured = null;
+        service.EntitlementChanged += (_, e) => captured = e;
+
+        _store.GetOrCreateAsync(Arg.Any<CancellationToken>())
+            .Returns(new UserEntitlement { Tier = SubscriptionTier.Plus, BillingPeriod = BillingPeriod.Lifetime });
+        await service.RefreshAsync();
+
+        captured.Should().NotBeNull();
+        captured!.Reason.Should().Be(EntitlementChangeReason.Refresh);
+        captured.PreviousTier.Should().Be(SubscriptionTier.Free);
+        captured.CurrentTier.Should().Be(SubscriptionTier.Plus);
+    }
+
+    [Fact]
     public async Task ApplyPurchaseAsync_Plus_DoesNotUnhidePrestigeContent()
     {
         // SEC-04 wiring: granting Plus must route the granted tier into the lapse handler so
