@@ -40,6 +40,7 @@ Versionsschema:
 - Pflanzen ansehen schreibt nicht mehr in die Datenbank; ein Ewiger Phönix setzt seinen Gieß-Timer nicht mehr bei jedem Blick zurück (nur noch beim Pflege-Durchlauf)
 - Barcode-Scanner öffnet zuverlässiger (nutzt das aktuelle App-Fenster statt der veralteten MainPage-API)
 - Datei-Import aus Cloud-Speichern (z.B. Google Drive): gleichnamige Dateien kollidieren nicht mehr in der Zwischenkopie
+- Statistik- und Pflanzen-Shop-Seite laden beim Öffnen nicht mehr doppelt (kein Flackern); Navigations-Fehler können den UI-Thread nicht mehr abstürzen lassen
 
 ### Sicherheit
 - Ein nach Tarif-Downgrade verstecktes Regal ist nicht mehr über einen Direkt-Link/seine ID erreichbar

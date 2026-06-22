@@ -13,7 +13,7 @@
 @inject BookLoggerApp.Core.Services.Abstractions.IWidgetUpdateService WidgetUpdateService
 @inject IOnboardingService OnboardingService
 @inject IStringLocalizer<AppResources> L
-@implements IDisposable
+@inherits BookLoggerApp.Components.ObservableComponentBase
 
 <PageTitle>@L["PageTitle_Goals"] - BookHeart</PageTitle>
 
@@ -499,8 +499,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Subscribe to ViewModel property changes for re-rendering
-        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+        // Z.723: observe the ViewModel via ObservableComponentBase (auto re-render +
+        // auto-unsubscribe on Dispose), like every other page — instead of the manual
+        // PropertyChanged wiring + hand-rolled unsubscribe this page used to carry.
+        Observe(ViewModel);
         // Subscribe to goal changes to refresh data when sessions end
         GoalService.GoalsChanged += OnGoalsChanged;
 
@@ -513,12 +515,6 @@
         BackButtonService.Register(_navBackHandler);
 
         await ViewModel.LoadCommand.ExecuteAsync(null);
-    }
-
-    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        // Re-render when any ViewModel property changes
-        InvokeAsync(StateHasChanged);
     }
 
     private async void OnGoalsChanged(object? sender, EventArgs e)
@@ -717,10 +713,10 @@
         StateHasChanged();
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
-        // Unsubscribe to prevent memory leaks
-        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        // ViewModel PropertyChanged is unsubscribed by ObservableComponentBase.Dispose (Z.723);
+        // here we only tear down this page's own subscriptions/handlers.
         GoalService.GoalsChanged -= OnGoalsChanged;
 
         if (_navBackHandler != null)
@@ -743,5 +739,7 @@
             BackButtonService.Unregister(_excludeModalBackHandler);
             _excludeModalBackHandler = null;
         }
+
+        base.Dispose();
     }
 }
