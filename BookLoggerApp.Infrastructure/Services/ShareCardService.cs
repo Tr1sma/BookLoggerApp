@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Entitlements;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Core.Resources;
 using BookLoggerApp.Core.Services.Abstractions;
@@ -36,14 +37,23 @@ public class ShareCardService : IShareCardService
     private static readonly SKColor GoldStarDim  = SKColor.Parse("#4A3F32");
 
     private readonly IStringLocalizer<AppResources> _localizer;
+    private readonly IFeatureGuard? _featureGuard;
 
-    public ShareCardService(IStringLocalizer<AppResources> localizer)
+    // Z.996: featureGuard is optional (default null) so existing tests construct the service with
+    // just the localizer; production wires the real guard so share-card generation is enforced
+    // service-side, not only behind the UI gate.
+    public ShareCardService(IStringLocalizer<AppResources> localizer, IFeatureGuard? featureGuard = null)
     {
         _localizer = localizer;
+        _featureGuard = featureGuard;
     }
 
     public Task<byte[]> GenerateStatsCardAsync(StatsShareData data, CancellationToken ct = default)
     {
+        // Z.996: Share cards are a Premium feature — enforce here (pattern SEC-06/SEC-08) so no
+        // caller can generate one without the entitlement, regardless of the UI state.
+        _featureGuard?.RequireAccess(FeatureKey.ShareCards, "Share cards require Premium.");
+
         const int Width  = 1080;
         const int Height = 1920;
 
@@ -58,6 +68,9 @@ public class ShareCardService : IShareCardService
 
     public Task<byte[]> GenerateBookCardAsync(BookShareData data, CancellationToken ct = default)
     {
+        // Z.996: service-side Premium enforcement (see GenerateStatsCardAsync).
+        _featureGuard?.RequireAccess(FeatureKey.ShareCards, "Share cards require Premium.");
+
         const int Width = 1080;
 
         // Dynamic height based on content presence
