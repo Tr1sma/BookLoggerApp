@@ -200,6 +200,11 @@ public class WishlistService : IWishlistService
         if (_featureGuard is not null && !_featureGuard.HasAccess(FeatureKey.Wishlist))
             return Array.Empty<Book>();
 
+        // Empty/whitespace query (or a null from a cleared search box) returns the full list
+        // instead of NRE-ing on query.ToLowerInvariant() — same guard as Quote/AnnotationService.
+        if (string.IsNullOrWhiteSpace(query))
+            return await GetWishlistBooksAsync(ct);
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var lowerQuery = query.ToLowerInvariant();
 

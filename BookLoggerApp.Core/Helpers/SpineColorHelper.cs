@@ -75,16 +75,13 @@ public static class SpineColorHelper
         }
 
         // 2. Try Custom Hex Code
-        if (!string.IsNullOrEmpty(spineColor) && spineColor.StartsWith("#"))
+        if (!string.IsNullOrEmpty(spineColor) && spineColor.StartsWith("#")
+            && TryNormalizeHex(spineColor, out var baseHex))
         {
-            var baseHex = spineColor.TrimStart('#');
-            if (baseHex.Length == 6)
-            {
-                // Generate light variant simply by blending with white or brightening
-                // For a spine, "Dark" is the base, "Light" is the highlight
-                // Let's assume the user picked the "Dark" base color.
-                return (baseHex, Lighten(baseHex, 0.3f));
-            }
+            // Generate light variant simply by blending with white or brightening
+            // For a spine, "Dark" is the base, "Light" is the highlight
+            // Let's assume the user picked the "Dark" base color.
+            return (baseHex, Lighten(baseHex, 0.3f));
         }
 
         // 3. Fallback: Hash-based color
@@ -92,6 +89,42 @@ public static class SpineColorHelper
         var hash = bookId.GetHashCode();
         var colorIndex = (hash & 0x7FFFFFFF) % colorList.Count;
         return colorList[colorIndex];
+    }
+
+    /// <summary>
+    /// Normalizes a leading-# hex string to a 6-digit RRGGBB (no #). Expands 3-digit shorthand
+    /// (#abc → aabbcc), strips an 8-digit alpha channel (#rrggbbaa → rrggbb), and validates that
+    /// every remaining character is a hex digit. Returns false on any unparseable input so the
+    /// caller can fall back to the hash-based color instead of emitting a broken style value.
+    /// </summary>
+    private static bool TryNormalizeHex(string spineColor, out string normalized)
+    {
+        normalized = string.Empty;
+        var hex = spineColor.TrimStart('#');
+
+        switch (hex.Length)
+        {
+            case 3: // #abc -> aabbcc
+                hex = $"{hex[0]}{hex[0]}{hex[1]}{hex[1]}{hex[2]}{hex[2]}";
+                break;
+            case 6: // already RRGGBB
+                break;
+            case 8: // #rrggbbaa -> drop the alpha channel
+                hex = hex.Substring(0, 6);
+                break;
+            default:
+                return false;
+        }
+
+        foreach (var c in hex)
+        {
+            bool isHex = c is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F';
+            if (!isHex)
+                return false;
+        }
+
+        normalized = hex;
+        return true;
     }
 
     private static string Lighten(string hexColor, float amount)

@@ -322,6 +322,29 @@ public class WishlistServiceTests : IDisposable
         result[0].ISBN.Should().Be("9781111111111");
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task SearchWishlistAsync_BlankQuery_ReturnsFullWishlist(string blank)
+    {
+        await SeedWishlistBookAsync("A");
+        await SeedWishlistBookAsync("B");
+
+        var result = await _service.SearchWishlistAsync(blank);
+
+        result.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task SearchWishlistAsync_NullQuery_ReturnsFullWishlist()
+    {
+        await SeedWishlistBookAsync("A");
+
+        var result = await _service.SearchWishlistAsync(null!);
+
+        result.Should().HaveCount(1);
+    }
+
     [Fact]
     public async Task SearchWishlistAsync_ExcludesNonWishlistBooks()
     {

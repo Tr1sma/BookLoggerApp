@@ -25,6 +25,11 @@ Versionsschema:
 - „Diese Woche" auf dem Dashboard rechnet nach lokaler Kalenderwoche statt UTC
 - Jahres-Statistiken erfassen jetzt auch die letzte Sekunde des Jahres (Off-by-one behoben)
 - Verschieben eines Wunschlisten-Buchs in die Bibliothek behält das ursprüngliche Hinzufügedatum
+- Wunschlisten-Suche mit leerer Eingabe zeigt wieder die ganze Liste statt einen Fehler auszulösen
+- Eigene Buchrücken-Farbe (Hex) akzeptiert jetzt auch Kurzform (#abc) und Alpha-Werte; ungültige Werte fallen sauber auf eine Ersatzfarbe zurück
+- ISBN-Suche prüft die Länge vorab und spart eine sinnlose Abfrage bei offensichtlich falscher ISBN
+- ISBN-Treffer mit leerem Titel/Autor überschreibt nicht mehr deine bereits eingetippten Eingaben
+- Notizen und Zitate werden getrimmt; reine Leerzeichen lassen sich nicht mehr speichern (verbrauchen keinen Frei-Slot mehr)
 
 ## [V1.0.0]
 

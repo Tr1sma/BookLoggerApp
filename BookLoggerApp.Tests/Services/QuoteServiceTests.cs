@@ -100,6 +100,44 @@ public class QuoteServiceTests : IDisposable
         result.CreatedAt.Should().Be(preset);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("\t\n")]
+    public async Task AddAsync_BlankText_ThrowsValidationException(string blank)
+    {
+        var book = await AddBookAsync();
+        var quote = new Quote { BookId = book.Id, Text = blank };
+
+        Func<Task> act = async () => await _service.AddAsync(quote);
+
+        await act.Should().ThrowAsync<ValidationException>();
+        (await _service.GetAllAsync()).Should().BeEmpty(); // nothing persisted
+    }
+
+    [Fact]
+    public async Task AddAsync_TrimsTextAndContext()
+    {
+        var book = await AddBookAsync();
+        var quote = new Quote { BookId = book.Id, Text = "  spaced quote  ", Context = "  p. 42  " };
+
+        var result = await _service.AddAsync(quote);
+
+        result.Text.Should().Be("spaced quote");
+        result.Context.Should().Be("p. 42");
+    }
+
+    [Fact]
+    public async Task AddAsync_WhitespaceContext_NormalizedToNull()
+    {
+        var book = await AddBookAsync();
+        var quote = new Quote { BookId = book.Id, Text = "text", Context = "   " };
+
+        var result = await _service.AddAsync(quote);
+
+        result.Context.Should().BeNull();
+    }
+
     [Fact]
     public async Task UpdateAsync_PersistsChanges()
     {

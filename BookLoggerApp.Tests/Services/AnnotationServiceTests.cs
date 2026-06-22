@@ -1,3 +1,4 @@
+using BookLoggerApp.Core.Exceptions;
 using BookLoggerApp.Core.Models;
 using BookLoggerApp.Infrastructure.Data;
 using BookLoggerApp.Infrastructure.Repositories;
@@ -96,6 +97,44 @@ public class AnnotationServiceTests : IDisposable
         var result = await _service.AddAsync(annotation);
 
         result.CreatedAt.Should().Be(preset);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("\t\n")]
+    public async Task AddAsync_BlankNote_ThrowsValidationException(string blank)
+    {
+        var book = await AddBookAsync();
+        var annotation = new Annotation { BookId = book.Id, Note = blank };
+
+        Func<Task> act = async () => await _service.AddAsync(annotation);
+
+        await act.Should().ThrowAsync<ValidationException>();
+        (await _service.GetAllAsync()).Should().BeEmpty(); // nothing persisted
+    }
+
+    [Fact]
+    public async Task AddAsync_TrimsNoteAndTitle()
+    {
+        var book = await AddBookAsync();
+        var annotation = new Annotation { BookId = book.Id, Note = "  spaced note  ", Title = "  Chapter  " };
+
+        var result = await _service.AddAsync(annotation);
+
+        result.Note.Should().Be("spaced note");
+        result.Title.Should().Be("Chapter");
+    }
+
+    [Fact]
+    public async Task AddAsync_WhitespaceTitle_NormalizedToNull()
+    {
+        var book = await AddBookAsync();
+        var annotation = new Annotation { BookId = book.Id, Note = "note", Title = "   " };
+
+        var result = await _service.AddAsync(annotation);
+
+        result.Title.Should().BeNull();
     }
 
     [Fact]
