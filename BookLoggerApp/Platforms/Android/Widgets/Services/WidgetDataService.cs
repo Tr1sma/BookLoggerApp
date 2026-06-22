@@ -18,6 +18,13 @@ public static class WidgetDataService
 {
     private static AppDbContext CreateDbContext()
     {
+        // A backup restore swaps booklogger.db3 out from under any open connection. The widget
+        // runs in a BroadcastReceiver with its own non-DI connection that the restore cannot
+        // close or pool-clear, so refuse to open the DB while a restore is in progress. Callers
+        // already treat exceptions as "no data" and render a fallback.
+        if (BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.IsRestoreInProgress)
+            throw new InvalidOperationException("Database restore in progress; widget data access is temporarily unavailable.");
+
         var dbPath = PlatformsDbPath.GetDatabasePath();
 
         if (!File.Exists(dbPath))

@@ -97,6 +97,11 @@ public static class DbInitializer
                 }
                 finally
                 {
+                    // Release the gate the restore path awaits BEFORE swapping the DB file, so a
+                    // backup restore never races this background context's writes (a surviving
+                    // second connection across the swap corrupts the WAL-index). Always fired,
+                    // even if a maintenance step threw, so restore can never block forever.
+                    DatabaseInitializationHelper.MarkDeferredMaintenanceComplete();
                     capturedScope.Dispose();
                 }
             });

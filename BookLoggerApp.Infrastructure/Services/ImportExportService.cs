@@ -1,3 +1,4 @@
+using System.Data;
 using System.Globalization;
 using System.Text.Json;
 using BookLoggerApp.Core.Entitlements;
@@ -679,6 +680,21 @@ public class ImportExportService : IImportExportService
             await BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.EnsureInitializedAsync();
             progress?.Report("Database initialization confirmed");
 
+            // DbInitializer's deferred maintenance (RunDeferredMaintenanceAsync) runs
+            // fire-and-forget AFTER the init gate is signalled and keeps writing through its
+            // OWN context. Wait for it to finish before swapping the file so that background
+            // writer is not a surviving second connection across the swap — the root cause of
+            // SQLITE_CORRUPT "database disk image is malformed". Best-effort: proceeds after a
+            // timeout rather than blocking the restore forever.
+            progress?.Report("Waiting for background maintenance to finish");
+            await BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper
+                .EnsureDeferredMaintenanceCompleteAsync(TimeSpan.FromSeconds(20));
+
+            // Block the Android widget's own (non-DI, un-poolable) connection for the duration
+            // of the restore so a BroadcastReceiver refresh cannot open booklogger.db3 mid-swap.
+            // Cleared in the finally below regardless of outcome.
+            BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.BeginRestore();
+
             if (!File.Exists(backupPath))
             {
                 throw new FileNotFoundException("Backup file not found", backupPath);
@@ -818,30 +834,72 @@ public class ImportExportService : IImportExportService
                 try
                 {
                     progress?.Report("Swapping DB file");
+                    // Delete the live WAL/SHM sidecars BEFORE overwriting the main file. A stale
+                    // wal-index left next to a freshly-copied main file is the root cause of the
+                    // "database disk image is malformed" failure; SQLite rebuilds clean sidecars
+                    // for the next connection on first access, so removing them first is safe.
+                    if (File.Exists(walPath)) File.Delete(walPath);
+                    if (File.Exists(shmPath)) File.Delete(shmPath);
+
                     File.Copy(extractedDbPath, currentDbPath, true);
 
-                    // Also delete any WAL/SHM files that might cause issues
+                    // Belt-and-suspenders: drop any sidecar that reappeared between the deletes
+                    // and the copy so the fresh context opens against a clean file.
                     if (File.Exists(walPath)) File.Delete(walPath);
                     if (File.Exists(shmPath)) File.Delete(shmPath);
 
                     progress?.Report("Applying migrations to restored DB");
-                    // Run migrations on a FRESH context after file copy. Per-migration
-                    // logging mirrors DbInitializer.MigrateDatabaseAsync so a hung migration
-                    // is identifiable from Settings → More Info → Diagnostics. A backup may
-                    // come from an older schema version, so the pending list can be long
-                    // here even when nothing is wrong.
+                    // Run migrations on a FRESH, NON-POOLED context after the file copy. We do NOT
+                    // use _contextFactory here: in production its connection string has pooling ON,
+                    // so the connection that performs the migration write burst could linger in the
+                    // pool and be reused against the swapped file. Pooling=false guarantees this
+                    // connection is fully closed on dispose. Per-migration logging mirrors
+                    // DbInitializer.MigrateDatabaseAsync so a hung migration is identifiable from
+                    // Settings → More Info → Diagnostics. A backup may come from an older schema
+                    // version, so the pending list can be long here even when nothing is wrong.
                     _logger?.LogInformation("Applying migrations to restored database...");
-                    await using var freshContext = await _contextFactory.CreateDbContextAsync(ct);
+                    var restoreConnectionString = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+                    {
+                        DataSource = currentDbPath,
+                        Pooling = false
+                    }.ToString();
+                    var restoreOptions = new DbContextOptionsBuilder<AppDbContext>()
+                        .UseSqlite(restoreConnectionString)
+                        .Options;
+                    await using var freshContext = new AppDbContext(restoreOptions);
 
-                    // Mirror DbInitializer's slow-storage tweaks for the restore path.
-                    // synchronous=NORMAL with WAL is safe and dramatically speeds up
-                    // multi-statement migrations on slow Android eMMC.
+                    // Re-establish WAL deterministically on the freshly-copied file (do not rely on
+                    // the backup's persisted header), mirroring DbInitializer.SetJournalModeWalAsync,
+                    // then normalize the WAL state. synchronous=NORMAL with WAL is safe and speeds up
+                    // multi-statement migrations on slow Android eMMC. Each step is BUSY-tolerant so a
+                    // momentarily-open foreign connection cannot turn a recoverable restore into a
+                    // hard failure.
                     try
                     {
+                        string journalMode = "unknown";
+                        var restoreConn = freshContext.Database.GetDbConnection();
+                        if (restoreConn.State != ConnectionState.Open)
+                        {
+                            await restoreConn.OpenAsync(ct);
+                        }
+                        await using (var jmCmd = restoreConn.CreateCommand())
+                        {
+                            jmCmd.CommandText = "PRAGMA journal_mode = WAL;";
+                            journalMode = (await jmCmd.ExecuteScalarAsync(ct))?.ToString() ?? "unknown";
+                        }
+                        try
+                        {
+                            await freshContext.Database.ExecuteSqlRawAsync("PRAGMA wal_checkpoint(TRUNCATE);", ct);
+                        }
+                        catch (Exception cpEx)
+                        {
+                            DatabaseInitializationHelper.AppendInitLog(
+                                $"[Restore] [pragma] wal_checkpoint skipped: {cpEx.GetType().Name}: {cpEx.Message}");
+                        }
                         await freshContext.Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL;", ct);
                         await freshContext.Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY;", ct);
                         DatabaseInitializationHelper.AppendInitLog(
-                            "[Restore] [pragma] synchronous=NORMAL, temp_store=MEMORY");
+                            $"[Restore] [pragma] journal_mode={journalMode}, synchronous=NORMAL, temp_store=MEMORY");
                     }
                     catch (Exception pragmaEx)
                     {
@@ -1018,6 +1076,12 @@ public class ImportExportService : IImportExportService
         {
             _logger?.LogError(ex, "Failed to restore from backup");
             throw;
+        }
+        finally
+        {
+            // Always re-enable widget DB access, even on failure (the success path restarts
+            // the app shortly after, but the failure path keeps running).
+            BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.EndRestore();
         }
     }
 
