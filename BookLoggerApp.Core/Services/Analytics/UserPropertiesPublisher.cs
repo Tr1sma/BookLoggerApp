@@ -6,10 +6,14 @@ namespace BookLoggerApp.Core.Services.Analytics;
 public sealed class UserPropertiesPublisher
 {
     private readonly IAnalyticsService _analytics;
+    private readonly ICrashReportingService? _crashReporting;
 
-    public UserPropertiesPublisher(IAnalyticsService analytics)
+    // Z.652: crash reporter is optional (default null) so existing tests can construct the
+    // publisher with just the analytics service. The crash reporter itself respects consent.
+    public UserPropertiesPublisher(IAnalyticsService analytics, ICrashReportingService? crashReporting = null)
     {
         _analytics = analytics;
+        _crashReporting = crashReporting;
     }
 
     public void PublishSettingsOnly(AppSettings settings)
@@ -26,7 +30,7 @@ public sealed class UserPropertiesPublisher
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"UserPropertiesPublisher.PublishSettingsOnly failed: {ex}");
+            ReportNonFatal(ex, "PublishSettingsOnly");
         }
     }
 
@@ -43,7 +47,27 @@ public sealed class UserPropertiesPublisher
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"UserPropertiesPublisher.PublishWithStats failed: {ex}");
+            ReportNonFatal(ex, "PublishWithStats");
+        }
+    }
+
+    // Z.652: surface the previously-swallowed failure as a non-fatal (consent gated inside the
+    // crash service) instead of only Debug.WriteLine, so publish breakages are observable in the
+    // field rather than silent.
+    private void ReportNonFatal(Exception ex, string phase)
+    {
+        System.Diagnostics.Debug.WriteLine($"UserPropertiesPublisher.{phase} failed: {ex}");
+        try
+        {
+            _crashReporting?.RecordNonFatal(ex, new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["source"] = "user_properties_publisher",
+                ["phase"] = phase,
+            });
+        }
+        catch
+        {
+            // Reporting must never replace the original swallow — a failing crash sink is moot here.
         }
     }
 }

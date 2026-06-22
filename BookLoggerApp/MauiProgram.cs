@@ -56,7 +56,7 @@ public static class MauiProgram
 
         // Wire the ambient CrashReporter on ViewModelBase so ExecuteSafely* catch-blocks
         // forward non-fatals to Crashlytics (no-op outside Android).
-        AnalyticsBootstrapper.Install(app.Services.GetRequiredService<ICrashReportingService>());
+        AnalyticsBootstrapper.InstallCrashReporter(app.Services.GetRequiredService<ICrashReportingService>());
 
         // Wire the ambient localizer on ViewModelBase for the generic fallbacks used
         // by ExecuteSafely*Async when a caller didn't pass an explicit errorPrefix.
