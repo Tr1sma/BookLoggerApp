@@ -69,7 +69,7 @@ public class BookListViewModelTests
         _bookService.AddAsync(Arg.Any<Book>(), Arg.Any<CancellationToken>())
             .Returns(ci => Task.FromResult((Book)ci[0]));
 
-        await ((CommunityToolkit.Mvvm.Input.IAsyncRelayCommand)_vm.AddAsyncCommand).ExecuteAsync(null);
+        await _vm.AddCommand.ExecuteAsync(null);
 
         _vm.Items.Should().HaveCount(1);
         _vm.Items[0].Title.Should().Be("Brand New");
@@ -96,7 +96,7 @@ public class BookListViewModelTests
         _vm.NewTitle = "";
         _vm.NewAuthor = "Somebody";
 
-        _vm.AddAsyncCommand.CanExecute(null).Should().BeFalse();
+        _vm.AddCommand.CanExecute(null).Should().BeFalse();
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class BookListViewModelTests
         _vm.NewTitle = "   ";
         _vm.NewAuthor = "Somebody";
 
-        _vm.AddAsyncCommand.CanExecute(null).Should().BeFalse();
+        _vm.AddCommand.CanExecute(null).Should().BeFalse();
     }
 
     [Fact]
@@ -114,6 +114,6 @@ public class BookListViewModelTests
         _vm.NewTitle = "Brand New";
         _vm.NewAuthor = "";
 
-        _vm.AddAsyncCommand.CanExecute(null).Should().BeFalse();
+        _vm.AddCommand.CanExecute(null).Should().BeFalse();
     }
 }

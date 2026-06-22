@@ -581,7 +581,7 @@ _Dieselbe Sache an einer Stelle anders gelöst als an einer anderen. Beide Stell
   - **Vorschlag:** Replace the inline color styles with CSS classes that reference var(--text-secondary)/var(--text-muted) in celebrations.css, matching the other celebration components.
   - **Auch betroffen:** BookLoggerApp/Components/Shared/SessionCompleteCelebration.razor (uses xp-label/xp-value CSS classes, no inline colors)
 
-- [ ] **[niedrig] Modal/celebration overlays are inconsistently exposed to assistive tech**  _(shared-components)_
+- [x] **[niedrig] Modal/celebration overlays are inconsistently exposed to assistive tech**  _(shared-components)_ — **BEHOBEN (V12, Phase 10):** `role="dialog"` + `aria-modal="true"` + `aria-labelledby` (auf die jeweilige Titel-Überschrift mit `id`) ergänzt für `DeleteConfirmationModal` und die drei Celebration-Overlays (`BookCompletionCelebration`, `LevelUpCelebration`, `SessionCompleteCelebration`), wie `PaywallModal`/`ReviewPromptModal`. **Gerät:** TalkBack-Smoke-Test via `/run`.
   - **Datei:** `BookLoggerApp/Components/Shared/DeleteConfirmationModal.razor` - delete-modal-overlay/delete-modal (lines 7-8)
   - **Problem:** PaywallModal, ReviewPromptModal, and AppStartupOverlay declare role="dialog" / aria-modal="true" / aria-labelledby, but DeleteConfirmationModal and all three celebration overlays (BookCompletionCelebration, LevelUpCelebration, SessionCompleteCelebration) render their overlay+card as plain <div>s with no dialog role, no aria-modal, and no labelled title. The same 'overlay + centered card' modal concern is thus handled two different ways across the shared-components slice.
   - **Warum relevant:** Screen-reader users get a focus-trap-less, unannounced modal for delete confirmation and celebrations; behavior is inconsistent with the other modals in the same folder.
@@ -595,7 +595,7 @@ _Dieselbe Sache an einer Stelle anders gelöst als an einer anderen. Beide Stell
   - **Vorschlag:** Change the comments to 'Refresh cache with saved entity' (or call InvalidateCache if a reload is actually intended). Make the wording consistent with the shared-reference contract documented on GetSettingsAsync.
   - **Auch betroffen:** BookLoggerApp.Infrastructure/Services/AppSettingsProvider.cs lines 261-274 — InvalidateCache actually clears the cache
 
-- [ ] **[niedrig] ReadingGoal.Target range mismatch: DataAnnotation [Range(1,1000000)] vs validator LessThanOrEqualTo(100000)**  `✓ verifiziert`  _(validators-misc)_
+- [x] **[niedrig] ReadingGoal.Target range mismatch: DataAnnotation [Range(1,1000000)] vs validator LessThanOrEqualTo(100000)**  _(validators-misc)_ — **BEHOBEN (V12, Phase 10):** `[Range(1, 100000)]` an die autoritative Validator-Grenze + die `Validator_Goal_TargetMax`-Message („…cannot exceed 100,000") angeglichen.
   - **Datei:** `BookLoggerApp.Core/Validators/ReadingGoalValidator.cs` - ReadingGoalValidator ctor, RuleFor(g => g.Target).LessThanOrEqualTo(100000) (line 28)
   - **Problem:** ReadingGoalValidator caps Target at 100000, but ReadingGoal.Target carries [Range(1, 1000000)] (ReadingGoal.cs line 22) — a 10x discrepancy. The two declared upper bounds for the same field disagree, so it is unclear what the intended maximum actually is.
   - **Warum relevant:** A goal with Target between 100001 and 1000000 is accepted by the DataAnnotation/DB but rejected by FluentValidation (whichever path runs). Confusing for maintenance and produces inconsistent error behavior if validation is ever wired up.
@@ -603,7 +603,7 @@ _Dieselbe Sache an einer Stelle anders gelöst als an einer anderen. Beide Stell
   - **Auch betroffen:** BookLoggerApp.Core/Models/ReadingGoal.cs line 22 — [Range(1, 1000000)] on Target
   - _Prüfnotiz (Verifier): Both cited facts are accurate: ReadingGoalValidator.cs line 28 caps Target at LessThanOrEqualTo(100000) (and the resx message "cannot exceed 100,000" agrees), while ReadingGoal.cs line 22 declares [Range(1, 1000000)] — a real 10x discrepancy on the same field. It is a genuine consistency defect, but only the FluentValidation path is actually enforced (via IValidationService); the [Range] DataAnnotation is effectively dead code since nothing calls TryValidateObject and EF Core does not enforce it, so the claimed "accepted by DB / rejected by validator" divergence cannot occur in practice and the impact is documentation/maintenance confusion rather than user-visible inconsistent behavior. Hence confirmed but mis-rated — niedrig (quality nit), not mittel._
 
-- [ ] **[niedrig] Year-Change-Commands ohne Fehlerbehandlung/DB-Gate (anders als LoadAsync)**  _(viewmodels-content)_
+- [x] **[niedrig] Year-Change-Commands ohne Fehlerbehandlung/DB-Gate (anders als LoadAsync)**  _(viewmodels-content)_ — **BEHOBEN (V12, Phase 10):** `ChangeHeatmapYearAsync`/`ChangeMonthlyVolumeYearAsync` (StatsTrendsViewModel) und `ChangeComparisonYearsAsync` (StatsAnalysesViewModel) laufen jetzt durch `ExecuteSafelyWithDbAsync` (IsBusy/ClearError/DB-Gate/Crash-Report + ct), wie `LoadAsync`.
   - **Datei:** `BookLoggerApp.Core/ViewModels/StatsTrendsViewModel.cs` - ChangeHeatmapYearAsync() Z.112-117 und ChangeMonthlyVolumeYearAsync() Z.119-124 rufen den Service direkt ohne ExecuteSafely*
   - **Problem:** Die initialen Loads dieser VMs laufen durch ExecuteSafelyWithDbAsync (IsBusy, ClearError, DB-Gate, Crash-Reporting). Die Year-Wechsel-Commands rufen den Service direkt auf. Eine geworfene Exception wird vom RelayCommand still verschluckt, ohne ErrorMessage/IsBusy zu setzen oder einen Non-Fatal zu melden.
   - **Warum relevant:** Schlägt ein Jahreswechsel-Query fehl, erhält der Nutzer kein Feedback (Chart bleibt unverändert/leer), und der Fehler wird nicht im Crash-Reporting erfasst — inkonsistent zum restlichen VM-Verhalten.
@@ -617,14 +617,14 @@ _Dieselbe Sache an einer Stelle anders gelöst als an einer anderen. Beide Stell
   - **Vorschlag:** In WishlistViewModel.LookupByIsbnAsync dieselbe Guard-Logik wie in ApplyMetadataToBookAsync verwenden (nur überschreiben, wenn metadata-Feld nicht leer).
   - **Auch betroffen:** BookLoggerApp.Core/ViewModels/BookEditViewModel.cs ApplyMetadataToBookAsync() Z.442-447 (nur bei !IsNullOrWhiteSpace überschreiben)
 
-- [ ] **[niedrig] SelectSpecies vs. SelectDecoration: Fehlerzustand wird nur in einem der beiden Shops gelöscht**  _(viewmodels-shell)_
+- [x] **[niedrig] SelectSpecies vs. SelectDecoration: Fehlerzustand wird nur in einem der beiden Shops gelöscht**  _(viewmodels-shell)_ — **BEHOBEN (V12, Phase 10):** `PlantShopViewModel.SelectSpecies` ruft jetzt `ClearError()` wie `DecorationShopViewModel.SelectDecoration`.
   - **Datei:** `BookLoggerApp.Core/ViewModels/PlantShopViewModel.cs` - SelectSpecies (Z.118-122) setzt nur SelectedSpecies, ruft kein ClearError
   - **Problem:** Die analogen Auswahl-Commands der beiden Shop-VMs verhalten sich unterschiedlich: SelectDecoration löscht eine bestehende Fehlermeldung beim Auswählen eines Items, SelectSpecies nicht.
   - **Warum relevant:** Im Plant-Shop kann eine alte Fehlermeldung (z.B. 'nicht genug Coins') stehen bleiben, während der Nutzer bereits eine andere Pflanze auswählt — irritierende, veraltete Fehleranzeige.
   - **Vorschlag:** In SelectSpecies ebenfalls ClearError() aufrufen, um beide Shops konsistent zu halten.
   - **Auch betroffen:** BookLoggerApp.Core/ViewModels/DecorationShopViewModel.cs:SelectDecoration (Z.82-87) setzt SelectedDecoration UND ruft ClearError()
 
-- [ ] **[niedrig] Level-Anforderungs-Fehlermeldung in Plant- und Decoration-Shop unterschiedlich parametrisiert**  _(viewmodels-shell)_
+- [x] **[niedrig] Level-Anforderungs-Fehlermeldung in Plant- und Decoration-Shop unterschiedlich parametrisiert**  _(viewmodels-shell)_ — **BEHOBEN (V12, Phase 10):** `Error_DecorationRequiresLevel` zeigt jetzt erforderliches **und** aktuelles Level (`{0}`/`{1}`, EN+DE) wie `Error_PlantRequiresLevel`; die Coin-Meldung nutzt denselben Key `Error_NotEnoughCoins` wie der Plant-Shop.
   - **Datei:** `BookLoggerApp.Core/ViewModels/DecorationShopViewModel.cs` - PurchaseDecorationAsync Z.66: Tr("Error_DecorationRequiresLevel", item.UnlockLevel) — nur erforderliches Level
   - **Problem:** Dieselbe fachliche Situation (Kauf gesperrt, weil Level zu niedrig) wird in beiden Shops unterschiedlich gemeldet: der Plant-Shop übergibt erforderliches und aktuelles Level, der Decoration-Shop nur das erforderliche. Ähnlich liefern die Coin-Fehlermeldungen unterschiedliche Keys (Error_NotEnoughCoins mit (dynamicPrice, UserCoins) vs. Error_NotEnoughCoinsShort mit (item.Cost, UserCoins)).
   - **Warum relevant:** Inkonsistente Nutzeransprache zwischen zwei nahezu identischen Shop-Flows; im Decoration-Shop fehlt dem Nutzer der Hinweis auf sein aktuelles Level.
@@ -682,21 +682,21 @@ _Sauberer/wartbarer schreibbar: Duplizierung, toter Code, zu lange Methoden, unk
   - **Warum relevant:** Unnecessary writes and change-events on every resume; combined with the mirror-sync clobber risk above this widens the window for racing the AppSettings row. Mostly a quality/perf concern.
   - **Vorschlag:** Short-circuit ApplyPurchaseAsync (or the caller) when the incoming purchase matches the currently-stored PurchaseToken and Tier — only persist/raise when something actually changed.
 
-- [ ] **[niedrig] Live XP preview hardcodes XP constants (5/20/50) instead of XpCalculator — drift risk (already caused a past 'pages × 2' bug)**  _(gamification-svc)_
+- [x] **[niedrig] Live XP preview hardcodes XP constants (5/20/50) instead of XpCalculator — drift risk (already caused a past 'pages × 2' bug)**  _(gamification-svc)_ — **BEHOBEN (V12, Phase 10):** `ReadingTimerInline.CalculateXP` nutzt jetzt `XpCalculator.CalculateXpForSession(minutes, pagesRead, streakDays: 0)` statt der Magic Numbers 5/20/50 — Single Source of Truth, kein Drift mehr.
   - **Datei:** `BookLoggerApp/Components/Shared/ReadingTimerInline.razor` - CalculateXP() lines 937-943
   - **Problem:** The preview duplicates the magic numbers 5, 20, 50 and the 60-minute threshold rather than calling XpCalculator.CalculateXpForSession(minutes, pages, streakDays:0) or exposing the constants. XP_CALCULATION_GUIDE.md explicitly records that this exact duplication previously caused a 'pages × 2 instead of × 20' bug (Phase 9 fixes).
   - **Warum relevant:** Any future tuning of XP constants must be changed in two places; forgetting one silently desyncs the preview from real rewards.
   - **Vorschlag:** Call XpCalculator.CalculateXpForSession(minutes, pagesRead, 0) (or surface XP_PER_MINUTE etc. as public consts) so the preview reuses the single source of truth.
   - **Auch betroffen:** BookLoggerApp.Core/Helpers/XpCalculator.cs:8-11 (XP_PER_MINUTE/XP_PER_PAGE/BONUS_XP_LONG_SESSION)
 
-- [ ] **[niedrig] Two divergent plant-leveling systems coexist; the XP-based one (Experience/AddExperienceAsync/LevelUpAsync/CanLevelUpAsync) is dead production code**  _(gamification-svc)_
+- [x] **[niedrig] Two divergent plant-leveling systems coexist; the XP-based one (Experience/AddExperienceAsync/LevelUpAsync/CanLevelUpAsync) is dead production code**  _(gamification-svc)_ — **BEHOBEN (V12, Phase 10):** Der XP-basierte Pfad (`AddExperienceAsync`/`CanLevelUpAsync`/`LevelUpAsync`) wurde aus `IPlantService` + `PlantService` + `MockPlantService` entfernt (kein Produktiv-Caller, koexistierte mit dem Reading-Days-Pfad → Doppel-Coin-Risiko). Leveling läuft jetzt nur über `RecordReadingDayAsync` (Lesetage) und `PurchaseLevelAsync` (Münzen). Zugehörige Tests entfernt; das `Experience`-Feld bleibt als dormante DB-Spalte (kein Migration-Zwang).
   - **Datei:** `BookLoggerApp.Infrastructure/Services/PlantService.cs` - AddExperienceAsync (189-237), LevelUpAsync (330-356), CanLevelUpAsync (311-328); UserPlant.Experience documented 'legacy' (UserPlant.cs:33-34)
   - **Problem:** Plant levels are driven in production solely by RecordReadingDayAsync (ReadingDaysCount → CalculateLevelFromReadingDays). The XP-based API (AddExperienceAsync, LevelUpAsync, CanLevelUpAsync, PlantGrowthCalculator.CalculateLevelFromXp/GetXpForLevel) is referenced only by tests — grep shows no app call sites. The two systems compute CurrentLevel from different inputs (Experience vs ReadingDaysCount); if the XP path were ever re-wired alongside reading-days it would fight RecordReadingDayAsync over CurrentLevel and award duplicate 100-coin payouts.
   - **Warum relevant:** Dead, untested-in-production surface area that duplicates leveling logic and invites a future double-coin/level bug. Confuses the intended progression model.
   - **Vorschlag:** Either remove the unused XP-based plant-leveling methods (and the legacy Experience field path) or clearly mark them obsolete/internal so they cannot be wired in parallel with reading-days leveling.
   - **Auch betroffen:** BookLoggerApp.Infrastructure/Services/PlantService.cs:246-309 (RecordReadingDayAsync — the live reading-days path)
 
-- [ ] **[niedrig] Verwaiste, widersprüchliche Kommentar-'Notizen' in CreateBackupAsync verschleiern die Logik**  _(import-image-lookup)_
+- [x] **[niedrig] Verwaiste, widersprüchliche Kommentar-'Notizen' in CreateBackupAsync verschleiern die Logik**  _(import-image-lookup)_ — **BEHOBEN (V12, Phase 10):** Die explorativen Selbstgespräch-Kommentare durch einen knappen Einzeiler ersetzt (warum vor dem Copy ein `wal_checkpoint(FULL)` läuft: self-contained Backup ohne -wal/-shm-Sidecar).
   - **Datei:** `BookLoggerApp.Infrastructure/Services/ImportExportService.cs` - CreateBackupAsync ~Zeile 367-383
   - **Problem:** Der Cover-Kopier-Block enthält einen langen Block aus Selbstgespräch-Kommentaren ('We need to check if IFileSystem exposes GetFiles...', 'Let's use the actual file system...', 'We can't rely solely on _fileSystem interface...'). Diese dokumentieren eine Entscheidungsfindung, nicht den Code, und widersprechen sich teils. Der tatsächliche Code ruft dann CopyDirectory (System.IO). Das erschwert Wartung und Review.
   - **Warum relevant:** Reine Lesbarkeit/Wartbarkeit; kein Laufzeitfehler.
@@ -765,25 +765,25 @@ _Sauberer/wartbarer schreibbar: Duplizierung, toter Code, zu lange Methoden, unk
   - **Vorschlag:** Wo moeglich serverseitig (DB) aggregieren bzw. mindestens nur den benoetigten Status/Jahr filtern (Where in der DB statt GetAllAsync), analog zu den bereits optimierten StatsService-Methoden.
   - **Auch betroffen:** BookLoggerApp.Infrastructure/Services/StatsService.cs: GetTotalPagesReadAsync Z. 29-31 / GetBooksByGenreAsync Z. 114-117 (DB-seitige Aggregation als Gegenbeispiel)
 
-- [ ] **[niedrig] Dead/unused drawing helpers in ShareCardService (DrawCoverPlaceholder, DrawInfoChip, DrawStarRating, DrawCategoryRatings)**  _(validators-misc)_
+- [x] **[niedrig] Dead/unused drawing helpers in ShareCardService (DrawCoverPlaceholder, DrawInfoChip, DrawStarRating, DrawCategoryRatings)**  _(validators-misc)_ — **BEHOBEN (V12, Phase 10):** Alle vier ungenutzten privaten Helfer entfernt (die Live-Card nutzt `DrawStarRatingGold`); kein Caller existierte.
   - **Datei:** `BookLoggerApp.Infrastructure/Services/ShareCardService.cs` - DrawCoverPlaceholder (line 805), DrawInfoChip (line 819), DrawStarRating (line 833), DrawCategoryRatings (line 850)
   - **Problem:** These four private helpers are defined and [ExcludeFromCodeCoverage]-annotated but are not called anywhere in the file — the card builders use the 'Colored'/'Gold' variants (DrawColoredInfoChip, DrawStarRatingGold, DrawColoredCategoryRatings) and skip the placeholder entirely (cover is simply omitted when absent). DrawStarIcon's 'filled=false' stroke branch path is the only star path used.
   - **Warum relevant:** Dead code adds maintenance noise and risks divergence (e.g. the unused 3-column DrawCategoryRatings has a different layout than the live 2-column one, so a future edit could 'fix' the wrong method).
   - **Vorschlag:** Remove the unused helpers or wire DrawCoverPlaceholder into DrawBookCard's no-cover branch if a placeholder is actually desired.
 
-- [ ] **[niedrig] Namenskollision: manuelles AddAsyncCommand überdeckt das von [RelayCommand] generierte Command**  _(viewmodels-content)_
+- [x] **[niedrig] Namenskollision: manuelles AddAsyncCommand überdeckt das von [RelayCommand] generierte Command**  _(viewmodels-content)_ — **BEHOBEN (V12, Phase 10):** Das hand-gebaute `AddAsyncCommand` (zweites `AsyncRelayCommand` über dieselbe Methode) entfernt; es bleibt nur das generierte `AddCommand` (mit `CanExecute = nameof(CanAdd)`), `NotifyCanExecuteChanged` refresht es. Tests auf `AddCommand` umgestellt.
   - **Datei:** `BookLoggerApp.Core/ViewModels/BookListViewModel.cs` - [RelayCommand(CanExecute = nameof(CanAdd))] auf AddAsync (Z.40) plus manuelles public IRelayCommand AddAsyncCommand (Z.85-87)
   - **Problem:** Das Attribut [RelayCommand(CanExecute = nameof(CanAdd))] würde ein Property AddAsyncCommand generieren; gleichzeitig existiert ein manuell definiertes lazy AddAsyncCommand-Property mit eigener AsyncRelayCommand-Instanz. Der Source-Generator überspringt die Generierung beim bestehenden Member, sodass das im Attribut deklarierte CanExecute toter Code ist und faktisch das manuelle Command verwendet wird. Zusätzlich ruft die Page @onclick="Vm.AddAsync" die Methode direkt (an der CanExecute-Guard vorbei).
   - **Warum relevant:** Verwirrende doppelte Command-Definition; das Attribut-CanExecute ist irreführend (wirkungslos). Erhöhtes Risiko bei künftigen Refactorings/Toolkit-Updates.
   - **Vorschlag:** Entweder ausschließlich das generierte [RelayCommand]-Command nutzen (manuelles Property + Feld löschen) oder das Attribut entfernen und nur das manuelle Command behalten. NotifyCanExecuteChanged konsistent auf das tatsächlich gebundene Command anwenden.
 
-- [ ] **[niedrig] Toter Command MovePlantToPositionAsync (BookshelfPlants wird nie befüllt)**  _(viewmodels-content)_
+- [x] **[niedrig] Toter Command MovePlantToPositionAsync (BookshelfPlants wird nie befüllt)**  _(viewmodels-content)_ — **BEHOBEN (V12, Phase 10):** `MovePlantToPositionAsync` + die nie befüllte `BookshelfPlants`-Collection entfernt; Reordering läuft über `ReorderShelfItemsAsync`.
   - **Datei:** `BookLoggerApp.Core/ViewModels/BookshelfViewModel.cs` - MovePlantToPositionAsync() Z.544-562 liest BookshelfPlants; die ObservableProperty BookshelfPlants (Z.40-41) wird nirgends zugewiesen
   - **Problem:** BookshelfPlants bleibt immer leer (in LoadAsync werden Pflanzen in die Shelf-Items bzw. AvailablePlants gelegt, nie in BookshelfPlants). MovePlantToPositionAsync findet daher nie eine Pflanze und endet stets in SetError(Error_PlantNotFound). Der Kommentar Z.540-541 markiert die Methode bereits als Legacy.
   - **Warum relevant:** Der Command ist funktionslos; falls noch irgendwo gebunden, erzeugt er nur eine irreführende Fehlermeldung. Code-Ballast.
   - **Vorschlag:** MovePlantToPositionAsync samt der ungenutzten BookshelfPlants-Property entfernen, da das Reordering bereits über ReorderShelfItemsAsync/MoveItemBetweenShelvesAsync abgedeckt ist.
 
-- [ ] **[niedrig] Tote Zuweisung: CurrentLevel wird sofort überschrieben**  _(viewmodels-content)_
+- [x] **[niedrig] Tote Zuweisung: CurrentLevel wird sofort überschrieben**  _(viewmodels-content)_ — **BEHOBEN (V12, Phase 10):** Die tote `CurrentLevel = settings.UserLevel`-Zuweisung in `StatsViewModel.LoadProgressionStatisticsAsync` entfernt; `CurrentLevel` wird ausschließlich aus `XpCalculator.CalculateLevelFromXp(TotalXp)` abgeleitet.
   - **Datei:** `BookLoggerApp.Core/ViewModels/StatsViewModel.cs` - LoadProgressionStatisticsAsync() Z.232 (CurrentLevel = settings.UserLevel) wird in Z.237 (CurrentLevel = XpCalculator.CalculateLevelFromXp(TotalXp)) überschrieben
   - **Problem:** CurrentLevel wird zunächst aus settings.UserLevel gesetzt und unmittelbar danach aus dem Gesamt-XP neu berechnet. Die erste Zuweisung ist toter Code und suggeriert fälschlich, dass der gespeicherte UserLevel verwendet wird.
   - **Warum relevant:** Reines Code-Verständnisproblem; kein Laufzeitfehler. Erschwert das Nachvollziehen, welcher Level-Wert maßgeblich ist.
@@ -801,7 +801,7 @@ _Sauberer/wartbarer schreibbar: Duplizierung, toter Code, zu lange Methoden, unk
   - **Warum relevant:** Inkonsistentes Command-Pattern (keine automatisch generierte CanExecute/Command-Property) und ein theoretisch hängendes Busy-Flag bei untypischen Ausnahmen.
   - **Vorschlag:** IsPurchaseInProgress in einem try/finally um den ExecuteSafelyAsync-Aufruf zurücksetzen und das Reentrancy-Guard ergänzen; Command-Konvention angleichen, sofern die Razor-Seite nicht zwingend die Methode direkt mit Argumenten aufruft.
 
-- [ ] **[niedrig] UserProgressViewModel: ungenutzte private Wrapper-Methode GetXpForLevel (toter Code)**  _(viewmodels-shell)_
+- [x] **[niedrig] UserProgressViewModel: ungenutzte private Wrapper-Methode GetXpForLevel (toter Code)**  _(viewmodels-shell)_ — **BEHOBEN (V12, Phase 10):** Die ungenutzte private `GetXpForLevel`-Wrapper-Methode entfernt (alle Aufrufer nutzen direkt `XpCalculator.GetXpForLevel`).
   - **Datei:** `BookLoggerApp.Core/ViewModels/UserProgressViewModel.cs` - GetXpForLevel (Z.79-82)
   - **Problem:** Die private static Methode GetXpForLevel(int level) delegiert nur an XpCalculator.GetXpForLevel(level) und wird nirgends aufgerufen — CalculateProgress (Z.59, Z.63) ruft XpCalculator.GetXpForLevel direkt auf. Toter Code.
   - **Warum relevant:** Unnötige Duplikation/Verwirrung; suggeriert eine eigene Level-Berechnung im VM, die es nicht gibt.

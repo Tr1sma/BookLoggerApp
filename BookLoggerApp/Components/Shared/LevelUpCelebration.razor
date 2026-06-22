@@ -6,7 +6,8 @@
 @if (Result != null)
 {
     <div class="celebration-overlay" @onclick="HandleClose">
-        <div class="celebration-card" @onclick:stopPropagation="true">
+        <div class="celebration-card" @onclick:stopPropagation="true"
+             role="dialog" aria-modal="true" aria-labelledby="levelUpTitle">
             <!-- Confetti particles (more for level-up!) -->
             @for (int i = 0; i < 15; i++)
             {
@@ -15,7 +16,7 @@
 
             <!-- Header -->
             <div class="levelup-header">
-                <h1>🏆 @L["LevelUp_Header"]</h1>
+                <h1 id="levelUpTitle">🏆 @L["LevelUp_Header"]</h1>
             </div>
 
             <!-- Level Transition -->

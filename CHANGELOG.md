@@ -16,6 +16,8 @@ Versionsschema:
 
 ### Geändert
 - Level-Up-Feier und Ziele-Seite nutzen durchgängig die warme App-Farbpalette (kein Bootstrap-Rot/-Grün/-Grau mehr)
+- Lösch-Dialog und Feier-Overlays sind für Screenreader jetzt korrekt als Dialog ausgezeichnet
+- Deko-Shop zeigt bei zu niedrigem Level jetzt auch dein aktuelles Level an (wie der Pflanzen-Shop)
 - App-Start/-Resume schreibt aktive Käufe nicht mehr bei jedem Vordergrund neu — nur bei echter Änderung (weniger unnötige DB-Schreibvorgänge und Neu-Renders)
 - Lesegeschwindigkeits-Trend vergleicht jetzt gleitende 30-Tage-Fenster statt Kalendermonate (kein Einbruch mehr zu Monatsbeginn)
 - Cover-Downloads nutzen einen gepoolten HTTP-Client (kein Socket-Leck-Risiko bei vielen Bildern)

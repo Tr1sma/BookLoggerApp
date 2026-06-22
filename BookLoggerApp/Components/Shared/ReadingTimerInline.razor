@@ -1,4 +1,5 @@
 @using BookLoggerApp.Core.Enums
+@using BookLoggerApp.Core.Helpers
 @using BookLoggerApp.Core.Models
 @using BookLoggerApp.Core.Resources
 @using BookLoggerApp.Core.Services.Abstractions
@@ -931,19 +932,12 @@
 
     private int CalculateXP()
     {
-        // Use correct XP formula: 5 XP per minute, 20 XP per page
+        // Z.685: single source of truth for the per-minute/per-page/long-session XP math
+        // (was hard-coded 5/20/50 magic numbers here). Streak bonus and plant boost are applied
+        // on save by ProgressService, so pass streakDays: 0 for the live preview.
         int minutes = (int)ElapsedTime.TotalMinutes;
         int pagesRead = CalculatePagesRead();
-        int baseXp = (minutes * 5) + (pagesRead * 20);
-
-        // Add long session bonus (50 XP for 60+ minutes)
-        if (minutes >= 60)
-        {
-            baseXp += 50;
-        }
-
-        // Note: Streak bonus and plant boost are applied on save by ProgressService
-        return baseXp;
+        return XpCalculator.CalculateXpForSession(minutes, pagesRead, streakDays: 0);
     }
 
     private int CalculateNewProgressPercentage()

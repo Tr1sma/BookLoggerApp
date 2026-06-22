@@ -809,86 +809,8 @@ public class ShareCardService : IShareCardService
         _ => Primary
     };
 
-    [ExcludeFromCodeCoverage]
-    private static void DrawCoverPlaceholder(SKCanvas canvas, string title,
-        float x, float y, float w, float h, SKTypeface boldTypeface)
-    {
-        var rect = new SKRect(x, y, x + w, y + h);
-        using var bgPaint = new SKPaint { Color = BgTertiary, IsAntialias = true };
-        canvas.DrawRoundRect(rect, 16, 16, bgPaint);
-
-        string letter = string.IsNullOrEmpty(title) ? "?" : title[0].ToString().ToUpperInvariant();
-        using var font  = new SKFont(boldTypeface, 120);
-        using var paint = new SKPaint { Color = Primary, IsAntialias = true };
-        canvas.DrawText(letter, x + w / 2f, y + h / 2f + 40, SKTextAlign.Center, font, paint);
-    }
-
-    [ExcludeFromCodeCoverage]
-    private static void DrawInfoChip(SKCanvas canvas, string text, float x, float y,
-        float maxW, float chipH, SKTypeface typeface, float fontSize)
-    {
-        var rect = new SKRect(x, y, x + maxW, y + chipH);
-        using var bgPaint = new SKPaint { Color = BgSecondary, IsAntialias = true };
-        canvas.DrawRoundRect(rect, 14, 14, bgPaint);
-
-        using var font  = new SKFont(typeface, fontSize);
-        using var paint = new SKPaint { Color = TextSecondary, IsAntialias = true };
-        canvas.DrawText(text, x + maxW / 2f, y + chipH / 2f + fontSize / 3f,
-            SKTextAlign.Center, font, paint);
-    }
-
-    [ExcludeFromCodeCoverage]
-    private static void DrawStarRating(SKCanvas canvas, double rating, float centerX, float y, float fontSize)
-    {
-        int filled = Math.Clamp((int)Math.Round(rating), 0, 5);
-        float starRadius = fontSize * 0.5f;
-
-        const float StarSpacing = 70;
-        float startX = centerX - (5 * StarSpacing) / 2f + StarSpacing / 2f;
-
-        for (int i = 0; i < 5; i++)
-        {
-            SKColor starColor = i < filled ? Primary : BgTertiary.WithAlpha(180);
-            DrawStarIcon(canvas, startX + i * StarSpacing, y + fontSize / 3f,
-                starRadius, starColor, filled: i < filled);
-        }
-    }
-
-    [ExcludeFromCodeCoverage]
-    private void DrawCategoryRatings(SKCanvas canvas,
-        List<KeyValuePair<RatingCategory, int?>> categories,
-        float x, float y, float totalW, SKTypeface regularTypeface, SKTypeface boldTypeface)
-    {
-        const int   Cols  = 3;
-        const float CellH = 90;
-        const float Gap   = 20;
-        float cellW = (totalW - Gap * (Cols - 1)) / Cols;
-
-        for (int i = 0; i < categories.Count; i++)
-        {
-            int   col   = i % Cols;
-            int   row   = i / Cols;
-            float cellX = x + col * (cellW + Gap);
-            float cellY = y + row * (CellH + Gap);
-
-            var (category, ratingVal) = (categories[i].Key, categories[i].Value);
-
-            var rect = new SKRect(cellX, cellY, cellX + cellW, cellY + CellH);
-            using var bgPaint = new SKPaint { Color = BgTertiary, IsAntialias = true };
-            canvas.DrawRoundRect(rect, 12, 12, bgPaint);
-
-            string label = CategoryLabel(category);
-            string value = ratingVal.HasValue ? $"{ratingVal}/5" : "–";
-
-            using var labelFont  = new SKFont(regularTypeface, 30);
-            using var labelPaint = new SKPaint { Color = TextSecondary, IsAntialias = true };
-            canvas.DrawText(label, cellX + cellW / 2f, cellY + 38, SKTextAlign.Center, labelFont, labelPaint);
-
-            using var valFont  = new SKFont(boldTypeface, 36);
-            using var valPaint = new SKPaint { Color = Primary, IsAntialias = true };
-            canvas.DrawText(value, cellX + cellW / 2f, cellY + 74, SKTextAlign.Center, valFont, valPaint);
-        }
-    }
+    // Z.768: removed unused private draw helpers DrawCoverPlaceholder, DrawInfoChip, DrawStarRating
+    // (the live card uses DrawStarRatingGold) and DrawCategoryRatings — none had a caller.
 
     [ExcludeFromCodeCoverage]
     private static void DrawWatermark(SKCanvas canvas, int w, int h,

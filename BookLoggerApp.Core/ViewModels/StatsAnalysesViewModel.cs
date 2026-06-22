@@ -108,13 +108,18 @@ public partial class StatsAnalysesViewModel : ViewModelBase
         }, Tr("Error_FailedTo_LoadAnalysisStatistics"));
     }
 
+    // Z.606: year-change command wrapped in ExecuteSafelyWithDbAsync (IsBusy/ClearError/DB-gate/
+    // crash-report + ct) like LoadAsync, instead of an unguarded direct service call.
     [RelayCommand]
     public async Task ChangeComparisonYearsAsync((int year1, int year2) years)
     {
-        SelectedYear1 = years.year1;
-        SelectedYear2 = years.year2;
-        var (y1, y2) = await _advancedStatsService.GetYearComparisonAsync(years.year1, years.year2);
-        Year1Stats = y1;
-        Year2Stats = y2;
+        await ExecuteSafelyWithDbAsync(async ct =>
+        {
+            SelectedYear1 = years.year1;
+            SelectedYear2 = years.year2;
+            var (y1, y2) = await _advancedStatsService.GetYearComparisonAsync(years.year1, years.year2, ct);
+            Year1Stats = y1;
+            Year2Stats = y2;
+        }, Tr("Error_FailedTo_LoadAnalysisStatistics"));
     }
 }

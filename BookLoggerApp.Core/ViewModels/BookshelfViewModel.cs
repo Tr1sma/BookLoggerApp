@@ -40,8 +40,8 @@ public partial class BookshelfViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<Book> _books = new();
 
-    [ObservableProperty]
-    private ObservableCollection<UserPlant> _bookshelfPlants = new();
+    // Z.780: removed the never-populated BookshelfPlants collection (its only reader was the dead
+    // MovePlantToPositionAsync below; reordering goes through ReorderShelfItemsAsync).
 
     [ObservableProperty]
     private ObservableCollection<UserPlant> _availablePlants = new();
@@ -552,29 +552,9 @@ public partial class BookshelfViewModel : ViewModelBase
         }, Tr("Error_FailedTo_DeletePlant"));
     }
 
-    // Dropping "MovePlantToPositionAsync" in favor of generic Drag/Drop reordering if possible
-    // or adapting it later. For now, removing the legacy string-based position logic.
-
-
-    [RelayCommand]
-    public async Task MovePlantToPositionAsync((Guid plantId, string position) args)
-    {
-        await ExecuteSafelyAsync(async () =>
-        {
-            var plant = BookshelfPlants.FirstOrDefault(p => p.Id == args.plantId);
-            if (plant == null)
-            {
-                SetError(Tr("Error_PlantNotFound"));
-                return;
-            }
-
-            plant.BookshelfPosition = args.position;
-            await _plantService.UpdateAsync(plant);
-
-            // Reload to reflect new positions
-            await LoadAsync();
-        }, Tr("Error_FailedTo_MovePlant"));
-    }
+    // Z.780: removed the dead MovePlantToPositionAsync — it read the never-populated
+    // BookshelfPlants (so it always errored "plant not found") and used the legacy string-based
+    // BookshelfPosition. Plant reordering goes through ReorderShelfItemsAsync below.
 
     [RelayCommand]
     public async Task ReorderShelfItemsAsync((Guid shelfId, Guid sourceId, Guid targetId) args)

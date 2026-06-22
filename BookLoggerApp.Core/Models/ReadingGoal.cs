@@ -20,7 +20,9 @@ public class ReadingGoal
 
     public GoalType Type { get; set; } // Books, Pages, Minutes
 
-    [Range(1, 1000000)]
+    // Z.598: upper bound matches ReadingGoalValidator (LessThanOrEqualTo 100_000) and the
+    // Validator_Goal_TargetMax message ("…cannot exceed 100,000") — the [Range] was 1_000_000.
+    [Range(1, 100000)]
     public int Target { get; set; } // Target value (e.g., 5 books, 1000 pages, 600 minutes)
 
     public int Current { get; set; } = 0; // Current progress

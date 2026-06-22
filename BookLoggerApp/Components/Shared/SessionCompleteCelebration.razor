@@ -6,7 +6,8 @@
 @if (Result != null)
 {
     <div class="celebration-overlay" @onclick="HandleClose">
-        <div class="celebration-card" @onclick:stopPropagation="true">
+        <div class="celebration-card" @onclick:stopPropagation="true"
+             role="dialog" aria-modal="true" aria-labelledby="sessionCompleteTitle">
             <!-- Confetti particles -->
             @for (int i = 0; i < 9; i++)
             {
@@ -15,7 +16,7 @@
 
             <!-- Header -->
             <div class="session-complete-header">
-                <h1>🎉 @L["Session_Header"]</h1>
+                <h1 id="sessionCompleteTitle">🎉 @L["Session_Header"]</h1>
             </div>
 
             @if (StreakRescuedByGuardian)

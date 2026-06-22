@@ -109,18 +109,26 @@ public partial class StatsTrendsViewModel : ViewModelBase
         }, Tr("Error_FailedTo_LoadTrendStatistics"));
     }
 
+    // Z.606: year-change commands run through ExecuteSafelyWithDbAsync (IsBusy/ClearError/DB-gate/
+    // crash-report + ct) like LoadAsync, instead of an unguarded direct service call.
     [RelayCommand]
     public async Task ChangeHeatmapYearAsync(int year)
     {
-        HeatmapYear = year;
-        HeatmapData = await _advancedStatsService.GetReadingHeatmapAsync(year);
+        await ExecuteSafelyWithDbAsync(async ct =>
+        {
+            HeatmapYear = year;
+            HeatmapData = await _advancedStatsService.GetReadingHeatmapAsync(year, ct);
+        }, Tr("Error_FailedTo_LoadTrendStatistics"));
     }
 
     [RelayCommand]
     public async Task ChangeMonthlyVolumeYearAsync(int year)
     {
-        MonthlyVolumeYear = year;
-        MonthlyVolumeData = await _advancedStatsService.GetMonthlyVolumeAsync(year);
+        await ExecuteSafelyWithDbAsync(async ct =>
+        {
+            MonthlyVolumeYear = year;
+            MonthlyVolumeData = await _advancedStatsService.GetMonthlyVolumeAsync(year, ct);
+        }, Tr("Error_FailedTo_LoadTrendStatistics"));
     }
 
     private static string DetermineTimeOfDayLabel(Dictionary<string, int> data)
