@@ -240,10 +240,11 @@ public class StatsService : IStatsService
 
     public async Task<List<BookRatingSummary>> GetBooksWithRatingsAsync(CancellationToken ct = default)
     {
-        var books = await _unitOfWork.Books.GetAllAsync(ct);
+        // Z.761: only completed books are summarised — filter status DB-side instead of loading
+        // the whole library and filtering in memory.
+        var books = await _unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed, ct);
 
         return books
-            .Where(b => b.Status == ReadingStatus.Completed)
             .Select(BookRatingSummary.FromBook)
             .OrderByDescending(s => s.AverageRating)
             .ToList();
