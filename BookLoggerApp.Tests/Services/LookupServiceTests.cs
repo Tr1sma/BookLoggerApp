@@ -532,6 +532,53 @@ public class LookupServiceTests
         result!.Title.Should().Be("Recovered");
     }
 
+    [Theory]
+    [InlineData("12345")]            // too short
+    [InlineData("123456789012")]     // 12 digits — neither 10 nor 13
+    [InlineData("12345678901234")]   // 14 digits — too long
+    [InlineData("ABCDEFGHIJ")]       // letters, length 10 but not digits
+    [InlineData("978014044913X")]    // 13 chars with trailing X (X only valid for ISBN-10)
+    public async Task LookupByISBNAsync_MalformedIsbn_ReturnsNullWithoutHttpCall(string malformed)
+    {
+        var callCount = 0;
+        var mockHandler = new MockHttpMessageHandler((r) =>
+        {
+            callCount++;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(@"{""totalItems"": 0}")
+            };
+        });
+        var service = new LookupService(new HttpClient(mockHandler));
+
+        var result = await service.LookupByISBNAsync(malformed);
+
+        result.Should().BeNull();
+        callCount.Should().Be(0); // rejected before firing the API query
+    }
+
+    [Fact]
+    public async Task LookupByISBNAsync_Isbn10WithTrailingX_IsAccepted()
+    {
+        var json = @"{
+          ""items"": [
+            { ""volumeInfo"": { ""title"": ""T"", ""authors"": [""A""] } }
+          ]
+        }";
+        var called = false;
+        var mockHandler = new MockHttpMessageHandler((r) =>
+        {
+            called = true;
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) };
+        });
+        var service = new LookupService(new HttpClient(mockHandler));
+
+        var result = await service.LookupByISBNAsync("097522980X");
+
+        called.Should().BeTrue();
+        result.Should().NotBeNull();
+    }
+
     [Fact]
     public async Task SearchBooksAsync_NullQuery_ReturnsEmpty()
     {

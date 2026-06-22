@@ -137,6 +137,28 @@ public class WishlistViewModelTests
     }
 
     [Fact]
+    public async Task LookupByIsbnAsync_BlankMetadataTitleAuthor_KeepsUserInput()
+    {
+        // INK: Google occasionally returns a hit with empty title/author. Don't wipe what the
+        // user already typed — only fill fields the lookup actually populated.
+        _vm.NewTitle = "My Title";
+        _vm.NewAuthor = "My Author";
+        _vm.NewIsbn = "9780140449136";
+        _lookupService.LookupByISBNAsync("9780140449136", Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<BookMetadata?>(new BookMetadata
+            {
+                Title = "",
+                Author = "   ",
+                PageCount = 320
+            }));
+
+        await _vm.LookupByIsbnCommand.ExecuteAsync(null);
+
+        _vm.NewTitle.Should().Be("My Title");
+        _vm.NewAuthor.Should().Be("My Author");
+    }
+
+    [Fact]
     public async Task LookupByIsbnAsync_NotFound_SetsNotFoundMessage()
     {
         _vm.NewIsbn = "0000000000";

@@ -141,8 +141,12 @@ public partial class WishlistViewModel : ViewModelBase
             var metadata = await _lookupService.LookupByISBNAsync(NewIsbn.Trim());
             if (metadata != null)
             {
-                NewTitle = metadata.Title;
-                NewAuthor = metadata.Author;
+                // Only overwrite a field the lookup actually filled — keep what the user already
+                // typed if Google returns a blank title/author (mirrors BookEditViewModel).
+                if (!string.IsNullOrWhiteSpace(metadata.Title))
+                    NewTitle = metadata.Title;
+                if (!string.IsNullOrWhiteSpace(metadata.Author))
+                    NewAuthor = metadata.Author;
                 _lookupPageCount = metadata.PageCount;
                 _lookupCoverUrl = metadata.CoverImageUrl;
                 _lookupDescription = metadata.Description;
