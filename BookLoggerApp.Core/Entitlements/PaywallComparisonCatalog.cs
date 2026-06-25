@@ -45,14 +45,12 @@ public static class PaywallComparisonCatalog
 
     public static IReadOnlyList<Row> Rows { get; } = new[]
     {
-        // All plans — identical across every tier
         new Row(Category.AllPlans, "Books", "∞", "∞", "∞", LabelKey: "Paywall_Feature_Books"),
         new Row(Category.AllPlans, "Basic stats", "✓", "✓", "✓", LabelKey: "Paywall_Feature_BasicStats"),
         new Row(Category.AllPlans, "ISBN / barcode scanner", "✓", "✓", "✓", LabelKey: "Paywall_Feature_IsbnScanner"),
         new Row(Category.AllPlans, "Backup & export (CSV, ZIP)", "✓", "✓", "✓", LabelKey: "Paywall_Feature_BackupExport"),
         new Row(Category.AllPlans, "Home widgets", "✓", "✓", "✓", LabelKey: "Paywall_Feature_HomeWidgets"),
 
-        // Plus & Premium — content limits and unlocks that Free does not get (or gets a sample of)
         new Row(Category.PlusAndPremium, "Notes & quotes", "3", "∞", "∞", FeatureKey.UnlimitedNotesAndQuotes, "Paywall_Feature_NotesQuotes"),
         new Row(Category.PlusAndPremium, "Reading goals", "3", "∞", "∞", FeatureKey.UnlimitedReadingGoals, "Paywall_Feature_ReadingGoals"),
         new Row(Category.PlusAndPremium, "Shelves", "3", "∞", "∞", FeatureKey.UnlimitedShelves, "Paywall_Feature_Shelves"),
@@ -64,7 +62,6 @@ public static class PaywallComparisonCatalog
         new Row(Category.PlusAndPremium, "Shelf colors", "—", "✓", "✓", FeatureKey.CustomShelfColors, "Paywall_Feature_ShelfColors"),
         new Row(Category.PlusAndPremium, "Finish forecast", "—", "✓", "✓", FeatureKey.ReadingForecast, "Paywall_Feature_ReadingForecast"),
 
-        // Premium only — exclusive to Premium
         new Row(Category.PremiumOnly, "Trends (heatmap, radar)", "—", "—", "✓", FeatureKey.StatsTrendsTab, "Paywall_Feature_Trends"),
         new Row(Category.PremiumOnly, "Insights (year, top authors)", "—", "—", "✓", FeatureKey.StatsInsightsTab, "Paywall_Feature_Insights"),
         new Row(Category.PremiumOnly, "Share cards (Wrapped, books)", "—", "—", "✓", FeatureKey.ShareCards, "Paywall_Feature_ShareCards"),

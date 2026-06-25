@@ -6,54 +6,35 @@ using Microsoft.Extensions.Logging;
 namespace BookLoggerApp.Infrastructure.Data;
 
 /// <summary>
-/// Repairs schema drift where <c>__EFMigrationsHistory</c> claims a migration is applied
-/// but the corresponding columns or tables are absent from the SQLite DB. This was
-/// originally observed on V10 upgrades where <c>AnalyticsEnabled</c> and other
-/// AppSettings columns were missing even after <c>MigrateAsync()</c> ran without
-/// throwing — most likely caused by a crashed prior migration that left the history
-/// table out of sync with the actual schema.
-///
-/// In V10.0.6 the same failure mode was observed for the entire
-/// <c>20260422123532_AddPremiumSubscriptionSystem</c> migration. When that migration's
-/// first <c>ALTER TABLE</c> hits a "duplicate column name" on a partially-applied DB,
-/// <see cref="MigrationRecovery.IsSchemaAlreadyAppliedError"/> kicks in and force-marks
-/// the migration as applied, but the remaining 8 ALTER TABLEs, the
-/// <c>UserEntitlements</c> CREATE TABLE and the seed rows are silently skipped.
-/// This guard now repairs every column and table that migration introduces.
-///
-/// Runs after <c>MigrateAsync()</c> in <see cref="DbInitializer"/> and also as a
-/// last-chance recovery inside <c>AppSettingsProvider</c> when a "no such column"
-/// error surfaces despite the startup guard. Idempotent — every column/table add is
-/// wrapped in its own try/catch so a duplicate column doesn't abort the repair loop.
+/// Repairs schema drift where <c>__EFMigrationsHistory</c> claims a migration is applied but its
+/// columns/tables are absent (observed on V10 upgrades, and for the whole AddPremiumSubscriptionSystem
+/// migration in V10.0.6 when a force-mark skipped its remaining statements). Runs after
+/// <c>MigrateAsync()</c> in <see cref="DbInitializer"/> and as last-chance recovery in
+/// <c>AppSettingsProvider</c>. Idempotent — each add has its own try/catch.
 /// </summary>
 public static class SchemaDriftGuard
 {
     /// <summary>
-    /// Declarative list of every table the guard knows how to repair, with the
-    /// columns each must contain and (for tables that an entire migration may have
-    /// failed to create) the full <c>CREATE TABLE</c> statement plus an optional
-    /// default-row insert.
-    ///
-    /// IMPORTANT: When <see cref="UserEntitlementsCreateSql"/> changes (i.e. a future
-    /// migration alters that table's schema), this list must be updated to match.
-    /// See <c>CLAUDE.md</c> "Migration Recovery" section.
+    /// Declarative list of every table the guard repairs, with required columns and (for tables a
+    /// migration may have failed to create) the full <c>CREATE TABLE</c> plus optional seed row.
+    /// IMPORTANT: keep in sync when <see cref="UserEntitlementsCreateSql"/> changes — see CLAUDE.md.
     /// </summary>
     private static readonly IReadOnlyList<ExpectedTable> ExpectedTables = new[]
     {
-        // --- AppSettings: existing pre-V10 callers expect these to be repaired. ---
+        // AppSettings: pre-V10 callers expect these repaired.
         new ExpectedTable(
             Name: "AppSettings",
             CreateTableSql: null,
             Columns: new[]
             {
-                // V10 — AddHideGettingStartedCta (defensive: users skipping multiple versions hit this too)
+                // V10 AddHideGettingStartedCta (defensive: version-skippers hit this too)
                 new ExpectedColumn("HideGettingStartedCta",   "INTEGER NOT NULL DEFAULT 0"),
-                // V10 — AddAnalyticsConsentFields (the original drift report's source)
+                // V10 AddAnalyticsConsentFields (original drift report source)
                 new ExpectedColumn("AnalyticsEnabled",        "INTEGER NOT NULL DEFAULT 1"),
                 new ExpectedColumn("CrashReportingEnabled",   "INTEGER NOT NULL DEFAULT 1"),
                 new ExpectedColumn("PrivacyBannerDismissed",  "INTEGER NOT NULL DEFAULT 0"),
                 new ExpectedColumn("PrivacyPolicyAcceptedAt", "TEXT NULL"),
-                // V10 — AddPremiumSubscriptionSystem
+                // V10 AddPremiumSubscriptionSystem
                 new ExpectedColumn("CurrentTier",             "INTEGER NOT NULL DEFAULT 0"),
                 new ExpectedColumn("EntitlementExpiresAt",    "TEXT NULL"),
                 // AddLiveTimerNotificationSetting
@@ -63,7 +44,7 @@ public static class SchemaDriftGuard
             },
             SeedRowSqlIfJustCreated: null),
 
-        // --- AddPremiumSubscriptionSystem: ALTER TABLE columns on existing tables. ---
+        // AddPremiumSubscriptionSystem: ALTER TABLE columns on existing tables.
         new ExpectedTable(
             Name: "UserPlants",
             CreateTableSql: null,
@@ -111,14 +92,14 @@ public static class SchemaDriftGuard
             },
             SeedRowSqlIfJustCreated: null),
 
-        // --- AddPremiumSubscriptionSystem: brand-new table that may be missing. ---
+        // AddPremiumSubscriptionSystem: brand-new table that may be missing.
         new ExpectedTable(
             Name: "UserEntitlements",
             CreateTableSql: UserEntitlementsCreateSql,
             Columns: Array.Empty<ExpectedColumn>(),
             SeedRowSqlIfJustCreated: UserEntitlementsSeedSql),
 
-        // --- AddSessionMoodTracking: brand-new child table that may be missing. ---
+        // AddSessionMoodTracking: brand-new child table that may be missing.
         new ExpectedTable(
             Name: "ReadingSessionMoods",
             CreateTableSql: ReadingSessionMoodsCreateSql,
@@ -127,10 +108,8 @@ public static class SchemaDriftGuard
     };
 
     /// <summary>
-    /// Mirrors the <c>CREATE TABLE</c> emitted by migration
-    /// <c>20260422123532_AddPremiumSubscriptionSystem</c> at lines 76-104. Kept as a
-    /// constant so a future <c>UserEntitlements</c> schema change is a single-file
-    /// search target — see CLAUDE.md migration section for the maintenance rule.
+    /// Mirrors the <c>CREATE TABLE</c> from migration AddPremiumSubscriptionSystem. Kept as a
+    /// constant so a future schema change is a single-file search target — see CLAUDE.md.
     /// </summary>
     private const string UserEntitlementsCreateSql = """
         CREATE TABLE IF NOT EXISTS "UserEntitlements" (
@@ -158,10 +137,8 @@ public static class SchemaDriftGuard
         """;
 
     /// <summary>
-    /// Mirrors the <c>CREATE TABLE</c> emitted by migration
-    /// <c>AddSessionMoodTracking</c> for the per-session mood tags. Kept as a constant
-    /// so a future <c>ReadingSessionMoods</c> schema change is a single-file search
-    /// target — see CLAUDE.md migration section for the maintenance rule.
+    /// Mirrors the <c>CREATE TABLE</c> from migration AddSessionMoodTracking. Kept as a constant
+    /// so a future schema change is a single-file search target — see CLAUDE.md.
     /// </summary>
     private const string ReadingSessionMoodsCreateSql = """
         CREATE TABLE IF NOT EXISTS "ReadingSessionMoods" (
@@ -174,9 +151,8 @@ public static class SchemaDriftGuard
         """;
 
     /// <summary>
-    /// Default Free-tier <c>UserEntitlement</c> row matching the <c>InsertData</c>
-    /// at migration line 288-291. Only inserted when the guard had to create the
-    /// table from scratch — otherwise we trust whatever rows exist.
+    /// Default Free-tier <c>UserEntitlement</c> row matching the migration's <c>InsertData</c>.
+    /// Only inserted when the guard had to create the table from scratch.
     /// </summary>
     private const string UserEntitlementsSeedSql = """
         INSERT OR IGNORE INTO "UserEntitlements"
@@ -186,12 +162,9 @@ public static class SchemaDriftGuard
         """;
 
     /// <summary>
-    /// Ensures every column/table the current model expects exists in the SQLite DB,
-    /// adding any missing column via raw <c>ALTER TABLE</c> and creating any missing
-    /// table via raw <c>CREATE TABLE IF NOT EXISTS</c>. Successful repairs are
-    /// reported to Crashlytics as non-fatals so drift frequency is observable in the
-    /// field. The method never throws — startup must not crash when the guard itself
-    /// has a problem; downstream defensive recovery picks up the slack.
+    /// Ensures every expected column/table exists, adding missing ones via raw
+    /// <c>ALTER TABLE</c>/<c>CREATE TABLE IF NOT EXISTS</c>. Repairs are reported to Crashlytics so
+    /// drift is observable. Never throws — startup must not crash if the guard itself fails.
     /// </summary>
     public static async Task EnsureCriticalColumnsAsync(
         AppDbContext context,
@@ -207,9 +180,7 @@ public static class SchemaDriftGuard
             }
             catch (Exception ex)
             {
-                // Per-table catch: one failure must not abort the rest of the repair
-                // loop (e.g. a transient SQLite error on Shelves shouldn't stop us
-                // from fixing UserPlants).
+                // Per-table catch: one failure must not abort the rest of the repair loop.
                 logger?.LogError(ex, "SchemaDriftGuard: failed to repair {Table}", table.Name);
                 SafeReportNonFatal(crashReporting, ex,
                     new Dictionary<string, string>(StringComparer.Ordinal)

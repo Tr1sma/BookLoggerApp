@@ -26,11 +26,9 @@ public class GenreService : IGenreService
 
     public async Task<IReadOnlyList<Genre>> GetAllAsync(CancellationToken ct = default)
     {
-        // Try to get cached genres
         if (_cache.TryGetValue(CacheKey, out List<Genre>? cached))
             return cached!;
 
-        // Load from database if not cached
         var genres = await _unitOfWork.Genres.GetAllAsync(ct);
         var list = genres.ToList();
 
@@ -48,8 +46,7 @@ public class GenreService : IGenreService
     {
         var result = await _unitOfWork.Genres.AddAsync(genre, ct);
         await _unitOfWork.SaveChangesAsync(ct);
-        // Invalidate cache when genres are modified
-        _cache.Remove(CacheKey);
+        _cache.Remove(CacheKey); // invalidate cache on modification
         return result;
     }
 
@@ -57,8 +54,7 @@ public class GenreService : IGenreService
     {
         await _unitOfWork.Genres.UpdateAsync(genre, ct);
         await _unitOfWork.SaveChangesAsync(ct);
-        // Invalidate cache when genres are modified
-        _cache.Remove(CacheKey);
+        _cache.Remove(CacheKey); // invalidate cache on modification
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -68,8 +64,7 @@ public class GenreService : IGenreService
         {
             await _unitOfWork.Genres.DeleteAsync(genre, ct);
             await _unitOfWork.SaveChangesAsync(ct);
-            // Invalidate cache when genres are modified
-            _cache.Remove(CacheKey);
+            _cache.Remove(CacheKey); // invalidate cache on modification
         }
     }
 
@@ -77,7 +72,7 @@ public class GenreService : IGenreService
     {
         var existing = await _unitOfWork.BookGenres.FindAsync(bg => bg.BookId == bookId && bg.GenreId == genreId);
         if (existing.Any())
-            return; // Already exists
+            return;
 
         var bookGenre = new BookGenre
         {
@@ -117,8 +112,7 @@ public class GenreService : IGenreService
 
     public async Task<IReadOnlyList<Trope>> GetTropesForBookAsync(Guid bookId, CancellationToken ct = default)
     {
-        // HIGH-1003: Tropes (Plus) tags are preserved but not surfaced for a non-entitled user
-        // (e.g. tags carried in a restored higher-tier backup); they reappear on re-upgrade.
+        // HIGH-1003: Tropes (Plus) tags are preserved but hidden for non-entitled users; reappear on re-upgrade.
         if (_featureGuard is not null && !_featureGuard.HasAccess(FeatureKey.Tropes))
             return Array.Empty<Trope>();
 
@@ -131,9 +125,8 @@ public class GenreService : IGenreService
 
     public async Task AddTropeToBookAsync(Guid bookId, Guid tropeId, CancellationToken ct = default)
     {
-        // CODE_REVIEW SEC-17: Tropes (Plus) tagging was gated only by the BookEdit.razor overlay.
-        // Enforce in the service so every caller is covered (RemoveTropeFromBookAsync stays open
-        // so downgraded users can still clean up existing trope tags).
+        // SEC-17: enforce Tropes (Plus) gate in the service so every caller is covered, not just the
+        // BookEdit.razor overlay (RemoveTropeFromBookAsync stays open so downgraded users can clean up).
         _featureGuard?.RequireAccess(FeatureKey.Tropes, "Tropes require Plus.");
 
         var existing = await _unitOfWork.BookTropes.FindAsync(bt => bt.BookId == bookId && bt.TropeId == tropeId);

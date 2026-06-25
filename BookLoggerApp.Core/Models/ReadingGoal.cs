@@ -4,9 +4,7 @@ using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Represents a user reading goal (e.g., read 5 books this month).
-/// </summary>
+/// <summary>A user reading goal (e.g., read 5 books this month).</summary>
 public class ReadingGoal
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -20,12 +18,11 @@ public class ReadingGoal
 
     public GoalType Type { get; set; } // Books, Pages, Minutes
 
-    // Z.598: upper bound matches ReadingGoalValidator (LessThanOrEqualTo 100_000) and the
-    // Validator_Goal_TargetMax message ("…cannot exceed 100,000") — the [Range] was 1_000_000.
+    // Upper bound must match ReadingGoalValidator (<= 100,000) and the Validator_Goal_TargetMax message.
     [Range(1, 100000)]
-    public int Target { get; set; } // Target value (e.g., 5 books, 1000 pages, 600 minutes)
+    public int Target { get; set; } // Target value (e.g., 5 books, 1000 pages, 600 minutes).
 
-    public int Current { get; set; } = 0; // Current progress
+    public int Current { get; set; } = 0;
 
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
@@ -33,20 +30,16 @@ public class ReadingGoal
     public bool IsCompleted { get; set; } = false;
     public DateTime? CompletedAt { get; set; }
 
-    // Navigation Properties
     public ICollection<GoalExcludedBook> ExcludedBooks { get; set; } = new List<GoalExcludedBook>();
     public ICollection<GoalGenre> GoalGenres { get; set; } = new List<GoalGenre>();
 
-    // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }
 
-    // Computed Properties
     public int ProgressPercentage => Target > 0 ? (Current * 100 / Target) : 0;
 
-    // Active is decided against local midnight (DateTime.Now), never DateTime.UtcNow, because
-    // EndDate comes from the UI's <input type="date"> picker as Kind=Unspecified with ticks
-    // representing the user's local calendar date. The rule lives in GoalActivityHelper so the
-    // app, the repository query and the Android widget cannot drift (CODE_REVIEW INK-06).
+    // Use local midnight (DateTime.Now), not UtcNow: EndDate comes from the date picker as
+    // Kind=Unspecified ticks for the user's local calendar date. Logic lives in GoalActivityHelper
+    // so app, repository query, and widget can't drift.
     public bool IsActive => GoalActivityHelper.IsActiveAsOf(this, DateTime.Now);
 }

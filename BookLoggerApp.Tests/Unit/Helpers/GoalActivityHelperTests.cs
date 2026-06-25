@@ -27,9 +27,8 @@ public class GoalActivityHelperTests
     [Fact]
     public void IsActiveAsOf_EndDateIsTodayLateInDay_StillActive()
     {
-        // The goal's last day: EndDate is local midnight, "now" is 23:00 the same local day.
-        // A DateTime.UtcNow / now-instant comparison would have dropped it hours ago — the
-        // local-midnight cutoff must keep it active for the whole final day (INK-06).
+        // Last day: EndDate is local midnight, now is 23:00 same day. The local-midnight cutoff
+        // must keep the goal active for the whole final day.
         var endDate = new DateTime(2025, 6, 10);
         var asOf = new DateTime(2025, 6, 10, 23, 0, 0);
 

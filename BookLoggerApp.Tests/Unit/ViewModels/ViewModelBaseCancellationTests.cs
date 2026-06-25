@@ -6,12 +6,9 @@ using Xunit;
 namespace BookLoggerApp.Tests.Unit.ViewModels;
 
 /// <summary>
-/// CODE_REVIEW CQ-01: ViewModels never produced a CancellationToken, so the ct plumbing through
-/// the service/repository layer delivered no benefit — every load passed default(CancellationToken).
-/// ViewModelBase now owns a per-load CancellationTokenSource: the token-accepting ExecuteSafely*
-/// overloads hand a live token to the action, a new load supersedes (cancels) the previous one,
-/// and <see cref="ViewModelBase.CancelOngoingLoad"/> lets a page cancel an in-flight load on
-/// teardown. A superseded/cancelled load must NOT surface as an error.
+/// ViewModelBase owns a per-load CancellationTokenSource: a new load supersedes (cancels) the
+/// previous one and <see cref="ViewModelBase.CancelOngoingLoad"/> cancels on teardown. A
+/// superseded/cancelled load must NOT surface as an error.
 /// </summary>
 public class ViewModelBaseCancellationTests
 {
@@ -124,10 +121,8 @@ public class ViewModelBaseCancellationTests
     [Fact]
     public async Task SupersededLoad_ThrowingNonCancellationException_DoesNotClobberActiveLoad()
     {
-        // A superseded load whose query fails with a NON-OperationCanceledException (e.g. EF's
-        // "A second operation was started on this context" InvalidOperationException, very plausible
-        // with the shared transient DbContext) must not write its error into / flip the busy flag of
-        // the newer load that now owns the scope.
+        // A superseded load failing with a non-OCE (e.g. EF "second operation" on the shared
+        // DbContext) must not clobber the error/busy state of the newer load that owns the scope.
         var vm = new ScopedVm();
         var firstStarted = new TaskCompletionSource();
         var releaseFirst = new TaskCompletionSource();

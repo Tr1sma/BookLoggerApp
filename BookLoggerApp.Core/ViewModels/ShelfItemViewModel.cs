@@ -10,7 +10,7 @@ public partial class ShelfItemViewModel : ObservableObject
     public ShelfItemType Type { get; set; }
     public int SlotWidth { get; set; } = 1;
 
-    // Union-ish properties
+    // Only one of these is set per item, by Type.
     public Book? Book { get; set; }
     public UserPlant? Plant { get; set; }
     public UserDecoration? Decoration { get; set; }

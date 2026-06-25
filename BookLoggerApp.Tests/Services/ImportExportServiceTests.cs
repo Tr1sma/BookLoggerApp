@@ -65,9 +65,7 @@ public class ImportExportServiceTests
     [Fact]
     public async Task DeleteAllDataAsync_ResetsProgressionThroughTheSerializedProvider()
     {
-        // CODE_REVIEW BUG-08: the settings reset must go through AppSettingsProvider (which
-        // serialises writes via its _writeGate), not a raw context write that can race a concurrent
-        // coin/XP award. Assert the reset is routed through the gated UpdateSettingsAsync.
+        // BUG-08: reset must route through gated UpdateSettingsAsync, not a raw write that can race a coin/XP award.
         var dbName = Guid.NewGuid().ToString();
         using var context = TestDbContext.Create(dbName);
         var contextFactory = new TestDbContextFactory(dbName);
@@ -88,8 +86,7 @@ public class ImportExportServiceTests
     [Fact]
     public async Task ImportFromJsonAsync_WithoutWishlistEntitlement_StripsWishlistInfo()
     {
-        // HIGH-1003: importing a backup from a Plus/Premium account must NOT reintroduce the
-        // Plus-only Wishlist metadata for a user who is not entitled to the Wishlist feature.
+        // HIGH-1003: import must not reintroduce Plus-only Wishlist metadata for an unentitled user.
         var sourceDbName = Guid.NewGuid().ToString();
         using (var sourceContext = TestDbContext.Create(sourceDbName))
         {
@@ -158,7 +155,6 @@ public class ImportExportServiceTests
     [Fact]
     public async Task ExportToJsonAsync_ShouldExportBooksAsJson()
     {
-        // Arrange
         var dbName = Guid.NewGuid().ToString();
         using var context = TestDbContext.Create(dbName);
         context.Books.Add(new Book
@@ -172,10 +168,8 @@ public class ImportExportServiceTests
         var contextFactory = new TestDbContextFactory(dbName);
         var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act
         var json = await service.ExportToJsonAsync();
 
-        // Assert
         json.Should().NotBeNullOrEmpty();
         json.Should().Contain("Test Book");
         json.Should().Contain("Test Author");
@@ -185,7 +179,6 @@ public class ImportExportServiceTests
     [Fact]
     public async Task ExportToCsvAsync_ShouldExportBooksAsCsv()
     {
-        // Arrange
         var dbName = Guid.NewGuid().ToString();
         using var context = TestDbContext.Create(dbName);
         context.Books.Add(new Book
@@ -199,10 +192,8 @@ public class ImportExportServiceTests
         var contextFactory = new TestDbContextFactory(dbName);
         var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act
         var csv = await service.ExportToCsvAsync();
 
-        // Assert
         csv.Should().NotBeNullOrEmpty();
         csv.Should().Contain("Test Book");
         csv.Should().Contain("Test Author");
@@ -213,7 +204,7 @@ public class ImportExportServiceTests
     [Fact]
     public async Task ExportToCsvAsync_NeutralizesFormulaInjection()
     {
-        // Arrange — a book whose untrusted fields begin with spreadsheet formula triggers.
+        // Untrusted fields begin with spreadsheet formula triggers.
         var dbName = Guid.NewGuid().ToString();
         using var context = TestDbContext.Create(dbName);
         context.Books.Add(new Book
@@ -227,11 +218,9 @@ public class ImportExportServiceTests
         var contextFactory = new TestDbContextFactory(dbName);
         var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act
         var csv = await service.ExportToCsvAsync();
 
-        // Assert — the dangerous leading characters are escaped with a leading apostrophe,
-        // so a spreadsheet renders them as text instead of executing a formula.
+        // Dangerous leading chars get an apostrophe prefix so spreadsheets treat them as text.
         csv.Should().Contain("'=HYPERLINK");
         csv.Should().Contain("'@SUM");
         csv.Should().NotContain(",=HYPERLINK");
@@ -240,7 +229,6 @@ public class ImportExportServiceTests
     [Fact]
     public async Task ImportFromJsonAsync_ShouldImportBooks()
     {
-        // Arrange
         var exportDbName = Guid.NewGuid().ToString();
         using var exportContext = TestDbContext.Create(exportDbName);
         exportContext.Books.Add(new Book
@@ -261,12 +249,10 @@ public class ImportExportServiceTests
         var importContextFactory = new TestDbContextFactory(importDbName);
         var importService = new ImportExportService(importContextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act
         var importedCount = await importService.ImportFromJsonAsync(json);
 
-        // Assert
         importedCount.Should().Be(1);
-        // Need to query from a new context to see the imported data
+        // Query from a new context to see the imported data.
         using var verifyContext = TestDbContext.Create(importDbName);
         var books = verifyContext.Books.ToList();
         books.Should().HaveCount(1);
@@ -277,7 +263,6 @@ public class ImportExportServiceTests
     [Fact]
     public async Task JsonRoundTrip_ShouldPreserveSessionMoods()
     {
-        // Arrange — a book with one session tagged with two moods.
         var exportDbName = Guid.NewGuid().ToString();
         var bookId = Guid.NewGuid();
         using var exportContext = TestDbContext.Create(exportDbName);
@@ -312,10 +297,8 @@ public class ImportExportServiceTests
         var importService = new ImportExportService(
             new TestDbContextFactory(importDbName), CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act
         var importedCount = await importService.ImportFromJsonAsync(json);
 
-        // Assert — the moods survived export -> import.
         importedCount.Should().Be(1);
         using var verifyContext = TestDbContext.Create(importDbName);
         var moods = verifyContext.ReadingSessionMoods.Select(m => m.Mood).ToList();
@@ -325,11 +308,8 @@ public class ImportExportServiceTests
     [Fact]
     public async Task ImportFromJsonAsync_WithSeededGenre_DoesNotCollideOnGenrePrimaryKey()
     {
-        // BUG-03: exported books carry their BookGenres + the full Genre entity, whose
-        // primary key is a fixed seed Guid identical on every device. Importing such a
-        // book into any DB (which already holds the seeded genres) used to re-INSERT the
-        // seed Genre row → PK/UNIQUE violation that aborted the whole import. On a real
-        // SQLite engine this reproduces; the EF InMemory provider hides it.
+        // BUG-03: exported books carry the seed Genre's fixed Guid; re-importing it used to cause a
+        // PK/UNIQUE violation on real SQLite (the EF InMemory provider hides it).
         using var source = new SqliteTestContext();
         Guid seededGenreId;
         string seededGenreName;
@@ -354,11 +334,10 @@ public class ImportExportServiceTests
         using var target = new SqliteTestContext(); // fresh DB with the same seeded genres
         var importService = new ImportExportService(target.CreateFactory(), CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act — must not throw a PK/unique violation on the seeded genre.
+        // Must not throw a PK/unique violation on the seeded genre.
         var imported = await importService.ImportFromJsonAsync(json);
 
-        // Assert — book imported and linked to the EXISTING seeded genre (find-or-create),
-        // with no duplicate genre row.
+        // Book links to the existing seeded genre (find-or-create), no duplicate row.
         imported.Should().Be(1);
         using var verify = target.CreateContext();
         var book = verify.Books.Include(b => b.BookGenres).Single(b => b.Title == "Imported Book");
@@ -369,9 +348,8 @@ public class ImportExportServiceTests
     [Fact]
     public async Task ImportFromJsonAsync_OnRealEngine_AssignsFreshIdsAndPreservesChildren()
     {
-        // BUG-03: importing must reassign new primary keys to the book and its children so
-        // re-importing the same export (or merging into a DB that shares child PKs) cannot
-        // collide. Children (sessions) must still survive the id rewiring.
+        // BUG-03: import reassigns fresh PKs to book and children to avoid re-import collisions;
+        // children (sessions) must survive the id rewiring.
         using var source = new SqliteTestContext();
         Guid originalBookId = Guid.NewGuid();
         using (var ctx = source.CreateContext())
@@ -409,7 +387,6 @@ public class ImportExportServiceTests
     [Fact]
     public async Task ImportFromCsvAsync_ShouldImportBooks()
     {
-        // Arrange
         var csv = @"Id,Title,Author,ISBN,Publisher,PublicationYear,Language,Description,PageCount,CurrentPage,CoverImagePath,Status,Rating,DateAdded,DateStarted,DateCompleted,Genres
 d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publisher,2023,en,Test Description,300,0,,Planned,5,2023-01-01T00:00:00,,,Fiction;Fantasy";
 
@@ -418,12 +395,10 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         var contextFactory = new TestDbContextFactory(dbName);
         var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act
         var importedCount = await service.ImportFromCsvAsync(csv);
 
-        // Assert
         importedCount.Should().Be(1);
-        // Need to query from a new context to see the imported data
+        // Query from a new context to see the imported data.
         using var verifyContext = TestDbContext.Create(dbName);
         var books = verifyContext.Books.ToList();
         books.Should().HaveCount(1);
@@ -435,15 +410,8 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
     [Fact]
     public async Task ImportFromCsvAsync_WithManyNewGenresAcrossMultipleBooks_ShouldPersistEveryGenreAssociation()
     {
-        // Regression gate around the CSV import's "create-new-Genre-inline" path. The
-        // import creates Genre entities without assigning a Guid (Genre.Id stays as
-        // default(Guid)) and then builds BookGenre rows with `GenreId = genre.Id` before
-        // SaveChanges runs. This works because EF Core's client-side Guid key generator
-        // populates the new Genre's PK during Add(), so each BookGenre picks up a real
-        // Guid at the moment of assignment. This test pins that behavior with three books,
-        // five brand-new genres, and overlapping assignments — if a future change breaks
-        // the propagation (e.g. by adding Genre entities but not tracking them, or by
-        // reordering Add/assign), the overlap assertions will fail.
+        // Regression: EF's client-side Guid generator populates a new Genre's PK on Add(), so
+        // BookGenre.GenreId gets a real Guid before SaveChanges. Three books, five genres, overlapping links.
         const string gA = "DiagGenre_A", gB = "DiagGenre_B", gC = "DiagGenre_C",
                      gD = "DiagGenre_D", gE = "DiagGenre_E";
         var csv = $@"Id,Title,Author,ISBN,Publisher,PublicationYear,Language,Description,PageCount,CurrentPage,CoverImagePath,Status,Rating,DateAdded,DateStarted,DateCompleted,Genres
@@ -456,10 +424,8 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         var contextFactory = new TestDbContextFactory(dbName);
         var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act
         await service.ImportFromCsvAsync(csv);
 
-        // Assert — every diagnostic genre must exist, every book-genre link must resolve
         using var verifyContext = TestDbContext.Create(dbName);
         var expectedNames = new[] { gA, gB, gC, gD, gE };
         var newGenres = verifyContext.Genres
@@ -496,9 +462,8 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
     [Fact]
     public async Task ImportFromCsvAsync_WithMultipleNewGenres_ShouldPersistAllGenreAssociations()
     {
-        // Simpler companion to the multi-book regression test above: two brand-new genre
-        // names (not in the seed data) on a single book, to confirm new Genre rows and
-        // their BookGenre junctions are persisted with real, distinct primary keys.
+        // Companion to the multi-book test: two new genres on one book persist as Genre rows
+        // and BookGenre junctions with real, distinct PKs.
         const string genreA = "ImportTestGenre_Alpha";
         const string genreB = "ImportTestGenre_Beta";
         var csv = $@"Id,Title,Author,ISBN,Publisher,PublicationYear,Language,Description,PageCount,CurrentPage,CoverImagePath,Status,Rating,DateAdded,DateStarted,DateCompleted,Genres
@@ -509,11 +474,8 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         var contextFactory = new TestDbContextFactory(dbName);
         var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act
         await service.ImportFromCsvAsync(csv);
 
-        // Assert — both new Genre rows must exist with real (non-empty) IDs, and two
-        // BookGenre rows must link the imported book to those Genre IDs.
         using var verifyContext = TestDbContext.Create(dbName);
         var newGenres = verifyContext.Genres
             .Where(g => g.Name == genreA || g.Name == genreB)
@@ -535,7 +497,6 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
     [Fact]
     public async Task ImportFromJsonAsync_WithDuplicates_ShouldSkipDuplicates()
     {
-        // Arrange
         var dbName = Guid.NewGuid().ToString();
         using var context = TestDbContext.Create(dbName);
         var existingBook = new Book
@@ -551,26 +512,19 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
         var json = await service.ExportToJsonAsync();
 
-        // Act - import the same books again
         var importedCount = await service.ImportFromJsonAsync(json);
 
-        // Assert
-        importedCount.Should().Be(0); // No new books imported
-        // Need to query from a new context to verify count
+        importedCount.Should().Be(0);
         using var verifyContext = TestDbContext.Create(dbName);
-        verifyContext.Books.Should().HaveCount(1); // Still only 1 book
+        verifyContext.Books.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task DeleteAllDataAsync_WithOwnedDecorations_RemovesDecorationsAndShelves()
     {
-        // Regression: DeleteAllDataAsync previously omitted UserDecorations and
-        // DecorationShelves from the RemoveRange chain. Because UserDecoration →
-        // ShopItem has DeleteBehavior.Restrict, the subsequent ShopItems.RemoveRange
-        // would raise an FK-violation on a real SQLite DB as soon as any decoration
-        // had been purchased. On the in-memory provider (which doesn't enforce FKs)
-        // the visible symptom was zombie UserDecoration rows referencing deleted
-        // ShopItems. Both aspects are pinned by this test.
+        // Regression: DeleteAllDataAsync omitted UserDecorations/DecorationShelves from RemoveRange.
+        // UserDecoration -> ShopItem is Restrict, so removing ShopItems threw an FK violation on real
+        // SQLite once a decoration was purchased (in-memory left zombie rows instead).
         var dbName = Guid.NewGuid().ToString();
         var shopItemId = Guid.NewGuid();
         var decorationId = Guid.NewGuid();
@@ -610,10 +564,9 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         var contextFactory = new TestDbContextFactory(dbName);
         var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act — must not throw
+        // Must not throw.
         await service.DeleteAllDataAsync();
 
-        // Assert
         using var verifyContext = TestDbContext.Create(dbName);
         verifyContext.UserDecorations.Should().BeEmpty(
             "purchased decorations must be removed on DeleteAllDataAsync");
@@ -637,10 +590,8 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         var contextFactory = new TestDbContextFactory(dbName);
         var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act
         await service.DeleteAllDataAsync();
 
-        // Assert
         using var verifyContext = TestDbContext.Create(dbName);
         verifyContext.Books.Should().BeEmpty();
         verifyContext.UserDecorations.Should().BeEmpty();
@@ -649,7 +600,6 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
     [Fact]
     public async Task CreateBackupAsync_ShouldCreateBackupFile()
     {
-        // Arrange
         var dbName = Guid.NewGuid().ToString();
         using var context = TestDbContext.Create(dbName);
         context.Books.Add(new Book { Title = "Test", Author = "Test" });
@@ -658,14 +608,9 @@ d5e6f7a8-b9c0-1234-5678-90abcdef1234,Test Book,Test Author,1234567890,Test Publi
         var contextFactory = new TestDbContextFactory(dbName);
         var service = new ImportExportService(contextFactory, CreateFileSystem(), CreateMockSettingsProvider());
 
-        // Act & Assert
-        // Note: Backup functionality requires a real SQLite database file,
-        // so this test would need to be an integration test or use a temp SQLite file
-        // For now, we just verify the method exists and doesn't throw
+        // Backup needs a real SQLite file; in-memory DB has no file path so this throws.
         Func<Task> act = async () => await service.CreateBackupAsync();
 
-        // This will throw because in-memory DB doesn't have a file path
-        // In a real scenario with a file-based DB, this would work
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
 }

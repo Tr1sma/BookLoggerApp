@@ -198,31 +198,24 @@ public class ZipSlipTests
 {
     static ZipSlipTests()
     {
-        // RestoreFromBackupAsync gates on DatabaseInitializationHelper.EnsureInitializedAsync
-        // to avoid racing the fire-and-forget DbInitializer on fresh installs. Tests bypass
-        // the initializer entirely, so satisfy the gate eagerly and idempotently here.
+        // RestoreFromBackupAsync gates on EnsureInitializedAsync; tests bypass the
+        // initializer, so satisfy the gate eagerly here.
         BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.MarkAsInitialized();
     }
 
     [Fact]
     public async Task RestoreFromBackupAsync_ShouldThrowIOException_OnZipSlip()
     {
-        // Arrange
         var tempDir = Path.Combine(Path.GetTempPath(), "ZipSlipTests_" + Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
         var zipPath = Path.Combine(tempDir, "malicious.zip");
 
         try
         {
-            // 1. Create a malicious zip file
-            // We can't use the standard ZipFile.CreateFromDirectory to easily create ".." entries
-            // because it sanitizes them. We must manipulate the archive directly.
+            // Build the archive directly: ZipFile.CreateFromDirectory sanitizes ".." entries.
             using (var fileStream = new FileStream(zipPath, FileMode.Create))
             using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Create))
             {
-                // Create an entry with ".." in the name
-                // Note: Windows and some libraries might sanitize this automatically,
-                // but this is the standard way to attempt a creation of such an entry for testing.
                 var entry = archive.CreateEntry("../../evil.txt");
                 using (var entryStream = entry.Open())
                 using (var writer = new StreamWriter(entryStream))
@@ -231,13 +224,12 @@ public class ZipSlipTests
                 }
             }
 
-            // 2. Setup Service
             var dbName = Guid.NewGuid().ToString();
             var contextFactory = new TestDbContextFactory(dbName);
             var fileSystem = new MockFileSystem();
             var settingsProvider = new MockAppSettingsProvider();
 
-            // Pass the tempDir as appDataPath so backups/restores happen there
+            // Pass tempDir as appDataPath so backups/restores happen there.
             var service = new ImportExportService(
                 contextFactory,
                 fileSystem,
@@ -245,8 +237,7 @@ public class ZipSlipTests
                 null,
                 tempDir);
 
-            // Act & Assert
-            // The service should detect the ".." in the entry name and throw an IOException
+            // Service must detect ".." in the entry name and throw.
             await Assert.ThrowsAsync<IOException>(async () =>
             {
                 await service.RestoreFromBackupAsync(zipPath);

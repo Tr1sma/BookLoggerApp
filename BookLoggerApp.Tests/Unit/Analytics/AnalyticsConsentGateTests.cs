@@ -71,8 +71,8 @@ public class AnalyticsConsentGateTests : IDisposable
     [Fact]
     public async Task ConsentChanged_fires_and_initializes_on_settings_change_before_initialize()
     {
-        // Z.181: unified ApplyConsentAndNotify path — a settings change that lands before
-        // InitializeAsync now applies consent, marks the gate initialized, and notifies.
+        // A settings change landing before InitializeAsync applies consent, marks the gate
+        // initialized, and notifies.
         var provider = new FakeSettingsProvider(analytics: false, crash: false);
         using var gate = new AnalyticsConsentGate(provider);
 

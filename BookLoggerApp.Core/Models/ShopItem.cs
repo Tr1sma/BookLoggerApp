@@ -10,7 +10,7 @@ public class ShopItem
 {
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    public ShopItemType ItemType { get; set; } // Plant, Theme, Decoration
+    public ShopItemType ItemType { get; set; }
 
     [Required]
     [MaxLength(100)]
@@ -20,7 +20,7 @@ public class ShopItem
     public string? Description { get; set; }
 
     [Range(0, 1000000)]
-    public int Cost { get; set; } // Cost in coins or XP
+    public int Cost { get; set; } // coins or XP
 
     [MaxLength(500)]
     public string ImagePath { get; set; } = string.Empty;
@@ -57,11 +57,9 @@ public class ShopItem
     /// </summary>
     public bool IsUltimateTier { get; set; } = false;
 
-    // For Plants: Reference to PlantSpecies
     public Guid? PlantSpeciesId { get; set; }
     public PlantSpecies? PlantSpecies { get; set; }
 
-    // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }
 }

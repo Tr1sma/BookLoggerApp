@@ -33,12 +33,10 @@ public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
         builder.Property(si => si.UnlockLevel)
             .IsRequired();
 
-        // Indexes
         builder.HasIndex(si => si.ItemType);
         builder.HasIndex(si => si.UnlockLevel);
         builder.HasIndex(si => si.IsAvailable);
 
-        // Relationship to PlantSpecies (optional)
         builder.HasOne(si => si.PlantSpecies)
             .WithMany()
             .HasForeignKey(si => si.PlantSpeciesId)

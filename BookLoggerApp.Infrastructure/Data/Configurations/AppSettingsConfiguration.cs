@@ -5,9 +5,7 @@ using BookLoggerApp.Core.Models;
 
 namespace BookLoggerApp.Infrastructure.Data.Configurations;
 
-/// <summary>
-/// EF Core configuration for AppSettings entity.
-/// </summary>
+/// <summary>EF Core configuration for the AppSettings entity.</summary>
 public class AppSettingsConfiguration : IEntityTypeConfiguration<AppSettings>
 {
     public void Configure(EntityTypeBuilder<AppSettings> builder)

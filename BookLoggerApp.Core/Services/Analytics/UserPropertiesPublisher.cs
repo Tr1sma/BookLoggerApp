@@ -8,8 +8,7 @@ public sealed class UserPropertiesPublisher
     private readonly IAnalyticsService _analytics;
     private readonly ICrashReportingService? _crashReporting;
 
-    // Z.652: crash reporter is optional (default null) so existing tests can construct the
-    // publisher with just the analytics service. The crash reporter itself respects consent.
+    // Crash reporter optional (default null) so tests can construct with analytics only; reporter respects consent.
     public UserPropertiesPublisher(IAnalyticsService analytics, ICrashReportingService? crashReporting = null)
     {
         _analytics = analytics;
@@ -51,9 +50,7 @@ public sealed class UserPropertiesPublisher
         }
     }
 
-    // Z.652: surface the previously-swallowed failure as a non-fatal (consent gated inside the
-    // crash service) instead of only Debug.WriteLine, so publish breakages are observable in the
-    // field rather than silent.
+    // Surface swallowed failure as a non-fatal (consent-gated) so publish breakages are observable, not silent.
     private void ReportNonFatal(Exception ex, string phase)
     {
         System.Diagnostics.Debug.WriteLine($"UserPropertiesPublisher.{phase} failed: {ex}");
@@ -67,7 +64,7 @@ public sealed class UserPropertiesPublisher
         }
         catch
         {
-            // Reporting must never replace the original swallow — a failing crash sink is moot here.
+            // A failing crash sink must never replace the original swallow.
         }
     }
 }

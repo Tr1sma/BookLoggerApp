@@ -59,7 +59,6 @@ public partial class StatsAnalysesViewModel : ViewModelBase
     {
         await ExecuteSafelyWithDbAsync(async ct =>
         {
-            // Load available years first
             var periods = await _statsService.GetActiveReadingPeriodsAsync(ct);
             AvailableYears = periods.Select(p => p.Year).Distinct().OrderByDescending(y => y).ToList();
 
@@ -108,8 +107,6 @@ public partial class StatsAnalysesViewModel : ViewModelBase
         }, Tr("Error_FailedTo_LoadAnalysisStatistics"));
     }
 
-    // Z.606: year-change command wrapped in ExecuteSafelyWithDbAsync (IsBusy/ClearError/DB-gate/
-    // crash-report + ct) like LoadAsync, instead of an unguarded direct service call.
     [RelayCommand]
     public async Task ChangeComparisonYearsAsync((int year1, int year2) years)
     {

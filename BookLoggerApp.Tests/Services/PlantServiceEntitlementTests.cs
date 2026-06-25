@@ -16,9 +16,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// CODE_REVIEW SEC-08 (plant-tier purchase entitlement enforced in the service, not only the
-/// PlantShop.razor LockedFeatureButton overlay) and SEC-11 (hidden-by-entitlement plants must
-/// not surface in reads after a downgrade).
+/// SEC-08: plant-tier purchase entitlement enforced in the service, not just the UI overlay.
+/// SEC-11: hidden-by-entitlement plants must not surface in reads after a downgrade.
 /// </summary>
 public class PlantServiceEntitlementTests : IDisposable
 {

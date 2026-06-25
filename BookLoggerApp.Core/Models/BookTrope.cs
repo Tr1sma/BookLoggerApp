@@ -2,9 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Join entity for the Many-to-Many relationship between Book and Trope.
-/// </summary>
+/// <summary>Many-to-many join between Book and Trope.</summary>
 public class BookTrope
 {
     public Guid BookId { get; set; }

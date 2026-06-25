@@ -3,9 +3,7 @@ using BookLoggerApp.Core.Entitlements;
 
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Represents user app settings (single-row table).
-/// </summary>
+/// <summary>User app settings (single-row table).</summary>
 public class AppSettings
 {
     public Guid Id { get; set; }
@@ -29,16 +27,15 @@ public class AppSettings
     public TimeSpan? ReminderTime { get; set; } // e.g., 20:00 daily
 
     /// <summary>
-    /// Whether the live reading-timer lock-screen notification (Android foreground service)
-    /// is shown during a reading session. Gated by <see cref="NotificationsEnabled"/>.
-    /// Defaults to true so existing users with notifications on get it without opting in.
+    /// Whether the live reading-timer lock-screen notification (Android foreground service) shows
+    /// during a session. Gated by <see cref="NotificationsEnabled"/>. Defaults true so existing
+    /// users with notifications on get it without opting in.
     /// </summary>
     public bool LiveTimerNotificationEnabled { get; set; } = true;
 
     /// <summary>
-    /// Whether mood/trigger tracking is shown: the per-session emoji picker when ending a
-    /// reading session, and the "Emotional Journey" chart on the book detail page.
-    /// Defaults to true so existing users see the feature without opting in.
+    /// Whether mood/trigger tracking is shown (per-session emoji picker and the book-detail
+    /// "Emotional Journey" chart). Defaults true so existing users see it without opting in.
     /// </summary>
     public bool MoodTrackingEnabled { get; set; } = true;
 

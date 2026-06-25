@@ -32,9 +32,8 @@ public class ProductCatalog : IProductCatalog
         _forward.ToDictionary(kv => kv.Value, kv => kv.Key, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// SKUs that have a confirmed Play Console introductory offer. Intentionally empty until a
-    /// real intro offer is configured: the paywall must not advertise a "first month" price on a
-    /// SKU that does not have one (CODE_REVIEW LOG-07). Add the SKU constant here once verified.
+    /// SKUs with a confirmed Play Console intro offer. Empty until configured so the paywall never
+    /// advertises a "first month" price on a SKU without one (LOG-07). Add SKU constants once verified.
     /// </summary>
     private static readonly HashSet<string> _introOfferSkus = new(StringComparer.OrdinalIgnoreCase);
 

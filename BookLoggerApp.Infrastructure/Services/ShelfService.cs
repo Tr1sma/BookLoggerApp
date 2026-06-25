@@ -41,8 +41,7 @@ public class ShelfService : IShelfService
             .Include(s => s.DecorationShelves)
             .ThenInclude(ds => ds.Decoration)
             .ThenInclude(d => d.ShopItem)
-            // Same entitlement filter as GetAllShelvesAsync: a downgrade-hidden shelf must not be
-            // reachable by direct id either, otherwise deep-links / stale nav would surface it.
+            // Same entitlement filter as GetAllShelvesAsync, so deep-links can't surface a hidden shelf.
             .FirstOrDefaultAsync(s => s.Id == id && !s.IsHiddenByEntitlement, ct);
     }
 
@@ -60,7 +59,7 @@ public class ShelfService : IShelfService
                 $"Free tier is limited to {FreeTierShelfCap} shelves. Upgrade to Plus for unlimited shelves.");
         }
 
-        // Assign sort order to be last
+        // Sort last
         var maxSortOrder = await context.Shelves.MaxAsync(s => (int?)s.SortOrder, ct) ?? 0;
         shelf.SortOrder = maxSortOrder + 1;
 
@@ -96,7 +95,7 @@ public class ShelfService : IShelfService
                 await context.SaveChangesAsync(ct);
             }
 
-            // Get current max position on the Main shelf
+            // Current max position on the Main shelf
             var maxBookPos = await context.BookShelves.Where(bs => bs.ShelfId == mainShelf.Id)
                 .MaxAsync(bs => (int?)bs.Position, ct) ?? -1;
             var maxPlantPos = await context.PlantShelves.Where(ps => ps.ShelfId == mainShelf.Id)
@@ -186,7 +185,7 @@ public class ShelfService : IShelfService
         }
         catch
         {
-            // Roll back with None so cleanup still runs even if ct is what tripped the failure.
+            // Roll back with None so cleanup runs even if ct triggered the failure.
             await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
@@ -201,11 +200,8 @@ public class ShelfService : IShelfService
 
         if (!exists)
         {
-            // Append at the end of the shelf's unified position space, identical to
-            // AddPlantToShelfAsync / AddDecorationToShelfAsync. Books, plants and
-            // decorations share one Position sequence on a shelf, so inserting a book
-            // at 0 (shifting only BookShelves) collided with plants/decorations already
-            // there and produced unstable ordering. (INK-02)
+            // Append to the shelf's unified Position sequence (books/plants/decorations share it);
+            // inserting at 0 collided with existing items and gave unstable ordering. (INK-02)
             var maxPos = await GetMaxPositionOnShelfAsync(context, shelfId, ct);
 
             context.BookShelves.Add(new BookShelf

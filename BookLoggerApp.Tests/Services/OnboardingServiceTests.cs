@@ -133,8 +133,7 @@ public class OnboardingServiceTests
     [Fact]
     public async Task GetSnapshotAsync_CompletesRatingMission_WhenGenreRelevantCategoriesRated_WithoutSpiceLevel()
     {
-        // Fantasy genre id (seeded). Its relevant categories per GenreRatingMapping are
-        // Characters, Plot, WritingStyle, Pacing, WorldBuilding, Atmosphaere — no SpiceLevel.
+        // Fantasy's relevant categories per GenreRatingMapping exclude SpiceLevel.
         var fantasyGenreId = Guid.Parse("00000000-0000-0000-0000-000000000003");
         var databaseName = Guid.NewGuid().ToString();
 
@@ -210,11 +209,6 @@ public class OnboardingServiceTests
         return new OnboardingService(contextFactory, settingsProvider, NullLogger<OnboardingService>.Instance);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Coverage-ergänzende Tests (Advance, Retreat, Complete, ResetAll,
-    // TrackEvent varieties, PlantWatered flow)
-    // ─────────────────────────────────────────────────────────────────────────
-
     [Fact]
     public async Task AdvanceIntroAsync_IncrementsStepAndMarksInProgress()
     {
@@ -242,7 +236,7 @@ public class OnboardingServiceTests
     {
         var service = CreateService(Guid.NewGuid().ToString());
 
-        // Advance far enough to hit the clamp
+        // Advance far enough to hit the clamp.
         var snapshot = await service.GetSnapshotAsync();
         var steps = snapshot.IntroStepCount;
         for (int i = 0; i < steps + 3; i++)

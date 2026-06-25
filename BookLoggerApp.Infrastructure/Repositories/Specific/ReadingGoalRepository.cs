@@ -16,11 +16,9 @@ public class ReadingGoalRepository : Repository<ReadingGoal>, IReadingGoalReposi
 
     public async Task<IEnumerable<ReadingGoal>> GetActiveGoalsAsync(CancellationToken ct = default)
     {
-        // Compare against today's local midnight, not DateTime.UtcNow. EndDate is stored
-        // with ticks that represent the user's local calendar midnight (the UI date picker
-        // produces Kind=Unspecified values), so using UtcNow flips goals off the "active"
-        // list several hours before local midnight for users in positive-UTC timezones.
-        // The cutoff lives in GoalActivityHelper so the app/widget cannot drift (INK-06).
+        // Compare against local midnight, not UtcNow: EndDate holds local calendar midnight, so
+        // UtcNow would drop goals early for positive-UTC users. Cutoff in GoalActivityHelper so
+        // app/widget can't drift (INK-06).
         var todayLocalMidnight = GoalActivityHelper.ActiveCutoff(DateTime.Now);
         return await _dbSet
             .AsNoTracking()

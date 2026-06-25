@@ -77,16 +77,12 @@ public class StatsViewModelTests
     public async Task LoadAsync_Should_Calculate_Level_Progress_Correctly()
     {
         // Arrange
-        var settings = new AppSettings { UserLevel = 2, TotalXp = 175 }; 
-        // Formula: Level 1 = 100 XP. Level 2 req 400 XP. Cumulative: L1=100.
-        // CurrentLevelXp = TotalXp (175) - 100 = 75.
-        // NextLevelXp = GetXpForLevel(2) = 100 * 2^2 = 400.
-        // Percentage = 75 / 400 = 18.75%
-        
+        var settings = new AppSettings { UserLevel = 2, TotalXp = 175 };
+        // L1=100 XP cumulative; CurrentLevelXp=75, NextLevelXp=400, so 18.75%.
+
         _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(settings);
         _plantService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(new List<UserPlant>());
         _plantService.CalculateTotalXpBoostAsync(Arg.Any<CancellationToken>()).Returns(0m);
-        // Note: CalculateTotalXpBoostAsync is needed because LoadAsync calls it
 
         // Act
         await _viewModel.LoadCommand.ExecuteAsync(null);
@@ -101,16 +97,8 @@ public class StatsViewModelTests
     public async Task LoadAsync_WithStaleLevel_Should_Recalculate_Level()
     {
         // Arrange
-        // Scenario: stored Level 1, but TotalXp = 600.
-        // Level 1 cost: 100. (Total 100)
-        // Level 2 cost: 400. (Total 500)
-        // Level 3 cost: 900. (Total 1400)
-        // With 600 XP: 
-        // > 100 (L1 done) -> Lev 2. Rem 500.
-        // > 400 (L2 done) -> Lev 3. Rem 100.
-        // < 900. Stop.
-        // Should be Level 3.
-        
+        // Stored Level 1 but TotalXp=600 (costs 100/400/900) recalculates to Level 3.
+
         var settings = new AppSettings { UserLevel = 1, TotalXp = 600 };
         _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(settings);
         _plantService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(new List<UserPlant>());

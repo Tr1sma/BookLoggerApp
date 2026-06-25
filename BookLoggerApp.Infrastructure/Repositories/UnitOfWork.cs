@@ -6,8 +6,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace BookLoggerApp.Infrastructure.Repositories;
 
 /// <summary>
-/// Unit of Work implementation coordinating multiple repository operations
-/// and managing transactions.
+/// Unit of Work implementation coordinating multiple repositories and managing transactions.
 /// </summary>
 public class UnitOfWork : IUnitOfWork
 {
@@ -39,13 +38,11 @@ public class UnitOfWork : IUnitOfWork
         _context = context;
     }
 
-    // ===== Specific Repositories =====
     public IBookRepository Books => _books ??= new BookRepository(_context);
     public IReadingSessionRepository ReadingSessions => _readingSessions ??= new ReadingSessionRepository(_context);
     public IReadingGoalRepository ReadingGoals => _readingGoals ??= new ReadingGoalRepository(_context);
     public IUserPlantRepository UserPlants => _userPlants ??= new UserPlantRepository(_context);
 
-    // ===== Generic Repositories =====
     public IRepository<Genre> Genres => _genres ??= new Repository<Genre>(_context);
     public IRepository<BookGenre> BookGenres => _bookGenres ??= new Repository<BookGenre>(_context);
     public IRepository<Quote> Quotes => _quotes ??= new Repository<Quote>(_context);
@@ -58,7 +55,6 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<GoalExcludedBook> GoalExcludedBooks => _goalExcludedBooks ??= new Repository<GoalExcludedBook>(_context);
     public IRepository<GoalGenre> GoalGenres => _goalGenres ??= new Repository<GoalGenre>(_context);
 
-    // ===== Direct Context Access =====
     public AppDbContext Context => _context;
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)

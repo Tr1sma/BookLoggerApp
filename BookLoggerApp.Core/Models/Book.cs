@@ -2,15 +2,11 @@
 
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Represents a book in the user's library.
-/// </summary>
+/// <summary>A book in the user's library.</summary>
 public class Book
 {
-    // Primary Key
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    // Basic Info
     [Required]
     [MaxLength(500)]
     public string Title { get; set; } = string.Empty;
@@ -30,7 +26,6 @@ public class Book
     [MaxLength(50)]
     public string? Language { get; set; }
 
-    // Content
     [MaxLength(2000)]
     public string? Description { get; set; }
 
@@ -38,24 +33,20 @@ public class Book
 
     public int CurrentPage { get; set; } = 0;
 
-    // Media
     [MaxLength(500)]
     public string? CoverImagePath { get; set; }
 
     [MaxLength(20)]
-    public string? SpineColor { get; set; } // Color identifier for book spine (e.g., "red", "blue", "green")
+    public string? SpineColor { get; set; } // Spine color identifier (e.g., "red", "blue").
 
-    public bool UsesCoverAsSpine { get; set; } = false; // If true, use cover image as spine background instead of color
+    public bool UsesCoverAsSpine { get; set; } = false; // Use cover image as spine background instead of color.
 
     [MaxLength(20)]
-    public string? BookshelfPosition { get; set; } // Position on bookshelf for drag & drop sorting
+    public string? BookshelfPosition { get; set; } // Position for drag-and-drop bookshelf sorting.
 
-    // Status & Rating
     public ReadingStatus Status { get; set; } = ReadingStatus.Planned;
 
-
-
-    // Multi-Category Ratings (1-5 stars, nullable)
+    // Multi-category ratings, 1-5 stars, nullable.
     public int? CharactersRating { get; set; }
     public int? PlotRating { get; set; }
     public int? WritingStyleRating { get; set; }
@@ -72,12 +63,10 @@ public class Book
     [MaxLength(5000)]
     public string? Notes { get; set; }
 
-    // Timestamps
     public DateTime DateAdded { get; set; } = DateTime.UtcNow;
     public DateTime? DateStarted { get; set; }
     public DateTime? DateCompleted { get; set; }
 
-    // Navigation Properties
     public ICollection<BookGenre> BookGenres { get; set; } = new List<BookGenre>();
     public ICollection<BookTrope> BookTropes { get; set; } = new List<BookTrope>();
     public ICollection<ReadingSession> ReadingSessions { get; set; } = new List<ReadingSession>();
@@ -88,20 +77,16 @@ public class Book
     // Wishlist metadata (1:1, only for Wishlist status books)
     public WishlistInfo? WishlistInfo { get; set; }
 
-    // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }
 
-    // Computed Properties
     public int ProgressPercentage => PageCount.HasValue && PageCount.Value > 0
         ? Math.Clamp(CurrentPage * 100 / PageCount.Value, 0, 100)
         : 0;
 
     /// <summary>
-    /// Calculates the average of all set category ratings.
-    /// SpiceLevelRating is deliberately excluded — it measures romantic intensity,
-    /// not book quality, so it must not skew the quality average.
-    /// Returns null if no (non-spice) category ratings are set.
+    /// Average of all set category ratings, or null if none set. SpiceLevelRating is excluded —
+    /// it measures romantic intensity, not quality, so it must not skew the average.
     /// </summary>
     public double? AverageRating
     {
@@ -131,9 +116,7 @@ public class Book
     }
 }
 
-/// <summary>
-/// Reading state for a book.
-/// </summary>
+/// <summary>Reading state for a book.</summary>
 public enum ReadingStatus
 {
     Planned = 0,

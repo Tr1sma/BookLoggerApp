@@ -7,9 +7,7 @@ using BookLoggerApp.Infrastructure.Data;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// EF Core-backed implementation of <see cref="IEntitlementStore"/>. Creates
-/// a fresh DbContext per call (via <see cref="IDbContextFactory{TContext}"/>)
-/// so it is safe to register as a Singleton.
+/// EF Core <see cref="IEntitlementStore"/>. Uses a fresh DbContext per call so it is Singleton-safe.
 /// </summary>
 public class EntitlementStore : IEntitlementStore
 {

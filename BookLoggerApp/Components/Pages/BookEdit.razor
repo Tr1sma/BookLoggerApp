@@ -44,7 +44,6 @@
     else if (ViewModel.Book != null)
     {
         <form class="book-edit-form" @onsubmit="HandleSave" @onsubmit:preventDefault="true">
-            <!-- Basic Information -->
             <section class="form-section">
                 <h2>@L["BookEdit_BasicInfo"]</h2>
 
@@ -151,7 +150,6 @@
                 </div>
             </section>
 
-            <!-- Content -->
             <section class="form-section">
                 <h2>@L["BookEdit_Content"]</h2>
 
@@ -173,7 +171,6 @@
                 </div>
             </section>
 
-            <!-- Status -->
             <section class="form-section">
                 <h2>@L["BookDetail_Status"]</h2>
 
@@ -188,7 +185,6 @@
                 </div>
             </section>
 
-            <!-- Genres -->
             <section class="form-section">
                 <h2>@L["BookEdit_Genres"]</h2>
 
@@ -205,7 +201,6 @@
                 </div>
             </section>
 
-            <!-- Tropes -->
             @if (ViewModel.AvailableTropes.Any())
             {
                 <LockedFeatureButton Feature="FeatureKey.Tropes">
@@ -228,12 +223,11 @@
                 </LockedFeatureButton>
             }
 
-            <!-- Shelves -->
             <section class="form-section">
                 <h2>@L["BookDetail_Shelves"]</h2>
                 <div class="form-hint">@L["BookEdit_ShelvesHint"]</div>
 
-                <div class="genres-selection"> <!-- Reusing genres style for grid layout -->
+                <div class="genres-selection"> @* reuses genres grid style *@
                     @if (ViewModel.AvailableShelves.Any())
                     {
                         @foreach (var shelf in ViewModel.AvailableShelves)
@@ -253,7 +247,6 @@
                 </div>
             </section>
 
-            <!-- Cover Image -->
             <section class="form-section">
                 <h2>@L["BookEdit_CoverImage"]</h2>
 
@@ -326,7 +319,6 @@
                                 </button>
                             }
 
-                            <!-- Custom Color Picker -->
                             <div class="custom-color-picker-container">
                                 <label class="custom-color-label" title="@L["BookEdit_CustomColor"]">
                                     <span class="spine-mode-icon">🎨</span>
@@ -342,7 +334,6 @@
                 }
             </section>
 
-            <!-- Form Actions -->
             <div class="form-actions">
                 @if (ViewModel.Book.Id != Guid.Empty)
                 {
@@ -359,7 +350,6 @@
     }
 </div>
 
-<!-- Book Completion Celebration -->
 <BookCompletionCelebration
     IsVisible="@ViewModel.ShowBookCompletionCelebration"
     Book="@ViewModel.Book"
@@ -377,7 +367,6 @@
         OnNeverAskAgain="HandleNeverAskAgainAsync" />
 }
 
-<!-- Delete Confirmation Modal -->
 <DeleteConfirmationModal
     IsVisible="@ViewModel.ShowDeleteConfirmation"
     BookTitle="@ViewModel.Book?.Title"
@@ -479,7 +468,7 @@
         {
             var coverPath = ViewModel.Book.CoverImagePath;
 
-            // If it's already a URL (http/https), use it directly
+            // Remote URL: use directly
             if (coverPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                 coverPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             {
@@ -487,14 +476,14 @@
                 return;
             }
 
-            // If it's a data URL already, use it directly
+            // Data URL: use directly
             if (coverPath.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
             {
                 _coverPreviewUrl = coverPath;
                 return;
             }
 
-            // For local files, get the full path from ImageService
+            // Local file: resolve full path via ImageService
             if (ViewModel.Book.Id != Guid.Empty)
             {
                 var fullPath = await ImageService.GetCoverImagePathAsync(ViewModel.Book.Id);
@@ -502,11 +491,9 @@
                 if (string.IsNullOrEmpty(fullPath) || !System.IO.File.Exists(fullPath))
                     return;
 
-                // Read the file and convert to Base64
                 var imageBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
                 var base64 = Convert.ToBase64String(imageBytes);
 
-                // Determine MIME type
                 var mimeType = fullPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
                     ? "image/png"
                     : "image/jpeg";
@@ -549,7 +536,7 @@
 
             if (ViewModel.Book!.Id != Guid.Empty)
             {
-                // Existing book: save to local storage right away
+                // Existing book: save to local storage now
                 using var saveStream = new MemoryStream(imageBytes);
                 var localPath = await ImageService.SaveCoverImageAsync(saveStream, ViewModel.Book.Id);
                 ViewModel.Book.CoverImagePath = localPath;
@@ -561,7 +548,6 @@
                 ViewModel.Book.CoverImagePath = "gallery-pending";
             }
 
-            // Generate preview from the bytes we already have in memory
             var base64 = Convert.ToBase64String(imageBytes);
             _coverPreviewUrl = $"data:image/jpeg;base64,{base64}";
         }
@@ -617,7 +603,7 @@
                 await OnboardingService.TrackEventAsync(OnboardingEvent.BookRated, ViewModel.Book.Id);
             }
 
-            // If book was completed, show celebration first before navigating
+            // Show completion celebration before navigating
             if (ViewModel.ShowBookCompletionCelebration)
             {
                 _celebrationBackHandler = async () =>
@@ -637,9 +623,7 @@
 
     private async Task HandleCelebrationClose()
     {
-        // Guard against double-fire (rapid tap, or back-button race): without this,
-        // TryShowReviewPromptOrNavigateAsync could trigger twice and cause a double
-        // navigation.
+        // Guard against double-fire (rapid tap / back-button race) causing double navigation.
         if (!ViewModel.ShowBookCompletionCelebration) return;
 
         if (_celebrationBackHandler != null)
@@ -790,7 +774,7 @@
     private async Task HandleIsbnLookup()
     {
         await ViewModel.LookupByIsbnCommand.ExecuteAsync(null);
-        // Reload cover preview after lookup (might have set a new cover URL)
+        // Reload preview: lookup may have set a new cover URL
         await LoadCoverPreviewAsync();
         StateHasChanged();
     }
@@ -804,7 +788,7 @@
     private async Task HandleSelectResult(BookMetadata result)
     {
         await ViewModel.SelectSearchResultCommand.ExecuteAsync(result);
-        // Reload cover preview after applying the picked result (might have set a new cover URL)
+        // Reload preview: picked result may have set a new cover URL
         await LoadCoverPreviewAsync();
         StateHasChanged();
     }
@@ -849,14 +833,14 @@
         {
             return ViewModel.Book.SpineColor;
         }
-        return "#000000"; // Default
+        return "#000000";
     }
 
     private void SetSpineMode(bool useCoverAsSpine)
     {
         if (ViewModel.Book != null)
         {
-            // Only allow cover mode if there's a cover image
+            // Cover mode requires a cover image
             if (useCoverAsSpine && string.IsNullOrEmpty(_coverPreviewUrl))
                 return;
 

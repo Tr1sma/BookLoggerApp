@@ -36,7 +36,7 @@ public static class DecorationSeedData
     private static readonly Guid _alchemyFlaskId = Guid.Parse("20000000-0000-0000-0000-000000000013");
     private static readonly Guid _ancientScrollId = Guid.Parse("20000000-0000-0000-0000-000000000014");
 
-    // Level 70 (ultimate, singleton) — Herz der Geschichten
+    // Level 70 (ultimate, singleton) — Heart of Stories
     private static readonly Guid _storyHeartId = Guid.Parse("20000000-0000-0000-0000-00000000000F");
 
     public static IEnumerable<ShopItem> GetDecorations()

@@ -1,8 +1,5 @@
 ﻿using Microsoft.UI.Xaml;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace BookLoggerApp.WinUI
 {
     /// <summary>
@@ -11,8 +8,7 @@ namespace BookLoggerApp.WinUI
     public partial class App : MauiWinUIApplication
     {
         /// <summary>
-        /// Initializes the singleton application object.  This is the first line of authored code
-        /// executed, and as such is the logical equivalent of main() or WinMain().
+        /// Initializes the singleton application object.
         /// </summary>
         public App()
         {

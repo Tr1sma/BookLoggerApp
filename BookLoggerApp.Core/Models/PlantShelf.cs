@@ -2,10 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Join entity for associating Plants with Shelves.
-/// Allows positioning plants on specific shelves.
-/// </summary>
+/// <summary>Join entity associating Plants with Shelves, with per-shelf positioning.</summary>
 public class PlantShelf
 {
     public Guid PlantId { get; set; }
@@ -17,8 +14,7 @@ public class PlantShelf
     public Shelf Shelf { get; set; } = null!;
 
     /// <summary>
-    /// Position of the plant on this specific shelf.
-    /// Can be interleaved with Books (both share the same coordinate system 0..N).
+    /// Position of the plant on this shelf. Can be interleaved with Books (shared 0..N coordinate system).
     /// </summary>
     public int Position { get; set; } = 0;
 }

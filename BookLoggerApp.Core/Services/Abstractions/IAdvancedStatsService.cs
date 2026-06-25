@@ -13,7 +13,7 @@ public interface IAdvancedStatsService
     Task<(double Current, double Previous)> GetReadingSpeedTrendAsync(CancellationToken ct = default);
     Task<(double CurrentAvg, double PreviousAvg)> GetAverageFinishTimeTrendAsync(CancellationToken ct = default);
 
-    // Analysen tab
+    // Analyses tab
     Task<(YearStats Year1, YearStats Year2)> GetYearComparisonAsync(int year1, int year2, CancellationToken ct = default);
     Task<Dictionary<string, int>> GetGenreRadarDataAsync(int maxGenres = 8, CancellationToken ct = default);
     Task<(int Completed, int Abandoned)> GetCompletionRateAsync(CancellationToken ct = default);

@@ -7,16 +7,8 @@ using BookLoggerApp.Infrastructure.Data;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Runs the data-guard when a user lapses to Free or re-upgrades to a paid tier.
-///
-/// <para><b>Lapse flow</b> (Plus/Premium → Free): hides overflow data without
-/// deleting it — exactly one plant stays active (deterministic tie-break), shelves
-/// beyond the 3-shelf Free cap get <c>IsHiddenByEntitlement</c>, Prestige plants
-/// and the Heart of Stories decoration also get hidden. Everything can be restored
-/// on re-upgrade.</para>
-///
-/// <para><b>Restore flow</b> (Free → Plus/Premium): clears every
-/// <c>IsHiddenByEntitlement</c> flag so the user sees their data again.</para>
+/// Data-guard for tier changes. Lapse (paid → Free) hides overflow data without deleting it;
+/// restore (Free → paid) clears the <c>IsHiddenByEntitlement</c> flags the new tier is entitled to.
 /// </summary>
 public class EntitlementLapseHandler
 {
@@ -28,12 +20,8 @@ public class EntitlementLapseHandler
     }
 
     /// <summary>
-    /// Reconciles all entitlement-gated content against the user's CURRENT
-    /// <paramref name="tier"/>. Run on every initial load / refresh (CODE_REVIEW HIGH-1003) so
-    /// content reintroduced out-of-band — a backup-restore or JSON-import of a higher-tier
-    /// account — is hidden for a user who is only entitled to a lower tier. Free runs the
-    /// lapse-hide; Plus/Premium clear the flags they are entitled to (and re-hide what they
-    /// are not). Idempotent: a no-op for a user whose data already matches their tier.
+    /// Reconciles entitlement-gated content against the current <paramref name="tier"/> (HIGH-1003),
+    /// so out-of-band content (backup-restore / JSON-import) can't leak to a lower tier. Idempotent.
     /// </summary>
     public Task ReconcileAsync(SubscriptionTier tier, CancellationToken ct = default)
     {
@@ -42,10 +30,7 @@ public class EntitlementLapseHandler
             : ClearEntitlementHidesAsync(tier, ct);
     }
 
-    /// <summary>
-    /// Applies the Free-tier visibility rules. Called from
-    /// <c>EntitlementService.ApplyLapseAsync</c> after the tier has flipped.
-    /// </summary>
+    /// <summary>Applies Free-tier visibility rules after a lapse.</summary>
     public async Task ApplyLapseAsync(CancellationToken ct = default)
     {
         await using AppDbContext context = await _contextFactory.CreateDbContextAsync(ct);
@@ -58,14 +43,8 @@ public class EntitlementLapseHandler
     }
 
     /// <summary>
-    /// Clears the hidden flags the new <paramref name="tier"/> is entitled to. Called after
-    /// <c>EntitlementService.ApplyPurchaseAsync</c> or <c>ApplyPromoAsync</c> when the new
-    /// tier is Plus or higher.
-    ///
-    /// <para><b>Tier-aware (CODE_REVIEW SEC-04):</b> Premium clears everything. Plus only
-    /// restores content it is entitled to (shelves, standard plants/decorations) and
-    /// <em>keeps Premium-only content hidden</em> — prestige plants and ultimate decorations.
-    /// On a Premium→Plus downgrade this also re-hides those items if they were still visible.</para>
+    /// Clears the hidden flags the new <paramref name="tier"/> is entitled to (SEC-04). Premium clears
+    /// everything; Plus keeps Premium-only content (prestige plants, ultimate decorations) hidden.
     /// </summary>
     public async Task ClearEntitlementHidesAsync(SubscriptionTier tier, CancellationToken ct = default)
     {
@@ -73,7 +52,7 @@ public class EntitlementLapseHandler
 
         bool premium = tier >= SubscriptionTier.Premium;
 
-        // Shelves: both Plus and Premium are entitled to unlimited shelves.
+        // Both Plus and Premium get unlimited shelves.
         var shelves = await context.Shelves
             .Where(s => s.IsHiddenByEntitlement)
             .ToListAsync(ct);
@@ -82,8 +61,7 @@ public class EntitlementLapseHandler
             shelf.IsHiddenByEntitlement = false;
         }
 
-        // Plants: standard plants unlock at Plus; prestige plants require Premium. For Plus
-        // we keep/force prestige plants hidden (and inactive); for Premium everything is freed.
+        // Standard plants unlock at Plus, prestige plants require Premium: Plus keeps prestige hidden/inactive.
         var plants = await context.UserPlants
             .Include(p => p.Species)
             .ToListAsync(ct);
@@ -102,7 +80,7 @@ public class EntitlementLapseHandler
 
         EnsureOneActivePlant(plants);
 
-        // Decorations: standard decorations unlock at Plus; ultimate decorations require Premium.
+        // Standard decorations unlock at Plus, ultimate decorations require Premium.
         var decorations = await context.UserDecorations
             .Include(d => d.ShopItem)
             .ToListAsync(ct);
@@ -124,11 +102,7 @@ public class EntitlementLapseHandler
         }
     }
 
-    /// <summary>
-    /// Guarantees at least one visible plant is active. Only promotes a fallback when
-    /// re-hiding (e.g. a Premium→Plus downgrade that hid the active prestige plant) left
-    /// the user with no active plant at all.
-    /// </summary>
+    /// <summary>Guarantees at least one visible plant is active, promoting a fallback only if none is.</summary>
     private static void EnsureOneActivePlant(List<UserPlant> plants)
     {
         if (plants.Count == 0)
@@ -162,10 +136,8 @@ public class EntitlementLapseHandler
             return;
         }
 
-        // Free is entitled only to free-tier plants. Standard plants (Plus) and prestige
-        // plants (Premium) are hidden — preserved, not deleted — so re-upgrade restores them
-        // and a restored/imported higher-tier backup can never leak them to a Free user
-        // (CODE_REVIEW HIGH-1003; previously only prestige plants were hidden).
+        // Free keeps only free-tier plants; hide (not delete) standard/prestige so re-upgrade
+        // restores them and an imported higher-tier backup can't leak them (HIGH-1003).
         foreach (var plant in plants)
         {
             if (!plant.Species.IsFreeTier)
@@ -175,8 +147,7 @@ public class EntitlementLapseHandler
             }
         }
 
-        // Among the remaining visible (free-tier) plants keep exactly one active: prefer the
-        // currently-active healthy one, then any active, then the oldest by PlantedAt.
+        // Keep exactly one visible plant active: prefer active+healthy, then any active, then oldest.
         var visible = plants.Where(p => !p.IsHiddenByEntitlement).ToList();
         if (visible.Count == 0)
         {
@@ -224,8 +195,7 @@ public class EntitlementLapseHandler
 
         foreach (var deco in decorations)
         {
-            // Free keeps only free-tier decorations; standard (Plus) and ultimate (Premium)
-            // are hidden (CODE_REVIEW HIGH-1003; previously only ultimate decorations were hidden).
+            // Free keeps only free-tier decorations; hide standard and ultimate (HIGH-1003).
             deco.IsHiddenByEntitlement = !deco.ShopItem.IsFreeTier;
         }
     }

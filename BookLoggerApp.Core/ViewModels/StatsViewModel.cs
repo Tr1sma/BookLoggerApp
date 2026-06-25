@@ -18,9 +18,7 @@ public partial class StatsViewModel : ViewModelBase
     private readonly IProgressService _progressService;
     private readonly IBookService _bookService;
 
-    /// <summary>
-    /// Raised when a stats share card PNG is ready. The component handles file write + sharing.
-    /// </summary>
+    /// <summary>Raised when a stats share card PNG is ready; the component handles file write + sharing.</summary>
     public event Action<byte[]>? ShareCardReady;
 
     public StatsViewModel(
@@ -72,7 +70,6 @@ public partial class StatsViewModel : ViewModelBase
     [ObservableProperty]
     private DateTime _dateRangeEnd = DateTime.UtcNow;
 
-    // Multi-Category Rating Statistics
     [ObservableProperty]
     private double _averageCharactersRating;
 
@@ -112,8 +109,6 @@ public partial class StatsViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<BookRatingSummary> _topRatedBooks = new();
 
-    // === Progression System Properties ===
-
     [ObservableProperty]
     private int _currentLevel = 1;
 
@@ -133,15 +128,13 @@ public partial class StatsViewModel : ViewModelBase
     private int _totalCoins = 0;
 
     [ObservableProperty]
-    private decimal _totalPlantBoost = 0m; // Total XP boost from all plants (e.g., 0.15 = 15%)
+    private decimal _totalPlantBoost = 0m; // XP boost from all plants (0.15 = 15%)
 
     [ObservableProperty]
     private ObservableCollection<PlantBoostInfo> _plantBoosts = new();
 
     [ObservableProperty]
     private ObservableCollection<LevelMilestone> _levelMilestones = new();
-
-    // === Share Card Properties ===
 
     [ObservableProperty]
     private string _selectedSharePeriod = "All Time";
@@ -171,22 +164,16 @@ public partial class StatsViewModel : ViewModelBase
             BooksByGenre = await _statsService.GetBooksByGenreAsync(ct);
             FavoriteGenre = await _statsService.GetFavoriteGenreAsync(ct);
 
-            // Load rating statistics
             await LoadRatingStatisticsAsync(ct);
-
-            // Load progression statistics
             await LoadProgressionStatisticsAsync(ct);
         }, Tr("Error_FailedTo_LoadStatistics"));
     }
 
-    /// <summary>
-    /// Loads multi-category rating statistics.
-    /// </summary>
+    /// <summary>Loads multi-category rating statistics.</summary>
     private async Task LoadRatingStatisticsAsync(CancellationToken ct = default)
     {
         CategoryAverages = await _statsService.GetAllAverageRatingsAsync(DateRangeStart, DateRangeEnd, ct);
 
-        // Set individual category averages
         AverageCharactersRating = CategoryAverages.GetValueOrDefault(RatingCategory.Characters, 0);
         AveragePlotRating = CategoryAverages.GetValueOrDefault(RatingCategory.Plot, 0);
         AverageWritingStyleRating = CategoryAverages.GetValueOrDefault(RatingCategory.WritingStyle, 0);
@@ -199,7 +186,6 @@ public partial class StatsViewModel : ViewModelBase
         AverageEmotionaleTiefeRating = CategoryAverages.GetValueOrDefault(RatingCategory.EmotionaleTiefe, 0);
         AverageAtmosphaereRating = CategoryAverages.GetValueOrDefault(RatingCategory.Atmosphaere, 0);
 
-        // Load top rated books
         var topBooks = await _statsService.GetTopRatedBooksAsync(10, ct: ct);
         TopRatedBooks = new ObservableCollection<BookRatingSummary>(topBooks);
     }
@@ -210,9 +196,7 @@ public partial class StatsViewModel : ViewModelBase
         await LoadAsync();
     }
 
-    /// <summary>
-    /// Filters top rated books by a specific rating category.
-    /// </summary>
+    /// <summary>Filters top rated books by a specific rating category.</summary>
     public async Task FilterTopBooksByCategoryAsync(RatingCategory? category = null)
     {
         await ExecuteSafelyAsync(async () =>
@@ -222,9 +206,7 @@ public partial class StatsViewModel : ViewModelBase
         }, Tr("Error_FailedTo_FilterTopBooks"));
     }
 
-    /// <summary>
-    /// Loads progression system statistics (level, XP, coins, plant boosts).
-    /// </summary>
+    /// <summary>Loads progression statistics (level, XP, coins, plant boosts).</summary>
     private async Task LoadProgressionStatisticsAsync(CancellationToken ct = default)
     {
         var settings = await _settingsProvider.GetSettingsAsync(ct);
@@ -232,15 +214,11 @@ public partial class StatsViewModel : ViewModelBase
         TotalXp = settings.TotalXp;
         TotalCoins = settings.Coins;
 
-        // Z.786: CurrentLevel is derived solely from TotalXp (removed the dead
-        // `CurrentLevel = settings.UserLevel` that was overwritten on the next line).
-        // Recalculate level from total XP to ensure consistency and fix sync bugs.
+        // Level is derived from TotalXp for consistency.
         CurrentLevel = XpCalculator.CalculateLevelFromXp(TotalXp);
 
-        // Calculate XP for current level progress
         CalculateProgress();
 
-        // Load plant boost details
         TotalPlantBoost = await _plantService.CalculateTotalXpBoostAsync(ct);
 
         var plants = await _plantService.GetAllAsync(ct);
@@ -270,16 +248,11 @@ public partial class StatsViewModel : ViewModelBase
         }
 
         PlantBoosts = new ObservableCollection<PlantBoostInfo>(plantBoostList);
-
-        // Generate level milestones (show -2, current, +5 levels)
         GenerateLevelMilestones();
     }
 
     private void CalculateProgress()
     {
-        // Use uniform logic from XpCalculator
-        
-        // Calculate XP accumulated for current level
         int xpForPreviousLevels = 0;
         for (int i = 1; i < CurrentLevel; i++)
         {
@@ -289,7 +262,6 @@ public partial class StatsViewModel : ViewModelBase
         CurrentLevelXp = TotalXp - xpForPreviousLevels;
         NextLevelXp = BookLoggerApp.Core.Helpers.XpCalculator.GetXpForLevel(CurrentLevel);
 
-        // Calculate percentage (0-100), clamped to valid range
         if (NextLevelXp > 0)
         {
             ProgressPercentage = Math.Clamp((decimal)CurrentLevelXp / NextLevelXp * 100m, 0m, 100m);
@@ -300,9 +272,7 @@ public partial class StatsViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Calculate XP required for a specific level (matches XpCalculator logic).
-    /// </summary>
+    /// <summary>XP required for a specific level (delegates to XpCalculator).</summary>
     private static int GetXpForLevel(int level)
     {
         return BookLoggerApp.Core.Helpers.XpCalculator.GetXpForLevel(level);
@@ -387,17 +357,17 @@ public partial class StatsViewModel : ViewModelBase
         if (period == "Year")
             return (new DateTime(DateTime.UtcNow.Year, 1, 1), DateTime.UtcNow);
 
-        // Specific year format (e.g., "2025", "2024")
+        // Specific year, e.g. "2025".
         if (period.Length == 4 && int.TryParse(period, out int yearOnly))
         {
             var yearStart = new DateTime(yearOnly, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             var yearEnd = yearOnly == DateTime.UtcNow.Year
                 ? DateTime.UtcNow
-                : yearStart.AddYears(1).AddTicks(-1); // half-open [year, year+1), matches the month branch below
+                : yearStart.AddYears(1).AddTicks(-1); // half-open [year, year+1), like the month branch
             return (yearStart, yearEnd);
         }
 
-        // "yyyy-MM" specific month format
+        // "yyyy-MM" specific month.
         if (period.Length == 7 && period[4] == '-'
             && int.TryParse(period[..4], out int year)
             && int.TryParse(period[5..], out int month))
@@ -407,7 +377,7 @@ public partial class StatsViewModel : ViewModelBase
             return (start, end);
         }
 
-        // Fallback: last 30 days
+        // Fallback: last 30 days.
         return (DateTime.UtcNow.Date.AddDays(-29), DateTime.UtcNow);
     }
 
@@ -427,10 +397,8 @@ public partial class StatsViewModel : ViewModelBase
     {
         var milestones = new List<LevelMilestone>();
 
-        // Show past levels (if any)
+        // Show 2 past through 5 future levels.
         int startLevel = Math.Max(1, CurrentLevel - 2);
-
-        // Show up to +5 future levels
         int endLevel = CurrentLevel + 5;
 
         for (int level = startLevel; level <= endLevel; level++)

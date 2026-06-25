@@ -13,13 +13,9 @@ public class ReadingSessionRepository : Repository<ReadingSession>, IReadingSess
     {
     }
 
-    // Z.570 — eager-loading contract for the two session list queries:
-    //  * GetSessionsByBookAsync includes Moods (the book-detail timeline renders the per-session
-    //    mood tags) but NOT Book (the caller already has the book).
-    //  * GetSessionsInRangeAsync includes Book (stats group/label by book) but deliberately NOT
-    //    Moods — no stats/forecast consumer reads ReadingSession.Moods, and this query can span a
-    //    full year of sessions, so loading the mood child rows would be pure waste. If a future
-    //    range-based feature needs moods, add a dedicated overload/flag rather than widening this.
+    // Z.570 — eager-loading contract: GetSessionsByBookAsync includes Moods (book-detail timeline)
+    // but not Book; GetSessionsInRangeAsync includes Book (stats) but deliberately not Moods — no
+    // consumer reads them and this can span a year of sessions, so loading them is pure waste.
     public async Task<IEnumerable<ReadingSession>> GetSessionsByBookAsync(Guid bookId, CancellationToken ct = default)
     {
         // Read-only (display/stats); don't pollute the change tracker (INK-10).

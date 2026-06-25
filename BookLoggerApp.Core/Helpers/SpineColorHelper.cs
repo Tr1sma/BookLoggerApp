@@ -78,9 +78,7 @@ public static class SpineColorHelper
         if (!string.IsNullOrEmpty(spineColor) && spineColor.StartsWith("#")
             && TryNormalizeHex(spineColor, out var baseHex))
         {
-            // Generate light variant simply by blending with white or brightening
-            // For a spine, "Dark" is the base, "Light" is the highlight
-            // Let's assume the user picked the "Dark" base color.
+            // Treat the user-picked hex as the dark base; derive the light highlight.
             return (baseHex, Lighten(baseHex, 0.3f));
         }
 

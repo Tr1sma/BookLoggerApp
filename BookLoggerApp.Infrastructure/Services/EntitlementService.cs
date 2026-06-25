@@ -6,13 +6,8 @@ using BookLoggerApp.Core.Services.Analytics;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Singleton entitlement cache. Persists changes via <see cref="IEntitlementStore"/>,
-/// mirrors the current tier into <c>AppSettings.CurrentTier</c> for hot-path reads,
-/// and broadcasts <see cref="EntitlementChanged"/>.
-///
-/// Step 3 scope: Play Billing integration is not wired yet. <see cref="ApplyLapseAsync"/>
-/// only flips the tier — the data-guard that hides overflow shelves/plants/decorations
-/// is added in Step 5 (<c>EntitlementLapseHandler</c>).
+/// Singleton entitlement cache. Persists via <see cref="IEntitlementStore"/>, mirrors the tier
+/// into <c>AppSettings.CurrentTier</c> for hot-path reads, and broadcasts <see cref="EntitlementChanged"/>.
 /// </summary>
 public class EntitlementService : IEntitlementService
 {
@@ -64,8 +59,7 @@ public class EntitlementService : IEntitlementService
 
             if (ShouldLapseByExpiry(entitlement))
             {
-                // Persist the downgrade AND run the overflow-hide data-guard
-                // (CODE_REVIEW BUG-09) instead of a silent in-memory tier flip.
+                // Persist the downgrade and run the data-guard, not a silent in-memory flip (BUG-09).
                 await ApplyLapseAsync("expired", ct);
                 return;
             }
@@ -74,10 +68,8 @@ public class EntitlementService : IEntitlementService
             _current = entitlement;
             _isInitialized = true;
 
-            // HIGH-1003: reconcile content against the real device tier on every load — not just
-            // on an expiry transition. A backup-restore / JSON-import can reintroduce higher-tier
-            // content for a lower-tier user; this hides what the current tier is not entitled to
-            // (and un-hides what it is). Idempotent for a user whose data already matches.
+            // HIGH-1003: reconcile content against the real tier on every load (restore/import can
+            // reintroduce higher-tier content for a lower-tier user). Idempotent.
             if (_lapseHandler is not null)
             {
                 await _lapseHandler.ReconcileAsync(entitlement.Tier, ct);
@@ -124,7 +116,7 @@ public class EntitlementService : IEntitlementService
         _current = reloaded;
         _isInitialized = true;
 
-        // HIGH-1003: same reconcile-against-real-tier pass as InitializeAsync.
+        // HIGH-1003: same reconcile pass as InitializeAsync.
         if (_lapseHandler is not null)
         {
             await _lapseHandler.ReconcileAsync(reloaded.Tier, ct);
@@ -132,9 +124,7 @@ public class EntitlementService : IEntitlementService
 
         await SyncAppSettingsMirrorAsync(reloaded, ct);
 
-        // Only broadcast when the tier actually changed. A no-op refresh (app resume, periodic
-        // reconcile) must not fire EntitlementChanged — every subscriber re-runs its diff/UI work
-        // on each raise, so a same-tier refresh was redundant churn.
+        // Broadcast only on an actual tier change; a same-tier refresh would churn every subscriber.
         if (previous != reloaded.Tier)
         {
             Raise(previous, reloaded, EntitlementChangeReason.Refresh);
@@ -145,11 +135,8 @@ public class EntitlementService : IEntitlementService
     {
         UserEntitlement current = await _store.GetOrCreateAsync(ct);
 
-        // Z.679: a restore/resume re-applies every active Play purchase on each foreground.
-        // When the stored entitlement already matches this purchase's identity, short-circuit
-        // — no DB write, no EntitlementChanged broadcast. Otherwise every resume churns the DB
-        // and re-runs each subscriber's diff/UI work for a no-op. Genuine purchases (reason
-        // Purchase) always fall through so a re-purchase after a refund still applies.
+        // Restore/resume re-applies every active Play purchase per foreground; short-circuit when the
+        // stored entitlement already matches (no DB write, no broadcast). Genuine purchases fall through.
         if (reason == EntitlementChangeReason.Restore && MatchesStoredPurchase(current, purchase))
         {
             _current = current;
@@ -294,22 +281,15 @@ public class EntitlementService : IEntitlementService
         Raise(previous, current, EntitlementChangeReason.DebugForce);
     }
 
-    /// <summary>
-    /// True when the stored entitlement already represents this exact purchase. Compares the
-    /// stable purchase identity (tier + product + token) — a renewed ExpiresAt for the same
-    /// token is irrelevant to whether a fresh apply is needed on resume.
-    /// </summary>
+    /// <summary>True when the stored entitlement already matches this purchase's identity (tier + product + token).</summary>
     private static bool MatchesStoredPurchase(UserEntitlement stored, PurchaseResult purchase)
         => stored.Tier == purchase.Tier
            && string.Equals(stored.ProductId, purchase.ProductId, StringComparison.Ordinal)
            && string.Equals(stored.PurchaseToken, purchase.PurchaseToken, StringComparison.Ordinal);
 
     /// <summary>
-    /// True when a loaded entitlement should be lapsed because its term has passed.
-    /// Read-only: the actual downgrade goes through <see cref="ApplyLapseAsync"/> so it is
-    /// persisted and runs the data-guard (CODE_REVIEW BUG-09). Auto-renewing subscriptions
-    /// are never lapsed on a guessed <see cref="UserEntitlement.ExpiresAt"/> — Google Play
-    /// presence is the source of truth (CODE_REVIEW LOG-01).
+    /// True when a loaded entitlement's term has passed (read-only check). Auto-renewing subscriptions
+    /// are never lapsed on a guessed ExpiresAt — Google Play presence is the source of truth (LOG-01).
     /// </summary>
     private static bool ShouldLapseByExpiry(UserEntitlement entitlement)
     {
@@ -335,9 +315,8 @@ public class EntitlementService : IEntitlementService
     {
         try
         {
-            // Narrow update: touches only CurrentTier/EntitlementExpiresAt so it can never
-            // clobber a concurrent XP/coin/level award (CODE_REVIEW SEC-12). The provider
-            // serialises this against all other AppSettings writes.
+            // Narrow update: touches only CurrentTier/EntitlementExpiresAt so it can't clobber a
+            // concurrent XP/coin/level award (SEC-12); the provider serialises AppSettings writes.
             await _settingsProvider.UpdateEntitlementMirrorAsync(entitlement.Tier, entitlement.ExpiresAt, ct);
         }
         catch (Exception ex)

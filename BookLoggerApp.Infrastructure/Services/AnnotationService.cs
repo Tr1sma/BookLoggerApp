@@ -7,8 +7,7 @@ using BookLoggerApp.Infrastructure.Repositories;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Service implementation for managing annotations.
-/// Free tier is capped at 3 notes per book via <see cref="IFeatureGuard"/>.
+/// Manages annotations. Free tier is capped at 3 notes per book via <see cref="IFeatureGuard"/>.
 /// </summary>
 public class AnnotationService : IAnnotationService
 {
@@ -36,8 +35,7 @@ public class AnnotationService : IAnnotationService
 
     public async Task<Annotation> AddAsync(Annotation annotation, CancellationToken ct = default)
     {
-        // Trim and reject blank notes before counting against the per-book cap, so whitespace
-        // can't burn a free-tier slot or persist an empty annotation.
+        // Trim and reject blank notes before the cap check so whitespace can't burn a free-tier slot.
         annotation.Note = annotation.Note?.Trim() ?? string.Empty;
         annotation.Title = string.IsNullOrWhiteSpace(annotation.Title) ? null : annotation.Title.Trim();
         if (string.IsNullOrWhiteSpace(annotation.Note))

@@ -39,11 +39,9 @@ public class PlantSpeciesConfiguration : IEntityTypeConfiguration<PlantSpecies>
         builder.Property(ps => ps.UnlockLevel)
             .IsRequired();
 
-        // Indexes
         builder.HasIndex(ps => ps.Name);
         builder.HasIndex(ps => ps.UnlockLevel);
 
-        // Relationship
         builder.HasMany(ps => ps.UserPlants)
             .WithOne(up => up.Species)
             .HasForeignKey(up => up.SpeciesId)

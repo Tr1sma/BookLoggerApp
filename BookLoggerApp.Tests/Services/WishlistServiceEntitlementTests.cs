@@ -13,10 +13,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// CODE_REVIEW SEC-16 / INK-08: the Wishlist (Plus) write paths were gated only by the
-/// Bookshelf.razor LockedFeatureButton, never in WishlistService. The service now requires
-/// <see cref="FeatureKey.Wishlist"/> on the create/edit paths; read + MoveToLibrary stay open
-/// so downgraded users can still see and migrate their existing wishlist data.
+/// Verifies WishlistService requires <see cref="FeatureKey.Wishlist"/> on create/edit paths,
+/// while read and MoveToLibrary stay open so downgraded users can migrate existing data.
 /// </summary>
 public class WishlistServiceEntitlementTests : IDisposable
 {
@@ -122,8 +120,8 @@ public class WishlistServiceEntitlementTests : IDisposable
     [Fact]
     public async Task GetWishlistBooksAsync_FreeUser_ReturnsEmptyButKeepsData()
     {
-        // HIGH-1003: a backup-restore of a Plus account leaves wishlist books in the DB. A Free
-        // user must not see them (read is gated), but the data is preserved and reappears on re-upgrade.
+        // A restored Plus account leaves wishlist books in the DB. A Free user must not see them
+        // (read gated), but the data is preserved and reappears on re-upgrade.
         Guid bookId;
         await using (var ctx = _factory.CreateDbContext())
         {

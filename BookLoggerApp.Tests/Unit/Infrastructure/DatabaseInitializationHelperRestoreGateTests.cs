@@ -5,14 +5,12 @@ using Xunit;
 namespace BookLoggerApp.Tests.Unit.Infrastructure;
 
 /// <summary>
-/// Gates added for the backup-restore corruption fix: the restore must be able to suppress
-/// the Android widget's connection (IsRestoreInProgress) and wait for DbInitializer's deferred
-/// maintenance to finish before swapping the DB file.
+/// Gates for the backup-restore corruption fix: restore suppresses the widget connection
+/// (IsRestoreInProgress) and waits for deferred maintenance before swapping the DB file.
 /// </summary>
 public class DatabaseInitializationHelperRestoreGateTests : IDisposable
 {
-    // Leave the global gate state "fully initialized" for whatever test runs next
-    // (parallelization is disabled assembly-wide, so tests share this static state serially).
+    // Leave the shared static gate "fully initialized" for the next serial test.
     public void Dispose()
     {
         DatabaseInitializationHelper.ResetForTests();
@@ -39,8 +37,7 @@ public class DatabaseInitializationHelperRestoreGateTests : IDisposable
         DatabaseInitializationHelper.ResetForTests();
         DatabaseInitializationHelper.MarkDeferredMaintenanceComplete();
 
-        // A generous timeout would only matter if the gate were NOT yet signalled; here it
-        // must return effectively instantly.
+        // Already signalled, so the timeout is irrelevant; must return instantly.
         var task = DatabaseInitializationHelper.EnsureDeferredMaintenanceCompleteAsync(TimeSpan.FromSeconds(30));
         var finished = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(2)));
 
@@ -53,8 +50,7 @@ public class DatabaseInitializationHelperRestoreGateTests : IDisposable
     {
         DatabaseInitializationHelper.ResetForTests(); // gate is un-signalled
 
-        // Must NOT throw on timeout — the restore proceeds (its other safeguards still apply)
-        // rather than blocking forever.
+        // Must not throw on timeout: restore proceeds rather than blocking forever.
         Func<Task> act = () => DatabaseInitializationHelper.EnsureDeferredMaintenanceCompleteAsync(
             TimeSpan.FromMilliseconds(100));
 

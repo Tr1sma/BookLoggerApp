@@ -10,43 +10,35 @@ using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Provider implementation for app settings using DbContextFactory for thread-safe operations.
-/// </summary>
+/// <summary>App settings provider; uses DbContextFactory for thread-safe operations.</summary>
 public class AppSettingsProvider : IAppSettingsProvider
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
     private AppSettings? _cachedSettings;
     private DateTime _lastLoad = DateTime.MinValue;
     private readonly TimeSpan _cacheLifetime = TimeSpan.FromMinutes(5);
-    // Serialises every read-modify-write against the singleton AppSettings cache so two
-    // mutators (XP award vs. coin spend/add vs. entitlement mirror) cannot interleave and
-    // lose an update (CODE_REVIEW BUG-08 / INK-03 / SEC-12). NOT reentrant — never call a
-    // gated method (or GetSettingsAsync's slow path) while already holding the gate, and
-    // raise change events only AFTER releasing it (a handler may call back in).
+    // Serialises read-modify-write against the cached AppSettings so concurrent mutators can't
+    // interleave and lose an update (CODE_REVIEW BUG-08 / INK-03 / SEC-12). NOT reentrant — never
+    // call a gated method while holding the gate; raise change events only after releasing it.
     private readonly SemaphoreSlim _writeGate = new(1, 1);
-    // Guards against infinite recovery loops: if the schema guard repair didn't fix
-    // the "no such column" error, we rethrow on the next hit instead of looping forever.
+    // Guards against infinite recovery loops: if the schema repair didn't fix the
+    // "no such column" error, rethrow on the next hit instead of looping forever.
     private int _repairAttempted;
 
     public event EventHandler? ProgressionChanged;
     public event EventHandler? SettingsChanged;
 
-    // NOTE: Do NOT add ICrashReportingService as a ctor param here. It creates a circular
-    // dependency on Android: FirebaseCrashlyticsService → IAnalyticsConsentGate →
-    // AnalyticsConsentGate → IAppSettingsProvider → AppSettingsProvider. The startup guard
-    // in DbInitializer already reports non-fatals for the main path; this provider only
-    // hits the recovery branch as a last-chance fallback.
+    // Do NOT add ICrashReportingService as a ctor param: it creates a DI cycle on Android
+    // (FirebaseCrashlyticsService → IAnalyticsConsentGate → IAppSettingsProvider → here).
+    // DbInitializer's startup guard already reports non-fatals for the main path.
     public AppSettingsProvider(IDbContextFactory<AppDbContext> contextFactory)
     {
         _contextFactory = contextFactory;
     }
 
     /// <summary>
-    /// Raises the ProgressionChanged event to notify subscribers of progression data changes.
-    /// Subscriber exceptions are caught and logged so that a single buggy handler cannot
-    /// take down the caller (e.g. mid-restore, where a stale DbContext in one subscriber
-    /// used to blow up the whole backup-restore flow).
+    /// Raises ProgressionChanged. Subscriber exceptions are caught and logged so one buggy
+    /// handler can't take down the caller (e.g. a stale DbContext mid-restore).
     /// </summary>
     private void OnProgressionChanged()
     {
@@ -65,9 +57,7 @@ public class AppSettingsProvider : IAppSettingsProvider
         }
     }
 
-    /// <summary>
-    /// Raises the SettingsChanged event to notify subscribers of settings changes.
-    /// </summary>
+    /// <summary>Raises SettingsChanged.</summary>
     private void OnSettingsChanged()
     {
         var handlers = SettingsChanged;
@@ -86,31 +76,19 @@ public class AppSettingsProvider : IAppSettingsProvider
     }
 
     /// <summary>
-    /// Returns the current AppSettings, either from the in-memory cache (fresh within
-    /// <see cref="_cacheLifetime"/>) or newly loaded from the database.
-    ///
-    /// <para><b>Mutability contract:</b> the returned instance is shared by reference with
-    /// the cache. Callers that mutate fields (e.g. <c>settings.TotalXp += …</c>) MUST pair
-    /// that with a corresponding <see cref="UpdateSettingsAsync"/> call so the RowVersion
-    /// stays in sync. This is intentional — <see cref="ProgressionService"/> relies on the
-    /// shared-reference pattern to apply XP + level + coin updates atomically inside a
-    /// single save. If you need an isolated snapshot, call <see cref="InvalidateCache"/>
-    /// first to force a fresh load.</para>
-    ///
-    /// <para><b>Thread safety:</b> all write paths (UpdateSettingsAsync, SpendCoins,
-    /// AddCoins, IncrementPlantsPurchased, RecalculateUserLevel, UpdateEntitlementMirror)
-    /// plus the cache-miss load are serialised behind a single <see cref="_writeGate"/>
-    /// (CODE_REVIEW BUG-08 / INK-03), so interleaved read-modify-write operations on the
-    /// shared cached instance can no longer lose updates.</para>
+    /// Returns current AppSettings from cache (fresh within <see cref="_cacheLifetime"/>) or the DB.
+    /// <para>Mutability: the returned instance is shared by reference with the cache; callers that
+    /// mutate fields MUST follow with <see cref="UpdateSettingsAsync"/> to keep RowVersion in sync.
+    /// Call <see cref="InvalidateCache"/> first if you need an isolated snapshot.</para>
+    /// <para>Thread safety: all write paths plus the cache-miss load serialise behind
+    /// <see cref="_writeGate"/> (CODE_REVIEW BUG-08 / INK-03), preventing lost updates.</para>
     /// </summary>
     public async Task<AppSettings> GetSettingsAsync(CancellationToken ct = default)
     {
-        // Return cached settings if still valid
         if (_cachedSettings != null && DateTime.UtcNow - _lastLoad < _cacheLifetime)
             return _cachedSettings;
 
-        // Slow path: serialise with the write gate so two callers can't both miss the cache
-        // and each insert a default AppSettings row.
+        // Slow path: serialise so two callers can't both miss the cache and each insert a default row.
         await _writeGate.WaitAsync(ct);
         try
         {
@@ -118,17 +96,13 @@ public class AppSettingsProvider : IAppSettingsProvider
             if (_cachedSettings != null && DateTime.UtcNow - _lastLoad < _cacheLifetime)
                 return _cachedSettings;
 
-            // Create a new context for this operation
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-            // Load from database, with a last-chance schema-drift repair if the primary
-            // startup guard in DbInitializer missed a missing column (e.g. a future release
-            // adds a new column the hard-coded guard list doesn't know about yet).
+            // Last-chance schema-drift repair in case DbInitializer's startup guard missed a column.
             var settings = await LoadSettingsWithRecoveryAsync(context, ct);
 
             if (settings == null)
             {
-                // Create default settings if none exist
                 settings = new AppSettings
                 {
                     Theme = "Light",
@@ -144,7 +118,6 @@ public class AppSettingsProvider : IAppSettingsProvider
                 await context.SaveChangesAsync(ct);
             }
 
-            // Update cache
             _cachedSettings = settings;
             _lastLoad = DateTime.UtcNow;
 
@@ -157,12 +130,9 @@ public class AppSettingsProvider : IAppSettingsProvider
     }
 
     /// <summary>
-    /// Persists the given settings instance. The RowVersion on <paramref name="settings"/>
-    /// must match the DB's current row version, otherwise EF raises
-    /// <see cref="DbUpdateConcurrencyException"/> — the caller either just loaded the
-    /// settings via <see cref="GetSettingsAsync"/> (cache hit) or already went through an
-    /// invalidation. The saved instance becomes the new cache entry (shared reference);
-    /// see <see cref="GetSettingsAsync"/> for the mutability contract.
+    /// Persists the given settings. RowVersion must match the DB row or EF raises
+    /// <see cref="DbUpdateConcurrencyException"/>. The saved instance becomes the new cache entry
+    /// (shared reference); see <see cref="GetSettingsAsync"/> for the mutability contract.
     /// </summary>
     public async Task UpdateSettingsAsync(AppSettings settings, CancellationToken ct = default)
     {
@@ -173,7 +143,7 @@ public class AppSettingsProvider : IAppSettingsProvider
         {
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-            // Track original values to detect progression changes
+            // Detect progression changes by comparing against the persisted row.
             var originalEntry = await context.AppSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == settings.Id, ct);
             progressionChanged = originalEntry != null &&
                                       (originalEntry.TotalXp != settings.TotalXp ||
@@ -184,7 +154,6 @@ public class AppSettingsProvider : IAppSettingsProvider
             context.AppSettings.Update(settings);
             await context.SaveChangesAsync(ct);
 
-            // Refresh the cached reference so subsequent GetSettingsAsync calls see the saved state
             _cachedSettings = settings;
             _lastLoad = DateTime.UtcNow;
         }
@@ -193,7 +162,7 @@ public class AppSettingsProvider : IAppSettingsProvider
             _writeGate.Release();
         }
 
-        // Notify subscribers OUTSIDE the gate (a handler may call back into the provider).
+        // Notify outside the gate (a handler may call back into the provider).
         if (progressionChanged)
         {
             OnProgressionChanged();
@@ -203,12 +172,10 @@ public class AppSettingsProvider : IAppSettingsProvider
     }
 
     /// <summary>
-    /// Narrowly mirrors the entitlement tier/expiry into AppSettings. Loads a FRESH tracked
-    /// row and modifies only CurrentTier + EntitlementExpiresAt, so EF emits an UPDATE that
-    /// touches only those columns — it can never overwrite a concurrent XP/coin/level award
-    /// carried on the shared cached instance (CODE_REVIEW SEC-12). The shared cache (if any)
-    /// is patched in place — only the two mirror columns plus the now-bumped RowVersion — so
-    /// a held reference stays valid for a subsequent full <see cref="UpdateSettingsAsync"/>.
+    /// Mirrors entitlement tier/expiry into AppSettings via a FRESH tracked row, updating only
+    /// CurrentTier + EntitlementExpiresAt so the narrow UPDATE can't overwrite a concurrent
+    /// XP/coin/level award (CODE_REVIEW SEC-12). Patches those two columns + RowVersion into the
+    /// shared cache so a held reference stays valid for a later <see cref="UpdateSettingsAsync"/>.
     /// </summary>
     public async Task UpdateEntitlementMirrorAsync(SubscriptionTier tier, DateTime? expiresAt, CancellationToken ct = default)
     {
@@ -233,13 +200,12 @@ public class AppSettingsProvider : IAppSettingsProvider
             settings.CurrentTier = tier;
             settings.EntitlementExpiresAt = expiresAt;
             settings.UpdatedAt = DateTime.UtcNow;
-            // settings is tracked and only these columns changed → narrow UPDATE (RowVersion
-            // is bumped by AppDbContext.StampRowVersions; TotalXp/Coins/UserLevel untouched).
+            // Only these columns changed → narrow UPDATE (RowVersion bumped by StampRowVersions;
+            // TotalXp/Coins/UserLevel untouched).
             await context.SaveChangesAsync(ct);
             changed = true;
 
-            // Keep a held shared-cache reference coherent without clobbering progression
-            // columns: mirror the two columns and adopt the freshly-bumped RowVersion.
+            // Keep a held cache reference coherent: mirror the two columns and adopt the new RowVersion.
             if (_cachedSettings is not null)
             {
                 _cachedSettings.CurrentTier = settings.CurrentTier;
@@ -290,7 +256,6 @@ public class AppSettingsProvider : IAppSettingsProvider
             settings.UpdatedAt = DateTime.UtcNow;
             await context.SaveChangesAsync(ct);
 
-            // Refresh cache with the freshly-saved instance
             _cachedSettings = settings;
             _lastLoad = DateTime.UtcNow;
         }
@@ -319,7 +284,6 @@ public class AppSettingsProvider : IAppSettingsProvider
             settings.UpdatedAt = DateTime.UtcNow;
             await context.SaveChangesAsync(ct);
 
-            // Refresh cache with the freshly-saved instance
             _cachedSettings = settings;
             _lastLoad = DateTime.UtcNow;
         }
@@ -354,7 +318,6 @@ public class AppSettingsProvider : IAppSettingsProvider
             settings.UpdatedAt = DateTime.UtcNow;
             await context.SaveChangesAsync(ct);
 
-            // Refresh cache with the freshly-saved instance
             _cachedSettings = settings;
             _lastLoad = DateTime.UtcNow;
         }
@@ -392,11 +355,9 @@ public class AppSettingsProvider : IAppSettingsProvider
     }
 
     /// <summary>
-    /// Runs the AppSettings read and, if it fails with a SQLite "no such column" error,
-    /// triggers <see cref="SchemaDriftGuard.EnsureCriticalColumnsAsync"/> once and retries.
-    /// This is a belt-and-braces defense — the primary repair path is in
-    /// <see cref="DbInitializer"/> right after <c>MigrateAsync</c>, and that path is where
-    /// Crashlytics reporting happens. Retries exactly once per provider instance so a
+    /// Reads AppSettings; on a SQLite "no such column" error, runs
+    /// <see cref="SchemaDriftGuard.EnsureCriticalColumnsAsync"/> once and retries. Belt-and-braces
+    /// behind the primary repair in <see cref="DbInitializer"/>; retries once per instance so a
     /// genuine config error can't spin forever.
     /// </summary>
     private async Task<AppSettings?> LoadSettingsWithRecoveryAsync(AppDbContext context, CancellationToken ct)
@@ -409,26 +370,21 @@ public class AppSettingsProvider : IAppSettingsProvider
         {
             if (Interlocked.Exchange(ref _repairAttempted, 1) != 0)
             {
-                // Already tried to repair once and we're still hitting the same error —
-                // rethrow so the caller sees the real failure instead of looping.
+                // Already repaired once and still failing — rethrow instead of looping.
                 throw;
             }
 
             System.Diagnostics.Debug.WriteLine($"AppSettingsProvider: caught drift '{ex.Message}'; invoking SchemaDriftGuard.");
 
-            // Pass null for crashReporting: taking ICrashReportingService here would create
-            // a DI cycle with FirebaseCrashlyticsService → IAnalyticsConsentGate → this.
-            // Reporting of this recovery path is a nice-to-have; correctness comes first.
+            // null crashReporting: taking ICrashReportingService here would create a DI cycle
+            // (FirebaseCrashlyticsService → IAnalyticsConsentGate → this).
             await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting: null, logger: null, ct);
 
             return await context.AppSettings.FirstOrDefaultAsync(ct);
         }
     }
 
-    /// <summary>
-    /// Recalculates and updates the UserLevel based on TotalXp.
-    /// Use this to fix corrupted level data.
-    /// </summary>
+    /// <summary>Recalculates UserLevel from TotalXp; fixes corrupted level data.</summary>
     public async Task RecalculateUserLevelAsync(CancellationToken ct = default)
     {
         bool changed = false;
@@ -442,17 +398,14 @@ public class AppSettingsProvider : IAppSettingsProvider
             if (settings == null)
                 throw new InvalidOperationException("AppSettings not found");
 
-            // Calculate correct level from total XP
             int correctLevel = XpCalculator.CalculateLevelFromXp(settings.TotalXp);
 
-            // Update if different
             if (settings.UserLevel != correctLevel)
             {
                 settings.UserLevel = correctLevel;
                 settings.UpdatedAt = DateTime.UtcNow;
                 await context.SaveChangesAsync(ct);
 
-                // Refresh cache with the freshly-saved instance
                 _cachedSettings = settings;
                 _lastLoad = DateTime.UtcNow;
                 changed = true;
@@ -470,9 +423,8 @@ public class AppSettingsProvider : IAppSettingsProvider
     }
 
     /// <summary>
-    /// Picks the initial UI language on first launch. Returns <c>"de"</c> when the
-    /// system UI culture is German-speaking, otherwise <c>"en"</c>. Any exceptions
-    /// fall back to English so startup cannot fail on this check.
+    /// Picks the first-launch UI language: <c>"de"</c> for a German system culture, else <c>"en"</c>.
+    /// Exceptions fall back to English so startup can't fail here.
     /// </summary>
     private static string DetectSystemLanguage()
     {

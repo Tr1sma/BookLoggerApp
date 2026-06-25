@@ -75,8 +75,7 @@ public static class TropeSeedData
 
     private static void AddTrope(List<Trope> tropes, string name, Guid genreId)
     {
-        // Generate a deterministic GUID based on name and genreId
-        // This ensures that the same trope will always have the same ID across migrations/databases
+        // Deterministic GUID from name+genreId, so a trope keeps the same ID across DBs/migrations.
         var stringToHash = $"{name}:{genreId}";
         var hash = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(stringToHash));
         var id = new Guid(hash);

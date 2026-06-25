@@ -9,9 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BookLoggerApp.Infrastructure.Services;
 
-/// <summary>
-/// Service implementation for managing books.
-/// </summary>
+/// <summary>Manages books.</summary>
 public class BookService : IBookService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -56,12 +54,10 @@ public class BookService : IBookService
 
     public async Task<Book> AddAsync(Book book, CancellationToken ct = default)
     {
-        // CODE_REVIEW BUG-05: enforce the BookValidator here so invalid data (blank title/author,
-        // absurd page counts) cannot reach the DB via any caller, not just the BookEdit form.
+        // CODE_REVIEW BUG-05: validate here so invalid data can't reach the DB via any caller.
         if (_validation is not null)
             await _validation.ValidateAndThrowAsync(book, ct);
 
-        // Business Logic: Set DateAdded if not set
         if (book.DateAdded == default)
             book.DateAdded = DateTime.UtcNow;
 
@@ -78,11 +74,10 @@ public class BookService : IBookService
 
     public async Task UpdateAsync(Book book, CancellationToken ct = default)
     {
-        // CODE_REVIEW BUG-05 (review follow-up): intentionally NOT validating here. UpdateAsync is the
-        // in-place single-field edit path (BookDetail rating/notes) which passes the WHOLE entity; running
-        // the full BookValidator would reject pre-existing legacy violations (e.g. CurrentPage > PageCount
-        // from before the progress clamp) that the edit did not introduce, silently dropping the change.
-        // User-entered data is validated at the true entry points: AddAsync and SaveBookWithRelationsAsync.
+        // CODE_REVIEW BUG-05: intentionally NOT validating here. This is the in-place single-field
+        // edit path (BookDetail) passing the whole entity; full validation would reject pre-existing
+        // legacy violations the edit didn't introduce. Validation happens at AddAsync and
+        // SaveBookWithRelationsAsync.
         try
         {
             await _unitOfWork.Books.UpdateAsync(book, ct);
@@ -142,22 +137,20 @@ public class BookService : IBookService
     {
         var booksList = books.ToList();
 
-        // CODE_REVIEW BUG-05: validate EVERY book up front so a single invalid row aborts the whole
-        // batch before any insert, instead of letting unchecked data reach the DB via bulk import.
+        // CODE_REVIEW BUG-05: validate every book up front so one invalid row aborts the whole
+        // batch before any insert.
         if (_validation is not null)
         {
             foreach (var book in booksList)
                 await _validation.ValidateAndThrowAsync(book, ct);
         }
 
-        // Business Logic: Set DateAdded for books where not set
         foreach (var book in booksList)
         {
             if (book.DateAdded == default)
                 book.DateAdded = DateTime.UtcNow;
         }
 
-        // Bulk insert for better performance
         await _unitOfWork.Books.AddRangeAsync(booksList, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         return booksList.Count;
@@ -204,8 +197,8 @@ public class BookService : IBookService
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
-        // Idempotency guard: callers may retry (rapid double-tap, VM back-button race).
-        // Completion-XP and goal-recalc must fire exactly once across repeated calls.
+        // Idempotency guard: callers may retry (double-tap, back-button race); completion-XP and
+        // goal-recalc must fire exactly once.
         bool wasAlreadyCompleted = book.Status == ReadingStatus.Completed;
 
         book.Status = ReadingStatus.Completed;
@@ -248,13 +241,12 @@ public class BookService : IBookService
         IReadOnlyList<Guid> manualShelfIds,
         CancellationToken ct = default)
     {
-        // CODE_REVIEW BUG-05: this is the load-bearing BookEdit save path. Validate up front so
-        // an invalid book never opens the transaction or writes relation rows.
+        // CODE_REVIEW BUG-05: load-bearing BookEdit save path. Validate up front so an invalid
+        // book never opens the transaction or writes relation rows.
         if (_validation is not null)
             await _validation.ValidateAndThrowAsync(book, ct);
 
-        // Derive the new/existing + completion/wishlist decisions from PERSISTED state
-        // before touching anything, so they reflect the DB, not the in-memory edit.
+        // Derive new/existing + completion/wishlist decisions from PERSISTED state, not the edit.
         var persisted = book.Id == Guid.Empty
             ? null
             : await _unitOfWork.Books.GetByIdAsync(book.Id, ct);
@@ -274,7 +266,7 @@ public class BookService : IBookService
         await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            // ---- Book record ----
+            // Book record
             if (isNew)
             {
                 await _unitOfWork.Books.AddAsync(book, ct);
@@ -294,10 +286,10 @@ public class BookService : IBookService
                 }
             }
 
-            // Persist the book row first so child FKs resolve (esp. for a brand-new book).
+            // Persist the book row first so child FKs resolve (esp. for a new book).
             await _unitOfWork.SaveChangesAsync(ct);
 
-            // ---- Genres (add/remove diff) ----
+            // Genres (add/remove diff)
             var currentGenres = await _unitOfWork.Context.BookGenres
                 .Where(bg => bg.BookId == book.Id)
                 .ToListAsync(ct);
@@ -313,7 +305,7 @@ public class BookService : IBookService
                     new BookGenre { BookId = book.Id, GenreId = genreId, AddedAt = DateTime.UtcNow }, ct);
             }
 
-            // ---- Shelves (only manual shelves may be removed; new entries go to position 0) ----
+            // Shelves (only manual shelves may be removed; new entries go to position 0)
             var currentShelfRows = await _unitOfWork.Context.BookShelves
                 .Where(bs => bs.BookId == book.Id)
                 .ToListAsync(ct);
@@ -326,7 +318,7 @@ public class BookService : IBookService
             }
             foreach (var shelfId in shelfIds.Where(id => !currentShelfIds.Contains(id)))
             {
-                // Shift existing items forward so the new book lands first (position 0),
+                // Shift existing items forward so the new book lands at position 0,
                 // matching ShelfService.AddBookToShelfAsync.
                 var siblings = await _unitOfWork.Context.BookShelves
                     .Where(bs => bs.ShelfId == shelfId)
@@ -339,7 +331,7 @@ public class BookService : IBookService
                     new BookShelf { ShelfId = shelfId, BookId = book.Id, Position = 0 });
             }
 
-            // ---- Tropes (add/remove diff) ----
+            // Tropes (add/remove diff)
             var currentTropes = await _unitOfWork.Context.BookTropes
                 .Where(bt => bt.BookId == book.Id)
                 .ToListAsync(ct);
@@ -352,10 +344,9 @@ public class BookService : IBookService
             var newTropeIds = tropeIds.Where(id => !currentTropeIds.Contains(id)).ToList();
             if (newTropeIds.Count > 0)
             {
-                // CODE_REVIEW SEC-17: this is the load-bearing trope-tagging path (BookEdit saves
-                // via SaveBookWithRelationsAsync, not GenreService.AddTropeToBookAsync). Adding NEW
-                // trope tags requires Plus; removals above stay open so downgraded users can clean
-                // up. The throw rolls back the whole transaction, so no partial save persists.
+                // CODE_REVIEW SEC-17: load-bearing trope-tagging path. Adding NEW trope tags
+                // requires Plus; removals above stay open so downgraded users can clean up.
+                // The throw rolls back the whole transaction, so no partial save persists.
                 _featureGuard?.RequireAccess(FeatureKey.Tropes, "Tropes require Plus.");
             }
             foreach (var tropeId in newTropeIds)
@@ -373,8 +364,8 @@ public class BookService : IBookService
             throw;
         }
 
-        // Completion side-effects run AFTER the commit ("Status→Completed zuletzt"):
-        // CompleteBookAsync is cross-service (XP/goal-recalc) and idempotent.
+        // Completion side-effects run AFTER the commit: CompleteBookAsync is cross-service
+        // (XP/goal-recalc) and idempotent.
         bool showCelebration = false;
         bool completedFromExisting = false;
         if (createdAsCompleted)
@@ -398,13 +389,11 @@ public class BookService : IBookService
         if (book == null)
             throw new EntityNotFoundException(typeof(Book), bookId);
 
-        // Idempotency guard: if the book is already completed, hitting the last page again
-        // (e.g. after the user scrubbed the page slider down and back up) must not re-award
-        // completion XP nor clobber the original DateCompleted.
+        // Idempotency guard: re-hitting the last page on an already-completed book must not
+        // re-award XP nor clobber the original DateCompleted.
         bool wasAlreadyCompleted = book.Status == ReadingStatus.Completed;
-        // Clamp to [0, PageCount] so a stray >PageCount input from the UI cannot persist
-        // an inconsistent "600 / 500 (100%)" state — the percentage is already clamped
-        // for display but the raw CurrentPage used to leak through.
+        // Clamp to [0, PageCount] so a stray >PageCount UI input can't persist an inconsistent
+        // "600 / 500 (100%)" state (raw CurrentPage used to leak through).
         int clampedPage = Math.Max(0, currentPage);
         if (book.PageCount.HasValue)
         {

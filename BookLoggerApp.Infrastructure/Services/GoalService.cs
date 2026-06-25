@@ -53,8 +53,7 @@ public class GoalService : IGoalService
 
     public async Task<ReadingGoal> AddAsync(ReadingGoal goal, CancellationToken ct = default)
     {
-        // CODE_REVIEW BUG-05: validate shape (title, target range, date window) before the
-        // entitlement gate or any persistence.
+        // BUG-05: validate shape before the entitlement gate or persistence.
         if (_validation is not null)
             await _validation.ValidateAndThrowAsync(goal, ct);
 
@@ -91,7 +90,7 @@ public class GoalService : IGoalService
 
     public async Task UpdateAsync(ReadingGoal goal, CancellationToken ct = default)
     {
-        // CODE_REVIEW BUG-05: validate before persisting an edited goal.
+        // BUG-05: validate before persisting an edited goal.
         if (_validation is not null)
             await _validation.ValidateAndThrowAsync(goal, ct);
 
@@ -115,7 +114,6 @@ public class GoalService : IGoalService
         var goals = await _unitOfWork.ReadingGoals.GetActiveGoalsAsync(ct);
         var goalsList = goals.ToList();
 
-        // Calculate current progress for each goal dynamically
         await CalculateGoalProgressAsync(goalsList, persistNewlyCompleted: false, ct);
 
         return goalsList;
@@ -126,7 +124,7 @@ public class GoalService : IGoalService
         var goals = await _unitOfWork.ReadingGoals.GetCompletedGoalsAsync(ct);
         var goalsList = goals.ToList();
 
-        // Also calculate progress for completed goals to show final values
+        // Compute progress on completed goals too, to show final values
         await CalculateGoalProgressAsync(goalsList, persistNewlyCompleted: false, ct);
 
         return goalsList;
@@ -142,20 +140,15 @@ public class GoalService : IGoalService
     {
         if (!goals.Any()) return false;
 
-        // HIGH-1003: genre / excluded-book goal filters are a Premium feature. A user not entitled
-        // to them (e.g. after restoring a Premium backup) gets UNFILTERED progress — the filter
-        // rows are preserved and re-apply automatically on re-upgrade. No filter chips are shown
-        // either, because goal.GoalGenres is only populated when filters are allowed.
+        // HIGH-1003: genre/excluded-book filters are Premium. Non-entitled users get UNFILTERED
+        // progress; the filter rows are preserved and re-apply on re-upgrade.
         bool filtersAllowed = _featureGuard?.HasAccess(FeatureKey.ReadingGoalsWithGenreTropeFilter) ?? true;
 
-        // Get all books and sessions for calculation
         var books = await _unitOfWork.Books.GetAllAsync(ct);
         var sessions = await _unitOfWork.ReadingSessions.GetAllAsync(ct);
 
-        // Load all exclusions in one query
         var allExclusions = await _unitOfWork.GoalExcludedBooks.GetAllAsync(ct);
 
-        // Load all goal-genre associations in one query
         var allGoalGenres = await _unitOfWork.GoalGenres.GetAllAsync(ct);
         var anyGoalHasGenres = allGoalGenres.Any();
 
@@ -166,7 +159,7 @@ public class GoalService : IGoalService
             allBookGenres = await _unitOfWork.BookGenres.GetAllAsync(ct);
         }
 
-        // Build genre lookup for populating GoalGenres on each goal (for UI display)
+        // Genre lookup for populating GoalGenres on each goal (UI display)
         Dictionary<Guid, Genre>? genreLookup = null;
         if (anyGoalHasGenres)
         {
@@ -226,15 +219,14 @@ public class GoalService : IGoalService
                 _ => goal.Current
             };
 
-            // Auto-mark as completed if target is reached
             if (goal.Current >= goal.Target && !goal.IsCompleted)
             {
                 anyGoalNewlyCompleted = true;
 
                 if (persistNewlyCompleted)
                 {
-                    // Reflect completion on the in-memory (returned) object for the caller/UI,
-                    // but DON'T persist via this instance — see the Z.187 note below.
+                    // Reflect completion on the in-memory object for the caller/UI;
+                    // do NOT persist via this instance — see the Z.187 note below.
                     goal.IsCompleted = true;
                     goal.CompletedAt = DateTime.UtcNow;
                     (newlyCompletedGoalIds ??= new List<Guid>()).Add(goal.Id);
@@ -243,13 +235,10 @@ public class GoalService : IGoalService
         }
 
         // Z.187: persist completion as a targeted scalar update on a freshly-loaded TRACKED entity.
-        // The `goals` here come from AsNoTracking() repository reads and, for genre-filtered goals,
-        // had their GoalGenres navigation REPLACED above with synthetic GoalGenre instances (sharing
-        // Genre references across goals) purely for UI display. Calling UpdateAsync on such an
-        // instance makes _dbSet.Update graft that projection graph into the change tracker and
-        // rewrite Genre / GoalGenre rows on SaveChanges (clobber + duplicate-tracking risk). Loading
-        // the goal by id (FindAsync → tracked, navigations not loaded) and writing only the two
-        // completion scalars keeps the persist path independent of the display projection.
+        // The `goals` come from AsNoTracking() reads and had GoalGenres replaced above with synthetic
+        // instances for UI display; UpdateAsync on those would graft the projection into the change
+        // tracker and clobber/duplicate Genre rows. Loading by id and writing only the two completion
+        // scalars keeps the persist path independent of the display projection.
         if (persistNewlyCompleted && newlyCompletedGoalIds is { Count: > 0 })
         {
             foreach (var goalId in newlyCompletedGoalIds)
@@ -285,9 +274,8 @@ public class GoalService : IGoalService
     {
         var (startDate, endDate) = GoalDateRangeHelper.GetGoalRangeUtc(goal);
 
-        // INK-01: attribute a session to the goal window by StartedAt (the canonical timestamp
-        // streaks, the reading trend and the dashboard already use), so a session that crosses a
-        // day/period boundary lands in the same window everywhere.
+        // INK-01: attribute a session to the goal window by StartedAt (the canonical timestamp used
+        // by streaks/trend/dashboard) so a boundary-crossing session lands in the same window everywhere.
         return sessions
             .Where(s => !excludedBookIds.Contains(s.BookId) &&
                         (genreMatchingBookIds == null || genreMatchingBookIds.Contains(s.BookId)) &&
@@ -321,7 +309,6 @@ public class GoalService : IGoalService
 
         goal.Current = progress;
 
-        // Auto-complete if target reached
         if (goal.Current >= goal.Target)
         {
             goal.IsCompleted = true;
@@ -346,7 +333,6 @@ public class GoalService : IGoalService
             }
         }
 
-        // Single SaveChanges for all updates
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
@@ -358,9 +344,8 @@ public class GoalService : IGoalService
 
     public async Task ExcludeBookFromGoalAsync(Guid goalId, Guid bookId, CancellationToken ct = default)
     {
-        // CODE_REVIEW SEC-03/SEC-07/SEC-10: AddAsync only guards filters present at creation, but
-        // the exclude modal attaches exclusions afterwards via this method. Enforce the Premium
-        // filter feature here so the gate covers every caller, not just the Goals.razor overlay.
+        // SEC-03/07/10: AddAsync only guards filters at creation; the exclude modal attaches them
+        // later via this method. Enforce the Premium gate here so it covers every caller.
         _featureGuard?.RequireAccess(
             FeatureKey.ReadingGoalsWithGenreTropeFilter,
             "Filtered goals (by genre or excluded books) require Premium.");
@@ -401,10 +386,9 @@ public class GoalService : IGoalService
 
     public async Task AddGenreToGoalAsync(Guid goalId, Guid genreId, CancellationToken ct = default)
     {
-        // CODE_REVIEW SEC-03/SEC-07/SEC-10: the load-bearing gate for the Premium genre filter.
-        // The create form locks the genre picker, but the edit/exclude modal calls this directly,
-        // so enforcing here closes the bypass for all callers (RemoveGenreFromGoalAsync stays open
-        // so downgraded users can still clear filters).
+        // SEC-03/07/10: load-bearing gate for the Premium genre filter. The edit/exclude modal calls
+        // this directly, so enforcing here closes the bypass for all callers (RemoveGenreFromGoalAsync
+        // stays open so downgraded users can clear filters).
         _featureGuard?.RequireAccess(
             FeatureKey.ReadingGoalsWithGenreTropeFilter,
             "Filtered goals (by genre or excluded books) require Premium.");

@@ -41,8 +41,7 @@ public class AnalyticsParamBuilderTests
     public void Add_throws_on_long_string_value()
     {
         var builder = AnalyticsParamBuilder.Create();
-        // Allowlisted key so the length tripwire is what trips (> 100 = Firebase cap), not the
-        // allowlist gate.
+        // Allowlisted key so the length tripwire trips (> 100 = Firebase cap), not the allowlist gate.
         var longValue = new string('x', 101);
         var act = () => builder.Add(AnalyticsParamNames.Source, longValue);
         act.Should().Throw<InvalidOperationException>();
@@ -59,7 +58,7 @@ public class AnalyticsParamBuilderTests
     [Fact]
     public void Add_throws_on_unknown_key()
     {
-        // Z.501: a key with no const in AnalyticsParamNames is rejected by the allowlist.
+        // A key with no const in AnalyticsParamNames is rejected by the allowlist.
         var builder = AnalyticsParamBuilder.Create();
         var act = () => builder.Add("definitely_not_allowlisted", "v");
         act.Should().Throw<InvalidOperationException>();
@@ -78,8 +77,8 @@ public class AnalyticsParamBuilderTests
     [Fact]
     public void Add_drops_unknown_key_in_release()
     {
-        // Z.501: in RELEASE the allowlist silently drops a non-declared key (defense-in-depth).
-        // In DEBUG the same key throws, so only assert the drop when DEBUG is not defined.
+        // In RELEASE the allowlist silently drops a non-declared key; in DEBUG it throws, so only
+        // assert the drop when DEBUG is not defined.
         var result = AnalyticsParamBuilder.Create()
             .Add(AnalyticsParamNames.Source, "ok")
             .Build();

@@ -209,11 +209,9 @@
 
     private record PriceDisplay(string Amount, string PeriodSuffix, string PerMonth, string Savings);
 
-    // Hardcoded prices mirror the Play Console SKU configuration for plus_monthly / plus_yearly
-    // / premium_monthly / premium_yearly. Swap to BillingProduct.FormattedPrice once
-    // IBillingService.QueryProductsAsync is wired into the Paywall (regional pricing story).
-    // UX-03: instance method so the period suffix, per-month hint and savings badge resolve via L
-    // (the surrounding labels were already localized; only these three bypassed it).
+    // Hardcoded prices mirror the Play Console SKUs; swap to BillingProduct.FormattedPrice
+    // once QueryProductsAsync is wired in (for regional pricing). Instance method so suffix,
+    // per-month hint and savings badge resolve via L.
     private PriceDisplay GetPrice(SubscriptionTier tier, BillingPeriod period)
     {
         string month = L["Paywall_PeriodMonth"].Value;
@@ -236,7 +234,7 @@
             // €99.99 / 12 ≈ €8.33
             return new PriceDisplay("€99.99", year, L["Paywall_PerMonthHint", "€8.33"].Value, L["Paywall_SavePercent", 30].Value);
         }
-        // Lifetime isn't rendered via this helper — the lifetime card has its own hard-coded layout.
+        // Lifetime uses its own hard-coded card layout, not this helper
         return new PriceDisplay("—", string.Empty, string.Empty, string.Empty);
     }
 

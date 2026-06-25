@@ -8,8 +8,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Infrastructure;
 
 /// <summary>
-/// Guards the seed data for late-game items (Chronikbaum, Phönix, Herz der Geschichten).
-/// A drift between seed data and ability logic would silently break these mechanics.
+/// Guards seed data for late-game items (Chronicle Tree, Phoenix, Heart of Stories).
+/// Drift between seed data and ability logic would silently break these mechanics.
 /// </summary>
 public class LateGameSeedIntegrityTests
 {

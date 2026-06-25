@@ -6,10 +6,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Unit.Entitlements;
 
 /// <summary>
-/// Covers CODE_REVIEW SEC-08 / SEC-06: the plant/decoration tier→FeatureKey mapping is
-/// now a single source of truth in <see cref="ShopTierFeatures"/>, shared by the shop UI
-/// (PlantShop.razor) and the service-layer entitlement guards (PlantService /
-/// DecorationService). These tests pin the mapping so UI and service can never diverge.
+/// Pins the plant/decoration tier→FeatureKey mapping in <see cref="ShopTierFeatures"/> so the
+/// shop UI and service-layer entitlement guards can never diverge.
 /// </summary>
 public class ShopTierFeaturesTests
 {

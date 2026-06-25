@@ -41,7 +41,6 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
                     string.Format(context.GetString(Resource.String.widget_page_info),
                         bookData.CurrentPage, bookData.TotalPages, bookData.ProgressPercentage));
 
-                // Load cover image
                 if (bookData.CoverImagePath is not null && File.Exists(bookData.CoverImagePath))
                 {
                     var bitmap = LoadScaledBitmap(bookData.CoverImagePath, 168, 252);
@@ -57,7 +56,6 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
             }
             else
             {
-                // No book currently being read
                 views.SetTextViewText(Resource.Id.widget_book_title, context.GetString(Resource.String.widget_no_active_book));
                 views.SetTextViewText(Resource.Id.widget_book_author, "");
                 views.SetProgressBar(Resource.Id.widget_progress_bar, 100, 0, false);
@@ -67,13 +65,11 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
         }
         catch
         {
-            // Fallback on any error
             views.SetTextViewText(Resource.Id.widget_book_title, "BookHeart");
             views.SetTextViewText(Resource.Id.widget_book_author, "");
             views.SetTextViewText(Resource.Id.widget_page_info, context.GetString(Resource.String.widget_tap_to_open));
         }
 
-        // Click opens the app
         var intent = new Intent(context, typeof(MainActivity));
         intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);
         var pendingIntent = PendingIntent.GetActivity(
@@ -92,11 +88,10 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
     {
         try
         {
-            // First pass: decode bounds only
+            // First pass: decode bounds only.
             var boundsOptions = new BitmapFactory.Options { InJustDecodeBounds = true };
             BitmapFactory.DecodeFile(path, boundsOptions);
 
-            // Calculate sample size
             int sampleSize = 1;
             if (boundsOptions.OutHeight > maxHeight || boundsOptions.OutWidth > maxWidth)
             {
@@ -109,7 +104,7 @@ public class CurrentBookWidgetProvider : AppWidgetProvider
                 }
             }
 
-            // Second pass: decode with sample size
+            // Second pass: decode at the computed sample size.
             var decodeOptions = new BitmapFactory.Options { InSampleSize = sampleSize };
             return BitmapFactory.DecodeFile(path, decodeOptions);
         }

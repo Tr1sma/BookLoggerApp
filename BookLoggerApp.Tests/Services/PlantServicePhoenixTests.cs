@@ -14,9 +14,7 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// Focused tests for the Ewiger Phönix-Bonsai mechanic:
-/// - The phoenix self-revives if it would die.
-/// - While the phoenix is owned, other plants cannot die.
+/// Tests the Ewiger Phönix-Bonsai mechanic: the phoenix self-revives, and while owned no other plant can die.
 /// </summary>
 public class PlantServicePhoenixTests : IDisposable
 {
@@ -82,15 +80,13 @@ public class PlantServicePhoenixTests : IDisposable
         var phoenixSpecies = await SeedSpecies("Phönix", SpecialAbilityKeys.EternalPhoenix);
         var phoenix = await SeedPlant(phoenixSpecies.Id, "Phönix", lastWatered: DateTime.UtcNow.AddDays(-200));
 
-        // Z.206: a pure read shows the protected (Wilting) status but must NOT mutate or persist
-        // the phoenix's water timer — reads no longer write.
+        // Z.206: a pure read shows Wilting but must not mutate/persist the water timer (reads no longer write).
         var read = await _plantService.GetByIdAsync(phoenix.Id);
         read!.Status.Should().Be(PlantStatus.Wilting, "the phoenix must never be shown as Dead");
         read.LastWatered.Should().BeCloseTo(DateTime.UtcNow.AddDays(-200), TimeSpan.FromMinutes(1),
             "a read must not reset the phoenix's water timer (Z.206 write-on-read fix)");
 
-        // The maintenance pass is the real persist path: it self-revives the phoenix and resets
-        // its water timer, so the next load sees a freshly-watered plant.
+        // The maintenance pass is the real persist path: it self-revives and resets the water timer.
         await _plantService.UpdatePlantStatusesAsync();
 
         var afterMaintenance = await _plantService.GetByIdAsync(phoenix.Id);

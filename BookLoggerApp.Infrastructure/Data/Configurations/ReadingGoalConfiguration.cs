@@ -29,12 +29,10 @@ public class ReadingGoalConfiguration : IEntityTypeConfiguration<ReadingGoal>
         builder.Property(rg => rg.EndDate)
             .IsRequired();
 
-        // Indexes
         builder.HasIndex(rg => rg.StartDate);
         builder.HasIndex(rg => rg.EndDate);
         builder.HasIndex(rg => rg.IsCompleted);
 
-        // Ignore computed properties
         builder.Ignore(rg => rg.ProgressPercentage);
         builder.Ignore(rg => rg.IsActive);
     }

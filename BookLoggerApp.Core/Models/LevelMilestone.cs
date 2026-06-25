@@ -1,8 +1,6 @@
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Represents a level milestone (past, current, or future).
-/// </summary>
+/// <summary>A level milestone (past, current, or future).</summary>
 public class LevelMilestone
 {
     public int Level { get; set; }

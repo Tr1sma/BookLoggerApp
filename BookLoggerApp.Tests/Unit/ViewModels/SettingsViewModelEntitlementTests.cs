@@ -12,9 +12,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Unit.ViewModels;
 
 /// <summary>
-/// CODE_REVIEW SEC-15: custom shelf colors (Plus) were saved with no entitlement check —
-/// the only gate was the Settings.razor LockedFeatureButton overlay. The ViewModel commands
-/// now require <see cref="FeatureKey.CustomShelfColors"/> before persisting the color.
+/// SEC-15: shelf color commands now require <see cref="FeatureKey.CustomShelfColors"/> before
+/// persisting, instead of relying only on the Settings.razor LockedFeatureButton overlay.
 /// </summary>
 public class SettingsViewModelEntitlementTests
 {

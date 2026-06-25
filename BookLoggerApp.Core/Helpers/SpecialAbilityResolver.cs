@@ -12,22 +12,22 @@ public static class SpecialAbilityResolver
     /// <summary>Minimum days between two Streak-Guardian rescues.</summary>
     public const int StreakGuardianCooldownDays = 14;
 
-    /// <summary>XP-boost percentage (as decimal) granted by an owned Herz der Geschichten.</summary>
+    /// <summary>XP-boost percentage (as decimal) granted by an owned Heart of Stories.</summary>
     public const decimal StoryHeartXpBoostPct = 0.25m;
 
-    /// <summary>Level-up coin multiplier applied when Herz der Geschichten is owned.</summary>
+    /// <summary>Level-up coin multiplier applied when Heart of Stories is owned.</summary>
     public const decimal StoryHeartCoinMultiplier = 1.25m;
 
-    /// <summary>Flat coin bonus per qualifying reading session when Herz der Geschichten is owned.</summary>
+    /// <summary>Flat coin bonus per qualifying reading session when Heart of Stories is owned.</summary>
     public const int StoryHeartSessionCoinBonus = 400;
 
-    /// <summary>Minimum session duration (minutes) to earn the Herz coin bonus.</summary>
+    /// <summary>Minimum session duration (minutes) to earn the Heart of Stories coin bonus.</summary>
     public const int StoryHeartSessionMinMinutes = 30;
 
-    /// <summary>Plant-growth multiplier applied globally while Herz der Geschichten is owned.</summary>
+    /// <summary>Plant-growth multiplier applied globally while Heart of Stories is owned.</summary>
     public const decimal StoryHeartPlantGrowthMultiplier = 2.0m;
 
-    /// <summary>Fraction of the next-level XP requirement granted on the first session of each day when Herz der Geschichten is owned.</summary>
+    /// <summary>Fraction of the next-level XP requirement granted on the first session of each day when Heart of Stories is owned.</summary>
     public const decimal StoryHeartFirstSessionXpPct = 0.025m;
 
     /// <summary>

@@ -40,11 +40,10 @@ public class LookupService : ILookupService
         if (string.IsNullOrWhiteSpace(isbn))
             return null;
 
-        // Clean ISBN (remove dashes and spaces) and uppercase the optional ISBN-10 'X' check digit.
+        // Strip separators; uppercase the optional ISBN-10 'X' check digit.
         isbn = isbn.Replace("-", "").Replace(" ", "").ToUpperInvariant();
 
-        // Reject malformed input early instead of firing a guaranteed-empty API query: a valid ISBN
-        // is exactly 10 (digits + optional trailing 'X' check digit) or 13 digits.
+        // Reject malformed input early to avoid a guaranteed-empty API query (valid: 10 or 13 chars).
         if (!IsValidIsbn(isbn))
         {
             _logger?.LogInformation("Skipping lookup for malformed ISBN: {ISBN}", isbn);
@@ -96,9 +95,7 @@ public class LookupService : ILookupService
     }
 
     /// <summary>
-    /// Validates the structural shape of an ISBN (already stripped of separators, uppercased).
-    /// ISBN-13: 13 digits. ISBN-10: 9 digits + a final check digit that may be 'X'.
-    /// Does not verify the checksum — Google Books rejects bad checksums anyway.
+    /// Validates ISBN shape only (ISBN-13: 13 digits; ISBN-10: 9 digits + 'X'/digit). No checksum — Google Books rejects bad ones.
     /// </summary>
     private static bool IsValidIsbn(string isbn)
     {
@@ -208,14 +205,12 @@ public class LookupService : ILookupService
 
     private BookMetadata MapToBookMetadata(GoogleBooksVolumeInfo volumeInfo, string? isbn)
     {
-        // Extract ISBN if not provided
         if (string.IsNullOrWhiteSpace(isbn))
         {
             isbn = volumeInfo.IndustryIdentifiers?
                 .FirstOrDefault(id => id.Type == "ISBN_13" || id.Type == "ISBN_10")?.Identifier;
         }
 
-        // Extract publication year
         int? publicationYear = null;
         if (!string.IsNullOrWhiteSpace(volumeInfo.PublishedDate) &&
             volumeInfo.PublishedDate.Length >= 4 &&

@@ -13,9 +13,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Unit.Services;
 
 /// <summary>
-/// CODE_REVIEW SEC-17: the Tropes (Plus) write path was gated only by the BookEdit.razor
-/// LockedFeatureButton, never in GenreService. AddTropeToBookAsync now requires
-/// <see cref="FeatureKey.Tropes"/>; RemoveTropeFromBookAsync stays open for downgrade cleanup.
+/// SEC-17: AddTropeToBookAsync requires <see cref="FeatureKey.Tropes"/> (Plus);
+/// RemoveTropeFromBookAsync stays open for downgrade cleanup.
 /// </summary>
 public class GenreServiceEntitlementTests : IDisposable
 {
@@ -82,8 +81,8 @@ public class GenreServiceEntitlementTests : IDisposable
     [Fact]
     public async Task GetTropesForBookAsync_FreeUser_ReturnsEmptyButKeepsData()
     {
-        // HIGH-1003: trope tags (Plus) carried in a restored higher-tier backup must not be
-        // surfaced for a non-entitled user; the BookTrope rows stay and reappear on re-upgrade.
+        // HIGH-1003: trope tags (Plus) from a restored higher-tier backup stay hidden for
+        // non-entitled users but persist and reappear on re-upgrade.
         var bookId = Guid.NewGuid();
         var tropeId = Guid.NewGuid();
         _context.Set<Trope>().Add(new Trope { Id = tropeId, Name = "Enemies to Lovers", GenreId = Guid.NewGuid() });

@@ -10,8 +10,7 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// Smoke-level tests for ShareCardService. Private drawing helpers are
-/// marked [ExcludeFromCodeCoverage] as pixel-perfect tests would be brittle.
+/// Smoke-level tests for ShareCardService (private drawing helpers excluded as pixel tests would be brittle).
 /// </summary>
 public class ShareCardServiceTests
 {
@@ -22,7 +21,7 @@ public class ShareCardServiceTests
     private static bool IsPng(byte[] bytes) =>
         bytes.Length >= 4 && bytes.Take(4).SequenceEqual(PngMagic);
 
-    // Z.996: share cards are a Premium feature — enforced service-side via IFeatureGuard.
+    // Share cards are a Premium feature, enforced service-side via IFeatureGuard.
     private static ShareCardService GuardedService(SubscriptionTier tier) =>
         new(new TestStringLocalizer<AppResources>(), new FeatureGuard(new FakeEntitlementService(tier)));
 

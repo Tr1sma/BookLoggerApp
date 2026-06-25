@@ -26,10 +26,9 @@ public class SpineColorHelperTests
     {
         var (dark, light) = SpineColorHelper.GetColors(hexCode, Guid.NewGuid());
         
-        // Dark should be the base hex without hash
         dark.Should().Be(hexCode.TrimStart('#'));
-        
-        // Light should be different (lighter)
+
+        // Light is a generated lighter shade, so it differs from dark.
         light.Should().NotBe(dark);
         light.Length.Should().Be(6);
     }
@@ -37,8 +36,7 @@ public class SpineColorHelperTests
     [Fact]
     public void GetColors_WithInvalidHex_ReturnsFallback()
     {
-        // Invalid hex code shouldn't crash, should fallback (either to hash or safe default)
-        // Since our implementation falls back to hash if preset/hex logic fails
+        // Invalid hex must not crash; falls back to a hash-derived color.
         var bookId = Guid.NewGuid();
         
         var (dark, light) = SpineColorHelper.GetColors("not-a-color", bookId);

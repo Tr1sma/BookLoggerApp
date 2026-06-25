@@ -5,10 +5,7 @@ using Microsoft.Extensions.Localization;
 
 namespace BookLoggerApp.Core.Validators;
 
-/// <summary>
-/// Validator for Book model.
-/// Ensures all book properties meet business rules.
-/// </summary>
+/// <summary>Validates Book properties against business rules.</summary>
 public class BookValidator : AbstractValidator<Book>
 {
     public BookValidator(IStringLocalizer<AppResources>? localizer = null)
@@ -44,9 +41,7 @@ public class BookValidator : AbstractValidator<Book>
             .LessThanOrEqualTo(DateTime.UtcNow).WithMessage(_ => Tr("Validator_Book_DateStartedFuture"))
             .When(b => b.DateStarted.HasValue);
 
-        // Future-date check on DateCompleted must fire independently of whether DateStarted
-        // is set, otherwise imports/lookups that provide only DateCompleted can slip a
-        // future date past validation (the older combined When required both fields).
+        // Future-date check must fire independently of DateStarted, else imports with only DateCompleted slip a future date past validation.
         RuleFor(b => b.DateCompleted)
             .LessThanOrEqualTo(DateTime.UtcNow).WithMessage(_ => Tr("Validator_Book_DateCompletedFuture"))
             .When(b => b.DateCompleted.HasValue);

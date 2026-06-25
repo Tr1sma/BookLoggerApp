@@ -3,17 +3,14 @@ using System;
 namespace BookLoggerApp.Core.Helpers;
 
 /// <summary>
-/// Converts canonically-UTC reading timestamps (ReadingSession.StartedAt is written as
-/// <see cref="DateTime.UtcNow"/>) into the user's local wall-clock calendar for day, weekday
-/// and time-of-day bucketing. Centralizing this keeps streaks, stats and goals on ONE
-/// calendar-day convention — the same local-midnight anchor that
-/// <see cref="GoalDateRangeHelper"/> and ReadingGoalRepository already use
-/// (CODE_REVIEW LOG-02/LOG-04/LOG-06/LOG-08, INK-06).
-///
-/// <para>The time zone is passed in by the caller (production passes
-/// <see cref="TimeZoneInfo.Local"/>) so the stats/streak logic stays deterministically
-/// testable on a CI machine in any zone.</para>
+/// Converts canonically-UTC reading timestamps into the user's local calendar for day,
+/// weekday and time-of-day bucketing, keeping streaks/stats/goals on one calendar-day
+/// convention (CODE_REVIEW LOG-02/LOG-04/LOG-06/LOG-08, INK-06).
 /// </summary>
+/// <remarks>
+/// Time zone is caller-supplied (production passes <see cref="TimeZoneInfo.Local"/>) so the
+/// logic stays deterministically testable on a CI machine in any zone.
+/// </remarks>
 public static class LocalTimeHelper
 {
     /// <summary>

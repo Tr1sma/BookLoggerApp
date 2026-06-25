@@ -8,16 +8,12 @@ namespace BookLoggerApp.Core.Services.Analytics;
 /// </summary>
 public sealed class AnalyticsParamBuilder
 {
-    // Z.508: separate the two length concerns. Firebase caps a string param value at 100 chars,
-    // so that is BOTH the storage-truncation length and the PII tripwire — a value longer than the
-    // Firebase cap is certainly raw content (titles/notes/queries), never a short bucket/category
-    // label. Previously a single 32-char constant did double duty: throwing in DEBUG but silently
-    // truncating to 32 in RELEASE for the very same value.
+    // Firebase caps string param values at 100 chars; reuse that as the PII tripwire since any
+    // longer value is certainly raw content (titles/notes/queries), not a short bucket label.
     private const int FirebaseMaxStringLength = 100;
     private const int PiiTripwireLength = FirebaseMaxStringLength;
 
-    // OrdinalIgnoreCase so a mis-cased key dedupes/compares the same way the Forbidden/Allowed
-    // sets do (Z.501) — previously the dictionary was Ordinal while the guards were IgnoreCase.
+    // OrdinalIgnoreCase so a mis-cased key compares the same way the Forbidden/Allowed sets do.
     private readonly Dictionary<string, object?> _params = new(StringComparer.OrdinalIgnoreCase);
 
     public static AnalyticsParamBuilder Create() => new();
@@ -82,8 +78,8 @@ public sealed class AnalyticsParamBuilder
 #endif
         }
 
-        // Z.501: allowlist is the primary gate — anything not declared as a const in
-        // AnalyticsParamNames is rejected, so a new raw-content key can't leak by default.
+        // Allowlist is the primary gate: any key not declared as a const in AnalyticsParamNames
+        // is rejected, so a new raw-content key can't leak by default.
         if (!AnalyticsParamNames.Allowed.Contains(key))
         {
 #if DEBUG

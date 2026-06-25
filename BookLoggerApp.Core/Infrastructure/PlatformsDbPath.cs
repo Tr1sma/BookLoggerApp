@@ -1,21 +1,19 @@
 ﻿using System.IO;
-using System; // For Environment
+using System;
 
 namespace BookLoggerApp.Infrastructure;
 
-// Returns a writable path in app data (Android/iOS/Windows safe)
+// Returns a writable app-data path (Android/iOS/Windows safe).
 public static class PlatformsDbPath
 {
     public static string GetDatabasePath(string fileName = "booklogger.db3")
     {
-        // Use Environment.GetFolderPath for cross-platform app data directory
-        // New Path: .../files/.local/share/ (on Android)
+        // LocalApplicationData → .../files/.local/share/ on Android.
         var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         Directory.CreateDirectory(folder);
         var dbPath = Path.Combine(folder, fileName);
 
-        // Legacy Check: .../files/ (on Android) used by System.Environment.SpecialFolder.Personal
-        // Many older Xamarin/MAUI examples used Personal.
+        // Legacy location (Personal → .../files/ on Android) used by older Xamarin/MAUI examples.
         var legacyFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
         var legacyDbPath = Path.Combine(legacyFolder, fileName);
 

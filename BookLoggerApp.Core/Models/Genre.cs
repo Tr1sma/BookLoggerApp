@@ -2,9 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Represents a book genre/category.
-/// </summary>
+/// <summary>A book genre/category.</summary>
 public class Genre
 {
     public Guid Id { get; set; }
@@ -22,11 +20,9 @@ public class Genre
     [MaxLength(7)]
     public string? ColorHex { get; set; } // For UI theming
 
-    // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }
 
-    // Navigation Properties
     public ICollection<BookGenre> BookGenres { get; set; } = new List<BookGenre>();
     public ICollection<Trope> Tropes { get; set; } = new List<Trope>();
 }

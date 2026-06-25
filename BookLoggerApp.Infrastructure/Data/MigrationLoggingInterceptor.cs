@@ -5,12 +5,9 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 namespace BookLoggerApp.Infrastructure.Data;
 
 /// <summary>
-/// Logs every SQL command executed by EF Core to <see cref="DatabaseInitializationHelper.InitLog"/>
-/// while <see cref="Enabled"/> is true. Used to surface exactly which SQL statement is
-/// hanging or running slowly during migrations on slow Android devices.
-///
-/// Toggled around <see cref="DbInitializer"/>.MigrateDatabaseAsync so the log isn't
-/// spammed during normal app operation.
+/// Logs every EF Core SQL command to <see cref="DatabaseInitializationHelper.InitLog"/> while
+/// <see cref="Enabled"/> is true, to surface which statement hangs during migrations. Toggled
+/// around <see cref="DbInitializer"/>.MigrateDatabaseAsync so it doesn't spam normal operation.
 /// </summary>
 public sealed class MigrationLoggingInterceptor : DbCommandInterceptor
 {

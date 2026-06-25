@@ -9,9 +9,7 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Core.ViewModels;
 
-/// <summary>
-/// VM for managing the book wishlist.
-/// </summary>
+/// <summary>VM for managing the book wishlist.</summary>
 public partial class WishlistViewModel : ViewModelBase
 {
     private readonly IWishlistService _wishlistService;
@@ -131,9 +129,7 @@ public partial class WishlistViewModel : ViewModelBase
 
         IsLookingUp = true;
         LookupMessage = null;
-        // INK-09: default to the error styling; only a confirmed hit flips it to success. This
-        // mirrors BookEditViewModel so the UI binds to a flag instead of sniffing the message text
-        // for "found" (which broke once the message was localized to German).
+        // Default to error styling; only a confirmed hit flips it to success, so the UI binds a flag instead of sniffing message text.
         LookupMessageIsError = true;
 
         try
@@ -141,8 +137,7 @@ public partial class WishlistViewModel : ViewModelBase
             var metadata = await _lookupService.LookupByISBNAsync(NewIsbn.Trim());
             if (metadata != null)
             {
-                // Only overwrite a field the lookup actually filled — keep what the user already
-                // typed if Google returns a blank title/author (mirrors BookEditViewModel).
+                // Only overwrite fields the lookup filled; keep what the user typed on blanks.
                 if (!string.IsNullOrWhiteSpace(metadata.Title))
                     NewTitle = metadata.Title;
                 if (!string.IsNullOrWhiteSpace(metadata.Author))

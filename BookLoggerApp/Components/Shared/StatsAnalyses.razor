@@ -16,7 +16,6 @@
     }
     else
     {
-        <!-- 1. Jahresvergleich -->
         <section class="advanced-stats-section">
             <div class="advanced-stats-card">
                 <h3>@L["StatsAnalyses_YearComparison"]</h3>
@@ -57,7 +56,6 @@
             </div>
         </section>
 
-        <!-- 2. Genre-Radar -->
         @if (ViewModel.GenreRadarData.Count > 0)
         {
             <section class="advanced-stats-section">
@@ -77,7 +75,6 @@
             </section>
         }
 
-        <!-- 3. Abschlussquote -->
         @if (ViewModel.CompletedCount + ViewModel.AbandonedCount > 0)
         {
             <section class="advanced-stats-section">
@@ -99,7 +96,6 @@
             </section>
         }
 
-        <!-- 4. Buchlängen-Vorliebe -->
         @if (ViewModel.PageCountData.Values.Any(v => v > 0))
         {
             <section class="advanced-stats-section">
@@ -126,7 +122,6 @@
             </section>
         }
 
-        <!-- 5. Meistgelesene Autoren -->
         @if (ViewModel.TopAuthors.Count > 0)
         {
             <section class="advanced-stats-section">
@@ -295,12 +290,10 @@
 
     private void BuildChartData()
     {
-        // Radar chart data
         _radarChartData = ViewModel.GenreRadarData
             .Select(kvp => new ChartDataPoint { Label = kvp.Key, Value = kvp.Value })
             .ToList();
 
-        // Donut chart data
         _donutChartData = new List<ChartDataPoint>
         {
             new() { Label = L["StatsAnalyses_Donut_Completed", ViewModel.CompletedCount], Value = ViewModel.CompletedCount },

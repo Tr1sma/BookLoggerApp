@@ -170,8 +170,7 @@ public class BookshelfViewModelTests
     [Fact]
     public async Task SearchAsync_WithEmptyQueryButStatusFilter_AppliesFilterInsteadOfResettingToShelves()
     {
-        // LOG-09: a status filter with no search text must still filter the library,
-        // not short-circuit back to the shelf view and ignore the filter entirely.
+        // LOG-09: a status filter with no search text must still filter the library, not revert to shelf view.
         var reading = new Book { Id = Guid.NewGuid(), Title = "Reading Book", Status = ReadingStatus.Reading };
         var completed = new Book { Id = Guid.NewGuid(), Title = "Completed Book", Status = ReadingStatus.Completed };
         _bookService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(new[] { reading, completed });
@@ -191,8 +190,8 @@ public class BookshelfViewModelTests
     [Fact]
     public async Task LoadAsync_WithoutCustomShelfColorEntitlement_FallsBackToDefaultColors()
     {
-        // HIGH-1003: custom shelf colors (Plus) restored from a higher-tier backup must not be
-        // applied for a non-entitled user. The saved values stay in AppSettings and return on re-upgrade.
+        // HIGH-1003: Plus shelf colors from a higher-tier backup must not apply for a non-entitled user
+        // (saved values stay in AppSettings, return on re-upgrade).
         _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>())
             .Returns(new AppSettings { ShelfLedgeColor = "#111111", ShelfBaseColor = "#222222" });
         var guard = Substitute.For<IFeatureGuard>();

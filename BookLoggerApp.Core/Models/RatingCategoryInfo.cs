@@ -3,9 +3,7 @@ using Microsoft.Extensions.Localization;
 
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Provides metadata and display information for rating categories.
-/// </summary>
+/// <summary>Metadata and display info for rating categories.</summary>
 public class RatingCategoryInfo
 {
     public RatingCategory Category { get; set; }
@@ -13,9 +11,7 @@ public class RatingCategoryInfo
     public string DisplayName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Returns all available rating categories with their metadata.
-    /// </summary>
+    /// <summary>Returns all rating categories with their metadata.</summary>
     public static List<RatingCategoryInfo> GetAllCategories(IStringLocalizer<AppResources>? localizer = null)
     {
         return new List<RatingCategoryInfo>
@@ -34,9 +30,7 @@ public class RatingCategoryInfo
         };
     }
 
-    /// <summary>
-    /// Gets the rating category info for a specific category.
-    /// </summary>
+    /// <summary>Gets the info for a specific rating category.</summary>
     public static RatingCategoryInfo? GetCategoryInfo(
         RatingCategory category,
         IStringLocalizer<AppResources>? localizer = null)

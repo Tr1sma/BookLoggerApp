@@ -5,9 +5,7 @@ using BookLoggerApp.Core.Helpers;
 
 namespace BookLoggerApp.Core.ViewModels;
 
-/// <summary>
-/// ViewModel for displaying user progression (level, XP) in the UI.
-/// </summary>
+/// <summary>ViewModel for displaying user progression (level, XP).</summary>
 public partial class UserProgressViewModel : ViewModelBase
 {
     private readonly IAppSettingsProvider _settingsProvider;
@@ -41,18 +39,15 @@ public partial class UserProgressViewModel : ViewModelBase
 
             TotalXp = settings.TotalXp;
 
-            // Recalculate level from total XP to ensure consistency
-            // This fixes the bug where progress > 100% if stored level is stale
+            // Derive level from total XP; a stale stored level can push progress over 100%.
             CurrentLevel = XpCalculator.CalculateLevelFromXp(TotalXp);
 
-            // Calculate XP for current level progress
             CalculateProgress();
         }, Tr("Error_FailedTo_LoadUserProgress"));
     }
 
     private void CalculateProgress()
     {
-        // Calculate XP accumulated for current level
         int xpForPreviousLevels = 0;
         for (int i = 1; i < CurrentLevel; i++)
         {
@@ -62,7 +57,6 @@ public partial class UserProgressViewModel : ViewModelBase
         CurrentLevelXp = TotalXp - xpForPreviousLevels;
         NextLevelXp = XpCalculator.GetXpForLevel(CurrentLevel);
 
-        // Calculate percentage (0-100), clamped to valid range
         if (NextLevelXp > 0)
         {
             ProgressPercentage = Math.Clamp((decimal)CurrentLevelXp / NextLevelXp * 100m, 0m, 100m);
@@ -73,9 +67,7 @@ public partial class UserProgressViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Refresh the progress display (call after XP is earned).
-    /// </summary>
+    /// <summary>Refreshes the progress display (call after XP is earned).</summary>
     [RelayCommand]
     public async Task RefreshAsync()
     {

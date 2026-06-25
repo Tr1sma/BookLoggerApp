@@ -11,7 +11,6 @@ public class FileSaverService : IFileSaverService
     {
         try
         {
-            // Use MAUI's share functionality as a cross-platform solution
             var tempPath = Path.Combine(FileSystem.CacheDirectory, defaultFileName);
             await File.WriteAllTextAsync(tempPath, content, ct);
 

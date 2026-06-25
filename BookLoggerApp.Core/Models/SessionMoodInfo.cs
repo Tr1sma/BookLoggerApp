@@ -5,8 +5,7 @@ using Microsoft.Extensions.Localization;
 namespace BookLoggerApp.Core.Models;
 
 /// <summary>
-/// Anzeige-Metadaten für die Sitzungs-Stimmungen (Emoji, lokalisiertes Label, Chart-Farbe).
-/// Spiegelt das Muster von <see cref="RatingCategoryInfo"/>.
+/// Display metadata for session moods (emoji, localized label, chart color). Mirrors <see cref="RatingCategoryInfo"/>.
 /// </summary>
 public class SessionMoodInfo
 {
@@ -14,25 +13,21 @@ public class SessionMoodInfo
     public string Emoji { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
 
-    /// <summary>Theme-Farbe der Chart-Serie für diese Stimmung (CLAUDE.md-Palette).</summary>
+    /// <summary>Chart series theme color for this mood (CLAUDE.md palette).</summary>
     public string ColorHex { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Liefert alle Stimmungen mit ihren Metadaten.
-    /// </summary>
+    /// <summary>Returns all moods with their metadata.</summary>
     public static List<SessionMoodInfo> GetAll(IStringLocalizer<AppResources>? localizer = null) => new()
     {
-        Create(SessionMood.Crying,      "😭", "Crying",      "#7B8FA3", localizer), // status-planned (blau-grau)
-        Create(SessionMood.Butterflies, "🦋", "Butterflies", "#C9A97F", localizer), // accent (helles Braun)
-        Create(SessionMood.Spice,       "🌶️", "Spice",       "#A67874", localizer), // status-abandoned (rot)
-        Create(SessionMood.Anger,       "😡", "Anger",       "#D4A574", localizer), // primary (Beige)
-        Create(SessionMood.Laughing,    "😂", "Laughing",    "#88A67E", localizer), // status-completed (grün)
-        Create(SessionMood.MindBlown,   "🤯", "Mind-blown",  "#8B7355", localizer), // secondary (gedämpftes Braun)
+        Create(SessionMood.Crying,      "😭", "Crying",      "#7B8FA3", localizer), // status-planned
+        Create(SessionMood.Butterflies, "🦋", "Butterflies", "#C9A97F", localizer), // accent
+        Create(SessionMood.Spice,       "🌶️", "Spice",       "#A67874", localizer), // status-abandoned
+        Create(SessionMood.Anger,       "😡", "Anger",       "#D4A574", localizer), // primary
+        Create(SessionMood.Laughing,    "😂", "Laughing",    "#88A67E", localizer), // status-completed
+        Create(SessionMood.MindBlown,   "🤯", "Mind-blown",  "#8B7355", localizer), // secondary
     };
 
-    /// <summary>
-    /// Liefert die Metadaten zu einer bestimmten Stimmung.
-    /// </summary>
+    /// <summary>Returns metadata for a specific mood.</summary>
     public static SessionMoodInfo? Get(SessionMood mood, IStringLocalizer<AppResources>? localizer = null)
         => GetAll(localizer).FirstOrDefault(m => m.Mood == mood);
 

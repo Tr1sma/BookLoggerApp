@@ -1,8 +1,8 @@
 namespace BookLoggerApp.Core.Enums;
 
 /// <summary>
-/// Emotionale Reaktion, die einer einzelnen Lesesitzung zugeordnet werden kann.
-/// Persistiert als int über die Kind-Tabelle ReadingSessionMood.
+/// Emotional reaction tagged to a reading session. Persisted as int via the
+/// ReadingSessionMood child table.
 /// </summary>
 public enum SessionMood
 {

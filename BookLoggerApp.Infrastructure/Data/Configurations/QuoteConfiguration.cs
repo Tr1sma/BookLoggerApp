@@ -26,10 +26,7 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         builder.Property(q => q.CreatedAt)
             .IsRequired();
 
-        // Indexes
         builder.HasIndex(q => q.BookId);
         builder.HasIndex(q => q.IsFavorite);
-
-        // Relationship configured in BookConfiguration
     }
 }

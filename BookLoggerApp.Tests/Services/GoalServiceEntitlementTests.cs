@@ -12,11 +12,10 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// CODE_REVIEW SEC-03 / SEC-07 / SEC-10: the Premium genre/excluded-book goal filters were
-/// only gated by the Goals.razor LockedFeatureButton, never in the service, so the exclude
-/// modal let any tier attach genre filters / book exclusions via the incremental mutators.
-/// The service now requires <see cref="FeatureKey.ReadingGoalsWithGenreTropeFilter"/> on the
-/// write path; the remove/include cleanup paths stay open so downgraded users can clear filters.
+/// SEC-03 / SEC-07 / SEC-10: Premium genre/excluded-book goal filters were only gated in the UI,
+/// so any tier could attach them via the incremental mutators. The service now requires
+/// <see cref="FeatureKey.ReadingGoalsWithGenreTropeFilter"/> on the write path; remove/include
+/// cleanup stays open so downgraded users can clear filters.
 /// </summary>
 public class GoalServiceEntitlementTests : IDisposable
 {
@@ -143,9 +142,9 @@ public class GoalServiceEntitlementTests : IDisposable
     [Fact]
     public async Task CalculateProgress_FreeUser_IgnoresExcludedBookFilter()
     {
-        // HIGH-1003: a restored Premium goal carries a book exclusion (a Premium-only filter). A
-        // Free user is not entitled to it, so progress is computed UNFILTERED — both completed
-        // books count. The exclusion row is preserved and re-applies on re-upgrade.
+        // HIGH-1003: a restored Premium goal carries a Premium-only book exclusion. A Free user
+        // isn't entitled to it, so progress is unfiltered (both books count); the row is preserved
+        // and re-applies on re-upgrade.
         await SeedBooksGoalWithExcludedBookAsync();
         var service = CreateService(SubscriptionTier.Free);
 

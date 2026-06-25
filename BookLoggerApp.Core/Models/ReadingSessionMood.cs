@@ -3,8 +3,8 @@ using BookLoggerApp.Core.Enums;
 namespace BookLoggerApp.Core.Models;
 
 /// <summary>
-/// Eine Stimmungs-Markierung (1 von max. 3) für eine <see cref="ReadingSession"/>.
-/// Composite-PK (ReadingSessionId, Mood) verhindert Duplikate pro Sitzung.
+/// A mood tag (1 of max 3) for a <see cref="ReadingSession"/>. Composite PK
+/// (ReadingSessionId, Mood) prevents duplicates per session.
 /// </summary>
 public class ReadingSessionMood
 {

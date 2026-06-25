@@ -23,10 +23,8 @@ public class UserDecorationConfiguration : IEntityTypeConfiguration<UserDecorati
         builder.Property(d => d.ShopItemId)
             .IsRequired();
 
-        // Indexes
         builder.HasIndex(d => d.ShopItemId);
 
-        // Relationship to ShopItem (template)
         builder.HasOne(d => d.ShopItem)
             .WithMany()
             .HasForeignKey(d => d.ShopItemId)

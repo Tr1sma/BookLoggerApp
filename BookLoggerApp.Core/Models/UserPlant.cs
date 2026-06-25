@@ -93,7 +93,6 @@ public class UserPlant
     /// </summary>
     public bool IsHiddenByEntitlement { get; set; } = false;
 
-    // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }
 }

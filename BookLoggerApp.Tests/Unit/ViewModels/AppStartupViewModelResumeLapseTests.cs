@@ -9,9 +9,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Unit.ViewModels;
 
 /// <summary>
-/// CODE_REVIEW BUG-02: app-resume must only lapse genuine Play purchases that Google Play
-/// no longer returns — never an active promo grant (which is not a Play purchase and so never
-/// appears in QueryActivePurchasesAsync).
+/// BUG-02: app-resume may only lapse genuine Play purchases missing from QueryActivePurchasesAsync,
+/// never an active promo grant (which is not a Play purchase).
 /// </summary>
 public class AppStartupViewModelResumeLapseTests
 {

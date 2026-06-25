@@ -5,8 +5,8 @@ namespace BookLoggerApp.Core.Infrastructure;
 
 /// <summary>
 /// Wires the ambient <see cref="ViewModelBase.CrashReporter"/> to the resolved
-/// <see cref="ICrashReportingService"/> once the DI container is built. Z.652: named for what it
-/// actually does (only the crash reporter is wired here) — analytics is configured elsewhere.
+/// <see cref="ICrashReportingService"/> after the DI container is built. Only the crash
+/// reporter is wired here; analytics is configured elsewhere.
 /// </summary>
 public static class AnalyticsBootstrapper
 {

@@ -56,12 +56,7 @@ public partial class SettingsViewModel : ViewModelBase
         SupportedLanguages = _languageService.SupportedLanguages;
     }
 
-    /// <summary>
-    /// Re-reads the migration log from the MigrationService. Useful when the DB
-    /// initialization is still running in the background and the user wants the
-    /// latest log contents (e.g. when opening the "Data Recovery Diagnostics"
-    /// section on the Settings page).
-    /// </summary>
+    /// <summary>Re-reads the migration log from MigrationService for the latest contents while DB init is still running.</summary>
     public void RefreshMigrationLog()
     {
         MigrationLog = _migrationService.GetMigrationLog();
@@ -107,7 +102,7 @@ public partial class SettingsViewModel : ViewModelBase
         {
             if (enabled)
             {
-                // Request OS-level notification permission (required on Android 13+)
+                // OS notification permission required on Android 13+.
                 bool granted = await _notificationService.RequestNotificationPermissionAsync();
                 if (!granted)
                 {
@@ -123,7 +118,7 @@ public partial class SettingsViewModel : ViewModelBase
             {
                 Settings.ReadingRemindersEnabled = false;
                 await _notificationService.CancelReadingReminderAsync();
-                // Master switch off → also remove any active live-timer notification.
+                // Master switch off also removes any active live-timer notification.
                 _timerNotification.Hide();
             }
             await SaveSettingsInternalAsync();
@@ -137,9 +132,7 @@ public partial class SettingsViewModel : ViewModelBase
         {
             if (enabled)
             {
-                // Re-verify the OS notification permission — it may have been revoked in the
-                // system settings since the master toggle was enabled. Without it the
-                // lock-screen timer notification cannot be shown.
+                // Re-verify OS permission; it may have been revoked since the master toggle was enabled.
                 bool granted = await _notificationService.RequestNotificationPermissionAsync();
                 if (!granted)
                 {
@@ -154,7 +147,6 @@ public partial class SettingsViewModel : ViewModelBase
             Settings.LiveTimerNotificationEnabled = enabled;
             if (!enabled)
             {
-                // Remove the notification immediately if a session is currently running.
                 _timerNotification.Hide();
             }
             await SaveSettingsInternalAsync();
@@ -178,7 +170,7 @@ public partial class SettingsViewModel : ViewModelBase
         {
             if (enabled)
             {
-                // Re-verify OS permission before scheduling (may have been revoked since toggle)
+                // Re-verify OS permission before scheduling; it may have been revoked since the toggle.
                 bool granted = await _notificationService.RequestNotificationPermissionAsync();
                 if (!granted)
                 {
@@ -236,8 +228,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         await ExecuteSafelyAsync(async () =>
         {
-            // CODE_REVIEW SEC-15: custom shelf colors are Plus-only. The Settings.razor overlay
-            // is a UI hint; enforce here so no non-overlay path persists a custom color for free.
+            // Custom shelf colors are Plus-only; enforce here so no non-overlay path persists one for free.
             _featureGuard?.RequireAccess(FeatureKey.CustomShelfColors, "Custom shelf colors require Plus.");
             ShelfLedgeColor = color;
             Settings.ShelfLedgeColor = color;
@@ -386,10 +377,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         await ExecuteSafelyAsync(async () =>
         {
-            // 1. Create ZIP Backup
             var backupPath = await _importExportService.CreateBackupAsync();
-
-            // 2. Share File
             await _shareService.ShareFileAsync("BookLogger Backup", backupPath, "application/zip");
         }, Tr("Error_FailedTo_BackupData"));
     }
@@ -405,12 +393,7 @@ public partial class SettingsViewModel : ViewModelBase
         {
             AppendLog("=== Restore from Backup started ===");
 
-            // Wait for the fire-and-forget DbInitializer to fully release its
-            // scoped DbContext before we touch the DB file. On a fresh install
-            // the user can race to Settings → Restore while DbInitializer is
-            // still running its seed sync; File.Copy then corrupts the open
-            // connection and every page blows up with "database disk image
-            // malformed" until a manual restart.
+            // Wait for the fire-and-forget DbInitializer to release its DbContext before touching the DB file; otherwise File.Copy corrupts the open connection ("database disk image malformed").
             AppendLog("Waiting for database initialization to complete...");
             try
             {
@@ -466,7 +449,6 @@ public partial class SettingsViewModel : ViewModelBase
     private void AppendLog(string message)
     {
         _migrationService.Log(message);
-        // Refresh local property from source of truth
         MigrationLog = _migrationService.GetMigrationLog();
     }
 }

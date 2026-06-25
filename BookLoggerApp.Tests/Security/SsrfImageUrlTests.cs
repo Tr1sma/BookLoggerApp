@@ -38,9 +38,7 @@ public class SsrfImageUrlTests
     [Fact]
     public async Task DownloadImageFromUrlAsync_skips_http_request_for_unsafe_url()
     {
-        // The guard must short-circuit BEFORE any HTTP request is made — proven by the
-        // handler recording zero calls. (Without the guard the loopback request would be
-        // attempted and the handler would be invoked.)
+        // Guard must short-circuit before any HTTP request; handler must record zero calls.
         var handler = new CountingHandler();
         var service = new ImageService(new FileSystemAdapter(), null, new HttpClient(handler));
 

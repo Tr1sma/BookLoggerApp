@@ -46,10 +46,8 @@ public sealed class AnalyticsConsentGate : IAnalyticsConsentGate, IDisposable
         }
         catch
         {
-            // Fail CLOSED: when the persisted consent choice cannot be confirmed
-            // (DB init timed out or threw), default analytics + crash reporting to
-            // OFF rather than ON. Honoring an opt-out under DB failure outweighs
-            // losing telemetry for a degraded session. See code review SEC-02.
+            // Fail closed: if the persisted consent can't be confirmed (DB init timed out/threw),
+            // default analytics + crash reporting OFF rather than risk ignoring an opt-out.
             lock (_lock)
             {
                 _analyticsAllowed = false;
@@ -81,10 +79,8 @@ public sealed class AnalyticsConsentGate : IAnalyticsConsentGate, IDisposable
     }
 
     /// <summary>
-    /// Single consent-apply path shared by initial load and live settings changes. Compares the
-    /// new values against the last-applied ones, marks the gate initialized, and fires
-    /// <see cref="ConsentChanged"/> — including on the very first application (so a settings change
-    /// that lands before <see cref="InitializeAsync"/> still notifies subscribers).
+    /// Shared consent-apply path for initial load and live changes. Marks the gate initialized and
+    /// fires <see cref="ConsentChanged"/> on first application or when values change.
     /// </summary>
     private void ApplyConsentAndNotify(AppSettings settings)
     {

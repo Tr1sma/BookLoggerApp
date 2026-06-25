@@ -10,11 +10,9 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// Z.187: a genre-filtered goal rebuilds its GoalGenres navigation with synthetic instances
-/// (sharing Genre references) purely for UI display while computing progress. The completion
-/// persist must only flip IsCompleted/CompletedAt and must NOT write that projection graph back.
-/// Runs on real SQLite — the EF InMemory provider doesn't enforce the PK/tracking semantics this
-/// exercises, so the bug class can't be reproduced there.
+/// Z.187: completion persist must only flip IsCompleted/CompletedAt, never write back the
+/// synthetic GoalGenres projection built for UI display. Runs on real SQLite — EF InMemory
+/// doesn't enforce the PK/tracking semantics needed to reproduce this.
 /// </summary>
 public sealed class GoalServiceGenreFilterPersistTests : IDisposable
 {
