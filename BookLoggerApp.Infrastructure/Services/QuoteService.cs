@@ -7,8 +7,7 @@ using BookLoggerApp.Infrastructure.Repositories;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Service implementation for managing quotes.
-/// Free tier is capped at 3 quotes per book via <see cref="IFeatureGuard"/>.
+/// Manages quotes. Free tier capped at 3 quotes per book via <see cref="IFeatureGuard"/>.
 /// </summary>
 public class QuoteService : IQuoteService
 {
@@ -36,8 +35,7 @@ public class QuoteService : IQuoteService
 
     public async Task<Quote> AddAsync(Quote quote, CancellationToken ct = default)
     {
-        // Trim and reject blank quotes before counting against the per-book cap, so whitespace
-        // can't burn a free-tier slot or persist an empty quote.
+        // Trim and reject blanks before the cap check, so whitespace can't burn a free-tier slot.
         quote.Text = quote.Text?.Trim() ?? string.Empty;
         quote.Context = string.IsNullOrWhiteSpace(quote.Context) ? null : quote.Context.Trim();
         if (string.IsNullOrWhiteSpace(quote.Text))

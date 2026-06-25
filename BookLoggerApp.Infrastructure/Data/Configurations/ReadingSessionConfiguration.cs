@@ -25,10 +25,7 @@ public class ReadingSessionConfiguration : IEntityTypeConfiguration<ReadingSessi
         builder.Property(rs => rs.Notes)
             .HasMaxLength(1000);
 
-        // Indexes
         builder.HasIndex(rs => rs.BookId);
         builder.HasIndex(rs => rs.StartedAt);
-
-        // Relationship configured in BookConfiguration
     }
 }

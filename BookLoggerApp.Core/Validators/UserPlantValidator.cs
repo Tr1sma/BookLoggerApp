@@ -5,10 +5,7 @@ using Microsoft.Extensions.Localization;
 
 namespace BookLoggerApp.Core.Validators;
 
-/// <summary>
-/// Validator for UserPlant model.
-/// Ensures plant data is valid.
-/// </summary>
+/// <summary>Validates UserPlant data.</summary>
 public class UserPlantValidator : AbstractValidator<UserPlant>
 {
     public UserPlantValidator(IStringLocalizer<AppResources>? localizer = null)

@@ -6,11 +6,7 @@ using BookLoggerApp.Core.Services.Analytics;
 
 namespace BookLoggerApp.Core.ViewModels;
 
-/// <summary>
-/// ViewModel backing the paywall modal. Holds the currently-selected tier,
-/// orchestrates the purchase/restore/promo flows, and exposes state so the
-/// Blazor components can render without knowing about billing internals.
-/// </summary>
+/// <summary>Backs the paywall modal: holds the selected tier and orchestrates purchase/restore/promo flows.</summary>
 public partial class PaywallViewModel : ViewModelBase
 {
     private readonly IEntitlementService _entitlementService;
@@ -36,8 +32,7 @@ public partial class PaywallViewModel : ViewModelBase
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
     }
 
-    /// Billing period toggle controlling the price shown on each tier card.
-    /// Defaults to Yearly (higher conversion and retention than Monthly).
+    /// <summary>Billing period toggle for prices; defaults to Yearly (higher conversion).</summary>
     [ObservableProperty]
     private BillingPeriod _selectedPeriod = BillingPeriod.Yearly;
 
@@ -63,10 +58,7 @@ public partial class PaywallViewModel : ViewModelBase
 
     public bool IsTierUnlocked(SubscriptionTier tier) => _entitlementService.CurrentTier >= tier;
 
-    /// <summary>
-    /// True only when the SKU for <paramref name="tier"/>+<paramref name="period"/> has a configured
-    /// introductory offer — drives the paywall "first month" badge (CODE_REVIEW LOG-07).
-    /// </summary>
+    /// <summary>True when the SKU for <paramref name="tier"/>+<paramref name="period"/> has an introductory offer (drives the "first month" badge).</summary>
     public bool HasIntroOffer(SubscriptionTier tier, BillingPeriod period)
         => _productCatalog.HasIntroductoryOffer(tier, period);
 
@@ -77,12 +69,7 @@ public partial class PaywallViewModel : ViewModelBase
 
     public async Task PurchaseTierAsync(SubscriptionTier tier, BillingPeriod period)
     {
-        // BUG-18: reentrancy guard. A double-tap on the buy button (before the UI processes the
-        // in-progress flag) must not launch two purchase flows or fire duplicate analytics.
-        // Set the flag synchronously before the first await so a near-simultaneous second call
-        // short-circuits here, and reset it in finally — not after ExecuteSafelyAsync — so a throw
-        // from the wrapper itself can't strand IsPurchaseInProgress=true. Mirrors the entry guard
-        // in AppStartupViewModel.StartFlexibleUpdateAsync.
+        // Reentrancy guard: a double-tap must not launch two purchase flows. Flag set before the first await and reset in finally so a throw can't strand it true.
         if (IsPurchaseInProgress)
         {
             return;
@@ -112,9 +99,7 @@ public partial class PaywallViewModel : ViewModelBase
                     await _billingService.ConnectAsync();
                 }
 
-                // BUG-12: when the user already owns a subscription and is switching to a different
-                // subscription, hand Play the owned purchase token so it does a proration replacement
-                // instead of throwing AlreadyOwned. A managed Lifetime product cannot replace a sub.
+                // When switching between subscriptions, pass the owned token so Play does a proration replacement instead of throwing AlreadyOwned. Lifetime cannot replace a sub.
                 string? oldPurchaseToken = null;
                 if (period != BillingPeriod.Lifetime
                     && _entitlementService.CurrentTier != SubscriptionTier.Free

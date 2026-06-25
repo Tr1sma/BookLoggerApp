@@ -12,9 +12,9 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// Covers the entitlement lifecycle on load: expiry must persist and run the
-/// data-guard (BUG-09), auto-renewing subscriptions must not be downgraded on a
-/// guessed expiry (LOG-01), and a Plus grant must not un-hide Premium content (SEC-04).
+/// Entitlement lifecycle on load: expiry persists and runs the data-guard (BUG-09),
+/// auto-renewing subs aren't downgraded on a guessed expiry (LOG-01), and a Plus grant
+/// doesn't un-hide Premium content (SEC-04).
 /// </summary>
 public class EntitlementServiceTests : IDisposable
 {
@@ -42,8 +42,8 @@ public class EntitlementServiceTests : IDisposable
     [Fact]
     public async Task InitializeAsync_WhenExpired_PersistsFreeTierAndRunsDataGuard()
     {
-        // BUG-09: a time-expired (non-auto-renewing) subscription must be persisted as
-        // Free AND run the overflow-hide guard, not just flip the in-memory tier.
+        // BUG-09: a time-expired (non-auto-renewing) sub must persist as Free and run the
+        // overflow-hide guard, not just flip the in-memory tier.
         var expired = new UserEntitlement
         {
             Tier = SubscriptionTier.Plus,
@@ -75,8 +75,8 @@ public class EntitlementServiceTests : IDisposable
     [Fact]
     public async Task InitializeAsync_WhenAutoRenewing_DoesNotDowngradeEvenIfExpiresInPast()
     {
-        // LOG-01: ExpiresAt is only an estimate for auto-renewing subs. Play presence is the
-        // source of truth, so an auto-renewing subscription must not be lapsed on a stale date.
+        // LOG-01: ExpiresAt is only an estimate for auto-renewing subs; Play presence is the
+        // source of truth, so don't lapse an auto-renewing sub on a stale date.
         var autoRenew = new UserEntitlement
         {
             Tier = SubscriptionTier.Premium,
@@ -100,9 +100,8 @@ public class EntitlementServiceTests : IDisposable
     [Fact]
     public async Task InitializeAsync_OnFreeLoad_ReconcilesAndHidesNonEntitledContent()
     {
-        // HIGH-1003: a Free initial load (e.g. after a backup-restore wiped entitlements and
-        // re-seeded Free) must run the data-guard so paid content carried in the restored DB is
-        // hidden — the guard previously ran only on an expiry transition, not on a plain load.
+        // HIGH-1003: a Free initial load (e.g. after backup-restore wiped entitlements) must run
+        // the data-guard to hide paid content in the restored DB — previously ran only on expiry.
         _store.GetOrCreateAsync(Arg.Any<CancellationToken>())
             .Returns(new UserEntitlement { Tier = SubscriptionTier.Free });
 
@@ -121,8 +120,8 @@ public class EntitlementServiceTests : IDisposable
     [Fact]
     public async Task InitializeAsync_OnPremiumLoad_ReconcilesAndClearsEntitledHides()
     {
-        // HIGH-1003: the reconcile pass runs on every initial load, so it must NOT strip a
-        // paying user's content — a Premium load un-hides prestige content it is entitled to.
+        // HIGH-1003: reconcile runs on every load but must not strip a paying user's content —
+        // a Premium load un-hides prestige content it is entitled to.
         _store.GetOrCreateAsync(Arg.Any<CancellationToken>())
             .Returns(new UserEntitlement { Tier = SubscriptionTier.Premium });
 
@@ -209,9 +208,8 @@ public class EntitlementServiceTests : IDisposable
     [Fact]
     public async Task ApplyPurchaseAsync_RestoreOfAlreadyStoredPurchase_DoesNotResaveOrRaise()
     {
-        // Z.679: resume/restore re-applies every active purchase on each foreground. When the
-        // stored entitlement already matches the purchase identity, ApplyPurchaseAsync must
-        // short-circuit — no SaveAsync, no EntitlementChanged churn.
+        // Z.679: resume/restore re-applies active purchases each foreground. When the stored
+        // entitlement already matches, ApplyPurchaseAsync short-circuits — no save, no event.
         var stored = new UserEntitlement
         {
             Tier = SubscriptionTier.Plus,
@@ -270,8 +268,8 @@ public class EntitlementServiceTests : IDisposable
     [Fact]
     public async Task ApplyPurchaseAsync_Plus_DoesNotUnhidePrestigeContent()
     {
-        // SEC-04 wiring: granting Plus must route the granted tier into the lapse handler so
-        // prestige plants stay hidden.
+        // SEC-04 wiring: granting Plus routes the tier into the lapse handler so prestige
+        // plants stay hidden.
         _store.GetOrCreateAsync(Arg.Any<CancellationToken>()).Returns(new UserEntitlement { Tier = SubscriptionTier.Free });
 
         Guid prestige = await SeedSpeciesAsync(isPrestige: true);
@@ -294,8 +292,6 @@ public class EntitlementServiceTests : IDisposable
         (await ctx.UserPlants.SingleAsync(p => p.Name == "Phoenix")).IsHiddenByEntitlement
             .Should().BeTrue("Plus is not entitled to prestige plants");
     }
-
-    // ───── Seed helpers ───────────────────────────────────────────────────
 
     private async Task<Guid> SeedSpeciesAsync(bool isPrestige = false, bool isFree = false)
     {

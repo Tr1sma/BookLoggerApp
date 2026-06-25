@@ -53,7 +53,7 @@
 
     private void BuildSeries()
     {
-        // Repo returns sessions newest-first; the emotional arc reads chronologically.
+        // Repo returns newest-first; chart reads chronologically
         var ordered = Sessions.OrderBy(s => s.StartedAt).ToList();
         _hasAnyMood = ordered.Any(s => s.MoodList.Count > 0);
 
@@ -64,7 +64,7 @@
             string label = $"{L["BookDetail_EmotionalJourney_AxisSession"].Value} {i + 1}";
             var moods = ordered[i].MoodList;
 
-            // Emit a point per mood per session so all series share identical x-categories.
+            // One point per mood per session so all series share x-categories
             foreach (var info in SessionMoodInfo.GetAll())
             {
                 _series[info.Mood].Add(new MoodPoint

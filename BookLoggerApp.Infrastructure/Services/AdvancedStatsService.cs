@@ -8,28 +8,22 @@ using Microsoft.EntityFrameworkCore;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Service implementation for advanced reading statistics (trends and analyses).
-///
-/// <para>The Stats Trends/Analyses ViewModels fan these methods out concurrently via
-/// <c>Task.WhenAll</c>. EF Core forbids concurrent operations on one DbContext, so each
-/// method opens its OWN context from an <see cref="IDbContextFactory{AppDbContext}"/>
-/// (CODE_REVIEW BUG-06) rather than sharing a single injected UnitOfWork.</para>
+/// Advanced reading statistics (trends and analyses). ViewModels fan these out concurrently
+/// via <c>Task.WhenAll</c>; since EF Core forbids concurrent ops on one DbContext, each method
+/// opens its own context from the factory (CODE_REVIEW BUG-06).
 /// </summary>
 public class AdvancedStatsService : IAdvancedStatsService
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
     private readonly TimeZoneInfo _timeZone;
 
-    // ReadingSession.StartedAt is canonically UTC; day/weekday/hour buckets must be formed in the
-    // user's local calendar (CODE_REVIEW LOG-04/LOG-08). The zone is injectable (default
-    // TimeZoneInfo.Local) so the bucketing stays deterministically testable on any CI offset.
+    // StartedAt is UTC; day/weekday/hour buckets use the user's local calendar (CODE_REVIEW
+    // LOG-04/LOG-08). Zone is injectable (default Local) so bucketing is testable on any CI offset.
     public AdvancedStatsService(IDbContextFactory<AppDbContext> contextFactory, TimeZoneInfo? timeZone = null)
     {
         _contextFactory = contextFactory;
         _timeZone = timeZone ?? TimeZoneInfo.Local;
     }
-
-    // ===== Trends tab =====
 
     public async Task<Dictionary<DateTime, int>> GetReadingHeatmapAsync(int year, CancellationToken ct = default)
     {
@@ -37,8 +31,7 @@ public class AdvancedStatsService : IAdvancedStatsService
         var unitOfWork = new UnitOfWork(context);
 
         var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        // Half-open [startOfYear, startOfNextYear): the inclusive last tick avoids the
-        // 23:59:59.000-23:59:59.999 gap (GetSessionsInRangeAsync compares with <=).
+        // Inclusive last tick avoids the 23:59:59.000-.999 gap (GetSessionsInRangeAsync uses <=).
         var endDate = startDate.AddYears(1).AddTicks(-1);
 
         var sessions = await unitOfWork.ReadingSessions.GetSessionsInRangeAsync(startDate, endDate, ct);
@@ -115,8 +108,8 @@ public class AdvancedStatsService : IAdvancedStatsService
             { ">2h", 0 }
         };
 
-        // INK-12: exclude 0-minute (pages-only) sessions so the length histogram uses the same
-        // session population as every other distribution method (all filter Minutes > 0).
+        // INK-12: exclude 0-minute (pages-only) sessions so this histogram uses the same
+        // population as the other distribution methods (all filter Minutes > 0).
         foreach (var session in sessions.Where(s => s.Minutes > 0))
         {
             string bucket = session.Minutes switch
@@ -138,7 +131,7 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        // Z.761: pull only the requested year's completed books DB-side (half-open range, matching
+        // Pull only the year's completed books DB-side (half-open range, matching
         // BookRepository.GetCountByCompletionYearAsync), then bucket by month in memory.
         var startOfYear = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var startOfNextYear = startOfYear.AddYears(1);
@@ -163,9 +156,9 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        // Z.389: rolling 30-day windows (current = last 30 days, previous = the 30 days before
-        // that), consistent with GetAverageFinishTimeTrendAsync. Calendar-month boundaries made the
-        // "current" figure collapse toward zero at the very start of each month.
+        // Rolling 30-day windows (current = last 30 days, previous = the 30 before), consistent
+        // with GetAverageFinishTimeTrendAsync. Calendar-month boundaries made "current" collapse
+        // toward zero at the start of each month.
         var now = DateTime.UtcNow;
         var thirtyDaysAgo = now.AddDays(-30);
         var sixtyDaysAgo = now.AddDays(-60);
@@ -222,8 +215,6 @@ public class AdvancedStatsService : IAdvancedStatsService
         return (Math.Round(currentAvg, 1), Math.Round(previousAvg, 1));
     }
 
-    // ===== Analysen tab =====
-
     public async Task<(YearStats Year1, YearStats Year2)> GetYearComparisonAsync(int year1, int year2, CancellationToken ct = default)
     {
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
@@ -240,8 +231,7 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        // Z.761: only completed books feed the radar — filter status DB-side instead of loading
-        // every book and filtering in memory.
+        // Only completed books feed the radar — filter status DB-side.
         var completedBooks = await unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed, ct);
         var completedBookIds = completedBooks.Select(b => b.Id).ToHashSet();
 
@@ -249,9 +239,8 @@ public class AdvancedStatsService : IAdvancedStatsService
         var genres = await unitOfWork.Genres.GetAllAsync(ct);
         var genreLookup = genres.ToDictionary(g => g.Id, g => g.Name);
 
-        // Z.749: a single GroupBy keyed on the resolved genre name. The previous nested
-        // GroupBy(g => g.Key) was a no-op — group keys are already unique, so g.Sum(x => x.Count())
-        // just re-summed a one-element sequence.
+        // Single GroupBy keyed on resolved genre name; the previous nested GroupBy was a no-op
+        // (keys are already unique).
         var result = bookGenres
             .Where(bg => completedBookIds.Contains(bg.BookId))
             .GroupBy(bg => genreLookup.TryGetValue(bg.GenreId, out var name) ? name : "Unknown")
@@ -268,7 +257,7 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        // Z.761: two DB-side counts instead of loading every book to count in memory.
+        // Two DB-side counts instead of loading every book to count in memory.
         var completed = await unitOfWork.Books.CountAsync(b => b.Status == ReadingStatus.Completed, ct);
         var abandoned = await unitOfWork.Books.CountAsync(b => b.Status == ReadingStatus.Abandoned, ct);
 
@@ -280,7 +269,7 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        // Z.761: only completed books with a page count contribute — filter DB-side.
+        // Only completed books with a page count contribute — filter DB-side.
         var books = await unitOfWork.Books.FindAsync(
             b => b.Status == ReadingStatus.Completed && b.PageCount.HasValue, ct);
 
@@ -312,7 +301,7 @@ public class AdvancedStatsService : IAdvancedStatsService
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         var unitOfWork = new UnitOfWork(context);
 
-        // Z.761: load only completed books DB-side; the whitespace-author filter stays in memory
+        // Load only completed books DB-side; whitespace-author filter stays in memory
         // (string.IsNullOrWhiteSpace doesn't translate to SQL).
         var books = await unitOfWork.Books.GetBooksByStatusAsync(ReadingStatus.Completed, ct);
 
@@ -332,16 +321,14 @@ public class AdvancedStatsService : IAdvancedStatsService
         return result;
     }
 
-    // ===== Private helpers =====
-
     private static async Task<YearStats> BuildYearStatsAsync(IUnitOfWork unitOfWork, int year, CancellationToken ct = default)
     {
         var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        // Half-open [startOfYear, startOfNextYear) via the inclusive last tick (see GetReadingHeatmapAsync).
+        // Inclusive last tick (see GetReadingHeatmapAsync).
         var endDate = startDate.AddYears(1).AddTicks(-1);
         var startOfNextYear = startDate.AddYears(1);
 
-        // Z.761: pull only the requested year's completed books DB-side (range form == .Year == year).
+        // Pull only the year's completed books DB-side (range form == .Year == year).
         var completedBooks = (await unitOfWork.Books.FindAsync(
             b => b.Status == ReadingStatus.Completed
                  && b.DateCompleted.HasValue

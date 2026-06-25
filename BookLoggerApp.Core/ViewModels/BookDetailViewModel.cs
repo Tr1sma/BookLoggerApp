@@ -18,9 +18,7 @@ public partial class BookDetailViewModel : ViewModelBase
     private readonly IImageService _imageService;
     private readonly IAppSettingsProvider _settingsProvider;
 
-    /// <summary>
-    /// Raised when a book recommendation share card PNG is ready.
-    /// </summary>
+    /// <summary>Raised when a book recommendation share card PNG is ready.</summary>
     public event Action<byte[]>? BookShareCardReady;
 
     public BookDetailViewModel(
@@ -67,25 +65,18 @@ public partial class BookDetailViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isGeneratingBookCard;
 
-    /// <summary>
-    /// Whether mood/trigger tracking is enabled (gates the "Emotional Journey" chart).
-    /// </summary>
+    /// <summary>Whether mood/trigger tracking is enabled (gates the "Emotional Journey" chart).</summary>
     [ObservableProperty]
     private bool _moodTrackingEnabled = true;
 
-    /// <summary>
-    /// Data-driven finish prediction for the currently-loaded book, or <c>null</c> when
-    /// the book is not being read or there is not enough session data to forecast.
-    /// </summary>
+    /// <summary>Finish prediction for the loaded book, or <c>null</c> when not reading or lacking session data.</summary>
     [ObservableProperty]
     private ReadingForecast? _forecast;
 
     [RelayCommand]
     public async Task LoadAsync(Guid bookId)
     {
-        // Initial load gates on the background DB-init like every other content VM
-        // (BookList/BookEdit/Bookshelf/Dashboard/...) — CODE_REVIEW INK-13. Follow-up
-        // actions (StartReading/Complete/AddSession) stay on ExecuteSafelyAsync.
+        // Initial load gates on background DB-init like other content VMs; follow-up actions stay on ExecuteSafelyAsync.
         await ExecuteSafelyWithDbAsync(async ct =>
         {
             Book = await _bookService.GetWithDetailsAsync(bookId, ct);
@@ -126,7 +117,7 @@ public partial class BookDetailViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             await _bookService.StartReadingAsync(Book.Id);
-            await LoadAsync(Book.Id); // Reload
+            await LoadAsync(Book.Id);
         }, Tr("Error_FailedTo_StartReading"));
     }
 
@@ -138,7 +129,7 @@ public partial class BookDetailViewModel : ViewModelBase
         await ExecuteSafelyAsync(async () =>
         {
             await _bookService.CompleteBookAsync(Book.Id);
-            await LoadAsync(Book.Id); // Reload
+            await LoadAsync(Book.Id);
         }, Tr("Error_FailedTo_CompleteBook"));
     }
 
@@ -155,7 +146,7 @@ public partial class BookDetailViewModel : ViewModelBase
                 PageNumber = pageNumber
             };
             await _quoteService.AddAsync(quote);
-            await LoadAsync(Book.Id); // Reload
+            await LoadAsync(Book.Id);
         }, Tr("Error_FailedTo_AddQuote"));
     }
 
@@ -172,20 +163,17 @@ public partial class BookDetailViewModel : ViewModelBase
                 Minutes = minutes,
                 StartedAt = DateTime.UtcNow
             });
-            await LoadAsync(Book.Id); // Reload
+            await LoadAsync(Book.Id);
         }, Tr("Error_FailedTo_AddSession"));
     }
 
-    /// <summary>
-    /// Updates a specific rating category for the current book.
-    /// </summary>
+    /// <summary>Updates a specific rating category for the current book.</summary>
     public async Task UpdateRatingAsync(RatingCategory category, int? rating)
     {
         if (Book == null) return;
 
         await ExecuteSafelyAsync(async () =>
         {
-            // Update the appropriate rating property
             switch (category)
             {
                 case RatingCategory.Characters:
@@ -223,17 +211,12 @@ public partial class BookDetailViewModel : ViewModelBase
                     break;
             }
 
-            // Save the book
             await _bookService.UpdateAsync(Book);
-
-            // Reload to refresh computed properties
             await LoadAsync(Book.Id);
         }, Tr("Error_FailedTo_UpdateCategoryRating"));
     }
 
-    /// <summary>
-    /// Updates the notes for the current book.
-    /// </summary>
+    /// <summary>Updates the notes for the current book.</summary>
     public async Task UpdateNotesAsync(string notes)
     {
         if (Book == null) return;
@@ -245,9 +228,7 @@ public partial class BookDetailViewModel : ViewModelBase
         }, Tr("Error_FailedTo_UpdateNotes"));
     }
 
-    /// <summary>
-    /// Gets the rating for a specific category.
-    /// </summary>
+    /// <summary>Gets the rating for a specific category.</summary>
     public int? GetRating(RatingCategory category)
     {
         if (Book == null) return null;
@@ -269,9 +250,7 @@ public partial class BookDetailViewModel : ViewModelBase
         };
     }
 
-    /// <summary>
-    /// Generates a book recommendation share card for a completed book.
-    /// </summary>
+    /// <summary>Generates a book recommendation share card for a completed book.</summary>
     [RelayCommand]
     public async Task GenerateAndShareBookCardAsync()
     {

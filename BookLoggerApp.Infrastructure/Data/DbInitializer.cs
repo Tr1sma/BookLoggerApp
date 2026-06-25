@@ -20,12 +20,9 @@ public static class DbInitializer
     private static readonly object _lock = new();
 
     /// <summary>
-    /// Initializes the database asynchronously.
-    /// This should be called once at application startup.
-    /// Notifies DatabaseInitializationHelper as soon as migrations complete so that
-    /// waiting ViewModels can load their data; non-critical maintenance (plant and
-    /// decoration sync, XP recalc, entitlement row, image path fixes, seed validation)
-    /// runs afterwards in the background without blocking the UI.
+    /// Initializes the database once at startup. Signals DatabaseInitializationHelper as
+    /// soon as migrations complete so waiting ViewModels can load; non-critical maintenance
+    /// (seed sync, XP recalc, entitlement row, image path fixes) runs afterwards in the background.
     /// </summary>
     public static async Task InitializeAsync(IServiceProvider services, ILogger? logger = null)
     {
@@ -53,19 +50,14 @@ public static class DbInitializer
             logger?.LogInformation("Starting database initialization...");
             DatabaseInitializationHelper.AppendInitLog("InitializeAsync: starting");
 
-            // Resolve DbContext via the factory so its options include the
-            // MigrationLoggingInterceptor (registered only on the factory's options
-            // to avoid double-firing per SQL command). The injected AppDbContext
-            // service uses a different options instance without the interceptor.
+            // Resolve via the factory so options include MigrationLoggingInterceptor (registered
+            // only on the factory to avoid double-firing per SQL command).
             var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
             dbContext = await contextFactory.CreateDbContextAsync();
             crashReporting = scope.ServiceProvider.GetService<ICrashReportingService>();
 
-            // Critical path: only migrations block the UI. Pages and ViewModels need
-            // a usable schema before they can query anything, but every other
-            // initialization step below is either idempotent maintenance (seed
-            // sync, image path fixes) or creates fallback data that downstream
-            // code already handles when absent (e.g. EntitlementStore.GetOrCreateAsync).
+            // Critical path: only migrations block the UI. Everything below is either
+            // idempotent maintenance or fallback data downstream code handles when absent.
             timings = await MigrateDatabaseAsync(dbContext, crashReporting, logger);
             logger?.LogInformation("Migrations finished in {Ms} ms", timings.TotalMs);
             DatabaseInitializationHelper.AppendInitLog(
@@ -84,9 +76,8 @@ public static class DbInitializer
 
             ReportInitSuccess(crashReporting, totalStopwatch.ElapsedMilliseconds, timings, logger);
 
-            // Hand the scope off to the deferred worker and don't dispose it here.
-            // The migration DbContext is disposed eagerly — deferred maintenance
-            // resolves its own scoped AppDbContext from the captured scope.
+            // Hand the scope to the deferred worker; don't dispose it here. The migration
+            // DbContext is disposed eagerly — deferred maintenance resolves its own from the scope.
             disposeScope = false;
             var capturedScope = scope;
             _ = Task.Run(async () =>
@@ -97,10 +88,9 @@ public static class DbInitializer
                 }
                 finally
                 {
-                    // Release the gate the restore path awaits BEFORE swapping the DB file, so a
-                    // backup restore never races this background context's writes (a surviving
-                    // second connection across the swap corrupts the WAL-index). Always fired,
-                    // even if a maintenance step threw, so restore can never block forever.
+                    // Release the gate restore awaits before swapping the DB file, so restore never
+                    // races this background context's writes (a surviving connection corrupts the
+                    // WAL-index). Always fired, even on failure, so restore can never block forever.
                     DatabaseInitializationHelper.MarkDeferredMaintenanceComplete();
                     capturedScope.Dispose();
                 }
@@ -139,12 +129,8 @@ public static class DbInitializer
     }
 
     /// <summary>
-    /// Times a few trivial SQL operations to characterize how fast (or slow) the
-    /// underlying eMMC/flash storage is responding. On a healthy phone these all
-    /// finish in <50ms; on a congested budget Android (Galaxy A16, etc.) they can
-    /// run into seconds — which means a multi-statement migration is going to take
-    /// minutes through no fault of EF Core. The numbers go straight into the InitLog
-    /// so the diagnostic from Settings is self-explanatory.
+    /// Times trivial SQL ops to characterize storage speed. Healthy phones finish in &lt;50ms;
+    /// congested budget Android can take seconds, explaining slow migrations. Logged to InitLog.
     /// </summary>
     private static async Task ProbeStorageAsync(AppDbContext context)
     {
@@ -173,17 +159,9 @@ public static class DbInitializer
     }
 
     /// <summary>
-    /// Sets per-connection PRAGMAs that significantly speed up migrations on slow
-    /// Android storage without compromising data safety:
-    /// - <c>journal_mode=WAL</c>: set explicitly (and the resulting mode logged) so the
-    ///   <c>synchronous=NORMAL</c> safety assumption below actually holds — NORMAL only
-    ///   survives power loss without corruption when the journal is WAL. WAL is persistent
-    ///   at the DB level, but forcing it here guarantees it regardless of prior state.
-    /// - <c>synchronous=NORMAL</c>: with journal_mode=WAL this is the recommended
-    ///   setting and survives power loss with at most rolling back the last
-    ///   uncommitted transaction.
-    /// - <c>temp_store=MEMORY</c>: keeps EF Core's intermediate tables in RAM
-    ///   instead of round-tripping through disk.
+    /// Sets per-connection PRAGMAs that speed up migrations on slow Android storage without
+    /// compromising data safety: <c>journal_mode=WAL</c> (forced so NORMAL is safe),
+    /// <c>synchronous=NORMAL</c> (safe with WAL), <c>temp_store=MEMORY</c> (temp tables in RAM).
     /// </summary>
     private static async Task ApplyMigrationPragmasAsync(AppDbContext context)
     {
@@ -191,9 +169,8 @@ public static class DbInitializer
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
 
-            // PRAGMA journal_mode returns the active mode as a result row, which
-            // ExecuteSqlRawAsync discards — read it back via a raw command so a DB that
-            // refuses WAL (e.g. an in-memory or networked FS) is visible in the diagnostic.
+            // PRAGMA journal_mode returns the mode as a result row that ExecuteSqlRawAsync discards;
+            // read it back so a DB that refuses WAL (in-memory/networked FS) shows in the diagnostic.
             string journalMode = await SetJournalModeWalAsync(context);
 
             await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL;");
@@ -211,8 +188,7 @@ public static class DbInitializer
 
     /// <summary>
     /// Issues <c>PRAGMA journal_mode = WAL</c> and returns the mode SQLite reports back
-    /// (lowercase, e.g. "wal" or "memory"). Opens/closes the connection only if it wasn't
-    /// already open so the caller's connection lifetime is preserved.
+    /// (lowercase). Opens/closes the connection only if not already open.
     /// </summary>
     private static async Task<string> SetJournalModeWalAsync(AppDbContext context)
     {
@@ -288,9 +264,8 @@ public static class DbInitializer
     }
 
     /// <summary>
-    /// Non-critical work that used to block app startup. Each step runs inside its
-    /// own try/catch so a single failure does not skip the rest, and exceptions are
-    /// logged rather than rethrown — the app is already usable at this point.
+    /// Non-critical maintenance. Each step has its own try/catch so one failure doesn't
+    /// skip the rest; exceptions are logged, not rethrown — the app is already usable.
     /// </summary>
     private static async Task RunDeferredMaintenanceAsync(
         IServiceScope scope,
@@ -352,28 +327,19 @@ public static class DbInitializer
         var migrateSw = System.Diagnostics.Stopwatch.StartNew();
         logger?.LogInformation("Applying migrations...");
 
-        // Storage characterization — surfaces whether the device's filesystem is the
-        // bottleneck. On a healthy phone these are all <50ms. On a Galaxy A16 with
-        // congested eMMC they routinely run into the seconds. Knowing this up front
-        // lets us interpret slow migrations correctly.
+        // Characterize storage so slow migrations can be attributed to a congested FS.
         await ProbeStorageAsync(context);
 
-        // Speed up migrations on slow eMMC. NORMAL is safe with WAL: it still survives
-        // power loss without DB corruption (just may roll back the last commit).
-        // temp_store=MEMORY keeps EF Core's temp tables out of the SD-card backed FS.
+        // Speed up migrations on slow eMMC (NORMAL is safe with WAL).
         await ApplyMigrationPragmasAsync(context);
 
-        // Clear any stale __EFMigrationsLock row from a previous app run that crashed
-        // or was force-closed mid-migration. EF Core 9's SqliteHistoryRepository polls
-        // INSERT OR IGNORE on this table forever if the row is already there; for a
-        // single-process Android app any pre-existing row is by definition stale.
+        // Clear any stale __EFMigrationsLock row left by a crashed/force-closed prior run.
+        // EF Core 9 polls INSERT OR IGNORE forever if the row exists; for a single-process
+        // Android app any pre-existing row is by definition stale.
         await MigrationRecovery.ClearStaleMigrationLockAsync(context);
 
-        // Apply migrations one at a time so a hung migration is identifiable in the
-        // diagnostic log instead of disappearing inside an opaque Database.MigrateAsync()
-        // call. 180s per-migration timeout (vs original 60s) accounts for slow eMMC
-        // + per-statement fsync overhead — a single migration with ~30 SQL ops can
-        // genuinely take 60s+ on budget Android even with NORMAL synchronous mode.
+        // Apply migrations one at a time so a hung one is identifiable in the diagnostic log.
+        // 180s per-migration timeout accounts for slow eMMC + per-statement fsync overhead.
         var applied = (await context.Database.GetAppliedMigrationsAsync()).ToList();
         var pending = (await context.Database.GetPendingMigrationsAsync()).ToList();
         DatabaseInitializationHelper.AppendInitLog(
@@ -394,9 +360,7 @@ public static class DbInitializer
         else
         {
             var migrator = context.Database.GetInfrastructure().GetRequiredService<IMigrator>();
-            // Turn on per-SQL logging only for the migration loop. The interceptor
-            // appends every command + duration to the InitLog so a hung statement is
-            // identifiable down to the exact SQL.
+            // Per-SQL logging only for the migration loop, so a hung statement is identifiable.
             MigrationLoggingInterceptor.Enabled = true;
             try
             {
@@ -424,13 +388,9 @@ public static class DbInitializer
                     }
                     catch (Exception ex) when (MigrationRecovery.IsSchemaAlreadyAppliedError(ex))
                     {
-                        // The migration's ALTER TABLE / CREATE TABLE found that the
-                        // schema element already exists. This happens when a previous
-                        // run partially applied the schema via SchemaDriftGuard recovery
-                        // without updating __EFMigrationsHistory, or when a DB was
-                        // upgraded out-of-band. Mark the migration as applied and move
-                        // on; SchemaDriftGuard runs after this loop and will fill in
-                        // any missing critical columns it knows about.
+                        // Schema element already exists (e.g. a prior partial apply that didn't
+                        // update __EFMigrationsHistory, or an out-of-band upgrade). Mark applied
+                        // and move on; SchemaDriftGuard fills in any missing critical columns after.
                         stepSw.Stop();
                         DatabaseInitializationHelper.AppendInitLog(
                             $"  ~ [{i + 1}/{pending.Count}] {name} schema already present " +
@@ -457,8 +417,8 @@ public static class DbInitializer
         DatabaseInitializationHelper.AppendInitLog(
             $"  MigrateAsync OK ({migrateSw.ElapsedMilliseconds}ms total, {pending.Count} migration(s) applied)");
 
-        // Repair any schema drift where __EFMigrationsHistory claims a migration is applied
-        // but the expected columns are missing (observed in the field on V10 upgrades).
+        // Repair schema drift where history claims a migration applied but columns are missing
+        // (observed in the field on V10 upgrades).
         DatabaseInitializationHelper.AppendInitLog("MigrateDatabaseAsync: SchemaDriftGuard...");
         var schemaDriftSw = System.Diagnostics.Stopwatch.StartNew();
         await SchemaDriftGuard.EnsureCriticalColumnsAsync(context, crashReporting, logger);
@@ -505,21 +465,20 @@ public static class DbInitializer
             {
                 string correctPath = plant.ImagePath;
 
-                // Remove leading slash if present
                 if (correctPath.StartsWith("/"))
                 {
                     correctPath = correctPath.TrimStart('/');
                     logger?.LogDebug("  -> Removed leading slash: {Path}", correctPath);
                 }
 
-                // Fix file extension: .png -> .svg
+                // .png -> .svg
                 if (correctPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
                 {
                     correctPath = correctPath[..^4] + ".svg";
                     logger?.LogDebug("  -> Changed extension to .svg: {Path}", correctPath);
                 }
 
-                // If it's just a filename, convert to wwwroot path
+                // Bare filename -> wwwroot path
                 if (!correctPath.Contains("/"))
                 {
                     correctPath = $"images/plants/{correctPath}";
@@ -550,7 +509,6 @@ public static class DbInitializer
             logger?.LogInformation("All plant image paths are already correct");
         }
 
-        // Verify final paths
         logger?.LogInformation("=== FINAL PLANT IMAGE PATHS ===");
         var finalPlants = await context.PlantSpecies.ToListAsync();
         foreach (var plant in finalPlants)
@@ -665,7 +623,6 @@ public static class DbInitializer
         {
             if (existingPlants.TryGetValue(def.Id, out var existing))
             {
-                // Update properties if changed
                 if (existing.UnlockLevel != def.UnlockLevel ||
                     existing.BaseCost != def.BaseCost ||
                     existing.GrowthRate != def.GrowthRate ||

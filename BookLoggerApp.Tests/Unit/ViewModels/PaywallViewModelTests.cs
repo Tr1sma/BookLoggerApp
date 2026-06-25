@@ -115,8 +115,7 @@ public class PaywallViewModelTests
     [Fact]
     public async Task PurchaseTierAsync_WhenAlreadySubscribed_PassesOwnedPurchaseTokenForProration()
     {
-        // BUG-12: switching from an owned subscription must pass the old purchase token so Play
-        // does a proration replacement instead of throwing AlreadyOwned.
+        // BUG-12: switching from an owned subscription must pass the old token so Play prorates instead of AlreadyOwned.
         _entitlements.CurrentTier.Returns(SubscriptionTier.Plus);
         _entitlements.CurrentEntitlement.Returns(new UserEntitlement
         {
@@ -174,22 +173,21 @@ public class PaywallViewModelTests
     [Fact]
     public async Task PurchaseTierAsync_WhenAlreadyInProgress_IgnoresReentrantCall()
     {
-        // BUG-18: a double-tap on the buy button must not launch two purchase flows.
-        // The reentrancy guard short-circuits the second call while the first is still in flight.
+        // BUG-18: double-tapping buy must not launch two flows; the reentrancy guard short-circuits the second.
         _catalog.GetProductId(SubscriptionTier.Plus, BillingPeriod.Yearly).Returns("plus_yearly");
         var gate = new TaskCompletionSource<BillingPurchaseOutcome>();
         _billing.LaunchPurchaseFlowAsync("plus_yearly", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(gate.Task);
         var vm = CreateVm();
 
-        // First call enters, flips IsPurchaseInProgress, and parks on the gated billing flow.
+        // First call flips IsPurchaseInProgress and parks on the gated flow.
         Task first = vm.PurchaseTierAsync(SubscriptionTier.Plus, BillingPeriod.Yearly);
         vm.IsPurchaseInProgress.Should().BeTrue();
 
-        // Second call is the double-tap and must short-circuit on the guard.
+        // Second call (double-tap) must short-circuit on the guard.
         Task second = vm.PurchaseTierAsync(SubscriptionTier.Plus, BillingPeriod.Yearly);
 
-        // Release the gated flow and let both calls settle.
+        // Release the gate and let both settle.
         gate.SetResult(BillingPurchaseOutcome.Success);
         await Task.WhenAll(first, second);
 
@@ -200,8 +198,7 @@ public class PaywallViewModelTests
     [Fact]
     public async Task PurchaseTierAsync_OnSuccess_UsesLocalizedGermanCelebration()
     {
-        // UX-04: the paywall celebration/banner copy must come from resx, so a German user
-        // sees German text instead of the previously hardcoded English literals.
+        // UX-04: paywall celebration/banner copy must come from resx so a German user sees German text.
         CultureInfo original = CultureInfo.CurrentUICulture;
         try
         {

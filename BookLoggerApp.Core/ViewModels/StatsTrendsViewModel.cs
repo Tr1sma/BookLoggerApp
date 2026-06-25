@@ -75,7 +75,6 @@ public partial class StatsTrendsViewModel : ViewModelBase
     {
         await ExecuteSafelyWithDbAsync(async ct =>
         {
-            // Load available years for navigation
             var periods = await _statsService.GetActiveReadingPeriodsAsync(ct);
             var years = periods.Select(p => p.Year).Distinct().OrderBy(y => y).ToList();
             MinYear = years.Count > 0 ? years[0] : DateTime.UtcNow.Year;
@@ -109,8 +108,6 @@ public partial class StatsTrendsViewModel : ViewModelBase
         }, Tr("Error_FailedTo_LoadTrendStatistics"));
     }
 
-    // Z.606: year-change commands run through ExecuteSafelyWithDbAsync (IsBusy/ClearError/DB-gate/
-    // crash-report + ct) like LoadAsync, instead of an unguarded direct service call.
     [RelayCommand]
     public async Task ChangeHeatmapYearAsync(int year)
     {

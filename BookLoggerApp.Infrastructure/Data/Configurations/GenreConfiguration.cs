@@ -26,10 +26,7 @@ public class GenreConfiguration : IEntityTypeConfiguration<Genre>
         builder.Property(g => g.ColorHex)
             .HasMaxLength(7);
 
-        // Unique index on Name
         builder.HasIndex(g => g.Name)
             .IsUnique();
-
-        // Relationship configured in BookGenreConfiguration
     }
 }

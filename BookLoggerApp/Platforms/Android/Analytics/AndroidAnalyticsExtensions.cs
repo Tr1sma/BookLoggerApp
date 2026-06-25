@@ -9,9 +9,8 @@ internal static class AndroidAnalyticsExtensions
     private const int MaxStringParamKeyLength = 40;
 
     /// <summary>
-    /// Converts a managed parameter dictionary into an Android Bundle suitable for
-    /// FirebaseAnalytics.LogEvent. Values beyond Firebase's 100-char string limit are
-    /// truncated. Null values are skipped.
+    /// Converts a parameter dictionary to an Android Bundle for FirebaseAnalytics.LogEvent.
+    /// Strings over Firebase's 100-char limit are truncated; null values skipped.
     /// </summary>
     public static Bundle ToBundle(this IDictionary<string, object?>? parameters)
     {
@@ -56,9 +55,8 @@ internal static class AndroidAnalyticsExtensions
     }
 
     /// <summary>
-    /// Wraps a managed <see cref="Exception"/> into a Java <see cref="Java.Lang.Throwable"/>
-    /// so Crashlytics can consume it via RecordException. Preserves the C# stack trace
-    /// message so the managed frame layout survives the Java hop.
+    /// Wraps an <see cref="Exception"/> in a Java <see cref="Java.Lang.Throwable"/> for
+    /// Crashlytics.RecordException, preserving the C# stack trace across the Java hop.
     /// </summary>
     public static Java.Lang.Throwable ToThrowable(this Exception exception)
     {

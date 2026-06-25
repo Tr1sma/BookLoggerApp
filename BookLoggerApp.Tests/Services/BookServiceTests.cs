@@ -38,20 +38,16 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task AddAsync_ShouldSetDateAdded()
     {
-        // Arrange
         var book = new Book { Title = "Test Book", Author = "Test Author" };
 
-        // Act
         var result = await _service.AddAsync(book);
 
-        // Assert
         result.DateAdded.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
     [Fact]
     public async Task StartReadingAsync_ShouldUpdateStatusAndDate()
     {
-        // Arrange
         var book = await _service.AddAsync(new Book
         {
             Title = "Test Book",
@@ -59,10 +55,8 @@ public class BookServiceTests : IDisposable
             Status = ReadingStatus.Planned
         });
 
-        // Act
         await _service.StartReadingAsync(book.Id);
 
-        // Assert
         var updated = await _service.GetByIdAsync(book.Id);
         updated!.Status.Should().Be(ReadingStatus.Reading);
         updated.DateStarted.Should().NotBeNull();
@@ -72,7 +66,6 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task StartReadingAsync_CalledTwice_ShouldNotChangeDateStarted()
     {
-        // Arrange
         var book = await _service.AddAsync(new Book
         {
             Title = "Test Book",
@@ -83,11 +76,9 @@ public class BookServiceTests : IDisposable
         await _service.StartReadingAsync(book.Id);
         var firstStart = (await _service.GetByIdAsync(book.Id))!.DateStarted;
 
-        // Act
         await Task.Delay(25);
         await _service.StartReadingAsync(book.Id);
 
-        // Assert
         var updated = await _service.GetByIdAsync(book.Id);
         updated!.Status.Should().Be(ReadingStatus.Reading);
         updated.DateStarted.Should().Be(firstStart);
@@ -96,7 +87,6 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task CompleteBookAsync_ShouldUpdateStatusAndDate()
     {
-        // Arrange
         var book = await _service.AddAsync(new Book
         {
             Title = "Test Book",
@@ -106,21 +96,18 @@ public class BookServiceTests : IDisposable
             CurrentPage = 95
         });
 
-        // Act
         await _service.CompleteBookAsync(book.Id);
 
-        // Assert
         var updated = await _service.GetByIdAsync(book.Id);
         updated!.Status.Should().Be(ReadingStatus.Completed);
         updated.DateCompleted.Should().NotBeNull();
-        updated.CurrentPage.Should().Be(100); // Should set to PageCount
+        updated.CurrentPage.Should().Be(100);
         _goalService.RecalculateGoalProgressCallCount.Should().Be(1);
     }
 
     [Fact]
     public async Task UpdateProgressAsync_ShouldAutoCompleteWhenLastPage()
     {
-        // Arrange
         var book = await _service.AddAsync(new Book
         {
             Title = "Test Book",
@@ -130,10 +117,8 @@ public class BookServiceTests : IDisposable
             Status = ReadingStatus.Reading
         });
 
-        // Act
         var result = await _service.UpdateProgressAsync(book.Id, 100);
 
-        // Assert
         result.Should().NotBeNull("auto-completion should return a ProgressionResult");
         result!.BookCompletionXp.Should().BeGreaterThanOrEqualTo(0);
 
@@ -147,7 +132,6 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task UpdateProgressAsync_ShouldReturnNull_WhenNotCompleting()
     {
-        // Arrange
         var book = await _service.AddAsync(new Book
         {
             Title = "Test Book",
@@ -157,10 +141,8 @@ public class BookServiceTests : IDisposable
             Status = ReadingStatus.Reading
         });
 
-        // Act
         var result = await _service.UpdateProgressAsync(book.Id, 75);
 
-        // Assert
         result.Should().BeNull("no auto-completion should return null");
 
         var updated = await _service.GetByIdAsync(book.Id);
@@ -171,7 +153,6 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task CompleteBookAsync_CalledTwice_AwardsCompletionXpOnce()
     {
-        // Arrange
         var book = await _service.AddAsync(new Book
         {
             Title = "Test Book",
@@ -181,11 +162,9 @@ public class BookServiceTests : IDisposable
             CurrentPage = 95
         });
 
-        // Act
         await _service.CompleteBookAsync(book.Id);
         await _service.CompleteBookAsync(book.Id);
 
-        // Assert
         _progressionService.AwardBookCompletionXpCallCount.Should().Be(1,
             "a second completion of the same book must not re-award XP");
         _goalService.RecalculateGoalProgressCallCount.Should().Be(1,
@@ -195,7 +174,6 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task CompleteBookAsync_PreservesOriginalDateCompleted()
     {
-        // Arrange
         var originalCompletion = new DateTime(2025, 6, 1, 12, 0, 0, DateTimeKind.Utc);
         var book = await _service.AddAsync(new Book
         {
@@ -207,10 +185,8 @@ public class BookServiceTests : IDisposable
             DateCompleted = originalCompletion
         });
 
-        // Act
         await _service.CompleteBookAsync(book.Id);
 
-        // Assert
         var updated = await _service.GetByIdAsync(book.Id);
         updated!.DateCompleted.Should().Be(originalCompletion,
             "DateCompleted must not be overwritten when the book is already completed");
@@ -219,7 +195,6 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task UpdateProgressAsync_ReachingLastPageAgain_DoesNotAwardXpTwice()
     {
-        // Arrange
         var originalCompletion = new DateTime(2025, 6, 1, 12, 0, 0, DateTimeKind.Utc);
         var book = await _service.AddAsync(new Book
         {
@@ -237,7 +212,6 @@ public class BookServiceTests : IDisposable
         await _service.UpdateProgressAsync(book.Id, 80);
         var resultSecondCompletion = await _service.UpdateProgressAsync(book.Id, 100);
 
-        // Assert
         resultSecondCompletion.Should().BeNull(
             "UpdateProgressAsync must only return a ProgressionResult on the first completion");
         _progressionService.AwardBookCompletionXpCallCount.Should().Be(initialCount,
@@ -253,7 +227,6 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task UpdateProgressAsync_FirstCompletion_AwardsXpAndSetsDate()
     {
-        // Arrange
         var book = await _service.AddAsync(new Book
         {
             Title = "Test Book",
@@ -264,10 +237,8 @@ public class BookServiceTests : IDisposable
         });
         var initialCount = _progressionService.AwardBookCompletionXpCallCount;
 
-        // Act
         var result = await _service.UpdateProgressAsync(book.Id, 100);
 
-        // Assert
         result.Should().NotBeNull("first completion must return a ProgressionResult");
         _progressionService.AwardBookCompletionXpCallCount.Should().Be(initialCount + 1);
 
@@ -279,15 +250,12 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task SearchAsync_ShouldFindBooksByTitleOrAuthor()
     {
-        // Arrange
         await _service.AddAsync(new Book { Title = "The Hobbit", Author = "J.R.R. Tolkien" });
         await _service.AddAsync(new Book { Title = "1984", Author = "George Orwell" });
         await _service.AddAsync(new Book { Title = "The Lord of the Rings", Author = "J.R.R. Tolkien" });
 
-        // Act
         var results = await _service.SearchAsync("Tolkien");
 
-        // Assert
         results.Should().HaveCount(2);
         results.Should().OnlyContain(b => b.Author.Contains("Tolkien"));
     }
@@ -295,15 +263,12 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task GetByStatusAsync_ShouldReturnOnlyBooksWithStatus()
     {
-        // Arrange
         await _service.AddAsync(new Book { Title = "Book 1", Status = ReadingStatus.Reading });
         await _service.AddAsync(new Book { Title = "Book 2", Status = ReadingStatus.Planned });
         await _service.AddAsync(new Book { Title = "Book 3", Status = ReadingStatus.Completed });
 
-        // Act
         var readingBooks = await _service.GetByStatusAsync(ReadingStatus.Reading);
 
-        // Assert
         readingBooks.Should().HaveCount(1);
         readingBooks.First().Title.Should().Be("Book 1");
     }
@@ -311,7 +276,6 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task ImportBooksAsync_ShouldImportMultipleBooks()
     {
-        // Arrange
         var books = new[]
         {
             new Book { Title = "Book 1", Author = "Author 1" },
@@ -319,19 +283,12 @@ public class BookServiceTests : IDisposable
             new Book { Title = "Book 3", Author = "Author 3" }
         };
 
-        // Act
         var count = await _service.ImportBooksAsync(books);
 
-        // Assert
         count.Should().Be(3);
         var allBooks = await _service.GetAllAsync();
         allBooks.Should().HaveCount(3);
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Coverage-ergänzende Tests (GetByIdAsync null, GetAllAsync-Order,
-    // DeleteAsync, GetByISBN, GetByGenre, GetWithDetails, Count, Update etc.)
-    // ─────────────────────────────────────────────────────────────────────────
 
     [Fact]
     public async Task GetByIdAsync_NotExisting_ReturnsNull()
@@ -596,13 +553,12 @@ public class BookServiceTests : IDisposable
     [Fact]
     public async Task ImportBooksAsync_WithAnyInvalidBook_ThrowsValidationAndPersistsNothing()
     {
-        // CODE_REVIEW BUG-05: bulk import must validate every row before inserting, so one bad
-        // book aborts the whole batch instead of letting unchecked data reach the DB.
+        // BUG-05: bulk import validates every row first; one bad book aborts the whole batch.
         var service = CreateServiceWithValidation();
         var books = new[]
         {
             new Book { Title = "Valid", Author = "Author" },
-            new Book { Title = "", Author = "Author" } // invalid
+            new Book { Title = "", Author = "Author" }
         };
 
         await FluentActions.Awaiting(() => service.ImportBooksAsync(books))
@@ -611,10 +567,8 @@ public class BookServiceTests : IDisposable
         (await _service.GetTotalCountAsync()).Should().Be(0, "a batch with any invalid book must not be partially imported");
     }
 
-    // NOTE: BookService.UpdateAsync deliberately does NOT validate (see the method's comment and
-    // ServiceValidationTests.BookService_UpdateAsync_PreexistingInvalidBook_DoesNotThrow). It is the
-    // incidental single-field edit path (BookDetail rating/notes) and must not reject pre-existing
-    // legacy violations the edit did not introduce. Validation lives on AddAsync / SaveBookWithRelationsAsync.
+    // NOTE: UpdateAsync deliberately does not validate — it's the single-field edit path and must
+    // not reject pre-existing legacy violations. Validation lives on AddAsync / SaveBookWithRelationsAsync.
 
     [Fact]
     public async Task SaveBookWithRelationsAsync_WithBlankTitle_ThrowsValidationAndPersistsNothing()

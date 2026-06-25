@@ -24,7 +24,7 @@ public class GenreServiceTests : IDisposable
         _unitOfWork = new UnitOfWork(_context);
         _cache = Substitute.For<IMemoryCache>();
         
-        // Setup cache to return false for TryGetValue by default causing database hit
+        // Default cache miss so reads fall through to the DB.
         object? outValue = null;
         _cache.TryGetValue(Arg.Any<object>(), out outValue).Returns(x => 
         {
@@ -34,7 +34,7 @@ public class GenreServiceTests : IDisposable
 
         _service = new GenreService(_unitOfWork, _cache);
         
-        // Clear seeded genres to ensure tests start with empty state
+        // Start each test with no seeded genres.
         _context.Genres.RemoveRange(_context.Genres);
         _context.SaveChanges();
     }
@@ -57,7 +57,7 @@ public class GenreServiceTests : IDisposable
 
         // Assert
         genres.Should().HaveCount(2);
-        _cache.Received(1).CreateEntry(Arg.Any<object>()); // Should cache result
+        _cache.Received(1).CreateEntry(Arg.Any<object>()); // result cached
     }
 
     [Fact]

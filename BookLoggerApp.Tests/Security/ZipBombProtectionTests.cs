@@ -9,10 +9,8 @@ public class ZipBombProtectionTests
     [Fact]
     public void CopyStreamWithLimit_throws_when_actual_bytes_exceed_limit()
     {
-        // A real zip-bomb lies in its header: a small declared length but a huge
-        // decompressed stream. The guard must count the bytes it actually writes,
-        // not trust the declared size — so feeding 1000 real bytes against a 512
-        // limit must fail regardless of any header value.
+        // Guard must count bytes actually written, not the declared header size:
+        // 1000 real bytes against a 512 limit must fail.
         using var src = new MemoryStream(new byte[1000]);
         using var dest = new MemoryStream();
 

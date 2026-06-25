@@ -16,10 +16,9 @@ public static class PlantGrowthCalculator
         if (level <= 1)
             return 0;
 
-        // Base formula: 100 * 1.5^(level-1)
         var baseXp = (int)(100 * Math.Pow(1.5, level - 1));
 
-        // Apply growth rate (higher growth rate = less XP needed)
+        // Higher growth rate = less XP needed
         return (int)(baseXp / growthRate);
     }
 
@@ -92,10 +91,9 @@ public static class PlantGrowthCalculator
     }
 
     /// <summary>
-    /// Calculate plant status based on last watered date and water interval.
-    /// Pflanzen sterben nach 2 verpassten Gießzeiten.
-    /// When <paramref name="globalGrowthMultiplier"/> > 1, the effective water interval is
-    /// shortened proportionally (faster growth also means faster thirst).
+    /// Calculate plant status from last watered date and water interval. Plants die after 2 missed
+    /// waterings. When <paramref name="globalGrowthMultiplier"/> > 1 the interval shortens
+    /// proportionally (faster growth also means faster thirst).
     /// </summary>
     public static PlantStatus CalculatePlantStatus(DateTime lastWatered, int waterIntervalDays, double globalGrowthMultiplier = 1.0)
     {
@@ -104,29 +102,26 @@ public static class PlantGrowthCalculator
             ? waterIntervalDays / globalGrowthMultiplier
             : waterIntervalDays;
 
-        // Healthy: Innerhalb des normalen Gießintervalls
+        // Healthy: within the normal watering interval
         if (daysSinceWatered < effectiveInterval)
             return PlantStatus.Healthy;
 
-        // Thirsty: 1. verpasste Gießzeit (effectiveInterval bis effectiveInterval * 1.5)
+        // Thirsty: 1st missed watering (interval to interval * 1.5)
         else if (daysSinceWatered < effectiveInterval * 1.5)
             return PlantStatus.Thirsty;
 
-        // Wilting: Kurz vor dem Tod (effectiveInterval * 1.5 bis effectiveInterval * 2)
+        // Wilting: nearly dead (interval * 1.5 to interval * 2)
         else if (daysSinceWatered < effectiveInterval * 2)
             return PlantStatus.Wilting;
 
-        // Dead: 2. verpasste Gießzeit (ab effectiveInterval * 2)
+        // Dead: 2nd missed watering (from interval * 2)
         else
             return PlantStatus.Dead;
     }
 
     /// <summary>
-    /// Check if plant needs watering soon (within 6 hours).
-    /// When <paramref name="globalGrowthMultiplier"/> > 1 the effective water interval is
-    /// shortened proportionally (e.g. Story-Heart halves the time to thirst) so this helper
-    /// agrees with <see cref="CalculatePlantStatus"/> instead of firing the "needs water"
-    /// UI hours after the plant is already visibly thirsty.
+    /// Check if plant needs watering soon (within 6 hours). The multiplier shortens the interval
+    /// proportionally so this stays consistent with <see cref="CalculatePlantStatus"/>.
     /// </summary>
     public static bool NeedsWateringSoon(DateTime lastWatered, int waterIntervalDays, double globalGrowthMultiplier = 1.0)
     {
@@ -136,7 +131,6 @@ public static class PlantGrowthCalculator
             : waterIntervalDays;
         var hoursUntilThirsty = effectiveIntervalDays * 24.0;
 
-        // Return true if within 6 hours of becoming thirsty
         return hoursSinceWatered >= (hoursUntilThirsty - 6);
     }
 
@@ -180,13 +174,8 @@ public static class PlantGrowthCalculator
     #region Reading Days Based Leveling
 
     /// <summary>
-    /// Calculate level based on reading days.
-    /// Formula: floor(readingDays * growthRate * globalGrowthMultiplier / 3) + 1
-    /// At GrowthRate 1.0: 3 reading days = 1 level.
-    /// At GrowthRate 1.2: ~2.5 reading days = 1 level (20% faster).
-    /// At GrowthRate 0.8: ~3.75 reading days = 1 level (20% slower).
-    /// When Herz der Geschichten is owned, callers pass globalGrowthMultiplier = 2.0 which
-    /// halves the reading-days required per level globally.
+    /// Calculate level from reading days. Formula: floor(readingDays * growthRate * globalGrowthMultiplier / 3) + 1.
+    /// At GrowthRate 1.0, 3 reading days = 1 level. "Herz der Geschichten" passes multiplier = 2.0 (half the days per level).
     /// </summary>
     public static int CalculateLevelFromReadingDays(int readingDays, double growthRate, int maxLevel, double globalGrowthMultiplier = 1.0)
     {
@@ -198,12 +187,9 @@ public static class PlantGrowthCalculator
     }
 
     /// <summary>
-    /// Calculate required reading days for a specific level.
-    /// Formula: ceil((level - 1) * 3 / (growthRate * globalGrowthMultiplier))
-    /// The multiplier must mirror <see cref="CalculateLevelFromReadingDays"/>; otherwise
-    /// display-oriented helpers below would disagree with the authoritative level formula
-    /// whenever Herz der Geschichten is owned (multiplier = 2.0) and show roughly twice
-    /// the actual remaining days to next level.
+    /// Required reading days for a level. Formula: ceil((level - 1) * 3 / (growthRate * globalGrowthMultiplier)).
+    /// The multiplier must mirror <see cref="CalculateLevelFromReadingDays"/> or display helpers would
+    /// show roughly twice the actual remaining days when "Herz der Geschichten" is owned.
     /// </summary>
     public static int GetReadingDaysForLevel(int level, double growthRate, double globalGrowthMultiplier = 1.0)
     {

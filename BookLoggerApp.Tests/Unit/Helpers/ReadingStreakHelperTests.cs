@@ -10,7 +10,6 @@ public class ReadingStreakHelperTests
     [Fact]
     public void CountsTowardStreak_ShouldReturnFalse_ForZeroProgressSession()
     {
-        // Arrange
         var session = new ReadingSession
         {
             StartedAt = DateTime.UtcNow,
@@ -19,17 +18,14 @@ public class ReadingStreakHelperTests
             EndedAt = DateTime.UtcNow
         };
 
-        // Act
         var countsTowardStreak = ReadingStreakHelper.CountsTowardStreak(session);
 
-        // Assert
         countsTowardStreak.Should().BeFalse();
     }
 
     [Fact]
     public void CalculateCurrentStreak_ShouldIgnoreOpenPlaceholderSessions()
     {
-        // Arrange
         var today = DateTime.UtcNow.Date;
         var sessions = new[]
         {
@@ -38,17 +34,14 @@ public class ReadingStreakHelperTests
             new ReadingSession { StartedAt = today.AddDays(-2), Minutes = 15 }
         };
 
-        // Act
         var streak = ReadingStreakHelper.CalculateCurrentStreak(sessions, today);
 
-        // Assert
         streak.Should().Be(1);
     }
 
     [Fact]
     public void CalculateInclusiveStreak_ShouldIncludeCurrentSessionDate()
     {
-        // Arrange
         var today = DateTime.UtcNow.Date;
         var sessions = new[]
         {
@@ -56,17 +49,15 @@ public class ReadingStreakHelperTests
             new ReadingSession { StartedAt = today.AddDays(-2), Minutes = 15 }
         };
 
-        // Act
         var streak = ReadingStreakHelper.CalculateInclusiveStreak(sessions, today);
 
-        // Assert
         streak.Should().Be(3);
     }
 
     [Fact]
     public void CalculateCurrentStreak_WithTimeZone_BucketsSessionByLocalDate()
     {
-        // LOG-02: streak must use the user's local calendar day, like goals.
+        // Streak must use the user's local calendar day, like goals.
         var tzPlus5 = TimeZoneInfo.CreateCustomTimeZone("t+5", TimeSpan.FromHours(5), "t+5", "t+5");
         var sessions = new[]
         {
@@ -84,7 +75,6 @@ public class ReadingStreakHelperTests
     [Fact]
     public void CalculateLongestStreak_ShouldIgnoreOpenPlaceholderSessions()
     {
-        // Arrange
         var today = DateTime.UtcNow.Date;
         var sessions = new[]
         {
@@ -94,10 +84,8 @@ public class ReadingStreakHelperTests
             new ReadingSession { StartedAt = today.AddDays(-2), Minutes = 10 }
         };
 
-        // Act
         var longestStreak = ReadingStreakHelper.CalculateLongestStreak(sessions);
 
-        // Assert
         longestStreak.Should().Be(2);
     }
 }

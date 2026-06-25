@@ -39,7 +39,6 @@ public partial class GoalsViewModel : ViewModelBase
 
     private CancellationTokenSource? _statusClearCts;
 
-    // Exclusion modal state
     [ObservableProperty]
     private bool _showExcludeModal = false;
 
@@ -52,7 +51,6 @@ public partial class GoalsViewModel : ViewModelBase
     [ObservableProperty]
     private HashSet<Guid> _excludedBookIds = new();
 
-    // Genre filter state
     [ObservableProperty]
     private List<Genre> _allGenres = new();
 
@@ -82,14 +80,12 @@ public partial class GoalsViewModel : ViewModelBase
         ShowCreateForm = true;
         IsEditing = false;
         SelectedGenreIds = new();
-        // For Books goals, default to yearly tracking (Jan 1 - Dec 31)
-        // For other goals, use current date as start
+        // Default to yearly tracking so all books completed this year count.
         var startOfYear = new DateTime(DateTime.UtcNow.Year, 1, 1);
         var endOfYear = new DateTime(DateTime.UtcNow.Year, 12, 31);
 
         NewGoal = new ReadingGoal
         {
-            // Start from beginning of year to include all books completed this year
             StartDate = startOfYear,
             EndDate = endOfYear,
             Type = GoalType.Books,
@@ -102,7 +98,7 @@ public partial class GoalsViewModel : ViewModelBase
     public async Task OpenEditFormAsync(ReadingGoal goal)
     {
         StatusMessage = null;
-        // Create a copy to edit to avoid modifying the list directly before saving
+        // Edit a copy so the list isn't modified before saving.
         NewGoal = new ReadingGoal
         {
             Id = goal.Id,
@@ -118,7 +114,6 @@ public partial class GoalsViewModel : ViewModelBase
             RowVersion = goal.RowVersion
         };
 
-        // Load existing genre associations for editing
         var goalGenres = await _goalService.GetGoalGenresAsync(goal.Id);
         SelectedGenreIds = goalGenres.Select(gg => gg.GenreId).ToHashSet();
 
@@ -153,7 +148,7 @@ public partial class GoalsViewModel : ViewModelBase
             {
                 await _goalService.UpdateAsync(NewGoal);
 
-                // Sync genre associations for the edited goal
+                // Sync genre associations.
                 var existingGenres = await _goalService.GetGoalGenresAsync(NewGoal.Id);
                 var existingGenreIds = existingGenres.Select(gg => gg.GenreId).ToHashSet();
 
@@ -171,7 +166,6 @@ public partial class GoalsViewModel : ViewModelBase
             else
             {
                 var created = await _goalService.AddAsync(NewGoal);
-                // Persist selected genres for the newly created goal
                 foreach (var genreId in SelectedGenreIds)
                 {
                     await _goalService.AddGenreToGoalAsync(created.Id, genreId);
@@ -183,8 +177,6 @@ public partial class GoalsViewModel : ViewModelBase
             NewGoal = null;
             IsEditing = false;
             await LoadAsync();
-
-            // Clear message after 3 seconds
             ScheduleStatusClear();
 
         }, IsEditing ? Tr("Error_FailedTo_UpdateGoal") : Tr("Error_FailedTo_CreateGoal"));
@@ -227,7 +219,7 @@ public partial class GoalsViewModel : ViewModelBase
         {
             ExcludeModalGoal = goal;
 
-            // Set up editing (same copy pattern as OpenEditForm)
+            // Same copy pattern as OpenEditForm.
             NewGoal = new ReadingGoal
             {
                 Id = goal.Id,
@@ -244,15 +236,12 @@ public partial class GoalsViewModel : ViewModelBase
             };
             IsEditing = true;
 
-            // Load all books
             var books = await _bookService.GetAllAsync();
             AllBooks = books.OrderBy(b => b.Title).ToList();
 
-            // Load current exclusions for this goal
             var exclusions = await _goalService.GetExcludedBooksAsync(goal.Id);
             ExcludedBookIds = exclusions.Select(e => e.BookId).ToHashSet();
 
-            // Load current genre filter for this goal
             var goalGenres = await _goalService.GetGoalGenresAsync(goal.Id);
             SelectedGenreIds = goalGenres.Select(gg => gg.GenreId).ToHashSet();
 
@@ -278,7 +267,7 @@ public partial class GoalsViewModel : ViewModelBase
                 SelectedGenreIds.Add(genreId);
             }
 
-            // Force UI update by replacing the set
+            // Replace the set to force a UI update.
             SelectedGenreIds = new HashSet<Guid>(SelectedGenreIds);
         }, "Fehler beim Ändern des Genre-Filters");
     }
@@ -301,7 +290,7 @@ public partial class GoalsViewModel : ViewModelBase
                 ExcludedBookIds.Add(bookId);
             }
 
-            // Force UI update by replacing the set
+            // Replace the set to force a UI update.
             ExcludedBookIds = new HashSet<Guid>(ExcludedBookIds);
         }, "Fehler beim Ändern der Ausschließung");
     }
@@ -316,8 +305,6 @@ public partial class GoalsViewModel : ViewModelBase
         SelectedGenreIds = new();
         NewGoal = null;
         IsEditing = false;
-
-        // Reload goals to reflect updated progress
         await LoadAsync();
     }
 

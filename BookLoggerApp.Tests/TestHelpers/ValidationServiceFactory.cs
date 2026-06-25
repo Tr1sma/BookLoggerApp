@@ -9,9 +9,7 @@ namespace BookLoggerApp.Tests.TestHelpers;
 
 /// <summary>
 /// Builds a real <see cref="ValidationService"/> wired to the production FluentValidation
-/// validators (Book, ReadingSession, ReadingGoal, UserPlant). Used by service tests that
-/// assert the service actually enforces validation (CODE_REVIEW BUG-05) — the production
-/// validators were dead code until the services started calling them.
+/// validators, for service tests that assert the service actually enforces validation.
 /// </summary>
 public static class ValidationServiceFactory
 {

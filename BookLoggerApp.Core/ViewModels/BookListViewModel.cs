@@ -6,9 +6,7 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Core.ViewModels;
 
-/// <summary>
-/// VM for listing and adding books.
-/// </summary>
+/// <summary>VM for listing and adding books.</summary>
 public partial class BookListViewModel : ViewModelBase
 {
     private readonly IBookService _books;
@@ -67,11 +65,7 @@ public partial class BookListViewModel : ViewModelBase
 
     private void NotifyCanExecuteChanged()
     {
-        // Z.774: re-evaluate CanExecute on the generated AddCommand. The hand-rolled
-        // AddAsyncCommand (a second AsyncRelayCommand over the same method) was removed — the
-        // [RelayCommand(CanExecute = nameof(CanAdd))] attribute already provides AddCommand with
-        // the guard wired, and two parallel commands meant NotifyCanExecuteChanged only refreshed
-        // one of them.
+        // Re-evaluate CanExecute on the generated AddCommand (the [RelayCommand] guard).
         AddCommand.NotifyCanExecuteChanged();
     }
 

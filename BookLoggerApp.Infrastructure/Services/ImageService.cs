@@ -18,24 +18,20 @@ public class ImageService : IImageService
     private readonly ILogger<ImageService>? _logger;
     private readonly IFileSystem _fileSystem;
 
-    // Single constructor so the DI typed-client (AddHttpClient<IImageService, ImageService>, Z.528)
-    // has one unambiguous ctor to activate. In production IHttpClientFactory supplies a pooled
-    // httpClient; tests pass one explicitly (or leave it null to fall back to a self-owned client).
+    // Single constructor so the DI typed-client (AddHttpClient<IImageService, ImageService>) has one
+    // unambiguous ctor. Production: IHttpClientFactory supplies a pooled client; tests pass their own (or null).
     public ImageService(IFileSystem fileSystem, ILogger<ImageService>? logger = null, HttpClient? httpClient = null)
     {
         _fileSystem = fileSystem;
         _logger = logger;
 
-        // Get the app's local data directory
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         _imagesDirectory = _fileSystem.CombinePath(appDataPath, "covers");
         _thumbnailsDirectory = _fileSystem.CombinePath(_imagesDirectory, "thumbs");
 
-        // Ensure directories exist
         _fileSystem.CreateDirectory(_imagesDirectory);
         _fileSystem.CreateDirectory(_thumbnailsDirectory);
 
-        // Initialize HttpClient for downloading images
         _httpClient = httpClient ?? new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(30)
@@ -49,20 +45,16 @@ public class ImageService : IImageService
 
         try
         {
-            // Generate filename: {bookId}.jpg
             var fileName = $"{bookId}.jpg";
             var fullPath = _fileSystem.CombinePath(_imagesDirectory, fileName);
 
-            // Save the stream to file
             using var fileStream = _fileSystem.OpenWrite(fullPath);
             await imageStream.CopyToAsync(fileStream, ct);
 
             _logger?.LogInformation("Cover image saved for book {BookId} at {Path}", bookId, fullPath);
 
-            // Invalidate cached thumbnail
-            DeleteThumbnail(bookId);
+            DeleteThumbnail(bookId); // invalidate cached thumbnail
 
-            // Return relative path
             return _fileSystem.CombinePath("covers", fileName);
         }
         catch (Exception ex)
@@ -79,13 +71,12 @@ public class ImageService : IImageService
             var fileName = $"{bookId}.jpg";
             var fullPath = _fileSystem.CombinePath(_imagesDirectory, fileName);
 
-            // Check if file exists
             if (_fileSystem.FileExists(fullPath))
             {
                 return Task.FromResult<string?>(fullPath);
             }
 
-            // Try alternative extensions
+            // Try alternative extension
             var pngPath = _fileSystem.CombinePath(_imagesDirectory, $"{bookId}.png");
             if (_fileSystem.FileExists(pngPath))
             {
@@ -114,14 +105,13 @@ public class ImageService : IImageService
                 _logger?.LogInformation("Cover image deleted for book {BookId}", bookId);
             }
 
-            // Also try to delete PNG version
+            // Also delete the PNG version
             var pngPath = _fileSystem.CombinePath(_imagesDirectory, $"{bookId}.png");
             if (_fileSystem.FileExists(pngPath))
             {
                 _fileSystem.DeleteFile(pngPath);
             }
 
-            // Delete cached thumbnail
             DeleteThumbnail(bookId);
 
             return Task.CompletedTask;
@@ -138,9 +128,8 @@ public class ImageService : IImageService
         if (string.IsNullOrWhiteSpace(url))
             return null;
 
-        // SSRF defense-in-depth (SEC-13): only fetch from public http/https hosts. Reject
-        // other schemes (file://, ftp://, …) and any loopback / private / link-local target
-        // so a hostile cover URL can't probe localhost, the LAN, or a cloud metadata endpoint.
+        // SSRF defense-in-depth (SEC-13): only fetch public http/https hosts. Reject other schemes
+        // and loopback/private/link-local targets so a hostile URL can't probe localhost/LAN/metadata.
         if (!IsSafeRemoteImageUrl(url, out _))
         {
             _logger?.LogWarning("Refusing to download image from disallowed URL: {Url}", url);
@@ -151,8 +140,7 @@ public class ImageService : IImageService
         {
             _logger?.LogInformation("Downloading image from URL: {Url}", url);
 
-            // Sentinel: Security enhancement - Use ResponseHeadersRead to inspect headers before downloading body
-            // This prevents downloading massive files (DoS risk) or wrong content types
+            // ResponseHeadersRead: inspect headers before the body to avoid pulling huge/wrong-type files (DoS).
             var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
 
             try
@@ -165,8 +153,7 @@ public class ImageService : IImageService
                     return null;
                 }
 
-                // Sentinel: Check Content-Length (Max 10MB)
-                // If Content-Length is missing, we must be careful.
+                // Enforce 10MB max via Content-Length (when present).
                 if (response.Content.Headers.ContentLength.HasValue)
                 {
                     if (response.Content.Headers.ContentLength > 10 * 1024 * 1024)
@@ -179,11 +166,9 @@ public class ImageService : IImageService
                 }
                 else
                 {
-                    // Warn about missing content length
                     _logger?.LogWarning("Missing Content-Length header from {Url}. Proceeding with caution.", url);
                 }
 
-                // Sentinel: Check Content-Type
                 var contentType = response.Content.Headers.ContentType?.MediaType;
                 if (string.IsNullOrEmpty(contentType) || !contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
                 {
@@ -192,8 +177,7 @@ public class ImageService : IImageService
                     return null;
                 }
 
-                // Copy the network stream to a MemoryStream so we can safely dispose the response.
-                // Content-Length is already validated above (max 10MB), so buffering is safe.
+                // Buffer to MemoryStream so the response can be disposed; size already capped at 10MB above.
                 var networkStream = await response.Content.ReadAsStreamAsync(ct);
                 var memoryStream = new MemoryStream();
                 await networkStream.CopyToAsync(memoryStream, ct);
@@ -250,7 +234,7 @@ public class ImageService : IImageService
     {
         try
         {
-            // Check for cached thumbnail first
+            // Return cached thumbnail if present
             var thumbPath = _fileSystem.CombinePath(_thumbnailsDirectory, $"{bookId}.jpg");
             if (_fileSystem.FileExists(thumbPath))
             {
@@ -258,7 +242,6 @@ public class ImageService : IImageService
                 return (cachedBytes, "image/jpeg");
             }
 
-            // Get original image path
             var originalPath = await GetCoverImagePathAsync(bookId, ct);
             if (originalPath == null)
                 return null;
@@ -267,7 +250,6 @@ public class ImageService : IImageService
             if (originalBytes.Length == 0)
                 return null;
 
-            // Decode with SkiaSharp
             using var original = SKBitmap.Decode(originalBytes);
             if (original == null)
             {
@@ -275,7 +257,7 @@ public class ImageService : IImageService
                 return null;
             }
 
-            // If already small enough, cache as-is and return
+            // Already small enough: cache as-is and return
             if (original.Width <= maxWidth && original.Height <= maxHeight)
             {
                 await _fileSystem.WriteAllBytesAsync(thumbPath, originalBytes, ct);
@@ -284,14 +266,13 @@ public class ImageService : IImageService
                 return (originalBytes, mimeType);
             }
 
-            // Calculate new dimensions maintaining aspect ratio
+            // New dimensions, preserving aspect ratio
             var ratioX = (float)maxWidth / original.Width;
             var ratioY = (float)maxHeight / original.Height;
             var ratio = Math.Min(ratioX, ratioY);
             var newWidth = (int)(original.Width * ratio);
             var newHeight = (int)(original.Height * ratio);
 
-            // Resize
             using var resized = original.Resize(
                 new SKImageInfo(newWidth, newHeight),
                 new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
@@ -307,7 +288,6 @@ public class ImageService : IImageService
             using var data = image.Encode(SKEncodedImageFormat.Jpeg, 85);
             var resizedBytes = data.ToArray();
 
-            // Cache to disk
             await _fileSystem.WriteAllBytesAsync(thumbPath, resizedBytes, ct);
 
             _logger?.LogInformation(
@@ -329,9 +309,8 @@ public class ImageService : IImageService
     }
 
     /// <summary>
-    /// Returns true only when <paramref name="url"/> is an absolute http/https URL whose
-    /// host is not loopback, private, link-local or otherwise reserved. SSRF guard for
-    /// remote image fetches. See code review SEC-13.
+    /// True only for absolute http/https URLs whose host is not loopback/private/link-local/reserved.
+    /// SSRF guard for remote image fetches (SEC-13).
     /// </summary>
     internal static bool IsSafeRemoteImageUrl(string url, out Uri? uri)
     {
@@ -352,8 +331,7 @@ public class ImageService : IImageService
             return false;
         }
 
-        // If the host is a literal IP, reject internal/reserved ranges outright. (Hostnames
-        // are left to DNS — this is defense-in-depth, not a substitute for network policy.)
+        // Literal IPs: reject internal/reserved ranges. Hostnames are left to DNS (defense-in-depth only).
         string host = parsed.HostNameType == UriHostNameType.IPv6
             ? parsed.Host.Trim('[', ']')
             : parsed.Host;

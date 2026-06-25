@@ -4,16 +4,13 @@ using BookLoggerApp.Infrastructure.Data.SeedData;
 
 namespace BookLoggerApp.Infrastructure.Data;
 
-/// <summary>
-/// Main database context for BookLoggerApp.
-/// </summary>
+/// <summary>Main database context for BookLoggerApp.</summary>
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
 
-    // DbSets
     public DbSet<Book> Books => Set<Book>();
     public DbSet<Genre> Genres => Set<Genre>();
     public DbSet<BookGenre> BookGenres => Set<BookGenre>();
@@ -102,29 +99,16 @@ public class AppDbContext : DbContext
             .WithMany(t => t.BookTropes)
             .HasForeignKey(bt => bt.TropeId);
 
-        // Configure BookRatingSummary as Keyless (View)
+        // BookRatingSummary is a keyless view.
         modelBuilder.Entity<BookRatingSummary>().HasNoKey();
 
-        // Apply all configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
-        // Optimistic-concurrency tokens.
-        // SQLite has no native rowversion type and never auto-generates the BLOB, so the
-        // [Timestamp]/store-generated pattern is a no-op there (the token stays null and the
-        // WHERE clause always matches — DbUpdateConcurrencyException can never fire). For the
-        // entities where lost updates actually matter and writes always go load-modify-save in a
-        // single context (AppSettings: coins/XP/level; UserEntitlement: tier), we turn RowVersion
-        // into a real, app-set concurrency token stamped in SaveChanges (see StampRowVersions).
-        // ValueGeneratedNever tells EF to include the value in INSERT/UPDATE SET and to use the
-        // original value in the UPDATE WHERE clause — which is what makes optimistic concurrency
-        // actually work on SQLite.
-        //
-        // The remaining entities carry a RowVersion column too, but they are updated through the
-        // generic repository's detached "blind update" path (Repository.UpdateAsync), which
-        // fabricates an entity from an Id without the current token. Enforcing concurrency there
-        // would break that intentional pattern, so we explicitly DEMOTE their RowVersion to a
-        // non-token column — removing the dead/false "RowVersion protects us" assumption the code
-        // review flagged (BUG-01/BUG-10/INK-07) without changing their last-writer-wins behaviour.
+        // Optimistic-concurrency tokens. SQLite has no native rowversion, so [Timestamp] is a no-op.
+        // For entities where lost updates matter (AppSettings, UserEntitlement) we make RowVersion a
+        // real app-set token (ValueGeneratedNever + IsConcurrencyToken, stamped in StampRowVersions).
+        // Others carry RowVersion but are updated via the repository's blind-update path, so we demote
+        // theirs to a non-token column (last-writer-wins).
         var concurrencyEntities = new[] { typeof(AppSettings), typeof(UserEntitlement) };
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
@@ -156,13 +140,7 @@ public class AppDbContext : DbContext
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
-    /// <summary>
-    /// Stamps a fresh value onto the RowVersion concurrency token of every added/modified
-    /// entity that has one. This is the in-app substitute for SQLite's missing native
-    /// rowversion generation — without it the token never changes and optimistic concurrency
-    /// (the documented protection in ProgressionService/AppSettingsProvider/PlantService) is
-    /// silently dead. Runs on every SaveChanges path because both core overloads funnel here.
-    /// </summary>
+    /// <summary>Stamps a fresh RowVersion on every added/modified entity that has a token; the in-app substitute for SQLite's missing native rowversion.</summary>
     private void StampRowVersions()
     {
         foreach (var entry in ChangeTracker.Entries())
@@ -180,7 +158,6 @@ public class AppDbContext : DbContext
 
     private void SeedData(ModelBuilder modelBuilder)
     {
-        // Seed Genres
         var genreIds = new
         {
             Fiction = Guid.Parse("00000000-0000-0000-0000-000000000001"),
@@ -212,13 +189,9 @@ public class AppDbContext : DbContext
             new Genre { Id = genreIds.Thriller, Name = "Thriller", Icon = "😱", ColorHex = "#c0392b" }
         );
 
-        // Seed PlantSpecies
         modelBuilder.Entity<PlantSpecies>().HasData(PlantSeedData.GetPlants());
-
-        // Seed Decoration ShopItems
         modelBuilder.Entity<ShopItem>().HasData(DecorationSeedData.GetDecorations());
 
-        // Seed AppSettings (default)
         modelBuilder.Entity<AppSettings>().HasData(
             new AppSettings
             {
@@ -245,10 +218,9 @@ public class AppDbContext : DbContext
             }
         );
 
-        // Seed Tropes
         modelBuilder.Entity<Trope>().HasData(TropeSeedData.GetTropes());
 
-        // Seed default UserEntitlement (single-row — everyone starts as Free).
+        // Single-row default: everyone starts Free.
         modelBuilder.Entity<UserEntitlement>().HasData(
             new UserEntitlement
             {

@@ -51,14 +51,11 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual Task UpdateAsync(T entity, CancellationToken ct = default)
     {
-        // Change-tracker only mutates here; the I/O happens in SaveChangesAsync. Honour ct so a
-        // cancelled unit of work stops before touching the tracker, and return a completed task
-        // (no await needed) to avoid the CS1998 "async without await" warning (Z.245).
+        // Tracker-only mutation (I/O is in SaveChangesAsync); honour ct before touching it.
         ct.ThrowIfCancellationRequested();
 
-        // If a *different* instance with the same key is already tracked, detach it first so
-        // _dbSet.Update doesn't throw an identity conflict. Both former branches called Update,
-        // so the conditional only guards the detach, not the Update itself (Z.245 dead-branch).
+        // If a different instance with the same key is already tracked, detach it first so
+        // _dbSet.Update doesn't throw an identity conflict.
         if (_context.Entry(entity).State == EntityState.Detached)
         {
             var keyProperty = _context.Model.FindEntityType(typeof(T))?.FindPrimaryKey()?.Properties.FirstOrDefault();

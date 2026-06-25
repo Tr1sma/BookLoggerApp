@@ -1,8 +1,6 @@
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Represents different rating categories for books.
-/// </summary>
+/// <summary>Rating categories for books.</summary>
 public enum RatingCategory
 {
     Characters = 0,

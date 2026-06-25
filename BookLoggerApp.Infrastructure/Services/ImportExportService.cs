@@ -31,7 +31,7 @@ public class ImportExportService : IImportExportService
     private readonly string _backupDirectory;
     private readonly string _basePath;
 
-    // Security constraints for zip extraction (Zip Bomb protection)
+    // Zip-bomb protection limits
     private const long MaxTotalExtractionSize = 1024L * 1024L * 1024L; // 1 GB
     private const int MaxEntryCount = 10000;
 
@@ -67,7 +67,6 @@ public class ImportExportService : IImportExportService
 
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-            // Fetch all data
             var books = await context.Books
                 .Include(b => b.BookGenres)
                     .ThenInclude(bg => bg.Genre)
@@ -84,7 +83,6 @@ public class ImportExportService : IImportExportService
                 .ToListAsync(ct);
             var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
 
-            // Create export object
             var exportData = new
             {
                 ExportDate = DateTime.UtcNow,
@@ -134,11 +132,8 @@ public class ImportExportService : IImportExportService
                 HasHeaderRecord = true
             });
 
-            // Map books to flat structure for CSV. Free-text fields are passed through
-            // SanitizeCsvField so a value beginning with =, +, -, @ or a control char
-            // cannot be interpreted as a formula when the export is opened in a
-            // spreadsheet (CSV/formula injection — SEC-14). Title/Author/Description may
-            // contain untrusted Google-Books data, so they are not safe to write verbatim.
+            // Flatten for CSV. Free-text fields go through SanitizeCsvField so untrusted values
+            // (e.g. Google-Books Title/Author/Description) can't act as spreadsheet formulas (SEC-14).
             var flatBooks = books.Select(b => new
             {
                 b.Id,
@@ -187,7 +182,6 @@ public class ImportExportService : IImportExportService
                 PropertyNameCaseInsensitive = true
             };
 
-            // Deserialize to a dynamic object first to handle the structure
             using var document = JsonDocument.Parse(json);
             var root = document.RootElement;
 
@@ -204,9 +198,8 @@ public class ImportExportService : IImportExportService
                 return 0;
             }
 
-            // Add books with a merge strategy. Each book is imported in its OWN context and
-            // try/catch so a single failure (e.g. an unexpected constraint) skips just that
-            // book instead of aborting the whole batch (BUG-03).
+            // BUG-03: import each book in its OWN context + try/catch so one failure skips only that
+            // book instead of aborting the whole batch.
             int importedCount = 0;
             foreach (var book in books)
             {
@@ -214,7 +207,7 @@ public class ImportExportService : IImportExportService
                 {
                     await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-                    // Check if book already exists (by ISBN or Title+Author)
+                    // Skip if a matching book exists (by ISBN or Title+Author)
                     var exists = await context.Books.AnyAsync(b =>
                         (b.ISBN != null && b.ISBN == book.ISBN) ||
                         (b.Title == book.Title && b.Author == book.Author), ct);
@@ -226,15 +219,13 @@ public class ImportExportService : IImportExportService
                         continue;
                     }
 
-                    // Reassign fresh primary keys to the book + its owned children and resolve
-                    // genres by name (find-or-create) so the import never re-inserts seeded
-                    // Genre rows or collides with existing child PKs (BUG-03).
+                    // BUG-03: fresh PKs for the book + children, and resolve genres by name (find-or-create)
+                    // so import never re-inserts seed Genre rows or collides with existing child PKs.
                     PrepareImportedBookGraph(book);
                     await ResolveImportedGenresAsync(context, book, ct);
 
-                    // HIGH-1003: a backup/import from a higher tier must not reintroduce the
-                    // Plus-only Wishlist metadata for a user who is not entitled to it. The
-                    // service-layer guards (SEC-16) only cover live writes; import bypasses them.
+                    // HIGH-1003: don't reintroduce Plus-only Wishlist metadata for a non-entitled user.
+                    // The SEC-16 service guards only cover live writes; import bypasses them.
                     if (book.WishlistInfo is not null
                         && _entitlementService is not null
                         && !await _entitlementService.HasAccessAsync(FeatureKey.Wishlist, ct))
@@ -274,21 +265,20 @@ public class ImportExportService : IImportExportService
             using var csvReader = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = true,
-                MissingFieldFound = null // Ignore missing fields
+                MissingFieldFound = null // ignore missing fields
             });
 
             var records = csvReader.GetRecords<BookCsvRecord>().ToList();
 
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-            // Pre-load existing genres for efficient find-or-create
+            // Pre-load genres for find-or-create
             var existingGenres = await context.Genres.ToListAsync(ct);
             var genreLookup = existingGenres.ToDictionary(g => g.Name, StringComparer.OrdinalIgnoreCase);
 
             int importedCount = 0;
             foreach (var record in records)
             {
-                // Check if book already exists
                 var existingBook = await context.Books
                     .FirstOrDefaultAsync(b =>
                         (b.ISBN != null && b.ISBN == record.ISBN) ||
@@ -368,7 +358,6 @@ public class ImportExportService : IImportExportService
 
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-            // Get the database file path safely
             var connectionString = context.Database.GetConnectionString();
             var builder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
             var dbPath = builder.DataSource;
@@ -378,57 +367,38 @@ public class ImportExportService : IImportExportService
                 throw new InvalidOperationException("Database file not found");
             }
 
-            // Create temporary directory for staging backup files
+            // Staging directory for backup files
             var tempBackupDir = _fileSystem.CombinePath(_backupDirectory, $"temp_{Guid.NewGuid()}");
             _fileSystem.CreateDirectory(tempBackupDir);
 
             try
             {
-                // Z.699: checkpoint the WAL into the main DB file before copying so the backup is
-                // self-contained and doesn't depend on a separate -wal/-shm sidecar.
+                // Z.699: checkpoint the WAL into the main DB before copying so the backup is
+                // self-contained (no -wal/-shm sidecar dependency).
                 var destDbPath = _fileSystem.CombinePath(tempBackupDir, "booklogger.db");
                 try { await context.Database.ExecuteSqlRawAsync("PRAGMA wal_checkpoint(FULL);", ct); } catch { }
                 _fileSystem.CopyFile(dbPath, destDbPath, overwrite: true);
 
-                // 2. Copy Covers
+                // Copy covers. Uses System.IO directly (CopyDirectory) since ZipFile works on paths anyway.
                 var coversSourceDir = _fileSystem.CombinePath(_basePath, "covers");
                 var coversDestDir = _fileSystem.CombinePath(tempBackupDir, "covers");
 
                 if (_fileSystem.DirectoryExists(coversSourceDir))
                 {
                     _fileSystem.CreateDirectory(coversDestDir);
-                    // Manually copy files since IFileSystem might not have recursive copy
-                    // Assuming flat structure for covers as per ImageService
-                    // Validating ImageService implementation: it puts files directly in 'covers' dir.
-                    // We need to check if IFileSystem exposes GetFiles, if not we might need to rely on System.IO or concrete implementation.
-                    // Checking ImportExportService dependencies: it uses IFileSystem.
-                    
-                    // NOTE: Since IFileSystem abstraction might be limited, and we are in Infrastructure which has access to System.IO,
-                    // we can use standard DirectoryInfo if IFileSystem is too restrictive, BUT better to stick to injection if possible. 
-                    // However, standard System.IO.Compression.ZipFile.CreateFromDirectory works on file system paths.
-                    
-                    // Let's use the actual file system for the directory copy to be safe and simple 
-                    // since ZipFile.CreateFromDirectory is a static system method anyway.
-                    
-                    // We can't rely solely on _fileSystem interface for the ZipFile helper which requires string paths.
-                    // So we will assume standard IO access is permitted for these paths.
-                    
                     CopyDirectory(coversSourceDir, coversDestDir);
                 }
 
-                // 3. Create ZIP
                 var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 var backupZipName = $"bookheart_backup_{timestamp}.zip";
                 var backupZipPath = _fileSystem.CombinePath(_backupDirectory, backupZipName);
 
-                // Ensure backup zip doesn't exist
                 if (File.Exists(backupZipPath)) File.Delete(backupZipPath);
 
                 ZipFile.CreateFromDirectory(tempBackupDir, backupZipPath);
 
                 _logger?.LogInformation("Backup created at: {Path}", backupZipPath);
 
-                // Update AppSettings
                 var settings = await context.AppSettings.FirstOrDefaultAsync(ct);
                 if (settings != null)
                 {
@@ -440,7 +410,6 @@ public class ImportExportService : IImportExportService
             }
             finally
             {
-                // Cleanup temp dir
                 if (Directory.Exists(tempBackupDir))
                 {
                     Directory.Delete(tempBackupDir, true);
@@ -455,10 +424,8 @@ public class ImportExportService : IImportExportService
     }
 
     /// <summary>
-    /// Reassigns fresh primary keys to an imported book and its owned children, and rewires
-    /// the child foreign keys, so importing into a non-empty DB (or re-importing the same
-    /// export) can never collide with existing rows. Genres are resolved separately
-    /// (find-or-create) because they are shared/seed entities. See code review BUG-03.
+    /// BUG-03: assign fresh PKs to an imported book and its owned children (rewiring FKs) so re-import
+    /// can't collide with existing rows. Genres are resolved separately as shared/seed entities.
     /// </summary>
     private static void PrepareImportedBookGraph(Book book)
     {
@@ -468,8 +435,7 @@ public class ImportExportService : IImportExportService
         {
             session.Id = Guid.NewGuid();
             session.BookId = book.Id;
-            // Moods have a composite PK (ReadingSessionId, Mood); point them at the new
-            // session id so they don't carry the source device's key.
+            // Moods have a composite PK (ReadingSessionId, Mood); repoint to the new session id.
             foreach (var mood in session.Moods)
             {
                 mood.ReadingSessionId = session.Id;
@@ -495,10 +461,8 @@ public class ImportExportService : IImportExportService
     }
 
     /// <summary>
-    /// Replaces the imported book's carried Genre entities (which keep their original seed
-    /// primary keys) with find-or-create resolutions against the target DB, so a seeded
-    /// genre is never re-inserted (PK collision) and free-form genres are de-duplicated by
-    /// name — mirroring the CSV import path. See code review BUG-03.
+    /// BUG-03: resolve the imported book's carried Genre entities via find-or-create against the target
+    /// DB so seed genres aren't re-inserted and free-form ones de-dup by name (mirrors the CSV path).
     /// </summary>
     private static async Task ResolveImportedGenresAsync(AppDbContext context, Book book, CancellationToken ct)
     {
@@ -517,7 +481,7 @@ public class ImportExportService : IImportExportService
             var name = bookGenre.Genre?.Name?.Trim();
             if (string.IsNullOrEmpty(name))
             {
-                continue; // can't resolve a genre we don't have a name for
+                continue; // can't resolve a nameless genre
             }
 
             if (!lookup.TryGetValue(name, out var genre))
@@ -546,10 +510,8 @@ public class ImportExportService : IImportExportService
     }
 
     /// <summary>
-    /// Neutralizes CSV/formula injection: if <paramref name="value"/> begins with a
-    /// character a spreadsheet may interpret as a formula (=, +, -, @) or a control
-    /// character (Tab, CR, LF), it is prefixed with a single apostrophe so Excel /
-    /// Google Sheets / LibreOffice render it as literal text. See code review SEC-14.
+    /// SEC-14: neutralize CSV/formula injection by prefixing an apostrophe when
+    /// <paramref name="value"/> starts with =, +, -, @ or a control char (Tab/CR/LF).
     /// </summary>
     internal static string? SanitizeCsvField(string? value)
     {
@@ -568,12 +530,9 @@ public class ImportExportService : IImportExportService
     }
 
     /// <summary>
-    /// Copies <paramref name="source"/> to <paramref name="destination"/> while counting
-    /// the bytes actually transferred. Throws <see cref="IOException"/> the moment the
-    /// running total would exceed <paramref name="maxBytes"/>. This is the authoritative
-    /// Zip-Bomb guard: it measures real decompressed output rather than trusting the
-    /// archive's declared (and forgeable) entry length. Returns the number of bytes written.
-    /// See code review SEC-05.
+    /// SEC-05: authoritative zip-bomb guard. Copies source to destination, throwing
+    /// <see cref="IOException"/> once the running byte total exceeds <paramref name="maxBytes"/> —
+    /// measuring real decompressed output, not the forgeable declared entry length. Returns bytes written.
     /// </summary>
     internal static long CopyStreamWithLimit(Stream source, Stream destination, long maxBytes)
     {
@@ -671,28 +630,21 @@ public class ImportExportService : IImportExportService
             _logger?.LogInformation("Restoring from backup: {Path}", backupPath);
             progress?.Report($"Starting restore from {Path.GetFileName(backupPath)}");
 
-            // Gate on DbInitializer completion so we never swap the DB file out
-            // from under an in-flight scoped DbContext in the startup initializer.
-            // Defense in depth: the ViewModel is expected to have awaited this
-            // already, but any direct caller (tests, future Android intents) gets
-            // the same guarantee. The second await is a no-op once the TCS is set.
+            // Gate on DbInitializer completion so we never swap the DB file under an in-flight
+            // startup DbContext. Defense in depth for direct callers; no-op once the TCS is set.
             progress?.Report("Waiting for database initialization to complete");
             await BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.EnsureInitializedAsync();
             progress?.Report("Database initialization confirmed");
 
-            // DbInitializer's deferred maintenance (RunDeferredMaintenanceAsync) runs
-            // fire-and-forget AFTER the init gate is signalled and keeps writing through its
-            // OWN context. Wait for it to finish before swapping the file so that background
-            // writer is not a surviving second connection across the swap — the root cause of
-            // SQLITE_CORRUPT "database disk image is malformed". Best-effort: proceeds after a
-            // timeout rather than blocking the restore forever.
+            // Wait for DbInitializer's fire-and-forget deferred maintenance to finish before swapping:
+            // a surviving second writer connection across the swap causes SQLITE_CORRUPT
+            // "database disk image is malformed". Best-effort — proceeds after a timeout.
             progress?.Report("Waiting for background maintenance to finish");
             await BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper
                 .EnsureDeferredMaintenanceCompleteAsync(TimeSpan.FromSeconds(20));
 
-            // Block the Android widget's own (non-DI, un-poolable) connection for the duration
-            // of the restore so a BroadcastReceiver refresh cannot open booklogger.db3 mid-swap.
-            // Cleared in the finally below regardless of outcome.
+            // Block the Android widget's own (non-DI) connection during the restore so a
+            // BroadcastReceiver refresh can't open the DB mid-swap. Cleared in the finally below.
             BookLoggerApp.Core.Infrastructure.DatabaseInitializationHelper.BeginRestore();
 
             if (!File.Exists(backupPath))
@@ -700,15 +652,13 @@ public class ImportExportService : IImportExportService
                 throw new FileNotFoundException("Backup file not found", backupPath);
             }
 
-            // Temp directory for extraction
             var tempExtractDir = _fileSystem.CombinePath(_backupDirectory, $"restore_{Guid.NewGuid()}");
             Directory.CreateDirectory(tempExtractDir);
 
             try
             {
                 progress?.Report("Extracting ZIP archive");
-                // 1. Extract ZIP securely
-                // Sentinel: Manual extraction with path validation to prevent Zip Slip and Zip Bomb vulnerabilities
+                // Manual extraction with path/size validation (Zip Slip + Zip Bomb guards).
                 using (var archive = ZipFile.OpenRead(backupPath))
                 {
                     long totalExtracted = 0;
@@ -716,7 +666,7 @@ public class ImportExportService : IImportExportService
 
                     foreach (var entry in archive.Entries)
                     {
-                        // Check for Zip Bomb (too many entries)
+                        // Zip-bomb guard: too many entries
                         entryCount++;
                         if (entryCount > MaxEntryCount)
                         {
@@ -737,21 +687,17 @@ public class ImportExportService : IImportExportService
                             throw new IOException($"Zip Slip vulnerability detected: {entry.FullName}");
                         }
 
-                        // Create directory if it doesn't exist (entry.FullName might contain directories)
                         if (entry.Name == "")
                         {
-                            // It's a directory
+                            // Directory entry
                             Directory.CreateDirectory(destinationPath);
                         }
                         else
                         {
                             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
 
-                            // Zip Bomb protection (SEC-05): cap the ACTUAL decompressed bytes
-                            // written across the whole archive, not the entry.Length header.
-                            // A crafted archive can declare a tiny uncompressed size yet
-                            // inflate to gigabytes; the only reliable defense counts the bytes
-                            // as they are written through a limiting copy.
+                            // Zip-bomb guard (SEC-05): cap ACTUAL decompressed bytes across the archive,
+                            // not the forgeable entry.Length header — count them through a limiting copy.
                             long remainingBudget = MaxTotalExtractionSize - totalExtracted;
                             using (var entryStream = entry.Open())
                             using (var fileStream = File.Create(destinationPath))
@@ -762,8 +708,7 @@ public class ImportExportService : IImportExportService
                     }
                 }
 
-                // 2. Validate Backup Content
-                // Case-insensitive search for database file
+                // Locate the database file (case-insensitive)
                 var extractedDbPath = Directory
                     .EnumerateFiles(tempExtractDir, "*", SearchOption.TopDirectoryOnly)
                     .FirstOrDefault(path => string.Equals(
@@ -771,7 +716,7 @@ public class ImportExportService : IImportExportService
                         "booklogger.db",
                         StringComparison.OrdinalIgnoreCase));
 
-                // If not found, try any .db file (fallback)
+                // Fallback: any .db file
                 if (string.IsNullOrEmpty(extractedDbPath))
                 {
                     extractedDbPath = Directory
@@ -785,8 +730,8 @@ public class ImportExportService : IImportExportService
                 }
 
                 progress?.Report("Validating extracted database integrity");
-                // Validate the extracted database before overwriting the live database.
-                // Opens it read-only so no WAL file is created in the temp directory.
+                // Integrity-check the extracted DB before overwriting the live one.
+                // Read-only so no WAL is created in the temp directory.
                 var backupConnectionString = $"Data Source={extractedDbPath};Mode=ReadOnly";
                 await using (var integrityConn = new Microsoft.Data.Sqlite.SqliteConnection(backupConnectionString))
                 {
@@ -803,7 +748,6 @@ public class ImportExportService : IImportExportService
 
                 await using var context = await _contextFactory.CreateDbContextAsync(ct);
                 
-                // Get current DB path safeley
                 var connectionString = context.Database.GetConnectionString();
                 var builder = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
                 var currentDbPath = builder.DataSource;
@@ -811,22 +755,18 @@ public class ImportExportService : IImportExportService
                 if (string.IsNullOrWhiteSpace(currentDbPath)) throw new InvalidOperationException("Current database path not found");
 
                 progress?.Report("Closing live DB connections");
-                // 3. Close Connections & Restore DB
+                // Close + dispose the context BEFORE copying to release all handles
                 await context.Database.CloseConnectionAsync();
-
-                // Dispose the context BEFORE copying to release all handles
                 await context.DisposeAsync();
 
-                // Clear SQLite connection pool to ensure no stale connections
+                // Clear the SQLite pool so no stale connections survive
                 Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
 
-                // Wait a bit to ensure locks are released (SQLite can be sticky)
+                // Let SQLite release locks (can be sticky)
                 await Task.Delay(200, ct);
 
-                // BUG-11: snapshot the live DB (and any WAL/SHM sidecars) BEFORE overwriting
-                // it, so a failure during the file swap or the subsequent migration can be
-                // rolled back. Without this, a failed restore-migration leaves the user with
-                // an irreversibly overwritten, half-migrated database.
+                // BUG-11: snapshot the live DB + WAL/SHM BEFORE overwriting so a failed swap or
+                // migration can be rolled back instead of leaving a half-migrated database.
                 var walPath = currentDbPath + "-wal";
                 var shmPath = currentDbPath + "-shm";
                 CreateRollbackSnapshot(currentDbPath);
@@ -834,29 +774,24 @@ public class ImportExportService : IImportExportService
                 try
                 {
                     progress?.Report("Swapping DB file");
-                    // Delete the live WAL/SHM sidecars BEFORE overwriting the main file. A stale
-                    // wal-index left next to a freshly-copied main file is the root cause of the
-                    // "database disk image is malformed" failure; SQLite rebuilds clean sidecars
-                    // for the next connection on first access, so removing them first is safe.
+                    // Delete live WAL/SHM sidecars BEFORE overwriting the main file: a stale wal-index
+                    // next to a fresh main file causes "database disk image is malformed". SQLite
+                    // rebuilds clean sidecars on next access, so removing them is safe.
                     if (File.Exists(walPath)) File.Delete(walPath);
                     if (File.Exists(shmPath)) File.Delete(shmPath);
 
                     File.Copy(extractedDbPath, currentDbPath, true);
 
-                    // Belt-and-suspenders: drop any sidecar that reappeared between the deletes
-                    // and the copy so the fresh context opens against a clean file.
+                    // Drop any sidecar that reappeared between the deletes and the copy.
                     if (File.Exists(walPath)) File.Delete(walPath);
                     if (File.Exists(shmPath)) File.Delete(shmPath);
 
                     progress?.Report("Applying migrations to restored DB");
-                    // Run migrations on a FRESH, NON-POOLED context after the file copy. We do NOT
-                    // use _contextFactory here: in production its connection string has pooling ON,
-                    // so the connection that performs the migration write burst could linger in the
-                    // pool and be reused against the swapped file. Pooling=false guarantees this
-                    // connection is fully closed on dispose. Per-migration logging mirrors
-                    // DbInitializer.MigrateDatabaseAsync so a hung migration is identifiable from
-                    // Settings → More Info → Diagnostics. A backup may come from an older schema
-                    // version, so the pending list can be long here even when nothing is wrong.
+                    // Migrate on a FRESH, NON-POOLED context (not _contextFactory): production pooling
+                    // could leave the migration connection in the pool to be reused against the swapped
+                    // file. Pooling=false closes it on dispose. Per-migration logging mirrors
+                    // DbInitializer so a hung migration shows in Diagnostics; an older backup schema
+                    // means the pending list can be long even when nothing is wrong.
                     _logger?.LogInformation("Applying migrations to restored database...");
                     var restoreConnectionString = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
                     {
@@ -868,12 +803,10 @@ public class ImportExportService : IImportExportService
                         .Options;
                     await using var freshContext = new AppDbContext(restoreOptions);
 
-                    // Re-establish WAL deterministically on the freshly-copied file (do not rely on
-                    // the backup's persisted header), mirroring DbInitializer.SetJournalModeWalAsync,
-                    // then normalize the WAL state. synchronous=NORMAL with WAL is safe and speeds up
-                    // multi-statement migrations on slow Android eMMC. Each step is BUSY-tolerant so a
-                    // momentarily-open foreign connection cannot turn a recoverable restore into a
-                    // hard failure.
+                    // Re-establish WAL deterministically on the copied file (don't trust the backup's
+                    // header), mirroring DbInitializer. synchronous=NORMAL with WAL is safe and speeds
+                    // up migrations on slow Android eMMC. Each step is BUSY-tolerant so a momentarily-open
+                    // foreign connection can't turn a recoverable restore into a hard failure.
                     try
                     {
                         string journalMode = "unknown";
@@ -907,10 +840,8 @@ public class ImportExportService : IImportExportService
                             $"[Restore] [pragma] failed: {pragmaEx.GetType().Name}: {pragmaEx.Message}");
                     }
 
-                    // The backup we just restored may itself contain a stale
-                    // __EFMigrationsLock row from the source device. Clear it before
-                    // calling MigrateAsync so EF Core's lock acquisition succeeds on
-                    // first try instead of polling.
+                    // The restored backup may carry a stale __EFMigrationsLock row from the source
+                    // device; clear it so EF Core acquires the lock on first try instead of polling.
                     await MigrationRecovery.ClearStaleMigrationLockAsync(freshContext, ct);
 
                     var restoreApplied = (await freshContext.Database.GetAppliedMigrationsAsync(ct)).ToList();
@@ -931,8 +862,7 @@ public class ImportExportService : IImportExportService
                     {
                         var restoreMigrator = freshContext.Database.GetInfrastructure()
                             .GetRequiredService<IMigrator>();
-                        // Surface every SQL command issued by EF Core during these migrations
-                        // to the InitLog. Toggle is reset in finally even if a migration throws.
+                        // Surface every EF Core SQL command to the InitLog; reset in finally.
                         MigrationLoggingInterceptor.Enabled = true;
                         try
                         {
@@ -962,9 +892,8 @@ public class ImportExportService : IImportExportService
                                 }
                                 catch (Exception ex) when (MigrationRecovery.IsSchemaAlreadyAppliedError(ex))
                                 {
-                                    // Same recovery path as DbInitializer: the migration's
-                                    // ALTER TABLE / CREATE TABLE found pre-existing schema.
-                                    // Mark applied and continue so the user isn't blocked.
+                                    // Same recovery as DbInitializer: migration found pre-existing
+                                    // schema; mark applied and continue so the user isn't blocked.
                                     stepSw.Stop();
                                     DatabaseInitializationHelper.AppendInitLog(
                                         $"[Restore] ~ [{i + 1}/{restorePending.Count}] {name} schema already present " +
@@ -990,11 +919,9 @@ public class ImportExportService : IImportExportService
                         DatabaseInitializationHelper.AppendInitLog("[Restore] no pending migrations");
                     }
 
-                    // Entitlement state is device-bound: it reflects what Google Play says
-                    // THIS device owns, not what the backup source had. Wipe the UserEntitlement
-                    // rows from the restored DB so DbInitializer re-seeds a Free row on the next
-                    // app-launch; AppStartup then re-queries Play Billing and upgrades if the
-                    // Google account has an active subscription.
+                    // Entitlement state is device-bound (what Play says THIS device owns), not the
+                    // backup source's. Wipe UserEntitlement rows so DbInitializer re-seeds Free and
+                    // AppStartup re-queries Play Billing on next launch.
                     if (await freshContext.UserEntitlements.AnyAsync(ct))
                     {
                         _logger?.LogInformation("Wiping {Count} imported UserEntitlement rows; they will be re-verified against Play Billing on next startup.",
@@ -1005,10 +932,8 @@ public class ImportExportService : IImportExportService
                 }
                 catch
                 {
-                    // BUG-11 rollback: a failed swap or migration must not leave the user with
-                    // a half-migrated or wrong-schema database. The freshContext above is
-                    // disposed as the exception unwinds (await using), so the file is unlocked
-                    // here — restore the pre-restore snapshot before propagating the error.
+                    // BUG-11 rollback: freshContext is disposed as the exception unwinds (await using),
+                    // so the file is unlocked here — restore the pre-restore snapshot before rethrowing.
                     DatabaseInitializationHelper.AppendInitLog(
                         "[Restore] swap/migration failed — rolling back to the pre-restore database");
                     Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
@@ -1021,8 +946,7 @@ public class ImportExportService : IImportExportService
                 }
 
                 progress?.Report("Restoring cover images");
-                // 4. Restore Covers
-                // Case-insensitive search for covers directory
+                // Locate the covers directory (case-insensitive)
                 var extractedCoversDir = Directory
                     .EnumerateDirectories(tempExtractDir, "*", SearchOption.TopDirectoryOnly)
                     .FirstOrDefault(path => string.Equals(
@@ -1034,9 +958,7 @@ public class ImportExportService : IImportExportService
                 {
                     var targetCoversDir = _fileSystem.CombinePath(_basePath, "covers");
 
-                    // Clean target covers dir to remove orphaned images? 
-                    // User requested "Restore", usually enabling a clean slate or overwrite.
-                    // Let's clear target directory to ensure exact match with backup.
+                    // Clear the target so covers exactly match the backup (no orphans)
                     if (Directory.Exists(targetCoversDir))
                     {
                         var dirInfo = new DirectoryInfo(targetCoversDir);
@@ -1054,12 +976,9 @@ public class ImportExportService : IImportExportService
                 _logger?.LogInformation("Backup restored successfully");
                 progress?.Report("Invalidating settings cache");
 
-                // Invalidate AppSettings cache without firing ProgressionChanged:
-                // the app is about to restart, and notifying live subscribers while
-                // the DB file was just swapped under their feet caused them to blow
-                // up mid-restore (the whole restore was being rolled back into a
-                // generic "Failed to restore backup" error, hiding the successful
-                // file ops and preventing the auto-restart).
+                // Invalidate AppSettings cache WITHOUT firing ProgressionChanged: the app is about to
+                // restart, and notifying live subscribers post-swap made them throw mid-restore,
+                // triggering a spurious rollback that hid the successful file ops.
                 _appSettingsProvider.InvalidateCache(notifyProgressionChanged: false);
 
                 progress?.Report("Restore complete");
@@ -1093,8 +1012,7 @@ public class ImportExportService : IImportExportService
 
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
 
-            // Delete in correct order to respect foreign key constraints
-            // 1. Delete junction/child entities first
+            // Delete in FK-safe order: junction/child entities first
             context.Annotations.RemoveRange(context.Annotations);
             context.Quotes.RemoveRange(context.Quotes);
             context.ReadingSessions.RemoveRange(context.ReadingSessions);
@@ -1102,11 +1020,8 @@ public class ImportExportService : IImportExportService
             context.BookTropes.RemoveRange(context.BookTropes);
             context.BookShelves.RemoveRange(context.BookShelves);
             context.PlantShelves.RemoveRange(context.PlantShelves);
-            // DecorationShelves references UserDecoration (Cascade) and Shelf — must go
-            // before UserDecorations, which in turn has DeleteBehavior.Restrict on its
-            // ShopItem FK, so UserDecorations must be gone before ShopItems are removed
-            // below, otherwise the SaveChanges below fails with an FK violation once the
-            // user has purchased any decoration.
+            // DecorationShelves before UserDecorations (Cascade), and UserDecorations before ShopItems
+            // (Restrict FK) — else SaveChanges throws an FK violation once a decoration is purchased.
             context.DecorationShelves.RemoveRange(context.DecorationShelves);
             context.UserDecorations.RemoveRange(context.UserDecorations);
             context.WishlistInfos.RemoveRange(context.WishlistInfos);
@@ -1114,21 +1029,17 @@ public class ImportExportService : IImportExportService
             context.GoalGenres.RemoveRange(context.GoalGenres);
             context.OnboardingMissionStates.RemoveRange(context.OnboardingMissionStates);
 
-            // 2. Delete main entities
+            // Main entities
             context.Books.RemoveRange(context.Books);
             context.ReadingGoals.RemoveRange(context.ReadingGoals);
             context.Shelves.RemoveRange(context.Shelves);
             context.UserPlants.RemoveRange(context.UserPlants);
             context.ShopItems.RemoveRange(context.ShopItems);
 
-            // Persist all the entity deletions.
             await context.SaveChangesAsync(ct);
 
-            // 3. Reset AppSettings to defaults (but keep the record) through the serialized provider
-            // (CODE_REVIEW BUG-08): a raw context write here would bypass AppSettingsProvider's
-            // write-gate and could race a concurrent coin/XP/level award. Routing the reset through
-            // UpdateSettingsAsync serialises it and refreshes the provider cache (so a separate
-            // InvalidateCache is no longer needed).
+            // BUG-08: reset AppSettings via the serialized provider (not a raw context write) so it
+            // can't bypass the write-gate and race a concurrent coin/XP/level award; also refreshes cache.
             var settings = await _appSettingsProvider.GetSettingsAsync(ct);
             settings.UserLevel = 1;
             settings.TotalXp = 0;

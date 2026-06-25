@@ -11,10 +11,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// Unit-tests for ShelfService covering shelf CRUD, add/remove/move operations.
-/// Uses InMemoryDatabase with transaction warnings suppressed so the transactional
-/// DeleteShelfAsync / UpdateShelfPositionsAsync / MoveXxxBetweenShelvesAsync paths
-/// can be exercised.
+/// ShelfService CRUD and add/remove/move tests. Uses InMemory with transaction warnings
+/// suppressed so the transactional Delete/UpdatePositions/Move paths can run.
 /// </summary>
 public class ShelfServiceTests : IDisposable
 {
@@ -160,17 +158,15 @@ public class ShelfServiceTests : IDisposable
         await using var verify = _factory.CreateDbContext();
         var entries = await verify.BookShelves.Where(bs => bs.ShelfId == shelf.Id).OrderBy(bs => bs.Position).ToListAsync();
         entries.Should().HaveCount(2);
-        entries[0].BookId.Should().Be(b1.Id); // appended in add order (INK-02)
+        entries[0].BookId.Should().Be(b1.Id); // appended in add order
         entries[1].BookId.Should().Be(b2.Id);
     }
 
     [Fact]
     public async Task AddBookToShelfAsync_AppendsAfterExistingPlant_NoPositionCollision()
     {
-        // Books, plants and decorations share one Position space on a shelf
-        // (GetMaxPositionOnShelfAsync / ShiftItemsOnShelfAsync / DeleteShelfAsync all
-        // treat it as unified). Adding a book must append after the existing plant,
-        // not collide at position 0. (INK-02)
+        // Books, plants and decorations share one unified Position space on a shelf, so adding a
+        // book must append after the existing plant, not collide at position 0.
         var shelf = await _service.CreateShelfAsync(new Shelf { Name = "S" });
         var plantId = Guid.NewGuid();
         Book book;
@@ -183,7 +179,7 @@ public class ShelfServiceTests : IDisposable
             ctx.Books.Add(book);
             await ctx.SaveChangesAsync();
         }
-        await _service.AddPlantToShelfAsync(shelf.Id, plantId); // plant occupies position 0
+        await _service.AddPlantToShelfAsync(shelf.Id, plantId);
 
         await _service.AddBookToShelfAsync(shelf.Id, book.Id);
 
@@ -191,7 +187,7 @@ public class ShelfServiceTests : IDisposable
         var plantPos = (await verify.PlantShelves.FirstAsync(ps => ps.ShelfId == shelf.Id && ps.PlantId == plantId)).Position;
         var bookPos = (await verify.BookShelves.FirstAsync(bs => bs.ShelfId == shelf.Id && bs.BookId == book.Id)).Position;
         plantPos.Should().Be(0);
-        bookPos.Should().Be(1); // appended after the plant, no collision
+        bookPos.Should().Be(1);
     }
 
     [Fact]
@@ -492,9 +488,7 @@ public class ShelfServiceTests : IDisposable
             ctx.Books.AddRange(b1, b2);
             await ctx.SaveChangesAsync();
         }
-        // Add b1 at position 0 and b2 at position 1
         await _service.AddBookToShelfAsync(tgt.Id, b1.Id);
-        // Now insert b2 at position 0
         var src = await _service.CreateShelfAsync(new Shelf { Name = "Src" });
         await _service.AddBookToShelfAsync(src.Id, b2.Id);
 

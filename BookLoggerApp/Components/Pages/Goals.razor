@@ -43,7 +43,6 @@
             <div class="alert alert-success">@ViewModel.StatusMessage</div>
         }
 
-        <!-- Create/Edit Goal Form -->
         @if (ViewModel.ShowCreateForm && ViewModel.NewGoal != null)
         {
             <div class="goal-form">
@@ -103,7 +102,6 @@
             </div>
         }
 
-        <!-- Active Goals -->
         <section class="active-goals">
             <h2>@L["Goals_ActiveGoals"]</h2>
             @if (ViewModel.ActiveGoals.Any())
@@ -123,7 +121,6 @@
             }
         </section>
 
-        <!-- Completed Goals -->
         <section class="completed-goals">
             <h2>@L["Goals_CompletedGoals"]</h2>
             @if (ViewModel.CompletedGoals.Any())
@@ -159,7 +156,6 @@
     </div>
 }
 
-<!-- Exclude Books Modal -->
 @if (ViewModel.ShowExcludeModal && ViewModel.ExcludeModalGoal != null)
 {
     <div class="modal-overlay" @onclick="CloseExcludeModal">
@@ -169,7 +165,6 @@
             </div>
 
             <div class="exclude-modal-body">
-                <!-- Edit Fields -->
                 @if (ViewModel.NewGoal != null)
                 {
                     <div class="modal-edit-section">
@@ -206,7 +201,6 @@
 
                 <div class="modal-section-divider"></div>
 
-                <!-- Genre filter section -->
                 @if (ViewModel.AllGenres.Any())
                 {
                     <h4 class="exclude-section-title">🏷️ @L["Goals_GenreFilter"]</h4>
@@ -225,7 +219,6 @@
                     <div class="modal-section-divider"></div>
                 }
 
-                <!-- Exclude books section -->
                 <h4 class="exclude-section-title">📚 @L["Goals_ExcludeBooks"]</h4>
                 @if (!ViewModel.AllBooks.Any())
                 {
@@ -312,7 +305,6 @@
         border: none;
     }
 
-    /* Modal Styles */
     .modal-overlay {
         position: fixed;
         top: 0;
@@ -344,7 +336,6 @@
         margin-top: 1.5rem;
     }
 
-    /* Exclude Modal */
     .exclude-modal {
         background: var(--card-bg, #fff);
         border-radius: 12px;
@@ -499,14 +490,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Z.723: observe the ViewModel via ObservableComponentBase (auto re-render +
-        // auto-unsubscribe on Dispose), like every other page — instead of the manual
-        // PropertyChanged wiring + hand-rolled unsubscribe this page used to carry.
+        // ObservableComponentBase handles auto re-render + auto-unsubscribe on Dispose
         Observe(ViewModel);
-        // Subscribe to goal changes to refresh data when sessions end
+        // Refresh data when sessions end
         GoalService.GoalsChanged += OnGoalsChanged;
 
-        // Register navigation back handler (Goals -> Bookshelf)
         _navBackHandler = async () =>
         {
             Navigation.NavigateTo("/");
@@ -521,7 +509,6 @@
     {
         try
         {
-            // Reload goals data when goals change
             await InvokeAsync(async () =>
             {
                 await ViewModel.LoadCommand.ExecuteAsync(null);
@@ -538,7 +525,6 @@
     {
         ViewModel.OpenCreateFormCommand.Execute(null);
 
-        // Register modal back handler
         _modalBackHandler = async () =>
         {
             CancelCreate();
@@ -593,7 +579,7 @@
         else
             ViewModel.SelectedGenreIds.Remove(genreId);
 
-        // Force UI update
+        // New instance forces UI update
         ViewModel.SelectedGenreIds = new HashSet<Guid>(ViewModel.SelectedGenreIds);
         StateHasChanged();
     }
@@ -673,7 +659,6 @@
 
         showDeleteConfirmation = false;
 
-        // Close exclude modal if it was open
         if (ViewModel.ShowExcludeModal)
         {
             if (_excludeModalBackHandler != null)
@@ -715,8 +700,7 @@
 
     public override void Dispose()
     {
-        // ViewModel PropertyChanged is unsubscribed by ObservableComponentBase.Dispose (Z.723);
-        // here we only tear down this page's own subscriptions/handlers.
+        // Base disposes ViewModel subscription; only tear down this page's handlers here
         GoalService.GoalsChanged -= OnGoalsChanged;
 
         if (_navBackHandler != null)

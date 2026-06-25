@@ -4,9 +4,7 @@ using BookLoggerApp.Core.Models;
 
 namespace BookLoggerApp.Infrastructure.Data.Configurations;
 
-/// <summary>
-/// EF Core configuration for Annotation entity.
-/// </summary>
+/// <summary>EF Core configuration for the Annotation entity.</summary>
 public class AnnotationConfiguration : IEntityTypeConfiguration<Annotation>
 {
     public void Configure(EntityTypeBuilder<Annotation> builder)
@@ -29,10 +27,9 @@ public class AnnotationConfiguration : IEntityTypeConfiguration<Annotation>
         builder.Property(a => a.CreatedAt)
             .IsRequired();
 
-        // Indexes
         builder.HasIndex(a => a.BookId);
         builder.HasIndex(a => a.PageNumber);
 
-        // Relationship configured in BookConfiguration
+        // Relationship configured in BookConfiguration.
     }
 }

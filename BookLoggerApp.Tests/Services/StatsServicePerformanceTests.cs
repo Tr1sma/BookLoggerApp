@@ -30,7 +30,6 @@ public class StatsServicePerformanceTests : IDisposable
     [Fact]
     public async Task GetTotalMinutesReadAsync_ShouldCalculateSumDatabaseSide_AndBeCorrect()
     {
-        // Arrange
         await _unitOfWork.ReadingSessions.AddAsync(new ReadingSession
         {
             Minutes = 60,
@@ -43,17 +42,14 @@ public class StatsServicePerformanceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var totalMinutes = await _service.GetTotalMinutesReadAsync();
 
-        // Assert
         totalMinutes.Should().Be(90);
     }
 
     [Fact]
     public async Task GetTotalPagesReadAsync_ShouldCalculateSumDatabaseSide_AndBeCorrect()
     {
-        // Arrange
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Book 1",
@@ -74,17 +70,14 @@ public class StatsServicePerformanceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var totalPages = await _service.GetTotalPagesReadAsync();
 
-        // Assert
         totalPages.Should().Be(300);
     }
 
     [Fact]
     public async Task GetBooksCompletedInYearAsync_ShouldCountDatabaseSide_AndBeCorrect()
     {
-        // Arrange
         var year = 2023;
         await _unitOfWork.Books.AddAsync(new Book
         {
@@ -111,17 +104,14 @@ public class StatsServicePerformanceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var count = await _service.GetBooksCompletedInYearAsync(year);
 
-        // Assert
         count.Should().Be(2);
     }
 
     [Fact]
     public async Task GetAverageRatingByCategoryAsync_ShouldCalculateDatabaseSide_AndBeCorrect()
     {
-        // Arrange
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Book 1",
@@ -150,10 +140,8 @@ public class StatsServicePerformanceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
 
-        // Assert
         average.Should().Be(3);
     }
 }

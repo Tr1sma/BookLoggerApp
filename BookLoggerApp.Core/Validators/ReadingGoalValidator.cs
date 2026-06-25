@@ -5,10 +5,7 @@ using Microsoft.Extensions.Localization;
 
 namespace BookLoggerApp.Core.Validators;
 
-/// <summary>
-/// Validator for ReadingGoal model.
-/// Ensures goal parameters are valid and achievable.
-/// </summary>
+/// <summary>Validates ReadingGoal parameters.</summary>
 public class ReadingGoalValidator : AbstractValidator<ReadingGoal>
 {
     public ReadingGoalValidator(IStringLocalizer<AppResources>? localizer = null)
@@ -36,7 +33,7 @@ public class ReadingGoalValidator : AbstractValidator<ReadingGoal>
         RuleFor(g => g.EndDate)
             .GreaterThan(g => g.StartDate).WithMessage(_ => Tr("Validator_Goal_EndAfterStart"));
 
-        // Validate that goal period is not too long (max 1 year)
+        // Goal period max 1 year.
         RuleFor(g => g.EndDate)
             .Must((goal, endDate) => (endDate - goal.StartDate).TotalDays <= 365)
             .WithMessage(_ => Tr("Validator_Goal_PeriodTooLong"));

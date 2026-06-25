@@ -7,7 +7,7 @@ using BookLoggerApp.Core.Helpers;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Service for managing user progression (XP, levels, coins).
+/// Manages user progression (XP, levels, coins).
 /// </summary>
 public class ProgressionService : IProgressionService
 {
@@ -30,32 +30,25 @@ public class ProgressionService : IProgressionService
 
     public async Task<ProgressionResult> AwardSessionXpAsync(int minutes, int? pagesRead, Guid? activePlantId, int streakDays = 0, CancellationToken ct = default)
     {
-        // 1. Calculate base XP from session (including streak bonus)
         var (minutesXp, pagesXp, longSessionXp, streakXp) = XpCalculator.CalculateSessionXpBreakdown(minutes, pagesRead, streakDays);
         int baseXp = minutesXp + pagesXp + longSessionXp + streakXp;
 
-        // 2. Get plant boost
         decimal plantBoost = await GetTotalPlantBoostAsync(ct);
 
-        // 3. Apply boost to get final XP
         int boostedXp = XpCalculator.ApplyPlantBoost(baseXp, plantBoost);
         int bonusXp = boostedXp - baseXp;
 
-        // 4. Get current settings
         var settings = await _settingsProvider.GetSettingsAsync(ct);
         int oldXp = settings.TotalXp;
 
-        // 5. Add XP to user
         settings.TotalXp += boostedXp;
         settings.UpdatedAt = DateTime.UtcNow;
 
-        // 6. Check for level-up and update UserLevel in the same settings instance
+        // Updates UserLevel on the same settings instance so the single save below persists both.
         var levelUpResult = await CheckAndProcessLevelUpAsync(oldXp, settings.TotalXp, settings, ct);
 
-        // 7. Save settings (with both TotalXp and UserLevel updated)
         await _settingsProvider.UpdateSettingsAsync(settings, ct);
 
-        // 8. Return result
         return new ProgressionResult
         {
             XpEarned = boostedXp,
@@ -74,31 +67,24 @@ public class ProgressionService : IProgressionService
 
     public async Task<ProgressionResult> AwardBookCompletionXpAsync(Guid? activePlantId, CancellationToken ct = default)
     {
-        // 1. Calculate base XP for book completion
         int baseXp = XpCalculator.CalculateXpForBookCompletion();
 
-        // 2. Get plant boost
         decimal plantBoost = await GetTotalPlantBoostAsync(ct);
 
-        // 3. Apply boost to get final XP
         int boostedXp = XpCalculator.ApplyPlantBoost(baseXp, plantBoost);
         int bonusXp = boostedXp - baseXp;
 
-        // 4. Get current settings
         var settings = await _settingsProvider.GetSettingsAsync(ct);
         int oldXp = settings.TotalXp;
 
-        // 5. Add XP to user
         settings.TotalXp += boostedXp;
         settings.UpdatedAt = DateTime.UtcNow;
 
-        // 6. Check for level-up and update UserLevel in the same settings instance
+        // Updates UserLevel on the same settings instance so the single save below persists both.
         var levelUpResult = await CheckAndProcessLevelUpAsync(oldXp, settings.TotalXp, settings, ct);
 
-        // 7. Save settings (with both TotalXp and UserLevel updated)
         await _settingsProvider.UpdateSettingsAsync(settings, ct);
 
-        // 8. Return result
         return new ProgressionResult
         {
             XpEarned = boostedXp,
@@ -138,13 +124,10 @@ public class ProgressionService : IProgressionService
         int oldLevel = XpCalculator.CalculateLevelFromXp(oldXp);
         int newLevel = XpCalculator.CalculateLevelFromXp(newXp);
 
-        // No level-up occurred
         if (newLevel <= oldLevel)
             return null;
 
-        // Calculate coins awarded (sum of all levels gained)
-        // Formula: 50 × Level + 3 × Level² (progressive scaling)
-        // Example: Level 3 → Level 5 = CalculateCoinsForLevel(4) + CalculateCoinsForLevel(5) = 248 + 325 = 573 coins
+        // Coins awarded = sum over each level gained (50 × Level + 3 × Level², progressive).
         int coinsAwarded = 0;
         for (int level = oldLevel + 1; level <= newLevel; level++)
         {
@@ -158,12 +141,10 @@ public class ProgressionService : IProgressionService
 
         int newCoins;
 
-        // Update user level and coins in settings
         if (settingsToUpdate != null)
         {
-            // Update the provided settings instance directly (caller will save)
-            // This prevents the race condition where AddCoinsAsync would save to DB
-            // but then UpdateSettingsAsync overwrites with old Coins value
+            // Mutate the caller's settings instance (caller saves). Avoids the race where a separate
+            // AddCoinsAsync save is then overwritten by UpdateSettingsAsync with the old Coins value.
             settingsToUpdate.UserLevel = newLevel;
             settingsToUpdate.Coins += coinsAwarded;
             settingsToUpdate.UpdatedAt = DateTime.UtcNow;
@@ -171,9 +152,8 @@ public class ProgressionService : IProgressionService
         }
         else
         {
-            // Fetch settings, apply both coins and level atomically, then save once.
-            // Previously this called AddCoinsAsync (separate save) then UpdateSettingsAsync
-            // (another save), which could lose coin updates in a race condition.
+            // Fetch, apply coins + level, save once. Two separate saves previously risked losing
+            // coin updates in a race.
             _settingsProvider.InvalidateCache();
             var settings = await _settingsProvider.GetSettingsAsync(ct);
             settings.Coins += coinsAwarded;

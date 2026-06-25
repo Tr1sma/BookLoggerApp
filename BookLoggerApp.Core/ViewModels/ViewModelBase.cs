@@ -8,34 +8,16 @@ using Microsoft.Extensions.Localization;
 
 namespace BookLoggerApp.Core.ViewModels;
 
-/// <summary>
-/// Base class for all ViewModels.
-/// </summary>
+/// <summary>Base class for all ViewModels.</summary>
 public abstract partial class ViewModelBase : ObservableObject, IDisposable
 {
-    /// <summary>
-    /// CODE_REVIEW CQ-01: per-load cancellation source. Each ct-accepting
-    /// <see cref="ExecuteSafelyAsync(Func{CancellationToken, Task}, string?)"/> /
-    /// <see cref="ExecuteSafelyWithDbAsync(Func{CancellationToken, Task}, string?)"/> call
-    /// begins a fresh load scope: the previous in-flight load is cancelled so a torn-down
-    /// or superseded screen-load no longer races the next one through the shared transient
-    /// DbContext. Cancelled on <see cref="Dispose"/> too.
-    /// </summary>
+    /// <summary>Per-load cancellation source: each ct-accepting Execute call starts a fresh scope and cancels the previous in-flight load so it can't race through the shared DbContext.</summary>
     private CancellationTokenSource? _loadCts;
     private bool _disposed;
-    /// <summary>
-    /// Ambient crash reporter used by <see cref="ExecuteSafelyAsync"/> /
-    /// <see cref="ExecuteSafelyWithDbAsync"/> to forward caught exceptions as non-fatals.
-    /// Assigned once at app startup by AnalyticsBootstrapper; defaults to NoOp for tests.
-    /// </summary>
+    /// <summary>Ambient crash reporter for forwarding caught exceptions as non-fatals; set at startup, NoOp in tests.</summary>
     public static ICrashReportingService CrashReporter { get; set; } = NoOpCrashReportingService.Instance;
 
-    /// <summary>
-    /// Ambient localizer used by <see cref="ExecuteSafelyAsync"/> and
-    /// <see cref="ExecuteSafelyWithDbAsync"/> for the fallback error-prefix and the
-    /// DB-timeout message. Assigned once at app startup by AnalyticsBootstrapper;
-    /// defaults to null so tests can run without wiring up localization.
-    /// </summary>
+    /// <summary>Ambient localizer for fallback error prefixes and the DB-timeout message; set at startup, null in tests.</summary>
     public static IStringLocalizer<AppResources>? Localizer { get; set; }
 
     [ObservableProperty]
@@ -44,10 +26,7 @@ public abstract partial class ViewModelBase : ObservableObject, IDisposable
     [ObservableProperty]
     private string? _errorMessage;
 
-    /// <summary>
-    /// True when the current error reflects a failed or timed-out database
-    /// initialization. Pages use this to decide whether to show a "retry" button.
-    /// </summary>
+    /// <summary>True when the error reflects a failed/timed-out DB init; pages use it to show a retry button.</summary>
     public bool IsDatabaseInitializationFailed => DatabaseInitializationHelper.InitializationFailed;
 
     protected void ClearError()
@@ -61,11 +40,7 @@ public abstract partial class ViewModelBase : ObservableObject, IDisposable
         IsBusy = false;
     }
 
-    /// <summary>
-    /// Looks up <paramref name="key"/> via the ambient <see cref="Localizer"/>.
-    /// Returns <paramref name="fallback"/> (or the key itself) when localization is
-    /// not wired up — e.g. in unit tests.
-    /// </summary>
+    /// <summary>Looks up <paramref name="key"/> via the ambient <see cref="Localizer"/>; returns <paramref name="fallback"/> (or the key) when localization isn't wired up.</summary>
     protected static string Tr(string key, string? fallback = null)
     {
         var loc = Localizer;
@@ -88,42 +63,23 @@ public abstract partial class ViewModelBase : ObservableObject, IDisposable
         return str.ResourceNotFound ? string.Format(key, args) : str.Value;
     }
 
-    /// <summary>
-    /// Executes an action safely with error handling and busy state management.
-    /// </summary>
+    /// <summary>Executes an action with error handling and busy-state management.</summary>
     protected Task ExecuteSafelyAsync(Func<Task> action, string? errorPrefix = null)
         => ExecuteCoreAsync(_ => action(), errorPrefix, ensureDb: false, CancellationToken.None);
 
-    /// <summary>
-    /// Executes an action safely after ensuring the database is initialized.
-    /// This should be called from ViewModel Load methods to prevent race conditions.
-    /// Note: DbContext concurrency is now handled via Transient lifetime registration.
-    /// </summary>
+    /// <summary>Executes an action after ensuring the DB is initialized; call from Load methods to avoid race conditions.</summary>
     protected Task ExecuteSafelyWithDbAsync(Func<Task> action, string? errorPrefix = null)
         => ExecuteCoreAsync(_ => action(), errorPrefix, ensureDb: true, CancellationToken.None);
 
-    /// <summary>
-    /// CODE_REVIEW CQ-01 overload: runs <paramref name="action"/> under a fresh per-load scope
-    /// and passes its <see cref="CancellationToken"/> in, so navigation/teardown (or the next
-    /// load) cancels the in-flight load instead of letting it race through the shared DbContext.
-    /// </summary>
+    /// <summary>Runs <paramref name="action"/> under a fresh per-load scope, passing its token so teardown or the next load cancels this one.</summary>
     protected Task ExecuteSafelyAsync(Func<CancellationToken, Task> action, string? errorPrefix = null)
         => ExecuteCoreAsync(action, errorPrefix, ensureDb: false, BeginLoadScope());
 
-    /// <summary>
-    /// CODE_REVIEW CQ-01 overload: DB-gated variant that threads a fresh per-load token into the action.
-    /// </summary>
+    /// <summary>DB-gated variant that threads a fresh per-load token into the action.</summary>
     protected Task ExecuteSafelyWithDbAsync(Func<CancellationToken, Task> action, string? errorPrefix = null)
         => ExecuteCoreAsync(action, errorPrefix, ensureDb: true, BeginLoadScope());
 
-    /// <summary>
-    /// CODE_REVIEW BUG-17: error wrapper for event-driven, fire-and-forget callbacks (billing
-    /// purchase / onboarding state changes) that must NOT touch the shared IsBusy/ErrorMessage.
-    /// Unlike <see cref="ExecuteSafelyAsync(Func{Task}, string?)"/> this neither sets IsBusy nor
-    /// clears/sets ErrorMessage, so a background event firing during an in-flight foreground load
-    /// can't clobber that load's busy/overlay/error state. Caught exceptions are still forwarded
-    /// to the crash reporter.
-    /// </summary>
+    /// <summary>Error wrapper for fire-and-forget event callbacks that must NOT touch shared IsBusy/ErrorMessage; exceptions still go to the crash reporter.</summary>
     protected async Task ExecuteDetachedAsync(Func<Task> action, string source)
     {
         try
@@ -153,25 +109,17 @@ public abstract partial class ViewModelBase : ObservableObject, IDisposable
         }
         catch (OperationCanceledException) when (loadToken.IsCancellationRequested)
         {
-            // CODE_REVIEW CQ-01: this load was superseded by a newer load or cancelled on
-            // teardown — swallow silently and leave the UI state to whatever replaced it.
+            // Load superseded or cancelled on teardown — swallow and leave UI state to its replacement.
             System.Diagnostics.Debug.WriteLine("Load cancelled (superseded or disposed).");
         }
         catch (Exception ex) when (loadToken.IsCancellationRequested)
         {
-            // CODE_REVIEW CQ-01: a superseded/cancelled load failed with a NON-cancellation
-            // exception — most plausibly the shared transient DbContext's "A second operation was
-            // started on this context" InvalidOperationException once a newer load began. Its token
-            // is already cancelled, so it must NOT clobber the active load's ErrorMessage/IsBusy;
-            // report it as a non-fatal only. (Non-token overloads pass CancellationToken.None, whose
-            // IsCancellationRequested is always false, so their failures still surface as errors.)
+            // A superseded load failed with a non-cancellation exception (likely the shared DbContext's "second operation" error); report as non-fatal, don't clobber the active load's state.
             ReportNonFatal(ex, errorPrefix, source: ensureDb ? "viewmodel_db_superseded" : "viewmodel_superseded");
         }
         catch (TimeoutException tex) when (ensureDb)
         {
-            // Surface the timeout to the helper too, so IsDatabaseInitializationFailed
-            // reflects reality for the retry UI. Without this, pages that gate Retry()
-            // on InitializationFailed would never trigger a fresh init.
+            // Mark failed so IsDatabaseInitializationFailed (and the retry UI) reflects the timeout.
             DatabaseInitializationHelper.MarkAsFailed(tex);
 
             var prefix = errorPrefix ?? (Localizer?["Error_GenericShort"].Value ?? "Error");
@@ -190,8 +138,7 @@ public abstract partial class ViewModelBase : ObservableObject, IDisposable
         }
         finally
         {
-            // Don't clear IsBusy for a superseded/cancelled load — the newer load owns the
-            // busy state now, and clobbering it here would flicker the spinner off mid-load.
+            // Don't clear IsBusy for a superseded load — the newer load owns it; clearing flickers the spinner.
             if (!loadToken.IsCancellationRequested)
             {
                 IsBusy = false;
@@ -199,12 +146,7 @@ public abstract partial class ViewModelBase : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>
-    /// CODE_REVIEW CQ-01: cancels the previous in-flight load and starts a fresh load scope,
-    /// returning its token. The previous source is only cancelled (not disposed) here to avoid
-    /// racing an EF query that still holds the token; it is GC-reclaimed. Dispose() does the
-    /// final cleanup.
-    /// </summary>
+    /// <summary>Cancels the previous in-flight load and starts a fresh scope, returning its token. Previous source is cancelled (not disposed) to avoid racing an EF query holding it.</summary>
     protected CancellationToken BeginLoadScope()
     {
         if (_disposed)
@@ -219,12 +161,7 @@ public abstract partial class ViewModelBase : ObservableObject, IDisposable
         return fresh.Token;
     }
 
-    /// <summary>
-    /// CODE_REVIEW CQ-01: cancels the currently running scoped load, if any. The primary
-    /// cancellation mechanism is supersede-on-reload (a new scoped load cancels the previous one);
-    /// this additionally lets a page cancel an in-flight load on teardown by calling it from its own
-    /// Dispose/navigation hook. Safe no-op when no load is running or its source was already disposed.
-    /// </summary>
+    /// <summary>Cancels the currently running scoped load (e.g. from a page's teardown hook). Safe no-op when no load is running.</summary>
     public void CancelOngoingLoad()
     {
         try

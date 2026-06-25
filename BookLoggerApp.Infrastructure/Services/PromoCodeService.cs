@@ -4,10 +4,8 @@ using BookLoggerApp.Core.Services.Abstractions;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Validates hardcoded <c>BH-</c>-prefixed promo codes. Codes are declared in
-/// <see cref="HardcodedCodes"/> as (code, grant) pairs; new codes ship in
-/// app updates. Play-native promo codes (for single-use Lifetime rewards) are
-/// handled by <see cref="IBillingService.LaunchRedeemPromoFlowAsync"/>.
+/// Validates hardcoded <c>BH-</c>-prefixed promo codes from <see cref="HardcodedCodes"/>.
+/// Play-native promo codes are handled by <see cref="IBillingService.LaunchRedeemPromoFlowAsync"/>.
 /// </summary>
 public class PromoCodeService : IPromoCodeService
 {
@@ -45,8 +43,7 @@ public class PromoCodeService : IPromoCodeService
 
         await _entitlementService.ApplyPromoAsync(activation, ct);
 
-        // The UI layer localizes these keys; pick a whole-month phrasing for 90 days,
-        // otherwise express the window in days. Tier name (Plus/Premium) stays verbatim.
+        // UI localizes these keys; use month phrasing for 90 days, else express in days.
         (string messageKey, object[] args) = grant.DurationDays switch
         {
             90 => ("Promo_Success_Months", new object[] { grant.Tier, 3 }),

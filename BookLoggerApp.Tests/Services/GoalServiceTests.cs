@@ -119,14 +119,10 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task CalculateGoalProgress_WithUnspecifiedKindDatesFromUiDatePicker_ShouldCountUtcBookInRange()
     {
-        // Regression gate for the timezone-kind mismatch in goal progress calculation.
-        // The UI binds <input type="date"> to DateTime with Kind=Unspecified (ticks
-        // represent the user's local calendar midnight), while Book.DateCompleted is
-        // written as DateTime.UtcNow (Kind=Utc). DateTime comparison ignores Kind and
-        // uses raw ticks, so without a conversion the comparisons mix local-midnight
-        // ticks with UTC-instant ticks and misclassify books near day boundaries in
-        // non-UTC timezones. The helper GoalService.GetGoalRangeUtc bridges this by
-        // calling ToUniversalTime() on the bounds; this test pins that behavior.
+        // Regression gate for the timezone-kind mismatch: UI date picker yields Kind=Unspecified
+        // (local-midnight ticks) but Book.DateCompleted is Kind=Utc. DateTime compares raw ticks
+        // ignoring Kind, misclassifying day-boundary books in non-UTC zones. GoalService.GetGoalRangeUtc
+        // bridges via ToUniversalTime() on the bounds; this pins that.
 
         var nowYear = DateTime.UtcNow.Year;
         var goal = await _service.AddAsync(new ReadingGoal
@@ -134,13 +130,12 @@ public class GoalServiceTests : IDisposable
             Title = "UI-Picker Goal",
             Type = GoalType.Books,
             Target = 5,
-            // Exactly what <input type="date" @bind="...StartDate" /> produces
+            // Exactly what <input type="date"> binding produces
             StartDate = new DateTime(nowYear - 1, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
             EndDate = new DateTime(nowYear + 1, 12, 31, 0, 0, 0, DateTimeKind.Unspecified)
         });
 
-        // Completed book stamped with the real runtime UtcNow (Kind=Utc); this lies
-        // inside the multi-year range regardless of the test runner's local timezone
+        // UtcNow-stamped book (Kind=Utc); inside the range in any local timezone
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "In-range book",
@@ -161,13 +156,9 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task GetActiveGoalsAsync_WithUnspecifiedEndDateEndingToday_ShouldStillBeActive()
     {
-        // Regression gate for the second half of the same kind-mismatch bug: the
-        // ReadingGoalRepository.GetActiveGoalsAsync filter previously compared EndDate
-        // against DateTime.UtcNow. For a user in a positive-UTC timezone, a goal whose
-        // EndDate equals today's local midnight (Kind=Unspecified) would get filtered
-        // out several hours before the local day ended, because UtcNow's ticks already
-        // exceed the stored local-midnight ticks. The fix compares against
-        // DateTime.Now.Date so goals ending "today locally" remain visible all day.
+        // Regression gate, second half of the kind-mismatch bug: GetActiveGoalsAsync compared
+        // EndDate against UtcNow, so in a positive-UTC zone a goal ending today's local midnight
+        // dropped hours early. Fix compares DateTime.Now.Date so it stays active all local day.
 
         var localToday = DateTime.Now.Date; // Kind=Local
         var goal = await _service.AddAsync(new ReadingGoal
@@ -176,16 +167,14 @@ public class GoalServiceTests : IDisposable
             Type = GoalType.Books,
             Target = 1,
             StartDate = new DateTime(localToday.Year - 1, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
-            // EndDate = today's local date, as the UI date picker would produce
+            // EndDate = today's local date, as the UI date picker produces
             EndDate = new DateTime(localToday.Year, localToday.Month, localToday.Day, 0, 0, 0, DateTimeKind.Unspecified)
         });
 
         // Act
         var activeGoals = await _service.GetActiveGoalsAsync();
 
-        // Assert — goal ending "today" in the user's local calendar must remain active
-        // throughout the entire local day, not disappear when UtcNow crosses some earlier
-        // UTC threshold
+        // Assert — goal ending "today" locally stays active all local day
         activeGoals.Should().ContainSingle(g => g.Id == goal.Id);
     }
 
@@ -228,15 +217,13 @@ public class GoalServiceTests : IDisposable
     [Fact]
     public async Task CalculateGoalProgress_AttributesSessionByStartedAt_NotEndedAt()
     {
-        // INK-01: a session that STARTS inside the goal window but ENDS well outside it must
-        // still count toward Minutes/Pages goals, because streaks/stats/dashboard all attribute
-        // sessions by StartedAt. Previously the goal filtered on EndedAt, so a boundary-crossing
-        // session was dropped.
+        // INK-01: sessions are attributed by StartedAt (like streaks/stats), so one starting
+        // inside but ending outside the window must still count. Previously filtered on EndedAt.
         var goal = await _service.AddAsync(new ReadingGoal
         {
             Title = "Minutes",
             Type = GoalType.Minutes,
-            Target = 1000, // high so it never auto-completes and drops off the active list
+            Target = 1000, // high so it never auto-completes off the active list
             StartDate = DateTime.UtcNow.AddDays(-1),
             EndDate = DateTime.UtcNow.AddDays(5),
             IsCompleted = false
@@ -266,7 +253,7 @@ public class GoalServiceTests : IDisposable
             Title = "Goal 1",
             Type = GoalType.Pages,
             Target = 100,
-            Current = 100, // Reached target
+            Current = 100,
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
             IsCompleted = false
@@ -276,7 +263,7 @@ public class GoalServiceTests : IDisposable
             Title = "Goal 2",
             Type = GoalType.Pages,
             Target = 100,
-            Current = 50, // Not reached yet
+            Current = 50,
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
             IsCompleted = false
@@ -474,8 +461,6 @@ public class GoalServiceTests : IDisposable
         exclusions.Should().BeEmpty();
     }
 
-    // ===== Genre Filter Tests =====
-
     [Fact]
     public async Task AddGenreToGoalAsync_ShouldAddGenre()
     {
@@ -661,11 +646,8 @@ public class GoalServiceTests : IDisposable
         loadedGoal.Current.Should().Be(2);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Coverage-ergänzende Tests (GetAllAsync, GetByIdAsync, DeleteAsync,
-    // UpdateAsync, GetCompletedGoalsAsync, GetGoalsByTypeAsync, Minutes,
-    // NotifyGoalsChanged, Exceptions, GetExcludedBooks/GoalGenres)
-    // ─────────────────────────────────────────────────────────────────────────
+    // Additional coverage: CRUD, GetCompletedGoals/GoalsByType, Minutes, NotifyGoalsChanged,
+    // exceptions, GetExcludedBooks/GoalGenres.
 
     [Fact]
     public async Task GetAllAsync_ReturnsAllGoals()

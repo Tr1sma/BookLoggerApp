@@ -28,9 +28,6 @@ public interface IFileSystem
     /// <summary>
     /// Checks if a file exists at the specified path.
     /// </summary>
-    /// <summary>
-    /// Checks if a file exists at the specified path.
-    /// </summary>
     bool FileExists(string path);
 
     /// <summary>

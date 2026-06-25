@@ -5,9 +5,7 @@ using BookLoggerApp.Core.Services.Abstractions;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Thin helper around <see cref="IEntitlementService"/> that centralizes the
-/// "throw <see cref="EntitlementRequiredException"/>" logic used by content
-/// services (notes, shelves, goals, plants, decorations).
+/// Centralizes the throw-<see cref="EntitlementRequiredException"/> logic used by content services.
 /// </summary>
 public class FeatureGuard : IFeatureGuard
 {

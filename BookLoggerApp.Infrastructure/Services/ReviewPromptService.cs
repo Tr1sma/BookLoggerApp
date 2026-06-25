@@ -41,9 +41,7 @@ public class ReviewPromptService : IReviewPromptService
             }
             catch
             {
-                // Persist failed — the in-memory settings instance now carries a phantom
-                // increment/timestamp that was never written. Drop the provider cache so the
-                // next read reloads the real DB state instead of burning a monthly prompt slot.
+                // Persist failed; drop cache so the unwritten increment doesn't burn a prompt slot.
                 _settingsProvider.InvalidateCache();
                 throw;
             }

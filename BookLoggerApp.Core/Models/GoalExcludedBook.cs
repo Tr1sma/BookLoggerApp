@@ -1,8 +1,7 @@
 namespace BookLoggerApp.Core.Models;
 
 /// <summary>
-/// Many-to-many relationship tracking books excluded from a reading goal.
-/// Excluded books and their reading sessions do not count toward the goal's progress.
+/// Books excluded from a reading goal; excluded books and their sessions don't count toward progress.
 /// </summary>
 public class GoalExcludedBook
 {

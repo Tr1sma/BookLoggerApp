@@ -5,14 +5,13 @@ namespace BookLoggerApp.Core.Helpers;
 
 /// <summary>
 /// Single source of truth for "is this reading goal still active today?".
-///
-/// <para>A goal's <see cref="ReadingGoal.EndDate"/> carries Kind=Unspecified ticks that represent
-/// the user's local calendar midnight (the UI's &lt;input type="date"&gt; picker), so it must be
-/// compared against the user's local midnight — NOT <see cref="DateTime.UtcNow"/>, which has a
-/// time-of-day component and drops the goal several hours early on its final day for users in
-/// positive-UTC zones. Both ReadingGoalRepository (DB-query cutoff) and the Android home-screen
-/// widget consume this helper so the two surfaces cannot drift (CODE_REVIEW INK-06).</para>
 /// </summary>
+/// <remarks>
+/// EndDate carries Kind=Unspecified ticks for the user's local midnight, so compare
+/// against local midnight — not DateTime.UtcNow, which drops the goal early on its final
+/// day in positive-UTC zones. Shared by ReadingGoalRepository and the Android widget so
+/// they cannot drift (CODE_REVIEW INK-06).
+/// </remarks>
 public static class GoalActivityHelper
 {
     /// <summary>

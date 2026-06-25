@@ -14,8 +14,8 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
 
     public FirebaseAnalyticsService(IAnalyticsConsentGate gate)
     {
-        // Do NOT resolve FirebaseAnalytics.GetInstance here — FirebaseApp may not be
-        // initialized yet when DI constructs this service. See GetAnalytics() below.
+        // Don't resolve FirebaseAnalytics.GetInstance here; FirebaseApp may not be
+        // initialized when DI constructs this service. See GetAnalytics() below.
         _gate = gate;
         _gate.ConsentChanged += OnConsentChanged;
     }
@@ -87,9 +87,7 @@ public sealed class FirebaseAnalyticsService : IAnalyticsService, IDisposable
 
     public void SetUserProperty(string name, string? value)
     {
-        // Gate user-profile attributes the same way as events (LogEvent/LogScreenView).
-        // Without this, profile properties are written to the Firebase analytics state
-        // even when the user has opted out. See code review BUG-07.
+        // Gate user properties like events; without this they're written even after opt-out (BUG-07).
         if (!_gate.AnalyticsAllowed) return;
         try
         {

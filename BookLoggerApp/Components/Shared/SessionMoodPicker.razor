@@ -32,7 +32,7 @@
 
     protected override void OnParametersSet()
     {
-        // Sync internal selection when the bound value changes externally (e.g. reset on save).
+        // Sync when the bound value changes externally (e.g. reset on save)
         if (!_selected.SequenceEqual(Value))
         {
             _selected = Value.ToList();

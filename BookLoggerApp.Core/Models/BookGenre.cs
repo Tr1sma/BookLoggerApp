@@ -2,9 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Many-to-many relationship between Books and Genres.
-/// </summary>
+/// <summary>Many-to-many join between Books and Genres.</summary>
 public class BookGenre
 {
     public Guid BookId { get; set; }
@@ -15,7 +13,6 @@ public class BookGenre
 
     public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 
-    // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }
 }

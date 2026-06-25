@@ -14,16 +14,14 @@ using BookLoggerApp.Core.Enums;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Service implementation for managing user plants with caching support.
+/// Manages user plants with caching support.
 ///
-/// <para><b>Concurrency model (CODE_REVIEW BUG-10 / INK-07):</b> only
-/// <c>AppSettings</c> and <c>UserEntitlement</c> carry a working, app-stamped RowVersion
-/// concurrency token (see <c>AppDbContext.StampRowVersions</c>). <c>UserPlant</c> is
-/// deliberately <i>last-writer-wins</i> (its RowVersion is configured as a non-token), so
-/// the <see cref="DbUpdateConcurrencyException"/> handlers below do NOT detect optimistic
-/// write conflicts — they translate EF's missing-row signal (the plant row was deleted
-/// concurrently, which still surfaces as <see cref="DbUpdateConcurrencyException"/> even
-/// without a token) into a friendly <see cref="ConcurrencyException"/>.</para>
+/// <para><b>Concurrency model (BUG-10 / INK-07):</b> only <c>AppSettings</c> and
+/// <c>UserEntitlement</c> carry an app-stamped RowVersion token. <c>UserPlant</c> is
+/// deliberately last-writer-wins (RowVersion is a non-token), so the
+/// <see cref="DbUpdateConcurrencyException"/> handlers below do NOT detect write conflicts —
+/// they translate EF's missing-row signal (concurrent delete) into a friendly
+/// <see cref="ConcurrencyException"/>.</para>
 /// </summary>
 public class PlantService : IPlantService
 {
@@ -83,8 +81,7 @@ public class PlantService : IPlantService
         if (plant.LastWatered == default)
             plant.LastWatered = DateTime.UtcNow;
 
-        // CODE_REVIEW BUG-05: validate after the timestamp defaults are filled (the validator
-        // requires PlantedAt/LastWatered) so blank names or out-of-range levels are rejected.
+        // BUG-05: validate after timestamp defaults are filled (validator requires PlantedAt/LastWatered).
         if (_validation is not null)
             await _validation.ValidateAndThrowAsync(plant, ct);
 
@@ -95,7 +92,7 @@ public class PlantService : IPlantService
 
     public async Task UpdateAsync(UserPlant plant, CancellationToken ct = default)
     {
-        // CODE_REVIEW BUG-05: validate the edited plant before persisting, like the create path.
+        // BUG-05: validate the edited plant before persisting, like the create path.
         if (_validation is not null)
             await _validation.ValidateAndThrowAsync(plant, ct);
 
@@ -143,13 +140,11 @@ public class PlantService : IPlantService
 
     public async Task SetActivePlantAsync(Guid plantId, CancellationToken ct = default)
     {
-        // Validate that the target plant exists
         var exists = await _unitOfWork.UserPlants.ExistsAsync(p => p.Id == plantId, ct);
         if (!exists)
             throw new EntityNotFoundException(typeof(UserPlant), plantId);
 
-        // Get all plants and update their active status
-        // Note: Using Load-Update-Save pattern instead of ExecuteUpdateAsync for compatibility with InMemory provider in tests
+        // Load-Update-Save instead of ExecuteUpdateAsync for InMemory provider compatibility in tests.
         var allPlants = await _unitOfWork.UserPlants.GetAllAsync(ct);
 
         foreach (var plant in allPlants)
@@ -163,15 +158,13 @@ public class PlantService : IPlantService
 
     public async Task<IReadOnlyList<PlantSpecies>> GetAllSpeciesAsync(CancellationToken ct = default)
     {
-        // Try to get cached species
         if (_cache.TryGetValue(SpeciesCacheKey, out List<PlantSpecies>? cached))
             return cached!;
 
-        // Load from database if not cached
         var species = await _unitOfWork.PlantSpecies.GetAllAsync(ct);
         var list = species.ToList();
 
-        // Cache for 24 hours (plant species rarely change)
+        // Cache for 24 hours (plant species rarely change).
         _cache.Set(SpeciesCacheKey, list, TimeSpan.FromHours(24));
         return list;
     }
@@ -196,7 +189,6 @@ public class PlantService : IPlantService
 
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
 
-        // Recalculate status
         plant.Status = PlantGrowthCalculator.CalculatePlantStatus(plant.LastWatered, plant.Species.WaterIntervalDays, growthMultiplier);
 
         try
@@ -214,15 +206,11 @@ public class PlantService : IPlantService
     // Z.692: AddExperienceAsync (XP-based plant leveling) removed — dead path, see IPlantService note.
 
     /// <summary>
-    /// Records a reading day for the plant if:
-    /// - Session was at least 15 minutes long
-    /// - No reading day has been recorded for this plant today
-    /// Automatically updates the plant's level based on reading days.
-    /// Formula: 3 reading days = 1 level (at GrowthRate 1.0)
+    /// Records a reading day (session >= 15 min, once per plant per day) and updates the plant's level. 3 reading days = 1 level at GrowthRate 1.0.
     /// </summary>
     public async Task RecordReadingDayAsync(Guid plantId, DateTime sessionDate, int sessionMinutes, CancellationToken ct = default)
     {
-        // Minimum 15 minutes required for a reading day
+        // Minimum 15 minutes required for a reading day.
         if (sessionMinutes < 15)
             return;
 
@@ -232,23 +220,21 @@ public class PlantService : IPlantService
 
         await RefreshPlantStatusAsync(plant, ct);
 
-        // Dead plants don't earn reading days
+        // Dead plants don't earn reading days.
         if (plant.Status == PlantStatus.Dead)
             return;
 
         var sessionDay = sessionDate.Date;
 
-        // Check if a reading day was already recorded today for this plant
+        // Skip if a reading day was already recorded today for this plant.
         if (plant.LastReadingDayRecorded?.Date == sessionDay)
             return;
 
-        // Record the reading day
         plant.ReadingDaysCount++;
         plant.LastReadingDayRecorded = sessionDay;
 
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
 
-        // Calculate new level based on reading days
         int newLevel = PlantGrowthCalculator.CalculateLevelFromReadingDays(
             plant.ReadingDaysCount,
             plant.Species.GrowthRate,
@@ -302,16 +288,13 @@ public class PlantService : IPlantService
         if (plant.CurrentLevel >= plant.Species.MaxLevel)
             throw new InvalidOperationException("Plant is already at max level");
 
-        // Calculate cost: 100 coins per level
+        // 100 coins per level.
         int cost = (plant.CurrentLevel + 1) * 100;
 
-        // Spend coins (will throw if not enough)
+        // Throws if not enough coins.
         await _settingsProvider.SpendCoinsAsync(cost, ct);
 
-        // Persist the level increase. _settingsProvider and _unitOfWork use separate DbContexts,
-        // so we can't wrap both in a single EF Core transaction — if the plant save fails after
-        // the coins are already deducted, refund them explicitly so the user isn't charged for a
-        // level they never received.
+        // Separate DbContexts can't share one EF transaction; refund coins explicitly if the plant save fails.
         try
         {
             plant.CurrentLevel++;
@@ -342,9 +325,8 @@ public class PlantService : IPlantService
         if (!species.IsAvailable)
             throw new InvalidOperationException("Plant species is not available for purchase");
 
-        // Entitlement gate (CODE_REVIEW SEC-08): the PlantShop.razor LockedFeatureButton is a
-        // UI hint only — enforce the plant's tier here so no caller (stale UI after a lapse,
-        // deep link, programmatic path) can buy a Plus/Premium plant without the subscription.
+        // Entitlement gate (SEC-08): UI lock is a hint only — enforce the plant's tier here so no
+        // caller can buy a Plus/Premium plant without the subscription.
         if (_featureGuard is not null)
         {
             FeatureKey? tierFeature = ShopTierFeatures.For(species);
@@ -354,7 +336,6 @@ public class PlantService : IPlantService
             }
         }
 
-        // Calculate dynamic cost
         int cost = await GetPlantCostAsync(speciesId, ct);
 
         var plant = new UserPlant
@@ -368,18 +349,14 @@ public class PlantService : IPlantService
             IsActive = false
         };
 
-        // CODE_REVIEW BUG-05: validate the new plant (e.g. name bounds) BEFORE charging coins, so an
-        // invalid name can't deduct coins and then fail the save.
+        // BUG-05: validate the new plant BEFORE charging coins, so an invalid name can't deduct coins then fail the save.
         if (_validation is not null)
             await _validation.ValidateAndThrowAsync(plant, ct);
 
-        // Spend coins (will throw if not enough)
+        // Throws if not enough coins.
         await _settingsProvider.SpendCoinsAsync(cost, ct);
 
-        // Create the plant. _settingsProvider and _unitOfWork use separate DbContexts, so a
-        // single EF Core transaction can't cover both operations — if the plant save fails
-        // after the coins are already deducted, refund them explicitly so the user isn't
-        // charged for a plant they never received.
+        // Separate DbContexts can't share one EF transaction; refund coins explicitly if the plant save fails.
         UserPlant result;
         try
         {
@@ -400,10 +377,8 @@ public class PlantService : IPlantService
             throw;
         }
 
-        // Increment PlantsPurchased only after the purchase actually succeeded. Previously this
-        // ran before the plant save, so a failed save would raise the dynamic price even though
-        // no plant existed. A failure here does NOT invalidate the purchase — at worst the next
-        // plant is priced as if this one hadn't been bought yet, which is self-correcting.
+        // Increment PlantsPurchased only after the purchase succeeded, so a failed save doesn't raise
+        // the dynamic price. A failure here is self-correcting (next plant priced as if unbought).
         try
         {
             await _settingsProvider.IncrementPlantsPurchasedAsync(ct);
@@ -439,8 +414,7 @@ public class PlantService : IPlantService
     }
 
     /// <summary>
-    /// Update all plant statuses based on last watered time.
-    /// Called periodically (e.g., when app starts or in background).
+    /// Updates all plant statuses based on last watered time. Called periodically (app start, background).
     /// </summary>
     public async Task UpdatePlantStatusesAsync(CancellationToken ct = default)
     {
@@ -449,9 +423,7 @@ public class PlantService : IPlantService
     }
 
     /// <summary>
-    /// Get plants that need watering soon (within 6 hours).
-    /// Honours the global growth multiplier (Story-Heart halves the effective interval)
-    /// so notifications align with the real thirst timeline the user sees in the UI.
+    /// Gets plants needing watering soon (within 6 hours). Honours the global growth multiplier so notifications match the UI thirst timeline.
     /// </summary>
     public async Task<IReadOnlyList<UserPlant>> GetPlantsNeedingWaterAsync(CancellationToken ct = default)
     {
@@ -467,7 +439,7 @@ public class PlantService : IPlantService
     }
 
     /// <summary>
-    /// Get available species for purchase based on user level.
+    /// Gets species available for purchase at the given user level.
     /// </summary>
     public async Task<IReadOnlyList<PlantSpecies>> GetAvailableSpeciesAsync(int userLevel, CancellationToken ct = default)
     {
@@ -476,10 +448,7 @@ public class PlantService : IPlantService
     }
 
     /// <summary>
-    /// Calculate the total XP boost percentage from all owned plants.
-    /// Formula per plant: baseBoost + (levelBonus per level).
-    /// Delegates to <see cref="SpecialAbilityResolver.CalculateAggregatedPlantBoost"/>
-    /// so UI display and XP-award use the same calculation.
+    /// Total XP boost percentage from all owned plants. Delegates to <see cref="SpecialAbilityResolver.CalculateAggregatedPlantBoost"/> so UI and XP-award agree.
     /// </summary>
     public async Task<decimal> CalculateTotalXpBoostAsync(CancellationToken ct = default)
     {
@@ -490,9 +459,7 @@ public class PlantService : IPlantService
     }
 
     /// <summary>
-    /// Get the dynamic cost for purchasing a plant species.
-    /// Formula: BaseCost + (PlantsPurchased × 200)
-    /// Example: First plant = 500, second = 700, third = 900
+    /// Dynamic purchase cost for a species: BaseCost + (PlantsPurchased × 200).
     /// </summary>
     public async Task<int> GetPlantCostAsync(Guid speciesId, CancellationToken ct = default)
     {
@@ -500,22 +467,17 @@ public class PlantService : IPlantService
         if (species == null)
             throw new EntityNotFoundException(typeof(PlantSpecies), speciesId);
 
-        // Get PlantsPurchased from AppSettings
         int plantsPurchased = await _settingsProvider.GetPlantsPurchasedAsync(ct);
 
-        // Calculate dynamic price
         int dynamicCost = species.BaseCost + (plantsPurchased * 200);
 
         return dynamicCost;
     }
 
     /// <summary>
-    /// Z.206 — pure, read-only status projection for the GETTER paths. Recomputes
-    /// <see cref="UserPlant.Status"/> in memory so callers display the current thirst state,
-    /// but does NOT persist and does NOT reset a Phoenix's water timer. The stateful side of a
-    /// status refresh (the Phoenix LastWatered reset + SaveChanges) lives only in the maintenance
-    /// pass (<see cref="UpdatePlantStatusesAsync"/>) and the real mutators, so a plain read never
-    /// writes to the database.
+    /// Z.206 — read-only status projection for getter paths: recomputes <see cref="UserPlant.Status"/>
+    /// in memory only. Does NOT persist and does NOT reset a Phoenix's water timer (that lives in
+    /// <see cref="UpdatePlantStatusesAsync"/> and the mutators), so a plain read never writes.
     /// </summary>
     private async Task ApplyDisplayStatusesAsync(IEnumerable<UserPlant> plants, CancellationToken ct)
     {
@@ -531,8 +493,7 @@ public class PlantService : IPlantService
 
     private async Task ApplyDisplayStatusAsync(UserPlant plant, CancellationToken ct)
     {
-        // Phoenix ownership gates a protection rule that applies across all plants, so we load
-        // the full set to determine it even when only one plant is being projected.
+        // Phoenix protection spans all plants, so load the full set even for a single projection.
         var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
         bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(allPlants, SpecialAbilityKeys.EternalPhoenix);
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
@@ -550,9 +511,8 @@ public class PlantService : IPlantService
             plant.Species.WaterIntervalDays,
             growthMultiplier);
 
-        // Phoenix protection (display only): never SHOW a plant as Dead while a Phoenix is owned.
-        // The persist path (TryApplyCurrentPlantStatus) additionally resets the Phoenix's
-        // LastWatered; a read must not, so the water timer is left untouched here (Z.206).
+        // Phoenix protection (display only): never SHOW Dead while a Phoenix is owned. Unlike the
+        // persist path, a read must not reset the Phoenix's LastWatered (Z.206).
         if (currentStatus == PlantStatus.Dead && userOwnsPhoenix)
         {
             currentStatus = PlantStatus.Wilting;
@@ -586,8 +546,7 @@ public class PlantService : IPlantService
 
     private async Task RefreshPlantStatusAsync(UserPlant plant, CancellationToken ct)
     {
-        // Phoenix ownership gates a protection rule that applies across all plants, so we
-        // load the full set to determine it even when only one plant is being refreshed.
+        // Phoenix protection spans all plants, so load the full set even for a single refresh.
         var allPlants = await _unitOfWork.UserPlants.GetUserPlantsAsync(ct);
         bool userOwnsPhoenix = SpecialAbilityResolver.AnyAlivePlantHasAbility(allPlants, SpecialAbilityKeys.EternalPhoenix);
         double growthMultiplier = await GetGlobalGrowthMultiplierAsync(ct);
@@ -617,10 +576,9 @@ public class PlantService : IPlantService
             growthMultiplier
         );
 
-        // Phoenix protection: while a Phoenix-Bonsai is owned, no plant in the garden can
-        // transition to Dead. The Phoenix itself is always owned (it self-revives), so the
-        // same check handles self-revival. For the Phoenix we also reset LastWatered to now
-        // so it doesn't re-enter the "would be dead" branch every status refresh.
+        // Phoenix protection: while a Phoenix is owned, no plant can transition to Dead (also
+        // handles the Phoenix's self-revival). Reset the Phoenix's LastWatered so it doesn't
+        // re-enter this branch every refresh.
         bool mutatedLastWatered = false;
         if (currentStatus == PlantStatus.Dead && userOwnsPhoenix)
         {

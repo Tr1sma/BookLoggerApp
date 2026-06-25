@@ -1,8 +1,8 @@
 namespace BookLoggerApp.Core.Models;
 
 /// <summary>
-/// Many-to-many relationship tracking genres assigned to a reading goal.
-/// When a goal has genres, only books matching at least one genre count toward progress (OR-logic).
+/// Genres assigned to a reading goal. When set, only books matching at least one genre
+/// count toward progress (OR-logic).
 /// </summary>
 public class GoalGenre
 {

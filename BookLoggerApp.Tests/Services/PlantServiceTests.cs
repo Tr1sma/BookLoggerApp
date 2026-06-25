@@ -28,7 +28,6 @@ public class PlantServiceTests : IDisposable
     {
         _dbHelper = DbContextTestHelper.CreateTestContext();
 
-        // Create memory cache for testing
         var services = new ServiceCollection();
         services.AddMemoryCache();
         var serviceProvider = services.BuildServiceProvider();
@@ -263,10 +262,9 @@ public class PlantServiceTests : IDisposable
 
     #endregion
 
-    // Z.692: Experience & Leveling tests removed — the AddExperienceAsync/CanLevelUpAsync/
-    // LevelUpAsync XP-based path they exercised was deleted (dead code, double-coin risk).
-    // Reading-day leveling (RecordReadingDayAsync) and coin-purchased leveling (PurchaseLevelAsync)
-    // remain covered by their own tests.
+    // Experience/leveling tests removed: the XP-based AddExperienceAsync/CanLevelUpAsync/
+    // LevelUpAsync path was deleted (dead code, double-coin risk). Reading-day and
+    // coin-purchased leveling stay covered by their own tests.
 
     #region XP Boost Tests
 
@@ -967,7 +965,7 @@ public class PlantServiceTests : IDisposable
 
     #region Coin Reward Tests
 
-    // Z.692: AddExperienceAsync coin-award tests removed with the XP-based path. RecordReadingDay
+    // AddExperienceAsync coin-award tests removed with the XP-based path; RecordReadingDay
     // and PurchaseLevel coin behaviour stays covered below.
 
     [Fact]

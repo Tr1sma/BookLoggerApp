@@ -88,7 +88,6 @@ public class WishlistServiceTests : IDisposable
     [Fact]
     public async Task MoveToLibraryAsync_PreservesOriginalDateAdded()
     {
-        // Arrange — a book wishlisted long ago
         var originalDate = new DateTime(2024, 1, 15, 8, 0, 0, DateTimeKind.Utc);
         Guid bookId;
         await using (var ctx = _factory.CreateDbContext())
@@ -106,10 +105,9 @@ public class WishlistServiceTests : IDisposable
             bookId = book.Id;
         }
 
-        // Act
         await _service.MoveToLibraryAsync(bookId);
 
-        // Assert — moved to the library, original add date untouched
+        // original add date must be untouched
         await using (var ctx = _factory.CreateDbContext())
         {
             var moved = await ctx.Books.FindAsync(bookId);

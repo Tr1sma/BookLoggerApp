@@ -2,10 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Join entity for associating UserDecorations with Shelves.
-/// Mirrors PlantShelf exactly.
-/// </summary>
+/// <summary>Join entity associating UserDecorations with Shelves. Mirrors PlantShelf.</summary>
 public class DecorationShelf
 {
     public Guid DecorationId { get; set; }
@@ -18,8 +15,6 @@ public class DecorationShelf
     [ForeignKey("ShelfId")]
     public Shelf Shelf { get; set; } = null!;
 
-    /// <summary>
-    /// Position in the shared coordinate system alongside Books and Plants on the same shelf.
-    /// </summary>
+    /// <summary>Position in the shelf's shared coordinate system (alongside Books and Plants).</summary>
     public int Position { get; set; } = 0;
 }

@@ -3,9 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace BookLoggerApp.Core.Models;
 
 /// <summary>
-/// Join entity for associating Books with Shelves.
-/// Explicitly managed to allow ordering of books within a specific shelf in the future if needed,
-/// though currently primarily for the many-to-many link.
+/// Join entity associating Books with Shelves. Explicitly managed to allow per-shelf
+/// ordering; currently mainly the many-to-many link.
 /// </summary>
 public class BookShelf
 {
@@ -17,8 +16,6 @@ public class BookShelf
     [ForeignKey("ShelfId")]
     public Shelf Shelf { get; set; } = null!;
 
-    /// <summary>
-    /// Position of the book on this specific shelf.
-    /// </summary>
+    /// <summary>Position of the book on this shelf.</summary>
     public int Position { get; set; } = 0;
 }

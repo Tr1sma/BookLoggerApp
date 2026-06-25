@@ -18,8 +18,7 @@ public class StatsServiceTests : IDisposable
     {
         _context = TestDbContext.Create();
         _unitOfWork = new UnitOfWork(_context);
-        // Pin UTC so this fixture's UTC-authored timestamps group deterministically regardless of
-        // the CI/dev machine zone; local-time behaviour is covered by dedicated zone tests.
+        // Pin UTC so UTC-authored timestamps group deterministically regardless of machine zone.
         _service = new StatsService(_unitOfWork, TimeZoneInfo.Utc);
     }
 
@@ -31,9 +30,8 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetLongestStreakAsync_GroupsSessionsByLocalCalendarDay()
     {
-        // LOG-02: the longest streak must bucket sessions by the user's LOCAL calendar day, like the
-        // current streak — not by raw UTC. Two sessions a couple of hours apart that straddle UTC
-        // midnight are ONE local day in UTC+2, so the longest streak is 1, not 2.
+        // Longest streak must bucket by local calendar day, not UTC: two sessions straddling UTC
+        // midnight are one local day in UTC+2, so the streak is 1, not 2.
         var tzPlus2 = TimeZoneInfo.CreateCustomTimeZone("t+2", TimeSpan.FromHours(2), "t+2", "t+2");
         var service = new StatsService(_unitOfWork, tzPlus2);
 
@@ -49,7 +47,6 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetCurrentStreakAsync_ShouldIgnoreOpenPlaceholderSessions()
     {
-        // Arrange
         var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test Book", Author = "Author" });
         await _context.SaveChangesAsync();
         var today = DateTime.UtcNow.Date;
@@ -70,17 +67,14 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var streak = await _service.GetCurrentStreakAsync();
 
-        // Assert
         streak.Should().Be(1);
     }
 
     [Fact]
     public async Task GetLongestStreakAsync_ShouldIgnoreOpenPlaceholderSessions()
     {
-        // Arrange
         var book = await _unitOfWork.Books.AddAsync(new Book { Title = "Test Book", Author = "Author" });
         await _context.SaveChangesAsync();
         var today = DateTime.UtcNow.Date;
@@ -113,10 +107,8 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var longestStreak = await _service.GetLongestStreakAsync();
 
-        // Assert
         longestStreak.Should().Be(2);
     }
 
@@ -125,19 +117,14 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetAverageRatingByCategoryAsync_WithNoBooks_ShouldReturnZero()
     {
-        // Arrange - No books in database
-
-        // Act
         var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
 
-        // Assert
         average.Should().Be(0);
     }
 
     [Fact]
     public async Task GetAverageRatingByCategoryAsync_WithSingleBook_ShouldReturnCorrectAverage()
     {
-        // Arrange
         var book = new Book
         {
             Title = "Test Book",
@@ -148,17 +135,14 @@ public class StatsServiceTests : IDisposable
         await _unitOfWork.Books.AddAsync(book);
         await _context.SaveChangesAsync();
 
-        // Act
         var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
 
-        // Assert
         average.Should().Be(5.0);
     }
 
     [Fact]
     public async Task GetAverageRatingByCategoryAsync_WithMultipleBooks_ShouldCalculateCorrectly()
     {
-        // Arrange
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Book 1",
@@ -184,17 +168,14 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
 
-        // Assert
         average.Should().BeApproximately(4.0, 0.01); // (5 + 3 + 4) / 3
     }
 
     [Fact]
     public async Task GetAverageRatingByCategoryAsync_ShouldIgnoreNullRatings()
     {
-        // Arrange
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Book 1",
@@ -220,17 +201,14 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Plot);
 
-        // Assert
         average.Should().BeApproximately(4.0, 0.01); // (5 + 3) / 2
     }
 
     [Fact]
     public async Task GetAverageRatingByCategoryAsync_ShouldOnlyIncludeCompletedBooks()
     {
-        // Arrange
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Completed Book",
@@ -256,17 +234,14 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var average = await _service.GetAverageRatingByCategoryAsync(RatingCategory.WritingStyle);
 
-        // Assert
         average.Should().Be(5.0); // Only completed book
     }
 
     [Fact]
     public async Task GetAllAverageRatingsAsync_ShouldReturnAllCategories()
     {
-        // Arrange
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Test Book",
@@ -282,10 +257,8 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var averages = await _service.GetAllAverageRatingsAsync();
 
-        // Assert
         averages.Should().HaveCount(11);
         averages[RatingCategory.Characters].Should().Be(5.0);
         averages[RatingCategory.Plot].Should().Be(4.0);
@@ -303,7 +276,6 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetTopRatedBooksAsync_ShouldReturnBooksOrderedByRating()
     {
-        // Arrange
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Low Rated",
@@ -332,10 +304,8 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var topBooks = await _service.GetTopRatedBooksAsync(10);
 
-        // Assert
         topBooks.Should().HaveCount(3);
         topBooks[0].Book.Title.Should().Be("High Rated");
         topBooks[0].AverageRating.Should().Be(5.0);
@@ -346,7 +316,6 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetTopRatedBooksAsync_ShouldRespectCountParameter()
     {
-        // Arrange
         for (int i = 1; i <= 15; i++)
         {
             await _unitOfWork.Books.AddAsync(new Book
@@ -359,17 +328,14 @@ public class StatsServiceTests : IDisposable
         }
         await _context.SaveChangesAsync();
 
-        // Act
         var topBooks = await _service.GetTopRatedBooksAsync(5);
 
-        // Assert
         topBooks.Should().HaveCount(5);
     }
 
     [Fact]
     public async Task GetTopRatedBooksAsync_FilteredByCategory_ShouldOnlyConsiderThatCategory()
     {
-        // Arrange
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Best Plot",
@@ -389,11 +355,9 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var topByPlot = await _service.GetTopRatedBooksAsync(10, RatingCategory.Plot);
         var topByCharacters = await _service.GetTopRatedBooksAsync(10, RatingCategory.Characters);
 
-        // Assert
         topByPlot[0].Book.Title.Should().Be("Best Plot");
         topByCharacters[0].Book.Title.Should().Be("Best Characters");
     }
@@ -401,7 +365,6 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetBooksWithRatingsAsync_ShouldReturnAllCompletedBooks()
     {
-        // Arrange
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Completed Book 1",
@@ -427,10 +390,8 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var books = await _service.GetBooksWithRatingsAsync();
 
-        // Assert
         books.Should().HaveCount(2);
         books.All(b => b.Book.Status == ReadingStatus.Completed).Should().BeTrue();
     }
@@ -438,7 +399,6 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetBooksWithRatingsAsync_ShouldIncludeRatingsDictionary()
     {
-        // Arrange
         await _unitOfWork.Books.AddAsync(new Book
         {
             Title = "Test Book",
@@ -451,10 +411,8 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var books = await _service.GetBooksWithRatingsAsync();
 
-        // Assert
         var book = books.First();
         book.Ratings.Should().ContainKey(RatingCategory.Characters);
         book.Ratings[RatingCategory.Characters].Should().Be(5);
@@ -473,7 +431,6 @@ public class StatsServiceTests : IDisposable
     [InlineData(RatingCategory.WorldBuilding)]
     public async Task GetAverageRatingByCategoryAsync_AllCategories_ShouldWork(RatingCategory category)
     {
-        // Arrange
         var book = new Book
         {
             Title = "Test Book",
@@ -489,10 +446,8 @@ public class StatsServiceTests : IDisposable
         await _unitOfWork.Books.AddAsync(book);
         await _context.SaveChangesAsync();
 
-        // Act
         var average = await _service.GetAverageRatingByCategoryAsync(category);
 
-        // Assert
         average.Should().BeGreaterThan(0);
         average.Should().BeLessThanOrEqualTo(5);
     }
@@ -507,10 +462,8 @@ public class StatsServiceTests : IDisposable
     [InlineData(-100)]
     public async Task GetAveragePagesPerDayAsync_WithZeroOrNegativeDays_ShouldThrowArgumentOutOfRangeException(int days)
     {
-        // Act
         var act = () => _service.GetAveragePagesPerDayAsync(days);
 
-        // Assert
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>()
             .WithParameterName("days");
     }
@@ -521,10 +474,8 @@ public class StatsServiceTests : IDisposable
     [InlineData(-100)]
     public async Task GetAverageMinutesPerDayAsync_WithZeroOrNegativeDays_ShouldThrowArgumentOutOfRangeException(int days)
     {
-        // Act
         var act = () => _service.GetAverageMinutesPerDayAsync(days);
 
-        // Assert
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>()
             .WithParameterName("days");
     }
@@ -532,20 +483,16 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetAveragePagesPerDayAsync_WithPositiveDays_ShouldNotThrow()
     {
-        // Act
         var result = await _service.GetAveragePagesPerDayAsync(7);
 
-        // Assert
         result.Should().BeGreaterThanOrEqualTo(0);
     }
 
     [Fact]
     public async Task GetAverageMinutesPerDayAsync_WithPositiveDays_ShouldNotThrow()
     {
-        // Act
         var result = await _service.GetAverageMinutesPerDayAsync(7);
 
-        // Assert
         result.Should().BeGreaterThanOrEqualTo(0);
     }
 
@@ -556,7 +503,6 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetAverageRatingByCategoryAsync_WithDateRange_ShouldFilterCorrectly()
     {
-        // Arrange
         var oldDate = DateTime.UtcNow.AddDays(-30);
         var recentDate = DateTime.UtcNow.AddDays(-5);
 
@@ -579,7 +525,6 @@ public class StatsServiceTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        // Act
         var allAverage = await _service.GetAverageRatingByCategoryAsync(RatingCategory.Characters);
         var filteredAverage = await _service.GetAverageRatingByCategoryAsync(
             RatingCategory.Characters,
@@ -587,7 +532,6 @@ public class StatsServiceTests : IDisposable
             endDate: DateTime.UtcNow
         );
 
-        // Assert
         allAverage.Should().BeApproximately(3.5, 0.01); // (2 + 5) / 2
         filteredAverage.Should().Be(5.0); // Only recent book
     }
@@ -640,9 +584,8 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetCurrentStreakAsync_UsesLocalCalendarDay()
     {
-        // LOG-02: with a +5h zone, a session at 2025-06-09 22:00 UTC falls on local 2025-06-10
-        // (yesterday relative to a local "today" of 2025-06-11) → streak 1. Under raw-UTC day
-        // boundaries it would stay on 2025-06-09 (neither today nor yesterday) → streak 0.
+        // With a +5h zone, a session at 2025-06-09 22:00 UTC falls on local 2025-06-10 (yesterday
+        // relative to local "today" 2025-06-11) → streak 1. Raw UTC would give streak 0.
         var tzPlus5 = TimeZoneInfo.CreateCustomTimeZone("t+5", TimeSpan.FromHours(5), "t+5", "t+5");
         using var ctx = TestDbContext.Create();
         var uow = new UnitOfWork(ctx);
@@ -666,7 +609,7 @@ public class StatsServiceTests : IDisposable
     [Fact]
     public async Task GetReadingTrendAsync_GroupsByLocalDate_NotUtc()
     {
-        // LOG-08: a session at 22:00 UTC belongs to the next local day for a +5h user.
+        // A session at 22:00 UTC belongs to the next local day for a +5h user.
         var tzPlus5 = TimeZoneInfo.CreateCustomTimeZone("t+5", TimeSpan.FromHours(5), "t+5", "t+5");
         using var ctx = TestDbContext.Create();
         var uow = new UnitOfWork(ctx);

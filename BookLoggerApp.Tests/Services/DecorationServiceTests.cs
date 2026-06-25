@@ -75,9 +75,9 @@ public class DecorationServiceTests : IDisposable
         await _decorationService.PurchaseDecorationAsync(shopItem.Id);
         await _decorationService.PurchaseDecorationAsync(shopItem.Id);
 
-        // Assert — coins deducted should be 2 × 200 = 400 (no multiplier)
+        // Assert — static cost, no multiplier: 2 × 200 deducted
         var coins = await _settingsProvider.GetUserCoinsAsync();
-        coins.Should().Be(600); // 1000 - 200 - 200
+        coins.Should().Be(600);
     }
 
     [Fact]

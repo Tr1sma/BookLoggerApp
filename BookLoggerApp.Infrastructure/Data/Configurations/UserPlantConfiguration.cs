@@ -35,10 +35,7 @@ public class UserPlantConfiguration : IEntityTypeConfiguration<UserPlant>
         builder.Property(up => up.PlantedAt)
             .IsRequired();
 
-        // Indexes
         builder.HasIndex(up => up.SpeciesId);
         builder.HasIndex(up => up.IsActive);
-
-        // Relationship configured in PlantSpeciesConfiguration
     }
 }

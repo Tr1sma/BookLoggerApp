@@ -4,22 +4,18 @@ using BookLoggerApp.Core.Enums;
 
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Represents a single reading session for a book.
-/// </summary>
+/// <summary>A single reading session for a book.</summary>
 public class ReadingSession
 {
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    // Foreign Key
     public Guid BookId { get; set; }
-    public Book Book { get; set; } = null!; // Navigation Property
+    public Book Book { get; set; } = null!;
 
-    // Session Data
     public DateTime StartedAt { get; set; } = DateTime.UtcNow;
     public DateTime? EndedAt { get; set; }
 
-    [Range(0, 1440)] // Max 24 hours
+    [Range(0, 1440)] // Max 24 hours.
     public int Minutes { get; set; } = 0;
 
     [Range(0, 10000)]
@@ -28,21 +24,18 @@ public class ReadingSession
     public int? StartPage { get; set; }
     public int? EndPage { get; set; }
 
-    // Gamification
-    public int XpEarned { get; set; } = 0; // Calculated on save
+    public int XpEarned { get; set; } = 0; // Calculated on save.
 
-    // Notes
     [MaxLength(1000)]
     public string? Notes { get; set; }
 
-    // Mood/Trigger-Tags (1-3) als Kind-Entities; Cascade-Delete mit der Sitzung.
+    // Mood/trigger tags (1-3) as child entities; cascade-deleted with the session.
     public ICollection<ReadingSessionMood> Moods { get; set; } = new List<ReadingSessionMood>();
 
-    /// <summary>Bequemer Zugriff auf die getaggten Stimmungen (nicht gemappt).</summary>
+    /// <summary>Convenience access to the tagged moods (not mapped).</summary>
     [NotMapped]
     public IReadOnlyList<SessionMood> MoodList => Moods.Select(m => m.Mood).Distinct().ToList();
 
-    // Concurrency Control
     [Timestamp]
     public byte[]? RowVersion { get; set; }
 }

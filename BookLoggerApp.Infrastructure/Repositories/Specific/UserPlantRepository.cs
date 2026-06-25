@@ -15,8 +15,8 @@ public class UserPlantRepository : Repository<UserPlant>, IUserPlantRepository
 
     public async Task<UserPlant?> GetActivePlantAsync(CancellationToken ct = default)
     {
-        // Hidden-by-entitlement plants (e.g. prestige plants after a Premium→Free downgrade)
-        // must never surface as the active plant — they are paid content (CODE_REVIEW SEC-11).
+        // Hidden-by-entitlement plants (e.g. prestige after a Premium→Free downgrade) are paid
+        // content and must never surface as the active plant (SEC-11).
         return await _dbSet
             .Include(up => up.Species)
             .Where(up => !up.IsHiddenByEntitlement)
@@ -25,12 +25,9 @@ public class UserPlantRepository : Repository<UserPlant>, IUserPlantRepository
 
     public async Task<IEnumerable<UserPlant>> GetUserPlantsAsync(CancellationToken ct = default)
     {
-        // Filter out hidden-by-entitlement plants so downgraded users neither see them in the
-        // garden nor have them counted in boost/status math (CODE_REVIEW SEC-11), mirroring
-        // the IsHiddenByEntitlement filter already applied in ShelfService.
-        // NB (INK-10): intentionally TRACKED. PlantService.GetAllAsync feeds these plants into
-        // RefreshPlantStatusesAsync, which mutates growth/water/status and persists via
-        // SaveChanges — AsNoTracking here would silently drop those updates.
+        // Filter out hidden-by-entitlement plants so downgraded users don't see/count them (SEC-11).
+        // INK-10: intentionally TRACKED — PlantService.GetAllAsync mutates these via
+        // RefreshPlantStatusesAsync and persists; AsNoTracking would silently drop those updates.
         return await _dbSet
             .Include(up => up.Species)
             .Where(up => !up.IsHiddenByEntitlement)

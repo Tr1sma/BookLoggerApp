@@ -10,7 +10,7 @@ using BookLoggerApp.Core.Helpers;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Service implementation for tracking reading progress.
+/// Tracks reading progress.
 /// </summary>
 public class ProgressService : IProgressService
 {
@@ -46,32 +46,25 @@ public class ProgressService : IProgressService
         _settingsProvider = settingsProvider;
         _analytics = analytics ?? NoOpAnalyticsService.Instance;
         _validation = validation;
-        // CODE_REVIEW LOG-02: streak "today"/session days use the local calendar; injectable
-        // (default TimeZoneInfo.Local) for deterministic tests.
+        // LOG-02: streak days use the local calendar; injectable (default Local) for deterministic tests.
         _timeZone = timeZone ?? TimeZoneInfo.Local;
     }
 
     public async Task<SessionSaveResult> AddSessionAsync(ReadingSession session, CancellationToken ct = default)
     {
-        // CODE_REVIEW BUG-05: validate the externally supplied session (book id, started/ended
-        // times, minute/page bounds) before awarding XP or persisting anything.
+        // BUG-05: validate the externally supplied session before awarding XP or persisting.
         if (_validation is not null)
             await _validation.ValidateAndThrowAsync(session, ct);
 
-        // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 
-        // Snapshot the user level BEFORE the session XP is awarded. The Story-Heart
-        // first-of-day bonus must be calculated against the pre-session level even if
-        // the session itself triggers a level-up.
+        // Snapshot level BEFORE session XP: the Story-Heart first-of-day bonus uses the pre-session level.
         var settingsBeforeSession = await _settingsProvider.GetSettingsAsync(ct);
         int levelAtSessionStart = settingsBeforeSession.UserLevel;
 
-        // Award the streak bonus only on the first qualifying session of the day
-        // so all save paths use the same reward logic.
+        // Streak bonus only on the first qualifying session of the day.
         var streak = await ResolveStreakForSessionAsync(session, ct);
 
-        // Award XP using the progression system (with plant boost and streak bonus)
         var progressionResult = await _progressionService.AwardSessionXpAsync(
             session.Minutes,
             session.PagesRead,
@@ -90,8 +83,7 @@ public class ProgressService : IProgressService
             await PersistGuardianCooldownAsync(streak.GuardianToUpdate.Value, ct);
         }
 
-        // Record reading day for active plant (for plant leveling)
-        // Plants level up based on reading days (15+ min sessions), not XP
+        // Plants level up on reading days (15+ min sessions), not XP.
         if (activePlant != null)
         {
             await _plantService.RecordReadingDayAsync(
@@ -106,7 +98,6 @@ public class ProgressService : IProgressService
 
         bool goalCompleted = await _goalService.RecalculateGoalProgressAsync(ct);
 
-        // Notify that goals may have changed
         _goalService.NotifyGoalsChanged();
 
         return new SessionSaveResult
@@ -123,7 +114,7 @@ public class ProgressService : IProgressService
 
     public async Task<ReadingSession> StartSessionAsync(Guid bookId, CancellationToken ct = default)
     {
-        // Start reading the book if it's in Planned status
+        // Start reading the book if it's still Planned.
         var book = await _bookService.GetByIdAsync(bookId, ct);
         if (book?.Status == ReadingStatus.Planned)
         {
@@ -148,7 +139,6 @@ public class ProgressService : IProgressService
 
     public async Task<SessionEndResult> EndSessionAsync(Guid sessionId, int pagesRead, int? durationMinutes = null, IReadOnlyList<SessionMood>? moods = null, CancellationToken ct = default)
     {
-        // Validate input
         if (pagesRead < 0)
             throw new ArgumentOutOfRangeException(nameof(pagesRead), "Pages read cannot be negative");
 
@@ -159,7 +149,7 @@ public class ProgressService : IProgressService
         var startPage = session.StartPage ?? 0;
         var absoluteEndPage = startPage + pagesRead;
 
-        // Validate pages read against book page count
+        // Validate end page against book page count.
         var book = await _bookService.GetByIdAsync(session.BookId, ct);
         if (book?.PageCount.HasValue == true && absoluteEndPage > book.PageCount.Value)
             throw new ArgumentOutOfRangeException(nameof(pagesRead),
@@ -177,33 +167,22 @@ public class ProgressService : IProgressService
             session.Minutes = Math.Max(0, (int)(session.EndedAt.Value - session.StartedAt).TotalMinutes);
         }
 
-        // Z.375 — Session completion fans out several persistent writes (session XP via
-        // ProgressionService, plant reading-day via PlantService, the session row + moods via
-        // this UnitOfWork, the guardian cooldown, Story-Heart coin/bonus-XP via the settings
-        // provider, and goal recompute). These run across DISTINCT, transient DbContexts — each
-        // service owns its own IUnitOfWork/AppDbContext and therefore its own SQLite connection —
-        // so a single EF transaction cannot span the chain (EF transactions are per-connection).
-        // The sequence is deliberately non-atomic; it is ordered so that the side-effects most
-        // expensive to repeat are deferred until AFTER the main session save succeeds: the
-        // guardian cooldown (PersistGuardianCooldownAsync) and the Story-Heart bonuses are only
-        // applied once the session row is committed, so a failed save never burns a cooldown or
-        // double-awards a bonus. Each step is individually idempotent-safe on retry. In this
-        // single-user offline app a mid-chain crash leaves at worst a slightly stale streak/goal
-        // total that the next session recomputes — an acceptable trade vs. unifying every service
-        // onto one shared connection.
+        // Z.375 — Session completion fans out writes across DISTINCT transient DbContexts (each
+        // service owns its own connection), so no single EF transaction can span the chain.
+        // Deliberately non-atomic and ordered so expensive-to-repeat side effects (guardian
+        // cooldown, Story-Heart bonuses) run only AFTER the session row commits — a failed save
+        // never burns a cooldown or double-awards. Each step is idempotent-safe on retry; in this
+        // single-user offline app a mid-chain crash leaves at worst a stale total the next session fixes.
 
-        // Get active plant for boost calculation
         var activePlant = await _plantService.GetActivePlantAsync(ct);
 
-        // Snapshot the user level BEFORE the session XP is awarded (see AddSessionAsync).
+        // Snapshot level BEFORE session XP (see AddSessionAsync).
         var settingsBeforeSession = await _settingsProvider.GetSettingsAsync(ct);
         int levelAtSessionStart = settingsBeforeSession.UserLevel;
 
-        // Award the streak bonus only on the first qualifying session of the day
-        // so active timer sessions and direct session saves use the same logic.
+        // Streak bonus only on the first qualifying session of the day.
         var streak = await ResolveStreakForSessionAsync(session, ct);
 
-        // Award XP using the new progression system (with streak bonus)
         var progressionResult = await _progressionService.AwardSessionXpAsync(
             session.Minutes,
             pagesRead,
@@ -212,18 +191,15 @@ public class ProgressService : IProgressService
             ct
         );
 
-        // Store the XP earned in the session
         session.XpEarned = progressionResult.XpEarned;
 
-        // Persist mood/trigger tags (1-3); the session was just started, so the
-        // navigation is empty and we simply add the new child rows.
+        // Persist mood/trigger tags (1-3); navigation is empty so just add child rows.
         foreach (var mood in SessionMoodHelper.Clamp(moods))
         {
             session.Moods.Add(new ReadingSessionMood { ReadingSessionId = session.Id, Mood = mood });
         }
 
-        // Record reading day for active plant (for plant leveling)
-        // Plants level up based on reading days (15+ min sessions), not XP
+        // Plants level up on reading days (15+ min sessions), not XP.
         if (activePlant != null)
         {
             await _plantService.RecordReadingDayAsync(
@@ -246,7 +222,6 @@ public class ProgressService : IProgressService
 
         bool goalCompleted = await _goalService.RecalculateGoalProgressAsync(ct);
 
-        // Notify that goals may have changed (pages/minutes progress)
         _goalService.NotifyGoalsChanged();
 
         _analytics.LogEvent(AnalyticsEventNames.SessionEnded, AnalyticsParamBuilder.Create()
@@ -256,7 +231,6 @@ public class ProgressService : IProgressService
             .Add(AnalyticsParamNames.TriggeredLevelUp, progressionResult.LevelUp is not null)
             .BuildMutable());
 
-        // Return both session and progression result for UI celebrations
         return new SessionEndResult
         {
             Session = session,
@@ -271,7 +245,7 @@ public class ProgressService : IProgressService
 
     public async Task UpdateSessionAsync(ReadingSession session, CancellationToken ct = default)
     {
-        // CODE_REVIEW BUG-05: validate the edited session before persisting, like AddSessionAsync.
+        // BUG-05: validate the edited session before persisting, like AddSessionAsync.
         if (_validation is not null)
             await _validation.ValidateAndThrowAsync(session, ct);
 
@@ -342,17 +316,13 @@ public class ProgressService : IProgressService
     public Task<int> GetCurrentStreakAsync(CancellationToken ct = default)
         => GetCurrentStreakAsync(DateTime.UtcNow, ct);
 
-    // Internal clock seam so the local-day streak logic stays deterministically testable
-    // with a fixed "now" (the public method passes DateTime.UtcNow).
+    // Internal clock seam so local-day streak logic stays deterministically testable with a fixed "now".
     internal async Task<int> GetCurrentStreakAsync(DateTime utcNow, CancellationToken ct)
     {
-        // LOG-02: anchor "today" and each session's day to the user's local calendar so the
-        // displayed streak matches the goals feature's local-midnight convention.
+        // LOG-02: anchor "today" to the local calendar to match the goals feature's local-midnight convention.
         var localToday = LocalTimeHelper.LocalDate(utcNow, _timeZone);
 
-        // Only load sessions from the last year instead of ALL sessions.
-        // A streak longer than 365 days is unrealistic, and this avoids
-        // loading thousands of records for long-time users.
+        // Load only the last year (a >365-day streak is unrealistic; avoids loading thousands of rows).
         var recentSessions = await _unitOfWork.ReadingSessions
             .GetSessionsInRangeAsync(utcNow.AddDays(-365), utcNow, ct);
 
@@ -370,9 +340,8 @@ public class ProgressService : IProgressService
             return new ResolvedStreak(0, false, null);
         }
 
-        // LOG-02: bucket the session and its neighbours by the user's LOCAL calendar day (like
-        // GetCurrentStreakAsync), so a session that crosses UTC midnight is attributed to the same
-        // day everywhere. The range query still filters by the raw UTC instant.
+        // LOG-02: bucket sessions by LOCAL calendar day so UTC-midnight crossings attribute consistently.
+        // The range query still filters by the raw UTC instant.
         var sessionDate = LocalTimeHelper.LocalDate(session.StartedAt, _timeZone);
 
         var recentSessions = (await _unitOfWork.ReadingSessions
@@ -391,9 +360,9 @@ public class ProgressService : IProgressService
         var priorSessions = recentSessions.Where(s => s.Id != session.Id).ToList();
         var regularStreak = ReadingStreakHelper.CalculateInclusiveStreak(priorSessions, sessionDate, _timeZone);
 
-        // Streak-Wächter: fires only when the regular streak would be 1 (yesterday missed),
-        // there was a qualifying session day-before-yesterday (so a prior streak existed),
-        // and an alive Chronikbaum is off cooldown.
+        // Streak guardian: fires only when the regular streak would be 1 (yesterday missed),
+        // a qualifying session existed day-before-yesterday (prior streak), and an alive
+        // guardian plant is off cooldown.
         if (regularStreak != 1)
         {
             return new ResolvedStreak(regularStreak, false, null);
@@ -462,9 +431,8 @@ public class ProgressService : IProgressService
             coinBonus = SpecialAbilityResolver.StoryHeartSessionCoinBonus;
         }
 
-        // LOG-02: "first qualifying session of the day" uses the user's LOCAL calendar day, same as
-        // the streak logic. Load a generous UTC instant window (the local day can straddle two UTC
-        // days) and match by local day in memory.
+        // LOG-02: "first qualifying session of the day" uses the LOCAL calendar day. Load a wide UTC
+        // window (a local day can straddle two UTC days) and match by local day in memory.
         var sessionLocalDate = LocalTimeHelper.LocalDate(session.StartedAt, _timeZone);
         var nearbySessions = await _unitOfWork.ReadingSessions
             .GetSessionsInRangeAsync(session.StartedAt.AddDays(-1), session.StartedAt.AddDays(1), ct);
@@ -482,9 +450,8 @@ public class ProgressService : IProgressService
 
             if (bonusXp > 0)
             {
-                // Capture the LevelUp so the caller can surface a celebration — the
-                // bonus XP is awarded AFTER the main session save, so any level-up it
-                // triggers never showed up in ProgressionResult.LevelUp before.
+                // Capture the LevelUp for the caller's celebration: bonus XP is awarded AFTER the
+                // main session save, so its level-up isn't in ProgressionResult.LevelUp.
                 bonusLevelUp = await _progressionService.AwardBonusXpAsync(bonusXp, ct);
             }
         }

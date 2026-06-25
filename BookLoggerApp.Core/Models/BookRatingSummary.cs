@@ -1,26 +1,18 @@
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// DTO containing a book with its rating summary information.
-/// </summary>
+/// <summary>DTO pairing a book with its rating summary.</summary>
 public class BookRatingSummary
 {
     public Book Book { get; set; } = null!;
 
-    /// <summary>
-    /// Average of all category ratings (excluding Overall).
-    /// </summary>
+    /// <summary>Average of all category ratings (excluding Overall).</summary>
     public double AverageRating { get; set; }
 
-    /// <summary>
-    /// Dictionary of all ratings by category.
-    /// </summary>
+    /// <summary>All ratings keyed by category.</summary>
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public Dictionary<RatingCategory, int?> Ratings { get; set; } = new();
 
-    /// <summary>
-    /// Creates a BookRatingSummary from a Book instance.
-    /// </summary>
+    /// <summary>Builds a summary from a <see cref="Book"/>.</summary>
     public static BookRatingSummary FromBook(Book book)
     {
         var summary = new BookRatingSummary

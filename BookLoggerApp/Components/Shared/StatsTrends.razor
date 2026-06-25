@@ -16,7 +16,6 @@
     }
     else
     {
-        <!-- 1. Lese-Kalender (Heatmap) -->
         <section class="advanced-stats-section">
             <div class="advanced-stats-card">
                 <div class="advanced-stats-header">
@@ -63,7 +62,6 @@
             </div>
         </section>
 
-        <!-- 2. Wochentag-Verteilung -->
         <section class="advanced-stats-section">
             <div class="advanced-stats-card">
                 <h3>@L["StatsTrends_WeekdayDist"]</h3>
@@ -87,7 +85,6 @@
             </div>
         </section>
 
-        <!-- 3. Tageszeit-Analyse -->
         <section class="advanced-stats-section">
             <div class="advanced-stats-card">
                 <div class="advanced-stats-header">
@@ -132,7 +129,6 @@
             </div>
         </section>
 
-        <!-- 4. Session-Längen -->
         <section class="advanced-stats-section">
             <div class="advanced-stats-card">
                 <h3>@L["StatsTrends_SessionLength"]</h3>
@@ -157,7 +153,6 @@
             </div>
         </section>
 
-        <!-- 5. Monatlicher Verlauf -->
         <section class="advanced-stats-section">
             <div class="advanced-stats-card">
                 <div class="advanced-stats-header">
@@ -190,10 +185,8 @@
             </div>
         </section>
 
-        <!-- 6 + 7. Geschwindigkeit & Lesedauer -->
         <section class="advanced-stats-section">
             <div class="compact-stats-row">
-                <!-- 6. Geschwindigkeit -->
                 <div class="compact-stat-card">
                     <span class="compact-stat-icon">⚡</span>
                     <span class="compact-stat-label">@L["StatsTrends_Speed"]</span>
@@ -206,7 +199,6 @@
                     }
                 </div>
 
-                <!-- 7. Lesedauer -->
                 <div class="compact-stat-card">
                     <span class="compact-stat-icon">📖</span>
                     <span class="compact-stat-label">@L["StatsTrends_ReadingTime"]</span>
@@ -224,14 +216,12 @@
 </div>
 
 @code {
-    // Chart data model
     private class ChartDataPoint
     {
         public string Label { get; set; } = "";
         public decimal Value { get; set; }
     }
 
-    // Heatmap cell model
     private class HeatmapCell
     {
         public int Row { get; set; }
@@ -241,20 +231,17 @@
         public bool IsEmpty { get; set; }
     }
 
-    // Chart data lists
     private List<ChartDataPoint> _weekdayChartData = new();
     private List<ChartDataPoint> _sessionLengthChartData = new();
     private List<ChartDataPoint> _monthlyChartData = new();
 
-    // Chart options
     private ApexChartOptions<ChartDataPoint> _weekdayChartOptions = new();
     private ApexChartOptions<ChartDataPoint> _sessionLengthChartOptions = new();
     private ApexChartOptions<ChartDataPoint> _monthlyChartOptions = new();
 
-    // German weekday abbreviations (Monday-first)
+    // Weekday abbreviations, Monday-first
     private static readonly string[] WeekdayLabels = { "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So" };
 
-    // Month abbreviations
     private static readonly string[] MonthLabels = { "Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez" };
 
     protected override async Task OnInitializedAsync()
@@ -329,7 +316,7 @@
 
     private void BuildChartData()
     {
-        // Weekday data (Monday first)
+        // Weekday data, Monday first
         DayOfWeek[] orderedDays = { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday,
                                     DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday };
 
@@ -339,7 +326,6 @@
             Value = ViewModel.WeekdayData.GetValueOrDefault(day, 0)
         }).ToList();
 
-        // Session length data
         string[] sessionBuckets = { "<15", "15-30", "30-60", "1-2h", ">2h" };
         string[] sessionLabels = { "<15m", "15-30m", "30-60m", "1-2h", ">2h" };
 
@@ -349,7 +335,6 @@
             Value = ViewModel.SessionLengthData.GetValueOrDefault(bucket, 0)
         }).ToList();
 
-        // Monthly volume data
         _monthlyChartData = Enumerable.Range(1, 12).Select(month => new ChartDataPoint
         {
             Label = MonthLabels[month - 1],

@@ -43,9 +43,7 @@ public class FilePickerService : IFilePickerService
                 return null;
             }
 
-            // Start Modification: Handle virtual files (e.g. Google Drive) where FullPath is null
-            // Check if path is usable (local file)
-            // If FullPath is null, OR it's a content URI, OR it doesn't exist on disk -> treat as virtual
+            // Virtual file (e.g. Google Drive): no usable local path — null FullPath, content URI, or not on disk.
             bool isVirtual = string.IsNullOrEmpty(result.FullPath)
                              || result.FullPath.StartsWith("content://")
                              || !File.Exists(result.FullPath);
@@ -92,7 +90,6 @@ public class FilePickerService : IFilePickerService
                 _migrationService.Log("[FilePicker] Copied virtual file to cache.");
                 return cacheFile;
             }
-            // End Modification
 
             return result.FullPath;
         }

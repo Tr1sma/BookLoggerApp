@@ -84,8 +84,8 @@ public static class AnalyticsParamNames
     public const string DismissReason = "dismiss_reason";
     public const string CtaSource = "cta_source";
 
-    // Forbidden-key set used by AnalyticsParamBuilder (PII guard). Kept so a known-PII key gets a
-    // precise diagnostic; the Allowlist below is the primary gate (Z.501).
+    // PII guard denylist used by AnalyticsParamBuilder for precise diagnostics; the Allowlist
+    // below is the primary gate.
     public static readonly HashSet<string> Forbidden = new(StringComparer.OrdinalIgnoreCase)
     {
         "title", "book_title", "author", "isbn", "quote", "quote_text", "annotation",
@@ -97,11 +97,9 @@ public static class AnalyticsParamNames
     };
 
     /// <summary>
-    /// Z.501: allowlist of every param key the app may emit — derived by reflection from the
-    /// <c>const string</c> fields above so it can never drift from the declared keys. The builder
-    /// rejects (DEBUG: throws, RELEASE: drops) any key not in this set, which is strictly safer
-    /// than the denylist alone: a newly-introduced raw-content key is blocked by default unless a
-    /// const is added for it here. Case-insensitive to match <see cref="Forbidden"/>.
+    /// Allowlist of every emittable param key, derived by reflection from the <c>const string</c>
+    /// fields above so it can't drift. Any key not in this set is rejected, blocking new
+    /// raw-content keys by default. Case-insensitive to match <see cref="Forbidden"/>.
     /// </summary>
     public static readonly HashSet<string> Allowed = BuildAllowed();
 
@@ -111,8 +109,7 @@ public static class AnalyticsParamNames
         foreach (FieldInfo field in typeof(AnalyticsParamNames)
                      .GetFields(BindingFlags.Public | BindingFlags.Static))
         {
-            // const string fields are literals; the Forbidden/Allowed sets are static readonly
-            // (IsInitOnly) and are skipped.
+            // Only const string literals; skip the static readonly Forbidden/Allowed sets.
             if (field is { IsLiteral: true, IsInitOnly: false } && field.FieldType == typeof(string)
                 && field.GetRawConstantValue() is string value)
             {

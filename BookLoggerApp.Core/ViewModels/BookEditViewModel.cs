@@ -17,9 +17,7 @@ public partial class BookEditViewModel : ViewModelBase
     private readonly IShareCardService _shareCardService;
     private readonly IProgressService _progressService;
 
-    /// <summary>
-    /// Raised when a book share card PNG is ready. The component handles file write + sharing.
-    /// </summary>
+    /// <summary>Raised when a book share card PNG is ready; the component handles file write + sharing.</summary>
     public event Action<byte[]>? BookShareCardReady;
 
     public BookEditViewModel(
@@ -69,20 +67,14 @@ public partial class BookEditViewModel : ViewModelBase
     [ObservableProperty]
     private string? _lookupMessage;
 
-    /// <summary>
-    /// Drives the lookup-message styling (error vs. success). Set alongside every
-    /// <see cref="LookupMessage"/> assignment so the UI doesn't have to sniff the text.
-    /// </summary>
+    /// <summary>Drives lookup-message styling (error vs. success); set alongside every <see cref="LookupMessage"/> assignment.</summary>
     [ObservableProperty]
     private bool _lookupMessageIsError;
 
     [ObservableProperty]
     private bool _isSearchingTitle;
 
-    /// <summary>
-    /// Candidate books from the title search; non-empty shows the picker. A title search
-    /// is inherently ambiguous (editions/similar titles), so the user picks the match.
-    /// </summary>
+    /// <summary>Title-search candidates; non-empty shows the picker so the user resolves the ambiguity.</summary>
     [ObservableProperty]
     private List<BookMetadata> _titleSearchResults = new();
 
@@ -98,10 +90,7 @@ public partial class BookEditViewModel : ViewModelBase
     [ObservableProperty]
     private bool _bookDeleted;
 
-    /// <summary>
-    /// True only when an existing book transitions to Completed during SaveAsync.
-    /// False for books added directly as Completed (no session data).
-    /// </summary>
+    /// <summary>True only when an existing book transitions to Completed during SaveAsync; false for books added directly as Completed.</summary>
     [ObservableProperty]
     private bool _bookCompletedFromSession;
 
@@ -111,7 +100,7 @@ public partial class BookEditViewModel : ViewModelBase
     [ObservableProperty]
     private ReadingStatus _selectedStatusForDisplay = ReadingStatus.Planned;
 
-    // Track original status to detect when book becomes completed
+    // Original status, to detect when the book becomes completed.
     private ReadingStatus? _originalStatus;
     private bool _hasExplicitStatusChange;
     private bool _isInitializingStatusSelection;
@@ -123,7 +112,7 @@ public partial class BookEditViewModel : ViewModelBase
         {
             AvailableGenres = (await _genreService.GetAllAsync(ct)).ToList();
 
-            // Load and filter shelves (manual only for editing)
+            // Manual shelves only for editing.
             var allShelves = await _shelfService.GetAllShelvesAsync();
             AvailableShelves = allShelves.Where(s => s.AutoSortRule == ShelfAutoSortRule.None).ToList();
 
@@ -139,8 +128,7 @@ public partial class BookEditViewModel : ViewModelBase
                     _originalStatus = Book.Status;
                     _hasExplicitStatusChange = false;
 
-                    // Wishlist isn't a selectable status in the dropdown.
-                    // Keep persisted status unchanged and map only the UI value.
+                    // Wishlist isn't selectable in the dropdown: keep persisted status, map only the UI value.
                     _isInitializingStatusSelection = true;
                     SelectedStatusForDisplay = Book.Status == ReadingStatus.Wishlist
                         ? ReadingStatus.Planned
@@ -150,10 +138,9 @@ public partial class BookEditViewModel : ViewModelBase
             }
             else
             {
-                // New book
                 Book = new Book
                 {
-                    Id = Guid.Empty, // Explicitly set to Empty so navigation knows this is unsaved
+                    Id = Guid.Empty, // Empty signals navigation that this is unsaved.
                     Status = ReadingStatus.Planned,
                     DateAdded = DateTime.UtcNow
                 };
@@ -171,7 +158,6 @@ public partial class BookEditViewModel : ViewModelBase
     {
         if (Book == null) return;
 
-        // Reset celebration flags
         ShowBookCompletionCelebration = false;
         BookCompletedFromSession = false;
 
@@ -183,9 +169,7 @@ public partial class BookEditViewModel : ViewModelBase
                 return;
             }
 
-            // New books need a stable Id BEFORE the atomic save so the cover file can be
-            // named and child relations FK-wired (EF would otherwise generate it only on
-            // insert, after the cover download). The save itself stays one transaction.
+            // New books need a stable Id before the save so the cover file can be named and relations FK-wired.
             if (Book.Id == Guid.Empty)
             {
                 Book.Id = Guid.NewGuid();
@@ -203,7 +187,7 @@ public partial class BookEditViewModel : ViewModelBase
                 }
             }
 
-            // Auto-select shelf if none selected (UI default; passed into the atomic save).
+            // Auto-select a shelf if none chosen (UI default).
             if (SelectedShelfIds.Count == 0 && AvailableShelves.Any())
             {
                 var mainShelf = AvailableShelves.FirstOrDefault(s => s.Name.Equals("Main Shelf", StringComparison.OrdinalIgnoreCase));
@@ -221,9 +205,7 @@ public partial class BookEditViewModel : ViewModelBase
                 }
             }
 
-            // Single transactional save: book record + genre/shelf/trope sync + wishlist
-            // cleanup commit atomically; completion XP/goal-recalc run after commit
-            // (CODE_REVIEW BUG-16). AvailableShelves = the manual shelves we may remove from.
+            // Single transactional save (book + genre/shelf/trope sync + wishlist cleanup); completion XP/goal-recalc run after commit. AvailableShelves = manual shelves we may remove from.
             var manualShelfIds = AvailableShelves.Select(s => s.Id).ToList();
             var result = await _bookService.SaveBookWithRelationsAsync(
                 Book, SelectedGenreIds, SelectedShelfIds, SelectedTropeIds, manualShelfIds);
@@ -281,11 +263,7 @@ public partial class BookEditViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Searches Google Books by the entered title (plus author, if any) and shows the
-    /// candidate results for the user to pick from. Unlike ISBN lookup it does not fill
-    /// the form directly, because a title query usually returns several matches.
-    /// </summary>
+    /// <summary>Searches Google Books by title (plus author) and shows candidates; unlike ISBN lookup it doesn't fill the form directly.</summary>
     [RelayCommand]
     public async Task SearchByTitleAsync()
     {
@@ -327,10 +305,7 @@ public partial class BookEditViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Applies a chosen title-search result to the form (same fill path as ISBN lookup)
-    /// and dismisses the picker.
-    /// </summary>
+    /// <summary>Applies a chosen title-search result to the form (same fill path as ISBN lookup) and dismisses the picker.</summary>
     [RelayCommand]
     public async Task SelectSearchResultAsync(BookMetadata metadata)
     {
@@ -350,10 +325,7 @@ public partial class BookEditViewModel : ViewModelBase
         TitleSearchResults = new();
     }
 
-    /// <summary>
-    /// Maps fetched <see cref="BookMetadata"/> onto the current <see cref="Book"/>. Shared by
-    /// ISBN lookup and title-search selection. Only non-empty fields overwrite existing values.
-    /// </summary>
+    /// <summary>Maps fetched <see cref="BookMetadata"/> onto the current <see cref="Book"/>; only non-empty fields overwrite existing values.</summary>
     private async Task ApplyMetadataToBookAsync(BookMetadata metadata)
     {
         if (Book == null)
@@ -365,8 +337,7 @@ public partial class BookEditViewModel : ViewModelBase
         if (!string.IsNullOrWhiteSpace(metadata.Author))
             Book.Author = metadata.Author;
 
-        // A title-search result also carries the ISBN, so fill it in (harmless for the
-        // ISBN-lookup path, where it equals the value the user already typed).
+        // Title-search results carry the ISBN; harmless for the ISBN-lookup path.
         if (!string.IsNullOrWhiteSpace(metadata.ISBN))
             Book.ISBN = metadata.ISBN;
 
@@ -385,19 +356,15 @@ public partial class BookEditViewModel : ViewModelBase
         if (metadata.PageCount.HasValue)
             Book.PageCount = metadata.PageCount;
 
-        // Handle cover image
         if (!string.IsNullOrWhiteSpace(metadata.CoverImageUrl))
         {
-            // For new books (Id == Guid.Empty), we'll store the URL temporarily
-            // and download it when the book is saved
+            // New books store the URL until saved; existing books download the cover now.
             if (Book.Id == Guid.Empty)
             {
-                // Store the URL temporarily for display
                 Book.CoverImagePath = metadata.CoverImageUrl;
             }
             else
             {
-                // For existing books, download and save the cover immediately
                 var coverPath = await _imageService.SaveCoverImageFromUrlAsync(metadata.CoverImageUrl, Book.Id);
                 if (coverPath != null)
                 {
@@ -406,17 +373,13 @@ public partial class BookEditViewModel : ViewModelBase
             }
         }
 
-        // Handle genres/categories
         if (metadata.Categories != null && metadata.Categories.Count > 0)
         {
             await MapCategoriesToGenresAsync(metadata.Categories);
         }
     }
 
-    /// <summary>
-    /// Maps a lookup/search exception to a localized <see cref="LookupMessage"/>. Shared by
-    /// ISBN lookup and title search so both report network/quota/timeout errors identically.
-    /// </summary>
+    /// <summary>Maps a lookup/search exception to a localized <see cref="LookupMessage"/>, shared by ISBN lookup and title search.</summary>
     private void ApplyLookupException(Exception ex)
     {
         LookupMessageIsError = true;
@@ -458,7 +421,6 @@ public partial class BookEditViewModel : ViewModelBase
 
     private async Task MapCategoriesToGenresAsync(List<string> categories)
     {
-        // Try to match categories to existing genres
         var matchedGenreIds = new List<Guid>();
 
         foreach (var category in categories)
@@ -474,7 +436,6 @@ public partial class BookEditViewModel : ViewModelBase
             }
         }
 
-        // Add matched genres to selected genres
         foreach (var genreId in matchedGenreIds)
         {
             if (!SelectedGenreIds.Contains(genreId))
@@ -535,9 +496,7 @@ public partial class BookEditViewModel : ViewModelBase
 
     public Task OnBookCompletionCelebrationClose()
     {
-        // Idempotent: a second invocation (rapid double-tap or back-button race) must not
-        // re-run the state transition, otherwise downstream navigation/review-prompt logic
-        // can fire twice.
+        // Idempotent: a second invocation (double-tap/back-button race) must not re-run the transition.
         if (!ShowBookCompletionCelebration) return Task.CompletedTask;
         ShowBookCompletionCelebration = false;
         BookCompletedFromSession = false;
@@ -591,7 +550,7 @@ public partial class BookEditViewModel : ViewModelBase
             SelectedGenreIds.Remove(genreId);
         }
 
-        // Manually trigger updates since we modified the list in-place
+        // Trigger manually since the list was modified in-place.
         await UpdateAvailableTropesAsync();
     }
 
@@ -609,8 +568,7 @@ public partial class BookEditViewModel : ViewModelBase
             var tropes = await _genreService.GetTropesForGenreAsync(genreId);
             allTropes.AddRange(tropes);
         }
-        
-        // Use AvailableTropes setter to notify UI
+
         AvailableTropes = allTropes.DistinctBy(t => t.Id).OrderBy(t => t.Name).ToList();
     }
 }

@@ -56,7 +56,6 @@ public static class WidgetDataService
             if (book is null)
                 return null;
 
-            // Resolve full cover image path
             string? fullCoverPath = null;
             if (!string.IsNullOrEmpty(book.CoverImagePath))
             {
@@ -150,7 +149,6 @@ public static class WidgetDataService
             if (goals.Count == 0)
                 return new List<GoalWidgetData>();
 
-            // Load data needed for progress calculation
             var books = await context.Books.AsNoTracking().ToListAsync();
             var sessions = await context.ReadingSessions.AsNoTracking().ToListAsync();
             var exclusions = await context.GoalExcludedBooks.AsNoTracking().ToListAsync();
@@ -182,11 +180,9 @@ public static class WidgetDataService
                         .ToHashSet();
                 }
 
-                // Use the shared helper so the widget's goal window matches the app's
-                // (ToUniversalTime() is essential — goal dates come from the UI as
-                // Kind=Unspecified local dates, and the DateCompleted/StartedAt values
-                // are stored as UTC. Skipping the conversion was showing different
-                // progress in the widget vs. the main Goals page for non-UTC users.)
+                // Shared helper keeps the widget's goal window aligned with the app's.
+                // The UTC conversion is essential: goal dates are Kind=Unspecified local
+                // while DateCompleted/StartedAt are UTC — skipping it desynced non-UTC users.
                 var (startDate, endDate) = BookLoggerApp.Core.Helpers.GoalDateRangeHelper.GetGoalRangeUtc(goal);
 
                 int current = goal.Type switch

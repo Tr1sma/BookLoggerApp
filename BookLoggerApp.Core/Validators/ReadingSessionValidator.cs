@@ -5,10 +5,7 @@ using Microsoft.Extensions.Localization;
 
 namespace BookLoggerApp.Core.Validators;
 
-/// <summary>
-/// Validator for ReadingSession model.
-/// Ensures reading session data is valid and consistent.
-/// </summary>
+/// <summary>Validates ReadingSession data.</summary>
 public class ReadingSessionValidator : AbstractValidator<ReadingSession>
 {
     public ReadingSessionValidator(IStringLocalizer<AppResources>? localizer = null)

@@ -10,9 +10,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// Covers the lapse / restore data-guard: hiding overflow shelves, reducing
-/// plants to one active, hiding prestige/ultimate items, and clearing those
-/// flags on re-upgrade.
+/// Lapse/restore data-guard: hide overflow shelves, reduce to one active plant,
+/// hide prestige/ultimate items, and clear those flags on re-upgrade.
 /// </summary>
 public class EntitlementLapseHandlerTests : IDisposable
 {
@@ -46,8 +45,7 @@ public class EntitlementLapseHandlerTests : IDisposable
         List<UserPlant> plants = await ctx.UserPlants.OrderBy(p => p.PlantedAt).ToListAsync();
         plants.Should().HaveCount(3);
         plants.Count(p => p.IsActive).Should().Be(1);
-        // "middle" was both IsActive and Healthy; it wins (oldest among active+healthy candidates
-        // is "middle" because "oldest" was not active).
+        // "middle" wins: oldest among active+healthy candidates ("oldest" was not active).
         plants.Single(p => p.IsActive).Name.Should().Be("Second");
         plants.Should().OnlyContain(p => p.IsHiddenByEntitlement == false,
             "free-tier plants should only lose IsActive, never get hidden");
@@ -127,9 +125,8 @@ public class EntitlementLapseHandlerTests : IDisposable
     [Fact]
     public async Task ApplyLapseAsync_hides_standard_tier_plants_but_keeps_free()
     {
-        // HIGH-1003 / SEC-04: Free is entitled only to free-tier plants. Standard (Plus) and
-        // prestige (Premium) plants must be hidden — preserved, not deleted — so a restored or
-        // imported higher-tier backup cannot leak them to a Free user.
+        // HIGH-1003 / SEC-04: Free gets only free-tier plants. Standard (Plus) and prestige
+        // (Premium) plants are hidden (not deleted) so a restored higher-tier backup can't leak them.
         Guid free = await SeedSpeciesAsync(isFree: true);
         Guid standard = await SeedSpeciesAsync(isPrestige: false, isFree: false);
         Guid prestige = await SeedSpeciesAsync(isPrestige: true);
@@ -152,7 +149,7 @@ public class EntitlementLapseHandlerTests : IDisposable
     [Fact]
     public async Task ApplyLapseAsync_hides_standard_tier_decorations_but_keeps_free()
     {
-        // HIGH-1003 / SEC-04: standard (Plus) AND ultimate (Premium) decorations are hidden for Free.
+        // HIGH-1003 / SEC-04: standard (Plus) and ultimate (Premium) decorations hidden for Free.
         Guid free = await SeedShopItemAsync("Starter Lamp", isUltimate: false, isFree: true);
         Guid standard = await SeedShopItemAsync("Cozy Rug", isUltimate: false, isFree: false);
         Guid ultimate = await SeedShopItemAsync("Heart of Stories", isUltimate: true);
@@ -210,7 +207,7 @@ public class EntitlementLapseHandlerTests : IDisposable
     [Fact]
     public async Task ClearEntitlementHidesAsync_Plus_unhides_standard_but_keeps_prestige_and_ultimate_hidden()
     {
-        // SEC-04: granting Plus must NOT un-hide Premium-only content (prestige plants,
+        // SEC-04: granting Plus must not un-hide Premium-only content (prestige plants,
         // ultimate decorations). Standard plants, shelves and standard decorations come back.
         Guid regular = await SeedSpeciesAsync(isPrestige: false);
         Guid prestige = await SeedSpeciesAsync(isPrestige: true);
@@ -273,8 +270,6 @@ public class EntitlementLapseHandlerTests : IDisposable
 
         ctx.UserPlants.Single(p => p.Name == "Fern").IsActive.Should().BeTrue("a standard plant stays active under Plus");
     }
-
-    // ───── Seed helpers ───────────────────────────────────────────────────
 
     private async Task<Guid> SeedSpeciesAsync(bool isPrestige = false, bool isFree = false)
     {

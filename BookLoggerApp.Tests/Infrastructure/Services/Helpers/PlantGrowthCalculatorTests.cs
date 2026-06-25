@@ -294,10 +294,6 @@ public class PlantGrowthCalculatorTests
 
     #region Reading Days Based Leveling Tests
 
-    // ========================================
-    // CalculateLevelFromReadingDays Tests
-    // ========================================
-
     [Theory]
     [InlineData(0, 1.0, 10, 1)]   // 0 days = Level 1
     [InlineData(-1, 1.0, 10, 1)]  // Negative days = Level 1
@@ -404,10 +400,6 @@ public class PlantGrowthCalculatorTests
         levelNormal.Should().BeGreaterThanOrEqualTo(levelSlow);
     }
 
-    // ========================================
-    // GetReadingDaysForLevel Tests
-    // ========================================
-
     [Theory]
     [InlineData(1, 1.0, 0)]   // Level 1 needs 0 days
     [InlineData(0, 1.0, 0)]   // Level 0 (edge) needs 0 days
@@ -486,10 +478,6 @@ public class PlantGrowthCalculatorTests
         }
     }
 
-    // ========================================
-    // GetReadingDaysToNextLevel Tests
-    // ========================================
-
     [Theory]
     [InlineData(1, 0, 1.0, 10, 3)]  // Level 1, 0 days: need 3 to reach level 2
     [InlineData(1, 1, 1.0, 10, 2)]  // Level 1, 1 day: need 2 more
@@ -551,10 +539,6 @@ public class PlantGrowthCalculatorTests
         // Assert
         daysToNext.Should().Be(expectedDaysNeeded);
     }
-
-    // ========================================
-    // GetReadingDaysPercentage Tests
-    // ========================================
 
     [Theory]
     [InlineData(1, 0, 1.0, 10, 0)]    // Level 1, 0 days = 0%
@@ -618,14 +602,10 @@ public class PlantGrowthCalculatorTests
         percentage.Should().BeInRange(0, 100);
     }
 
-    // ========================================
-    // User Requirement Verification Tests
-    // ========================================
-
     [Fact]
     public void ReadingDays_UserRequirement_3DaysEqualsOneLevelAtGrowthRate1()
     {
-        // User requirement: "3 Lese tage = 1 Level (bei GrowthRate 1.0)"
+        // User requirement: 3 reading days = 1 level (at GrowthRate 1.0).
         // Starting at level 1, after 3 days should be level 2
 
         int startLevel = PlantGrowthCalculator.CalculateLevelFromReadingDays(0, 1.0, 10);
@@ -639,7 +619,7 @@ public class PlantGrowthCalculatorTests
     [Fact]
     public void ReadingDays_UserRequirement_GrowthRate1Point2Is20PercentFaster()
     {
-        // User requirement: "Growth rate 1.2 soll 20% schneller sein als 1"
+        // User requirement: growth rate 1.2 should be 20% faster than 1.0.
         // At GR 1.0: 3 days per level
         // At GR 1.2: ~2.5 days per level (20% faster)
 
@@ -662,7 +642,7 @@ public class PlantGrowthCalculatorTests
     [Fact]
     public void ReadingDays_UserRequirement_GrowthRate0Point8Is20PercentSlower()
     {
-        // User requirement: "0.8 logischweise 20% langsamer als 1"
+        // User requirement: 0.8 should logically be 20% slower than 1.0.
         // At GR 1.0: 3 days per level
         // At GR 0.8: ~3.75 days per level (20% slower)
 
@@ -705,11 +685,11 @@ public class PlantGrowthCalculatorTests
 
     #endregion
 
-    #region Global Growth Multiplier (Herz der Geschichten) Tests
+    #region Global Growth Multiplier (Heart of Stories) Tests
 
     // Regression guard for V9 code-review: inverse helpers used to ignore the global
     // multiplier while CalculateLevelFromReadingDays honoured it. UI would then show
-    // ~2x the actual days to next level while Herz der Geschichten was active.
+    // ~2x the actual days to next level while Heart of Stories was active.
 
     [Theory]
     [InlineData(2, 1.0, 2.0, 2)]   // Level 2 at GR 1.0 × 2.0 = ceil(3/2) = 2 days (was 3)
@@ -726,7 +706,7 @@ public class PlantGrowthCalculatorTests
     [Fact]
     public void GetReadingDaysForLevel_DefaultMultiplier_UnchangedBehavior()
     {
-        // Abwärtskompatibilität: Default (multiplier = 1.0) darf das vorherige Verhalten nicht ändern.
+        // Backwards compatibility: default (multiplier = 1.0) must not change prior behavior.
         PlantGrowthCalculator.GetReadingDaysForLevel(5, 1.0).Should().Be(12);
         PlantGrowthCalculator.GetReadingDaysForLevel(10, 1.2).Should().Be(23);
     }
@@ -734,12 +714,12 @@ public class PlantGrowthCalculatorTests
     [Fact]
     public void GetReadingDaysToNextLevel_WithMultiplier2_MatchesForwardFormula()
     {
-        // Forward-Formel: 6 Lesetage × 2.0 / 3 = 4 → Level 5
+        // Forward formula: 6 reading days × 2.0 / 3 = 4 → Level 5
         int forwardLevel = PlantGrowthCalculator.CalculateLevelFromReadingDays(6, 1.0, 100, 2.0);
         forwardLevel.Should().Be(5);
 
-        // Inverse: bei Level 5 + 6 Tagen + Multiplier 2.0 sollen es bis Level 6 nur noch
-        // wenige Tage sein — nicht 9 wie vor dem Fix.
+        // Inverse: at level 5 + 6 days + multiplier 2.0, only a few days remain to level 6 —
+        // not 9 as before the fix.
         int daysToNext = PlantGrowthCalculator.GetReadingDaysToNextLevel(
             currentLevel: 5,
             readingDays: 6,
@@ -754,8 +734,8 @@ public class PlantGrowthCalculatorTests
     [Fact]
     public void GetReadingDaysPercentage_WithMultiplier_ConsistentWithLevel()
     {
-        // Bei aktivem Herz: Multiplier = 2.0, Level = 3 (ab 3 Lesetagen)
-        // Die Prozentanzeige muss konsistent mit den Level-Schwellen sein.
+        // With Heart active: multiplier = 2.0, level = 3 (from 3 reading days).
+        // The percentage display must stay consistent with the level thresholds.
         int level = PlantGrowthCalculator.CalculateLevelFromReadingDays(3, 1.0, 100, 2.0);
         level.Should().Be(3); // floor(3*2/3)+1 = 3
 

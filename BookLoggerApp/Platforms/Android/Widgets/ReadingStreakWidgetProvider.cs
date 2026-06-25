@@ -39,7 +39,6 @@ public class ReadingStreakWidgetProvider : AppWidgetProvider
                     ? Resource.String.widget_streak_label_one
                     : Resource.String.widget_streak_label_other));
 
-            // Today status indicator
             if (streakData.ReadToday)
             {
                 views.SetTextViewText(Resource.Id.widget_streak_today, context.GetString(Resource.String.widget_read_today));
@@ -64,7 +63,6 @@ public class ReadingStreakWidgetProvider : AppWidgetProvider
             views.SetTextViewText(Resource.Id.widget_streak_today, "");
         }
 
-        // Click opens the app
         var intent = new Intent(context, typeof(MainActivity));
         intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);
         var pendingIntent = PendingIntent.GetActivity(

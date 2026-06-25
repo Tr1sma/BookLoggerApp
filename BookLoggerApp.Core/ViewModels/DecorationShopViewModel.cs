@@ -6,9 +6,7 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Core.ViewModels;
 
-/// <summary>
-/// ViewModel for the Decoration Shop tab.
-/// </summary>
+/// <summary>ViewModel for the Decoration Shop tab.</summary>
 public partial class DecorationShopViewModel : ViewModelBase
 {
     private readonly IDecorationService _decorationService;
@@ -42,7 +40,7 @@ public partial class DecorationShopViewModel : ViewModelBase
             UserCoins = await _settingsProvider.GetUserCoinsAsync(ct);
             UserLevel = await _settingsProvider.GetUserLevelAsync(ct);
 
-            // Load ALL decorations (including locked) — card handles lock overlay
+            // Load all decorations including locked; the card renders the lock overlay.
             var items = await _decorationService.GetAllDecorationShopItemsAsync(ct);
             AllDecorations = new ObservableCollection<ShopItem>(
                 items.OrderBy(d => d.UnlockLevel).ThenBy(d => d.Cost).ThenBy(d => d.Name));
@@ -63,7 +61,6 @@ public partial class DecorationShopViewModel : ViewModelBase
 
             if (UserLevel < item.UnlockLevel)
             {
-                // Z.627: include the current level and use the same coin key as PlantShopViewModel.
                 SetError(Tr("Error_DecorationRequiresLevel", item.UnlockLevel, UserLevel));
                 return;
             }

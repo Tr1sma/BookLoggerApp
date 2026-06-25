@@ -13,11 +13,9 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// CODE_REVIEW INK-05: the UnitOfWork-based services accepted a CancellationToken on every
-/// public method but forwarded it only to SaveChangesAsync — every read went through a
-/// specific-repository method that took no token, so the token was dropped before reaching EF.
-/// After BUG-15/CQ-02 added ct to the repositories, these services now thread their ct all the
-/// way to the terminal EF query. A real SQLite provider is used so cancellation is observable.
+/// Verifies UnitOfWork-based services thread CancellationToken all the way to the terminal EF
+/// query (regression: tokens were previously dropped before reaching EF). Uses real SQLite so
+/// cancellation is observable.
 /// </summary>
 public class ServiceCancellationTests : IDisposable
 {

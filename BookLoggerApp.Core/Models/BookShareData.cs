@@ -1,8 +1,6 @@
 namespace BookLoggerApp.Core.Models;
 
-/// <summary>
-/// Data transfer object for generating a book recommendation share card.
-/// </summary>
+/// <summary>DTO for generating a book recommendation share card.</summary>
 public class BookShareData
 {
     public string Title { get; set; } = string.Empty;

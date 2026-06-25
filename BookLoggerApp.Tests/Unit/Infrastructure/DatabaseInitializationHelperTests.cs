@@ -116,9 +116,7 @@ public class DatabaseInitializationHelperTests : IDisposable
     [Fact]
     public void DefaultTimeout_IsReasonableForBudgetDevices()
     {
-        // Keep this assertion tight — a drift back toward the old 45s silently
-        // regresses UX on affected devices. The actual value is intentional and
-        // informed by field telemetry; change both together.
+        // Guard against drift back to the old 45s, which regresses UX on budget devices.
         DatabaseInitializationHelper.DefaultTimeout.Should().BeLessThanOrEqualTo(TimeSpan.FromSeconds(20));
         DatabaseInitializationHelper.DefaultTimeout.Should().BeGreaterThanOrEqualTo(TimeSpan.FromSeconds(5));
     }
@@ -126,10 +124,8 @@ public class DatabaseInitializationHelperTests : IDisposable
     [Fact]
     public async Task EnsureInitializedAsync_Continuation_RunsAsynchronously()
     {
-        // Regression guard for RunContinuationsAsynchronously on the TCS: without
-        // that flag, awaiters resume synchronously on whatever thread called
-        // MarkAsInitialized, which in production is the DB-init worker. That
-        // hijacks the worker and can starve any subsequent init work.
+        // Regression guard for RunContinuationsAsynchronously: without it, awaiters resume
+        // synchronously on the DB-init worker thread and can starve subsequent init work.
         Task awaitTask = DatabaseInitializationHelper.EnsureInitializedAsync(TimeSpan.FromSeconds(5));
 
         int settingThreadId = 0;

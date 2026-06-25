@@ -134,8 +134,7 @@ public partial class AppStartupViewModel : ViewModelBase
         {
             await DatabaseInitializationHelper.EnsureInitializedAsync();
 
-            // Load the current entitlement tier into memory before any UI renders so
-            // HasAccess returns the correct answer on the first paint.
+            // Load entitlement tier before any UI renders so HasAccess is correct on first paint.
             if (_entitlementService is not null)
             {
                 try
@@ -148,9 +147,7 @@ public partial class AppStartupViewModel : ViewModelBase
                 }
             }
 
-            // Connect to Google Play Billing and pull every active purchase back
-            // into the entitlement store. Runs best-effort — a billing hiccup
-            // must never block the rest of startup.
+            // Connect to Play Billing and restore active purchases. Best-effort: must never block startup.
             if (_billingService is not null && _entitlementService is not null)
             {
                 try
@@ -185,9 +182,7 @@ public partial class AppStartupViewModel : ViewModelBase
 
             var onboardingSnapshot = await _onboardingService.GetSnapshotAsync(ct);
 
-            // Gate on our own persisted "last seen changelog version" flag rather than
-            // solely MAUI's VersionTracking.IsFirstLaunchForCurrentVersion, which has been
-            // observed to fire on every cold start on some devices.
+            // Gate on our own persisted "last seen changelog version" flag; MAUI's IsFirstLaunchForCurrentVersion fires on every cold start on some devices.
             var lastSeenChangelog = _appVersionService.LastSeenChangelogVersion;
             var hasUnseenChangelog = !string.Equals(lastSeenChangelog, CurrentVersion, StringComparison.OrdinalIgnoreCase);
 
@@ -196,8 +191,6 @@ public partial class AppStartupViewModel : ViewModelBase
             if (onboardingSnapshot.ShouldShowIntro)
             {
                 // Never show the changelog on top of the onboarding intro.
-                // New users don't need version history, and existing users who
-                // replay the intro have already seen the changelog.
                 _showChangelogAfterOnboarding = false;
             }
             else if (hasUnseenChangelog)
@@ -236,9 +229,7 @@ public partial class AppStartupViewModel : ViewModelBase
             async () => await RefreshUpdateStateAsync(ct),
             Tr("Error_FailedTo_RefreshAppUpdateState"));
 
-        // Re-query Play Billing and update the tier cache. If the user cancelled
-        // their subscription in the Play Store while the app was backgrounded,
-        // this detects the lapse on the next foreground. Best-effort.
+        // Re-query Play Billing on resume to detect a subscription cancelled while backgrounded. Best-effort.
         if (_billingService is not null && _entitlementService is not null)
         {
             try
@@ -275,10 +266,9 @@ public partial class AppStartupViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// CODE_REVIEW BUG-02: only force-lapse on resume when the current entitlement is a real
-    /// Play purchase that Google Play no longer returns. Active promo grants have no
-    /// ProductId/PurchaseToken and never appear in QueryActivePurchasesAsync, so they must not
-    /// be downgraded while still valid; an expired promo is handled by the expiry path instead.
+    /// Force-lapse on resume only for a real Play purchase Google no longer returns. Promo grants
+    /// lack ProductId/PurchaseToken and never appear in QueryActivePurchasesAsync, so they must not
+    /// be downgraded while still valid; expired promos go through the expiry path.
     /// </summary>
     private static bool ShouldLapseOnResume(UserEntitlement? entitlement)
     {
@@ -318,8 +308,7 @@ public partial class AppStartupViewModel : ViewModelBase
     {
         IsChangelogVisible = false;
 
-        // Persist that the user has now seen this version's changelog so it does not
-        // re-appear on every subsequent cold start.
+        // Persist that this version's changelog was seen so it doesn't re-appear on cold start.
         if (!string.IsNullOrWhiteSpace(CurrentVersion))
         {
             _appVersionService.MarkChangelogSeen(CurrentVersion);
@@ -514,8 +503,7 @@ public partial class AppStartupViewModel : ViewModelBase
             return;
         }
 
-        // BUG-17: background billing event — use the detached wrapper so it never touches the
-        // shared IsBusy/ErrorMessage state an in-flight startup/resume load may own.
+        // Background billing event — detached so it never touches shared IsBusy/ErrorMessage state.
         _ = ExecuteDetachedAsync(
             () => _entitlementService.ApplyPurchaseAsync(purchase, Core.Entitlements.EntitlementChangeReason.Purchase),
             source: "appstartup_billing_purchase");
@@ -523,9 +511,7 @@ public partial class AppStartupViewModel : ViewModelBase
 
     private void OnAppUpdateStateChanged(object? sender, AppUpdateState state)
     {
-        // BUG-17: background update-state event — detached (like the billing/onboarding handlers)
-        // so a throw (e.g. from a PropertyChanged subscriber) can't crash the event raiser or
-        // clobber the shared IsBusy/ErrorMessage state an in-flight startup/resume load may own.
+        // Background update-state event — detached so a throw can't crash the raiser or clobber shared IsBusy/ErrorMessage state.
         _ = ExecuteDetachedAsync(() =>
         {
             UpdateState = state;
@@ -536,8 +522,7 @@ public partial class AppStartupViewModel : ViewModelBase
 
     private void OnOnboardingStateChanged(object? sender, EventArgs e)
     {
-        // BUG-17: background onboarding-state event — detached so it never clobbers the shared
-        // IsBusy/ErrorMessage state an in-flight startup/resume load may own.
+        // Background onboarding-state event — detached so it never clobbers shared IsBusy/ErrorMessage state.
         _ = ExecuteDetachedAsync(async () =>
         {
             var snapshot = await _onboardingService.RefreshSnapshotAsync();

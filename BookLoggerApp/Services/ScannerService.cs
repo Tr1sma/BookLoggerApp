@@ -54,12 +54,10 @@ public class ScannerService : IScannerService
                 return null;
             }
 
-            // Wait for the result
             return await tcs.Task;
         }
         catch (Exception ex)
         {
-            // Log error or handle gracefully
             System.Diagnostics.Debug.WriteLine($"Scanner error: {ex.Message}");
             return null;
         }

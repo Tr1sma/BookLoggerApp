@@ -53,8 +53,7 @@ public class StatsService : IStatsService
         // share the goal feature's local-midnight convention instead of raw UTC boundaries.
         var localToday = LocalTimeHelper.LocalDate(utcNow, _timeZone);
 
-        // Only load sessions from the last year instead of ALL sessions.
-        // A streak longer than 365 days is unrealistic, and this avoids
+        // Load only the last year of sessions; a streak >365 days is unrealistic and this avoids
         // loading thousands of records for long-time users.
         var recentSessions = await _unitOfWork.ReadingSessions
             .GetSessionsInRangeAsync(utcNow.AddDays(-365), utcNow, ct);

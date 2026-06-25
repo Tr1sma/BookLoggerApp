@@ -14,12 +14,10 @@ public class Trope
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
 
-    // Foreign Key for Genre
     public Guid GenreId { get; set; }
-    
+
     [ForeignKey(nameof(GenreId))]
     public Genre Genre { get; set; } = null!;
 
-    // Navigation Properties
     public ICollection<BookTrope> BookTropes { get; set; } = new List<BookTrope>();
 }

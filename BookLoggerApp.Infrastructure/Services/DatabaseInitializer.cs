@@ -19,10 +19,7 @@ public class DatabaseInitializer : IDatabaseInitializer
 
     public void Retry()
     {
-        // Idempotent: if a retry is already running, don't spawn another. Multiple
-        // concurrent DbInitializer.InitializeAsync calls would race on the same
-        // SQLite file and produce unpredictable lock behaviour — especially bad
-        // when users tap the retry button repeatedly.
+        // Idempotent: skip if a retry is running — concurrent InitializeAsync calls would race on the same SQLite file.
         lock (_retryLock)
         {
             if (_activeRetryThread is { IsAlive: true })

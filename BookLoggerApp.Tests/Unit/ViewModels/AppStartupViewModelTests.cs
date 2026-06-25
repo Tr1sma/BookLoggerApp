@@ -30,9 +30,7 @@ public class AppStartupViewModelTests
         _settingsProvider.GetSettingsAsync(Arg.Any<CancellationToken>()).Returns(new AppSettings { PrivacyBannerDismissed = true });
 
         _appVersionService.CurrentVersion.Returns("0.8.0");
-        // Default to "user has already seen this version's changelog" so tests that don't
-        // care about the changelog aren't poisoned by the first-launch path. Tests that
-        // expect the changelog to surface override this with .Returns((string?)null).
+        // Default to "already seen this version's changelog"; changelog tests override with null.
         _appVersionService.LastSeenChangelogVersion.Returns("0.8.0");
         _changelogService.GetReleaseHistoryAsync(Arg.Any<CancellationToken>()).Returns(new[]
         {
@@ -383,14 +381,13 @@ public class AppStartupViewModelTests
     [Fact]
     public void OnOnboardingStateChanged_DoesNotClobberForegroundErrorState()
     {
-        // BUG-17: the fire-and-forget onboarding StateChanged handler must NOT run through
-        // ExecuteSafelyAsync (which clears ErrorMessage and toggles IsBusy). Otherwise a
-        // background event clobbers the shared error/busy state owned by an in-flight load.
+        // BUG-17: the fire-and-forget StateChanged handler must not run through ExecuteSafelyAsync,
+        // else it clobbers the shared error/busy state owned by an in-flight load.
         var gate = new TaskCompletionSource<OnboardingSnapshot>();
         _onboardingService.RefreshSnapshotAsync(Arg.Any<CancellationToken>()).Returns(gate.Task);
         _viewModel.ErrorMessage = "Real startup error";
 
-        // Fire the onboarding service's StateChanged event (subscribed in the VM ctor).
+        // Fire StateChanged (subscribed in the VM ctor).
         _onboardingService.StateChanged += Raise.Event<EventHandler>(_onboardingService, EventArgs.Empty);
 
         // The detached handler must leave the foreground error message intact.

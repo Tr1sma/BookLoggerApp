@@ -191,11 +191,9 @@ public class ProgressServiceTests : IDisposable
     [Fact]
     public async Task AddSessionAsync_StreakBonus_UsesLocalCalendarDay()
     {
-        // LOG-02: the streak-bonus "first qualifying session of the day" dedup must use the user's
-        // LOCAL calendar day, like GetCurrentStreakAsync — not raw UTC. Two sessions a few hours
-        // apart that straddle UTC midnight are the SAME local day in UTC+2, so the second must not
-        // be treated as a new streak day. With raw UTC they fall on different days and the second
-        // would wrongly earn a fresh streak bonus.
+        // LOG-02: streak-bonus first-of-day dedup must use the LOCAL calendar day, not raw UTC.
+        // Two sessions straddling UTC midnight are the same local day in UTC+2, so the second
+        // must not earn a fresh streak bonus.
         var tzPlus2 = TimeZoneInfo.CreateCustomTimeZone("t+2", TimeSpan.FromHours(2), "t+2", "t+2");
         var service = new ProgressService(
             _unitOfWork, _progressionService, _plantService, _bookService,
@@ -228,9 +226,8 @@ public class ProgressServiceTests : IDisposable
     [Fact]
     public async Task StoryHeartFirstOfDayBonus_UsesLocalCalendarDay()
     {
-        // LOG-02: the Story-Heart "first qualifying session of the day" bonus must bucket by the
-        // LOCAL calendar day, like the streak. Two sessions across UTC midnight are the same local
-        // day in UTC+2, so only the first earns the first-of-day bonus.
+        // LOG-02: Story-Heart first-of-day bonus must bucket by LOCAL calendar day, like the streak.
+        // Two sessions across UTC midnight are the same local day in UTC+2, so only the first earns it.
         var tzPlus2 = TimeZoneInfo.CreateCustomTimeZone("t+2", TimeSpan.FromHours(2), "t+2", "t+2");
         var decorationService = Substitute.For<IDecorationService>();
         decorationService.UserOwnsAbilityAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -717,12 +714,6 @@ public class ProgressServiceTests : IDisposable
         // Assert
         result.Session.PagesRead.Should().Be(500);
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Coverage-ergänzende Tests (DeleteSessionAsync, Getter-Methoden,
-    // Update, GetMinutesByDateAsync, GetTotalMinutesAllBooks, GetTotalPages,
-    // EndSession Exceptions, StartSessionAsync)
-    // ─────────────────────────────────────────────────────────────────────────
 
     [Fact]
     public async Task DeleteSessionAsync_ExistingSession_Removes()

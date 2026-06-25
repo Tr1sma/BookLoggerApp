@@ -6,9 +6,7 @@ using BookLoggerApp.Core.Services.Abstractions;
 
 namespace BookLoggerApp.Core.ViewModels;
 
-/// <summary>
-/// ViewModel for the Plant Shop page.
-/// </summary>
+/// <summary>ViewModel for the Plant Shop page.</summary>
 public partial class PlantShopViewModel : ViewModelBase
 {
     private readonly IPlantService _plantService;
@@ -37,7 +35,6 @@ public partial class PlantShopViewModel : ViewModelBase
     [ObservableProperty]
     private PlantSpecies? _selectedSpecies;
 
-    // Dictionary to store dynamic prices for each species
     private Dictionary<Guid, int> _dynamicPrices = new();
 
     [RelayCommand]
@@ -45,15 +42,13 @@ public partial class PlantShopViewModel : ViewModelBase
     {
         await ExecuteSafelyWithDbAsync(async ct =>
         {
-            // Load user stats
             UserCoins = await _settingsProvider.GetUserCoinsAsync(ct);
             UserLevel = await _settingsProvider.GetUserLevelAsync(ct);
 
-            // Load ALL species (including locked ones for display)
+            // Includes locked species for display.
             var species = await _plantService.GetAllSpeciesAsync(ct);
             AvailableSpecies = new ObservableCollection<PlantSpecies>(species.Where(s => s.IsAvailable).OrderBy(s => s.UnlockLevel).ThenBy(s => s.BaseCost).ThenBy(s => s.Name));
 
-            // Load dynamic prices for each species
             _dynamicPrices.Clear();
             foreach (var sp in AvailableSpecies)
             {
@@ -63,9 +58,7 @@ public partial class PlantShopViewModel : ViewModelBase
         }, Tr("Error_FailedTo_LoadShop"));
     }
 
-    /// <summary>
-    /// Get the dynamic price for a plant species.
-    /// </summary>
+    /// <summary>Gets the dynamic price for a plant species.</summary>
     public int GetDynamicPrice(Guid speciesId)
     {
         return _dynamicPrices.TryGetValue(speciesId, out var price) ? price : 0;
@@ -76,7 +69,6 @@ public partial class PlantShopViewModel : ViewModelBase
     {
         await ExecuteSafelyAsync(async () =>
         {
-            // Check if user has enough coins
             var species = AvailableSpecies.FirstOrDefault(s => s.Id == speciesId);
             if (species == null)
             {
@@ -84,14 +76,12 @@ public partial class PlantShopViewModel : ViewModelBase
                 return;
             }
 
-            // Check if plant is unlocked
             if (UserLevel < species.UnlockLevel)
             {
                 SetError(Tr("Error_PlantRequiresLevel", species.UnlockLevel, UserLevel));
                 return;
             }
 
-            // Get dynamic price
             int dynamicPrice = GetDynamicPrice(speciesId);
 
             if (UserCoins < dynamicPrice)
@@ -100,15 +90,14 @@ public partial class PlantShopViewModel : ViewModelBase
                 return;
             }
 
-            // Use species name as default if no custom name provided
             var plantName = string.IsNullOrWhiteSpace(NewPlantName)
                 ? species.Name
                 : NewPlantName;
 
-            // Purchase plant (PlantService handles coin deduction and counter increment)
+            // PlantService handles coin deduction and counter increment.
             await _plantService.PurchasePlantAsync(speciesId, plantName);
 
-            // Reload shop (prices will be recalculated after PlantsPurchased increment)
+            // Reload so prices recalc after the PlantsPurchased increment.
             NewPlantName = "";
             SelectedSpecies = null;
             await LoadAsync();
@@ -119,7 +108,6 @@ public partial class PlantShopViewModel : ViewModelBase
     public void SelectSpecies(PlantSpecies species)
     {
         SelectedSpecies = species;
-        // Z.620: clear any stale error when picking a species, like DecorationShopViewModel.SelectDecoration.
         ClearError();
     }
 

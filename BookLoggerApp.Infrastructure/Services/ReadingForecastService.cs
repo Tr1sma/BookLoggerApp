@@ -6,9 +6,8 @@ using BookLoggerApp.Infrastructure.Repositories;
 namespace BookLoggerApp.Infrastructure.Services;
 
 /// <summary>
-/// Builds finish forecasts for all currently-reading books. Orchestration only — the
-/// prediction math lives in <see cref="ReadingForecastCalculator"/>. Sessions for every
-/// reading book are fetched in a single ranged query and grouped in memory to avoid N+1.
+/// Builds finish forecasts for currently-reading books; prediction math lives in
+/// <see cref="ReadingForecastCalculator"/>. Sessions fetched in one ranged query to avoid N+1.
 /// </summary>
 public class ReadingForecastService : IReadingForecastService
 {
@@ -29,8 +28,7 @@ public class ReadingForecastService : IReadingForecastService
 
         DateTime now = DateTime.UtcNow;
 
-        // Pull sessions once, from the earliest point any reading book could have started
-        // (a generous default window covers books without an explicit DateStarted).
+        // Generous default window covers books without an explicit DateStarted.
         DateTime earliest = now.AddDays(-365);
         foreach (Book book in readingBooks)
         {

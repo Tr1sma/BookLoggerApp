@@ -17,13 +17,9 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// CODE_REVIEW BUG-05: the four FluentValidation validators were registered but never invoked
-/// on any production write path, so garbage data (empty titles, zero/over-limit targets,
-/// invalid sessions/plants) reached the DB unchecked. The services now resolve
-/// <see cref="IValidationService"/> (optional, auto-injected in production / null in legacy
-/// unit tests) and call ValidateAndThrowAsync at the start of their write methods. These tests
-/// wire a real ValidationService with the four validators and assert invalid entities are
-/// rejected by the service — not just by the validator in isolation.
+/// Verifies services invoke <see cref="IValidationService"/> on write paths and reject invalid
+/// entities (regression: validators were registered but never called). Wires a real
+/// ValidationService so rejection is asserted at the service level, not the validator alone.
 /// </summary>
 public class ServiceValidationTests : IDisposable
 {
@@ -60,7 +56,7 @@ public class ServiceValidationTests : IDisposable
     public async Task BookService_AddAsync_InvalidBook_ThrowsAndPersistsNothing()
     {
         var service = CreateBookService();
-        var invalid = new Book { Title = "", Author = "" }; // empty title + author
+        var invalid = new Book { Title = "", Author = "" };
 
         Func<Task> act = () => service.AddAsync(invalid);
 
@@ -84,7 +80,7 @@ public class ServiceValidationTests : IDisposable
     public async Task BookService_SaveBookWithRelationsAsync_InvalidBook_ThrowsAndPersistsNothing()
     {
         var service = CreateBookService();
-        var invalid = new Book { Title = "", Author = "Author" }; // empty title
+        var invalid = new Book { Title = "", Author = "Author" };
 
         Func<Task> act = () => service.SaveBookWithRelationsAsync(
             invalid,
@@ -105,7 +101,7 @@ public class ServiceValidationTests : IDisposable
 
         var invalid = new ReadingGoal
         {
-            Title = "", // empty
+            Title = "",
             Type = GoalType.Books,
             Target = 0, // must be > 0
             StartDate = DateTime.UtcNow,
@@ -160,7 +156,7 @@ public class ServiceValidationTests : IDisposable
             featureGuard: null,
             validation: CreateValidationService());
 
-        goal.Title = ""; // now invalid
+        goal.Title = "";
 
         Func<Task> act = () => service.UpdateAsync(goal);
 
@@ -230,8 +226,7 @@ public class ServiceValidationTests : IDisposable
             featureGuard: null,
             validation: CreateValidationService());
 
-        // No PlantedAt/LastWatered: AddAsync defaults them BEFORE validating, so the (otherwise
-        // required, must-be-in-the-past) timestamp rules must still pass. Guards the defaulting order.
+        // No PlantedAt/LastWatered: AddAsync defaults them before validating. Guards defaulting order.
         var valid = new UserPlant { Name = "Ferdinand", SpeciesId = Guid.NewGuid(), CurrentLevel = 1, Experience = 0 };
 
         await service.AddAsync(valid);
@@ -242,8 +237,7 @@ public class ServiceValidationTests : IDisposable
     [Fact]
     public async Task PlantService_PurchasePlantAsync_InvalidName_ThrowsBeforeSpendingCoins()
     {
-        // CODE_REVIEW BUG-05 follow-up: PurchasePlantAsync (not AddAsync) is the real production
-        // plant-creation path, so plant validation must run there too — and before coins are spent.
+        // PurchasePlantAsync is the real production plant-creation path; validation must run there before coins are spent.
         var cache = new ServiceCollection().AddMemoryCache().BuildServiceProvider()
             .GetRequiredService<IMemoryCache>();
         var factory = new TestDbContextFactory(_dbHelper.DatabaseName);
@@ -282,10 +276,8 @@ public class ServiceValidationTests : IDisposable
     [Fact]
     public async Task BookService_UpdateAsync_PreexistingInvalidBook_DoesNotThrow()
     {
-        // A book that violates a current rule (CurrentPage > PageCount) — e.g. legacy data from
-        // before the progress clamp existed. A single-field edit (rating/note) calls UpdateAsync
-        // with the whole entity and must NOT be rejected for a pre-existing inconsistency it did
-        // not introduce. Validation lives on the user-entry paths (AddAsync / SaveBookWithRelations).
+        // Legacy book violating a current rule (CurrentPage > PageCount). A single-field edit must
+        // not be rejected for a pre-existing inconsistency; validation lives on user-entry paths only.
         var book = new Book { Title = "Legacy", Author = "A", PageCount = 100, CurrentPage = 600 };
         _dbHelper.Context.Books.Add(book);
         await _dbHelper.Context.SaveChangesAsync();

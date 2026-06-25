@@ -27,10 +27,9 @@ public class WidgetConfigurationActivity : Activity
     {
         base.OnCreate(savedInstanceState);
 
-        // Default result is CANCELED — if user backs out, widget won't be added
+        // Default CANCELED so backing out doesn't add the widget.
         SetResult(Result.Canceled);
 
-        // Get the widget ID from the intent
         _appWidgetId = Intent?.GetIntExtra(AppWidgetManager.ExtraAppwidgetId,
             AppWidgetManager.InvalidAppwidgetId) ?? AppWidgetManager.InvalidAppwidgetId;
 
@@ -69,7 +68,6 @@ public class WidgetConfigurationActivity : Activity
 
         if (emptyView is not null) emptyView.Visibility = ViewStates.Gone;
 
-        // Build display strings
         var goalLabels = _goals.Select(g =>
         {
             var unit = g.GoalType switch
@@ -120,7 +118,6 @@ public class WidgetConfigurationActivity : Activity
 
     private void SaveConfigAndFinish(Guid? goalId)
     {
-        // Save selected goal ID to SharedPreferences
         var prefs = GetSharedPreferences(DailyGoalWidgetProvider.PrefsName, FileCreationMode.Private);
         var editor = prefs?.Edit();
         if (editor is not null)
@@ -134,14 +131,12 @@ public class WidgetConfigurationActivity : Activity
             editor.Apply();
         }
 
-        // Trigger initial widget update
         var appWidgetManager = AppWidgetManager.GetInstance(this);
         if (appWidgetManager is not null)
         {
             DailyGoalWidgetProvider.UpdateWidget(this, appWidgetManager, _appWidgetId);
         }
 
-        // Return success
         var resultIntent = new Intent();
         resultIntent.PutExtra(AppWidgetManager.ExtraAppwidgetId, _appWidgetId);
         SetResult(Result.Ok, resultIntent);

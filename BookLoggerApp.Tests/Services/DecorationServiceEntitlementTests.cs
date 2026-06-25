@@ -12,9 +12,8 @@ using Xunit;
 namespace BookLoggerApp.Tests.Services;
 
 /// <summary>
-/// CODE_REVIEW SEC-06 (decoration-tier purchase entitlement enforced in the service) and
-/// SEC-11 (hidden-by-entitlement decorations must not surface in reads nor grant their
-/// special-ability boost after a downgrade).
+/// SEC-06: decoration-tier purchase entitlement enforced in the service.
+/// SEC-11: hidden decorations stay out of reads and grant no ability boost after downgrade.
 /// </summary>
 public class DecorationServiceEntitlementTests : IDisposable
 {
