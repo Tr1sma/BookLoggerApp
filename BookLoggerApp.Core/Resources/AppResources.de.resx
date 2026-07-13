@@ -2479,6 +2479,18 @@
   <data name="Lookup_Timeout" xml:space="preserve">
     <value>Zeitüberschreitung der Anfrage. Bitte erneut versuchen.</value>
   </data>
+  <data name="Lookup_ServerUnavailable" xml:space="preserve">
+    <value>Der Buch-Dienst ist vorübergehend nicht erreichbar. Bitte versuche es gleich noch einmal.</value>
+  </data>
+  <data name="Lookup_FailedHttp" xml:space="preserve">
+    <value>Suche fehlgeschlagen (HTTP {0}). Bitte versuche es erneut.</value>
+  </data>
+  <data name="Lookup_FailedGeneric" xml:space="preserve">
+    <value>Suche fehlgeschlagen. Bitte versuche es erneut.</value>
+  </data>
+  <data name="Lookup_FailedWithReason" xml:space="preserve">
+    <value>Suche fehlgeschlagen: {0}</value>
+  </data>
   <data name="Lookup_EnterTitleFirst" xml:space="preserve">
     <value>Bitte zuerst einen Titel eingeben</value>
   </data>

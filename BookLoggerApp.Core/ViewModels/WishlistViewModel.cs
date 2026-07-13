@@ -161,11 +161,17 @@ public partial class WishlistViewModel : ViewModelBase
         {
             LookupMessage = Tr("Lookup_QuotaReached");
         }
+        catch (HttpRequestException ex) when (ex.StatusCode.HasValue && (int)ex.StatusCode.Value >= 500)
+        {
+            // Transient server/backend errors (e.g. HTTP 503) already survived the retry
+            // backoff, so tell the user it's the service, not their input.
+            LookupMessage = Tr("Lookup_ServerUnavailable");
+        }
         catch (HttpRequestException ex)
         {
             LookupMessage = ex.StatusCode.HasValue
-                ? $"Lookup failed (HTTP {(int)ex.StatusCode.Value}). Please try again."
-                : "Lookup failed. Please try again.";
+                ? Tr("Lookup_FailedHttp", (int)ex.StatusCode.Value)
+                : Tr("Lookup_FailedGeneric");
         }
         catch (TaskCanceledException)
         {
@@ -173,7 +179,9 @@ public partial class WishlistViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            LookupMessage = $"Lookup failed: {ex.Message}";
+            // Cast to object so this binds to Tr(string, params object[]) and actually
+            // formats {0}; a bare string arg would bind to the fallback overload instead.
+            LookupMessage = Tr("Lookup_FailedWithReason", (object)ex.Message);
         }
         finally
         {
