@@ -12,7 +12,7 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
-## [Unveröffentlicht]
+## [1.0.1]
 
 ### Geändert
 - Level-Up-Feier und Ziele-Seite nutzen durchgängig die warme App-Farbpalette (kein Bootstrap-Rot/-Grün/-Grau mehr)
