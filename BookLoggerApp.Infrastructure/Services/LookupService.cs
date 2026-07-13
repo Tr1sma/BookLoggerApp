@@ -11,8 +11,21 @@ namespace BookLoggerApp.Infrastructure.Services;
 public class LookupService : ILookupService
 {
     private const string GoogleBooksApiBaseUrl = "https://www.googleapis.com/books/v1/volumes";
-    private const int MaxRetries = 3;
-    private static readonly int[] RetryDelaysMs = [1000, 3000, 6000];
+    private static readonly int[] DefaultRetryDelaysMs = [1000, 3000, 6000];
+
+    // Transient HTTP statuses worth retrying: request timeout, rate limiting, and
+    // backend/gateway failures. Google Books commonly returns 503 (Service Unavailable)
+    // during short backend hiccups — the usual cause of a one-off "Lookup failed (HTTP 503)"
+    // when scanning or auto-filling a book. A brief backoff-and-retry recovers those.
+    private static readonly HttpStatusCode[] TransientStatusCodes =
+    [
+        HttpStatusCode.RequestTimeout,       // 408
+        HttpStatusCode.TooManyRequests,      // 429
+        HttpStatusCode.InternalServerError,  // 500
+        HttpStatusCode.BadGateway,           // 502
+        HttpStatusCode.ServiceUnavailable,   // 503
+        HttpStatusCode.GatewayTimeout,       // 504
+    ];
     private const string QuotaKeyword = "quota";
     private const string RateLimitKeyword = "rateLimitExceeded";
     private const string DailyLimitKeyword = "dailyLimitExceeded";
@@ -24,15 +37,18 @@ public class LookupService : ILookupService
     private readonly HttpClient _httpClient;
     private readonly ILogger<LookupService>? _logger;
     private readonly string? _googleBooksApiKey;
+    private readonly int[] _retryDelaysMs;
     private bool _useApiKey = true;
 
-    public LookupService(HttpClient httpClient, ILogger<LookupService>? logger = null, string? googleBooksApiKey = null)
+    public LookupService(HttpClient httpClient, ILogger<LookupService>? logger = null, string? googleBooksApiKey = null, int[]? retryDelaysMs = null)
     {
         _logger = logger;
         _httpClient = httpClient;
         _googleBooksApiKey = string.IsNullOrWhiteSpace(googleBooksApiKey)
             ? ApiKeys.GoogleBooks
             : googleBooksApiKey;
+        // Injectable purely so tests can retry without real delays; production uses the defaults.
+        _retryDelaysMs = retryDelaysMs is { Length: > 0 } ? retryDelaysMs : DefaultRetryDelaysMs;
     }
 
     public async Task<BookMetadata?> LookupByISBNAsync(string isbn, CancellationToken ct = default)
@@ -169,16 +185,21 @@ public class LookupService : ILookupService
     {
         var response = await _httpClient.GetAsync(url, ct);
 
-        for (int i = 0; i < MaxRetries && response.StatusCode == HttpStatusCode.TooManyRequests; i++)
+        for (int i = 0; i < _retryDelaysMs.Length && IsTransientStatus(response.StatusCode); i++)
         {
-            _logger?.LogWarning("Retry {RetryCount}/{MaxRetries} after 429 Too Many Requests", i + 1, MaxRetries);
+            _logger?.LogWarning(
+                "Retry {RetryCount}/{MaxRetries} after transient status {StatusCode}",
+                i + 1, _retryDelaysMs.Length, (int)response.StatusCode);
             response.Dispose();
-            await Task.Delay(RetryDelaysMs[i], ct);
+            await Task.Delay(_retryDelaysMs[i], ct);
             response = await _httpClient.GetAsync(url, ct);
         }
 
         return response;
     }
+
+    private static bool IsTransientStatus(HttpStatusCode statusCode) =>
+        Array.IndexOf(TransientStatusCodes, statusCode) >= 0;
 
     private static bool IsQuotaOrRateLimitError(HttpStatusCode statusCode, string body)
     {

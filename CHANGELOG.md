@@ -23,6 +23,7 @@ Versionsschema:
 - Cover-Downloads nutzen einen gepoolten HTTP-Client (kein Socket-Leck-Risiko bei vielen Bildern)
 
 ### Behoben
+- Buch-Lookup (Scannen, ISBN-Autoausfüllen, Titelsuche) bricht bei kurzzeitigen Google-Books-Störungen nicht mehr sofort mit „Lookup failed (HTTP 503)" ab: vorübergehende Serverfehler (408/429/500/502/503/504) werden jetzt mit Backoff erneut versucht. Bleibt der Dienst nicht erreichbar, erscheint eine verständliche, lokalisierte Meldung statt eines rohen HTTP-Codes
 - Cloud-Backup wiederherstellen scheitert nicht mehr mit „Database image is malformed": die DB-Datei wird nicht mehr ausgetauscht, während eine zweite Verbindung (Widget oder Hintergrund-Wartung) sie noch offen hält. Restore wartet jetzt auf die Hintergrund-Wartung, sperrt den Widget-Zugriff während des Vorgangs, löscht WAL/SHM vor dem Kopieren und führt die Migration auf einer eigenen, nicht gepoolten Verbindung mit explizitem WAL-Modus aus
 - Promo-Code-Meldungen, Export-Teilen-Titel und Share-Card-Texte (Statistik & Buch) erscheinen jetzt in der App-Sprache statt fest auf Englisch
 - Lesezeit-Anzeige auf Dashboard & Statistik nutzt die lokalisierte Schreibweise (vorher fest „Xh Ym")

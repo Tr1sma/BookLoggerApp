@@ -391,16 +391,23 @@ public partial class BookEditViewModel : ViewModelBase
             case HttpRequestException http when IsQuotaExceeded(http):
                 LookupMessage = Tr("Lookup_QuotaReached");
                 break;
+            case HttpRequestException http when http.StatusCode.HasValue && (int)http.StatusCode.Value >= 500:
+                // Transient server/backend errors (e.g. HTTP 503) already survived the retry
+                // backoff, so tell the user it's the service, not their input.
+                LookupMessage = Tr("Lookup_ServerUnavailable");
+                break;
             case HttpRequestException http:
                 LookupMessage = http.StatusCode.HasValue
-                    ? $"Lookup failed (HTTP {(int)http.StatusCode.Value}). Please try again."
-                    : "Lookup failed. Please try again.";
+                    ? Tr("Lookup_FailedHttp", (int)http.StatusCode.Value)
+                    : Tr("Lookup_FailedGeneric");
                 break;
             case TaskCanceledException:
                 LookupMessage = Tr("Lookup_Timeout");
                 break;
             default:
-                LookupMessage = $"Error: {ex.Message}";
+                // Cast to object so this binds to Tr(string, params object[]) and actually
+                // formats {0}; a bare string arg would bind to the fallback overload instead.
+                LookupMessage = Tr("Lookup_FailedWithReason", (object)ex.Message);
                 break;
         }
     }

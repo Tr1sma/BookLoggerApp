@@ -2538,6 +2538,18 @@
   <data name="Lookup_Timeout" xml:space="preserve">
     <value>Request timed out. Please try again.</value>
   </data>
+  <data name="Lookup_ServerUnavailable" xml:space="preserve">
+    <value>The book service is temporarily unavailable. Please try again in a moment.</value>
+  </data>
+  <data name="Lookup_FailedHttp" xml:space="preserve">
+    <value>Lookup failed (HTTP {0}). Please try again.</value>
+  </data>
+  <data name="Lookup_FailedGeneric" xml:space="preserve">
+    <value>Lookup failed. Please try again.</value>
+  </data>
+  <data name="Lookup_FailedWithReason" xml:space="preserve">
+    <value>Lookup failed: {0}</value>
+  </data>
   <data name="Lookup_EnterTitleFirst" xml:space="preserve">
     <value>Please enter a title first</value>
   </data>
