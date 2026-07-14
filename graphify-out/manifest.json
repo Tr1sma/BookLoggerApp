@@ -1,0 +1,3162 @@
+{
+  ".claude/settings.local.json": {
+    "mtime": 1783605023.74503,
+    "ast_hash": "54c672fe6fd0871993fe735b9fe1affd",
+    "semantic_hash": "54c672fe6fd0871993fe735b9fe1affd"
+  },
+  ".config/dotnet-tools.json": {
+    "mtime": 1783605023.7460303,
+    "ast_hash": "f80e76fad13c15d531d508971ee096fd",
+    "semantic_hash": "f80e76fad13c15d531d508971ee096fd"
+  },
+  ".vscode/launch.json": {
+    "mtime": 1779873417.2647367,
+    "ast_hash": "2682faa444452200c8e6e23eb65b5466",
+    "semantic_hash": "2682faa444452200c8e6e23eb65b5466"
+  },
+  ".vscode/tasks.json": {
+    "mtime": 1779873417.2647367,
+    "ast_hash": "d6469261758f726df85690e466a7e588",
+    "semantic_hash": "d6469261758f726df85690e466a7e588"
+  },
+  "BookLoggerApp.Core/BookLoggerApp.Core.csproj": {
+    "mtime": 1783605023.7480347,
+    "ast_hash": "e505224411582f76046f6fae2def47d6",
+    "semantic_hash": "e505224411582f76046f6fae2def47d6"
+  },
+  "BookLoggerApp.Core/Entitlements/BillingPeriod.cs": {
+    "mtime": 1779873417.267724,
+    "ast_hash": "b406d6f10ce1f65e3bc028f70d92e386",
+    "semantic_hash": "b406d6f10ce1f65e3bc028f70d92e386"
+  },
+  "BookLoggerApp.Core/Entitlements/EntitlementChangedEventArgs.cs": {
+    "mtime": 1783605023.7490373,
+    "ast_hash": "564d42dfc52bad83dfa0ed0e61949f5c",
+    "semantic_hash": "564d42dfc52bad83dfa0ed0e61949f5c"
+  },
+  "BookLoggerApp.Core/Entitlements/FeatureDisplayInfo.cs": {
+    "mtime": 1783605023.7500417,
+    "ast_hash": "4899aa529b376173bc44c6d83e34afb4",
+    "semantic_hash": "4899aa529b376173bc44c6d83e34afb4"
+  },
+  "BookLoggerApp.Core/Entitlements/FeatureKey.cs": {
+    "mtime": 1783605023.751048,
+    "ast_hash": "553b802cc6a027407ecd80c0fd3ce89f",
+    "semantic_hash": "553b802cc6a027407ecd80c0fd3ce89f"
+  },
+  "BookLoggerApp.Core/Entitlements/FeaturePolicy.cs": {
+    "mtime": 1783605023.7520564,
+    "ast_hash": "8db3e132f1d4cfc3bf8a58a9bd88a6ba",
+    "semantic_hash": "8db3e132f1d4cfc3bf8a58a9bd88a6ba"
+  },
+  "BookLoggerApp.Core/Entitlements/PaywallComparisonCatalog.cs": {
+    "mtime": 1783605023.753062,
+    "ast_hash": "2b23d93fd08508846f0ed04be017720d",
+    "semantic_hash": "2b23d93fd08508846f0ed04be017720d"
+  },
+  "BookLoggerApp.Core/Entitlements/PromoActivation.cs": {
+    "mtime": 1779873417.271707,
+    "ast_hash": "862f9baefab311858ce736e7b7e79845",
+    "semantic_hash": "862f9baefab311858ce736e7b7e79845"
+  },
+  "BookLoggerApp.Core/Entitlements/PurchaseResult.cs": {
+    "mtime": 1779873417.2727034,
+    "ast_hash": "590edeed4759438ccaa80ef8dded7fe2",
+    "semantic_hash": "590edeed4759438ccaa80ef8dded7fe2"
+  },
+  "BookLoggerApp.Core/Entitlements/ShopTierFeatures.cs": {
+    "mtime": 1783605023.7540672,
+    "ast_hash": "68f8c86fdc3373625e2726584ecea6af",
+    "semantic_hash": "68f8c86fdc3373625e2726584ecea6af"
+  },
+  "BookLoggerApp.Core/Entitlements/SubscriptionTier.cs": {
+    "mtime": 1779873417.2736988,
+    "ast_hash": "099481f29c310c5ddabd04be1d70b6a2",
+    "semantic_hash": "099481f29c310c5ddabd04be1d70b6a2"
+  },
+  "BookLoggerApp.Core/Enums/BlindDateRevealAnimation.cs": {
+    "mtime": 1783605023.7540672,
+    "ast_hash": "9215f00c9ed4a45783aa8c9ee1d73c67",
+    "semantic_hash": "9215f00c9ed4a45783aa8c9ee1d73c67"
+  },
+  "BookLoggerApp.Core/Enums/ExportFormat.cs": {
+    "mtime": 1779873417.2746947,
+    "ast_hash": "8d00960dc6596094f4ed71da12e6ab68",
+    "semantic_hash": "8d00960dc6596094f4ed71da12e6ab68"
+  },
+  "BookLoggerApp.Core/Enums/GoalType.cs": {
+    "mtime": 1779873417.2756903,
+    "ast_hash": "63f032336b31b29fedd8c6e79c2f0de4",
+    "semantic_hash": "63f032336b31b29fedd8c6e79c2f0de4"
+  },
+  "BookLoggerApp.Core/Enums/PlantStatus.cs": {
+    "mtime": 1779873417.276687,
+    "ast_hash": "18f0949278ad95c19d1d7208c64a604d",
+    "semantic_hash": "18f0949278ad95c19d1d7208c64a604d"
+  },
+  "BookLoggerApp.Core/Enums/SessionMood.cs": {
+    "mtime": 1783605023.7550707,
+    "ast_hash": "0c735902e73685ad84f9e47afbecfc8f",
+    "semantic_hash": "0c735902e73685ad84f9e47afbecfc8f"
+  },
+  "BookLoggerApp.Core/Enums/ShopItemType.cs": {
+    "mtime": 1779873417.276687,
+    "ast_hash": "9d9d6a4dff6cfd3259be0978c6747fa0",
+    "semantic_hash": "9d9d6a4dff6cfd3259be0978c6747fa0"
+  },
+  "BookLoggerApp.Core/Enums/WishlistPriority.cs": {
+    "mtime": 1779873417.2776816,
+    "ast_hash": "1a37e258c818b1cdd26c5a24ed744fb8",
+    "semantic_hash": "1a37e258c818b1cdd26c5a24ed744fb8"
+  },
+  "BookLoggerApp.Core/Exceptions/BookLoggerException.cs": {
+    "mtime": 1779873417.2786775,
+    "ast_hash": "53146dc0316f39e3ae3234159f2b4637",
+    "semantic_hash": "53146dc0316f39e3ae3234159f2b4637"
+  },
+  "BookLoggerApp.Core/Exceptions/ConcurrencyException.cs": {
+    "mtime": 1779873417.279673,
+    "ast_hash": "cfd4dc8ed9235d66fc6d5022608dab96",
+    "semantic_hash": "cfd4dc8ed9235d66fc6d5022608dab96"
+  },
+  "BookLoggerApp.Core/Exceptions/EntitlementRequiredException.cs": {
+    "mtime": 1779873417.2806687,
+    "ast_hash": "a6d59c2ead4372ca9908a0fa7dcb1182",
+    "semantic_hash": "a6d59c2ead4372ca9908a0fa7dcb1182"
+  },
+  "BookLoggerApp.Core/Exceptions/EntityNotFoundException.cs": {
+    "mtime": 1779873417.2806687,
+    "ast_hash": "5d0fd80dc4500d62ac05a3cda7876fff",
+    "semantic_hash": "5d0fd80dc4500d62ac05a3cda7876fff"
+  },
+  "BookLoggerApp.Core/Exceptions/InsufficientFundsException.cs": {
+    "mtime": 1779873417.2816646,
+    "ast_hash": "96b5c32c2f25142a154e48fdf3aac528",
+    "semantic_hash": "96b5c32c2f25142a154e48fdf3aac528"
+  },
+  "BookLoggerApp.Core/Exceptions/ValidationException.cs": {
+    "mtime": 1779873417.2826605,
+    "ast_hash": "376fa31ba0201ff7332d0c41f9a0dd55",
+    "semantic_hash": "376fa31ba0201ff7332d0c41f9a0dd55"
+  },
+  "BookLoggerApp.Core/Helpers/ChangelogParser.cs": {
+    "mtime": 1779873417.2836561,
+    "ast_hash": "f2eaa8a5111f474dd568910a81d514f5",
+    "semantic_hash": "f2eaa8a5111f474dd568910a81d514f5"
+  },
+  "BookLoggerApp.Core/Helpers/GenreRatingMapping.cs": {
+    "mtime": 1779878282.8429399,
+    "ast_hash": "695902870c2f07a062ff130d80fbb63e",
+    "semantic_hash": "695902870c2f07a062ff130d80fbb63e"
+  },
+  "BookLoggerApp.Core/Helpers/GoalActivityHelper.cs": {
+    "mtime": 1783605023.7560747,
+    "ast_hash": "bf0299b035f5eb669186e94b96610d69",
+    "semantic_hash": "bf0299b035f5eb669186e94b96610d69"
+  },
+  "BookLoggerApp.Core/Helpers/GoalDateRangeHelper.cs": {
+    "mtime": 1783605023.7571094,
+    "ast_hash": "2e9847b6fdeb24b736cc9f50032c6f00",
+    "semantic_hash": "2e9847b6fdeb24b736cc9f50032c6f00"
+  },
+  "BookLoggerApp.Core/Helpers/LocalTimeHelper.cs": {
+    "mtime": 1783605023.7571094,
+    "ast_hash": "2f851118c159ee1355880563c1825058",
+    "semantic_hash": "2f851118c159ee1355880563c1825058"
+  },
+  "BookLoggerApp.Core/Helpers/ReadingForecastCalculator.cs": {
+    "mtime": 1783605023.7581139,
+    "ast_hash": "49513addc49d13558588e8705f43c399",
+    "semantic_hash": "49513addc49d13558588e8705f43c399"
+  },
+  "BookLoggerApp.Core/Helpers/ReadingStreakHelper.cs": {
+    "mtime": 1783605023.7592278,
+    "ast_hash": "14e8dc02c3a3143f9be4a79885731b46",
+    "semantic_hash": "14e8dc02c3a3143f9be4a79885731b46"
+  },
+  "BookLoggerApp.Core/Helpers/ScannerTaskCompletionHelper.cs": {
+    "mtime": 1779873417.2866435,
+    "ast_hash": "88b887c52ff1900e92a441e3e1f9a388",
+    "semantic_hash": "88b887c52ff1900e92a441e3e1f9a388"
+  },
+  "BookLoggerApp.Core/Helpers/SessionMoodHelper.cs": {
+    "mtime": 1783605023.760232,
+    "ast_hash": "cdd4eb8034bc6466743ea8867f394e6f",
+    "semantic_hash": "cdd4eb8034bc6466743ea8867f394e6f"
+  },
+  "BookLoggerApp.Core/Helpers/SpecialAbilityResolver.cs": {
+    "mtime": 1783605023.760232,
+    "ast_hash": "5b267a9c579c3a639b4dad883beedd0a",
+    "semantic_hash": "5b267a9c579c3a639b4dad883beedd0a"
+  },
+  "BookLoggerApp.Core/Helpers/SpineColorHelper.cs": {
+    "mtime": 1783605023.7612343,
+    "ast_hash": "c50278d4dd61c6e6f0d9a50401c5499c",
+    "semantic_hash": "c50278d4dd61c6e6f0d9a50401c5499c"
+  },
+  "BookLoggerApp.Core/Helpers/TimeFormatHelper.cs": {
+    "mtime": 1783605023.7622402,
+    "ast_hash": "f51621f3a83d62d97dae60520dbd2fcb",
+    "semantic_hash": "f51621f3a83d62d97dae60520dbd2fcb"
+  },
+  "BookLoggerApp.Core/Helpers/XpCalculator.cs": {
+    "mtime": 1779873417.2886353,
+    "ast_hash": "8a4583eee3d91eab79f40018dafcad93",
+    "semantic_hash": "8a4583eee3d91eab79f40018dafcad93"
+  },
+  "BookLoggerApp.Core/Infrastructure/AnalyticsBootstrapper.cs": {
+    "mtime": 1783605023.7632544,
+    "ast_hash": "0d431e93b1d3f895ca99214038038f81",
+    "semantic_hash": "0d431e93b1d3f895ca99214038038f81"
+  },
+  "BookLoggerApp.Core/Infrastructure/DatabaseInitializationHelper.cs": {
+    "mtime": 1783605023.7642481,
+    "ast_hash": "064a4ffe7d5ba1e25b7b75601c00f9ce",
+    "semantic_hash": "064a4ffe7d5ba1e25b7b75601c00f9ce"
+  },
+  "BookLoggerApp.Core/Infrastructure/PlatformsDbPath.cs": {
+    "mtime": 1783605023.764754,
+    "ast_hash": "5138f688664a8e5666dbffa852c00416",
+    "semantic_hash": "5138f688664a8e5666dbffa852c00416"
+  },
+  "BookLoggerApp.Core/Models/Annotation.cs": {
+    "mtime": 1783605023.7657566,
+    "ast_hash": "d2daf3a5156b38c9fd95cd8128e3f1bd",
+    "semantic_hash": "d2daf3a5156b38c9fd95cd8128e3f1bd"
+  },
+  "BookLoggerApp.Core/Models/AppSettings.cs": {
+    "mtime": 1783605023.7670639,
+    "ast_hash": "e498935073f428c32e807db4049fdff8",
+    "semantic_hash": "e498935073f428c32e807db4049fdff8"
+  },
+  "BookLoggerApp.Core/Models/AppUpdateState.cs": {
+    "mtime": 1779873417.2946098,
+    "ast_hash": "d89f21e0a4089b7843e1f60c5ad2a8fc",
+    "semantic_hash": "d89f21e0a4089b7843e1f60c5ad2a8fc"
+  },
+  "BookLoggerApp.Core/Models/AuthorStats.cs": {
+    "mtime": 1779873417.2946098,
+    "ast_hash": "4127d8a9268d29ad8aad67ef5241e2c1",
+    "semantic_hash": "4127d8a9268d29ad8aad67ef5241e2c1"
+  },
+  "BookLoggerApp.Core/Models/BlindDateCandidate.cs": {
+    "mtime": 1783605023.7670639,
+    "ast_hash": "38b64e09148671cd41539dc131eda4b9",
+    "semantic_hash": "38b64e09148671cd41539dc131eda4b9"
+  },
+  "BookLoggerApp.Core/Models/Book.cs": {
+    "mtime": 1783605023.76807,
+    "ast_hash": "ee91735c8bcb0ae7a29662cd55f5afb8",
+    "semantic_hash": "ee91735c8bcb0ae7a29662cd55f5afb8"
+  },
+  "BookLoggerApp.Core/Models/BookGenre.cs": {
+    "mtime": 1783605023.769074,
+    "ast_hash": "8aa3840adfd50ae081b9df02e7370c77",
+    "semantic_hash": "8aa3840adfd50ae081b9df02e7370c77"
+  },
+  "BookLoggerApp.Core/Models/BookRatingSummary.cs": {
+    "mtime": 1783605023.7700775,
+    "ast_hash": "12110d1e994bcc675c024ab9b6540ce3",
+    "semantic_hash": "12110d1e994bcc675c024ab9b6540ce3"
+  },
+  "BookLoggerApp.Core/Models/BookSaveResult.cs": {
+    "mtime": 1783605023.771083,
+    "ast_hash": "5ab123aea35ee9b354a33771c6f635dd",
+    "semantic_hash": "5ab123aea35ee9b354a33771c6f635dd"
+  },
+  "BookLoggerApp.Core/Models/BookShareData.cs": {
+    "mtime": 1783605023.771083,
+    "ast_hash": "9f15439e9b76726b9f339727710301d5",
+    "semantic_hash": "9f15439e9b76726b9f339727710301d5"
+  },
+  "BookLoggerApp.Core/Models/BookShelf.cs": {
+    "mtime": 1783605023.7720873,
+    "ast_hash": "357f5ff2bd8c58daa265a080c20dca11",
+    "semantic_hash": "357f5ff2bd8c58daa265a080c20dca11"
+  },
+  "BookLoggerApp.Core/Models/BookTrope.cs": {
+    "mtime": 1783605023.7730906,
+    "ast_hash": "ce54888fb817221d214b610596de76e2",
+    "semantic_hash": "ce54888fb817221d214b610596de76e2"
+  },
+  "BookLoggerApp.Core/Models/ChangelogRelease.cs": {
+    "mtime": 1779873417.3005843,
+    "ast_hash": "5b7c25c0408801e26f0b0e7f13cece49",
+    "semantic_hash": "5b7c25c0408801e26f0b0e7f13cece49"
+  },
+  "BookLoggerApp.Core/Models/DecorationShelf.cs": {
+    "mtime": 1783605023.7740934,
+    "ast_hash": "6d35063952564c16c3fad1b5058d143f",
+    "semantic_hash": "6d35063952564c16c3fad1b5058d143f"
+  },
+  "BookLoggerApp.Core/Models/Genre.cs": {
+    "mtime": 1783605023.7752357,
+    "ast_hash": "344958dc370d7c952619b4220eace163",
+    "semantic_hash": "344958dc370d7c952619b4220eace163"
+  },
+  "BookLoggerApp.Core/Models/GoalExcludedBook.cs": {
+    "mtime": 1783605023.7762415,
+    "ast_hash": "fdcc49fce3cc80f859a2b2348e57cadf",
+    "semantic_hash": "fdcc49fce3cc80f859a2b2348e57cadf"
+  },
+  "BookLoggerApp.Core/Models/GoalGenre.cs": {
+    "mtime": 1783605023.7772484,
+    "ast_hash": "265c896d795997aa0a357dad15b993f0",
+    "semantic_hash": "265c896d795997aa0a357dad15b993f0"
+  },
+  "BookLoggerApp.Core/Models/LevelMilestone.cs": {
+    "mtime": 1783605023.7772484,
+    "ast_hash": "1e2f5df9f6500f7c5a0f9d05cae84d23",
+    "semantic_hash": "1e2f5df9f6500f7c5a0f9d05cae84d23"
+  },
+  "BookLoggerApp.Core/Models/LevelUpResult.cs": {
+    "mtime": 1783605023.7782557,
+    "ast_hash": "0da5dcfe4410e0719173d3d3f829d750",
+    "semantic_hash": "0da5dcfe4410e0719173d3d3f829d750"
+  },
+  "BookLoggerApp.Core/Models/OnboardingEvent.cs": {
+    "mtime": 1779873417.3055632,
+    "ast_hash": "6d414f6e64195f559882a2c4a355182c",
+    "semantic_hash": "6d414f6e64195f559882a2c4a355182c"
+  },
+  "BookLoggerApp.Core/Models/OnboardingFeatureAtlasEntry.cs": {
+    "mtime": 1779879696.9173183,
+    "ast_hash": "9b0d838cc24468c3e31d1cfccdda919c",
+    "semantic_hash": "9b0d838cc24468c3e31d1cfccdda919c"
+  },
+  "BookLoggerApp.Core/Models/OnboardingIntroStatus.cs": {
+    "mtime": 1779873417.306559,
+    "ast_hash": "1147bf4d71c6a4af21983f4ef2f0ed18",
+    "semantic_hash": "1147bf4d71c6a4af21983f4ef2f0ed18"
+  },
+  "BookLoggerApp.Core/Models/OnboardingMissionCatalog.cs": {
+    "mtime": 1779879757.5707386,
+    "ast_hash": "67ddee1ecd1348c69fd039afb6733906",
+    "semantic_hash": "67ddee1ecd1348c69fd039afb6733906"
+  },
+  "BookLoggerApp.Core/Models/OnboardingMissionDefinition.cs": {
+    "mtime": 1779879696.7287607,
+    "ast_hash": "ee2706fe75aee40b69696f21089425df",
+    "semantic_hash": "ee2706fe75aee40b69696f21089425df"
+  },
+  "BookLoggerApp.Core/Models/OnboardingMissionId.cs": {
+    "mtime": 1779873417.309549,
+    "ast_hash": "7736a4a70e504adcfc0cbab999824ef5",
+    "semantic_hash": "7736a4a70e504adcfc0cbab999824ef5"
+  },
+  "BookLoggerApp.Core/Models/OnboardingMissionProgress.cs": {
+    "mtime": 1779879696.8329778,
+    "ast_hash": "2f269236a96608f1f26b9eebb92fc40c",
+    "semantic_hash": "2f269236a96608f1f26b9eebb92fc40c"
+  },
+  "BookLoggerApp.Core/Models/OnboardingMissionState.cs": {
+    "mtime": 1779873417.310545,
+    "ast_hash": "9b7a102252794628534d57b81b0785df",
+    "semantic_hash": "9b7a102252794628534d57b81b0785df"
+  },
+  "BookLoggerApp.Core/Models/OnboardingMissionStatus.cs": {
+    "mtime": 1779873417.31182,
+    "ast_hash": "bacfa2a7290af6e3ba2f4480f0d5c595",
+    "semantic_hash": "bacfa2a7290af6e3ba2f4480f0d5c595"
+  },
+  "BookLoggerApp.Core/Models/OnboardingSnapshot.cs": {
+    "mtime": 1779873417.31182,
+    "ast_hash": "de767a134b91e0e216288cf9ba87eaa3",
+    "semantic_hash": "de767a134b91e0e216288cf9ba87eaa3"
+  },
+  "BookLoggerApp.Core/Models/PlantBoostInfo.cs": {
+    "mtime": 1779873417.3128188,
+    "ast_hash": "68877ec174778db759a9fb7bc9f9c9aa",
+    "semantic_hash": "68877ec174778db759a9fb7bc9f9c9aa"
+  },
+  "BookLoggerApp.Core/Models/PlantShelf.cs": {
+    "mtime": 1783605023.7792606,
+    "ast_hash": "6636d2e52edc3f0a5a266944c05d1cc6",
+    "semantic_hash": "6636d2e52edc3f0a5a266944c05d1cc6"
+  },
+  "BookLoggerApp.Core/Models/PlantSpecies.cs": {
+    "mtime": 1783605023.780262,
+    "ast_hash": "92cb7e71284c09eb4b342bab1c9d34cd",
+    "semantic_hash": "92cb7e71284c09eb4b342bab1c9d34cd"
+  },
+  "BookLoggerApp.Core/Models/ProgressionResult.cs": {
+    "mtime": 1783605023.7812622,
+    "ast_hash": "007acb0226443123317970ff5e399afe",
+    "semantic_hash": "007acb0226443123317970ff5e399afe"
+  },
+  "BookLoggerApp.Core/Models/Quote.cs": {
+    "mtime": 1783605023.7822661,
+    "ast_hash": "059afe8e9d78b05eb1b7bf8ec3517289",
+    "semantic_hash": "059afe8e9d78b05eb1b7bf8ec3517289"
+  },
+  "BookLoggerApp.Core/Models/RatingCategory.cs": {
+    "mtime": 1783605023.783276,
+    "ast_hash": "eccf350aaf12a8d0f63834fc0ffa3c23",
+    "semantic_hash": "eccf350aaf12a8d0f63834fc0ffa3c23"
+  },
+  "BookLoggerApp.Core/Models/RatingCategoryInfo.cs": {
+    "mtime": 1783605023.7842827,
+    "ast_hash": "9d50a2983ee4436fe3f91ef75584e9c0",
+    "semantic_hash": "9d50a2983ee4436fe3f91ef75584e9c0"
+  },
+  "BookLoggerApp.Core/Models/ReadingForecast.cs": {
+    "mtime": 1783605023.7842827,
+    "ast_hash": "5598e3ffd202eadfdd621a234064f80a",
+    "semantic_hash": "5598e3ffd202eadfdd621a234064f80a"
+  },
+  "BookLoggerApp.Core/Models/ReadingGoal.cs": {
+    "mtime": 1783605023.7852888,
+    "ast_hash": "50de2c32b598e5a5d8145140d6b25d61",
+    "semantic_hash": "50de2c32b598e5a5d8145140d6b25d61"
+  },
+  "BookLoggerApp.Core/Models/ReadingSession.cs": {
+    "mtime": 1783605023.7863305,
+    "ast_hash": "f769b4233c3f3905569e734cbb3b96d9",
+    "semantic_hash": "f769b4233c3f3905569e734cbb3b96d9"
+  },
+  "BookLoggerApp.Core/Models/ReadingSessionMood.cs": {
+    "mtime": 1783605023.7873383,
+    "ast_hash": "18ce8fedbd08a5c4eed4841ee4a0ecb9",
+    "semantic_hash": "18ce8fedbd08a5c4eed4841ee4a0ecb9"
+  },
+  "BookLoggerApp.Core/Models/SessionEndResult.cs": {
+    "mtime": 1779873417.3197892,
+    "ast_hash": "7d7352089fdcf8ecb4f945e9061e1e9f",
+    "semantic_hash": "7d7352089fdcf8ecb4f945e9061e1e9f"
+  },
+  "BookLoggerApp.Core/Models/SessionMoodInfo.cs": {
+    "mtime": 1783605023.7873383,
+    "ast_hash": "5bd6fddbe4020a33f0535de2044aa04e",
+    "semantic_hash": "5bd6fddbe4020a33f0535de2044aa04e"
+  },
+  "BookLoggerApp.Core/Models/SessionSaveResult.cs": {
+    "mtime": 1779873417.3207848,
+    "ast_hash": "9173f1bcf6d5f9068b81f363b8eb3cce",
+    "semantic_hash": "9173f1bcf6d5f9068b81f363b8eb3cce"
+  },
+  "BookLoggerApp.Core/Models/Shelf.cs": {
+    "mtime": 1779873417.3207848,
+    "ast_hash": "5076397b52f1f132e5a54082b8348b49",
+    "semantic_hash": "5076397b52f1f132e5a54082b8348b49"
+  },
+  "BookLoggerApp.Core/Models/ShopItem.cs": {
+    "mtime": 1783605023.788345,
+    "ast_hash": "8db3a47d9d8f0c70c7ef222e07681235",
+    "semantic_hash": "8db3a47d9d8f0c70c7ef222e07681235"
+  },
+  "BookLoggerApp.Core/Models/SpecialAbilityKeys.cs": {
+    "mtime": 1779873417.3227763,
+    "ast_hash": "f35be5bdd8e2b8eeeaad30ca39c3d5c1",
+    "semantic_hash": "f35be5bdd8e2b8eeeaad30ca39c3d5c1"
+  },
+  "BookLoggerApp.Core/Models/StatsShareData.cs": {
+    "mtime": 1779873417.3232827,
+    "ast_hash": "45b09b03c93dc1f97475cebf2a60ebea",
+    "semantic_hash": "45b09b03c93dc1f97475cebf2a60ebea"
+  },
+  "BookLoggerApp.Core/Models/Trope.cs": {
+    "mtime": 1783605023.7893505,
+    "ast_hash": "a153d4e9cb405a9672147e238693fc01",
+    "semantic_hash": "a153d4e9cb405a9672147e238693fc01"
+  },
+  "BookLoggerApp.Core/Models/UpcomingFinish.cs": {
+    "mtime": 1783605023.7904773,
+    "ast_hash": "f67125446c6ba21367516b4928be99ff",
+    "semantic_hash": "f67125446c6ba21367516b4928be99ff"
+  },
+  "BookLoggerApp.Core/Models/UserDecoration.cs": {
+    "mtime": 1783605023.7914834,
+    "ast_hash": "20fff857e7b799f27b688bc9d615b563",
+    "semantic_hash": "20fff857e7b799f27b688bc9d615b563"
+  },
+  "BookLoggerApp.Core/Models/UserEntitlement.cs": {
+    "mtime": 1779873417.3252773,
+    "ast_hash": "a97d80d0ea36f9db48de0731e306d1d6",
+    "semantic_hash": "a97d80d0ea36f9db48de0731e306d1d6"
+  },
+  "BookLoggerApp.Core/Models/UserPlant.cs": {
+    "mtime": 1783605023.792485,
+    "ast_hash": "9c3742a55eeee8fbbcdae2fe954d4eb4",
+    "semantic_hash": "9c3742a55eeee8fbbcdae2fe954d4eb4"
+  },
+  "BookLoggerApp.Core/Models/WishlistInfo.cs": {
+    "mtime": 1779873417.3272686,
+    "ast_hash": "899efb97ecf28e9372079548dc0ddf12",
+    "semantic_hash": "899efb97ecf28e9372079548dc0ddf12"
+  },
+  "BookLoggerApp.Core/Models/YearStats.cs": {
+    "mtime": 1779873417.3272686,
+    "ast_hash": "cd021d9b34d474cd86761ff7abfcb65f",
+    "semantic_hash": "cd021d9b34d474cd86761ff7abfcb65f"
+  },
+  "BookLoggerApp.Core/Resources/AppResources.cs": {
+    "mtime": 1779873417.3292754,
+    "ast_hash": "63d07d6381aaec7f2fdc1f88a63ee159",
+    "semantic_hash": "63d07d6381aaec7f2fdc1f88a63ee159"
+  },
+  "BookLoggerApp.Core/Resources/SeedDataLocalization.cs": {
+    "mtime": 1779873417.3332584,
+    "ast_hash": "e5f7a3ad7b8548c79875c8fa704b1574",
+    "semantic_hash": "e5f7a3ad7b8548c79875c8fa704b1574"
+  },
+  "BookLoggerApp.Core/Resources/WishlistPriorityLocalization.cs": {
+    "mtime": 1783605023.7964942,
+    "ast_hash": "a9078d20382058329c7ed1fd1343aa6d",
+    "semantic_hash": "a9078d20382058329c7ed1fd1343aa6d"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IAdvancedStatsService.cs": {
+    "mtime": 1783605023.7974954,
+    "ast_hash": "e53fe2ec557b75ef5f8df9d0dc7f3be0",
+    "semantic_hash": "e53fe2ec557b75ef5f8df9d0dc7f3be0"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IAnalyticsConsentGate.cs": {
+    "mtime": 1779873417.33525,
+    "ast_hash": "d80cb926bb95e1403e000c1e6263affb",
+    "semantic_hash": "d80cb926bb95e1403e000c1e6263affb"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IAnalyticsService.cs": {
+    "mtime": 1779873417.3362458,
+    "ast_hash": "43eddaadc4d013af92ce7ae2ec105fe0",
+    "semantic_hash": "43eddaadc4d013af92ce7ae2ec105fe0"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IAnnotationService.cs": {
+    "mtime": 1779873417.3372414,
+    "ast_hash": "49d4633659d18e83a24bd21141dc5d32",
+    "semantic_hash": "49d4633659d18e83a24bd21141dc5d32"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IAppRestartService.cs": {
+    "mtime": 1779873417.3382373,
+    "ast_hash": "6e634a5cbd084ff0070b541055da0d0b",
+    "semantic_hash": "6e634a5cbd084ff0070b541055da0d0b"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IAppSettingsProvider.cs": {
+    "mtime": 1783605023.7988722,
+    "ast_hash": "c155c8f877623ea392fd3a7ca06e5471",
+    "semantic_hash": "c155c8f877623ea392fd3a7ca06e5471"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IAppUpdateService.cs": {
+    "mtime": 1779873417.339233,
+    "ast_hash": "236cf07e5bc954525163ad5e506cfbd3",
+    "semantic_hash": "236cf07e5bc954525163ad5e506cfbd3"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IAppVersionService.cs": {
+    "mtime": 1779873417.3402288,
+    "ast_hash": "361ab7441c79677496a8135f2c3bca2a",
+    "semantic_hash": "361ab7441c79677496a8135f2c3bca2a"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IBackButtonService.cs": {
+    "mtime": 1783605023.7998698,
+    "ast_hash": "1a67a4419f895f7fb7991dd8840cabee",
+    "semantic_hash": "1a67a4419f895f7fb7991dd8840cabee"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IBillingService.cs": {
+    "mtime": 1779873417.3422203,
+    "ast_hash": "d2b114a53953dea257716e1750106f9c",
+    "semantic_hash": "d2b114a53953dea257716e1750106f9c"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IBlindDateService.cs": {
+    "mtime": 1783605023.8008711,
+    "ast_hash": "5ed2fcfbcb2bede2b5419d098085c4e7",
+    "semantic_hash": "5ed2fcfbcb2bede2b5419d098085c4e7"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IBookService.cs": {
+    "mtime": 1783605023.801875,
+    "ast_hash": "09bd30a25cfcbedd9fccfb122cd748cc",
+    "semantic_hash": "09bd30a25cfcbedd9fccfb122cd748cc"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IChangelogService.cs": {
+    "mtime": 1779873417.3432162,
+    "ast_hash": "0993b361be25658d6aaaebb42031dcfd",
+    "semantic_hash": "0993b361be25658d6aaaebb42031dcfd"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/ICrashReportingService.cs": {
+    "mtime": 1779873417.344212,
+    "ast_hash": "7f215751151459624cc292ce66ef30ec",
+    "semantic_hash": "7f215751151459624cc292ce66ef30ec"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IDatabaseInitializer.cs": {
+    "mtime": 1779873417.3452077,
+    "ast_hash": "1c8fb3f0a91448e9a445c1a0f0f4b206",
+    "semantic_hash": "1c8fb3f0a91448e9a445c1a0f0f4b206"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IDecorationService.cs": {
+    "mtime": 1779873417.3452077,
+    "ast_hash": "a919db54872dfd07b13706060a4463e8",
+    "semantic_hash": "a919db54872dfd07b13706060a4463e8"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IDeepLinkService.cs": {
+    "mtime": 1783605023.801875,
+    "ast_hash": "31adaca7356354f7d77879a0ec80dcac",
+    "semantic_hash": "31adaca7356354f7d77879a0ec80dcac"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IEntitlementService.cs": {
+    "mtime": 1779873417.3462036,
+    "ast_hash": "b3d86d8a15575e43045fb3078e3c0142",
+    "semantic_hash": "b3d86d8a15575e43045fb3078e3c0142"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IEntitlementStore.cs": {
+    "mtime": 1779873417.347487,
+    "ast_hash": "5475895a69dd155614f2def351e2273e",
+    "semantic_hash": "5475895a69dd155614f2def351e2273e"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IFeatureGuard.cs": {
+    "mtime": 1779873417.3487,
+    "ast_hash": "0bbe7d515723cf422c780a4538028402",
+    "semantic_hash": "0bbe7d515723cf422c780a4538028402"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IFilePickerService.cs": {
+    "mtime": 1779873417.3487,
+    "ast_hash": "c6bf363eb4e033dda89ccd622769a73b",
+    "semantic_hash": "c6bf363eb4e033dda89ccd622769a73b"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IFileSaverService.cs": {
+    "mtime": 1783605023.802883,
+    "ast_hash": "8e4ccb78bd83fb594d0cc66c4df517e0",
+    "semantic_hash": "8e4ccb78bd83fb594d0cc66c4df517e0"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IFileSystem.cs": {
+    "mtime": 1783605023.8038936,
+    "ast_hash": "a71a4bb0811ff751a051ddc316f41068",
+    "semantic_hash": "a71a4bb0811ff751a051ddc316f41068"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IGenreService.cs": {
+    "mtime": 1779873417.350926,
+    "ast_hash": "fec7851bdb286b345c463fbebe0916dc",
+    "semantic_hash": "fec7851bdb286b345c463fbebe0916dc"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IGoalService.cs": {
+    "mtime": 1779873417.3522046,
+    "ast_hash": "8468c25c150a457d54973fd31e2abb56",
+    "semantic_hash": "8468c25c150a457d54973fd31e2abb56"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IImageService.cs": {
+    "mtime": 1779873417.353209,
+    "ast_hash": "995912a8b1b2416dd9298d4cd5f3e84f",
+    "semantic_hash": "995912a8b1b2416dd9298d4cd5f3e84f"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IImportExportService.cs": {
+    "mtime": 1779873417.353209,
+    "ast_hash": "04bac777b655734dd5b95274f7298a22",
+    "semantic_hash": "04bac777b655734dd5b95274f7298a22"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/ILanguageService.cs": {
+    "mtime": 1779873417.3546748,
+    "ast_hash": "4d3c7fcf96111547f07ad13f93ec1478",
+    "semantic_hash": "4d3c7fcf96111547f07ad13f93ec1478"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/ILookupService.cs": {
+    "mtime": 1779873417.3556788,
+    "ast_hash": "62c981af7cea1575b7fd20cf0cc071c0",
+    "semantic_hash": "62c981af7cea1575b7fd20cf0cc071c0"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IMigrationService.cs": {
+    "mtime": 1779873417.3556788,
+    "ast_hash": "93b0be27db81ff371dd1901777dcc882",
+    "semantic_hash": "93b0be27db81ff371dd1901777dcc882"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/INotificationService.cs": {
+    "mtime": 1779873417.3569849,
+    "ast_hash": "3d3d0963a6802470adbdaaf31eba8edf",
+    "semantic_hash": "3d3d0963a6802470adbdaaf31eba8edf"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IOnboardingService.cs": {
+    "mtime": 1779873417.3580544,
+    "ast_hash": "da92f0e06db711b7b13b2a63cb651dbf",
+    "semantic_hash": "da92f0e06db711b7b13b2a63cb651dbf"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IPaywallCoordinator.cs": {
+    "mtime": 1779873417.3580544,
+    "ast_hash": "294f0905a31b1cfd3a03c73608517fdb",
+    "semantic_hash": "294f0905a31b1cfd3a03c73608517fdb"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IPlantService.cs": {
+    "mtime": 1783605023.8048966,
+    "ast_hash": "0f37166e720f8b2e07111f682ed06154",
+    "semantic_hash": "0f37166e720f8b2e07111f682ed06154"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IProductCatalog.cs": {
+    "mtime": 1783605023.8059957,
+    "ast_hash": "897fd035ecea513ebf8100293212b719",
+    "semantic_hash": "897fd035ecea513ebf8100293212b719"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IProgressService.cs": {
+    "mtime": 1783605023.8069973,
+    "ast_hash": "b6e46cf49fdee94b14bfc3b7ed572349",
+    "semantic_hash": "b6e46cf49fdee94b14bfc3b7ed572349"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IProgressionService.cs": {
+    "mtime": 1779873417.3612337,
+    "ast_hash": "fcea452f0058303936127218750fea03",
+    "semantic_hash": "fcea452f0058303936127218750fea03"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IPromoCodeService.cs": {
+    "mtime": 1783605023.807999,
+    "ast_hash": "e1a4a8eb8b7ee73244128baee0fb1d1a",
+    "semantic_hash": "e1a4a8eb8b7ee73244128baee0fb1d1a"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IQuoteService.cs": {
+    "mtime": 1779873417.3634245,
+    "ast_hash": "8c2d229381ec652634fb5491a3483c31",
+    "semantic_hash": "8c2d229381ec652634fb5491a3483c31"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IReadingForecastService.cs": {
+    "mtime": 1783605023.807999,
+    "ast_hash": "0db8daa84a85cfb363b1671b74dec7ef",
+    "semantic_hash": "0db8daa84a85cfb363b1671b74dec7ef"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IReadingTimerNotificationService.cs": {
+    "mtime": 1783605023.8093915,
+    "ast_hash": "a4b3a98100d49dd21d558acae95243bd",
+    "semantic_hash": "a4b3a98100d49dd21d558acae95243bd"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IReviewPromptService.cs": {
+    "mtime": 1779873417.3648682,
+    "ast_hash": "1d395279212876bad558330cc546917c",
+    "semantic_hash": "1d395279212876bad558330cc546917c"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IShareCardService.cs": {
+    "mtime": 1779873417.365874,
+    "ast_hash": "8211d562e48d9d7bc85d2f1087151fe2",
+    "semantic_hash": "8211d562e48d9d7bc85d2f1087151fe2"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IShareService.cs": {
+    "mtime": 1779873417.365874,
+    "ast_hash": "3565aaeb4f389863efd8f9646d8bfbb0",
+    "semantic_hash": "3565aaeb4f389863efd8f9646d8bfbb0"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IShelfService.cs": {
+    "mtime": 1783605023.810395,
+    "ast_hash": "93e6c2ed4eb794a3d16aa1e648fe2c4b",
+    "semantic_hash": "93e6c2ed4eb794a3d16aa1e648fe2c4b"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IStatsService.cs": {
+    "mtime": 1779873417.368364,
+    "ast_hash": "5061339f44b2ed9ff09ecdb4f3b1bac3",
+    "semantic_hash": "5061339f44b2ed9ff09ecdb4f3b1bac3"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/ITimerStateService.cs": {
+    "mtime": 1783605023.8113976,
+    "ast_hash": "7a2b0892138d1f21ad91380912209903",
+    "semantic_hash": "7a2b0892138d1f21ad91380912209903"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IValidationService.cs": {
+    "mtime": 1779873417.3696215,
+    "ast_hash": "0d6bb570efd300f7d7d8fa821a74e376",
+    "semantic_hash": "0d6bb570efd300f7d7d8fa821a74e376"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IWidgetUpdateService.cs": {
+    "mtime": 1779873417.3696215,
+    "ast_hash": "f394dff6292aa58f9b3f60747827d7df",
+    "semantic_hash": "f394dff6292aa58f9b3f60747827d7df"
+  },
+  "BookLoggerApp.Core/Services/Abstractions/IWishlistService.cs": {
+    "mtime": 1779873417.3710253,
+    "ast_hash": "a4540ee336e64eadba3b3801f843febe",
+    "semantic_hash": "a4540ee336e64eadba3b3801f843febe"
+  },
+  "BookLoggerApp.Core/Services/Analytics/AnalyticsBuckets.cs": {
+    "mtime": 1779873417.3720212,
+    "ast_hash": "d2852b0f66bf1730d5b6f0af884608e8",
+    "semantic_hash": "d2852b0f66bf1730d5b6f0af884608e8"
+  },
+  "BookLoggerApp.Core/Services/Analytics/AnalyticsConsentGate.cs": {
+    "mtime": 1783605023.8123991,
+    "ast_hash": "fd01d1905daffc859f81f7fc05af37ff",
+    "semantic_hash": "fd01d1905daffc859f81f7fc05af37ff"
+  },
+  "BookLoggerApp.Core/Services/Analytics/AnalyticsEventNames.cs": {
+    "mtime": 1779873417.3740127,
+    "ast_hash": "7c00317f5694215ce29bf27b414a5dcc",
+    "semantic_hash": "7c00317f5694215ce29bf27b414a5dcc"
+  },
+  "BookLoggerApp.Core/Services/Analytics/AnalyticsParamBuilder.cs": {
+    "mtime": 1783605023.8134007,
+    "ast_hash": "c34821d52a12efb0558ba62d74cc7572",
+    "semantic_hash": "c34821d52a12efb0558ba62d74cc7572"
+  },
+  "BookLoggerApp.Core/Services/Analytics/AnalyticsParamNames.cs": {
+    "mtime": 1783605023.8144083,
+    "ast_hash": "14fecba1b376a6debab2b5512f61e0b5",
+    "semantic_hash": "14fecba1b376a6debab2b5512f61e0b5"
+  },
+  "BookLoggerApp.Core/Services/Analytics/NoOpAnalyticsService.cs": {
+    "mtime": 1779873417.3760045,
+    "ast_hash": "c968c0fcbc011ca5b23e438a3a8bf294",
+    "semantic_hash": "c968c0fcbc011ca5b23e438a3a8bf294"
+  },
+  "BookLoggerApp.Core/Services/Analytics/NoOpCrashReportingService.cs": {
+    "mtime": 1779873417.3770003,
+    "ast_hash": "72b1980495921692e967bb691baa893d",
+    "semantic_hash": "72b1980495921692e967bb691baa893d"
+  },
+  "BookLoggerApp.Core/Services/Analytics/ScreenNames.cs": {
+    "mtime": 1779873417.377996,
+    "ast_hash": "6e28dca65dfeedb3f8e39baec65c9185",
+    "semantic_hash": "6e28dca65dfeedb3f8e39baec65c9185"
+  },
+  "BookLoggerApp.Core/Services/Analytics/UserPropertiesPublisher.cs": {
+    "mtime": 1783605023.815416,
+    "ast_hash": "e9786fe42b4d8fa23ba5530ca866dfbb",
+    "semantic_hash": "e9786fe42b4d8fa23ba5530ca866dfbb"
+  },
+  "BookLoggerApp.Core/Services/Analytics/UserPropertyNames.cs": {
+    "mtime": 1779873417.3799875,
+    "ast_hash": "988e98a507553fa86bafed2932a7751e",
+    "semantic_hash": "988e98a507553fa86bafed2932a7751e"
+  },
+  "BookLoggerApp.Core/Validators/BookValidator.cs": {
+    "mtime": 1783605023.8164606,
+    "ast_hash": "528ec620ad2b35b37d161f1a9b610ee4",
+    "semantic_hash": "528ec620ad2b35b37d161f1a9b610ee4"
+  },
+  "BookLoggerApp.Core/Validators/ReadingGoalValidator.cs": {
+    "mtime": 1783605023.8174634,
+    "ast_hash": "aba9a7ca945dbda218439befcef3ee79",
+    "semantic_hash": "aba9a7ca945dbda218439befcef3ee79"
+  },
+  "BookLoggerApp.Core/Validators/ReadingSessionValidator.cs": {
+    "mtime": 1783605023.8184652,
+    "ast_hash": "f499c2effc802d89112102ac2e6aaf13",
+    "semantic_hash": "f499c2effc802d89112102ac2e6aaf13"
+  },
+  "BookLoggerApp.Core/Validators/UserPlantValidator.cs": {
+    "mtime": 1783605023.8194666,
+    "ast_hash": "d465aadd8d61b16d9caa8f98713e7e2d",
+    "semantic_hash": "d465aadd8d61b16d9caa8f98713e7e2d"
+  },
+  "BookLoggerApp.Core/ViewModels/AppStartupViewModel.cs": {
+    "mtime": 1783605023.8204677,
+    "ast_hash": "30191ab72e12cb164246f411ae12bfc2",
+    "semantic_hash": "30191ab72e12cb164246f411ae12bfc2"
+  },
+  "BookLoggerApp.Core/ViewModels/BlindDateViewModel.cs": {
+    "mtime": 1783605023.8216424,
+    "ast_hash": "c554ed57296ded23293e3c7e66cdc89e",
+    "semantic_hash": "c554ed57296ded23293e3c7e66cdc89e"
+  },
+  "BookLoggerApp.Core/ViewModels/BookDetailViewModel.cs": {
+    "mtime": 1783605023.8226483,
+    "ast_hash": "889e8e1796409271dee282428e1656cc",
+    "semantic_hash": "889e8e1796409271dee282428e1656cc"
+  },
+  "BookLoggerApp.Core/ViewModels/BookEditViewModel.cs": {
+    "mtime": 1783605023.8236547,
+    "ast_hash": "fcd8f3bcf05174333a56129b924f3b89",
+    "semantic_hash": "fcd8f3bcf05174333a56129b924f3b89"
+  },
+  "BookLoggerApp.Core/ViewModels/BookListViewModel.cs": {
+    "mtime": 1783605023.8246646,
+    "ast_hash": "d5e79fb7ed088dcdc2edc2713d6dcda3",
+    "semantic_hash": "d5e79fb7ed088dcdc2edc2713d6dcda3"
+  },
+  "BookLoggerApp.Core/ViewModels/BookshelfViewModel.cs": {
+    "mtime": 1783605023.8256798,
+    "ast_hash": "ca877447893537283ee6197e21dc8dd5",
+    "semantic_hash": "ca877447893537283ee6197e21dc8dd5"
+  },
+  "BookLoggerApp.Core/ViewModels/DashboardViewModel.cs": {
+    "mtime": 1783605023.8266847,
+    "ast_hash": "652cd4d079c7cb4da80084c2e1259876",
+    "semantic_hash": "652cd4d079c7cb4da80084c2e1259876"
+  },
+  "BookLoggerApp.Core/ViewModels/DecorationShopViewModel.cs": {
+    "mtime": 1783605023.8276894,
+    "ast_hash": "2530f040c82a9395c564f3b59ea0f980",
+    "semantic_hash": "2530f040c82a9395c564f3b59ea0f980"
+  },
+  "BookLoggerApp.Core/ViewModels/GoalsViewModel.cs": {
+    "mtime": 1783605023.828696,
+    "ast_hash": "1a1a3ec01f2d7a7136f7676fbae71698",
+    "semantic_hash": "1a1a3ec01f2d7a7136f7676fbae71698"
+  },
+  "BookLoggerApp.Core/ViewModels/PaywallViewModel.cs": {
+    "mtime": 1783605023.8297033,
+    "ast_hash": "acfd60f8a7b1cb0fb2bd16640b051702",
+    "semantic_hash": "acfd60f8a7b1cb0fb2bd16640b051702"
+  },
+  "BookLoggerApp.Core/ViewModels/PlantShopViewModel.cs": {
+    "mtime": 1783605023.830711,
+    "ast_hash": "a390b82af5e704bb6d5d1c5e651f47e9",
+    "semantic_hash": "a390b82af5e704bb6d5d1c5e651f47e9"
+  },
+  "BookLoggerApp.Core/ViewModels/SettingsViewModel.cs": {
+    "mtime": 1783605023.8320541,
+    "ast_hash": "1c4eebbe51b447a5579877ffa3196cff",
+    "semantic_hash": "1c4eebbe51b447a5579877ffa3196cff"
+  },
+  "BookLoggerApp.Core/ViewModels/ShelfItemViewModel.cs": {
+    "mtime": 1783605023.8330514,
+    "ast_hash": "000b34aba2abcb1fab9438be5feddea3",
+    "semantic_hash": "000b34aba2abcb1fab9438be5feddea3"
+  },
+  "BookLoggerApp.Core/ViewModels/StatsAnalysesViewModel.cs": {
+    "mtime": 1783605023.8340578,
+    "ast_hash": "49d46cbe018b258d0a1f295994f7ef89",
+    "semantic_hash": "49d46cbe018b258d0a1f295994f7ef89"
+  },
+  "BookLoggerApp.Core/ViewModels/StatsTrendsViewModel.cs": {
+    "mtime": 1783605023.8350701,
+    "ast_hash": "7125a6282f1aa8e7d9c58e0efb9e4e3a",
+    "semantic_hash": "7125a6282f1aa8e7d9c58e0efb9e4e3a"
+  },
+  "BookLoggerApp.Core/ViewModels/StatsViewModel.cs": {
+    "mtime": 1783605023.836066,
+    "ast_hash": "e9659a79915ad49fc37f77a3ed34f132",
+    "semantic_hash": "e9659a79915ad49fc37f77a3ed34f132"
+  },
+  "BookLoggerApp.Core/ViewModels/UserProgressViewModel.cs": {
+    "mtime": 1783605023.836575,
+    "ast_hash": "8546735b6f354b6f44e50449f6f0b640",
+    "semantic_hash": "8546735b6f354b6f44e50449f6f0b640"
+  },
+  "BookLoggerApp.Core/ViewModels/ViewModelBase.cs": {
+    "mtime": 1783605023.8375847,
+    "ast_hash": "1ac598524411297946bb072510644fad",
+    "semantic_hash": "1ac598524411297946bb072510644fad"
+  },
+  "BookLoggerApp.Core/ViewModels/WishlistViewModel.cs": {
+    "mtime": 1783605023.8385916,
+    "ast_hash": "cd620e48f82b55a74bbd92afb2b06e42",
+    "semantic_hash": "cd620e48f82b55a74bbd92afb2b06e42"
+  },
+  "BookLoggerApp.Infrastructure/BookLoggerApp.Infrastructure.csproj": {
+    "mtime": 1783605023.8395987,
+    "ast_hash": "d58c9e437555d254f8e7723bd9d19597",
+    "semantic_hash": "d58c9e437555d254f8e7723bd9d19597"
+  },
+  "BookLoggerApp.Infrastructure/Data/AppDbContext.cs": {
+    "mtime": 1783605023.840607,
+    "ast_hash": "3127b603a49edb577b58d19cb6035721",
+    "semantic_hash": "3127b603a49edb577b58d19cb6035721"
+  },
+  "BookLoggerApp.Infrastructure/Data/AppDbContextFactory.cs": {
+    "mtime": 1783605023.8416135,
+    "ast_hash": "16bd7b41ad353c9c507f31ee424114ec",
+    "semantic_hash": "16bd7b41ad353c9c507f31ee424114ec"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/AnnotationConfiguration.cs": {
+    "mtime": 1783605023.8426206,
+    "ast_hash": "3462fe29906ff249c5817403122f7f27",
+    "semantic_hash": "3462fe29906ff249c5817403122f7f27"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/AppSettingsConfiguration.cs": {
+    "mtime": 1783605023.8436258,
+    "ast_hash": "256d422776c85fc69e4f26d6eaf0fe0a",
+    "semantic_hash": "256d422776c85fc69e4f26d6eaf0fe0a"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/BookConfiguration.cs": {
+    "mtime": 1783605023.8446276,
+    "ast_hash": "13319d0cb4b01b9375e8919491d28f86",
+    "semantic_hash": "13319d0cb4b01b9375e8919491d28f86"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/BookGenreConfiguration.cs": {
+    "mtime": 1783605023.8456323,
+    "ast_hash": "29e0980f1caa891ff4fc955249ffc47a",
+    "semantic_hash": "29e0980f1caa891ff4fc955249ffc47a"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/GenreConfiguration.cs": {
+    "mtime": 1783605023.8466642,
+    "ast_hash": "694412f76c340945f7fcc76da38b0b83",
+    "semantic_hash": "694412f76c340945f7fcc76da38b0b83"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/OnboardingMissionStateConfiguration.cs": {
+    "mtime": 1779873417.412187,
+    "ast_hash": "bc1918da0b39c64c3944d36d651d8a2e",
+    "semantic_hash": "bc1918da0b39c64c3944d36d651d8a2e"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/PlantSpeciesConfiguration.cs": {
+    "mtime": 1783605023.8476653,
+    "ast_hash": "ab5296b196b5e39391d75bcf7bdbd1ec",
+    "semantic_hash": "ab5296b196b5e39391d75bcf7bdbd1ec"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/QuoteConfiguration.cs": {
+    "mtime": 1783605023.8486662,
+    "ast_hash": "f38c0a0bd5c20306d4e186a30025d4f0",
+    "semantic_hash": "f38c0a0bd5c20306d4e186a30025d4f0"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/ReadingGoalConfiguration.cs": {
+    "mtime": 1783605023.8496673,
+    "ast_hash": "af9dd2a09653b0c4c1adfa6030b14415",
+    "semantic_hash": "af9dd2a09653b0c4c1adfa6030b14415"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/ReadingSessionConfiguration.cs": {
+    "mtime": 1783605023.8506684,
+    "ast_hash": "b832a6a53cbe0f6521058f281716df4b",
+    "semantic_hash": "b832a6a53cbe0f6521058f281716df4b"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/ReadingSessionMoodConfiguration.cs": {
+    "mtime": 1783605023.8506684,
+    "ast_hash": "d5874031d2f6452b9af8c1d3dcdee416",
+    "semantic_hash": "d5874031d2f6452b9af8c1d3dcdee416"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/ShopItemConfiguration.cs": {
+    "mtime": 1783605023.8516722,
+    "ast_hash": "60c9977cf748fc52552fd1999f84cfb7",
+    "semantic_hash": "60c9977cf748fc52552fd1999f84cfb7"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/UserDecorationConfiguration.cs": {
+    "mtime": 1783605023.852804,
+    "ast_hash": "c31e2d044f1f8f4b231eaac3ab0a16f3",
+    "semantic_hash": "c31e2d044f1f8f4b231eaac3ab0a16f3"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/UserEntitlementConfiguration.cs": {
+    "mtime": 1779873417.417166,
+    "ast_hash": "3ae57283ec5a40cae8d319f53bae8d22",
+    "semantic_hash": "3ae57283ec5a40cae8d319f53bae8d22"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/UserPlantConfiguration.cs": {
+    "mtime": 1783605023.8538086,
+    "ast_hash": "054579b3745d9df0ffd97129cde2d8b2",
+    "semantic_hash": "054579b3745d9df0ffd97129cde2d8b2"
+  },
+  "BookLoggerApp.Infrastructure/Data/Configurations/WishlistInfoConfiguration.cs": {
+    "mtime": 1779873417.4181616,
+    "ast_hash": "2d5e1207bd3abb902d3a0a8450eeb519",
+    "semantic_hash": "2d5e1207bd3abb902d3a0a8450eeb519"
+  },
+  "BookLoggerApp.Infrastructure/Data/DbInitializer.cs": {
+    "mtime": 1783605023.8558211,
+    "ast_hash": "4ca10e800f1a5d4ad83346bdaa5b26af",
+    "semantic_hash": "4ca10e800f1a5d4ad83346bdaa5b26af"
+  },
+  "BookLoggerApp.Infrastructure/Data/MigrationLoggingInterceptor.cs": {
+    "mtime": 1783605023.856827,
+    "ast_hash": "39daec5c0b2c477d9fd39c60e189b9b5",
+    "semantic_hash": "39daec5c0b2c477d9fd39c60e189b9b5"
+  },
+  "BookLoggerApp.Infrastructure/Data/MigrationRecovery.cs": {
+    "mtime": 1783605023.8578331,
+    "ast_hash": "9bf807c460a165425b6def214bb096f0",
+    "semantic_hash": "9bf807c460a165425b6def214bb096f0"
+  },
+  "BookLoggerApp.Infrastructure/Data/SchemaDriftGuard.cs": {
+    "mtime": 1783605023.858838,
+    "ast_hash": "0e6bdad36aac0135acd1beed5219c07a",
+    "semantic_hash": "0e6bdad36aac0135acd1beed5219c07a"
+  },
+  "BookLoggerApp.Infrastructure/Data/SeedData/DecorationSeedData.cs": {
+    "mtime": 1783605023.8608606,
+    "ast_hash": "09d95a4d41171e3761539fefc1c4def0",
+    "semantic_hash": "09d95a4d41171e3761539fefc1c4def0"
+  },
+  "BookLoggerApp.Infrastructure/Data/SeedData/PlantSeedData.cs": {
+    "mtime": 1779873417.4246511,
+    "ast_hash": "414169742adb5952c68cbd6dcaea67cc",
+    "semantic_hash": "414169742adb5952c68cbd6dcaea67cc"
+  },
+  "BookLoggerApp.Infrastructure/Data/SeedData/TropeSeedData.cs": {
+    "mtime": 1783605023.8618658,
+    "ast_hash": "a3c0ae32c8d84eceb79ec91d82c757e0",
+    "semantic_hash": "a3c0ae32c8d84eceb79ec91d82c757e0"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104184330_InitialCreate.Designer.cs": {
+    "mtime": 1779873417.4276385,
+    "ast_hash": "59239584c4bc4d2555d50b81f9f0546f",
+    "semantic_hash": "59239584c4bc4d2555d50b81f9f0546f"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104184330_InitialCreate.cs": {
+    "mtime": 1779873417.4286344,
+    "ast_hash": "6bf392414a72a7182d48cdb54d797c67",
+    "semantic_hash": "6bf392414a72a7182d48cdb54d797c67"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104185541_FixPlantImagePaths.Designer.cs": {
+    "mtime": 1779873417.4296303,
+    "ast_hash": "46d799a48c59cf606dd0a8923b94edd0",
+    "semantic_hash": "46d799a48c59cf606dd0a8923b94edd0"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104185541_FixPlantImagePaths.cs": {
+    "mtime": 1779873417.430626,
+    "ast_hash": "6627de75cad3593a50f4ee86b6a6afd1",
+    "semantic_hash": "6627de75cad3593a50f4ee86b6a6afd1"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104190601_UseRelativePlantImagePaths.Designer.cs": {
+    "mtime": 1779873417.4316218,
+    "ast_hash": "2f623196f327f8aff47606ccb211baa8",
+    "semantic_hash": "2f623196f327f8aff47606ccb211baa8"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104190601_UseRelativePlantImagePaths.cs": {
+    "mtime": 1779873417.4316218,
+    "ast_hash": "31f410a9cef292032ea0f5f3f54dce96",
+    "semantic_hash": "31f410a9cef292032ea0f5f3f54dce96"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104191014_UseMauiImagePaths.Designer.cs": {
+    "mtime": 1779873417.4326174,
+    "ast_hash": "bbb16a070000b61227c3052ae9e85264",
+    "semantic_hash": "bbb16a070000b61227c3052ae9e85264"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104191014_UseMauiImagePaths.cs": {
+    "mtime": 1779873417.4336133,
+    "ast_hash": "58c8048ad98bcb8be89492c9ffc4385e",
+    "semantic_hash": "58c8048ad98bcb8be89492c9ffc4385e"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104191443_FinalPlantImagePathsWwwroot.Designer.cs": {
+    "mtime": 1779873417.4346092,
+    "ast_hash": "e1dd537905582c66eda21e9b0f4161a3",
+    "semantic_hash": "e1dd537905582c66eda21e9b0f4161a3"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104191443_FinalPlantImagePathsWwwroot.cs": {
+    "mtime": 1779873417.4356048,
+    "ast_hash": "a3d7e2a14010a7c7f17ad637a8836097",
+    "semantic_hash": "a3d7e2a14010a7c7f17ad637a8836097"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104193450_FixStarterSproutUnlockLevel.Designer.cs": {
+    "mtime": 1779873417.4356048,
+    "ast_hash": "6a54b925b5ab2d77fc82c01567823f44",
+    "semantic_hash": "6a54b925b5ab2d77fc82c01567823f44"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104193450_FixStarterSproutUnlockLevel.cs": {
+    "mtime": 1779873417.4366007,
+    "ast_hash": "95ef081a8ddc3acae4508e9fbe5d268c",
+    "semantic_hash": "95ef081a8ddc3acae4508e9fbe5d268c"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104195102_AddBookwormFern.Designer.cs": {
+    "mtime": 1779873417.4375966,
+    "ast_hash": "899cfcda5e245d745015b406653ece33",
+    "semantic_hash": "899cfcda5e245d745015b406653ece33"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251104195102_AddBookwormFern.cs": {
+    "mtime": 1779873417.4385922,
+    "ast_hash": "005d8b1076809391de8641e26c0c6680",
+    "semantic_hash": "005d8b1076809391de8641e26c0c6680"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251105132656_AddSpineColorToBook.Designer.cs": {
+    "mtime": 1779873417.4395885,
+    "ast_hash": "ffe919c8bbc7228837d2f5b970498ae3",
+    "semantic_hash": "ffe919c8bbc7228837d2f5b970498ae3"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251105132656_AddSpineColorToBook.cs": {
+    "mtime": 1779873417.440755,
+    "ast_hash": "562c829ec13a4dfc1eb2ec16a836cd54",
+    "semantic_hash": "562c829ec13a4dfc1eb2ec16a836cd54"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251106065030_AddMultiCategoryRatings.Designer.cs": {
+    "mtime": 1779873417.441761,
+    "ast_hash": "e532c7957fd51923eeadca5ec6a7fa82",
+    "semantic_hash": "e532c7957fd51923eeadca5ec6a7fa82"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251106065030_AddMultiCategoryRatings.cs": {
+    "mtime": 1779873417.4427676,
+    "ast_hash": "bd99dc3668902d98c110cfe032fa7fc1",
+    "semantic_hash": "bd99dc3668902d98c110cfe032fa7fc1"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251106100657_AddProgressionSystemFields.Designer.cs": {
+    "mtime": 1779873417.443774,
+    "ast_hash": "be7abf34771055237acdd0ac9f167600",
+    "semantic_hash": "be7abf34771055237acdd0ac9f167600"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251106100657_AddProgressionSystemFields.cs": {
+    "mtime": 1779873417.443774,
+    "ast_hash": "721b0229720f2c0922cf30f2d2dbd8f9",
+    "semantic_hash": "721b0229720f2c0922cf30f2d2dbd8f9"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251107105000_AddBookshelfPositionToBooks.Designer.cs": {
+    "mtime": 1779873417.4447806,
+    "ast_hash": "a919b6821a72123f33a1702af4c4e452",
+    "semantic_hash": "a919b6821a72123f33a1702af4c4e452"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251107105000_AddBookshelfPositionToBooks.cs": {
+    "mtime": 1779873417.4457867,
+    "ast_hash": "7ffd345f1b638222c021f1461f782a24",
+    "semantic_hash": "7ffd345f1b638222c021f1461f782a24"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251107165319_AddRowVersions.Designer.cs": {
+    "mtime": 1779873417.446792,
+    "ast_hash": "2d3bda6a0256bcbc44ed4e6371668361",
+    "semantic_hash": "2d3bda6a0256bcbc44ed4e6371668361"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251107165319_AddRowVersions.cs": {
+    "mtime": 1779873417.4477983,
+    "ast_hash": "a931e81ef82695da8a5c49e2caafa386",
+    "semantic_hash": "a931e81ef82695da8a5c49e2caafa386"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251203221408_AddReadingDaysToUserPlant.Designer.cs": {
+    "mtime": 1779873417.4488058,
+    "ast_hash": "2e8024bba27ca9fb4466c493d9ce732e",
+    "semantic_hash": "2e8024bba27ca9fb4466c493d9ce732e"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251203221408_AddReadingDaysToUserPlant.cs": {
+    "mtime": 1779873417.4498029,
+    "ast_hash": "a0c4a92dbbd928ac9160d2745d29b721",
+    "semantic_hash": "a0c4a92dbbd928ac9160d2745d29b721"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251204120000_AddUsesCoverAsSpineToBook.Designer.cs": {
+    "mtime": 1779873417.4498029,
+    "ast_hash": "4beb6d5ad48f9b0f91eb0a89012cc628",
+    "semantic_hash": "4beb6d5ad48f9b0f91eb0a89012cc628"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251204120000_AddUsesCoverAsSpineToBook.cs": {
+    "mtime": 1779873417.45125,
+    "ast_hash": "f9b9b7fd82a14330311ee3f2b5d4b635",
+    "semantic_hash": "f9b9b7fd82a14330311ee3f2b5d4b635"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251210190516_RemoveOverall_AddNotes.Designer.cs": {
+    "mtime": 1779873417.4522824,
+    "ast_hash": "111955301f0d459a5bfb45a08a1e0d99",
+    "semantic_hash": "111955301f0d459a5bfb45a08a1e0d99"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251210190516_RemoveOverall_AddNotes.cs": {
+    "mtime": 1779873417.4522824,
+    "ast_hash": "eedcc29661f67d4e7d586d67e004441e",
+    "semantic_hash": "eedcc29661f67d4e7d586d67e004441e"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251210194048_AddShelves.Designer.cs": {
+    "mtime": 1779873417.453345,
+    "ast_hash": "e8947d0ccfe6598673a2ef930adb4b5e",
+    "semantic_hash": "e8947d0ccfe6598673a2ef930adb4b5e"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251210194048_AddShelves.cs": {
+    "mtime": 1779873417.4543474,
+    "ast_hash": "461e7c2422973db0848a44217d03a53a",
+    "semantic_hash": "461e7c2422973db0848a44217d03a53a"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251220222003_AddNewGenres.Designer.cs": {
+    "mtime": 1779873417.4553857,
+    "ast_hash": "0cab57323ab2d234d7389e347d87a629",
+    "semantic_hash": "0cab57323ab2d234d7389e347d87a629"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251220222003_AddNewGenres.cs": {
+    "mtime": 1779873417.456527,
+    "ast_hash": "bbe11de5ba17a4a5f0447e4fc1a40b09",
+    "semantic_hash": "bbe11de5ba17a4a5f0447e4fc1a40b09"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251222130157_UpdateShelfSchema.Designer.cs": {
+    "mtime": 1779873417.4578292,
+    "ast_hash": "1f0677143e84c7474af8ac0473e45ccf",
+    "semantic_hash": "1f0677143e84c7474af8ac0473e45ccf"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20251222130157_UpdateShelfSchema.cs": {
+    "mtime": 1779873417.45903,
+    "ast_hash": "62045c9bf63a7c365ffc67b65ab23036",
+    "semantic_hash": "62045c9bf63a7c365ffc67b65ab23036"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260106000648_RebalanceGamification.Designer.cs": {
+    "mtime": 1779873417.4600255,
+    "ast_hash": "48359055229e386efd2c64b813ca54eb",
+    "semantic_hash": "48359055229e386efd2c64b813ca54eb"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260106000648_RebalanceGamification.cs": {
+    "mtime": 1779873417.4600255,
+    "ast_hash": "44480047e08757c17607d7b9a1476952",
+    "semantic_hash": "44480047e08757c17607d7b9a1476952"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260106130303_AddNewPlants.Designer.cs": {
+    "mtime": 1779873417.4610214,
+    "ast_hash": "85a0f9c5d2e29909057a731dc9368b29",
+    "semantic_hash": "85a0f9c5d2e29909057a731dc9368b29"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260106130303_AddNewPlants.cs": {
+    "mtime": 1779873417.4621768,
+    "ast_hash": "b96f89d777c74b8f32452859df59e8d8",
+    "semantic_hash": "b96f89d777c74b8f32452859df59e8d8"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260113203255_AddTropes.Designer.cs": {
+    "mtime": 1779873417.463176,
+    "ast_hash": "d9a79e32bb644a47b03323a5655a3bca",
+    "semantic_hash": "d9a79e32bb644a47b03323a5655a3bca"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260113203255_AddTropes.cs": {
+    "mtime": 1779873417.4641721,
+    "ast_hash": "8da4b3ac484e7ebfacf398420784837d",
+    "semantic_hash": "8da4b3ac484e7ebfacf398420784837d"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260113205015_UpdateTropeSeeds.Designer.cs": {
+    "mtime": 1779873417.4656518,
+    "ast_hash": "663a2f33bd3897fb940d80e7d61595fd",
+    "semantic_hash": "663a2f33bd3897fb940d80e7d61595fd"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260113205015_UpdateTropeSeeds.cs": {
+    "mtime": 1779873417.466885,
+    "ast_hash": "adf3ea7c361f0855f8dc7e2acd0d2b8a",
+    "semantic_hash": "adf3ea7c361f0855f8dc7e2acd0d2b8a"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260213090358_AddWishlistFeature.Designer.cs": {
+    "mtime": 1779873417.4678812,
+    "ast_hash": "48a29eb13ba40be73c49ee8cdf332ba6",
+    "semantic_hash": "48a29eb13ba40be73c49ee8cdf332ba6"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260213090358_AddWishlistFeature.cs": {
+    "mtime": 1779873417.4688766,
+    "ast_hash": "74e781b9e3a8886dd726fd9de3436ac6",
+    "semantic_hash": "74e781b9e3a8886dd726fd9de3436ac6"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260213114325_AddGoalExcludedBooks.Designer.cs": {
+    "mtime": 1779873417.4698725,
+    "ast_hash": "78b96e8589b5ac2cec9d6f0f4c392b23",
+    "semantic_hash": "78b96e8589b5ac2cec9d6f0f4c392b23"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260213114325_AddGoalExcludedBooks.cs": {
+    "mtime": 1779873417.4708953,
+    "ast_hash": "570fc48c3331d33b80aea0bbd326d117",
+    "semantic_hash": "570fc48c3331d33b80aea0bbd326d117"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260214123940_AddGoalGenres.Designer.cs": {
+    "mtime": 1779873417.4718916,
+    "ast_hash": "95a8d285e27c8b2d1f846d046022142d",
+    "semantic_hash": "95a8d285e27c8b2d1f846d046022142d"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260214123940_AddGoalGenres.cs": {
+    "mtime": 1779873417.472887,
+    "ast_hash": "83fdb8aa2eafd6e1adf8596e5d769656",
+    "semantic_hash": "83fdb8aa2eafd6e1adf8596e5d769656"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260218000000_FixIsbnAndLanguageMaxLength.Designer.cs": {
+    "mtime": 1779873417.4742694,
+    "ast_hash": "e4af3a5065749bcaf8c6c79528c9f36c",
+    "semantic_hash": "e4af3a5065749bcaf8c6c79528c9f36c"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260218000000_FixIsbnAndLanguageMaxLength.cs": {
+    "mtime": 1779873417.475448,
+    "ast_hash": "f5e26e54bd432386262be675cc517962",
+    "semantic_hash": "f5e26e54bd432386262be675cc517962"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260331083312_AddReviewPromptTracking.Designer.cs": {
+    "mtime": 1779873417.4764435,
+    "ast_hash": "62b61e19c4ba707af229c60c5d5c9d14",
+    "semantic_hash": "62b61e19c4ba707af229c60c5d5c9d14"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260331083312_AddReviewPromptTracking.cs": {
+    "mtime": 1779873417.4774394,
+    "ast_hash": "48f8ac2287b4c9929165dbcbde6b632b",
+    "semantic_hash": "48f8ac2287b4c9929165dbcbde6b632b"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260331091615_AddReviewPromptMonthCount.Designer.cs": {
+    "mtime": 1779873417.4787107,
+    "ast_hash": "672d1c572108325ec41890b8ea8a1e2f",
+    "semantic_hash": "672d1c572108325ec41890b8ea8a1e2f"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260331091615_AddReviewPromptMonthCount.cs": {
+    "mtime": 1779873417.4797163,
+    "ast_hash": "a4f3d90ed7077ae916e6d295a1b1a5f8",
+    "semantic_hash": "a4f3d90ed7077ae916e6d295a1b1a5f8"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260401155752_RemoveInAppReviewPrompt.Designer.cs": {
+    "mtime": 1779873417.4807122,
+    "ast_hash": "1454c233d43ed037ce515c1b337b8614",
+    "semantic_hash": "1454c233d43ed037ce515c1b337b8614"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260401155752_RemoveInAppReviewPrompt.cs": {
+    "mtime": 1779873417.481708,
+    "ast_hash": "dfed009a4e8ea9bec4b52d3c93e1c11c",
+    "semantic_hash": "dfed009a4e8ea9bec4b52d3c93e1c11c"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260401163236_AddReviewPromptRules.Designer.cs": {
+    "mtime": 1779873417.481708,
+    "ast_hash": "4279ec887c6147c028db13b6660d53b1",
+    "semantic_hash": "4279ec887c6147c028db13b6660d53b1"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260401163236_AddReviewPromptRules.cs": {
+    "mtime": 1779873417.4831543,
+    "ast_hash": "f406c05de08d77bf8bddf44c63124b5e",
+    "semantic_hash": "f406c05de08d77bf8bddf44c63124b5e"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260402131309_AddShelfColors.Designer.cs": {
+    "mtime": 1779873417.485149,
+    "ast_hash": "e2d8780dbf0349a729bb1b2b20e0aabc",
+    "semantic_hash": "e2d8780dbf0349a729bb1b2b20e0aabc"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260402131309_AddShelfColors.cs": {
+    "mtime": 1779873417.485149,
+    "ast_hash": "6f183e43e0c9cf8178d0d48052cea048",
+    "semantic_hash": "6f183e43e0c9cf8178d0d48052cea048"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260410093915_AddOnboardingFlow.Designer.cs": {
+    "mtime": 1779873417.4873044,
+    "ast_hash": "b82c9ed9356a0117c1de4d2c772bbe18",
+    "semantic_hash": "b82c9ed9356a0117c1de4d2c772bbe18"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260410093915_AddOnboardingFlow.cs": {
+    "mtime": 1779873417.4883087,
+    "ast_hash": "2e978ac10ba268cbfd401e51d0908bdf",
+    "semantic_hash": "2e978ac10ba268cbfd401e51d0908bdf"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260410110951_AddDecorations.Designer.cs": {
+    "mtime": 1779873417.4893045,
+    "ast_hash": "aa340865f3a61aa6ab39bafcd39d1cf5",
+    "semantic_hash": "aa340865f3a61aa6ab39bafcd39d1cf5"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260410110951_AddDecorations.cs": {
+    "mtime": 1779873417.4903002,
+    "ast_hash": "82f816c111cb8c2279699e6fc5e164c3",
+    "semantic_hash": "82f816c111cb8c2279699e6fc5e164c3"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260410131449_AddHideGettingStartedCta.Designer.cs": {
+    "mtime": 1779873417.4912963,
+    "ast_hash": "3283b3b88652aa0d3aebcf9a7ed9b1db",
+    "semantic_hash": "3283b3b88652aa0d3aebcf9a7ed9b1db"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260410131449_AddHideGettingStartedCta.cs": {
+    "mtime": 1779873417.4924133,
+    "ast_hash": "cefe986b7c5201a5543b96a5cd053043",
+    "semantic_hash": "cefe986b7c5201a5543b96a5cd053043"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260410160000_AddSlotWidthToShopItem.Designer.cs": {
+    "mtime": 1779873417.4934323,
+    "ast_hash": "fc29562fba7989e98dc1ac35de1a1c52",
+    "semantic_hash": "fc29562fba7989e98dc1ac35de1a1c52"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260410160000_AddSlotWidthToShopItem.cs": {
+    "mtime": 1779873417.4944346,
+    "ast_hash": "c27a61994b80504a4e2b4ef8f70beddf",
+    "semantic_hash": "c27a61994b80504a4e2b4ef8f70beddf"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260411132023_FixSpectaclesSlotWidth.Designer.cs": {
+    "mtime": 1779873417.4954364,
+    "ast_hash": "8fe7bb72bf99821f7be9c276c17c701f",
+    "semantic_hash": "8fe7bb72bf99821f7be9c276c17c701f"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260411132023_FixSpectaclesSlotWidth.cs": {
+    "mtime": 1779873417.4964695,
+    "ast_hash": "7bd0b2717dfbdeec76542d70891ba525",
+    "semantic_hash": "7bd0b2717dfbdeec76542d70891ba525"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260411134340_WidenMoreDecorations.Designer.cs": {
+    "mtime": 1779873417.497929,
+    "ast_hash": "99e4d78e81290bb5a6ea27f20bf7b571",
+    "semantic_hash": "99e4d78e81290bb5a6ea27f20bf7b571"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260411134340_WidenMoreDecorations.cs": {
+    "mtime": 1779873417.498925,
+    "ast_hash": "1ff2bdba0aa51beb4ba64c807e7d7627",
+    "semantic_hash": "1ff2bdba0aa51beb4ba64c807e7d7627"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260412000000_AddGenreSpecificRatingCategories.Designer.cs": {
+    "mtime": 1779873417.4999206,
+    "ast_hash": "66c44d2166df85e1227618c8758d9fef",
+    "semantic_hash": "66c44d2166df85e1227618c8758d9fef"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260412000000_AddGenreSpecificRatingCategories.cs": {
+    "mtime": 1779873417.5011046,
+    "ast_hash": "7943792609e31a11d5210aebe35e3d21",
+    "semantic_hash": "7943792609e31a11d5210aebe35e3d21"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260413104941_IncreaseHighTierPlantXpBoosts.Designer.cs": {
+    "mtime": 1779873417.5021005,
+    "ast_hash": "18a23940f60fa08b032dffd4b8d93336",
+    "semantic_hash": "18a23940f60fa08b032dffd4b8d93336"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260413104941_IncreaseHighTierPlantXpBoosts.cs": {
+    "mtime": 1779873417.5033185,
+    "ast_hash": "2c76e2a711f3b09a559bd5c5a6a9dead",
+    "semantic_hash": "2c76e2a711f3b09a559bd5c5a6a9dead"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260414202618_AddLateGameItemsAndAbilities.Designer.cs": {
+    "mtime": 1779873417.504412,
+    "ast_hash": "43a6a4be988ee0359ee080bc0b2a8967",
+    "semantic_hash": "43a6a4be988ee0359ee080bc0b2a8967"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260414202618_AddLateGameItemsAndAbilities.cs": {
+    "mtime": 1779873417.5054705,
+    "ast_hash": "ee8ca02973719ebea4dae760647b71ca",
+    "semantic_hash": "ee8ca02973719ebea4dae760647b71ca"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260422065259_AddAnalyticsConsentFields.Designer.cs": {
+    "mtime": 1779873417.5064948,
+    "ast_hash": "3c7e852b94de50c52045dc0b1cbde0ae",
+    "semantic_hash": "3c7e852b94de50c52045dc0b1cbde0ae"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260422065259_AddAnalyticsConsentFields.cs": {
+    "mtime": 1779873417.5077913,
+    "ast_hash": "89a1536639a9da56f1665f84b0c378e8",
+    "semantic_hash": "89a1536639a9da56f1665f84b0c378e8"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260422123532_AddPremiumSubscriptionSystem.Designer.cs": {
+    "mtime": 1779873417.5087943,
+    "ast_hash": "00822a8ee8056c144e496d2ef4fe922a",
+    "semantic_hash": "00822a8ee8056c144e496d2ef4fe922a"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260422123532_AddPremiumSubscriptionSystem.cs": {
+    "mtime": 1779873417.510022,
+    "ast_hash": "b76e07dcfe9908cf13975afe95fdeb06",
+    "semantic_hash": "b76e07dcfe9908cf13975afe95fdeb06"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260529081628_AddLiveTimerNotificationSetting.Designer.cs": {
+    "mtime": 1783605023.8628712,
+    "ast_hash": "86a4ba880295f4e4f175f45ff5d7e966",
+    "semantic_hash": "86a4ba880295f4e4f175f45ff5d7e966"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260529081628_AddLiveTimerNotificationSetting.cs": {
+    "mtime": 1783605023.864716,
+    "ast_hash": "3467d5c503b303ffad7737cd9f17c50b",
+    "semantic_hash": "3467d5c503b303ffad7737cd9f17c50b"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260602174853_AddSessionMoodTracking.Designer.cs": {
+    "mtime": 1783605023.8657138,
+    "ast_hash": "86dcf758107f40bed4ff97af12a13650",
+    "semantic_hash": "86dcf758107f40bed4ff97af12a13650"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260602174853_AddSessionMoodTracking.cs": {
+    "mtime": 1783605023.866722,
+    "ast_hash": "18d411af87e7ca577768b2be051598ec",
+    "semantic_hash": "18d411af87e7ca577768b2be051598ec"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260618082241_NeutralizeUnusedRowVersionTokens.Designer.cs": {
+    "mtime": 1783605023.8677251,
+    "ast_hash": "207f9459de372173bc997e182168e57a",
+    "semantic_hash": "207f9459de372173bc997e182168e57a"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/20260618082241_NeutralizeUnusedRowVersionTokens.cs": {
+    "mtime": 1783605023.868864,
+    "ast_hash": "6d9153c0e72aa6f326be2d40a3abefcc",
+    "semantic_hash": "6d9153c0e72aa6f326be2d40a3abefcc"
+  },
+  "BookLoggerApp.Infrastructure/Migrations/AppDbContextModelSnapshot.cs": {
+    "mtime": 1783605023.8698728,
+    "ast_hash": "dd60951277f40c189a4af3b983997415",
+    "semantic_hash": "dd60951277f40c189a4af3b983997415"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/IRepository.cs": {
+    "mtime": 1783605023.8708797,
+    "ast_hash": "2041cc96b54845a7b4c0137093db3fe2",
+    "semantic_hash": "2041cc96b54845a7b4c0137093db3fe2"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/IUnitOfWork.cs": {
+    "mtime": 1783605023.8718846,
+    "ast_hash": "a40877da437141abed98b87cbe12fe90",
+    "semantic_hash": "a40877da437141abed98b87cbe12fe90"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/Repository.cs": {
+    "mtime": 1783605023.8728864,
+    "ast_hash": "227f7375fc98263528315466fcf8c9b1",
+    "semantic_hash": "227f7375fc98263528315466fcf8c9b1"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/Specific/BookRepository.cs": {
+    "mtime": 1783605023.8738875,
+    "ast_hash": "e9bf88ddeab63f80644013b606139321",
+    "semantic_hash": "e9bf88ddeab63f80644013b606139321"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/Specific/IBookRepository.cs": {
+    "mtime": 1783605023.8748884,
+    "ast_hash": "24feb300b37e2ad8825c6b85b8b0ce48",
+    "semantic_hash": "24feb300b37e2ad8825c6b85b8b0ce48"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/Specific/IReadingGoalRepository.cs": {
+    "mtime": 1783605023.8758929,
+    "ast_hash": "30c23edcfc3c762192fff3367f8b821a",
+    "semantic_hash": "30c23edcfc3c762192fff3367f8b821a"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/Specific/IReadingSessionRepository.cs": {
+    "mtime": 1783605023.876941,
+    "ast_hash": "628c4bc93e9618997ef15332417e508b",
+    "semantic_hash": "628c4bc93e9618997ef15332417e508b"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/Specific/IUserPlantRepository.cs": {
+    "mtime": 1783605023.8779478,
+    "ast_hash": "c541b824d3b3eb8ea6516d6de77f6f39",
+    "semantic_hash": "c541b824d3b3eb8ea6516d6de77f6f39"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/Specific/ReadingGoalRepository.cs": {
+    "mtime": 1783605023.878953,
+    "ast_hash": "ca6bd36d99d5b4c1a792e929b0f1ab42",
+    "semantic_hash": "ca6bd36d99d5b4c1a792e929b0f1ab42"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/Specific/ReadingSessionRepository.cs": {
+    "mtime": 1783605023.878953,
+    "ast_hash": "6b0ec47b3f0e16418ef0698c98dd265e",
+    "semantic_hash": "6b0ec47b3f0e16418ef0698c98dd265e"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/Specific/UserPlantRepository.cs": {
+    "mtime": 1783605023.8804636,
+    "ast_hash": "0ceee0df6f98cc8065f04a1388fbb6f0",
+    "semantic_hash": "0ceee0df6f98cc8065f04a1388fbb6f0"
+  },
+  "BookLoggerApp.Infrastructure/Repositories/UnitOfWork.cs": {
+    "mtime": 1783605023.881657,
+    "ast_hash": "1245bdb8fc0957cf3cd14464966c3e00",
+    "semantic_hash": "1245bdb8fc0957cf3cd14464966c3e00"
+  },
+  "BookLoggerApp.Infrastructure/Services/AdvancedStatsService.cs": {
+    "mtime": 1783605023.8827133,
+    "ast_hash": "ed99822acffbd42d9b010eaf1b0cebcf",
+    "semantic_hash": "ed99822acffbd42d9b010eaf1b0cebcf"
+  },
+  "BookLoggerApp.Infrastructure/Services/AnnotationService.cs": {
+    "mtime": 1783605023.8839056,
+    "ast_hash": "6bcae1d3a7ae9822954ab832dbee49a9",
+    "semantic_hash": "6bcae1d3a7ae9822954ab832dbee49a9"
+  },
+  "BookLoggerApp.Infrastructure/Services/AppSettingsProvider.cs": {
+    "mtime": 1783605023.8849504,
+    "ast_hash": "c60c021a4bd7a509523a7ce05cd07f74",
+    "semantic_hash": "c60c021a4bd7a509523a7ce05cd07f74"
+  },
+  "BookLoggerApp.Infrastructure/Services/BackButtonService.cs": {
+    "mtime": 1783605023.8859596,
+    "ast_hash": "c763d5f4db1b9efed79059148ba48328",
+    "semantic_hash": "c763d5f4db1b9efed79059148ba48328"
+  },
+  "BookLoggerApp.Infrastructure/Services/BlindDateService.cs": {
+    "mtime": 1783605023.8859596,
+    "ast_hash": "506bbc27b7c7ac0073216479d8fbb3ff",
+    "semantic_hash": "506bbc27b7c7ac0073216479d8fbb3ff"
+  },
+  "BookLoggerApp.Infrastructure/Services/BookService.cs": {
+    "mtime": 1783605023.8879726,
+    "ast_hash": "8eeaf13d8af325edb1f3b0323c7af309",
+    "semantic_hash": "8eeaf13d8af325edb1f3b0323c7af309"
+  },
+  "BookLoggerApp.Infrastructure/Services/DatabaseInitializer.cs": {
+    "mtime": 1783605023.888978,
+    "ast_hash": "668a593a90addd51df60858a5f5e9649",
+    "semantic_hash": "668a593a90addd51df60858a5f5e9649"
+  },
+  "BookLoggerApp.Infrastructure/Services/DecorationService.cs": {
+    "mtime": 1783605023.8899832,
+    "ast_hash": "2db86af7c380f8cd6dbbd51c165a8c28",
+    "semantic_hash": "2db86af7c380f8cd6dbbd51c165a8c28"
+  },
+  "BookLoggerApp.Infrastructure/Services/EntitlementLapseHandler.cs": {
+    "mtime": 1783605023.890985,
+    "ast_hash": "8102f588bad2a3673f6b987034466e66",
+    "semantic_hash": "8102f588bad2a3673f6b987034466e66"
+  },
+  "BookLoggerApp.Infrastructure/Services/EntitlementService.cs": {
+    "mtime": 1783605023.8919861,
+    "ast_hash": "b2a1d59e8bac52878504c83a53b82f80",
+    "semantic_hash": "b2a1d59e8bac52878504c83a53b82f80"
+  },
+  "BookLoggerApp.Infrastructure/Services/EntitlementStore.cs": {
+    "mtime": 1783605023.892987,
+    "ast_hash": "211c99030589714c13229d0be82db6e9",
+    "semantic_hash": "211c99030589714c13229d0be82db6e9"
+  },
+  "BookLoggerApp.Infrastructure/Services/FeatureGuard.cs": {
+    "mtime": 1783605023.8939905,
+    "ast_hash": "a869e214185f18c6f6d76088fbe63632",
+    "semantic_hash": "a869e214185f18c6f6d76088fbe63632"
+  },
+  "BookLoggerApp.Infrastructure/Services/FileSystemAdapter.cs": {
+    "mtime": 1779873417.5337846,
+    "ast_hash": "9fdf2fc31846449692d79c7a43fab856",
+    "semantic_hash": "9fdf2fc31846449692d79c7a43fab856"
+  },
+  "BookLoggerApp.Infrastructure/Services/GenreService.cs": {
+    "mtime": 1783605023.8949974,
+    "ast_hash": "10213a4e14627af792833fc35b6f3144",
+    "semantic_hash": "10213a4e14627af792833fc35b6f3144"
+  },
+  "BookLoggerApp.Infrastructure/Services/GoalService.cs": {
+    "mtime": 1783605023.8959935,
+    "ast_hash": "ac172af959f413f5a3756962e370177f",
+    "semantic_hash": "ac172af959f413f5a3756962e370177f"
+  },
+  "BookLoggerApp.Infrastructure/Services/Helpers/PlantGrowthCalculator.cs": {
+    "mtime": 1783605023.8973677,
+    "ast_hash": "c2b31e66e0bfc7b2c6e963199fb09282",
+    "semantic_hash": "c2b31e66e0bfc7b2c6e963199fb09282"
+  },
+  "BookLoggerApp.Infrastructure/Services/ImageService.cs": {
+    "mtime": 1783605023.898767,
+    "ast_hash": "240affba5c27a97db21033bef8f12a7f",
+    "semantic_hash": "240affba5c27a97db21033bef8f12a7f"
+  },
+  "BookLoggerApp.Infrastructure/Services/ImportExportService.cs": {
+    "mtime": 1783605023.901539,
+    "ast_hash": "73d520dd8cbeabf60cef4e3f8d8af2f0",
+    "semantic_hash": "73d520dd8cbeabf60cef4e3f8d8af2f0"
+  },
+  "BookLoggerApp.Infrastructure/Services/LookupService.cs": {
+    "mtime": 1783605023.9035532,
+    "ast_hash": "20005dfc0e5741ddfbf6d5f9e3417dd5",
+    "semantic_hash": "20005dfc0e5741ddfbf6d5f9e3417dd5"
+  },
+  "BookLoggerApp.Infrastructure/Services/NoOpBillingService.cs": {
+    "mtime": 1779873417.5407934,
+    "ast_hash": "4d77b1d74d59afd53663db19163e0aed",
+    "semantic_hash": "4d77b1d74d59afd53663db19163e0aed"
+  },
+  "BookLoggerApp.Infrastructure/Services/OnboardingService.cs": {
+    "mtime": 1779879770.4799569,
+    "ast_hash": "7fe4805fb1b8fc3816aaaae06bea09f6",
+    "semantic_hash": "7fe4805fb1b8fc3816aaaae06bea09f6"
+  },
+  "BookLoggerApp.Infrastructure/Services/PaywallCoordinator.cs": {
+    "mtime": 1779873417.542841,
+    "ast_hash": "b9a3e5d0dcf583e12e59ef2969e4002a",
+    "semantic_hash": "b9a3e5d0dcf583e12e59ef2969e4002a"
+  },
+  "BookLoggerApp.Infrastructure/Services/PlantService.cs": {
+    "mtime": 1783605023.9057846,
+    "ast_hash": "1bbe1abbfd5228d1b20845fb1afa745b",
+    "semantic_hash": "1bbe1abbfd5228d1b20845fb1afa745b"
+  },
+  "BookLoggerApp.Infrastructure/Services/ProductCatalog.cs": {
+    "mtime": 1783605023.907033,
+    "ast_hash": "ed91e7eff6ce3fdcf3d3cc63ab3f6064",
+    "semantic_hash": "ed91e7eff6ce3fdcf3d3cc63ab3f6064"
+  },
+  "BookLoggerApp.Infrastructure/Services/ProgressService.cs": {
+    "mtime": 1783605023.908648,
+    "ast_hash": "7434405e7a3bdacacbf5296b9f7af54b",
+    "semantic_hash": "7434405e7a3bdacacbf5296b9f7af54b"
+  },
+  "BookLoggerApp.Infrastructure/Services/ProgressionService.cs": {
+    "mtime": 1783605023.909801,
+    "ast_hash": "7265650f4082036403d064a7d398df75",
+    "semantic_hash": "7265650f4082036403d064a7d398df75"
+  },
+  "BookLoggerApp.Infrastructure/Services/PromoCodeService.cs": {
+    "mtime": 1783605023.9115243,
+    "ast_hash": "de6777c56043c481849af1b75da6f3f8",
+    "semantic_hash": "de6777c56043c481849af1b75da6f3f8"
+  },
+  "BookLoggerApp.Infrastructure/Services/QuoteService.cs": {
+    "mtime": 1783605023.9130516,
+    "ast_hash": "855ad717a127122916629b1fea9bffa9",
+    "semantic_hash": "855ad717a127122916629b1fea9bffa9"
+  },
+  "BookLoggerApp.Infrastructure/Services/ReadingForecastService.cs": {
+    "mtime": 1783605023.9142203,
+    "ast_hash": "8d0bea34ba418df0fdfcbb29817fc3a0",
+    "semantic_hash": "8d0bea34ba418df0fdfcbb29817fc3a0"
+  },
+  "BookLoggerApp.Infrastructure/Services/ReviewPromptService.cs": {
+    "mtime": 1783605023.9157958,
+    "ast_hash": "350ddbc33cf8b27e502d62495126e20f",
+    "semantic_hash": "350ddbc33cf8b27e502d62495126e20f"
+  },
+  "BookLoggerApp.Infrastructure/Services/ShareCardService.cs": {
+    "mtime": 1783605023.9189777,
+    "ast_hash": "39ae481f8c7536a80bd9b276725f9155",
+    "semantic_hash": "39ae481f8c7536a80bd9b276725f9155"
+  },
+  "BookLoggerApp.Infrastructure/Services/ShelfService.cs": {
+    "mtime": 1783605023.9195325,
+    "ast_hash": "e99f804ad53f7fe5c7b06dc45f88dfd0",
+    "semantic_hash": "e99f804ad53f7fe5c7b06dc45f88dfd0"
+  },
+  "BookLoggerApp.Infrastructure/Services/StatsService.cs": {
+    "mtime": 1783605023.9218233,
+    "ast_hash": "2533d9363168025b8c6fd56fae992400",
+    "semantic_hash": "2533d9363168025b8c6fd56fae992400"
+  },
+  "BookLoggerApp.Infrastructure/Services/ValidationService.cs": {
+    "mtime": 1779873417.5529854,
+    "ast_hash": "47b31a5f80af8d896523be36fb151cca",
+    "semantic_hash": "47b31a5f80af8d896523be36fb151cca"
+  },
+  "BookLoggerApp.Infrastructure/Services/WishlistService.cs": {
+    "mtime": 1783605023.9228716,
+    "ast_hash": "bcf7c27e1a514ff3c8f61cdda6f8a9fe",
+    "semantic_hash": "bcf7c27e1a514ff3c8f61cdda6f8a9fe"
+  },
+  "BookLoggerApp.Tests/AssemblyInfo.cs": {
+    "mtime": 1779873417.5580723,
+    "ast_hash": "ec819d66dfcbee7ee33ca0541f15ec1a",
+    "semantic_hash": "ec819d66dfcbee7ee33ca0541f15ec1a"
+  },
+  "BookLoggerApp.Tests/BookLoggerApp.Tests.csproj": {
+    "mtime": 1783605023.9241433,
+    "ast_hash": "16929ec21a83f5ee47802d6bc3448dbe",
+    "semantic_hash": "16929ec21a83f5ee47802d6bc3448dbe"
+  },
+  "BookLoggerApp.Tests/Infrastructure/AdvancedStatsServiceContextTests.cs": {
+    "mtime": 1783605023.9253173,
+    "ast_hash": "22cf7082683f3525c95f86f9ca6c239c",
+    "semantic_hash": "22cf7082683f3525c95f86f9ca6c239c"
+  },
+  "BookLoggerApp.Tests/Infrastructure/AppDbContextFactoryTests.cs": {
+    "mtime": 1779873417.5601943,
+    "ast_hash": "9892b219ceb8233ca061466346b72f06",
+    "semantic_hash": "9892b219ceb8233ca061466346b72f06"
+  },
+  "BookLoggerApp.Tests/Infrastructure/AppSettingsConcurrencyTests.cs": {
+    "mtime": 1783605023.9261756,
+    "ast_hash": "72a4818024e29922413a65e275ca9604",
+    "semantic_hash": "72a4818024e29922413a65e275ca9604"
+  },
+  "BookLoggerApp.Tests/Infrastructure/BookServiceEntitlementTests.cs": {
+    "mtime": 1783605023.9266818,
+    "ast_hash": "5d7586c701868e0c91de0dd93f4caafb",
+    "semantic_hash": "5d7586c701868e0c91de0dd93f4caafb"
+  },
+  "BookLoggerApp.Tests/Infrastructure/BookServiceTransactionTests.cs": {
+    "mtime": 1783605023.9341497,
+    "ast_hash": "cf96c97b3e746c02827b5abcb595a283",
+    "semantic_hash": "cf96c97b3e746c02827b5abcb595a283"
+  },
+  "BookLoggerApp.Tests/Infrastructure/LateGameSeedIntegrityTests.cs": {
+    "mtime": 1783605023.9359097,
+    "ast_hash": "16d05fe2dacd9e544cd34dd8b6828c65",
+    "semantic_hash": "16d05fe2dacd9e544cd34dd8b6828c65"
+  },
+  "BookLoggerApp.Tests/Infrastructure/MigrationRecoveryTests.cs": {
+    "mtime": 1783605023.9364161,
+    "ast_hash": "b7f368eeebe350c320747d389ce9ae77",
+    "semantic_hash": "b7f368eeebe350c320747d389ce9ae77"
+  },
+  "BookLoggerApp.Tests/Infrastructure/RowVersionConcurrencyTests.cs": {
+    "mtime": 1783605023.937119,
+    "ast_hash": "0b2f1be76da109ee7b1b3597d5745424",
+    "semantic_hash": "0b2f1be76da109ee7b1b3597d5745424"
+  },
+  "BookLoggerApp.Tests/Infrastructure/Services/Helpers/PlantGrowthCalculatorTests.cs": {
+    "mtime": 1783605023.9396346,
+    "ast_hash": "eb6c1532236b1d8736f0d2094a68a594",
+    "semantic_hash": "eb6c1532236b1d8736f0d2094a68a594"
+  },
+  "BookLoggerApp.Tests/Integration/ImportExportServiceZipIntegrationTests.cs": {
+    "mtime": 1783605023.9406352,
+    "ast_hash": "9814229474a9f2b31c81723c91392e65",
+    "semantic_hash": "9814229474a9f2b31c81723c91392e65"
+  },
+  "BookLoggerApp.Tests/Integration/MigrationTests.cs": {
+    "mtime": 1783605023.9423418,
+    "ast_hash": "62bba355b934fe297054a6f5721ea543",
+    "semantic_hash": "62bba355b934fe297054a6f5721ea543"
+  },
+  "BookLoggerApp.Tests/Integration/RatingIntegrationTests.cs": {
+    "mtime": 1783605023.944307,
+    "ast_hash": "f045d46f7960a08aaf7b3751a826da88",
+    "semantic_hash": "f045d46f7960a08aaf7b3751a826da88"
+  },
+  "BookLoggerApp.Tests/Integration/SchemaDriftGuardTests.cs": {
+    "mtime": 1783605023.9453058,
+    "ast_hash": "2c2280b828a7fed040c7884e8832122f",
+    "semantic_hash": "2c2280b828a7fed040c7884e8832122f"
+  },
+  "BookLoggerApp.Tests/Integration/ShelfServiceTests.cs": {
+    "mtime": 1783605023.9470048,
+    "ast_hash": "4cff9d37d40e8a87f3f893d6ae3edc1e",
+    "semantic_hash": "4cff9d37d40e8a87f3f893d6ae3edc1e"
+  },
+  "BookLoggerApp.Tests/Integration/SpineModePersistenceTests.cs": {
+    "mtime": 1779884737.0885372,
+    "ast_hash": "a203a99e211064b9ca7817ed27dbccbc",
+    "semantic_hash": "a203a99e211064b9ca7817ed27dbccbc"
+  },
+  "BookLoggerApp.Tests/Models/BookTests.cs": {
+    "mtime": 1783605023.9489002,
+    "ast_hash": "a23c875690529def168923c50f82aae2",
+    "semantic_hash": "a23c875690529def168923c50f82aae2"
+  },
+  "BookLoggerApp.Tests/Models/ModelsExtraTests.cs": {
+    "mtime": 1779873417.5711975,
+    "ast_hash": "895d5d4f361f4e0955bea78c452b8c0f",
+    "semantic_hash": "895d5d4f361f4e0955bea78c452b8c0f"
+  },
+  "BookLoggerApp.Tests/Models/ReadingGoalTests.cs": {
+    "mtime": 1779873417.5726604,
+    "ast_hash": "89c349f49c86c075a0da49829b6e9c51",
+    "semantic_hash": "89c349f49c86c075a0da49829b6e9c51"
+  },
+  "BookLoggerApp.Tests/Models/SessionMoodInfoTests.cs": {
+    "mtime": 1783605023.9495864,
+    "ast_hash": "10832987ea403008a6a87dd83c24725f",
+    "semantic_hash": "10832987ea403008a6a87dd83c24725f"
+  },
+  "BookLoggerApp.Tests/Repositories/BookRepositoryTests.cs": {
+    "mtime": 1779873417.5736597,
+    "ast_hash": "9dfce56de0f26c4b976a6b9cc86fb25d",
+    "semantic_hash": "9dfce56de0f26c4b976a6b9cc86fb25d"
+  },
+  "BookLoggerApp.Tests/Repositories/GenericRepositoryTests.cs": {
+    "mtime": 1779873417.574655,
+    "ast_hash": "0b399059f59282e84215b3f53d2c869d",
+    "semantic_hash": "0b399059f59282e84215b3f53d2c869d"
+  },
+  "BookLoggerApp.Tests/Repositories/ReadOnlyTrackingTests.cs": {
+    "mtime": 1783605023.951089,
+    "ast_hash": "cefc5bbd67533467da55beca733b3bec",
+    "semantic_hash": "cefc5bbd67533467da55beca733b3bec"
+  },
+  "BookLoggerApp.Tests/Repositories/ReadingSessionRepositoryTests.cs": {
+    "mtime": 1783605023.9524758,
+    "ast_hash": "acb04e3164290f5bf3fed31beff2c8dd",
+    "semantic_hash": "acb04e3164290f5bf3fed31beff2c8dd"
+  },
+  "BookLoggerApp.Tests/Repositories/RepositoryCancellationTests.cs": {
+    "mtime": 1783605023.9529822,
+    "ast_hash": "ef9420dd2f410e7bf4f1006d4e7af9c4",
+    "semantic_hash": "ef9420dd2f410e7bf4f1006d4e7af9c4"
+  },
+  "BookLoggerApp.Tests/Repositories/RepositoryTests.cs": {
+    "mtime": 1779873417.5771427,
+    "ast_hash": "b0c701c9c629361f8933b7a570526793",
+    "semantic_hash": "b0c701c9c629361f8933b7a570526793"
+  },
+  "BookLoggerApp.Tests/Repositories/UnitOfWorkTests.cs": {
+    "mtime": 1783605023.9548285,
+    "ast_hash": "abd256951ad98fe1d9ce9d8c7a7ca194",
+    "semantic_hash": "abd256951ad98fe1d9ce9d8c7a7ca194"
+  },
+  "BookLoggerApp.Tests/Security/CsvInjectionTests.cs": {
+    "mtime": 1783605023.9563837,
+    "ast_hash": "f420514df62f518e1b8e9e3be0aa369e",
+    "semantic_hash": "f420514df62f518e1b8e9e3be0aa369e"
+  },
+  "BookLoggerApp.Tests/Security/ImageSecurityTests.cs": {
+    "mtime": 1779873417.5781386,
+    "ast_hash": "87aee865e369ee8b92157e88898997a6",
+    "semantic_hash": "87aee865e369ee8b92157e88898997a6"
+  },
+  "BookLoggerApp.Tests/Security/ImageServiceSecurityTests.cs": {
+    "mtime": 1783605023.9573927,
+    "ast_hash": "048609a1bca43451d66aaac7c8eaba71",
+    "semantic_hash": "048609a1bca43451d66aaac7c8eaba71"
+  },
+  "BookLoggerApp.Tests/Security/SsrfImageUrlTests.cs": {
+    "mtime": 1783605023.9581344,
+    "ast_hash": "0b82885dd6d72bcf045cf8c3743b6bfb",
+    "semantic_hash": "0b82885dd6d72bcf045cf8c3743b6bfb"
+  },
+  "BookLoggerApp.Tests/Security/ZipBombProtectionTests.cs": {
+    "mtime": 1783605023.9597235,
+    "ast_hash": "91b3e9d95c215f0da183450987c251ee",
+    "semantic_hash": "91b3e9d95c215f0da183450987c251ee"
+  },
+  "BookLoggerApp.Tests/Security/ZipSlipTests.cs": {
+    "mtime": 1783605023.9612439,
+    "ast_hash": "383b8bd4c2ed29d2beac1f17842c0e00",
+    "semantic_hash": "383b8bd4c2ed29d2beac1f17842c0e00"
+  },
+  "BookLoggerApp.Tests/Services/AdvancedStatsServiceTests.cs": {
+    "mtime": 1783605023.9631052,
+    "ast_hash": "eeebe61b207589c29e7f679a65310732",
+    "semantic_hash": "eeebe61b207589c29e7f679a65310732"
+  },
+  "BookLoggerApp.Tests/Services/AnnotationServiceTests.cs": {
+    "mtime": 1783605023.9646254,
+    "ast_hash": "a8b9d17ee9b2049ca38fe3d80a10021b",
+    "semantic_hash": "a8b9d17ee9b2049ca38fe3d80a10021b"
+  },
+  "BookLoggerApp.Tests/Services/AppSettingsProviderTests.cs": {
+    "mtime": 1783605023.966382,
+    "ast_hash": "06d565f63d74fcba0b9d38c5f5b76b8f",
+    "semantic_hash": "06d565f63d74fcba0b9d38c5f5b76b8f"
+  },
+  "BookLoggerApp.Tests/Services/BackButtonServiceTests.cs": {
+    "mtime": 1779873417.5875387,
+    "ast_hash": "499d549b1b67bdbec1b60daf2dbbb34d",
+    "semantic_hash": "499d549b1b67bdbec1b60daf2dbbb34d"
+  },
+  "BookLoggerApp.Tests/Services/BlindDateServiceTests.cs": {
+    "mtime": 1783605023.9689555,
+    "ast_hash": "f78558feebe7a1ff9079b83ddd230fcb",
+    "semantic_hash": "f78558feebe7a1ff9079b83ddd230fcb"
+  },
+  "BookLoggerApp.Tests/Services/BookServiceTests.cs": {
+    "mtime": 1783605023.9704757,
+    "ast_hash": "b9c20fd5bc51dcdb613e831ea62441df",
+    "semantic_hash": "b9c20fd5bc51dcdb613e831ea62441df"
+  },
+  "BookLoggerApp.Tests/Services/DecorationServiceEntitlementTests.cs": {
+    "mtime": 1783605023.9719422,
+    "ast_hash": "980b0a07d2f400206c908803aa97645f",
+    "semantic_hash": "980b0a07d2f400206c908803aa97645f"
+  },
+  "BookLoggerApp.Tests/Services/DecorationServiceTests.cs": {
+    "mtime": 1783605023.973314,
+    "ast_hash": "ba8f8d18dd75c68b86888d725a2d4501",
+    "semantic_hash": "ba8f8d18dd75c68b86888d725a2d4501"
+  },
+  "BookLoggerApp.Tests/Services/EntitlementLapseHandlerTests.cs": {
+    "mtime": 1783605023.9747393,
+    "ast_hash": "168d0c37c7427023bb7e41b97924cb34",
+    "semantic_hash": "168d0c37c7427023bb7e41b97924cb34"
+  },
+  "BookLoggerApp.Tests/Services/EntitlementServiceTests.cs": {
+    "mtime": 1783605023.9765048,
+    "ast_hash": "8303f8201dd2adf0c5ac656438e7c400",
+    "semantic_hash": "8303f8201dd2adf0c5ac656438e7c400"
+  },
+  "BookLoggerApp.Tests/Services/FeatureGuardTests.cs": {
+    "mtime": 1779873417.5983596,
+    "ast_hash": "ad35346f44d2a5be6786448a1d36edd9",
+    "semantic_hash": "ad35346f44d2a5be6786448a1d36edd9"
+  },
+  "BookLoggerApp.Tests/Services/FileSystemAdapterTests.cs": {
+    "mtime": 1779873417.5996292,
+    "ast_hash": "fd99aac6f31baabc698017480ec371e9",
+    "semantic_hash": "fd99aac6f31baabc698017480ec371e9"
+  },
+  "BookLoggerApp.Tests/Services/GoalServiceEntitlementTests.cs": {
+    "mtime": 1783605023.9777079,
+    "ast_hash": "88fde3dc7b05c0ea01967e007d89d2df",
+    "semantic_hash": "88fde3dc7b05c0ea01967e007d89d2df"
+  },
+  "BookLoggerApp.Tests/Services/GoalServiceGenreFilterPersistTests.cs": {
+    "mtime": 1783605023.9787781,
+    "ast_hash": "0afa1b061bbfc11a1063e27a6d42d92c",
+    "semantic_hash": "0afa1b061bbfc11a1063e27a6d42d92c"
+  },
+  "BookLoggerApp.Tests/Services/GoalServiceTests.cs": {
+    "mtime": 1783605023.9805424,
+    "ast_hash": "8c7e11e09de72c866753fd2ae8f81d19",
+    "semantic_hash": "8c7e11e09de72c866753fd2ae8f81d19"
+  },
+  "BookLoggerApp.Tests/Services/ImageServiceTests.cs": {
+    "mtime": 1783605023.9821024,
+    "ast_hash": "5732d4724f64697cf1a3f33a560f904e",
+    "semantic_hash": "5732d4724f64697cf1a3f33a560f904e"
+  },
+  "BookLoggerApp.Tests/Services/ImportExportServiceTests.cs": {
+    "mtime": 1783605023.9838562,
+    "ast_hash": "8062192c245df2ed5335c71dbe360ebb",
+    "semantic_hash": "8062192c245df2ed5335c71dbe360ebb"
+  },
+  "BookLoggerApp.Tests/Services/LookupServiceTests.cs": {
+    "mtime": 1783605023.985495,
+    "ast_hash": "9651436b0d51c88f6e47315ba12376f1",
+    "semantic_hash": "9651436b0d51c88f6e47315ba12376f1"
+  },
+  "BookLoggerApp.Tests/Services/NotificationServiceTests.cs": {
+    "mtime": 1783605023.9869514,
+    "ast_hash": "ae885458613e5599407652ebb9ea1d65",
+    "semantic_hash": "ae885458613e5599407652ebb9ea1d65"
+  },
+  "BookLoggerApp.Tests/Services/OnboardingServiceTests.cs": {
+    "mtime": 1783605023.988672,
+    "ast_hash": "987423568842e0f8668c699dac2b5475",
+    "semantic_hash": "987423568842e0f8668c699dac2b5475"
+  },
+  "BookLoggerApp.Tests/Services/PlantServiceEntitlementTests.cs": {
+    "mtime": 1783605023.9894333,
+    "ast_hash": "18c723f5ace0b70439152cb01b5fda08",
+    "semantic_hash": "18c723f5ace0b70439152cb01b5fda08"
+  },
+  "BookLoggerApp.Tests/Services/PlantServicePhoenixTests.cs": {
+    "mtime": 1783605023.990913,
+    "ast_hash": "f9ba931966b0593286930f3d2589bf57",
+    "semantic_hash": "f9ba931966b0593286930f3d2589bf57"
+  },
+  "BookLoggerApp.Tests/Services/PlantServiceTests.cs": {
+    "mtime": 1783605023.9939246,
+    "ast_hash": "40eceb782996ccb7afad4833cb669da2",
+    "semantic_hash": "40eceb782996ccb7afad4833cb669da2"
+  },
+  "BookLoggerApp.Tests/Services/ProductCatalogTests.cs": {
+    "mtime": 1783605023.9946935,
+    "ast_hash": "95bb232c982d70fbbbbf5838c42720e5",
+    "semantic_hash": "95bb232c982d70fbbbbf5838c42720e5"
+  },
+  "BookLoggerApp.Tests/Services/ProgressServiceTests.cs": {
+    "mtime": 1783605023.9961414,
+    "ast_hash": "0a9b6127853f2cec10e7befabe6d7443",
+    "semantic_hash": "0a9b6127853f2cec10e7befabe6d7443"
+  },
+  "BookLoggerApp.Tests/Services/ProgressionServiceTests.cs": {
+    "mtime": 1779873417.612346,
+    "ast_hash": "16b5427a16e9a6f7ceba880cccaccb04",
+    "semantic_hash": "16b5427a16e9a6f7ceba880cccaccb04"
+  },
+  "BookLoggerApp.Tests/Services/QuoteServiceTests.cs": {
+    "mtime": 1783605023.9977057,
+    "ast_hash": "3d6911840678c25bed8303adfcc6b648",
+    "semantic_hash": "3d6911840678c25bed8303adfcc6b648"
+  },
+  "BookLoggerApp.Tests/Services/ReadingForecastServiceTests.cs": {
+    "mtime": 1783605023.9992127,
+    "ast_hash": "7f2ecec42f56cd81aec6376e17b7794e",
+    "semantic_hash": "7f2ecec42f56cd81aec6376e17b7794e"
+  },
+  "BookLoggerApp.Tests/Services/ReviewPromptServiceTests.cs": {
+    "mtime": 1783605024.0006206,
+    "ast_hash": "11f1e4113ef77675d414a4d74183c30a",
+    "semantic_hash": "11f1e4113ef77675d414a4d74183c30a"
+  },
+  "BookLoggerApp.Tests/Services/ServiceCancellationTests.cs": {
+    "mtime": 1783605024.004701,
+    "ast_hash": "8aea5e2ccdaa00cd00a900911122653c",
+    "semantic_hash": "8aea5e2ccdaa00cd00a900911122653c"
+  },
+  "BookLoggerApp.Tests/Services/ServiceValidationTests.cs": {
+    "mtime": 1783605024.00588,
+    "ast_hash": "8bb4da579baa16ae96c7b23282ee5999",
+    "semantic_hash": "8bb4da579baa16ae96c7b23282ee5999"
+  },
+  "BookLoggerApp.Tests/Services/ShareCardServiceTests.cs": {
+    "mtime": 1783605024.0072024,
+    "ast_hash": "a704c6c53442915d0804872d4ffd94d7",
+    "semantic_hash": "a704c6c53442915d0804872d4ffd94d7"
+  },
+  "BookLoggerApp.Tests/Services/ShelfServiceDriftRecoveryTests.cs": {
+    "mtime": 1783605024.008708,
+    "ast_hash": "2927b0554c51b65f230816e35c10dce9",
+    "semantic_hash": "2927b0554c51b65f230816e35c10dce9"
+  },
+  "BookLoggerApp.Tests/Services/ShelfServiceTests.cs": {
+    "mtime": 1783605024.0110366,
+    "ast_hash": "543af000d92ada414d9e8ee7b55fcafd",
+    "semantic_hash": "543af000d92ada414d9e8ee7b55fcafd"
+  },
+  "BookLoggerApp.Tests/Services/StatsServicePerformanceTests.cs": {
+    "mtime": 1783605024.013391,
+    "ast_hash": "4502bf41d9e5f2ca16673d9eaf882107",
+    "semantic_hash": "4502bf41d9e5f2ca16673d9eaf882107"
+  },
+  "BookLoggerApp.Tests/Services/StatsServiceTests.cs": {
+    "mtime": 1783605024.014956,
+    "ast_hash": "c73c66ab45f170d389e163770c9c2f78",
+    "semantic_hash": "c73c66ab45f170d389e163770c9c2f78"
+  },
+  "BookLoggerApp.Tests/Services/ValidationServiceTests.cs": {
+    "mtime": 1779873417.6204808,
+    "ast_hash": "d5e0ccaee04f00e3baceaf4dc36a7416",
+    "semantic_hash": "d5e0ccaee04f00e3baceaf4dc36a7416"
+  },
+  "BookLoggerApp.Tests/Services/WishlistServiceEntitlementTests.cs": {
+    "mtime": 1783605024.0164804,
+    "ast_hash": "0eee9457a2b2706d7e36f4939d3c8efb",
+    "semantic_hash": "0eee9457a2b2706d7e36f4939d3c8efb"
+  },
+  "BookLoggerApp.Tests/Services/WishlistServiceTests.cs": {
+    "mtime": 1783605024.0179157,
+    "ast_hash": "357e1182ef6f7d9316464b0553401522",
+    "semantic_hash": "357e1182ef6f7d9316464b0553401522"
+  },
+  "BookLoggerApp.Tests/TestHelpers/DbContextTestHelper.cs": {
+    "mtime": 1779873417.6229863,
+    "ast_hash": "7560dfbd59d07b5789a80d3259ae9d8c",
+    "semantic_hash": "7560dfbd59d07b5789a80d3259ae9d8c"
+  },
+  "BookLoggerApp.Tests/TestHelpers/FakeEntitlementService.cs": {
+    "mtime": 1779873417.6240232,
+    "ast_hash": "9ad358ad0278a27ce044f6a6a69aeb57",
+    "semantic_hash": "9ad358ad0278a27ce044f6a6a69aeb57"
+  },
+  "BookLoggerApp.Tests/TestHelpers/MockAnalyticsService.cs": {
+    "mtime": 1779873417.625037,
+    "ast_hash": "7a5cf1381862ffb6f0200eaa2e2ce49a",
+    "semantic_hash": "7a5cf1381862ffb6f0200eaa2e2ce49a"
+  },
+  "BookLoggerApp.Tests/TestHelpers/MockBookService.cs": {
+    "mtime": 1783605024.020556,
+    "ast_hash": "b9e81d620d7b8f63c22553118c59dd2d",
+    "semantic_hash": "b9e81d620d7b8f63c22553118c59dd2d"
+  },
+  "BookLoggerApp.Tests/TestHelpers/MockCrashReportingService.cs": {
+    "mtime": 1779873417.626033,
+    "ast_hash": "bfe3fa12b9355fcf11b0117ed0baa5de",
+    "semantic_hash": "bfe3fa12b9355fcf11b0117ed0baa5de"
+  },
+  "BookLoggerApp.Tests/TestHelpers/MockGoalService.cs": {
+    "mtime": 1779873417.627029,
+    "ast_hash": "404e510b32c8a66279e798aee98b8da1",
+    "semantic_hash": "404e510b32c8a66279e798aee98b8da1"
+  },
+  "BookLoggerApp.Tests/TestHelpers/MockNotificationService.cs": {
+    "mtime": 1779873417.627029,
+    "ast_hash": "b15c8cd3b2804a93f5b7e65df82b3315",
+    "semantic_hash": "b15c8cd3b2804a93f5b7e65df82b3315"
+  },
+  "BookLoggerApp.Tests/TestHelpers/MockPlantService.cs": {
+    "mtime": 1783605024.0216913,
+    "ast_hash": "d172aaad230bd7c100d255fde087e63c",
+    "semantic_hash": "d172aaad230bd7c100d255fde087e63c"
+  },
+  "BookLoggerApp.Tests/TestHelpers/MockProgressionService.cs": {
+    "mtime": 1779873417.629624,
+    "ast_hash": "8e2d928d26c9a74325d80ab432721087",
+    "semantic_hash": "8e2d928d26c9a74325d80ab432721087"
+  },
+  "BookLoggerApp.Tests/TestHelpers/SqliteTestContext.cs": {
+    "mtime": 1783605024.0236528,
+    "ast_hash": "b8ae86acbab36d9a4afa050ae648d22e",
+    "semantic_hash": "b8ae86acbab36d9a4afa050ae648d22e"
+  },
+  "BookLoggerApp.Tests/TestHelpers/TestDbContext.cs": {
+    "mtime": 1779873417.630881,
+    "ast_hash": "6f77065be7febcbbf26d301d68e2d3e5",
+    "semantic_hash": "6f77065be7febcbbf26d301d68e2d3e5"
+  },
+  "BookLoggerApp.Tests/TestHelpers/TestStringLocalizer.cs": {
+    "mtime": 1783605024.0248964,
+    "ast_hash": "405d4fc57979e703f7cdb84b34e8fa6f",
+    "semantic_hash": "405d4fc57979e703f7cdb84b34e8fa6f"
+  },
+  "BookLoggerApp.Tests/TestHelpers/ValidationServiceFactory.cs": {
+    "mtime": 1783605024.0259874,
+    "ast_hash": "a3fb81c370b2d377668e5012672a5f21",
+    "semantic_hash": "a3fb81c370b2d377668e5012672a5f21"
+  },
+  "BookLoggerApp.Tests/Unit/Analytics/AnalyticsBucketsTests.cs": {
+    "mtime": 1779873417.6329083,
+    "ast_hash": "bc37e1b813c0e5dec3564bf2c786aed2",
+    "semantic_hash": "bc37e1b813c0e5dec3564bf2c786aed2"
+  },
+  "BookLoggerApp.Tests/Unit/Analytics/AnalyticsConsentGateTests.cs": {
+    "mtime": 1783605024.028295,
+    "ast_hash": "0daa5929803ade145eb903b41a951d4a",
+    "semantic_hash": "0daa5929803ade145eb903b41a951d4a"
+  },
+  "BookLoggerApp.Tests/Unit/Analytics/AnalyticsParamBuilderTests.cs": {
+    "mtime": 1783605024.0293415,
+    "ast_hash": "62cfe9914ae03b22f261453cc9d58442",
+    "semantic_hash": "62cfe9914ae03b22f261453cc9d58442"
+  },
+  "BookLoggerApp.Tests/Unit/Analytics/NoOpServiceTests.cs": {
+    "mtime": 1779873417.635186,
+    "ast_hash": "e642f7216fd10a4847d028ab54bd8eea",
+    "semantic_hash": "e642f7216fd10a4847d028ab54bd8eea"
+  },
+  "BookLoggerApp.Tests/Unit/Entitlements/FeaturePolicyTests.cs": {
+    "mtime": 1779873417.637437,
+    "ast_hash": "64c7ccca7ddc6ca1512b9f88365ade81",
+    "semantic_hash": "64c7ccca7ddc6ca1512b9f88365ade81"
+  },
+  "BookLoggerApp.Tests/Unit/Entitlements/PaywallComparisonCatalogTests.cs": {
+    "mtime": 1779873417.637437,
+    "ast_hash": "4df87817b3d2f3f922e31026110d840d",
+    "semantic_hash": "4df87817b3d2f3f922e31026110d840d"
+  },
+  "BookLoggerApp.Tests/Unit/Entitlements/ShopTierFeaturesTests.cs": {
+    "mtime": 1783605024.030923,
+    "ast_hash": "aaaf121fe94631f1761231f3419e81fa",
+    "semantic_hash": "aaaf121fe94631f1761231f3419e81fa"
+  },
+  "BookLoggerApp.Tests/Unit/ExceptionsTests.cs": {
+    "mtime": 1779873417.638433,
+    "ast_hash": "cd0733f2a8bd9fff3eedd96c52693100",
+    "semantic_hash": "cd0733f2a8bd9fff3eedd96c52693100"
+  },
+  "BookLoggerApp.Tests/Unit/Helpers/ChangelogParserTests.cs": {
+    "mtime": 1783605024.0329304,
+    "ast_hash": "044aa0809c3ac85b1c2e44e0bc4f41f6",
+    "semantic_hash": "044aa0809c3ac85b1c2e44e0bc4f41f6"
+  },
+  "BookLoggerApp.Tests/Unit/Helpers/GenreRatingMappingTests.cs": {
+    "mtime": 1783605024.0350459,
+    "ast_hash": "9f2691511eaa6f31fbb71c5e92402bf3",
+    "semantic_hash": "9f2691511eaa6f31fbb71c5e92402bf3"
+  },
+  "BookLoggerApp.Tests/Unit/Helpers/GoalActivityHelperTests.cs": {
+    "mtime": 1783605024.0368254,
+    "ast_hash": "0ea29c672193114967baebfb4aec2dae",
+    "semantic_hash": "0ea29c672193114967baebfb4aec2dae"
+  },
+  "BookLoggerApp.Tests/Unit/Helpers/LocalTimeHelperTests.cs": {
+    "mtime": 1783605024.0378876,
+    "ast_hash": "1fb52246136cab75dc0c1b51fc55bfb7",
+    "semantic_hash": "1fb52246136cab75dc0c1b51fc55bfb7"
+  },
+  "BookLoggerApp.Tests/Unit/Helpers/ReadingForecastCalculatorTests.cs": {
+    "mtime": 1783605024.039471,
+    "ast_hash": "aced906cefbcf06de5452d08878e7840",
+    "semantic_hash": "aced906cefbcf06de5452d08878e7840"
+  },
+  "BookLoggerApp.Tests/Unit/Helpers/ReadingStreakHelperTests.cs": {
+    "mtime": 1783605024.0410526,
+    "ast_hash": "71fca951df51546ff1a72c6b3eb7b068",
+    "semantic_hash": "71fca951df51546ff1a72c6b3eb7b068"
+  },
+  "BookLoggerApp.Tests/Unit/Helpers/ScannerTaskCompletionHelperTests.cs": {
+    "mtime": 1779873417.642552,
+    "ast_hash": "0a3a30c3c176fea66825e77d25ebf4d1",
+    "semantic_hash": "0a3a30c3c176fea66825e77d25ebf4d1"
+  },
+  "BookLoggerApp.Tests/Unit/Helpers/SessionMoodHelperTests.cs": {
+    "mtime": 1783605024.042106,
+    "ast_hash": "9ef91904ec33038281a1ff8baa7e030e",
+    "semantic_hash": "9ef91904ec33038281a1ff8baa7e030e"
+  },
+  "BookLoggerApp.Tests/Unit/Helpers/SpecialAbilityResolverTests.cs": {
+    "mtime": 1779873417.6435664,
+    "ast_hash": "bd1fe74d13d7525fdb51edb9aa6e098a",
+    "semantic_hash": "bd1fe74d13d7525fdb51edb9aa6e098a"
+  },
+  "BookLoggerApp.Tests/Unit/Helpers/XpCalculatorTests.cs": {
+    "mtime": 1783605024.0436442,
+    "ast_hash": "b3007ea825b1fd918275acc4d17bf9f8",
+    "semantic_hash": "b3007ea825b1fd918275acc4d17bf9f8"
+  },
+  "BookLoggerApp.Tests/Unit/Infrastructure/DatabaseInitializationHelperRestoreGateTests.cs": {
+    "mtime": 1783605024.044652,
+    "ast_hash": "a4b9ff9be84006cf971793e58fcd2803",
+    "semantic_hash": "a4b9ff9be84006cf971793e58fcd2803"
+  },
+  "BookLoggerApp.Tests/Unit/Infrastructure/DatabaseInitializationHelperTests.cs": {
+    "mtime": 1783605024.0463896,
+    "ast_hash": "3dd790e49795f2bf763fbb1e8de23d9e",
+    "semantic_hash": "3dd790e49795f2bf763fbb1e8de23d9e"
+  },
+  "BookLoggerApp.Tests/Unit/Infrastructure/PlatformsDbPathTests.cs": {
+    "mtime": 1779873417.6468196,
+    "ast_hash": "059d83479de23c9f2891cc1528ca6f57",
+    "semantic_hash": "059d83479de23c9f2891cc1528ca6f57"
+  },
+  "BookLoggerApp.Tests/Unit/Resources/AppResourcesCoverageTests.cs": {
+    "mtime": 1783605024.047437,
+    "ast_hash": "d289bd65217c62bdc6a31416360e32d6",
+    "semantic_hash": "d289bd65217c62bdc6a31416360e32d6"
+  },
+  "BookLoggerApp.Tests/Unit/Resources/WishlistPriorityLocalizationTests.cs": {
+    "mtime": 1783605024.047962,
+    "ast_hash": "3b0534a80defbb9f2afae350d17cf9f3",
+    "semantic_hash": "3b0534a80defbb9f2afae350d17cf9f3"
+  },
+  "BookLoggerApp.Tests/Unit/Services/Abstractions/TimerStateDataTests.cs": {
+    "mtime": 1779873417.6488414,
+    "ast_hash": "e51c882e2adfb791e19d6fad414136c1",
+    "semantic_hash": "e51c882e2adfb791e19d6fad414136c1"
+  },
+  "BookLoggerApp.Tests/Unit/Services/GenreServiceEntitlementTests.cs": {
+    "mtime": 1783605024.0490057,
+    "ast_hash": "040558ae5aefc8ec4dc35e84262658dc",
+    "semantic_hash": "040558ae5aefc8ec4dc35e84262658dc"
+  },
+  "BookLoggerApp.Tests/Unit/Services/GenreServiceTests.cs": {
+    "mtime": 1783605024.0500534,
+    "ast_hash": "3baf63ed90a5bc3ffd494061f9b3b050",
+    "semantic_hash": "3baf63ed90a5bc3ffd494061f9b3b050"
+  },
+  "BookLoggerApp.Tests/Unit/SpineColorHelperTests.cs": {
+    "mtime": 1783605024.0512812,
+    "ast_hash": "d5a5c0a84d7d26e0c3d0547fe5b8714b",
+    "semantic_hash": "d5a5c0a84d7d26e0c3d0547fe5b8714b"
+  },
+  "BookLoggerApp.Tests/Unit/Validators/BookValidatorTests.cs": {
+    "mtime": 1779873417.6522048,
+    "ast_hash": "e8a7ba48f86281d8aff9fb6014263c89",
+    "semantic_hash": "e8a7ba48f86281d8aff9fb6014263c89"
+  },
+  "BookLoggerApp.Tests/Unit/Validators/ReadingGoalValidatorTests.cs": {
+    "mtime": 1779873417.6532032,
+    "ast_hash": "9c9d3f4668ef74341a59f16b3f00c202",
+    "semantic_hash": "9c9d3f4668ef74341a59f16b3f00c202"
+  },
+  "BookLoggerApp.Tests/Unit/Validators/ReadingSessionValidatorTests.cs": {
+    "mtime": 1779873417.6532032,
+    "ast_hash": "12ac3769958157140049d856f7629193",
+    "semantic_hash": "12ac3769958157140049d856f7629193"
+  },
+  "BookLoggerApp.Tests/Unit/Validators/UserPlantValidatorTests.cs": {
+    "mtime": 1779873417.654199,
+    "ast_hash": "dfeea187dba692c4e549637f8be2cb69",
+    "semantic_hash": "dfeea187dba692c4e549637f8be2cb69"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/AppStartupViewModelResumeLapseTests.cs": {
+    "mtime": 1783605024.0518055,
+    "ast_hash": "e1b9bd650d515787991f6dfb6c9623f4",
+    "semantic_hash": "e1b9bd650d515787991f6dfb6c9623f4"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/AppStartupViewModelTests.cs": {
+    "mtime": 1783605024.0533621,
+    "ast_hash": "fa9864d0e1faa66672a225067ef23d24",
+    "semantic_hash": "fa9864d0e1faa66672a225067ef23d24"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/BlindDateViewModelTests.cs": {
+    "mtime": 1783605024.0544007,
+    "ast_hash": "782f7bd9dbe0b64ae8c811d8d6268523",
+    "semantic_hash": "782f7bd9dbe0b64ae8c811d8d6268523"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/BookDetailViewModelTests.cs": {
+    "mtime": 1783605024.0554378,
+    "ast_hash": "5f8917951fcebc4f3e5f1f642008a691",
+    "semantic_hash": "5f8917951fcebc4f3e5f1f642008a691"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/BookEditViewModelTests.cs": {
+    "mtime": 1783605024.0570004,
+    "ast_hash": "d50f5d3143507942370377faeb0b8f70",
+    "semantic_hash": "d50f5d3143507942370377faeb0b8f70"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/BookListViewModelTests.cs": {
+    "mtime": 1783605024.058035,
+    "ast_hash": "9009c57811a36f78c486c23f112f7b88",
+    "semantic_hash": "9009c57811a36f78c486c23f112f7b88"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/BookshelfViewModelTests.cs": {
+    "mtime": 1783605024.0590682,
+    "ast_hash": "3df6a93bd5d6b93055cf8f4f0abb4574",
+    "semantic_hash": "3df6a93bd5d6b93055cf8f4f0abb4574"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/DashboardViewModelTests.cs": {
+    "mtime": 1783605024.0601065,
+    "ast_hash": "2bcaa867ea1c35e5a2c82d28be620b57",
+    "semantic_hash": "2bcaa867ea1c35e5a2c82d28be620b57"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/DecorationShopViewModelTests.cs": {
+    "mtime": 1779873417.6620798,
+    "ast_hash": "44817c73a0e64172e0b9832d7bdf3eef",
+    "semantic_hash": "44817c73a0e64172e0b9832d7bdf3eef"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/GoalsViewModelTests.cs": {
+    "mtime": 1779873417.6620798,
+    "ast_hash": "f494fc28e740b51dba706983e677e4ee",
+    "semantic_hash": "f494fc28e740b51dba706983e677e4ee"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/PaywallViewModelTests.cs": {
+    "mtime": 1783605024.0614352,
+    "ast_hash": "ab978dae7f33d3031f59bc19ac7d09a1",
+    "semantic_hash": "ab978dae7f33d3031f59bc19ac7d09a1"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/PlantShopViewModelTests.cs": {
+    "mtime": 1779873417.6640835,
+    "ast_hash": "955b46432f4fc97096e99d5be02f9ccb",
+    "semantic_hash": "955b46432f4fc97096e99d5be02f9ccb"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/SettingsViewModelEntitlementTests.cs": {
+    "mtime": 1783605024.0624714,
+    "ast_hash": "2ca95d6ff99f4e792b64a89401cdc92a",
+    "semantic_hash": "2ca95d6ff99f4e792b64a89401cdc92a"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/SettingsViewModelTests.cs": {
+    "mtime": 1783605024.0635087,
+    "ast_hash": "d043bb83b0a2d4c03105da560f7dc434",
+    "semantic_hash": "d043bb83b0a2d4c03105da560f7dc434"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/ShelfItemViewModelTests.cs": {
+    "mtime": 1779873417.6664886,
+    "ast_hash": "91daea39d14cfcee4544b067b4261e09",
+    "semantic_hash": "91daea39d14cfcee4544b067b4261e09"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/StatsAnalysesViewModelTests.cs": {
+    "mtime": 1779873417.6674845,
+    "ast_hash": "22d711dbd2e8e27e2d50852e32dc767a",
+    "semantic_hash": "22d711dbd2e8e27e2d50852e32dc767a"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/StatsTrendsViewModelTests.cs": {
+    "mtime": 1779873417.6684806,
+    "ast_hash": "312d381b9aa827fd7482113ac3b49752",
+    "semantic_hash": "312d381b9aa827fd7482113ac3b49752"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/StatsViewModelTests.cs": {
+    "mtime": 1783605024.06454,
+    "ast_hash": "bba81ff14053fc109292dfd0b4be480d",
+    "semantic_hash": "bba81ff14053fc109292dfd0b4be480d"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/UserProgressViewModelTests.cs": {
+    "mtime": 1783605024.065577,
+    "ast_hash": "7411938cc2523485674802ae330d01b9",
+    "semantic_hash": "7411938cc2523485674802ae330d01b9"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/ViewModelBaseCancellationTests.cs": {
+    "mtime": 1783605024.0662603,
+    "ast_hash": "fc7ff7d0ded2492425ad3b09d0b3ce23",
+    "semantic_hash": "fc7ff7d0ded2492425ad3b09d0b3ce23"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/ViewModelBaseCrashReportingTests.cs": {
+    "mtime": 1779873417.6707363,
+    "ast_hash": "4fbb7bc75f8167a1545ac2e0f2ddfb1d",
+    "semantic_hash": "4fbb7bc75f8167a1545ac2e0f2ddfb1d"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/ViewModelBaseTests.cs": {
+    "mtime": 1783605024.0672984,
+    "ast_hash": "6efc048558103b07544857a4362d69a0",
+    "semantic_hash": "6efc048558103b07544857a4362d69a0"
+  },
+  "BookLoggerApp.Tests/Unit/ViewModels/WishlistViewModelTests.cs": {
+    "mtime": 1783605024.0683439,
+    "ast_hash": "f9e8b1846ec248d4cb8f18bb05d3456e",
+    "semantic_hash": "f9e8b1846ec248d4cb8f18bb05d3456e"
+  },
+  "BookLoggerApp.sln": {
+    "mtime": 1779873417.67311,
+    "ast_hash": "b2a3f1d17a33e729b78d956ebe347721",
+    "semantic_hash": "b2a3f1d17a33e729b78d956ebe347721"
+  },
+  "BookLoggerApp/App.xaml": {
+    "mtime": 1779873417.6756945,
+    "ast_hash": "bda2ad90987c2491f037785510a182dd",
+    "semantic_hash": "bda2ad90987c2491f037785510a182dd"
+  },
+  "BookLoggerApp/App.xaml.cs": {
+    "mtime": 1779873417.6766903,
+    "ast_hash": "e60ad6a5999309ecb053ae996665e41b",
+    "semantic_hash": "e60ad6a5999309ecb053ae996665e41b"
+  },
+  "BookLoggerApp/BookLoggerApp.csproj": {
+    "mtime": 1783605024.0698862,
+    "ast_hash": "4dfc5f84da846b0d12619bfa37091430",
+    "semantic_hash": "4dfc5f84da846b0d12619bfa37091430"
+  },
+  "BookLoggerApp/Components/Layout/BottomNavBar.razor": {
+    "mtime": 1783605024.0709147,
+    "ast_hash": "c8d751c86f9a2ed816c2678cbab72dac",
+    "semantic_hash": "c8d751c86f9a2ed816c2678cbab72dac"
+  },
+  "BookLoggerApp/Components/Layout/MainLayout.razor": {
+    "mtime": 1779873417.68017,
+    "ast_hash": "6298f9b5425d921cc3d3ead109cb07ce",
+    "semantic_hash": "6298f9b5425d921cc3d3ead109cb07ce"
+  },
+  "BookLoggerApp/Components/Layout/NavMenu.razor": {
+    "mtime": 1779873417.6823258,
+    "ast_hash": "4ce26f361e2a88682673a856732d0f67",
+    "semantic_hash": "4ce26f361e2a88682673a856732d0f67"
+  },
+  "BookLoggerApp/Components/ObservableComponentBase.cs": {
+    "mtime": 1783605024.0719407,
+    "ast_hash": "6ef7a7ff74b8cef486fb17b92679a2b4",
+    "semantic_hash": "6ef7a7ff74b8cef486fb17b92679a2b4"
+  },
+  "BookLoggerApp/Components/Pages/BlindDate.razor": {
+    "mtime": 1783605024.0724537,
+    "ast_hash": "206924db2b0911e1ab90304e2736578c",
+    "semantic_hash": "206924db2b0911e1ab90304e2736578c"
+  },
+  "BookLoggerApp/Components/Pages/BookDetail.razor": {
+    "mtime": 1783605024.0740006,
+    "ast_hash": "08312af81bc7bce81a07c1532c4fc1cd",
+    "semantic_hash": "08312af81bc7bce81a07c1532c4fc1cd"
+  },
+  "BookLoggerApp/Components/Pages/BookEdit.razor": {
+    "mtime": 1783605024.0750365,
+    "ast_hash": "02e146e373d50a9417e742b0c2e86321",
+    "semantic_hash": "02e146e373d50a9417e742b0c2e86321"
+  },
+  "BookLoggerApp/Components/Pages/Bookshelf.razor": {
+    "mtime": 1783605024.0765922,
+    "ast_hash": "da2b0e26b69d429ab5afc8a606c4ba23",
+    "semantic_hash": "da2b0e26b69d429ab5afc8a606c4ba23"
+  },
+  "BookLoggerApp/Components/Pages/Dashboard.razor": {
+    "mtime": 1783605024.077633,
+    "ast_hash": "283634af6a8f9dd9c495d2a51e6610c0",
+    "semantic_hash": "283634af6a8f9dd9c495d2a51e6610c0"
+  },
+  "BookLoggerApp/Components/Pages/GettingStarted.razor": {
+    "mtime": 1779879804.2980452,
+    "ast_hash": "0d8aed4c62e89cabfd19d086a7d4ba55",
+    "semantic_hash": "0d8aed4c62e89cabfd19d086a7d4ba55"
+  },
+  "BookLoggerApp/Components/Pages/Goals.razor": {
+    "mtime": 1783605024.0786705,
+    "ast_hash": "d4e230e38822762dbc0d14390dc9c0e5",
+    "semantic_hash": "d4e230e38822762dbc0d14390dc9c0e5"
+  },
+  "BookLoggerApp/Components/Pages/PlantShop.razor": {
+    "mtime": 1783605024.0802238,
+    "ast_hash": "9f1ab6df9b0612a6cbfa77489c954c61",
+    "semantic_hash": "9f1ab6df9b0612a6cbfa77489c954c61"
+  },
+  "BookLoggerApp/Components/Pages/Settings.razor": {
+    "mtime": 1783605024.081376,
+    "ast_hash": "37eb220ef19c652192af1abfb413fbca",
+    "semantic_hash": "37eb220ef19c652192af1abfb413fbca"
+  },
+  "BookLoggerApp/Components/Pages/Stats.razor": {
+    "mtime": 1783605024.0828044,
+    "ast_hash": "ec9c97a44906b894f413e2cb6e9f291c",
+    "semantic_hash": "ec9c97a44906b894f413e2cb6e9f291c"
+  },
+  "BookLoggerApp/Components/Routes.razor": {
+    "mtime": 1783605024.0838552,
+    "ast_hash": "e83eb70583f0e3da6d0cffc7b7de2d06",
+    "semantic_hash": "e83eb70583f0e3da6d0cffc7b7de2d06"
+  },
+  "BookLoggerApp/Components/Shared/AnalyticsScreenTracker.razor": {
+    "mtime": 1779873417.6999328,
+    "ast_hash": "8d681f84dbd4b12564cdf59ab96fa573",
+    "semantic_hash": "8d681f84dbd4b12564cdf59ab96fa573"
+  },
+  "BookLoggerApp/Components/Shared/AppStartupOverlay.razor": {
+    "mtime": 1779873417.6999328,
+    "ast_hash": "99866fb5e94d4f12eece5c1b56ad3a57",
+    "semantic_hash": "99866fb5e94d4f12eece5c1b56ad3a57"
+  },
+  "BookLoggerApp/Components/Shared/BlindDateCard.razor": {
+    "mtime": 1783605024.0843787,
+    "ast_hash": "fc6c4d29ef41577aceb57d57473eecb4",
+    "semantic_hash": "fc6c4d29ef41577aceb57d57473eecb4"
+  },
+  "BookLoggerApp/Components/Shared/BookCard.razor": {
+    "mtime": 1783605024.0854094,
+    "ast_hash": "2bd5b85e7e565b6cf7ec83da74bfefba",
+    "semantic_hash": "2bd5b85e7e565b6cf7ec83da74bfefba"
+  },
+  "BookLoggerApp/Components/Shared/BookCompletionCelebration.razor": {
+    "mtime": 1783605024.0864413,
+    "ast_hash": "52042edbc49f01ef53a89c678bd96a13",
+    "semantic_hash": "52042edbc49f01ef53a89c678bd96a13"
+  },
+  "BookLoggerApp/Components/Shared/BurnDownForecastCard.razor": {
+    "mtime": 1783605024.0874832,
+    "ast_hash": "b299332ad43bcc4acafc6f36675d3866",
+    "semantic_hash": "b299332ad43bcc4acafc6f36675d3866"
+  },
+  "BookLoggerApp/Components/Shared/ColorPresetPicker.razor": {
+    "mtime": 1779873417.7043335,
+    "ast_hash": "f625f31fb5a0bbac2ae226a2703e90ed",
+    "semantic_hash": "f625f31fb5a0bbac2ae226a2703e90ed"
+  },
+  "BookLoggerApp/Components/Shared/DecorationCard.razor": {
+    "mtime": 1779873417.7054584,
+    "ast_hash": "9b7357f43b16b6a42fd8301108303d34",
+    "semantic_hash": "9b7357f43b16b6a42fd8301108303d34"
+  },
+  "BookLoggerApp/Components/Shared/DecorationShopCard.razor": {
+    "mtime": 1783605024.088512,
+    "ast_hash": "eda3a21cc017ae626cf4d89ae0eda392",
+    "semantic_hash": "eda3a21cc017ae626cf4d89ae0eda392"
+  },
+  "BookLoggerApp/Components/Shared/DeleteConfirmationModal.razor": {
+    "mtime": 1783605024.0890326,
+    "ast_hash": "8c926ee3daa06a02562995a7679eae82",
+    "semantic_hash": "8c926ee3daa06a02562995a7679eae82"
+  },
+  "BookLoggerApp/Components/Shared/EmotionalJourneyChart.razor": {
+    "mtime": 1783605024.090068,
+    "ast_hash": "3529bc5a9775b67b64816903d36b95b2",
+    "semantic_hash": "3529bc5a9775b67b64816903d36b95b2"
+  },
+  "BookLoggerApp/Components/Shared/FeatureSuggestionForm.razor": {
+    "mtime": 1783605024.0911605,
+    "ast_hash": "f6933c675f2358671d012fc61a8fef9c",
+    "semantic_hash": "f6933c675f2358671d012fc61a8fef9c"
+  },
+  "BookLoggerApp/Components/Shared/GettingStartedCta.razor": {
+    "mtime": 1783605024.092195,
+    "ast_hash": "f23e1bc795487bf9fbde5b5f0ab22c7d",
+    "semantic_hash": "f23e1bc795487bf9fbde5b5f0ab22c7d"
+  },
+  "BookLoggerApp/Components/Shared/GoalCard.razor": {
+    "mtime": 1783605024.0927124,
+    "ast_hash": "4a531a0fddd6b3d2536caf2782d7a84b",
+    "semantic_hash": "4a531a0fddd6b3d2536caf2782d7a84b"
+  },
+  "BookLoggerApp/Components/Shared/GoalHeader.razor": {
+    "mtime": 1779873417.7104583,
+    "ast_hash": "88e2a9572e151c036e70b8db9cb2afe7",
+    "semantic_hash": "88e2a9572e151c036e70b8db9cb2afe7"
+  },
+  "BookLoggerApp/Components/Shared/LevelUpCelebration.razor": {
+    "mtime": 1783605024.0940177,
+    "ast_hash": "afc057d09a9e26ad00e8da7bdb2bf58b",
+    "semantic_hash": "afc057d09a9e26ad00e8da7bdb2bf58b"
+  },
+  "BookLoggerApp/Components/Shared/LockedFeatureButton.razor": {
+    "mtime": 1779873417.7128537,
+    "ast_hash": "65c430a2110281a978b66da74cfa75e2",
+    "semantic_hash": "65c430a2110281a978b66da74cfa75e2"
+  },
+  "BookLoggerApp/Components/Shared/OnboardingTutorial.razor": {
+    "mtime": 1779873417.7138493,
+    "ast_hash": "5163e87ff913f090850785fbadb4e23d",
+    "semantic_hash": "5163e87ff913f090850785fbadb4e23d"
+  },
+  "BookLoggerApp/Components/Shared/Paywall/PaywallCelebration.razor": {
+    "mtime": 1779873417.7161565,
+    "ast_hash": "de6008ab41effe8d823a992eb5ba3a87",
+    "semantic_hash": "de6008ab41effe8d823a992eb5ba3a87"
+  },
+  "BookLoggerApp/Components/Shared/Paywall/PaywallModal.razor": {
+    "mtime": 1783605024.0945375,
+    "ast_hash": "0a56cf0627165f8f2be678a62e2cb9ba",
+    "semantic_hash": "0a56cf0627165f8f2be678a62e2cb9ba"
+  },
+  "BookLoggerApp/Components/Shared/Paywall/PaywallOverlay.razor": {
+    "mtime": 1779873417.7172585,
+    "ast_hash": "594f7a8f84cc6ceaf91f4a474d60b7f6",
+    "semantic_hash": "594f7a8f84cc6ceaf91f4a474d60b7f6"
+  },
+  "BookLoggerApp/Components/Shared/PlantCard.razor": {
+    "mtime": 1779873417.718272,
+    "ast_hash": "5173171f7095d484e124a851c993a158",
+    "semantic_hash": "5173171f7095d484e124a851c993a158"
+  },
+  "BookLoggerApp/Components/Shared/PlantDetailCard.razor": {
+    "mtime": 1783605024.0955408,
+    "ast_hash": "ca1a07217aa45f73f76bf674a31e5535",
+    "semantic_hash": "ca1a07217aa45f73f76bf674a31e5535"
+  },
+  "BookLoggerApp/Components/Shared/PlantShopCard.razor": {
+    "mtime": 1783605024.0965426,
+    "ast_hash": "6af3ecf21ac1f76f1d309a660f8cf147",
+    "semantic_hash": "6af3ecf21ac1f76f1d309a660f8cf147"
+  },
+  "BookLoggerApp/Components/Shared/PlantWidget.razor": {
+    "mtime": 1783605024.097656,
+    "ast_hash": "d56acbc6a57ffe94d6f37b743ac06fdd",
+    "semantic_hash": "d56acbc6a57ffe94d6f37b743ac06fdd"
+  },
+  "BookLoggerApp/Components/Shared/PrivacyDisclosureBanner.razor": {
+    "mtime": 1779873417.7231991,
+    "ast_hash": "f9bd5b5fcb4e3af47c9317f3e3d1ab93",
+    "semantic_hash": "f9bd5b5fcb4e3af47c9317f3e3d1ab93"
+  },
+  "BookLoggerApp/Components/Shared/RatingInput.razor": {
+    "mtime": 1783605024.0986576,
+    "ast_hash": "bf53fea7826d72b431535afbb0c17574",
+    "semantic_hash": "bf53fea7826d72b431535afbb0c17574"
+  },
+  "BookLoggerApp/Components/Shared/ReadingTimerInline.razor": {
+    "mtime": 1783605024.100451,
+    "ast_hash": "7c3c433811851acf43c7d92ea065b24e",
+    "semantic_hash": "7c3c433811851acf43c7d92ea065b24e"
+  },
+  "BookLoggerApp/Components/Shared/ReadingWrappedTeaser.razor": {
+    "mtime": 1783605024.1014864,
+    "ast_hash": "4068d165d8a37685294839bb0c4bca0e",
+    "semantic_hash": "4068d165d8a37685294839bb0c4bca0e"
+  },
+  "BookLoggerApp/Components/Shared/ReviewPromptModal.razor": {
+    "mtime": 1779873417.7279413,
+    "ast_hash": "4ee6ec5a4b675091a5bf6c6ea4514f5d",
+    "semantic_hash": "4ee6ec5a4b675091a5bf6c6ea4514f5d"
+  },
+  "BookLoggerApp/Components/Shared/SessionCompleteCelebration.razor": {
+    "mtime": 1783605024.1025188,
+    "ast_hash": "74d688a381f6c46caf213069b02a249d",
+    "semantic_hash": "74d688a381f6c46caf213069b02a249d"
+  },
+  "BookLoggerApp/Components/Shared/SessionMoodPicker.razor": {
+    "mtime": 1783605024.1030786,
+    "ast_hash": "7ffc1465a4683a08c95220bf52746ffa",
+    "semantic_hash": "7ffc1465a4683a08c95220bf52746ffa"
+  },
+  "BookLoggerApp/Components/Shared/StatCard.razor": {
+    "mtime": 1779873417.7303178,
+    "ast_hash": "428e3959348eded3b51e306f234462bf",
+    "semantic_hash": "428e3959348eded3b51e306f234462bf"
+  },
+  "BookLoggerApp/Components/Shared/StatsAnalyses.razor": {
+    "mtime": 1783605024.1041212,
+    "ast_hash": "ba3e7e33559437cf9aab129fa1fcf89b",
+    "semantic_hash": "ba3e7e33559437cf9aab129fa1fcf89b"
+  },
+  "BookLoggerApp/Components/Shared/StatsTrends.razor": {
+    "mtime": 1783605024.1051505,
+    "ast_hash": "ce51dba783dc2e2ea282e5075fcacbf6",
+    "semantic_hash": "ce51dba783dc2e2ea282e5075fcacbf6"
+  },
+  "BookLoggerApp/Components/Shared/StreakCelebration.razor": {
+    "mtime": 1779873417.7325678,
+    "ast_hash": "63962c30471af5a6b41913a2c8ff739b",
+    "semantic_hash": "63962c30471af5a6b41913a2c8ff739b"
+  },
+  "BookLoggerApp/Components/Shared/UpcomingFinishesWidget.razor": {
+    "mtime": 1783605024.1061776,
+    "ast_hash": "9b5a1dbad2c9ee5ec9d173ece0664a25",
+    "semantic_hash": "9b5a1dbad2c9ee5ec9d173ece0664a25"
+  },
+  "BookLoggerApp/Components/Shared/UpgradeRecommendationCard.razor": {
+    "mtime": 1783605024.1072066,
+    "ast_hash": "f3ca54d7d1177bef948932d28eedf898",
+    "semantic_hash": "f3ca54d7d1177bef948932d28eedf898"
+  },
+  "BookLoggerApp/Components/Shared/UserProgressWidget.razor": {
+    "mtime": 1783605024.1077237,
+    "ast_hash": "5d9f4acfa658b19a3c461b6300ddc3e5",
+    "semantic_hash": "5d9f4acfa658b19a3c461b6300ddc3e5"
+  },
+  "BookLoggerApp/Components/_Imports.razor": {
+    "mtime": 1779873417.7356002,
+    "ast_hash": "b660e75171bdaa4972c516823d7b2f39",
+    "semantic_hash": "b660e75171bdaa4972c516823d7b2f39"
+  },
+  "BookLoggerApp/MainPage.xaml": {
+    "mtime": 1779873417.7388237,
+    "ast_hash": "eff65e5d9b956343337fb2b360a97623",
+    "semantic_hash": "eff65e5d9b956343337fb2b360a97623"
+  },
+  "BookLoggerApp/MainPage.xaml.cs": {
+    "mtime": 1783605024.1087637,
+    "ast_hash": "8497157a2c0737818b9daaaac887f95d",
+    "semantic_hash": "8497157a2c0737818b9daaaac887f95d"
+  },
+  "BookLoggerApp/MauiProgram.cs": {
+    "mtime": 1783605024.1098,
+    "ast_hash": "104f16737464cdbc04db5f695c60f91e",
+    "semantic_hash": "104f16737464cdbc04db5f695c60f91e"
+  },
+  "BookLoggerApp/Platforms/Android/Analytics/AndroidAnalyticsExtensions.cs": {
+    "mtime": 1783605024.1113539,
+    "ast_hash": "5307741e441f615930867f50e69aa9ec",
+    "semantic_hash": "5307741e441f615930867f50e69aa9ec"
+  },
+  "BookLoggerApp/Platforms/Android/Analytics/CrashlyticsLoggerProvider.cs": {
+    "mtime": 1779873417.7436748,
+    "ast_hash": "e9e6b91a2ee191b15e2632f44324fe53",
+    "semantic_hash": "e9e6b91a2ee191b15e2632f44324fe53"
+  },
+  "BookLoggerApp/Platforms/Android/Analytics/FirebaseAnalyticsService.cs": {
+    "mtime": 1783605024.1124892,
+    "ast_hash": "00c686bc2e732e3aedfb3b8386c4b850",
+    "semantic_hash": "00c686bc2e732e3aedfb3b8386c4b850"
+  },
+  "BookLoggerApp/Platforms/Android/Analytics/FirebaseCrashlyticsService.cs": {
+    "mtime": 1779873417.7448857,
+    "ast_hash": "dbfa3a14b70c645c92ce338889856d08",
+    "semantic_hash": "dbfa3a14b70c645c92ce338889856d08"
+  },
+  "BookLoggerApp/Platforms/Android/CustomWebChromeClient.cs": {
+    "mtime": 1783605024.1140437,
+    "ast_hash": "df9e3942d855cc2b272e1bc0bef70aef",
+    "semantic_hash": "df9e3942d855cc2b272e1bc0bef70aef"
+  },
+  "BookLoggerApp/Platforms/Android/MainActivity.cs": {
+    "mtime": 1783605024.1150799,
+    "ast_hash": "1f5383a0c1159718ab9de7159445a113",
+    "semantic_hash": "1f5383a0c1159718ab9de7159445a113"
+  },
+  "BookLoggerApp/Platforms/Android/MainApplication.cs": {
+    "mtime": 1779873417.748221,
+    "ast_hash": "1d7b797788174917e2c2d4d54ac408ca",
+    "semantic_hash": "1d7b797788174917e2c2d4d54ac408ca"
+  },
+  "BookLoggerApp/Platforms/Android/Services/ReadingTimerActionReceiver.cs": {
+    "mtime": 1783605024.1185493,
+    "ast_hash": "10d31ee28f4c1e18cd8637729c2ff1a7",
+    "semantic_hash": "10d31ee28f4c1e18cd8637729c2ff1a7"
+  },
+  "BookLoggerApp/Platforms/Android/Services/ReadingTimerForegroundService.cs": {
+    "mtime": 1783605024.1195507,
+    "ast_hash": "d29a2fd87764782dfbe2f22c64f41082",
+    "semantic_hash": "d29a2fd87764782dfbe2f22c64f41082"
+  },
+  "BookLoggerApp/Platforms/Android/Widgets/CurrentBookWidgetProvider.cs": {
+    "mtime": 1783605024.1195507,
+    "ast_hash": "74fc76d6dbe4e54e282296192b28e321",
+    "semantic_hash": "74fc76d6dbe4e54e282296192b28e321"
+  },
+  "BookLoggerApp/Platforms/Android/Widgets/DailyGoalWidgetProvider.cs": {
+    "mtime": 1783605024.1207688,
+    "ast_hash": "ba2428cdaf575f5521fd3c87ec50c9bf",
+    "semantic_hash": "ba2428cdaf575f5521fd3c87ec50c9bf"
+  },
+  "BookLoggerApp/Platforms/Android/Widgets/Models/WidgetData.cs": {
+    "mtime": 1779873417.7700286,
+    "ast_hash": "3cb47ec1731c79071bf47858c89cb4db",
+    "semantic_hash": "3cb47ec1731c79071bf47858c89cb4db"
+  },
+  "BookLoggerApp/Platforms/Android/Widgets/ReadingStreakWidgetProvider.cs": {
+    "mtime": 1783605024.122024,
+    "ast_hash": "84b205cf9c8c63b055fc05a2fd66bc44",
+    "semantic_hash": "84b205cf9c8c63b055fc05a2fd66bc44"
+  },
+  "BookLoggerApp/Platforms/Android/Widgets/Services/WidgetDataService.cs": {
+    "mtime": 1783605024.1230254,
+    "ast_hash": "5956b5398d0e62e23290e7c38844fe9c",
+    "semantic_hash": "5956b5398d0e62e23290e7c38844fe9c"
+  },
+  "BookLoggerApp/Platforms/Android/Widgets/WidgetConfigurationActivity.cs": {
+    "mtime": 1783605024.1240268,
+    "ast_hash": "de931c3f1eb811fc40090dcba1c42b01",
+    "semantic_hash": "de931c3f1eb811fc40090dcba1c42b01"
+  },
+  "BookLoggerApp/Platforms/Android/Widgets/WidgetUpdateHelper.cs": {
+    "mtime": 1779884719.9421027,
+    "ast_hash": "690b90e2dfc2c13faf23041097a6a7b3",
+    "semantic_hash": "690b90e2dfc2c13faf23041097a6a7b3"
+  },
+  "BookLoggerApp/Platforms/MacCatalyst/AppDelegate.cs": {
+    "mtime": 1779873417.7765229,
+    "ast_hash": "da9a314f0fb3034679fef0019f7105c4",
+    "semantic_hash": "da9a314f0fb3034679fef0019f7105c4"
+  },
+  "BookLoggerApp/Platforms/MacCatalyst/Program.cs": {
+    "mtime": 1783605024.1250281,
+    "ast_hash": "a9f79a2736accbeae492ea0d3de5e530",
+    "semantic_hash": "a9f79a2736accbeae492ea0d3de5e530"
+  },
+  "BookLoggerApp/Platforms/Tizen/Main.cs": {
+    "mtime": 1779873417.7808084,
+    "ast_hash": "dbc5416f867228b28adfb74f89edaf2d",
+    "semantic_hash": "dbc5416f867228b28adfb74f89edaf2d"
+  },
+  "BookLoggerApp/Platforms/Windows/App.xaml": {
+    "mtime": 1779873417.7828143,
+    "ast_hash": "8c158e23c3ccd00e2b781a4225970adb",
+    "semantic_hash": "8c158e23c3ccd00e2b781a4225970adb"
+  },
+  "BookLoggerApp/Platforms/Windows/App.xaml.cs": {
+    "mtime": 1783605024.1263168,
+    "ast_hash": "e15f65a30424cbd7e3f8a07b9b8339b8",
+    "semantic_hash": "e15f65a30424cbd7e3f8a07b9b8339b8"
+  },
+  "BookLoggerApp/Platforms/iOS/AppDelegate.cs": {
+    "mtime": 1779873417.786209,
+    "ast_hash": "da9a314f0fb3034679fef0019f7105c4",
+    "semantic_hash": "da9a314f0fb3034679fef0019f7105c4"
+  },
+  "BookLoggerApp/Platforms/iOS/Program.cs": {
+    "mtime": 1783605024.1273184,
+    "ast_hash": "30dff2a55c2e34f2b07bd7214a6a601e",
+    "semantic_hash": "30dff2a55c2e34f2b07bd7214a6a601e"
+  },
+  "BookLoggerApp/Properties/launchSettings.json": {
+    "mtime": 1779873417.7909596,
+    "ast_hash": "4e57b643958c5bf8b3edc47dc24a9cec",
+    "semantic_hash": "4e57b643958c5bf8b3edc47dc24a9cec"
+  },
+  "BookLoggerApp/ScannerPage.xaml": {
+    "mtime": 1779873418.1913972,
+    "ast_hash": "7b73ee29b25d045fb3a4cc9292cc56d4",
+    "semantic_hash": "7b73ee29b25d045fb3a4cc9292cc56d4"
+  },
+  "BookLoggerApp/ScannerPage.xaml.cs": {
+    "mtime": 1779873418.1913972,
+    "ast_hash": "60416872d4dc9ad9fc0bba26fd84d7ed",
+    "semantic_hash": "60416872d4dc9ad9fc0bba26fd84d7ed"
+  },
+  "BookLoggerApp/Services/AdConfig.cs": {
+    "mtime": 1779873418.1927986,
+    "ast_hash": "f69f643afe9340a8b002169c8373589b",
+    "semantic_hash": "f69f643afe9340a8b002169c8373589b"
+  },
+  "BookLoggerApp/Services/AppRestartService.cs": {
+    "mtime": 1783605024.1284199,
+    "ast_hash": "3112ac8bf62cf3d3f741d19942fd146a",
+    "semantic_hash": "3112ac8bf62cf3d3f741d19942fd146a"
+  },
+  "BookLoggerApp/Services/AppUpdateService.cs": {
+    "mtime": 1779884719.943267,
+    "ast_hash": "864ea63aa43da8cf1eef256cacf32739",
+    "semantic_hash": "864ea63aa43da8cf1eef256cacf32739"
+  },
+  "BookLoggerApp/Services/AppVersionService.cs": {
+    "mtime": 1779873418.1948097,
+    "ast_hash": "9c8b5e8b35f7fbe39e8a1f80327d65ac",
+    "semantic_hash": "9c8b5e8b35f7fbe39e8a1f80327d65ac"
+  },
+  "BookLoggerApp/Services/Billing/AndroidBillingService.cs": {
+    "mtime": 1783605024.1294339,
+    "ast_hash": "f59f71561d4bc92266ca6f3bfbc78e28",
+    "semantic_hash": "f59f71561d4bc92266ca6f3bfbc78e28"
+  },
+  "BookLoggerApp/Services/ChangelogService.cs": {
+    "mtime": 1779873418.1968136,
+    "ast_hash": "681d9d2df5ea063d7f62ba6ded21b8ec",
+    "semantic_hash": "681d9d2df5ea063d7f62ba6ded21b8ec"
+  },
+  "BookLoggerApp/Services/DeepLinkService.cs": {
+    "mtime": 1783605024.1304357,
+    "ast_hash": "5748174a84fda8ba93fa7fee4d876cad",
+    "semantic_hash": "5748174a84fda8ba93fa7fee4d876cad"
+  },
+  "BookLoggerApp/Services/FilePickerService.cs": {
+    "mtime": 1783605024.1314368,
+    "ast_hash": "5b338e61abf2e12bb2522917ea6290aa",
+    "semantic_hash": "5b338e61abf2e12bb2522917ea6290aa"
+  },
+  "BookLoggerApp/Services/FileSaverService.cs": {
+    "mtime": 1783605024.1324382,
+    "ast_hash": "f6ad96c7299a1559e1d345f585a95311",
+    "semantic_hash": "f6ad96c7299a1559e1d345f585a95311"
+  },
+  "BookLoggerApp/Services/IScannerService.cs": {
+    "mtime": 1779873418.1990352,
+    "ast_hash": "d981d0d35469c3bb37743dfac2c49229",
+    "semantic_hash": "d981d0d35469c3bb37743dfac2c49229"
+  },
+  "BookLoggerApp/Services/LanguageService.cs": {
+    "mtime": 1779873418.2003198,
+    "ast_hash": "543f37763c0be9f311ea5518882dde12",
+    "semantic_hash": "543f37763c0be9f311ea5518882dde12"
+  },
+  "BookLoggerApp/Services/MigrationService.cs": {
+    "mtime": 1783605024.1334393,
+    "ast_hash": "999cab70643d840d29754a091379329d",
+    "semantic_hash": "999cab70643d840d29754a091379329d"
+  },
+  "BookLoggerApp/Services/NotificationService.cs": {
+    "mtime": 1779884719.9442723,
+    "ast_hash": "f0f25b41aa84b6cab4adaa517c0b807b",
+    "semantic_hash": "f0f25b41aa84b6cab4adaa517c0b807b"
+  },
+  "BookLoggerApp/Services/PermissionService.cs": {
+    "mtime": 1779873418.2023625,
+    "ast_hash": "c6c6fa25ab290a1fcdf0fc4ec922a6fb",
+    "semantic_hash": "c6c6fa25ab290a1fcdf0fc4ec922a6fb"
+  },
+  "BookLoggerApp/Services/ReadingTimerNotificationService.cs": {
+    "mtime": 1783605024.13454,
+    "ast_hash": "5f5026ccd0475da29fba988e6f1e307f",
+    "semantic_hash": "5f5026ccd0475da29fba988e6f1e307f"
+  },
+  "BookLoggerApp/Services/ScannerService.cs": {
+    "mtime": 1783605024.135047,
+    "ast_hash": "edbe8d783b7ac0122433946517fcfc11",
+    "semantic_hash": "edbe8d783b7ac0122433946517fcfc11"
+  },
+  "BookLoggerApp/Services/ShareService.cs": {
+    "mtime": 1779873418.2033656,
+    "ast_hash": "c6bbb4dba3a8a7e7e719a2eb92469c1d",
+    "semantic_hash": "c6bbb4dba3a8a7e7e719a2eb92469c1d"
+  },
+  "BookLoggerApp/Services/TimerStateService.cs": {
+    "mtime": 1783605024.1360533,
+    "ast_hash": "dfecabaa3d7529ced19cc5bbd5b462d0",
+    "semantic_hash": "dfecabaa3d7529ced19cc5bbd5b462d0"
+  },
+  "BookLoggerApp/Services/WidgetUpdateService.cs": {
+    "mtime": 1779873418.2057095,
+    "ast_hash": "268c3180724b8c6f8d8a97b25820e499",
+    "semantic_hash": "268c3180724b8c6f8d8a97b25820e499"
+  },
+  "BookLoggerApp/wwwroot/js/animation-control.js": {
+    "mtime": 1779873418.2575548,
+    "ast_hash": "995abe886f2c025f3d5292cb76329e85",
+    "semantic_hash": "995abe886f2c025f3d5292cb76329e85"
+  },
+  "BookLoggerApp/wwwroot/js/bookshelfDragDrop.js": {
+    "mtime": 1779873418.2589564,
+    "ast_hash": "63c696432e5d8956ec3ff4d090ecfd12",
+    "semantic_hash": "63c696432e5d8956ec3ff4d090ecfd12"
+  },
+  "BookLoggerApp/wwwroot/js/lazyLoading.js": {
+    "mtime": 1779873418.2599525,
+    "ast_hash": "68b9aef68c0c11044a55ffedb4cd7741",
+    "semantic_hash": "68b9aef68c0c11044a55ffedb4cd7741"
+  },
+  "BookLoggerApp/wwwroot/js/settingsSupport.js": {
+    "mtime": 1779873418.2599525,
+    "ast_hash": "16236c00f918949d77624c26a5f676fb",
+    "semantic_hash": "16236c00f918949d77624c26a5f676fb"
+  },
+  "count_lines.ps1": {
+    "mtime": 1779873418.269967,
+    "ast_hash": "82a7bca0544090d1eed5a44d451b99b4",
+    "semantic_hash": "82a7bca0544090d1eed5a44d451b99b4"
+  },
+  ".claude/.superpowers/brainstorm/367-1776016350/content/analysen-tab-mockup.html": {
+    "mtime": 1779873417.2364316,
+    "ast_hash": "508284803b95e580f6f810c3440c3c40",
+    "semantic_hash": "508284803b95e580f6f810c3440c3c40"
+  },
+  ".claude/.superpowers/brainstorm/367-1776016350/content/stats-proposals.html": {
+    "mtime": 1779873417.2374275,
+    "ast_hash": "f84fe9c305d78ce913341e5fafe9cab9",
+    "semantic_hash": "f84fe9c305d78ce913341e5fafe9cab9"
+  },
+  ".claude/.superpowers/brainstorm/367-1776016350/content/trends-tab-mockup.html": {
+    "mtime": 1779873417.238423,
+    "ast_hash": "4c3c834d53c0217781929209a0d20774",
+    "semantic_hash": "4c3c834d53c0217781929209a0d20774"
+  },
+  ".claude/.superpowers/brainstorm/367-1776016350/content/trends-tab-v2.html": {
+    "mtime": 1779873417.239419,
+    "ast_hash": "6bbba6221d947900b89229f34f8a1603",
+    "semantic_hash": "6bbba6221d947900b89229f34f8a1603"
+  },
+  ".claude/.superpowers/brainstorm/367-1776016350/content/waiting.html": {
+    "mtime": 1779873417.2404149,
+    "ast_hash": "5d11ae590a739a3362d3f045f4f7faf3",
+    "semantic_hash": "5d11ae590a739a3362d3f045f4f7faf3"
+  },
+  ".claude/docs/superpowers/plans/2026-04-12-advanced-statistics.md": {
+    "mtime": 1779873417.2443976,
+    "ast_hash": "bcdc19d3876aff3f2053a5d3f419909d",
+    "semantic_hash": "bcdc19d3876aff3f2053a5d3f419909d"
+  },
+  ".claude/docs/superpowers/specs/2026-04-12-advanced-statistics-design.md": {
+    "mtime": 1779873417.2453935,
+    "ast_hash": "094aec2c9221df1bb5316687f867f05c",
+    "semantic_hash": "094aec2c9221df1bb5316687f867f05c"
+  },
+  ".github/FUNDING.yml": {
+    "mtime": 1779873417.2493768,
+    "ast_hash": "d7a179443a686bcda80b62f167b88c9d",
+    "semantic_hash": "d7a179443a686bcda80b62f167b88c9d"
+  },
+  ".github/ISSUE_TEMPLATE/bug_report.md": {
+    "mtime": 1779873417.2503724,
+    "ast_hash": "188fd8a11f28f0e50dc7cb27a22af1eb",
+    "semantic_hash": "188fd8a11f28f0e50dc7cb27a22af1eb"
+  },
+  ".github/ISSUE_TEMPLATE/feature_request.md": {
+    "mtime": 1779873417.2513683,
+    "ast_hash": "2c95cb00ebd7546ccec06638cd813767",
+    "semantic_hash": "2c95cb00ebd7546ccec06638cd813767"
+  },
+  ".github/OLD_WFlows/gemini-dispatch.yml": {
+    "mtime": 1779873417.252364,
+    "ast_hash": "cef399a98e05f2a650ec2f71ed4f475f",
+    "semantic_hash": "cef399a98e05f2a650ec2f71ed4f475f"
+  },
+  ".github/OLD_WFlows/gemini-invoke.yml": {
+    "mtime": 1779873417.2535276,
+    "ast_hash": "80c6ead1c7fbbd63a09cb71848009ed0",
+    "semantic_hash": "80c6ead1c7fbbd63a09cb71848009ed0"
+  },
+  ".github/OLD_WFlows/gemini-review.yml": {
+    "mtime": 1779873417.2545278,
+    "ast_hash": "cb240ebb8688c88cc5963297ae846dad",
+    "semantic_hash": "cb240ebb8688c88cc5963297ae846dad"
+  },
+  ".github/OLD_WFlows/gemini-scheduled-triage.yml": {
+    "mtime": 1779873417.2557752,
+    "ast_hash": "0681d5a3e80551caf7797c6f2a8a915a",
+    "semantic_hash": "0681d5a3e80551caf7797c6f2a8a915a"
+  },
+  ".github/OLD_WFlows/gemini-triage.yml": {
+    "mtime": 1779873417.2557752,
+    "ast_hash": "0c8ad7fa4606ac1a52591004d957a1f1",
+    "semantic_hash": "0c8ad7fa4606ac1a52591004d957a1f1"
+  },
+  ".github/dependabot.yml": {
+    "mtime": 1779873417.2607534,
+    "ast_hash": "25e3537801c918e2c47e40c55590ba92",
+    "semantic_hash": "25e3537801c918e2c47e40c55590ba92"
+  },
+  ".github/workflows/android-release.yml": {
+    "mtime": 1779873417.2617495,
+    "ast_hash": "367c4d312f2385a1ceeaaf493c2a848b",
+    "semantic_hash": "367c4d312f2385a1ceeaaf493c2a848b"
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1779873417.262745,
+    "ast_hash": "d2416230cd081fd2c26ee8f79082d4ff",
+    "semantic_hash": "d2416230cd081fd2c26ee8f79082d4ff"
+  },
+  "AGENTS.md": {
+    "mtime": 1783605023.7460303,
+    "ast_hash": "f6da69f6ef076da4c5b5df17e7bb4800",
+    "semantic_hash": "f6da69f6ef076da4c5b5df17e7bb4800"
+  },
+  "BookLoggerApp/Resources/Raw/AboutAssets.txt": {
+    "mtime": 1779873418.189239,
+    "ast_hash": "dca8514f7e2eb872ecf1f3edbf30ec64",
+    "semantic_hash": "dca8514f7e2eb872ecf1f3edbf30ec64"
+  },
+  "BookLoggerApp/wwwroot/index.html": {
+    "mtime": 1783605024.1452034,
+    "ast_hash": "ca01e0bc17e5f991aaa27d4125404164",
+    "semantic_hash": "ca01e0bc17e5f991aaa27d4125404164"
+  },
+  "CHANGELOG.md": {
+    "mtime": 1783605024.1467583,
+    "ast_hash": "0955c7cbfa2cde49b2ec11f12696bfae",
+    "semantic_hash": "0955c7cbfa2cde49b2ec11f12696bfae"
+  },
+  "CLAUDE.md": {
+    "mtime": 1783605024.147796,
+    "ast_hash": "57ea6257aa8fd069bcacfab2c06c9128",
+    "semantic_hash": "57ea6257aa8fd069bcacfab2c06c9128"
+  },
+  "CODE_OF_CONDUCT.md": {
+    "mtime": 1783605024.148317,
+    "ast_hash": "88b7e7b53eb8e1efcb0a2c823a1b2119",
+    "semantic_hash": "88b7e7b53eb8e1efcb0a2c823a1b2119"
+  },
+  "CODE_REVIEW_TODO.md": {
+    "mtime": 1783605024.1524615,
+    "ast_hash": "2b03b53544ce1e90cb56d3ee3dc26002",
+    "semantic_hash": "2b03b53544ce1e90cb56d3ee3dc26002"
+  },
+  "CONTRIBUTING.md": {
+    "mtime": 1783605024.1529834,
+    "ast_hash": "1a6d0b78f5e5222c14b9247da2d97e75",
+    "semantic_hash": "1a6d0b78f5e5222c14b9247da2d97e75"
+  },
+  "LICENSE.md": {
+    "mtime": 1783605024.1535552,
+    "ast_hash": "952187b9cf08c82d65de6876335228f7",
+    "semantic_hash": "952187b9cf08c82d65de6876335228f7"
+  },
+  "PRIVACY_POLICY.md": {
+    "mtime": 1779873418.2641404,
+    "ast_hash": "ecf985a3f1c68792b6063631bf6ce543",
+    "semantic_hash": "ecf985a3f1c68792b6063631bf6ce543"
+  },
+  "PRIVACY_POLICY_DE.md": {
+    "mtime": 1779873418.265136,
+    "ast_hash": "696c0750f7d8b132aa3d6ac823d1e819",
+    "semantic_hash": "696c0750f7d8b132aa3d6ac823d1e819"
+  },
+  "PlanFix.md": {
+    "mtime": 1783605024.1545665,
+    "ast_hash": "5a97edea177adbdfddd26b3766eb428d",
+    "semantic_hash": "5a97edea177adbdfddd26b3766eb428d"
+  },
+  "README.md": {
+    "mtime": 1779873418.2664065,
+    "ast_hash": "451d24720778d2cdc787881b24c42f0a",
+    "semantic_hash": "451d24720778d2cdc787881b24c42f0a"
+  },
+  "SECURITY.md": {
+    "mtime": 1783605024.155568,
+    "ast_hash": "3d6da98e07d3fa3958029211515a36ea",
+    "semantic_hash": "3d6da98e07d3fa3958029211515a36ea"
+  }
+}
