@@ -211,11 +211,25 @@ public class WishlistViewModelTests
     {
         _vm.NewIsbn = "9780140449136";
         _lookupService.LookupByISBNAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns<Task<BookMetadata?>>(_ => throw new HttpRequestException("server err", null, HttpStatusCode.InternalServerError));
+            .Returns<Task<BookMetadata?>>(_ => throw new HttpRequestException("bad request", null, HttpStatusCode.BadRequest));
 
         await _vm.LookupByIsbnCommand.ExecuteAsync(null);
 
-        _vm.LookupMessage.Should().Contain("HTTP 500");
+        _vm.LookupMessage.Should().Contain("HTTP 400");
+    }
+
+    [Fact]
+    public async Task LookupByIsbnAsync_ServerError_SetsServerUnavailableMessage()
+    {
+        _vm.NewIsbn = "9780140449136";
+        _lookupService.LookupByISBNAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns<Task<BookMetadata?>>(_ => throw new HttpRequestException("503", null, HttpStatusCode.ServiceUnavailable));
+
+        await _vm.LookupByIsbnCommand.ExecuteAsync(null);
+
+        // 5xx maps to the "service temporarily unavailable" message, not a raw HTTP code.
+        _vm.LookupMessage.Should().Contain("temporarily unavailable");
+        _vm.LookupMessage.Should().NotContain("HTTP 503");
     }
 
     [Fact]

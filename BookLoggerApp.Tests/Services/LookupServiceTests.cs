@@ -442,18 +442,98 @@ public class LookupServiceTests
     }
 
     [Fact]
-    public async Task LookupByISBNAsync_Http500_ThrowsHttpRequestException()
+    public async Task LookupByISBNAsync_PersistentHttp500_RetriesThenThrows()
     {
+        var requestCount = 0;
         var mockHandler = new MockHttpMessageHandler((r) =>
-            new HttpResponseMessage(HttpStatusCode.InternalServerError)
+        {
+            requestCount++;
+            return new HttpResponseMessage(HttpStatusCode.InternalServerError)
             {
                 Content = new StringContent("server error")
-            });
-        var service = new LookupService(new HttpClient(mockHandler), googleBooksApiKey: "");
+            };
+        });
+        var service = new LookupService(
+            new HttpClient(mockHandler), googleBooksApiKey: "", retryDelaysMs: [0, 0, 0]);
 
         Func<Task> act = async () => await service.LookupByISBNAsync("9780140449136");
 
         await act.Should().ThrowAsync<HttpRequestException>();
+        // Initial attempt + 3 retries: transient 5xx must be retried before giving up.
+        requestCount.Should().Be(4);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]   // 503 — the reported failure
+    [InlineData(HttpStatusCode.InternalServerError)]  // 500
+    [InlineData(HttpStatusCode.BadGateway)]           // 502
+    [InlineData(HttpStatusCode.GatewayTimeout)]       // 504
+    [InlineData(HttpStatusCode.RequestTimeout)]       // 408
+    public async Task LookupByISBNAsync_TransientErrorThenSuccess_RetriesAndSucceeds(HttpStatusCode transient)
+    {
+        var requestCount = 0;
+        var json = @"{ ""items"": [ { ""volumeInfo"": { ""title"": ""Recovered"", ""authors"": [""A""] } } ] }";
+
+        var mockHandler = new MockHttpMessageHandler((r) =>
+        {
+            requestCount++;
+            if (requestCount == 1)
+                return new HttpResponseMessage(transient) { Content = new StringContent("transient") };
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) };
+        });
+        var service = new LookupService(
+            new HttpClient(mockHandler), googleBooksApiKey: "", retryDelaysMs: [0, 0, 0]);
+
+        var result = await service.LookupByISBNAsync("9780140449136");
+
+        result.Should().NotBeNull();
+        result!.Title.Should().Be("Recovered");
+        requestCount.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task SearchBooksAsync_TransientErrorThenSuccess_RetriesAndSucceeds()
+    {
+        var requestCount = 0;
+        var json = @"{ ""items"": [ { ""volumeInfo"": { ""title"": ""The Great Gatsby"", ""authors"": [""F. Scott Fitzgerald""] } } ] }";
+
+        var mockHandler = new MockHttpMessageHandler((r) =>
+        {
+            requestCount++;
+            if (requestCount == 1)
+                return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) { Content = new StringContent("down") };
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) };
+        });
+        var service = new LookupService(
+            new HttpClient(mockHandler), googleBooksApiKey: "", retryDelaysMs: [0, 0, 0]);
+
+        var result = await service.SearchBooksAsync("The Great Gatsby");
+
+        result.Should().ContainSingle();
+        result.First().Title.Should().Be("The Great Gatsby");
+        requestCount.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task LookupByISBNAsync_NonTransientHttpError_DoesNotRetry()
+    {
+        var requestCount = 0;
+        var mockHandler = new MockHttpMessageHandler((r) =>
+        {
+            requestCount++;
+            return new HttpResponseMessage(HttpStatusCode.BadRequest)
+            {
+                Content = new StringContent("bad request")
+            };
+        });
+        var service = new LookupService(
+            new HttpClient(mockHandler), googleBooksApiKey: "", retryDelaysMs: [0, 0, 0]);
+
+        Func<Task> act = async () => await service.LookupByISBNAsync("9780140449136");
+
+        await act.Should().ThrowAsync<HttpRequestException>();
+        // 4xx (other than quota/rate-limit) is a permanent client error — no retry.
+        requestCount.Should().Be(1);
     }
 
     [Fact]

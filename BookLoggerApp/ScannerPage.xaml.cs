@@ -54,8 +54,12 @@ public partial class ScannerPage : ContentPage
                 Dispatcher.Dispatch(async () =>
                 {
                     cameraBarcodeReaderView.IsDetecting = false;
-                    await Navigation.PopModalAsync();
+                    // Publish the scanned code BEFORE popping the modal. PopModalAsync triggers
+                    // OnDisappearing, which calls TrySetCancelledResult(null); since the TCS is
+                    // first-writer-wins, completing it here first makes that cancel a no-op.
+                    // Doing it the other way round loses the scan (null returned, ISBN never filled).
                     _tcs?.TrySetResult(code);
+                    await Navigation.PopModalAsync();
                 });
             }
         }
