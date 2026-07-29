@@ -74,8 +74,10 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private AppSettings _settings = new();
 
+    // No literal default: the ctor assigns the real value from IAppVersionService before
+    // anything can observe it, and a hardcoded version here only goes stale on every bump.
     [ObservableProperty]
-    private string _appVersion = "1.0.0";
+    private string _appVersion = string.Empty;
 
     [ObservableProperty]
     private string _migrationLog;

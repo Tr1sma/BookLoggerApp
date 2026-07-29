@@ -42,6 +42,18 @@ public partial class PaywallViewModel : ViewModelBase
     [ObservableProperty]
     private string? _banner;
 
+    /// <summary>
+    /// Promo feedback, rendered inline next to the code input. Deliberately separate from
+    /// <see cref="Banner"/>: the banner sits at the top of a 90vh scroll container, so a
+    /// message posted there is invisible to a user standing at the promo field.
+    /// </summary>
+    [ObservableProperty]
+    private string? _promoMessage;
+
+    /// <summary>True when the entered code belongs to Google Play; surfaces the Play redeem button.</summary>
+    [ObservableProperty]
+    private bool _showPlayStoreRedeem;
+
     [ObservableProperty]
     private bool _isPurchaseInProgress;
 
@@ -172,6 +184,9 @@ public partial class PaywallViewModel : ViewModelBase
     {
         await ExecuteSafelyAsync(async () =>
         {
+            PromoMessage = null;
+            ShowPlayStoreRedeem = false;
+
             PromoCodeRedemptionResult result = await _promoCodeService.RedeemAsync(PromoCodeInput);
             string message = Tr(result.MessageKey, result.MessageArgs);
 
@@ -189,12 +204,29 @@ public partial class PaywallViewModel : ViewModelBase
             }
             else
             {
-                Banner = message;
+                // Keep the code in the field when it's a Play code — the user needs to copy it over.
+                PromoMessage = message;
+                ShowPlayStoreRedeem = result.RequiresPlayStore;
                 _analytics.LogEvent(AnalyticsEventNames.PromoCodeFailed, AnalyticsParamBuilder.Create()
+                    .Add(AnalyticsParamNames.CodeType, result.RequiresPlayStore ? "play_store" : "in_app")
                     .Add(AnalyticsParamNames.Reason, result.MessageKey)
                     .BuildMutable());
             }
         }, Tr("Error_FailedTo_RedeemPromoCode"));
+    }
+
+    /// <summary>Hands off to the Play Store's redemption screen for Google-owned promo codes.</summary>
+    [RelayCommand]
+    public async Task OpenPlayStoreRedeemAsync()
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            PromoMessage = null;
+            if (!await _billingService.LaunchRedeemPromoFlowAsync())
+            {
+                PromoMessage = Tr("Promo_PlayStoreOpenFailed");
+            }
+        }, Tr("Error_FailedTo_OpenPlayStore"));
     }
 
     [RelayCommand]

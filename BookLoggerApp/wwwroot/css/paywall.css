@@ -470,6 +470,25 @@
     cursor: pointer;
 }
 
+.paywall-promo-message {
+    margin: 0.5rem 0 0;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: var(--text-secondary, #C9B5A0);
+}
+
+.paywall-promo-playstore {
+    margin-top: 0.5rem;
+    width: 100%;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--primary-color, #D4A574);
+    background: var(--bg-tertiary, #3D3126);
+    color: var(--text-primary, #F5E6D3);
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 .paywall-footer {
     display: flex;
     align-items: center;

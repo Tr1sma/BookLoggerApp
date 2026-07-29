@@ -2196,6 +2196,18 @@
   <data name="Promo_Success_Months" xml:space="preserve">
     <value>{0} unlocked for {1} months.</value>
   </data>
+  <data name="Promo_PlayStoreCode" xml:space="preserve">
+    <value>That looks like a Google Play code. Redeem it in the Play Store.</value>
+  </data>
+  <data name="Promo_PlayStoreOpen" xml:space="preserve">
+    <value>Redeem in Play Store</value>
+  </data>
+  <data name="Promo_PlayStoreOpenFailed" xml:space="preserve">
+    <value>Could not open the Play Store. Redeem the code in the Play Store app.</value>
+  </data>
+  <data name="Error_FailedTo_OpenPlayStore" xml:space="preserve">
+    <value>Play Store could not be opened</value>
+  </data>
   <data name="Paywall_PeriodMonth" xml:space="preserve">
     <value>month</value>
   </data>
