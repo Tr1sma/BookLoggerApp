@@ -176,10 +176,25 @@
         <section class="paywall-promo">
             <label for="paywallPromo">@L["Paywall_PromoLabel"]</label>
             <div class="paywall-promo-row">
+                @* bind on oninput, not the default onchange: tapping the button blurs the
+                   input, and the re-render that fires from the change event can swallow
+                   the click before it reaches the handler. *@
                 <input id="paywallPromo" type="text" autocomplete="off"
-                       @bind="ViewModel.PromoCodeInput" placeholder="BH-…" />
+                       @bind="ViewModel.PromoCodeInput" @bind:event="oninput" placeholder="BH-…" />
                 <button type="button" @onclick="ViewModel.RedeemPromoAsync">@L["Paywall_Redeem"]</button>
             </div>
+            @* Feedback stays here, next to the field — the header banner is several
+               screens up inside the scroll container and would go unseen. *@
+            @if (!string.IsNullOrWhiteSpace(ViewModel.PromoMessage))
+            {
+                <p class="paywall-promo-message" role="status" aria-live="polite">@ViewModel.PromoMessage</p>
+            }
+            @if (ViewModel.ShowPlayStoreRedeem)
+            {
+                <button type="button" class="paywall-promo-playstore" @onclick="ViewModel.OpenPlayStoreRedeemAsync">
+                    @L["Promo_PlayStoreOpen"]
+                </button>
+            }
         </section>
 
         <footer class="paywall-footer">

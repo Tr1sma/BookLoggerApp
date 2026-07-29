@@ -2137,6 +2137,18 @@
   <data name="Promo_Success_Months" xml:space="preserve">
     <value>{0} für {1} Monate freigeschaltet.</value>
   </data>
+  <data name="Promo_PlayStoreCode" xml:space="preserve">
+    <value>Das sieht nach einem Google-Play-Code aus. Den löst du im Play Store ein.</value>
+  </data>
+  <data name="Promo_PlayStoreOpen" xml:space="preserve">
+    <value>Im Play Store einlösen</value>
+  </data>
+  <data name="Promo_PlayStoreOpenFailed" xml:space="preserve">
+    <value>Play Store konnte nicht geöffnet werden. Lös den Code in der Play-Store-App ein.</value>
+  </data>
+  <data name="Error_FailedTo_OpenPlayStore" xml:space="preserve">
+    <value>Play Store konnte nicht geöffnet werden</value>
+  </data>
   <data name="Paywall_PeriodMonth" xml:space="preserve">
     <value>Monat</value>
   </data>

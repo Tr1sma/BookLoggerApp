@@ -53,7 +53,7 @@ public class PaywallViewModelTests
     }
 
     [Fact]
-    public async Task RedeemPromoAsync_OnFailure_SetsBannerAndDoesNotShowCelebration()
+    public async Task RedeemPromoAsync_OnFailure_SetsPromoMessageAndDoesNotShowCelebration()
     {
         _promoCodes.RedeemAsync("BOGUS", Arg.Any<CancellationToken>())
             .Returns(new PromoCodeRedemptionResult(false, "Promo_Unknown", Array.Empty<object>()));
@@ -63,8 +63,74 @@ public class PaywallViewModelTests
         await vm.RedeemPromoAsync();
 
         vm.ShowCelebration.Should().BeFalse();
-        vm.Banner.Should().Be("Unknown promo code.");
+        // The message belongs next to the input, not in the header banner several screens up.
+        vm.PromoMessage.Should().Be("Unknown promo code.");
+        vm.Banner.Should().BeNull();
+        vm.ShowPlayStoreRedeem.Should().BeFalse();
         vm.PromoCodeInput.Should().Be("BOGUS");
+    }
+
+    [Fact]
+    public async Task RedeemPromoAsync_PlayStoreCode_OffersPlayStoreRedemption()
+    {
+        _promoCodes.RedeemAsync("MKZYHKL3UQR3SU8MTDB1RKR", Arg.Any<CancellationToken>())
+            .Returns(new PromoCodeRedemptionResult(
+                false, "Promo_PlayStoreCode", Array.Empty<object>(), null, RequiresPlayStore: true));
+        var vm = CreateVm();
+        vm.PromoCodeInput = "MKZYHKL3UQR3SU8MTDB1RKR";
+
+        await vm.RedeemPromoAsync();
+
+        vm.ShowPlayStoreRedeem.Should().BeTrue();
+        vm.PromoMessage.Should().Be("That looks like a Google Play code. Redeem it in the Play Store.");
+        vm.ShowCelebration.Should().BeFalse();
+        // The code stays put — the user has to copy it into the Play Store.
+        vm.PromoCodeInput.Should().Be("MKZYHKL3UQR3SU8MTDB1RKR");
+    }
+
+    [Fact]
+    public async Task OpenPlayStoreRedeemAsync_LaunchesRedeemFlow()
+    {
+        _billing.LaunchRedeemPromoFlowAsync(Arg.Any<CancellationToken>()).Returns(true);
+        var vm = CreateVm();
+
+        await vm.OpenPlayStoreRedeemAsync();
+
+        await _billing.Received(1).LaunchRedeemPromoFlowAsync(Arg.Any<CancellationToken>());
+        vm.PromoMessage.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task OpenPlayStoreRedeemAsync_WhenLaunchFails_TellsTheUser()
+    {
+        _billing.LaunchRedeemPromoFlowAsync(Arg.Any<CancellationToken>()).Returns(false);
+        var vm = CreateVm();
+
+        await vm.OpenPlayStoreRedeemAsync();
+
+        vm.PromoMessage.Should().Be("Could not open the Play Store. Redeem the code in the Play Store app.");
+    }
+
+    [Fact]
+    public async Task RedeemPromoAsync_OnSuccess_ClearsPlayStoreOffer()
+    {
+        PromoActivation activation = new(SubscriptionTier.Plus, BillingPeriod.Monthly, "BH-BETA2026", DateTime.UtcNow.AddDays(30));
+        _promoCodes.RedeemAsync("PLAYCODE123456", Arg.Any<CancellationToken>())
+            .Returns(new PromoCodeRedemptionResult(
+                false, "Promo_PlayStoreCode", Array.Empty<object>(), null, RequiresPlayStore: true));
+        _promoCodes.RedeemAsync("BH-BETA2026", Arg.Any<CancellationToken>())
+            .Returns(new PromoCodeRedemptionResult(true, "Promo_Success_Days", new object[] { SubscriptionTier.Plus, 30 }, activation));
+        var vm = CreateVm();
+
+        vm.PromoCodeInput = "PLAYCODE123456";
+        await vm.RedeemPromoAsync();
+        vm.ShowPlayStoreRedeem.Should().BeTrue();
+
+        vm.PromoCodeInput = "BH-BETA2026";
+        await vm.RedeemPromoAsync();
+
+        vm.ShowPlayStoreRedeem.Should().BeFalse();
+        vm.PromoMessage.Should().BeNull();
     }
 
     [Fact]

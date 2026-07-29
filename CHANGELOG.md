@@ -12,6 +12,15 @@ Versionsschema:
 - MAJOR wird auf 1 gesetzt wenn der erste public Play-Store-Upload erfolgt
 - MINOR für neue Features, PATCH für Bugfixes und kleinere Änderungen
 
+## [1.0.2]
+
+### Hinzugefügt
+- Play-Store-Gutscheincodes werden im Promo-Feld erkannt: statt „Unbekannter Promo-Code" erscheint ein Hinweis samt Button, der direkt die Einlöseseite im Play Store öffnet
+
+### Behoben
+- Promo-Code einlösen wirkte folgenlos: die Rückmeldung wurde im Kopfbereich des Paywall-Dialogs gerendert und lag damit mehrere Bildschirmhöhen über dem Eingabefeld. Sie steht jetzt direkt unter dem Feld
+- Das Promo-Eingabefeld übernimmt Tippeingaben jetzt sofort statt erst beim Verlassen des Felds — der Tipp auf „Einlösen" ging dadurch auf Mobilgeräten gelegentlich verloren
+
 ## [1.0.1]
 
 ### Geändert

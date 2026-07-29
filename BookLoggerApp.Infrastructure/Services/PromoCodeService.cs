@@ -35,7 +35,11 @@ public class PromoCodeService : IPromoCodeService
 
         if (!HardcodedCodes.TryGetValue(trimmed, out PromoGrant? grant))
         {
-            return new PromoCodeRedemptionResult(false, "Promo_Unknown", Array.Empty<object>());
+            // Outside our BH- namespace we can't validate anything — Play owns those codes
+            // and redeems them server-side. Point the user there instead of "unknown code".
+            return LooksLikePlayStoreCode(trimmed)
+                ? new PromoCodeRedemptionResult(false, "Promo_PlayStoreCode", Array.Empty<object>(), null, RequiresPlayStore: true)
+                : new PromoCodeRedemptionResult(false, "Promo_Unknown", Array.Empty<object>());
         }
 
         DateTime expiresAt = DateTime.UtcNow.AddDays(grant.DurationDays);
@@ -51,6 +55,15 @@ public class PromoCodeService : IPromoCodeService
         };
         return new PromoCodeRedemptionResult(true, messageKey, args, activation);
     }
+
+    /// <summary>
+    /// True for codes that plausibly belong to Google Play: its one-time codes are 23
+    /// uppercase alphanumerics, Play Console custom codes are shorter but share that
+    /// alphabet. A <c>BH-</c> code is ours (the hyphen already excludes it here), and
+    /// anything with spaces or punctuation is a typo rather than a voucher.
+    /// </summary>
+    private static bool LooksLikePlayStoreCode(string code)
+        => code.Length >= 6 && code.All(char.IsAsciiLetterOrDigit);
 
     private sealed record PromoGrant(SubscriptionTier Tier, BillingPeriod Period, int DurationDays);
 }

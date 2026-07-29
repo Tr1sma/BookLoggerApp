@@ -17,9 +17,12 @@ public interface IPromoCodeService
 /// Result of a promo-code redemption. <see cref="MessageKey"/> is an AppResources
 /// key and <see cref="MessageArgs"/> its format arguments — the UI layer resolves
 /// them via the active localizer, keeping this service localization-free.
+/// <see cref="RequiresPlayStore"/> marks a code this service cannot redeem because
+/// Google owns it; the UI then offers the Play redemption flow instead of a dead end.
 /// </summary>
 public record PromoCodeRedemptionResult(
     bool Success,
     string MessageKey,
     object[] MessageArgs,
-    PromoActivation? Activation = null);
+    PromoActivation? Activation = null,
+    bool RequiresPlayStore = false);
