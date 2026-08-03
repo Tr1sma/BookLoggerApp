@@ -16,8 +16,8 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
     <!-- Override transitive 2.1.11 (CVE-2025-6965, bundled SQLite < 3.50.2) with patched 3.0.3 -->
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.4" />
-    <PackageReference Include="SkiaSharp" Version="4.150.1" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+    <PackageReference Include="SkiaSharp" Version="4.151.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)' != 'Debug'">
